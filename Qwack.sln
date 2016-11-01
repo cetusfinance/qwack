@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{754E413D-24A5-4779-8B70-FC66F040D042}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+		LICENSE = LICENSE
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Math.Interpolation", "src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.xproj", "{026F0C48-6597-45A9-A8BA-2CB9E5446197}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{9550BFAC-7055-4B8B-B391-BC93D2588A16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{6DB91873-6019-406B-A635-4DCFBC0993CB}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Math.Tests", "test\Qwack.Math.Tests\Qwack.Math.Tests.xproj", "{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{026F0C48-6597-45A9-A8BA-2CB9E5446197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{026F0C48-6597-45A9-A8BA-2CB9E5446197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{026F0C48-6597-45A9-A8BA-2CB9E5446197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{026F0C48-6597-45A9-A8BA-2CB9E5446197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{026F0C48-6597-45A9-A8BA-2CB9E5446197} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
+		{72E8DB79-9DD3-4102-9E73-4E5390DCE2DB} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
+	EndGlobalSection
+EndGlobal

@@ -14,13 +14,10 @@
     "netcoreapp1.0": {
       "dependencies": {
         "Microsoft.NETCore.App": {
-          "version": "1.0.0"
+          "version": "1.0.0",
+          "type": "platform"
         }
       }
     }
-  },
-  "runtimes": {
-    "win7-x64": {},
-    "ubuntu.14.04-x64": {}
   }
 }

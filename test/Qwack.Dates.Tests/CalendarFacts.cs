@@ -26,7 +26,7 @@ namespace Qwack.Dates.Tests
             Calendar calendar;
             Assert.True(CalendarProvider.Collection.TryGetCalendar("usd", out calendar));
 
-            Assert.True(calendar.IsHoliday(new DateTime(2015, 07, 04)));
+            Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 04)));
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace Qwack.Dates.Tests
             Calendar calendar;
             Assert.True(CalendarProvider.Collection.TryGetCalendar("usd", out calendar));
 
-            Assert.True(calendar.IsHoliday(new DateTime(2015, 07, 03)));
+            Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 03)));
         }
 
         [Theory]
@@ -50,6 +50,17 @@ namespace Qwack.Dates.Tests
             Assert.True(us.IsHoliday(dateToCheck));
             Assert.False(gb.IsHoliday(dateToCheck));
             Assert.True(combined.IsHoliday(dateToCheck));
+        }
+
+        [Fact]
+        public void CheckThatClonedCalendarIsEqualButNotTheSame()
+        {
+            Calendar usd;
+            CalendarProvider.Collection.TryGetCalendar("usd", out usd);
+            var clone = usd.Clone();
+
+            Assert.NotSame(usd.DaysToExclude, clone.DaysToExclude);
+            Assert.Equal(usd.DaysToExclude, clone.DaysToExclude);
         }
 
         public IEnumerable<DateTime> GetUSExclusiveHolidays()

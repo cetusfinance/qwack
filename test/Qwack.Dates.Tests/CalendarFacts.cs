@@ -24,7 +24,7 @@ namespace Qwack.Dates.Tests
         public void CheckUSDCalendarHasHolidayOnJuly4th()
         {
             Calendar calendar;
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("usd", out calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 04)));
         }
@@ -33,7 +33,7 @@ namespace Qwack.Dates.Tests
         public void CheckUSDCalendarHasWeekendAsHolidays()
         {
             Calendar calendar;
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("usd", out calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 03)));
         }
@@ -43,9 +43,9 @@ namespace Qwack.Dates.Tests
         public void CheckCombinedCalendarHasJuly4th(DateTime dateToCheck)
         {
             Calendar us, gb, combined;
-            CalendarProvider.Collection.TryGetCalendar("usd", out us);
-            CalendarProvider.Collection.TryGetCalendar("gbp", out gb);
-            CalendarProvider.Collection.TryGetCalendar("gbp+usd", out combined);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out us);
+            CalendarProvider.Collection.TryGetCalendar("lon", out gb);
+            CalendarProvider.Collection.TryGetCalendar("lon+nyc", out combined);
 
             Assert.True(us.IsHoliday(dateToCheck));
             Assert.False(gb.IsHoliday(dateToCheck));
@@ -56,18 +56,18 @@ namespace Qwack.Dates.Tests
         public void CheckThatClonedCalendarIsEqualButNotTheSame()
         {
             Calendar usd;
-            CalendarProvider.Collection.TryGetCalendar("usd", out usd);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out usd);
             var clone = usd.Clone();
 
             Assert.NotSame(usd.DaysToExclude, clone.DaysToExclude);
             Assert.Equal(usd.DaysToExclude, clone.DaysToExclude);
         }
 
-        public IEnumerable<DateTime> GetUSExclusiveHolidays()
+        public static IEnumerable<object> GetUSExclusiveHolidays()
         {
-            List<DateTime> holidays = new List<DateTime>()
+            List<object> holidays = new List<object>()
             {
-                new DateTime(2015,07,04)
+                new object[] { new DateTime(2016,07,04) }
             };
 
             return holidays;

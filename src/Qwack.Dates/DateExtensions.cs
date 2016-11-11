@@ -7,6 +7,94 @@ namespace Qwack.Dates
 {
     public static class DateExtensions
     {
+        public static DateTime GetNextIMMDate(this DateTime input)
+        {
+            int m = input.Month;
+            int d = input.Day;
+            int y = input.Year;
+
+            //handle case of date before 3rd weds in IMM month
+            if (m % 3 == 0 && input < ThirdWednesday(input))
+                return ThirdWednesday(input);
+
+            m = m - m % 3 + 3; //roll to next IMM month
+            if (m > 12)
+            {
+                m -= 12;
+                y++;
+            }
+            return ThirdWednesday(new DateTime(y, m, 1));
+        }
+
+        public static DateTime GetPrevIMMDate(this DateTime input)
+        {
+            int m = input.Month;
+            int d = input.Day;
+            int y = input.Year;
+
+            //handle case of date after 3rd weds in IMM month
+            if (m % 3 == 0 && input > ThirdWednesday(input))
+                return ThirdWednesday(input);
+
+            m = m - m % 3; //roll to next IMM month
+            if (m < 1)
+            {
+                m += 12;
+                y--;
+            }
+            return ThirdWednesday(new DateTime(y, m, 1));
+        }
+
+        public static List<DateTime> BusinessDaysInPeriod(this DateTime startDateInc, DateTime endDateInc, Calendar calendars)
+        {
+            var o = new List<DateTime>((int)(startDateInc - endDateInc).TotalDays);
+            var date = startDateInc;
+            while (date <= endDateInc)
+            {
+                o.Add(date);
+                date = date.AddPeriod(RollType.F, calendars, Frequency.OneBd);
+            }
+            return o;
+        }
+
+        public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis)
+        {
+            switch (basis)
+            {
+                case DayCountBasis.Act_360:
+                    return (endDate - startDate).TotalDays / 360;
+                case DayCountBasis.Act_365F:
+                    return (endDate - startDate).TotalDays / 365;
+                case DayCountBasis.Act_Act_ISDA:
+                case DayCountBasis.Act_Act:
+                    if (endDate.Year == startDate.Year)
+                    {   //simple case
+                        DateTime EoY = new DateTime(endDate.Year, 12, 31);
+                        return (endDate - startDate).TotalDays / EoY.DayOfYear;
+                    }
+                    else
+                    {
+                        double nIntermediateYears = endDate.Year - startDate.Year - 1;
+
+                        DateTime EoYe = new DateTime(endDate.Year, 12, 31);
+                        double E = endDate.DayOfYear / EoYe.DayOfYear;
+
+                        DateTime EoYs = new DateTime(startDate.Year, 12, 31);
+                        double S = (EoYs - startDate).TotalDays / EoYs.DayOfYear;
+
+                        return S + nIntermediateYears + E;
+                    }
+                case DayCountBasis._30_360:
+                    double Ydiff = endDate.Year - startDate.Year;
+                    double Mdiff = endDate.Month - startDate.Month;
+                    double Ddiff = endDate.Day - startDate.Day;
+                    return (Ydiff * 360 + Mdiff * 30 + Ddiff) / 360;
+                case DayCountBasis.Unity:
+                    return 1.0;
+            }
+            return -1;
+        }
+
         public static DateTime FirstBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             var returnDate = input.FirstDayOfMonth();
@@ -25,7 +113,7 @@ namespace Qwack.Dates
         public static DateTime LastBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             DateTime D = input.Date.AddMonths(1).FirstDayOfMonth();
-            return SubtractPeriod(D, RollType.P, calendar, DatePeriod.BusinessDay, 1);
+            return SubtractPeriod(D, RollType.P, calendar, Frequency.OneBd);
         }
 
         public static DateTime ThirdWednesday(this DateTime date)
@@ -33,18 +121,18 @@ namespace Qwack.Dates
             return date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
         }
 
-        public static DateTime NthSpecificWeekDay(this DateTime date, DayOfWeek DoW, int n)
+        public static DateTime NthSpecificWeekDay(this DateTime date, DayOfWeek dayofWeek, int number)
         {
             //Get the first day of the month
             DateTime firstDate = new DateTime(date.Year, date.Month, 1);
             //Get the current day 0=sunday
             int currentDay = (int)firstDate.DayOfWeek;
-            int targetDOW = (int)DoW;
+            int targetDOW = (int)dayofWeek;
 
             int daysToAdd = 0;
 
             if (currentDay == targetDOW)
-                return firstDate.AddDays((n - 1) * 7);
+                return firstDate.AddDays((number - 1) * 7);
 
             if (currentDay < targetDOW)
             {
@@ -55,7 +143,7 @@ namespace Qwack.Dates
                 daysToAdd = 7 + targetDOW - currentDay;
             }
 
-            return firstDate.AddDays(daysToAdd).AddDays((n - 1) * 7);
+            return firstDate.AddDays(daysToAdd).AddDays((number - 1) * 7);
 
         }
 
@@ -171,23 +259,18 @@ namespace Qwack.Dates
             }
         }
 
-        public static DateTime AddPeriod(this DateTime date, RollType rollType, Calendar calendars, Frequency frequency)
-        {
-            return AddPeriod(date, rollType, calendars, frequency.PeriodType, frequency.PeriodCount);
-        }
-
-        public static DateTime AddPeriod(this DateTime date, RollType rollType, Calendar calendar, DatePeriod periodType, int numberOfPeriods)
+        public static DateTime AddPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency datePeriod)
         {
             date = date.Date;
-            if (numberOfPeriods == 0)
+            if (datePeriod.PeriodCount == 0)
             {
                 return IfHolidayRoll(date, rollType, calendar);
             }
-            if (periodType == DatePeriod.B)
+            if (datePeriod.PeriodType == DatePeriodType.B)
             {
                 //Business day jumping so we need to do something different
                 DateTime d = date;
-                for (int i = 0; i < numberOfPeriods; i++)
+                for (int i = 0; i < datePeriod.PeriodCount; i++)
                 {
                     d = d.AddDays(1);
                     d = IfHolidayRoll(d, rollType, calendar);
@@ -196,20 +279,20 @@ namespace Qwack.Dates
             }
 
             DateTime dt;
-            switch (periodType)
+            switch (datePeriod.PeriodType)
             {
-                case DatePeriod.D:
-                    dt = date.AddDays(numberOfPeriods);
+                case DatePeriodType.D:
+                    dt = date.AddDays(datePeriod.PeriodCount);
                     break;
-                case DatePeriod.M:
-                    dt = date.AddMonths(numberOfPeriods);
+                case DatePeriodType.M:
+                    dt = date.AddMonths(datePeriod.PeriodCount);
                     break;
-                case DatePeriod.W:
-                    dt = date.AddDays(numberOfPeriods * 7);
+                case DatePeriodType.W:
+                    dt = date.AddDays(datePeriod.PeriodCount * 7);
                     break;
-                case DatePeriod.Y:
+                case DatePeriodType.Y:
                 default:
-                    dt = date.AddYears(numberOfPeriods);
+                    dt = date.AddYears(datePeriod.PeriodCount);
                     break;
             }
 
@@ -219,7 +302,7 @@ namespace Qwack.Dates
             }
             if (rollType == RollType.ShortFLongMF)
             {
-                if (periodType == DatePeriod.B || periodType == DatePeriod.D || periodType == DatePeriod.W)
+                if (datePeriod.PeriodType == DatePeriodType.B || datePeriod.PeriodType == DatePeriodType.D || datePeriod.PeriodType == DatePeriodType.W)
                     return IfHolidayRoll(dt, RollType.F, calendar);
                 else
                     return IfHolidayRoll(dt, RollType.MF, calendar);
@@ -227,24 +310,19 @@ namespace Qwack.Dates
             return IfHolidayRoll(dt, rollType, calendar);
         }
 
-        public static DateTime SubtractPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency frequency)
-        {
-            return SubtractPeriod(date, rollType, calendar, frequency.PeriodType, frequency.PeriodCount);
-        }
-
-        public static DateTime SubtractPeriod(this DateTime date, RollType rollType, Calendar calendar, DatePeriod periodType, int numberOfPeriods)
+        public static DateTime SubtractPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency datePeriod)
         {
             date = date.Date;
-            if (numberOfPeriods == 0)
+            if (datePeriod.PeriodCount == 0)
             {
                 return IfHolidayRoll(date, rollType, calendar);
             }
 
-            if (periodType == DatePeriod.B)
+            if (datePeriod.PeriodType == DatePeriodType.B)
             {
                 //Business day jumping so we need to do something different
                 DateTime d = date;
-                for (int i = 0; i < numberOfPeriods; i++)
+                for (int i = 0; i < datePeriod.PeriodCount; i++)
                 {
                     d = d.AddDays(-1);
                     d = IfHolidayRoll(d, rollType, calendar);
@@ -252,7 +330,8 @@ namespace Qwack.Dates
 
                 return d;
             }
-            return AddPeriod(date, rollType, calendar, periodType, 0 - numberOfPeriods);
+            datePeriod.PeriodCount = 0 - datePeriod.PeriodCount;
+            return AddPeriod(date, rollType, calendar, datePeriod);
         }
 
     }

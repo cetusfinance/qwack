@@ -14,13 +14,13 @@ namespace Qwack.Dates
             SplitPeriod(frequency);
         }
 
-        public Frequency(int periodCount, DatePeriod periodType)
+        public Frequency(int periodCount, DatePeriodType periodType)
         {
             PeriodCount = periodCount;
             PeriodType = periodType;
         }
 
-        public DatePeriod PeriodType { get; set; }
+        public DatePeriodType PeriodType { get; set; }
         public int PeriodCount { get; set; }
 
         public override string ToString()
@@ -30,41 +30,44 @@ namespace Qwack.Dates
 
         private void SplitPeriod(string period)
         {
-            string PP = period?.Substring(period.Length - 1, 1);
+            var periodType = period[period.Length-1];
 
-            switch (PP.ToUpper())
+            switch (periodType)
             {
-                case "D":
-                    PeriodType = DatePeriod.D;
+                case 'D':
+                case 'd':
+                    PeriodType = DatePeriodType.D;
                     break;
-                case "Y":
-                    PeriodType = DatePeriod.Y;
+                case 'Y':
+                case 'y':
+                    PeriodType = DatePeriodType.Y;
                     break;
-                case "M":
-                    PeriodType = DatePeriod.M;
+                case 'M':
+                case 'm':
+                    PeriodType = DatePeriodType.M;
                     break;
-                case "B":
-                    PeriodType = DatePeriod.B;
+                case 'B':
+                case 'b':
+                    PeriodType = DatePeriodType.B;
                     break;
-                case "W":
-                    PeriodType = DatePeriod.W;
+                case 'w':
+                case 'W':
+                    PeriodType = DatePeriodType.W;
                     break;
                 default:
-                    throw new ArgumentException(nameof(period), $"Unknown period type {PP}");
-
+                    throw new ArgumentException(nameof(period), $"Unknown period type {periodType}");
             }
-
             PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
         }
 
-        public static Frequency ZeroBd { get { return new Frequency(0, DatePeriod.B); } }
-        public static Frequency OneBd { get { return new Frequency(1, DatePeriod.B); } }
-        public static Frequency TwoBd { get { return new Frequency(2, DatePeriod.B); } }
-        public static Frequency OneWeek { get { return new Frequency(1, DatePeriod.W); } }
-        public static Frequency TwoWeeks { get { return new Frequency(2, DatePeriod.W); } }
-        public static Frequency OneMonth { get { return new Frequency(1, DatePeriod.M); } }
-        public static Frequency ThreeMonths { get { return new Frequency(3, DatePeriod.M); } }
-        public static Frequency SixMonths { get { return new Frequency(6, DatePeriod.M); } }
-        public static Frequency OneYear { get { return new Frequency(1, DatePeriod.Y); } }
+        public static Frequency ZeroBd { get { return new Frequency(0, DatePeriodType.B); } }
+        public static Frequency OneBd { get { return new Frequency(1, DatePeriodType.B); } }
+        public static Frequency TwoBd { get { return new Frequency(2, DatePeriodType.B); } }
+        public static Frequency OneWeek { get { return new Frequency(1, DatePeriodType.W); } }
+        public static Frequency TwoWeeks { get { return new Frequency(2, DatePeriodType.W); } }
+        public static Frequency OneMonth { get { return new Frequency(1, DatePeriodType.M); } }
+        public static Frequency ThreeMonths { get { return new Frequency(3, DatePeriodType.M); } }
+        public static Frequency SixMonths { get { return new Frequency(6, DatePeriodType.M); } }
+        public static Frequency OneYear { get { return new Frequency(1, DatePeriodType.Y); } }
     }
 }

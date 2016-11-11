@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
-    public enum DatePeriod
+    public enum DatePeriodType
     {
         BusinessDay = 0,
         B = 0,

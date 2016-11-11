@@ -28,6 +28,49 @@ namespace Qwack.Dates
             return SubtractPeriod(D, RollType.P, calendar, DatePeriod.BusinessDay, 1);
         }
 
+        public static DateTime ThirdWednesday(this DateTime date)
+        {
+            return date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
+        }
+
+        public static DateTime NthSpecificWeekDay(this DateTime date, DayOfWeek DoW, int n)
+        {
+            //Get the first day of the month
+            DateTime firstDate = new DateTime(date.Year, date.Month, 1);
+            //Get the current day 0=sunday
+            int currentDay = (int)firstDate.DayOfWeek;
+            int targetDOW = (int)DoW;
+
+            int daysToAdd = 0;
+
+            if (currentDay == targetDOW)
+                return firstDate.AddDays((n - 1) * 7);
+
+            if (currentDay < targetDOW)
+            {
+                daysToAdd = targetDOW - currentDay;
+            }
+            else
+            {
+                daysToAdd = 7 + targetDOW - currentDay;
+            }
+
+            return firstDate.AddDays(daysToAdd).AddDays((n - 1) * 7);
+
+        }
+
+        public static DateTime LastDayOfMonth(this DateTime input)
+        {
+            if (input.Month != 12)
+            {
+                return new DateTime(input.Year, input.Month + 1, 1).AddDays(-1);
+            }
+            else
+            {
+                return new DateTime(input.Year + 1, 1, 1).AddDays(-1);
+            }
+        }
+
         public static DateTime IfHolidayRollForward(this DateTime input, Calendar calendar)
         {
             input = input.Date;

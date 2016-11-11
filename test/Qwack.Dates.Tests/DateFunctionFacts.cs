@@ -38,6 +38,27 @@ namespace Qwack.Dates.Tests
         }
 
         [Fact]
+        public void FirstDayOfMonth()
+        {
+            var dt = new DateTime(2016, 10, 10);
+            Assert.Equal(new DateTime(2016, 10, 1), dt.FirstDayOfMonth());
+        }
+
+        [Fact]
+        public void LastDayOfMonthDec()
+        {
+            var dt = new DateTime(2016, 12, 10, 12, 10, 10);
+            Assert.Equal(new DateTime(2016, 12, 31), dt.LastDayOfMonth());
+        }
+
+        [Fact]
+        public void LastDayOfMonthJan()
+        {
+            var dt = new DateTime(2016, 01, 10, 12, 10, 10);
+            Assert.Equal(new DateTime(2016, 01, 31), dt.LastDayOfMonth());
+        }
+
+        [Fact]
         public void LastBusinessDayOfTheMonthRespectsHolidaysAndWeekends()
         {
             var calendar = new Calendar();
@@ -47,6 +68,34 @@ namespace Qwack.Dates.Tests
 
             var dt = new DateTime(2016, 10, 10);
             Assert.Equal(new DateTime(2016, 10, 28), dt.LastBusinessDayOfMonth(calendar));
+        }
+
+        [Fact]
+        public void NthSpecificWeekdaySameDay()
+        {
+            var dt = new DateTime(2016, 11, 1);
+            Assert.Equal(new DateTime(2016, 11, 22), dt.NthSpecificWeekDay(DayOfWeek.Tuesday, 4));
+        }
+
+        [Fact]
+        public void NthSpecificWeekdayDayBefore()
+        {
+            var dt = new DateTime(2016, 11, 1);
+            Assert.Equal(new DateTime(2016, 11, 21), dt.NthSpecificWeekDay(DayOfWeek.Monday, 3));
+        }
+
+        [Fact]
+        public void NthSpecificWeekdayDayAfter()
+        {
+            var dt = new DateTime(2016, 11, 1);
+            Assert.Equal(new DateTime(2016, 11, 11), dt.NthSpecificWeekDay(DayOfWeek.Friday, 2));
+        }
+
+        [Fact]
+        public void ThirdWednesday()
+        {
+            var dt = new DateTime(2016, 11, 20, 10, 20, 10);
+            Assert.Equal(new DateTime(2016, 11, 16), dt.ThirdWednesday());
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Qwack.Core.Instruments.Funding
         public Frequency FixingOffset { get; set; } = new Frequency("2b");
         public Frequency ForecastTenor { get; set; }
         public SwapLegType LegType { get; set; }
-        public Frequency PaymentOffset { get; set; } = new Frequency("0b");
+        public Frequency PaymentOffset { get; set; } = 0.Bd();
         public OffsetRelativeToType PaymentOffsetRelativeTo { get; set; } = OffsetRelativeToType.PeriodEnd;
         public decimal FixedRateOrMargin { get; set; }
         public decimal Nominal { get; set; } = 1e6M;
@@ -64,13 +64,14 @@ namespace Qwack.Core.Instruments.Funding
 
         public CashFlowSchedule GenerateSchedule()
         {
-            var startDate = EffectiveDate;
-            var endDate = TerminationDate.Date(startDate, ResetRollType, ResetCalendar);
-            var f = new CashFlowSchedule();
-            var lf = new List<CashFlow>();
+            DateTime startDate = EffectiveDate;
+            DateTime endDate = TerminationDate.Date(startDate, ResetRollType, ResetCalendar);
+            CashFlowSchedule F = new CashFlowSchedule();
+            List<CashFlow> LF = new List<CashFlow>();
 
-            if ((NotionalExchange == ExchangeType.FrontOnly) || (NotionalExchange == ExchangeType.Both))
-                lf.Add(new CashFlow
+            if (NotionalExchange == ExchangeType.FrontOnly || NotionalExchange == ExchangeType.Both)
+            {
+                LF.Add(new CashFlow
                 {
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
@@ -78,6 +79,7 @@ namespace Qwack.Core.Instruments.Funding
                     DiscountFactor = 1.0,
                     FlowType = FlowType.FixedAmount
                 });
+            }
 
             //need to handle stub types and roll day types
             switch (StubType)
@@ -85,126 +87,135 @@ namespace Qwack.Core.Instruments.Funding
                 case StubType.ShortFront:
                 case StubType.LongFront:
                     {
-                        var currentReset = GetNextResetDate(endDate, false);
+                        int nQ = 0;
+                        DateTime currentReset = GetNextResetDate(endDate, false);
                         while (GetNextResetDate(currentReset, false) >= startDate)
                         {
-                            var q = new CashFlow();
-                            q.ResetDateStart = currentReset;
-                            q.AccrualPeriodStart = currentReset;
-                            q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                            q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                            q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                            CashFlow Q = new CashFlow();
+                            Q.ResetDateStart = currentReset;
+                            Q.AccrualPeriodStart = currentReset;
+                            Q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                            Q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+                            Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             // Q.Currency = _currency;
-                            q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual) && (LegType != SwapLegType.FloatNoAccrual) ?
-                                 q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
-                                 1.0; q.Notional = (double)Nominal;
-                            q.Fv = LegType == SwapLegType.Fixed ?
-                                (double)Nominal * q.DiscountFactor * (double)FixedRateOrMargin :
+                            Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                 DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
+                                 1.0; Q.Notional = (double)Nominal;
+                            Q.Fv = (LegType == SwapLegType.Fixed) ?
+                                (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
                                 0;
-                            q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                            q.FlowType = LegType == SwapLegType.Fixed ? FlowType.FixedRate : FlowType.FloatRate;
-                            q.Notional = (double)Nominal;
-                            lf.Add(q);
+                            Q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                            Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
+                            Q.Notional = (double)Nominal;
+                            LF.Add(Q);
+                            nQ++;
                             currentReset = GetNextResetDate(currentReset, false);
                         }
 
-                        if ((lf.Count == 0) || (lf.Last().AccrualPeriodStart != startDate))
+                        if (LF.Count == 0 || LF.Last().AccrualPeriodStart != startDate)
+                        {
                             if (StubType == StubType.LongFront)
                             {
-                                var q = lf.Last();
-                                q.ResetDateStart = startDate;
-                                q.AccrualPeriodStart = startDate;
-                                q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                CashFlow Q = LF.Last();
+                                Q.ResetDateStart = startDate;
+                                Q.AccrualPeriodStart = startDate;
+                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
 
                             }
                             else
                             {
-                                var q = new CashFlow();
-                                q.AccrualPeriodStart = startDate;
-                                q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                                q.AccrualPeriodEnd = lf.Count > 0 ? lf.Last().AccrualPeriodStart : endDate;
-                                q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                CashFlow Q = new CashFlow();
+                                Q.AccrualPeriodStart = startDate;
+                                Q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                                Q.AccrualPeriodEnd = LF.Count > 0 ? LF.Last().AccrualPeriodStart : endDate;
+                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual) && (LegType != SwapLegType.FloatNoAccrual) ?
-                                    q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
-                                    1.0; q.Notional = (double)Nominal;
-                                q.Fv = LegType == SwapLegType.Fixed ?
-                                    (double)Nominal * q.DiscountFactor * (double)FixedRateOrMargin :
+                                Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                 DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
+                                 1.0; Q.Notional = (double)Nominal;
+                                Q.Fv = (LegType == SwapLegType.Fixed) ?
+                                    (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
                                     0;
-                                q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                                q.Notional = (double)Nominal;
-                                lf.Add(q);
+                                Q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                                Q.Notional = (double)Nominal;
+                                LF.Add(Q);
+                                nQ++;
                             }
+                        }
+
+
                         break;
                     }
                 case StubType.ShortBack:
                 case StubType.LongBack:
                     {
-                        var currentReset = startDate;
+                        int nQ = 0;
+                        DateTime currentReset = startDate;
                         while (GetNextResetDate(currentReset, true) <= endDate)
                         {
-                            var q = new CashFlow
-                            {
-                                AccrualPeriodStart = currentReset,
-                                FixingDateStart =
-                                    currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
-                            };
-                            q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                            CashFlow Q = new CashFlow();
+                            Q.AccrualPeriodStart = currentReset;
+                            Q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                            Q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+                            Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             //Q.Currency = CCY;
-                            q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual) && (LegType != SwapLegType.FloatNoAccrual) ?
-                                q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
+                            Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
                                 1.0;
-                            q.Notional = (double)Nominal;
-                            q.Fv = LegType == SwapLegType.Fixed ?
-                                (double)Nominal * q.DiscountFactor * (double)FixedRateOrMargin :
+                            Q.Notional = (double)Nominal;
+                            Q.Fv = (LegType == SwapLegType.Fixed) ?
+                                (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
                                 0;
-                            q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                            q.FlowType = LegType == SwapLegType.Fixed ? FlowType.FixedRate : FlowType.FloatRate;
-                            lf.Add(q);
+                            Q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                            Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
+                            LF.Add(Q);
+                            nQ++;
                             currentReset = GetNextResetDate(currentReset, false);
                         }
 
 
 
-                        if (lf.Last().AccrualPeriodEnd != endDate)
+                        if (LF.Last().AccrualPeriodEnd != endDate)
+                        {
                             if (StubType == StubType.LongBack)
                             {
-                                var q = lf.Last();
-                                q.AccrualPeriodEnd = endDate;
-                                q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                CashFlow Q = LF.Last();
+                                Q.AccrualPeriodEnd = endDate;
+                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
 
                             }
                             else
                             {
-                                var q = new CashFlow();
-                                q.AccrualPeriodStart = lf.Last().AccrualPeriodEnd;
-                                q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                                q.AccrualPeriodEnd = endDate;
-                                q.SettleDate = PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd ?
-                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                CashFlow Q = new CashFlow();
+                                Q.AccrualPeriodStart = LF.Last().AccrualPeriodEnd;
+                                Q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                                Q.AccrualPeriodEnd = endDate;
+                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual) && (LegType != SwapLegType.FloatNoAccrual) ?
-                                    q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
-                                    1.0; q.Notional = (double)Nominal;
-                                q.Fv = LegType == SwapLegType.Fixed ?
-                                    (double)Nominal * q.DiscountFactor * (double)FixedRateOrMargin :
+                                Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                   DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
+                                   1.0; Q.Notional = (double)Nominal;
+                                Q.Fv = (LegType == SwapLegType.Fixed) ?
+                                    (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
                                     0;
-                                q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                                q.Notional = (double)Nominal;
-                                lf.Add(q);
+                                Q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                                Q.Notional = (double)Nominal;
+                                LF.Add(Q);
+                                nQ++;
                             }
+                        }
                         break;
                     }
                 case StubType.LongBoth:
@@ -212,8 +223,9 @@ namespace Qwack.Core.Instruments.Funding
                     throw new NotImplementedException("Schedules with Both type stubs cannot be generated");
             }
 
-            if ((NotionalExchange == ExchangeType.BackOnly) || (NotionalExchange == ExchangeType.Both))
-                lf.Add(new CashFlow
+            if (NotionalExchange == ExchangeType.BackOnly || NotionalExchange == ExchangeType.Both)
+            {
+                LF.Add(new CashFlow
                 {
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
@@ -221,9 +233,10 @@ namespace Qwack.Core.Instruments.Funding
                     DiscountFactor = 1.0,
                     FlowType = FlowType.FixedAmount
                 });
-            f.Flows = lf.OrderBy(x => x.AccrualPeriodStart).ToList();
+            }
+            F.Flows = LF.OrderBy(x => x.AccrualPeriodStart).ToList();
 
-            return f;
+            return F;
         }
 
         private DateTime GetNextResetDate(DateTime currentReset, bool fwdDirection)
@@ -234,12 +247,12 @@ namespace Qwack.Core.Instruments.Funding
                 if (fwdDirection)
                 {
                     var d1 = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                    return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, Frequency.ZeroBd);
+                    return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, 0.Bd());
                 }
                 else
                 {
                     var d1 = currentReset.SubtractPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                    return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, Frequency.ZeroBd);
+                    return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, 0.Bd());
                 }
 
             int rollOut;
@@ -247,12 +260,12 @@ namespace Qwack.Core.Instruments.Funding
                 if (fwdDirection)
                 {
                     var d1 = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                    return new DateTime(d1.Year, d1.Month, rollOut).AddPeriod(ResetRollType, ResetCalendar, Frequency.ZeroBd);
+                    return new DateTime(d1.Year, d1.Month, rollOut).AddPeriod(ResetRollType, ResetCalendar, 0.Bd());
                 }
                 else
                 {
                     var d1 = currentReset.SubtractPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                    return new DateTime(d1.Year, d1.Month, rollOut).AddPeriod(ResetRollType, ResetCalendar, Frequency.ZeroBd);
+                    return new DateTime(d1.Year, d1.Month, rollOut).AddPeriod(ResetRollType, ResetCalendar, 0.Bd());
                 }
             return fwdDirection ? currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency) : currentReset.SubtractPeriod(ResetRollType, ResetCalendar, ResetFrequency);
         }

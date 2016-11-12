@@ -50,7 +50,7 @@ namespace Qwack.Dates
             while (date <= endDateInc)
             {
                 o.Add(date);
-                date = date.AddPeriod(RollType.F, calendars, Frequency.OneBd);
+                date = date.AddPeriod(RollType.F, calendars, 1.Bd());
             }
             return o;
         }
@@ -111,7 +111,7 @@ namespace Qwack.Dates
         public static DateTime LastBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             var d = input.Date.AddMonths(1).FirstDayOfMonth();
-            return SubtractPeriod(d, RollType.P, calendar, Frequency.OneBd);
+            return SubtractPeriod(d, RollType.P, calendar, 1.Bd());
         }
 
         public static DateTime ThirdWednesday(this DateTime date)
@@ -326,8 +326,7 @@ namespace Qwack.Dates
 
                 return d;
             }
-            datePeriod.PeriodCount = 0 - datePeriod.PeriodCount;
-            return AddPeriod(date, rollType, calendar, datePeriod);
+            return AddPeriod(date, rollType, calendar, new Frequency(0 - datePeriod.PeriodCount, datePeriod.PeriodType));
         }
 
     }

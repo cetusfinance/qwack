@@ -27,28 +27,26 @@ namespace Qwack.Core.Tests.CurveSolving
             var swapTenor2 = new Frequency("2y");
             Calendar jhb = CalendarProvider.Collection["JHB"];
 
-            var pillarDate = startDate.AddPeriod(RollType.MF, jhb, Frequency.OneYear);
+            var pillarDate = startDate.AddPeriod(RollType.MF, jhb, 1.Years());
             var pillarDate2 = startDate.AddPeriod(RollType.MF, jhb, swapTenor2);
-            var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, Frequency.ThreeMonths);
+            var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, 3.Months());
 
-            Currency ccyZar = new Currency("JHB");
-            ccyZar.DayCount = DayCountBasis.Act_365F;
-            ccyZar.SettlementCalendar = jhb;
+            Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, jhb);
 
             var zar3m = new FloatRateIndex()
             {
                 Currency = ccyZar,
                 DayCountBasis = DayCountBasis.Act_365F,
                 DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = Frequency.ThreeMonths,
-                FixingOffset = Frequency.ZeroBd,
+                ResetTenor = 3.Months(),
+                FixingOffset = 0.Bd(),
                 HolidayCalendars = jhb,
                 RollConvention = RollType.MF
             };
 
-            var swap = new IrSwap(startDate, Frequency.OneYear, zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
+            var swap = new IrSwap(startDate, 1.Years(), zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
             var swap2 = new IrSwap(startDate, swapTenor2, zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
-            var depo = new IrSwap(startDate, Frequency.ThreeMonths, zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
+            var depo = new IrSwap(startDate, 3.Months(), zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
 
             var fic = new FundingInstrumentCollection()
             {

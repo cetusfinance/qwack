@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 
@@ -9,127 +10,126 @@ namespace Qwack.Core.Calibrators
 {
     public class NewtonRaphsonMultiCurveSolver
     {
-        private const double _jacobianBump = 0.0001;
-        public int nInstruments { get; private set; }
-        public int nPillars { get; private set; }
-        public FundingInstrumentCollection Instruments { get; private set; }
-        public FundingModel CurveEngine { get; private set; }
-
-        public double Tollerance { get; set; } = 0.0000001;
+        public double Tollerance { get; set; } = 0.00000001;
         public int MaxItterations { get; set; } = 1000;
-
-        public TimeSpan SolveTime { get; set; }
         public int UsedItterations { get; set; }
-        public double[][] Jacobian { get; set; }
-        public double[] CurrentGuess { get; set; }
-        public double[] CurrentPVs { get; set; }
+        private const double _jacobianBump = 0.0001;
 
-        string[] curveNames;
-        public void Solve(FundingModel curveEngine, FundingInstrumentCollection instruments)
+        private FundingModel _curveEngine;
+        private List<IFundingInstrument> _fundingInstruments;
+        private int _numberOfInstruments;
+        private int _numberOfPillars;
+        private int _numberOfCurves;
+        private double[] _currentGuess;
+        private double[] _currentPVs;
+        private double[][] _jacobian;
+        private string[] _curveNames;
+
+        private Tuple<int, int>[] PillarToCurveMapping;
+
+        public void Solve(FundingModel fundingModel, FundingInstrumentCollection instruments)
         {
-            var sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            CurveEngine = curveEngine;
-            Instruments = instruments;
-            nInstruments = instruments.Count;
-            nPillars = 0;
-            curveNames = CurveEngine.Curves.Keys.ToArray();
-            for (int i = 0; i < curveEngine.Curves.Count; i++)
-                nPillars += curveEngine.Curves[curveNames[i]].NumberOfPillars;
-            CurrentGuess = new double[nInstruments];
-            CurrentPVs = ComputePVs();
+            _curveEngine = fundingModel;
+            _fundingInstruments = instruments;
+            _numberOfInstruments = _fundingInstruments.Count;
+            _numberOfPillars = _curveEngine.Curves.Select(kv => kv.Value.NumberOfPillars).Sum();
+            _numberOfCurves = _curveEngine.Curves.Count;
+            _currentGuess = new double[_numberOfPillars];
+            _currentPVs = ComputePVs();
+            _curveNames = fundingModel.Curves.Keys.ToArray();
+            if (_numberOfPillars != _numberOfInstruments)
+                throw new ArgumentException();
+
+            List<Tuple<int, int>> pillarToCurveMap = new List<Tuple<int, int>>();
+            for (int i = 0; i < _numberOfCurves; i++)
+            {
+                var currentCurve = _curveEngine.Curves[_curveNames[i]];
+                int nPillarsOnCurve = currentCurve.NumberOfPillars;
+                pillarToCurveMap.AddRange(Enumerable.Range(0, nPillarsOnCurve).Select(x => new Tuple<int, int>(i, x)));
+            }
+            PillarToCurveMapping = pillarToCurveMap.ToArray();
+
 
             ComputeJacobian();
 
             for (int i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
-                CurrentPVs = ComputePVs();
-                if (CurrentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
+                _currentPVs = ComputePVs();
+                if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
                 {
                     UsedItterations = i + 1;
                     break;
                 }
                 ComputeJacobian();
             }
-
-            SolveTime = sw.Elapsed;
         }
 
-        private double[] ComputePVs()
+        void ComputeNextGuess()
         {
-            var O = new double[nInstruments];
-            for (int i = 0; i < O.Length; i++)
+            // f = f - d/f'
+
+
+
+
+            //for (int i = 0; i < nPillars; i++)
+            //{
+
+            //    int pillarIx = i - pillarsSoFar;
+
+            //var JacobianM = MathNet.Numerics.LinearAlgebra.Double.Matrix.Build.DenseOfArray(Jacobian);
+            var JacobianMI = Qwack.Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
+            //JacobianMI = Math.Matrix.MSMathMatrix.MatrixTranspose(JacobianMI);
+            //var CurrentPVV = MathNet.Numerics.LinearAlgebra.Double.Vector.Build.Dense(CurrentPVs);
+            //var deltaGuess = Math.Matrix.MSMathMatrix.MatrixProduct(JacobianMI, _currentPVs);
+            var deltaGuess = Qwack.Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPVs, JacobianMI);
+            for (int j = 0; j < _numberOfInstruments; j++)
             {
-                O[i] = Instruments[i].Pv(CurveEngine, false);
+                int curveIx = PillarToCurveMapping[j].Item1;
+                int curvePillarIx = PillarToCurveMapping[j].Item2;
+                var currentEngine = _curveEngine.Curves[_curveNames[curveIx]];
+                _currentGuess[j] -= deltaGuess[j];
+
+                currentEngine.SetRate(curvePillarIx, _currentGuess[j], true);
+
             }
 
-            return O;
         }
 
         private void ComputeJacobian()
         {
-            Jacobian = new double[nPillars][];
-            for (int i = 0; i < nPillars; i++)
-            {
-                Jacobian[i] = new double[nInstruments];
-            }
+            _jacobian = Qwack.Math.Matrix.DoubleArrayFunctions.MatrixCreate(_numberOfPillars, _numberOfPillars);
 
-            int currentCurveIx = 0;
-            int currentCurvePillars = CurveEngine.Curves[curveNames[currentCurveIx]].NumberOfPillars;
-            int pillarsSoFar = 0;
-            for (int i = 0; i < nPillars; i++)
+            for (int i = 0; i < _numberOfPillars; i++)
             {
-                var currentEngine = CurveEngine.Curves[curveNames[currentCurveIx]];
-                int pillarIx = i - pillarsSoFar;
-                CurrentGuess[i] = currentEngine.GetRate(pillarIx);
+                int curveIx = PillarToCurveMapping[i].Item1;
+                int curvePillarIx = PillarToCurveMapping[i].Item2;
 
-                currentEngine.BumpRate(pillarIx, _jacobianBump, true);
+                var currentCurve = _curveEngine.Curves[_curveNames[curveIx]];
+
+                _currentGuess[i] = currentCurve.GetRate(curvePillarIx);
+
+                currentCurve.BumpRate(curvePillarIx, _jacobianBump, true);
                 double[] bumpedPVs = ComputePVs();
-                currentEngine.BumpRate(pillarIx, -_jacobianBump, true);
+                currentCurve.BumpRate(curvePillarIx, -_jacobianBump, true);
 
                 for (int j = 0; j < bumpedPVs.Length; j++)
                 {
-                    Jacobian[i][j] = (bumpedPVs[j] - CurrentPVs[j]) / _jacobianBump;
-                }
-
-                if (pillarIx == currentEngine.NumberOfPillars - 1)
-                {
-                    pillarsSoFar += currentEngine.NumberOfPillars;
-                    currentCurveIx++;
+                    _jacobian[i][j] = (bumpedPVs[j] - _currentPVs[j]) / _jacobianBump;
                 }
             }
         }
 
-        private void ComputeNextGuess()
+        private double[] ComputePVs()
         {
-            // f = f - d/f'
-            int currentCurveIx = 0;
-            int currentCurvePillars = CurveEngine.Curves[curveNames[currentCurveIx]].NumberOfPillars;
-            int pillarsSoFar = 0;
-            //for (int i = 0; i < nPillars; i++)
-            //{
-            var currentEngine = CurveEngine.Curves[curveNames[currentCurveIx]];
-            //    int pillarIx = i - pillarsSoFar;
-            //var JacobianM = MathNet.Numerics.LinearAlgebra.Double.Matrix.Build.DenseOfArray(Jacobian);
-            var JacobianMI = Math.Matrix.DoubleArrayFunctions.InvertMatrix(Jacobian);
-            //var CurrentPVV = MathNet.Numerics.LinearAlgebra.Double.Vector.Build.Dense(CurrentPVs);
-            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(JacobianMI, CurrentPVs);
-            for (int j = 0; j < nInstruments; j++)
+            var O = new double[_numberOfInstruments];
+            for (int i = 0; i < O.Length; i++)
             {
-                int pillarIx = j - pillarsSoFar;
-                if (pillarIx == currentEngine.NumberOfPillars)
-                {
-                    pillarsSoFar += currentEngine.NumberOfPillars;
-                    currentCurveIx++;
-                    currentEngine = CurveEngine.Curves[curveNames[currentCurveIx]];
-                    pillarIx = j - pillarsSoFar;
-                }
-
-                CurrentGuess[j] -= deltaGuess[j];
-
-                currentEngine.SetRate(pillarIx, CurrentGuess[j], true);
+                O[i] = _fundingInstruments[i].Pv(_curveEngine, true);
             }
+
+            return O;
         }
     }
 }
+

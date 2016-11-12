@@ -173,6 +173,37 @@ namespace Qwack.Math.Matrix
             }
             return Tuple.Create(A, pi);
         }
+        public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
+        {
+            var matrixA = MatrixCreate(1, vectorA.Length);
+            matrixA[0] = vectorA;
+            return MatrixProduct(matrixA, matrixB)[0];
+        }
+        public static double[][] MatrixProduct(double[][] matrixA, double[][] matrixB)
+        {
+            int aRows = matrixA.Length;
+            int aCols = matrixA[0].Length;
+            int bRows = matrixB.Length;
+            int bCols = matrixB[0].Length;
+            if (aCols != bRows)
+                throw new Exception("Non-conformable matrices");
+
+            double[][] result = MatrixCreate(aRows, bCols);
+
+            for (int i = 0; i < aRows; ++i) // each row of A
+                for (int j = 0; j < bCols; ++j) // each col of B
+                    for (int k = 0; k < aCols; ++k) // could use k < bRows
+                        result[i][j] += matrixA[i][k] * matrixB[k][j];
+
+            return result;
+        }
+        public static double[][] MatrixCreate(int rows, int cols)
+        {
+            double[][] result = new double[rows][];
+            for (int i = 0; i < rows; ++i)
+                result[i] = new double[cols];
+            return result;
+        }
 
         public static double[] MatrixProduct(double[][] matrixA, double[] vectorB)
         {

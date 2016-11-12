@@ -4,14 +4,16 @@ namespace Qwack.Core.Basic
 {
     public class Currency
     {
-        public Currency(string ccy)
+        public Currency(string ccy, DayCountBasis dayCount, Calendar settlementCalendar)
         {
             Ccy = ccy;
+            DayCount = dayCount;
+            SettlementCalendar = settlementCalendar;
         }
 
         public string Ccy { get; }
-        public DayCountBasis DayCount { get; set; }
-        public Calendar SettlementCalendar { get; set; }
+        public DayCountBasis DayCount { get; }
+        public Calendar SettlementCalendar { get; }
 
         public override bool Equals(object x)
         {

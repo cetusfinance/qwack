@@ -6,8 +6,8 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>72e8db79-9dd3-4102-9e73-4e5390dce2db</ProjectGuid>
-    <RootNamespace>Qwack.Math.Tests</RootNamespace>
+    <ProjectGuid>7fb89e58-483e-42a1-807d-beee1df2bc76</ProjectGuid>
+    <RootNamespace>Qwack.Dates.Tests</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>

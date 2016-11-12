@@ -9,6 +9,27 @@ namespace Qwack.Dates.Tests
     public class DateFunctionFacts
     {
         private static readonly Calendar EmptyCalendar = new Calendar();
+        private static readonly Calendar WeekendsOnly = new Calendar() { DaysToAlwaysExclude = new List<DayOfWeek>() { DayOfWeek.Saturday, DayOfWeek.Sunday } };
+
+        [Fact]
+        public void BusinessDaysInPeriod()
+        {
+            var startDate = new DateTime(2016, 02, 10);
+            var endDate = new DateTime(2016, 10, 13);
+            Assert.Equal(247, startDate.BusinessDaysInPeriod(endDate, EmptyCalendar).Count());
+
+            var noWeekends = startDate.BusinessDaysInPeriod(endDate, WeekendsOnly);
+            Assert.Equal(177, noWeekends.Count);
+            Assert.Equal(0, noWeekends.Count(d => d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday));
+        }
+
+        [Fact]
+        public void YearFractionSingleYear()
+        {
+            var startDate = new DateTime(2016, 02, 10);
+            var endDate = new DateTime(2016, 10, 13);
+            Assert.Equal(246,startDate.CalculateYearFraction(endDate, DayCountBasis.ACT360) * 360,15);
+        }
 
         [Fact]
         public void FirstBusinessDayOfTheMonthIgnoresTime()

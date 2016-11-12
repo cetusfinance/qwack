@@ -15,7 +15,9 @@ namespace Qwack.Dates
 
             //handle case of date before 3rd weds in IMM month
             if (m % 3 == 0 && input < ThirdWednesday(input))
+            {
                 return ThirdWednesday(input);
+            }
 
             m = m - m % 3 + 3; //roll to next IMM month
             if (m > 12)
@@ -47,7 +49,11 @@ namespace Qwack.Dates
 
         public static List<DateTime> BusinessDaysInPeriod(this DateTime startDateInc, DateTime endDateInc, Calendar calendars)
         {
-            var o = new List<DateTime>((int)(startDateInc - endDateInc).TotalDays);
+            if(endDateInc < startDateInc)
+            {
+                throw new ArgumentException(nameof(endDateInc), "End date is before the start date");
+            }
+            var o = new List<DateTime>((int)(endDateInc - startDateInc).TotalDays);
             var date = startDateInc;
             while (date <= endDateInc)
             {

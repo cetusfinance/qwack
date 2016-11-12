@@ -29,6 +29,19 @@ namespace Qwack.Dates
             }
         }
 
+        public Calendar this[string calendarName]
+        {
+            get
+            {
+                Calendar returnCalendar;
+                if(TryGetCalendar(calendarName,out returnCalendar))
+                {
+                    return returnCalendar;
+                }
+                throw new ArgumentOutOfRangeException(nameof(calendarName),$"Could not find or make a calendar called {calendarName}");
+            }
+        }
+
         public bool TryGetCalendar(string calendarName, out Calendar calendar)
         {
             if (calendarName.Contains("+"))

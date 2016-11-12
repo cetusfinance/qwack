@@ -16,7 +16,8 @@ namespace Qwack.Core.Models
         public Dictionary<Currency, string> DiscountCurveMap { get; private set; }
         public Dictionary<Currency, double> SpotRates { get; private set; }
 
-        public void Init(Currency baseCurrency, DateTime buildDate, Dictionary<Currency, double> spotRates, List<FxPair> fXPairDefinitions, Dictionary<Currency, string> discountCurveMap)
+        public void Init(Currency baseCurrency, DateTime buildDate, Dictionary<Currency, double> spotRates,
+            List<FxPair> fXPairDefinitions, Dictionary<Currency, string> discountCurveMap)
         {
             BaseCurrency = baseCurrency;
             BuildDate = buildDate;

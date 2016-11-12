@@ -9,7 +9,13 @@ namespace Qwack.Math.Interpolation
     {
         public static IInterpolator1D GetInterpolator(double[] x, double[] y, Interpolator1DType kind, bool noCopy = false, bool isSorted = false)
         {
-            throw new NotImplementedException("Not yet implemented");
+            switch (kind)
+            {
+                case Interpolator1DType.LinearFlatExtrap:
+                    return new LinearInterpolatorFlatExtrap(x, y, noCopy, isSorted);
+                default:
+                    throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
+            }
         }
     }
 }

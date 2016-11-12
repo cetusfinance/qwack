@@ -18,10 +18,10 @@ namespace Qwack.Core.Instruments.Funding
             AccrualDCB = dayBasis;
         }
 
-        public GenericSwapLeg(DateTime startDate, string tenor, Calendar calendars, Currency currency, Frequency resetFrequency, DayCountBasis dayBasis)
+        public GenericSwapLeg(DateTime startDate, Frequency tenor, Calendar calendars, Currency currency, Frequency resetFrequency, DayCountBasis dayBasis)
         {
             EffectiveDate = startDate;
-            TerminationDate = new TenorDateRelative(new Frequency(tenor));
+            TerminationDate = new TenorDateRelative(tenor);
             ResetFrequency = resetFrequency;
             Currency = currency;
             SetAllCalendars(calendars);

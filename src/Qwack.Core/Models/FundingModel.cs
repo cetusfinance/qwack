@@ -9,15 +9,8 @@ namespace Qwack.Core.Models
 {
     public class FundingModel
     {
-        public Dictionary<string, IrCurve> Curves { get; protected set; }
-        public DateTime BuildDate { get; protected set; }
-        public FxMatrix FxMatrix { get; protected set; }
-
-        public string CurrentSolveCurve { get; set; }
-
-        protected FundingModel()
+        private FundingModel()
         {
-
         }
 
         public FundingModel(DateTime buildDate, IrCurve[] curves)
@@ -31,6 +24,11 @@ namespace Qwack.Core.Models
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves);
         }
+
+        public Dictionary<string, IrCurve> Curves { get; private set; }
+        public DateTime BuildDate { get; protected set; }
+        public FxMatrix FxMatrix { get; protected set; }
+        public string CurrentSolveCurve { get; set; }
 
         public void UpdateCurves(Dictionary<string, IrCurve> updateCurves)
         {

@@ -9,10 +9,10 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class IrSwap : IFundingInstrument
     {
-        public IrSwap(DateTime startDate, string swapTenor, FloatRateIndex rateIndex, double parRate,
+        public IrSwap(DateTime startDate, Frequency swapTenor, FloatRateIndex rateIndex, double parRate,
             SwapPayReceiveType swapType, string discountCurve, string forecastCurve)
         {
-            SwapTenor = new Frequency(swapTenor);
+            SwapTenor = swapTenor;
             ResetFrequency = rateIndex.ResetTenor;
             StartDate = startDate;
             EndDate = StartDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, SwapTenor);

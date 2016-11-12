@@ -6,8 +6,6 @@
         Linear,
         LinearFlatExtrap,
         FloaterHormannRational,
-        LogLinear,
-        VectorLinearFlatExtrap,
-        VectorLinearFlatExtrapFaster
+        LogLinear
     }
 }

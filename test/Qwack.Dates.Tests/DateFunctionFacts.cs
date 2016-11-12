@@ -28,7 +28,7 @@ namespace Qwack.Dates.Tests
         {
             var startDate = new DateTime(2016, 02, 10);
             var endDate = new DateTime(2016, 10, 13);
-            Assert.Equal(246,startDate.CalculateYearFraction(endDate, DayCountBasis.ACT360) * 360,15);
+            Assert.Equal(246,startDate.CalculateYearFraction(endDate, DayCountBasis.Act360) * 360,15);
         }
 
         [Fact]

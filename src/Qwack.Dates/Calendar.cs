@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
@@ -42,11 +41,11 @@ namespace Qwack.Dates
         {
             var newCalender = new Calendar()
             {
-                DaysToAlwaysExclude = this.DaysToAlwaysExclude.ToList(),
-                InheritedCalendars = this.InheritedCalendars.ToList(),
-                DaysToExclude = new HashSet<DateTime>(this.DaysToExclude),
-                MonthsToExclude = this.MonthsToExclude.ToList(),
-                Name = this.Name
+                DaysToAlwaysExclude = DaysToAlwaysExclude.ToList(),
+                InheritedCalendars = InheritedCalendars.ToList(),
+                DaysToExclude = new HashSet<DateTime>(DaysToExclude),
+                MonthsToExclude = MonthsToExclude.ToList(),
+                Name = Name
             };
             return newCalender;
         }

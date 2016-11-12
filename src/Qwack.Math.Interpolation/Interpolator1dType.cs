@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Qwack.Math.Interpolation
+﻿namespace Qwack.Math.Interpolation
 {
-    public enum InterpolatorKind1d
+    public enum Interpolator1DType
     {
         CubicSpline,
         Linear,

@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "NETStandard.Library": "1.6.0",
-    "Qwack.Dates": { "target": "project" }
+    "Qwack.Dates": { "target": "project" },
+    "Qwack.Math.Interpolation": {"target": "project"}
   },
   "frameworks": {
     "netstandard1.4": {},

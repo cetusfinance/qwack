@@ -28,6 +28,15 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Dates", "src\Qwack.Da
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Dates.Tests", "test\Qwack.Dates.Tests\Qwack.Dates.Tests.xproj", "{7FB89E58-483E-42A1-807D-BEEE1DF2BC76}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Core", "src\Qwack.Core\Qwack.Core.xproj", "{4195FE50-2868-4BFD-A876-13AC6DBE8781}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{EEBFB441-5A3E-4D5B-A546-EB37FB3C5F7E}"
+	ProjectSection(SolutionItems) = preProject
+		script\runtests.bat = script\runtests.bat
+	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Core.Tests", "test\Qwack.Core.Tests\Qwack.Core.Tests.xproj", "{2D89F7C2-484E-48A1-97B7-D993099AC7B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +63,14 @@ Global
 		{7FB89E58-483E-42A1-807D-BEEE1DF2BC76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FB89E58-483E-42A1-807D-BEEE1DF2BC76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FB89E58-483E-42A1-807D-BEEE1DF2BC76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4195FE50-2868-4BFD-A876-13AC6DBE8781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4195FE50-2868-4BFD-A876-13AC6DBE8781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4195FE50-2868-4BFD-A876-13AC6DBE8781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4195FE50-2868-4BFD-A876-13AC6DBE8781}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D89F7C2-484E-48A1-97B7-D993099AC7B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D89F7C2-484E-48A1-97B7-D993099AC7B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D89F7C2-484E-48A1-97B7-D993099AC7B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D89F7C2-484E-48A1-97B7-D993099AC7B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,5 +81,7 @@ Global
 		{D2D5E3AC-E0A7-45E5-A2E1-D5428EBF3A44} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{B0A9CBE2-FF87-4B2E-95DB-3C2707595C5A} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{7FB89E58-483E-42A1-807D-BEEE1DF2BC76} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
+		{4195FE50-2868-4BFD-A876-13AC6DBE8781} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
+		{2D89F7C2-484E-48A1-97B7-D993099AC7B2} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
 	EndGlobalSection
 EndGlobal

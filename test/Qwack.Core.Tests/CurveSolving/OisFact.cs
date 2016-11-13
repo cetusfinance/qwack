@@ -24,32 +24,53 @@ namespace Qwack.Core.Tests.CurveSolving
         private static readonly Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, _jhb);
         private static readonly Calendar _usd = _calendarProvider.Collection["nyc"];
         private static readonly Currency ccyUsd = new Currency("USD", DayCountBasis.Act_360, _usd);
+        private static readonly FloatRateIndex _zar3m = new FloatRateIndex()
+        {
+            Currency = ccyZar,
+            DayCountBasis = DayCountBasis.Act_365F,
+            DayCountBasisFixed = DayCountBasis.Act_365F,
+            ResetTenor = 3.Months(),
+            ResetTenorFixed = 3.Months(),
+            FixingOffset = 0.Bd(),
+            HolidayCalendars = _jhb,
+            RollConvention = RollType.MF
+        };
+        private static readonly FloatRateIndex zaron = new FloatRateIndex()
+        {
+            Currency = ccyZar,
+            DayCountBasis = DayCountBasis.Act_365F,
+            DayCountBasisFixed = DayCountBasis.Act_365F,
+            ResetTenor = 3.Months(),
+            FixingOffset = 0.Bd(),
+            HolidayCalendars = _jhb,
+            RollConvention = RollType.F
+        };
+        private static readonly FloatRateIndex usdon = new FloatRateIndex()
+        {
+            Currency = ccyUsd,
+            DayCountBasis = DayCountBasis.Act_365F,
+            DayCountBasisFixed = DayCountBasis.Act_365F,
+            ResetTenor = 3.Months(),
+            ResetTenorFixed = 1.Years(),
+            FixingOffset = 0.Bd(),
+            HolidayCalendars = _usd,
+            RollConvention = RollType.F
+        };
+        FloatRateIndex usd3m = new FloatRateIndex()
+        {
+            Currency = ccyUsd,
+            DayCountBasis = DayCountBasis.Act_360,
+            DayCountBasisFixed = DayCountBasis.Act_360,
+            ResetTenor = 3.Months(),
+            ResetTenorFixed = 1.Years(),
+            FixingOffset = 2.Bd(),
+            HolidayCalendars = _usd,
+            RollConvention = RollType.MF
+        };
 
         [Fact]
         public void BasicOisCurveSolving()
         {
-            var zar3m = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = 3.Months(),
-                FixingOffset = 0.Bd(),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.MF
-            };
-
-            var zaron = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = 3.Months(),
-                FixingOffset = 0.Bd(),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.F
-            };
-
             DateTime startDate = new DateTime(2016, 05, 20);
             var depoTenors = new Frequency[] { 3.Months() };
             double[] depoPrices = { 0.06 };
@@ -75,24 +96,24 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < FRAs.Length; i++)
             {
-                FRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPrices[i], zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
+                FRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPrices[i], _zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
                 fic.Add(FRAs[i]);
             }
 
             for (int i = 0; i < oisSwaps.Length; i++)
             {
-                oisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPrices[i], true, zaron, zar3m, "ZAR.JIBAR.3M", "ZAR.OIS.1B", "ZAR.OIS.1B");
+                oisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPrices[i], true, zaron, _zar3m, "ZAR.JIBAR.3M", "ZAR.OIS.1B", "ZAR.OIS.1B");
                 fic.Add(oisSwaps[i]);
             }
 
             for (int i = 0; i < swaps.Length; i++)
             {
-                swaps[i] = new IrSwap(startDate, swapTenors[i], zar3m, swapPrices[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
+                swaps[i] = new IrSwap(startDate, swapTenors[i], _zar3m, swapPrices[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
                 fic.Add(swaps[i]);
             }
             for (int i = 0; i < depos.Length; i++)
             {
-                depos[i] = new IrSwap(startDate, depoTenors[i], zar3m, depoPrices[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
+                depos[i] = new IrSwap(startDate, depoTenors[i], _zar3m, depoPrices[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.OIS.1B");
                 fic.Add(depos[i]);
             }
 
@@ -100,7 +121,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curveOIS = new IrCurve(pillarDatesOIS, new double[pillarDatesOIS.Length], startDate, "ZAR.OIS.1B", Interpolator1DType.LinearFlatExtrap);
             var model = new FundingModel(startDate, new IrCurve[] { curve3m, curveOIS });
 
-            var S = new NewtonRaphsonMultiCurveSolver();
+            var S = new NewtonRaphsonMultiCurveSolverReducedWork();
             S.Solve(model, fic);
 
             foreach (var ins in fic)
@@ -113,55 +134,6 @@ namespace Qwack.Core.Tests.CurveSolving
         [Fact]
         public void ComplexCurve()
         {
-            var zar3m = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = 3.Months(),
-                ResetTenorFixed = 3.Months(),
-                FixingOffset = 0.Bd(),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.MF
-            };
-
-            var zaron = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = 3.Months(),
-                ResetTenorFixed = 3.Months(),
-                FixingOffset = 0.Bd(),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.F
-            };
-
-            var usd3m = new FloatRateIndex()
-            {
-                Currency = ccyUsd,
-                DayCountBasis = DayCountBasis.Act_360,
-                DayCountBasisFixed = DayCountBasis.Act_360,
-                ResetTenor = 3.Months(),
-                ResetTenorFixed = 1.Years(),
-                FixingOffset = 2.Bd(),
-                HolidayCalendars = _usd,
-                RollConvention = RollType.MF
-            };
-
-            var usdon = new FloatRateIndex()
-            {
-                Currency = ccyUsd,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = 3.Months(),
-                ResetTenorFixed = 1.Years(),
-                FixingOffset = 0.Bd(),
-                HolidayCalendars = _usd,
-                RollConvention = RollType.F
-            };
-
-
             DateTime startDate = new DateTime(2016, 05, 20);
             var depoTenors = new Frequency[] { 3.Months() };
             var OISdepoTenors = new Frequency[] { 1.Bd() };
@@ -216,7 +188,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < FRATenors.Length; i++)
             {
-                ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], _zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARFRAs[i]);
                 USDFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesUSD[i], usd3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDFRAs[i]);
@@ -224,7 +196,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < oisTenors.Length; i++)
             {
-                ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, zaron, zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
+                ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, zaron, _zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 FIC.Add(ZARoisSwaps[i]);
                 USDoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesUSD[i], true, usdon, usd3m, "USD.LIBOR.3M", "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
                 FIC.Add(USDoisSwaps[i]);
@@ -232,7 +204,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < swapTenors.Length; i++)
             {
-                ZARswaps[i] = new IrSwap(startDate, swapTenors[i], zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARswaps[i] = new IrSwap(startDate, swapTenors[i], _zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARswaps[i]);
                 USDswaps[i] = new IrSwap(startDate, swapTenors[i], usd3m, swapPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDswaps[i]);
@@ -241,7 +213,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < depoTenors.Length; i++)
             {
-                ZARdepos[i] = new IrSwap(startDate, depoTenors[i], zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARdepos[i] = new IrSwap(startDate, depoTenors[i], _zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARdepos[i]);
                 USDdepos[i] = new IrSwap(startDate, depoTenors[i], usd3m, depoPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDdepos[i]);
@@ -262,7 +234,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
 
-            var S = new NewtonRaphsonMultiCurveSolver();
+            var S = new NewtonRaphsonMultiCurveSolverReducedWork();
             S.Solve(engine, FIC);
 
             foreach (var ins in FIC)
@@ -276,55 +248,6 @@ namespace Qwack.Core.Tests.CurveSolving
         [Fact]
         public void ComplexerCurve()
         {
-            var zar3m = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = new Frequency("3m"),
-                ResetTenorFixed = new Frequency("3m"),
-                FixingOffset = new Frequency("0b"),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.MF
-            };
-
-            var zaron = new FloatRateIndex()
-            {
-                Currency = ccyZar,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = new Frequency("3m"),
-                ResetTenorFixed = new Frequency("3m"),
-                FixingOffset = new Frequency("0b"),
-                HolidayCalendars = _jhb,
-                RollConvention = RollType.F
-            };
-
-            var usd3m = new FloatRateIndex()
-            {
-                Currency = ccyUsd,
-                DayCountBasis = DayCountBasis.Act_360,
-                DayCountBasisFixed = DayCountBasis.Act_360,
-                ResetTenor = new Frequency("3m"),
-                ResetTenorFixed = new Frequency("1y"),
-                FixingOffset = new Frequency("2b"),
-                HolidayCalendars = _usd,
-                RollConvention = RollType.MF
-            };
-
-            var usdon = new FloatRateIndex()
-            {
-                Currency = ccyUsd,
-                DayCountBasis = DayCountBasis.Act_365F,
-                DayCountBasisFixed = DayCountBasis.Act_365F,
-                ResetTenor = new Frequency("3m"),
-                ResetTenorFixed = new Frequency("1y"),
-                FixingOffset = new Frequency("0b"),
-                HolidayCalendars = _usd,
-                RollConvention = RollType.F
-            };
-
-
             DateTime startDate = new DateTime(2016, 05, 20);
             Frequency[] depoTenors = { 3.Months() };
             Frequency[] OISdepoTenors = { 1.Bd() };
@@ -337,17 +260,17 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] FRAPricesZAR = { 0.065, 0.07, 0.075, 0.077, 0.08, 0.081, 0.082 };
             double[] FRAPricesUSD = { 0.012, 0.013, 0.014, 0.015, 0.016, 0.017, 0.018 };
 
-            Frequency[] swapTenors = { 3.Years(), 4.Years(), 5.Years(), 6.Years(),7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
+            Frequency[] swapTenors = { 3.Years(), 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
             double[] swapPricesZAR = { 0.08, 0.083, 0.085, 0.087, 0.089, 0.091, 0.092, 0.093, 0.094, 0.097, 0.099, 0.099, 0.099 };
             double[] swapPricesUSD = { 0.017, 0.018, 0.019, 0.020, 0.021, 0.022, 0.023, 0.024, 0.025, 0.026, 0.027, 0.028, 0.03 };
-            Frequency[] oisTenors = { 3.Months() , 6.Months(), 1.Years(), 18.Months(), 2.Years(), 3.Years(), 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
+            Frequency[] oisTenors = { 3.Months(), 6.Months(), 1.Years(), 18.Months(), 2.Years(), 3.Years(), 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
             double[] oisPricesZAR = { 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004 };
             double[] oisPricesUSD = { 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002 };
 
             double fxSpot = 14.0;
-            Frequency[] fxForwardTenors = {3.Months(), 6.Months(), 1.Years(), 18.Months(), 2.Years(), 3.Years() };
+            Frequency[] fxForwardTenors = { 3.Months(), 6.Months(), 1.Years(), 18.Months(), 2.Years(), 3.Years() };
             double[] fxForwardPrices = { 14.10, 14.20, 14.40, 14.60, 14.80, 15.20 };
-            Frequency[] xcySwapTenors = {4.Years(), 5.Years(), 6.Years(),7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(),15.Years(), 20.Years(), 25.Years(), 30.Years() };
+            Frequency[] xcySwapTenors = { 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
             double[] xcySwapPrices = { 0.0055, 0.0050, 0.0045, 0.0040, 0.0035, 0.0030, 0.0025, 0.0020, 0.0015, 0.0010, 0.0005, 0.0000 };
 
             DateTime[] ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
@@ -391,7 +314,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < FRATenors.Length; i++)
             {
-                ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], _zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARFRAs[i]);
                 USDFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesUSD[i], usd3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDFRAs[i]);
@@ -399,7 +322,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < oisTenors.Length; i++)
             {
-                ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, zaron, zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
+                ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, zaron, _zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 FIC.Add(ZARoisSwaps[i]);
                 USDoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesUSD[i], true, usdon, usd3m, "USD.LIBOR.3M", "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
                 FIC.Add(USDoisSwaps[i]);
@@ -407,7 +330,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < swapTenors.Length; i++)
             {
-                ZARswaps[i] = new IrSwap(startDate, swapTenors[i], zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARswaps[i] = new IrSwap(startDate, swapTenors[i], _zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARswaps[i]);
                 USDswaps[i] = new IrSwap(startDate, swapTenors[i], usd3m, swapPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDswaps[i]);
@@ -416,7 +339,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < depoTenors.Length; i++)
             {
-                ZARdepos[i] = new IrSwap(startDate, depoTenors[i], zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
+                ZARdepos[i] = new IrSwap(startDate, depoTenors[i], _zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 FIC.Add(ZARdepos[i]);
                 USDdepos[i] = new IrSwap(startDate, depoTenors[i], usd3m, depoPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 FIC.Add(USDdepos[i]);
@@ -447,7 +370,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             for (int i = 0; i < xcySwapTenors.Length; i++)
             {
-                xcySwaps[i] = new XccyBasisSwap(startDate, xcySwapTenors[i], xcySwapPrices[i], true, usd3m, zar3m, ExchangeType.Both, MTMSwapType.ReceiveNotionalFixed, "USD.LIBOR.3M", "ZAR.JIBAR.3M", "USD.DISC.CSA_USD", "ZAR.DISC.CSA_USD") { SolveCurve = "ZAR.DISC.CSA_USD" };
+                xcySwaps[i] = new XccyBasisSwap(startDate, xcySwapTenors[i], xcySwapPrices[i], true, usd3m, _zar3m, ExchangeType.Both, MTMSwapType.ReceiveNotionalFixed, "USD.LIBOR.3M", "ZAR.JIBAR.3M", "USD.DISC.CSA_USD", "ZAR.DISC.CSA_USD") { SolveCurve = "ZAR.DISC.CSA_USD" };
                 FIC.Add(xcySwaps[i]);
             }
 
@@ -478,7 +401,7 @@ namespace Qwack.Core.Tests.CurveSolving
             fxMatrix.Init(ccyUsd, startDate, spotRates, fxPairs, discountMap);
             engine.SetupFx(fxMatrix);
 
-            var S = new NewtonRaphsonMultiCurveSolver();
+            var S = new NewtonRaphsonMultiCurveSolverReducedWork();
             S.Solve(engine, FIC);
 
             foreach (var ins in FIC)

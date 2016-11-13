@@ -206,7 +206,7 @@ namespace Qwack.Dates
                     {
                         return date.IfHolidayRollForward(calendar);
                     }
-                case RollType.NearestFolow:
+                case RollType.NearestFollow:
                     d1 = date.IfHolidayRollForward(calendar);
                     d2 = date.IfHolidayRollBack(calendar);
                     distFwd = (d1 - date).TotalDays;

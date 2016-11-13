@@ -57,7 +57,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(new [] { pillarDateDepo, pillarDate, pillarDate2 }, new double[3], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap);
             var model = new FundingModel(startDate, new[] { curve });
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
+            var s = new Calibrators.NewtonRaphsonMultiCurveSolverReducedWork();
             s.Solve(model, fic);
 
             var resultSwap1 = swap.Pv(model, false);

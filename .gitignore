@@ -250,3 +250,6 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report.csv
+test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report.html
+test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report-github.md

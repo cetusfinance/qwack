@@ -59,7 +59,6 @@ namespace Qwack.Core.Calibrators
                     ComputeJacobian(fundingInstruments, fundingModel, curvesForStage, currentGuess, bumpedPvs);
                     ComputeNextGuess(currentGuess, fundingInstruments.Count, curvesForStage);
                 }
-
             }
         }
         
@@ -68,7 +67,7 @@ namespace Qwack.Core.Calibrators
         {
             // f = f - d/f'
             var JacobianMI = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Math.Matrix.DestructiveFunctions.MatrixProduct(_currentPvs, JacobianMI);
+            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, JacobianMI);
             int curveIx = 0;
             int pillarIx = 0;
             for (int j = 0; j < numberOfInstruments; j++)
@@ -88,7 +87,6 @@ namespace Qwack.Core.Calibrators
 
         private void ComputeJacobian(List<IFundingInstrument> instruments, FundingModel model, List<ICurve> curvesForStage, double[] currentGuess, double[] bumpedPvs)
         {
-            
             int curveIx = 0;
             int pillarIx = 0;
             for (int i = 0; i < instruments.Count; i++)

@@ -20,8 +20,7 @@ namespace Qwack.Curves.Benchmark
     {
         private static FundingModel _fundingModel;
         private static FundingInstrumentCollection _instruments;
-        private static FundingInstrumentCollection _instrumentsFast;
-
+        
         [Setup]
         public static void Setup()
         {
@@ -81,9 +80,7 @@ namespace Qwack.Curves.Benchmark
             {
                 ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], CurveDataSetup._zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARFRAs[i]);
-                _instrumentsFast.Add(ZARFRAs[i]);
                 USDFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesUSD[i], CurveDataSetup.usd3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
-                _instrumentsFast.Add(USDFRAs[i]);
                 _instruments.Add(USDFRAs[i]);
             }
 
@@ -91,9 +88,7 @@ namespace Qwack.Curves.Benchmark
             {
                 ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, CurveDataSetup.zaron, CurveDataSetup._zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 _instruments.Add(ZARoisSwaps[i]);
-                _instrumentsFast.Add(ZARoisSwaps[i]);
                 USDoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesUSD[i], true, CurveDataSetup.usdon, CurveDataSetup.usd3m, "USD.LIBOR.3M", "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
-                _instrumentsFast.Add(USDoisSwaps[i]);
                 _instruments.Add(USDoisSwaps[i]);
             }
 

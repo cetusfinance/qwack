@@ -175,9 +175,19 @@ namespace Qwack.Math.Matrix
         }
         public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
         {
-            var matrixA = new double[1][];
-            matrixA[0] = vectorA;
-            return MatrixProduct(matrixA, matrixB)[0];
+            int aCols = vectorA.Length;
+            int bRows = matrixB.Length;
+            int bCols = matrixB[0].Length;
+            if (aCols != bRows) throw new Exception("Non-conformable matrices");
+            var result = new double[vectorA.Length];
+            for (int j = 0; j < bCols; ++j) // each col of B
+            {
+                for (int k = 0; k < bRows; ++k)
+                {// could use k < bRows
+                    result[j] += vectorA[k] * matrixB[k][j];
+                }
+            }
+            return result;
         }
         public static double[][] MatrixProduct(double[][] matrixA, double[][] matrixB)
         {
@@ -185,15 +195,20 @@ namespace Qwack.Math.Matrix
             int aCols = matrixA[0].Length;
             int bRows = matrixB.Length;
             int bCols = matrixB[0].Length;
-            if (aCols != bRows)
-                throw new Exception("Non-conformable matrices");
+            if (aCols != bRows) throw new Exception("Non-conformable matrices");
 
             double[][] result = MatrixCreate(aRows, bCols);
 
             for (int i = 0; i < aRows; ++i) // each row of A
+            {
                 for (int j = 0; j < bCols; ++j) // each col of B
-                    for (int k = 0; k < bRows; ++k) // could use k < bRows
+                {
+                    for (int k = 0; k < bRows; ++k)
+                    {
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
+                    }
+                }
+            }
 
             return result;
         }
@@ -201,7 +216,9 @@ namespace Qwack.Math.Matrix
         {
             double[][] result = new double[rows][];
             for (int i = 0; i < rows; ++i)
+            {
                 result[i] = new double[cols];
+            }
             return result;
         }
 
@@ -209,12 +226,16 @@ namespace Qwack.Math.Matrix
         {
             int aRows = matrixA.Length; int aCols = matrixA[0].Length;
             int bRows = vectorB.Length;
-            if (aCols != bRows)
-                throw new Exception("Non-conformable matrices in MatrixProduct");
+            if (aCols != bRows) throw new Exception("Non-conformable matrices in MatrixProduct");
+
             double[] result = new double[aRows];
             for (int i = 0; i < aRows; ++i) // each row of A
+            {
                 for (int k = 0; k < aCols; ++k)
+                {
                     result[i] += matrixA[i][k] * vectorB[k];
+                }
+            }
             return result;
         }
     }

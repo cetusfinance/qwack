@@ -16,7 +16,7 @@ namespace Qwack.Core.Instruments
         public double Fv { get; set; }
         public double Pv { get; set; }
         public double Notional { get; set; }
-        public double DiscountFactor { get; set; }
+        public double NotionalByYearFraction { get; set; }
         public Currency Currency { get; set; }
         public double FixedRateOrMargin { get; set; }
 

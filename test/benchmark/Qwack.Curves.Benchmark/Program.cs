@@ -15,34 +15,34 @@ namespace Qwack.Curves.Benchmark
 
         public static void Main(string[] args)
         {
-            SolvingOisBenchmark.Setup();
+            //SolvingOisBenchmark.Setup();
 
-            for (int i = 0; i < 100; i++)
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    SolvingOisBenchmark.PuttingItTogetherV2();
+            //}
+
+            if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {
-                SolvingOisBenchmark.PuttingItTogetherV2();
+                Console.WriteLine("Running full benchmarks suite");
+                _benchmarks.Select(pair => pair.Value).ToList().ForEach(action => BenchmarkRunner.Run(action));
+                return;
             }
 
-            //if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
-            //{
-            //    Console.WriteLine("Running full benchmarks suite");
-            //    _benchmarks.Select(pair => pair.Value).ToList().ForEach(action => BenchmarkRunner.Run(action));
-            //    return;
-            //}
+            if (args.Length == 0 || !_benchmarks.ContainsKey(args[0]))
+            {
+                Console.WriteLine("Please, select benchmark, list of available:");
+                _benchmarks
+                    .Select(pair => pair.Key)
+                    .ToList()
+                    .ForEach(Console.WriteLine);
+                Console.WriteLine("All");
+                return;
+            }
 
-            //if (args.Length == 0 || !_benchmarks.ContainsKey(args[0]))
-            //{
-            //    Console.WriteLine("Please, select benchmark, list of available:");
-            //    _benchmarks
-            //        .Select(pair => pair.Key)
-            //        .ToList()
-            //        .ForEach(Console.WriteLine);
-            //    Console.WriteLine("All");
-            //    return;
-            //}
+            BenchmarkRunner.Run(_benchmarks[args[0]]);
 
-            //BenchmarkRunner.Run(_benchmarks[args[0]]);
-
-            //Console.Read();
+            Console.Read();
         }
     }
 }

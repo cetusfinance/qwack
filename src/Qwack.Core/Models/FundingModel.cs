@@ -26,8 +26,8 @@ namespace Qwack.Core.Models
         }
 
         public Dictionary<string, IrCurve> Curves { get; private set; }
-        public DateTime BuildDate { get; protected set; }
-        public FxMatrix FxMatrix { get; protected set; }
+        public DateTime BuildDate { get; private set; }
+        public FxMatrix FxMatrix { get; private set; }
         public string CurrentSolveCurve { get; set; }
 
         public void UpdateCurves(Dictionary<string, IrCurve> updateCurves)

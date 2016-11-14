@@ -68,8 +68,7 @@ namespace Qwack.Core.Instruments.Funding
             return PV(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDf, updateEst);
         }
 
-        private double PV(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDf,
-            bool updateEstimate)
+        private double PV(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate)
         {
             double totalPv = 0;
 
@@ -80,7 +79,7 @@ namespace Qwack.Core.Instruments.Funding
                 if (updateState)
                 {
                     var rateLin = flow.FixedRateOrMargin;
-                    var yf = flow.DiscountFactor;
+                    var yf = flow.NotionalByYearFraction;
                     fv = rateLin * yf * flow.Notional;
                     fv *= SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0;
                 }
@@ -119,7 +118,7 @@ namespace Qwack.Core.Instruments.Funding
                     var s = flow.AccrualPeriodStart;
                     var e = flow.AccrualPeriodEnd;
                     var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, BasisFloat);
-                    var yf = flow.DiscountFactor;
+                    var yf = flow.NotionalByYearFraction;
                     fv = rateLin * yf * flow.Notional;
                     fv *= SwapType == SwapPayReceiveType.Payer ? -1.0 : 1.0;
                 }

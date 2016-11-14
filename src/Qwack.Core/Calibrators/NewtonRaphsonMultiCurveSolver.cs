@@ -67,21 +67,7 @@ namespace Qwack.Core.Calibrators
 
         void ComputeNextGuess()
         {
-            // f = f - d/f'
-
-
-
-
-            //for (int i = 0; i < nPillars; i++)
-            //{
-
-            //    int pillarIx = i - pillarsSoFar;
-
-            //var JacobianM = MathNet.Numerics.LinearAlgebra.Double.Matrix.Build.DenseOfArray(Jacobian);
             var JacobianMI = Qwack.Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            //JacobianMI = Math.Matrix.MSMathMatrix.MatrixTranspose(JacobianMI);
-            //var CurrentPVV = MathNet.Numerics.LinearAlgebra.Double.Vector.Build.Dense(CurrentPVs);
-            //var deltaGuess = Math.Matrix.MSMathMatrix.MatrixProduct(JacobianMI, _currentPVs);
             var deltaGuess = Qwack.Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPVs, JacobianMI);
             for (int j = 0; j < _numberOfInstruments; j++)
             {

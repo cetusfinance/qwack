@@ -76,7 +76,7 @@ namespace Qwack.Core.Instruments.Funding
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
                     SettleDate = startDate,
-                    DiscountFactor = 1.0,
+                    NotionalByYearFraction = 1.0,
                     FlowType = FlowType.FixedAmount
                 });
             }
@@ -100,11 +100,11 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             // Q.Currency = _currency;
-                            Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                            Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                  DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
                                  1.0; Q.Notional = (double)Nominal;
                             Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
+                                (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                 0;
                             Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                             Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
@@ -136,11 +136,11 @@ namespace Qwack.Core.Instruments.Funding
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                  DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
                                  1.0; Q.Notional = (double)Nominal;
                                 Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                    (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
+                                    (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
                                 Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                                 Q.Notional = (double)Nominal;
@@ -167,12 +167,12 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             //Q.Currency = CCY;
-                            Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                            Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                 DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
                                 1.0;
                             Q.Notional = (double)Nominal;
                             Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
+                                (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                 0;
                             Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                             Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
@@ -204,11 +204,11 @@ namespace Qwack.Core.Instruments.Funding
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                Q.DiscountFactor = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                    DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
                                    1.0; Q.Notional = (double)Nominal;
                                 Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                    (double)Nominal * Q.DiscountFactor * (double)FixedRateOrMargin :
+                                    (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
                                 Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                                 Q.Notional = (double)Nominal;
@@ -230,7 +230,7 @@ namespace Qwack.Core.Instruments.Funding
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     SettleDate = endDate,
-                    DiscountFactor = 1.0,
+                    NotionalByYearFraction = 1.0,
                     FlowType = FlowType.FixedAmount
                 });
             }

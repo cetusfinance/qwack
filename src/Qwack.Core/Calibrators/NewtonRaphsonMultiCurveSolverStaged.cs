@@ -10,7 +10,7 @@ using Qwack.Core.Models;
 
 namespace Qwack.Core.Calibrators
 {
-    public class NewtonRaphsonMultiCurveSolverReducedWorkV2
+    public class NewtonRaphsonMultiCurveSolverStaged
     {
         public double Tollerance { get; set; } = 0.00000001;
         public int MaxItterations { get; set; } = 1000;
@@ -46,8 +46,8 @@ namespace Qwack.Core.Calibrators
                 var currentGuess = new double[fundingInstruments.Count];
                 _currentPvs = new double[fundingInstruments.Count];
                 var bumpedPvs = new double[fundingInstruments.Count];
-                ComputeJacobian(fundingInstruments, fundingModel, curvesForStage, currentGuess, bumpedPvs);
-                ComputeNextGuess(currentGuess, fundingInstruments.Count, curvesForStage);
+                _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(instruments.Count, instruments.Count);
+
                 for (int i = 0; i < MaxItterations; i++)
                 {
                     ComputePVs(true, fundingInstruments, fundingModel, _currentPvs);
@@ -67,7 +67,7 @@ namespace Qwack.Core.Calibrators
         {
             // f = f - d/f'
             var JacobianMI = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, JacobianMI);
+            var deltaGuess = Math.Matrix.DestructiveFunctions.MatrixProduct(_currentPvs, JacobianMI);
             int curveIx = 0;
             int pillarIx = 0;
             for (int j = 0; j < numberOfInstruments; j++)
@@ -83,12 +83,11 @@ namespace Qwack.Core.Calibrators
                     curveIx++;
                 }
             }
-
         }
 
         private void ComputeJacobian(List<IFundingInstrument> instruments, FundingModel model, List<ICurve> curvesForStage, double[] currentGuess, double[] bumpedPvs)
         {
-            _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(instruments.Count, instruments.Count);
+            
             int curveIx = 0;
             int pillarIx = 0;
             for (int i = 0; i < instruments.Count; i++)

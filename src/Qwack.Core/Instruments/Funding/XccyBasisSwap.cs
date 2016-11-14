@@ -133,7 +133,7 @@ namespace Qwack.Core.Instruments.Funding
                     DateTime e = flow.AccrualPeriodEnd;
                     double RateLin = forecastCurvePay.GetForwardRate(s, e, RateType.Linear, BasisPay)
                         + flow.FixedRateOrMargin;
-                    double YF = flow.DiscountFactor;
+                    double YF = flow.NotionalByYearFraction;
                     FV = RateLin * YF * (MTMSwapType == MTMSwapType.ReceiveNotionalFixed ? fixedNotional : flow.Notional);
                     FV *= -1.0;
                 }
@@ -168,7 +168,7 @@ namespace Qwack.Core.Instruments.Funding
                     DateTime e = flow.AccrualPeriodEnd;
                     double RateLin = forecastCurveRec.GetForwardRate(s, e, RateType.Linear, BasisRec)
                         + flow.FixedRateOrMargin;
-                    double YF = flow.DiscountFactor;
+                    double YF = flow.NotionalByYearFraction;
                     FV = RateLin * YF * (MTMSwapType == MTMSwapType.PayNotionalFixed ? fixedNotional : flow.Notional);
                 }
                 else

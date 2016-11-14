@@ -63,27 +63,20 @@ namespace Qwack.Curves.Benchmark
 
 
             var ZARswaps = new IrSwap[swapTenors.Length];
-            var ZARswapsf = new IrSwapFast[swapTenors.Length];
             var ZARdepos = new IrSwap[depoTenors.Length];
-            var ZARdeposf = new IrSwapFast[depoTenors.Length];
             var ZARdeposOIS = new IrSwap[OISdepoTenors.Length];
-            var ZARdeposOISf = new IrSwapFast[OISdepoTenors.Length];
             var ZARoisSwaps = new IrBasisSwap[oisTenors.Length];
             var ZARFRAs = new ForwardRateAgreement[FRATenors.Length];
 
             var USDswaps = new IrSwap[swapTenors.Length];
-            var USDswapsf = new IrSwapFast[swapTenors.Length];
             var USDdepos = new IrSwap[depoTenors.Length];
-            var USDdeposf = new IrSwapFast[depoTenors.Length];
             var USDdeposOIS = new IrSwap[OISdepoTenors.Length];
-            var USDdeposOISf = new IrSwapFast[OISdepoTenors.Length];
             var USDoisSwaps = new IrBasisSwap[oisTenors.Length];
             var USDFRAs = new ForwardRateAgreement[FRATenors.Length];
 
 
             _instruments = new FundingInstrumentCollection();
-            _instrumentsFast = new FundingInstrumentCollection();
-
+            
             for (int i = 0; i < FRATenors.Length; i++)
             {
                 ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], CurveDataSetup._zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
@@ -107,37 +100,25 @@ namespace Qwack.Curves.Benchmark
             for (int i = 0; i < swapTenors.Length; i++)
             {
                 ZARswaps[i] = new IrSwap(startDate, swapTenors[i], CurveDataSetup._zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
-                ZARswapsf[i] = new IrSwapFast(startDate, swapTenors[i], CurveDataSetup._zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARswaps[i]);
-                _instrumentsFast.Add(ZARswapsf[i]);
                 USDswaps[i] = new IrSwap(startDate, swapTenors[i], CurveDataSetup.usd3m, swapPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
-                USDswapsf[i] = new IrSwapFast(startDate, swapTenors[i], CurveDataSetup.usd3m, swapPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 _instruments.Add(USDswaps[i]);
-                _instrumentsFast.Add(USDswapsf[i]);
             }
 
             for (int i = 0; i < depoTenors.Length; i++)
             {
                 ZARdepos[i] = new IrSwap(startDate, depoTenors[i], CurveDataSetup._zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
-                ZARdeposf[i] = new IrSwapFast(startDate, depoTenors[i], CurveDataSetup._zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARdepos[i]);
-                _instrumentsFast.Add(ZARdeposf[i]);
                 USDdepos[i] = new IrSwap(startDate, depoTenors[i], CurveDataSetup.usd3m, depoPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
-                USDdeposf[i] = new IrSwapFast(startDate, depoTenors[i], CurveDataSetup.usd3m, depoPricesUSD[i], SwapPayReceiveType.Payer, "USD.LIBOR.3M", "USD.DISC.CSA_USD") { SolveCurve = "USD.LIBOR.3M" };
                 _instruments.Add(USDdepos[i]);
-                _instrumentsFast.Add(USDdeposf[i]);
             }
 
             for (int i = 0; i < OISdepoTenors.Length; i++)
             {
                 ZARdeposOIS[i] = new IrSwap(startDate, OISdepoTenors[i], CurveDataSetup.zaron, OISdepoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
-                ZARdeposOISf[i] = new IrSwapFast(startDate, OISdepoTenors[i], CurveDataSetup.zaron, OISdepoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 _instruments.Add(ZARdeposOIS[i]);
-                _instrumentsFast.Add(ZARdeposOISf[i]);
                 USDdeposOIS[i] = new IrSwap(startDate, OISdepoTenors[i], CurveDataSetup.usdon, OISdepoPricesUSD[i], SwapPayReceiveType.Payer, "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
-                USDdeposOISf[i] = new IrSwapFast(startDate, OISdepoTenors[i], CurveDataSetup.usdon, OISdepoPricesUSD[i], SwapPayReceiveType.Payer, "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
                 _instruments.Add(USDdeposOIS[i]);
-                _instrumentsFast.Add(USDdeposOISf[i]);
             }
 
             var ZARcurve3m = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
@@ -155,47 +136,13 @@ namespace Qwack.Curves.Benchmark
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
             solver.Solve(model,_instruments);
         }
-
-        //[Benchmark(Description = "Changed from a bin search vector")]
-        //public static void InterpolatorNoSearch()
-        //{
-        //    InterpolatorFactory.UseNoSearch = true;
-        //    var model = _fundingModel.DeepClone();
-        //    var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
-        //    solver.Solve(model, _instruments);
-        //}
-
-        //[Benchmark(Description = "Put some precalculations into the IrSwap")]
-        //public static void InterpolatorNoSearchFasterIrSwap()
-        //{
-        //    var model = _fundingModel.DeepClone();
-        //    var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
-        //    solver.Solve(model, _instrumentsFast);
-        //}
-
-        //[Benchmark]
-        //public static void ReducedWorkSolver()
-        //{
-        //    var model = _fundingModel.DeepClone();
-        //    var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverReducedWork();
-        //    solver.Solve(model, _instruments);
-        //}
-
+                
         [Benchmark]
         public static void PuttingItTogether()
         {
             InterpolatorFactory.UseNoSearch = true;
             var model = _fundingModel.DeepClone();
-            var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverReducedWork();
-            solver.Solve(model, _instruments);
-        }
-
-        [Benchmark]
-        public static void PuttingItTogetherV2()
-        {
-            InterpolatorFactory.UseNoSearch = true;
-            var model = _fundingModel.DeepClone();
-            var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverReducedWorkV2();
+            var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(model, _instruments);
         }
     }

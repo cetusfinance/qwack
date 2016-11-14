@@ -79,7 +79,7 @@ namespace Qwack.Core.Instruments.Funding
             {
                 double RateFix = flow.FixedRateOrMargin;
                 double RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
-                double YF = flow.DiscountFactor;
+                double YF = flow.NotionalByYearFraction;
                 FV = ((RateFloat - RateFix) * YF) / (1 + RateFloat * YF);
 
                 FV *= (PayRec == SwapPayReceiveType.Payer) ? 1.0 : -1.0;

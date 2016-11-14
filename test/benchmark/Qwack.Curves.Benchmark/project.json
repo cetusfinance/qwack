@@ -1,0 +1,30 @@
+﻿{
+  "version": "0.1.0-*",
+  "buildOptions": {
+    "copyToOutput": "..\\..\\..\\data\\Calendars.json",
+    "emitEntryPoint": true
+  },
+  "dependencies": {
+    "NETStandard.Library": "1.6.0",
+    "Qwack.Dates": { "target": "project" },
+    "Qwack.Core": { "target": "project" },
+    "Qwack.Math.Interpolation": {"target": "project"}, 
+    "Microsoft.Extensions.PlatformAbstractions": "1.1.0-alpha1-21955",
+    "BenchmarkDotNet": "0.10.0"
+  },
+  "frameworks": {
+    //"netcoreapp1.0": {
+    //  "dependencies": {
+    //    "Microsoft.NETCore.App": {
+    //      "version": "1.0.0",
+    //      "type": "platform"
+    //    }
+    //  }
+    //},
+    "net461": {
+      "dependencies": {
+        "BenchmarkDotNet.Diagnostics.Windows": "0.10.0"
+      }
+    }
+  }
+}

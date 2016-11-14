@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
     public class CalendarCollection
     {
-        private Dictionary<string, Calendar> _mergedCalendars = new Dictionary<string, Calendar>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Calendar> _mergedCalendars = new Dictionary<string, Calendar>(StringComparer.OrdinalIgnoreCase);
 
         public CalendarCollection(IEnumerable<Calendar> startingCalendars)
         {
@@ -30,6 +29,19 @@ namespace Qwack.Dates
             }
         }
 
+        public Calendar this[string calendarName]
+        {
+            get
+            {
+                Calendar returnCalendar;
+                if(TryGetCalendar(calendarName,out returnCalendar))
+                {
+                    return returnCalendar;
+                }
+                throw new ArgumentOutOfRangeException(nameof(calendarName),$"Could not find or make a calendar called {calendarName}");
+            }
+        }
+
         public bool TryGetCalendar(string calendarName, out Calendar calendar)
         {
             if (calendarName.Contains("+"))
@@ -38,7 +50,7 @@ namespace Qwack.Dates
                 {
                     return true;
                 }
-                return TryGetCalendar(calendarName.Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries), out calendar);
+                return TryGetCalendar(calendarName.Split(new[] { '+' }, StringSplitOptions.RemoveEmptyEntries), out calendar);
             }
             return _mergedCalendars.TryGetValue(calendarName, out calendar);
 
@@ -52,10 +64,9 @@ namespace Qwack.Dates
                 return true;
             }
             //We couldn't find it so lets generate it
-            calendar = new Calendar();
-            calendar.Name = key;
+            calendar = new Calendar {Name = key};
 
-            for (int i = 0; i < calendarsNames.Length; i++)
+            for (var i = 0; i < calendarsNames.Length; i++)
             {
                 MergeCalendar(_mergedCalendars[calendarsNames[i]], calendar);
             }
@@ -64,7 +75,7 @@ namespace Qwack.Dates
 
         }
 
-        private void MergeCalendar(Calendar calendar, Calendar newCal)
+        private static void MergeCalendar(Calendar calendar, Calendar newCal)
         {
             foreach (var mtoEx in calendar.MonthsToExclude)
             {

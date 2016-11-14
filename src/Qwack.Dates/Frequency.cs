@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
-    public class Frequency
+    public struct Frequency
     {
-        public Frequency() { }
-
         public Frequency(string frequency)
         {
+            PeriodType = DatePeriodType.B;
+            PeriodCount = 0;
             SplitPeriod(frequency);
         }
 
@@ -30,7 +30,7 @@ namespace Qwack.Dates
 
         private void SplitPeriod(string period)
         {
-            var periodType = period[period.Length-1];
+            var periodType = period[period.Length - 1];
 
             switch (periodType)
             {
@@ -60,14 +60,33 @@ namespace Qwack.Dates
             PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
         }
 
-        public static Frequency ZeroBd { get { return new Frequency(0, DatePeriodType.B); } }
-        public static Frequency OneBd { get { return new Frequency(1, DatePeriodType.B); } }
-        public static Frequency TwoBd { get { return new Frequency(2, DatePeriodType.B); } }
-        public static Frequency OneWeek { get { return new Frequency(1, DatePeriodType.W); } }
-        public static Frequency TwoWeeks { get { return new Frequency(2, DatePeriodType.W); } }
-        public static Frequency OneMonth { get { return new Frequency(1, DatePeriodType.M); } }
-        public static Frequency ThreeMonths { get { return new Frequency(3, DatePeriodType.M); } }
-        public static Frequency SixMonths { get { return new Frequency(6, DatePeriodType.M); } }
-        public static Frequency OneYear { get { return new Frequency(1, DatePeriodType.Y); } }
+        public static bool operator ==(Frequency x, Frequency y)
+        {
+            return x.PeriodCount == y.PeriodCount && y.PeriodType == x.PeriodType;
+        }
+
+        public static bool operator !=(Frequency x, Frequency y)
+        {
+            return !(x == y);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var result = PeriodCount;
+                result = (result * 397) ^ (int)PeriodType;
+                return result;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Frequency))
+            {
+                return false;
+            }
+            return (Frequency)obj == this;
+        }
     }
 }

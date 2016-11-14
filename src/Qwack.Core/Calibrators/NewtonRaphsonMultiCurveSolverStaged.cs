@@ -46,7 +46,7 @@ namespace Qwack.Core.Calibrators
                 var currentGuess = new double[fundingInstruments.Count];
                 _currentPvs = new double[fundingInstruments.Count];
                 var bumpedPvs = new double[fundingInstruments.Count];
-                _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(instruments.Count, instruments.Count);
+                _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
 
                 for (int i = 0; i < MaxItterations; i++)
                 {
@@ -62,8 +62,9 @@ namespace Qwack.Core.Calibrators
 
             }
         }
-
-        void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<ICurve> curvesForStage)
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<ICurve> curvesForStage)
         {
             // f = f - d/f'
             var JacobianMI = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);

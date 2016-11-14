@@ -24,14 +24,11 @@ namespace Qwack.Core.Calibrators
         private double[] _currentGuess;
         private double[] _currentPVs;
         private double[][] _jacobian;
-        private string[] _curveNames;
 
         private Tuple<int, int>[] PillarToCurveMapping;
 
         private List<IrCurve> _curvesForStage;
-        private List<string> _curvesNamesForStage;
-
-        private List<IFundingInstrument> _instrumentsForStage;
+        
         private int _stage;
         private int _maxStage;
 
@@ -42,23 +39,21 @@ namespace Qwack.Core.Calibrators
 
             for (_stage = 0; _stage <= _maxStage; _stage++)
             {
-                _curvesNamesForStage = fundingModel.Curves.Where(x => x.Value.SolveStage == _stage).Select(x => x.Key).ToList();
                 _curvesForStage = fundingModel.Curves.Where(x => x.Value.SolveStage == _stage).Select(x => x.Value).ToList();
 
-                _fundingInstruments = instruments.Where(x => _curvesNamesForStage.Contains(x.SolveCurve)).ToList();
+                _fundingInstruments = instruments.Where(x => _curvesForStage.Select(cs => cs.Name).Contains(x.SolveCurve)).ToList();
                 _numberOfInstruments = _fundingInstruments.Count;
                 _numberOfPillars = _curvesForStage.Select(kv => kv.NumberOfPillars).Sum();
                 _numberOfCurves = _curvesForStage.Count;
                 _currentGuess = new double[_numberOfPillars];
-                _curveNames = _curvesNamesForStage.ToArray();
-
+                
                 if (_numberOfPillars != _numberOfInstruments)
                     throw new ArgumentException();
 
                 List<Tuple<int, int>> pillarToCurveMap = new List<Tuple<int, int>>();
                 for (int i = 0; i < _numberOfCurves; i++)
                 {
-                    var currentCurve = _curveEngine.Curves[_curveNames[i]];
+                    var currentCurve = _curvesForStage[i];
                     int nPillarsOnCurve = currentCurve.NumberOfPillars;
                     pillarToCurveMap.AddRange(Enumerable.Range(0, nPillarsOnCurve).Select(x => new Tuple<int, int>(i, x)));
                 }
@@ -87,11 +82,10 @@ namespace Qwack.Core.Calibrators
             {
                 int curveIx = PillarToCurveMapping[j].Item1;
                 int curvePillarIx = PillarToCurveMapping[j].Item2;
-                var currentEngine = _curveEngine.Curves[_curveNames[curveIx]];
+                var currentEngine = _curvesForStage[curveIx];
                 _currentGuess[j] -= deltaGuess[j];
 
                 currentEngine.SetRate(curvePillarIx, _currentGuess[j], true);
-
             }
 
         }
@@ -105,8 +99,8 @@ namespace Qwack.Core.Calibrators
                 int curveIx = PillarToCurveMapping[i].Item1;
                 int curvePillarIx = PillarToCurveMapping[i].Item2;
 
-                var currentCurve = _curveEngine.Curves[_curveNames[curveIx]];
-                _curveEngine.CurrentSolveCurve = _curveNames[curveIx];
+                var currentCurve = _curvesForStage[curveIx];
+                _curveEngine.CurrentSolveCurve = _curvesForStage[curveIx].Name;
                 _currentGuess[i] = currentCurve.GetRate(curvePillarIx);
 
                 currentCurve.BumpRate(curvePillarIx, _jacobianBump, true);

@@ -17,6 +17,7 @@ namespace Qwack.Core.Curves
         private DayCountBasis _basis = DayCountBasis.Act_365F;
         private IInterpolator1D _interpolator;
         private Interpolator1DType _interpKind;
+        private string _name;
 
         public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind)
         {
@@ -35,11 +36,11 @@ namespace Qwack.Core.Curves
             }
 
             _interpolator = InterpolatorFactory.GetInterpolator(_pillarsD.ToArray(), _rates.ToArray(), interpKind, isSorted: true, noCopy: true);
-            Name = name;
+            _name = name;
         }
         
         public DateTime BuildDate => _buildDate;
-        public string Name { get; internal set; }
+        public string Name => _name;
         public int NumberOfPillars => _pillars.Length;
         public DateTime[] PillarDates => _pillars;
         public Interpolator1DType InterpolatorType => _interpKind;
@@ -141,12 +142,12 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, Name, _interpKind);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind);
                 return returnCurve;
             }
         }
 
-        public IrCurve SetRate(int pillarIx, double rate, bool mutate)
+        public ICurve SetRate(int pillarIx, double rate, bool mutate)
         {
             if (mutate)
             {
@@ -156,7 +157,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, Name, _interpKind);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, _name, _interpKind);
                 return returnCurve;
             }
 

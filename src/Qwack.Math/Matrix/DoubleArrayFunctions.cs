@@ -175,7 +175,7 @@ namespace Qwack.Math.Matrix
         }
         public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
         {
-            var matrixA = MatrixCreate(1, vectorA.Length);
+            var matrixA = new double[1][];
             matrixA[0] = vectorA;
             return MatrixProduct(matrixA, matrixB)[0];
         }
@@ -192,7 +192,7 @@ namespace Qwack.Math.Matrix
 
             for (int i = 0; i < aRows; ++i) // each row of A
                 for (int j = 0; j < bCols; ++j) // each col of B
-                    for (int k = 0; k < aCols; ++k) // could use k < bRows
+                    for (int k = 0; k < bRows; ++k) // could use k < bRows
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
 
             return result;

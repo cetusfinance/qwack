@@ -121,7 +121,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curveOIS = new IrCurve(pillarDatesOIS, new double[pillarDatesOIS.Length], startDate, "ZAR.OIS.1B", Interpolator1DType.LinearFlatExtrap);
             var model = new FundingModel(startDate, new IrCurve[] { curve3m, curveOIS });
 
-            var S = new NewtonRaphsonMultiCurveSolverReducedWork();
+            var S = new NewtonRaphsonMultiCurveSolver();
             S.Solve(model, fic);
 
             foreach (var ins in fic)
@@ -401,7 +401,7 @@ namespace Qwack.Core.Tests.CurveSolving
             fxMatrix.Init(ccyUsd, startDate, spotRates, fxPairs, discountMap);
             engine.SetupFx(fxMatrix);
 
-            var S = new NewtonRaphsonMultiCurveSolverReducedWork();
+            var S = new NewtonRaphsonMultiCurveSolverReducedWorkV2();
             S.Solve(engine, FIC);
 
             foreach (var ins in FIC)

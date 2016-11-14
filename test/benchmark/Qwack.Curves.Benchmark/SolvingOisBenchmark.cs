@@ -189,5 +189,14 @@ namespace Qwack.Curves.Benchmark
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverReducedWork();
             solver.Solve(model, _instruments);
         }
+
+        [Benchmark]
+        public static void PuttingItTogetherV2()
+        {
+            InterpolatorFactory.UseNoSearch = true;
+            var model = _fundingModel.DeepClone();
+            var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverReducedWorkV2();
+            solver.Solve(model, _instruments);
+        }
     }
 }

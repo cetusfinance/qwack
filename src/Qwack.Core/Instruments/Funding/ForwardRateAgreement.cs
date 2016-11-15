@@ -11,9 +11,9 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ForwardRateAgreement : IFundingInstrument
     {
-        public ForwardRateAgreement(DateTime valDate, string FRACode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
+        public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
         {
-            string[] code = FRACode.ToUpper().Split('X');
+            string[] code = fraCode.ToUpper().Split('X');
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
             ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
             EndDate = new TenorDateRelative(rateIndex.ResetTenor);
@@ -22,17 +22,17 @@ namespace Qwack.Core.Instruments.Funding
             Basis = rateIndex.DayCountBasis;
             PayRec = payRec;
 
-            FRALeg = new GenericSwapLeg(StartDate, EndDate.Date(StartDate, rateIndex.RollConvention, rateIndex.HolidayCalendars), rateIndex.HolidayCalendars, rateIndex.Currency, rateIndex.ResetTenor, Basis);
-            FRALeg.FixedRateOrMargin = (decimal)ParRate;
-            FlowScheduleFRA = FRALeg.GenerateSchedule();
+            FraLeg = new GenericSwapLeg(StartDate, EndDate.Date(StartDate, rateIndex.RollConvention, rateIndex.HolidayCalendars), rateIndex.HolidayCalendars, rateIndex.Currency, rateIndex.ResetTenor, Basis);
+            FraLeg.FixedRateOrMargin = (decimal)ParRate;
+            FlowScheduleFra = FraLeg.GenerateSchedule();
 
-            FRALeg.FixedRateOrMargin = (decimal)ParRate;
-            FRALeg.LegType = SwapLegType.Fra;
-            FlowScheduleFRA.Flows[0].SettleDate = StartDate;
+            FraLeg.FixedRateOrMargin = (decimal)ParRate;
+            FraLeg.LegType = SwapLegType.Fra;
+            FlowScheduleFra.Flows[0].SettleDate = StartDate;
             ForecastCurve = forecastCurve;
             DiscountCurve = discountCurve;
 
-            FRAType = fraType;
+            FraType = fraType;
         }
 
         public double Notional { get; set; }
@@ -40,14 +40,14 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime StartDate { get; set; }
         public ITenorDate EndDate { get; set; }
         public DateTime ResetDate { get; set; }
-        public Currency CCY { get; set; }
-        public GenericSwapLeg FRALeg { get; set; }
-        public CashFlowSchedule FlowScheduleFRA { get; set; }
+        public Currency Ccy { get; set; }
+        public GenericSwapLeg FraLeg { get; set; }
+        public CashFlowSchedule FlowScheduleFra { get; set; }
         public DayCountBasis Basis { get; set; }
         public SwapPayReceiveType PayRec { get; set; }
         public string ForecastCurve { get; set; }
         public string DiscountCurve { get; set; }
-        public FraDiscountingType FRAType { get; set; }
+        public FraDiscountingType FraType { get; set; }
         public string SolveCurve { get; set; }
 
         public double Pv(FundingModel model, bool updateState)
@@ -64,12 +64,12 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
         {
-            double totalPV = 0;
+            var totalPV = 0.0;
 
-            if (FlowScheduleFRA.Flows.Count != 1)
-                throw new NotImplementedException("FRA should have a sinlge flow");
+            if (FlowScheduleFra.Flows.Count != 1)
+                throw new InvalidOperationException("FRA should have a sinlge flow");
 
-            var flow = FlowScheduleFRA.Flows.Single();
+            var flow = FlowScheduleFra.Flows.Single();
 
             DateTime s = flow.AccrualPeriodStart;
             DateTime e = flow.AccrualPeriodEnd;
@@ -90,15 +90,13 @@ namespace Qwack.Core.Instruments.Funding
             if (updateDF)
                 DF = discountCurve.Pv(1.0, flow.SettleDate);
             else
-                DF = (flow.Fv == flow.Pv) ? 1.0 : flow.Pv / flow.Fv;
+                DF = flow.Pv / flow.Fv;
 
             totalPV = discountCurve.Pv(FV, flow.SettleDate);
 
-            if (updateState)
-            {
-                flow.Fv = FV;
-                flow.Pv = totalPV;
-            }
+            if (!updateState) return totalPV;
+            flow.Fv = FV;
+            flow.Pv = totalPV;
             return totalPV;
         }
     }

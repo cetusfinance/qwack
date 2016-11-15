@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
@@ -13,7 +12,7 @@ namespace Qwack.Core.Calibrators
         public double Tollerance { get; set; } = 0.00000001;
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
-        private const double _jacobianBump = 0.0001;
+        private const double JacobianBump = 0.0001;
 
         private FundingModel _curveEngine;
         private List<IFundingInstrument> _fundingInstruments;
@@ -25,7 +24,7 @@ namespace Qwack.Core.Calibrators
         private double[][] _jacobian;
         private string[] _curveNames;
 
-        private Tuple<int, int>[] PillarToCurveMapping;
+        private Tuple<int, int>[] _pillarToCurveMapping;
 
         public void Solve(FundingModel fundingModel, FundingInstrumentCollection instruments)
         {
@@ -45,9 +44,10 @@ namespace Qwack.Core.Calibrators
             {
                 var currentCurve = _curveEngine.Curves[_curveNames[i]];
                 int nPillarsOnCurve = currentCurve.NumberOfPillars;
-                pillarToCurveMap.AddRange(Enumerable.Range(0, nPillarsOnCurve).Select(x => new Tuple<int, int>(i, x)));
+                var i1 = i;
+                pillarToCurveMap.AddRange(Enumerable.Range(0, nPillarsOnCurve).Select(x => new Tuple<int, int>(i1, x)));
             }
-            PillarToCurveMapping = pillarToCurveMap.ToArray();
+            _pillarToCurveMapping = pillarToCurveMap.ToArray();
 
 
             ComputeJacobian();
@@ -65,56 +65,51 @@ namespace Qwack.Core.Calibrators
             }
         }
 
-        void ComputeNextGuess()
+        private void ComputeNextGuess()
         {
-            var JacobianMI = Qwack.Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Qwack.Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPVs, JacobianMI);
-            for (int j = 0; j < _numberOfInstruments; j++)
+            var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
+            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPVs, jacobianMi);
+            for (var j = 0; j < _numberOfInstruments; j++)
             {
-                int curveIx = PillarToCurveMapping[j].Item1;
-                int curvePillarIx = PillarToCurveMapping[j].Item2;
+                var curveIx = _pillarToCurveMapping[j].Item1;
+                var curvePillarIx = _pillarToCurveMapping[j].Item2;
                 var currentEngine = _curveEngine.Curves[_curveNames[curveIx]];
                 _currentGuess[j] -= deltaGuess[j];
 
                 currentEngine.SetRate(curvePillarIx, _currentGuess[j], true);
-
             }
-
         }
 
         private void ComputeJacobian()
         {
-            _jacobian = Qwack.Math.Matrix.DoubleArrayFunctions.MatrixCreate(_numberOfPillars, _numberOfPillars);
+            _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(_numberOfPillars, _numberOfPillars);
 
-            for (int i = 0; i < _numberOfPillars; i++)
+            for (var i = 0; i < _numberOfPillars; i++)
             {
-                int curveIx = PillarToCurveMapping[i].Item1;
-                int curvePillarIx = PillarToCurveMapping[i].Item2;
-
+                var curveIx = _pillarToCurveMapping[i].Item1;
+                var curvePillarIx = _pillarToCurveMapping[i].Item2;
                 var currentCurve = _curveEngine.Curves[_curveNames[curveIx]];
-
                 _currentGuess[i] = currentCurve.GetRate(curvePillarIx);
 
-                currentCurve.BumpRate(curvePillarIx, _jacobianBump, true);
-                double[] bumpedPVs = ComputePVs();
-                currentCurve.BumpRate(curvePillarIx, -_jacobianBump, true);
+                currentCurve.BumpRate(curvePillarIx, JacobianBump, true);
+                var bumpedPVs = ComputePVs();
+                currentCurve.BumpRate(curvePillarIx, -JacobianBump, true);
 
-                for (int j = 0; j < bumpedPVs.Length; j++)
+                for (var j = 0; j < bumpedPVs.Length; j++)
                 {
-                    _jacobian[i][j] = (bumpedPVs[j] - _currentPVs[j]) / _jacobianBump;
+                    _jacobian[i][j] = (bumpedPVs[j] - _currentPVs[j]) / JacobianBump;
                 }
             }
         }
 
         private double[] ComputePVs()
         {
-            var O = new double[_numberOfInstruments];
-            for (int i = 0; i < O.Length; i++)
+            var o = new double[_numberOfInstruments];
+            for (var i = 0; i < o.Length; i++)
             {
-                O[i] = _fundingInstruments[i].Pv(_curveEngine, true);
+                o[i] = _fundingInstruments[i].Pv(_curveEngine, true);
             }
-
-            return O;
+            return o;
         }
     }
 }

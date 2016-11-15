@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Dates;
@@ -11,13 +10,12 @@ namespace Qwack.Core.Curves
     public class IrCurve : ICurve
     {
         private DateTime _buildDate;
-        private readonly double[] _pillarsD;
-        private DateTime[] _pillars;
-        private double[] _rates;
-        private DayCountBasis _basis = DayCountBasis.Act_365F;
-        private IInterpolator1D _interpolator;
-        private Interpolator1DType _interpKind;
-        private string _name;
+        private readonly DateTime[] _pillars;
+        private readonly double[] _rates;
+        private readonly DayCountBasis _basis = DayCountBasis.Act_365F;
+        private readonly IInterpolator1D _interpolator;
+        private readonly Interpolator1DType _interpKind;
+        private readonly string _name;
 
         public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind)
         {
@@ -26,16 +24,16 @@ namespace Qwack.Core.Curves
             pillars.CopyTo(_pillars,0);
             _rates = new double[_pillars.Length];
 
-            _pillarsD = new double[_pillars.Length];
+            var pillarsD = new double[_pillars.Length];
             _buildDate = buildDate;
 
-            for (var i = 0; i < pillars.Count(); i++)
+            for (var i = 0; i < pillars.Length; i++)
             {
-                _pillarsD[i] = buildDate.CalculateYearFraction(pillars[i], _basis);
+                pillarsD[i] = buildDate.CalculateYearFraction(pillars[i], _basis);
                 _rates[i] = rates[i];
             }
 
-            _interpolator = InterpolatorFactory.GetInterpolator(_pillarsD.ToArray(), _rates.ToArray(), interpKind, isSorted: true, noCopy: true);
+            _interpolator = InterpolatorFactory.GetInterpolator(pillarsD.ToArray(), _rates.ToArray(), interpKind, isSorted: true, noCopy: true);
             _name = name;
         }
         
@@ -112,11 +110,6 @@ namespace Qwack.Core.Curves
             var q = (1 / dFe) / (1 / dFs);
 
             return Log(q) / (te - ts);
-        }
-                
-        public DateTime[] GetPillarDates()
-        {
-            return _pillars.ToArray();
         }
 
         public double[] GetRates()

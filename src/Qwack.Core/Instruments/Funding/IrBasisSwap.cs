@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -26,13 +24,17 @@ namespace Qwack.Core.Instruments.Funding
             BasisPay = payIndex.DayCountBasis;
             BasisRec = recIndex.DayCountBasis;
 
-            PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay);
-            PayLeg.FixedRateOrMargin = (decimal)ParSpreadPay;
-            PayLeg.LegType = SwapLegType.Float;
+            PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay)
+            {
+                FixedRateOrMargin = (decimal) ParSpreadPay,
+                LegType = SwapLegType.Float
+            };
 
-            RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec);
-            RecLeg.FixedRateOrMargin = (decimal)ParSpreadRec;
-            RecLeg.LegType = SwapLegType.Float;
+            RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec)
+            {
+                FixedRateOrMargin = (decimal) ParSpreadRec,
+                LegType = SwapLegType.Float
+            };
 
 
             FlowSchedulePay = PayLeg.GenerateSchedule();
@@ -56,7 +58,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime EndDate { get; set; }
         public int NDates { get; set; }
         public DateTime[] ResetDates { get; set; }
-        public Currency CCY { get; set; }
+        public Currency Ccy { get; set; }
         public GenericSwapLeg PayLeg { get; set; }
         public GenericSwapLeg RecLeg { get; set; }
         public CashFlowSchedule FlowSchedulePay { get; set; }

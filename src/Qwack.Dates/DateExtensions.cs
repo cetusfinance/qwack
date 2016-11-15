@@ -5,6 +5,9 @@ namespace Qwack.Dates
 {
     public static class DateExtensions
     {
+        private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
+        private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
+
         public static DateTime GetNextImmDate(this DateTime input)
         {
             var m = input.Month;
@@ -60,9 +63,9 @@ namespace Qwack.Dates
             switch (basis)
             {
                 case DayCountBasis.Act_360:
-                    return (endDate - startDate).TotalDays / 360;
+                    return (endDate.Ticks - startDate.Ticks) * _ticksFraction360;
                 case DayCountBasis.Act_365F:
-                    return (endDate - startDate).TotalDays / 365;
+                    return (endDate.Ticks - startDate.Ticks) * _ticksFraction365;
                 case DayCountBasis.Act_Act_ISDA:
                 case DayCountBasis.Act_Act:
                     if (endDate.Year == startDate.Year)

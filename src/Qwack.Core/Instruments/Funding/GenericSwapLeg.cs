@@ -64,14 +64,14 @@ namespace Qwack.Core.Instruments.Funding
 
         public CashFlowSchedule GenerateSchedule()
         {
-            DateTime startDate = EffectiveDate;
-            DateTime endDate = TerminationDate.Date(startDate, ResetRollType, ResetCalendar);
-            CashFlowSchedule F = new CashFlowSchedule();
-            List<CashFlow> LF = new List<CashFlow>();
+            var startDate = EffectiveDate;
+            var endDate = TerminationDate.Date(startDate, ResetRollType, ResetCalendar);
+            var f = new CashFlowSchedule();
+            var lf = new List<CashFlow>();
 
             if (NotionalExchange == ExchangeType.FrontOnly || NotionalExchange == ExchangeType.Both)
             {
-                LF.Add(new CashFlow
+                lf.Add(new CashFlow
                 {
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
@@ -91,34 +91,33 @@ namespace Qwack.Core.Instruments.Funding
                         DateTime currentReset = GetNextResetDate(endDate, false);
                         while (GetNextResetDate(currentReset, false) >= startDate)
                         {
-                            CashFlow Q = new CashFlow();
-                            Q.ResetDateStart = currentReset;
-                            Q.AccrualPeriodStart = currentReset;
-                            Q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                            Q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
-                            Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
-                            // Q.Currency = _currency;
-                            Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
-                                 DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
-                                 1.0; Q.Notional = (double)Nominal;
-                            Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
+                            var q = new CashFlow();
+                            q.ResetDateStart = currentReset;
+                            q.AccrualPeriodStart = currentReset;
+                            q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                            q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+                            q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                            q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                 q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
+                                 1.0; q.Notional = (double)Nominal;
+                            q.Fv = (LegType == SwapLegType.Fixed) ?
+                                (double)Nominal * q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                 0;
-                            Q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                            Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
-                            Q.Notional = (double)Nominal;
-                            LF.Add(Q);
+                            q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                            q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
+                            q.Notional = (double)Nominal;
+                            lf.Add(q);
                             nQ++;
                             currentReset = GetNextResetDate(currentReset, false);
                         }
 
-                        if (LF.Count == 0 || LF.Last().AccrualPeriodStart != startDate)
+                        if (lf.Count == 0 || lf.Last().AccrualPeriodStart != startDate)
                         {
                             if (StubType == StubType.LongFront)
                             {
-                                CashFlow Q = LF.Last();
+                                CashFlow Q = lf.Last();
                                 Q.ResetDateStart = startDate;
                                 Q.AccrualPeriodStart = startDate;
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
@@ -128,23 +127,23 @@ namespace Qwack.Core.Instruments.Funding
                             }
                             else
                             {
-                                CashFlow Q = new CashFlow();
-                                Q.AccrualPeriodStart = startDate;
-                                Q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                                Q.AccrualPeriodEnd = LF.Count > 0 ? LF.Last().AccrualPeriodStart : endDate;
-                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                var q = new CashFlow();
+                                q.AccrualPeriodStart = startDate;
+                                q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
+                                q.AccrualPeriodEnd = lf.Count > 0 ? lf.Last().AccrualPeriodStart : endDate;
+                                q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
-                                 DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
-                                 1.0; Q.Notional = (double)Nominal;
-                                Q.Fv = (LegType == SwapLegType.Fixed) ?
-                                    (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
+                                q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                 q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
+                                 1.0; q.Notional = (double)Nominal;
+                                q.Fv = (LegType == SwapLegType.Fixed) ?
+                                    (double)Nominal * q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
-                                Q.FixedRateOrMargin = (double)FixedRateOrMargin;
-                                Q.Notional = (double)Nominal;
-                                LF.Add(Q);
+                                q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                                q.Notional = (double)Nominal;
+                                lf.Add(q);
                                 nQ++;
                             }
                         }
@@ -168,7 +167,7 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             //Q.Currency = CCY;
                             Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
-                                DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
+                                Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                 1.0;
                             Q.Notional = (double)Nominal;
                             Q.Fv = (LegType == SwapLegType.Fixed) ?
@@ -176,18 +175,18 @@ namespace Qwack.Core.Instruments.Funding
                                 0;
                             Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                             Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
-                            LF.Add(Q);
+                            lf.Add(Q);
                             nQ++;
                             currentReset = GetNextResetDate(currentReset, false);
                         }
 
 
 
-                        if (LF.Last().AccrualPeriodEnd != endDate)
+                        if (lf.Last().AccrualPeriodEnd != endDate)
                         {
                             if (StubType == StubType.LongBack)
                             {
-                                CashFlow Q = LF.Last();
+                                CashFlow Q = lf.Last();
                                 Q.AccrualPeriodEnd = endDate;
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
@@ -197,7 +196,7 @@ namespace Qwack.Core.Instruments.Funding
                             else
                             {
                                 CashFlow Q = new CashFlow();
-                                Q.AccrualPeriodStart = LF.Last().AccrualPeriodEnd;
+                                Q.AccrualPeriodStart = lf.Last().AccrualPeriodEnd;
                                 Q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
                                 Q.AccrualPeriodEnd = endDate;
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
@@ -205,14 +204,14 @@ namespace Qwack.Core.Instruments.Funding
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
                                 Q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
-                                   DateExtensions.CalculateYearFraction(Q.AccrualPeriodStart, Q.AccrualPeriodEnd, AccrualDCB) :
+                                   Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                    1.0; Q.Notional = (double)Nominal;
                                 Q.Fv = (LegType == SwapLegType.Fixed) ?
                                     (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
                                 Q.FixedRateOrMargin = (double)FixedRateOrMargin;
                                 Q.Notional = (double)Nominal;
-                                LF.Add(Q);
+                                lf.Add(Q);
                                 nQ++;
                             }
                         }
@@ -225,7 +224,7 @@ namespace Qwack.Core.Instruments.Funding
 
             if (NotionalExchange == ExchangeType.BackOnly || NotionalExchange == ExchangeType.Both)
             {
-                LF.Add(new CashFlow
+                lf.Add(new CashFlow
                 {
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
@@ -234,9 +233,9 @@ namespace Qwack.Core.Instruments.Funding
                     FlowType = FlowType.FixedAmount
                 });
             }
-            F.Flows = LF.OrderBy(x => x.AccrualPeriodStart).ToList();
+            f.Flows = lf.OrderBy(x => x.AccrualPeriodStart).ToList();
 
-            return F;
+            return f;
         }
 
         private DateTime GetNextResetDate(DateTime currentReset, bool fwdDirection)

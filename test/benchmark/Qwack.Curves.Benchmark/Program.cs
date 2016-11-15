@@ -16,7 +16,11 @@ namespace Qwack.Curves.Benchmark
 
         public static void Main(string[] args)
         {
-            InterpolationBenchmark.Setup();
+            //SolvingOisBenchmark.Setup();
+            //for(int i = 0; i < 100; i ++)
+            //{
+            //    SolvingOisBenchmark.PuttingItTogether();
+            //}
 
             if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {

@@ -38,21 +38,10 @@ namespace Qwack.Curves.Benchmark
             }
         }
 
-        //[Benchmark(Baseline = true, OperationsPerInvoke = Interpolations)]
-        //public static void UsingBinarySearch()
-        //{
-        //    var interp = new Math.Interpolation.LinearInterpolatorFlatExtrap(_x, _y, true, true);
-        //    var g = _guesses;
-        //    for (int i = 0; i < Interpolations; i++)
-        //    {
-        //        var interpValue = interp.Interpolate(g[i]);
-        //    }
-        //}
-
-        [Benchmark(OperationsPerInvoke = Interpolations,Baseline =true)]
-        public static void SimpleLoop()
+        [Benchmark(Baseline = true, OperationsPerInvoke = Interpolations)]
+        public static void UsingBinarySearch()
         {
-            var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y, true, true);
+            var interp = new Math.Interpolation.LinearInterpolatorFlatExtrap(_x, _y);
             var g = _guesses;
             for (int i = 0; i < Interpolations; i++)
             {
@@ -60,10 +49,10 @@ namespace Qwack.Curves.Benchmark
             }
         }
 
-        [Benchmark(OperationsPerInvoke = Interpolations)]
-        public static void SimpleLoopTweaked()
+        [Benchmark(OperationsPerInvoke = Interpolations,Baseline =true)]
+        public static void SimpleLoop()
         {
-            var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y, true, true);
+            var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y);
             var g = _guesses;
             for (int i = 0; i < Interpolations; i++)
             {

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
@@ -15,7 +13,7 @@ namespace Qwack.Core.Calibrators
         public double Tollerance { get; set; } = 0.00000001;
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
-        private const double _jacobianBump = 0.0001;
+        private const double JacobianBump = 0.0001;
 
         private double[][] _jacobian;
         double[] _currentPvs;
@@ -66,10 +64,10 @@ namespace Qwack.Core.Calibrators
         private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<ICurve> curvesForStage)
         {
             // f = f - d/f'
-            var JacobianMI = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, JacobianMI);
-            int curveIx = 0;
-            int pillarIx = 0;
+            var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
+            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, jacobianMi);
+            var curveIx = 0;
+            var pillarIx = 0;
             for (int j = 0; j < numberOfInstruments; j++)
             {
                 var curve = curvesForStage[curveIx];
@@ -94,13 +92,13 @@ namespace Qwack.Core.Calibrators
                 var currentCurve = curvesForStage[curveIx];
                 model.CurrentSolveCurve = currentCurve.Name;
                 currentGuess[i] = currentCurve.GetRate(pillarIx);
-                currentCurve.BumpRate(pillarIx, _jacobianBump, true);
+                currentCurve.BumpRate(pillarIx, JacobianBump, true);
                 ComputePVs(false, instruments, model, bumpedPvs);
-                currentCurve.BumpRate(pillarIx, -_jacobianBump, true);
+                currentCurve.BumpRate(pillarIx, -JacobianBump, true);
 
                 for (int j = 0; j < bumpedPvs.Length; j++)
                 {
-                    _jacobian[i][j] = (bumpedPvs[j] - _currentPvs[j]) / _jacobianBump;
+                    _jacobian[i][j] = (bumpedPvs[j] - _currentPvs[j]) / JacobianBump;
                 }
                 pillarIx++;
                 if (pillarIx == currentCurve.NumberOfPillars)

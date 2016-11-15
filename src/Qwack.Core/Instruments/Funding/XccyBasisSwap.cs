@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -10,40 +8,11 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class XccyBasisSwap : IFundingInstrument
     {
-        public double NotionalPay { get; set; }
-        public double NotionalRec { get; set; }
-        public double ParSpreadPay { get; set; }
-        public double ParSpreadRec { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public int NDates { get; set; }
-        public DateTime[] ResetDates { get; set; }
-        public Currency CCYPay { get; set; }
-        public Currency CCYRec { get; set; }
-        public Currency PVCCY { get; set; }
-        public GenericSwapLeg PayLeg { get; set; }
-        public GenericSwapLeg RecLeg { get; set; }
-        public CashFlowSchedule FlowSchedulePay { get; set; }
-        public CashFlowSchedule FlowScheduleRec { get; set; }
-        public DayCountBasis BasisPay { get; set; }
-        public DayCountBasis BasisRec { get; set; }
-        public Frequency ResetFrequencyPay { get; set; }
-        public Frequency ResetFrequencyRec { get; set; }
-        public Frequency SwapTenor { get; set; }
-        public string ForecastCurvePay { get; set; }
-        public string ForecastCurveRec { get; set; }
-        public string DiscountCurvePay { get; set; }
-        public string DiscountCurveRec { get; set; }
-
-        public MTMSwapType MTMSwapType { get; set; }
-        public ExchangeType NotionalExchange { get; set; }
-        public string SolveCurve { get; set; }
-
         public XccyBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, ExchangeType notionalExchange, MTMSwapType mtmSwapType, string forecastCurvePay, string forecastCurveRec, string discountCurvePay, string discountCurveRec)
         {
             SwapTenor = swapTenor;
             NotionalExchange = notionalExchange;
-            MTMSwapType = mtmSwapType;
+            MtmSwapType = mtmSwapType;
 
             ResetFrequencyRec = recIndex.ResetTenor;
             ResetFrequencyPay = payIndex.ResetTenor;
@@ -56,8 +25,8 @@ namespace Qwack.Core.Instruments.Funding
             BasisPay = payIndex.DayCountBasis;
             BasisRec = recIndex.DayCountBasis;
 
-            CCYPay = payIndex.Currency;
-            CCYRec = recIndex.Currency;
+            CcyPay = payIndex.Currency;
+            CcyRec = recIndex.Currency;
 
             PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay);
             PayLeg.FixedRateOrMargin = (decimal)ParSpreadPay;
@@ -87,21 +56,50 @@ namespace Qwack.Core.Instruments.Funding
             DiscountCurveRec = discountCurveRec;
         }
 
+        public double NotionalPay { get; set; }
+        public double NotionalRec { get; set; }
+        public double ParSpreadPay { get; set; }
+        public double ParSpreadRec { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int NDates { get; set; }
+        public DateTime[] ResetDates { get; set; }
+        public Currency CcyPay { get; set; }
+        public Currency CcyRec { get; set; }
+        public Currency Pvccy { get; set; }
+        public GenericSwapLeg PayLeg { get; set; }
+        public GenericSwapLeg RecLeg { get; set; }
+        public CashFlowSchedule FlowSchedulePay { get; set; }
+        public CashFlowSchedule FlowScheduleRec { get; set; }
+        public DayCountBasis BasisPay { get; set; }
+        public DayCountBasis BasisRec { get; set; }
+        public Frequency ResetFrequencyPay { get; set; }
+        public Frequency ResetFrequencyRec { get; set; }
+        public Frequency SwapTenor { get; set; }
+        public string ForecastCurvePay { get; set; }
+        public string ForecastCurveRec { get; set; }
+        public string DiscountCurvePay { get; set; }
+        public string DiscountCurveRec { get; set; }
+
+        public MTMSwapType MtmSwapType { get; set; }
+        public ExchangeType NotionalExchange { get; set; }
+        public string SolveCurve { get; set; }
+
         public double Pv(FundingModel model, bool updateState)
         {
-            bool updateDFPay = updateState || model.CurrentSolveCurve == DiscountCurvePay;
-            bool updateDFRec = updateState || model.CurrentSolveCurve == DiscountCurveRec;
-            bool updatePayEst = updateState || model.CurrentSolveCurve == ForecastCurvePay;
-            bool updateRecEst = updateState || model.CurrentSolveCurve == ForecastCurveRec;
+            var updateDfPay = updateState || model.CurrentSolveCurve == DiscountCurvePay;
+            var updateDfRec = updateState || model.CurrentSolveCurve == DiscountCurveRec;
+            var updatePayEst = updateState || model.CurrentSolveCurve == ForecastCurvePay;
+            var updateRecEst = updateState || model.CurrentSolveCurve == ForecastCurveRec;
 
-            return PV(model, updateState, updateDFPay, updateDFRec, updatePayEst, updateRecEst);
+            return PV(model, updateState, updateDfPay, updateDfRec, updatePayEst, updateRecEst);
         }
 
         public CashFlowSchedule ExpectedCashFlows(FundingModel model)
         {
             throw new NotImplementedException();
         }
-        public double PV(FundingModel model, bool updateState, bool updateDFPay, bool updateDFRec, bool updatePayEst, bool updateRecEst)
+        public double PV(FundingModel model, bool updateState, bool updateDfPay, bool updateDfRec, bool updatePayEst, bool updateRecEst)
         {
             var discountCurvePay = model.Curves[DiscountCurvePay];
             var discountCurveRec = model.Curves[DiscountCurveRec];
@@ -111,52 +109,59 @@ namespace Qwack.Core.Instruments.Funding
             double totalPVPay = 0;
 
 
-            var payCCY = MTMSwapType == MTMSwapType.ReceiveNotionalFixed ? CCYRec : CCYPay;
-            var recCCY = MTMSwapType == MTMSwapType.PayNotionalFixed ? CCYPay : CCYRec;
-            Currency baseCCY = PVCCY ?? payCCY;
+            var payCCY = MtmSwapType == MTMSwapType.ReceiveNotionalFixed ? CcyRec : CcyPay;
+            var recCCY = MtmSwapType == MTMSwapType.PayNotionalFixed ? CcyPay : CcyRec;
+            Currency baseCCY = Pvccy ?? payCCY;
 
             double fxPayToBase = model.GetFxRate(model.BuildDate, payCCY, baseCCY);
             double fxRecToBase = model.GetFxRate(model.BuildDate, recCCY, baseCCY);
 
-            double fixedNotional = (double)(MTMSwapType == MTMSwapType.PayNotionalFixed ? PayLeg.Nominal :
-                MTMSwapType == MTMSwapType.ReceiveNotionalFixed ? RecLeg.Nominal : 0M);
+            double fixedNotional = (double)(MtmSwapType == MTMSwapType.PayNotionalFixed ? PayLeg.Nominal :
+                MtmSwapType == MTMSwapType.ReceiveNotionalFixed ? RecLeg.Nominal : 0M);
 
             for (int i = 0; i < FlowSchedulePay.Flows.Count; i++)
             {
-                double FV, DF;
+                double fv, df;
 
                 var flow = FlowSchedulePay.Flows[i];
 
                 if (updatePayEst && flow.FlowType != FlowType.FixedAmount)
                 {
-                    DateTime s = flow.AccrualPeriodStart;
-                    DateTime e = flow.AccrualPeriodEnd;
-                    double RateLin = forecastCurvePay.GetForwardRate(s, e, RateType.Linear, BasisPay)
-                        + flow.FixedRateOrMargin;
-                    double YF = flow.NotionalByYearFraction;
-                    FV = RateLin * YF * (MTMSwapType == MTMSwapType.ReceiveNotionalFixed ? fixedNotional : flow.Notional);
-                    FV *= -1.0;
+                    var s = flow.AccrualPeriodStart;
+                    var e = flow.AccrualPeriodEnd;
+                    var rateLin = forecastCurvePay.GetForwardRate(s, e, RateType.Linear, BasisPay)
+                                  + flow.FixedRateOrMargin;
+                    var YF = flow.NotionalByYearFraction;
+                    fv = rateLin * YF *
+                         (MtmSwapType == MTMSwapType.ReceiveNotionalFixed ? fixedNotional : flow.Notional);
+                    fv *= -1.0;
                 }
                 else
-                    FV = flow.Fv;
+                {
+                    fv = flow.Fv;
+                }
 
-                if (updateDFPay)
-                    DF = discountCurvePay.Pv(1, flow.SettleDate);
+                if (updateDfPay)
+                {
+                    df = discountCurvePay.Pv(1, flow.SettleDate);
+                }
                 else
-                    DF = (flow.Fv == flow.Pv) ? 1.0 : flow.Pv / flow.Fv;
+                {
+                    df = flow.Pv / flow.Fv;
+                }
 
-                double PV = DF * FV;
+                var pv = df * fv;
 
                 if (updateState)
                 {
-                    flow.Fv = FV;
-                    flow.Pv = PV;
+                    flow.Fv = fv;
+                    flow.Pv = pv;
                 }
 
-                totalPVPay += PV;
+                totalPVPay += pv;
             }
 
-            for (int i = 0; i < FlowScheduleRec.Flows.Count; i++)
+            for (var i = 0; i < FlowScheduleRec.Flows.Count; i++)
             {
                 double FV, DF;
 
@@ -164,22 +169,28 @@ namespace Qwack.Core.Instruments.Funding
 
                 if (updateRecEst && flow.FlowType != FlowType.FixedAmount)
                 {
-                    DateTime s = flow.AccrualPeriodStart;
-                    DateTime e = flow.AccrualPeriodEnd;
-                    double RateLin = forecastCurveRec.GetForwardRate(s, e, RateType.Linear, BasisRec)
-                        + flow.FixedRateOrMargin;
-                    double YF = flow.NotionalByYearFraction;
-                    FV = RateLin * YF * (MTMSwapType == MTMSwapType.PayNotionalFixed ? fixedNotional : flow.Notional);
+                    var s = flow.AccrualPeriodStart;
+                    var e = flow.AccrualPeriodEnd;
+                    var rateLin = forecastCurveRec.GetForwardRate(s, e, RateType.Linear, BasisRec)
+                                     + flow.FixedRateOrMargin;
+                    var YF = flow.NotionalByYearFraction;
+                    FV = rateLin * YF * (MtmSwapType == MTMSwapType.PayNotionalFixed ? fixedNotional : flow.Notional);
                 }
                 else
+                {
                     FV = flow.Fv;
+                }
 
-                if (updateDFRec)
+                if (updateDfRec)
+                {
                     DF = discountCurveRec.Pv(1, flow.SettleDate);
+                }
                 else
-                    DF = (flow.Fv == flow.Pv) ? 1.0 : flow.Pv / flow.Fv;
+                {
+                    DF = flow.Pv / flow.Fv;
+                }
 
-                double PV = DF * FV;
+                var PV = DF * FV;
 
                 if (updateState)
                 {

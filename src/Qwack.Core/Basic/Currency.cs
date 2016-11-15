@@ -11,9 +11,10 @@ namespace Qwack.Core.Basic
             SettlementCalendar = settlementCalendar;
         }
 
-        public string Ccy { get; }
-        public DayCountBasis DayCount { get; }
+        public string Ccy { get; set;}
+        public DayCountBasis DayCount { get; set;}
         public Calendar SettlementCalendar { get; }
+        public string SettlementCalendarName { get;set;}
 
         public override bool Equals(object x)
         {

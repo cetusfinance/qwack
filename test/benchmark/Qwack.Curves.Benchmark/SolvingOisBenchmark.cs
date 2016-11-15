@@ -10,7 +10,6 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Dates.Providers;
 using Qwack.Math.Interpolation;
 
 namespace Qwack.Curves.Benchmark

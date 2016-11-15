@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.PlatformAbstractions;
-using Qwack.Dates.Providers;
+using Qwack.Json.Providers;
 using Xunit;
 
 namespace Qwack.Dates.Tests

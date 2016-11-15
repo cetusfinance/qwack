@@ -7,7 +7,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
-using Qwack.Dates.Providers;
+using Qwack.Json.Providers;
 
 namespace Qwack.Curves.Benchmark
 {

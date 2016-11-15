@@ -134,7 +134,6 @@ namespace Qwack.Curves.Benchmark
         [Benchmark]
         public static void PuttingItTogether()
         {
-            InterpolatorFactory.UseNoSearch = true;
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(model, _instruments);

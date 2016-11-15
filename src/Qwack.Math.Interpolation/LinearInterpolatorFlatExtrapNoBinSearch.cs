@@ -58,9 +58,10 @@ namespace Qwack.Math.Interpolation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int FindFloorPoint(double t)
         {
-            for(int i = 1; i < _x.Length;i++)
+            var x = _x;
+            for(int i = 1; i < x.Length;i++)
             {
-                if(_x[i] >= t)
+                if(x[i] >= t)
                 {
                     return i-1;
                 }

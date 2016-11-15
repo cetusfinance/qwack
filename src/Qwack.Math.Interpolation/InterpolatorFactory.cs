@@ -7,16 +7,14 @@ namespace Qwack.Math.Interpolation
 {
     public class InterpolatorFactory
     {
-        public static bool UseNoSearch { get;set;}
-
         public static IInterpolator1D GetInterpolator(double[] x, double[] y, Interpolator1DType kind, bool noCopy = false, bool isSorted = false)
         {
             switch (kind)
             {
                 case Interpolator1DType.LinearFlatExtrap:
-                    if(UseNoSearch)
-                    {
-                        return new LinearInterpolatorFlatExtrapNoBinSearch(x,y,noCopy,isSorted);
+                    if(x.Length < 200)
+                    { 
+                        return new LinearInterpolatorFlatExtrapNoBinSearch(x, y, noCopy, isSorted);
                     }
                     else
                     {

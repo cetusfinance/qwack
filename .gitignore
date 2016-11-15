@@ -253,3 +253,6 @@ paket-files/
 test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report.csv
 test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report.html
 test/benchmark/BenchmarkDotNet.Artifacts/results/SolvingOisBenchmark-report-github.md
+test/benchmark/BenchmarkDotNet.Artifacts/results/InterpolationBenchmark-report.csv
+test/benchmark/BenchmarkDotNet.Artifacts/results/InterpolationBenchmark-report.html
+test/benchmark/BenchmarkDotNet.Artifacts/results/InterpolationBenchmark-report-github.md

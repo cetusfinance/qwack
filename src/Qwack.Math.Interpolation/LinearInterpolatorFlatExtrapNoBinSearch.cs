@@ -17,34 +17,15 @@ namespace Qwack.Math.Interpolation
         private double _minX;
         private double _maxX;
 
-        public LinearInterpolatorFlatExtrapNoBinSearch(double[] x, double[] y, bool noCopy, bool isSorted)
+        public LinearInterpolatorFlatExtrapNoBinSearch(double[] x, double[] y)
         {
-            if (noCopy)
-            {
-                _x = x;
-                _y = y;
-            }
-            else
-            {
-                _x = new double[x.Length];
-                _y = new double[y.Length];
-                Buffer.BlockCopy(x, 0, _x, 0, x.Length * 8);
-                Buffer.BlockCopy(y, 0, _y, 0, y.Length * 8);
-            }
-            if (!isSorted)
-            {
-                Array.Sort(_x, _y);
-            }
+            _x = x;
+            _y = y;
             _minX = _x[0];
             _maxX = _x[x.Length - 1];
             CalculateSlope();
         }
-
-        public LinearInterpolatorFlatExtrapNoBinSearch(double[] x, double[] y)
-            : this(x, y, false, false)
-        {
-        }
-
+                
         public LinearInterpolatorFlatExtrapNoBinSearch()
         { }
 
@@ -58,9 +39,10 @@ namespace Qwack.Math.Interpolation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int FindFloorPoint(double t)
         {
-            for(int i = 1; i < _x.Length;i++)
+            var x = _x;
+            for(int i = 1; i < x.Length;i++)
             {
-                if(_x[i] >= t)
+                if(x[i] >= t)
                 {
                     return i-1;
                 }

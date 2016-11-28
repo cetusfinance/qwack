@@ -1,45 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static System.Math;
 
 namespace Qwack.Math.Matrix
 {
     public class DoubleArrayFunctions
     {
-        public static double[][] InvertMatrix(double[][] A)
+        public static double[][] InvertMatrix(double[][] a)
         {
-            int n = A.Length;
+            var n = a.Length;
             //e will represent each column in the identity matrix
-            double[] e;
             //x will hold the inverse matrix to be returned
-            double[][] x = new double[n][];
-            for (int i = 0; i < n; i++)
+            var x = new double[n][];
+            for (var i = 0; i < n; i++)
             {
-                x[i] = new double[A[i].Length];
+                x[i] = new double[a[i].Length];
             }
-            /*
-            * solve will contain the vector solution for the LUP decomposition as we solve
-            * for each vector of x.  We will combine the solutions into the double[][] array x.
-            * */
-            double[] solve;
 
             //Get the LU matrix and P matrix (as an array)
-            Tuple<double[][], int[]> results = LUPDecomposition(A);
+            var results = LupDecomposition(a);
 
-            double[][] LU = results.Item1;
-            int[] P = results.Item2;
+            var lu = results.Item1;
+            var p = results.Item2;
 
             /*
             * Solve AX = e for each column ei of the identity matrix using LUP decomposition
             * */
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
-                e = new double[A[i].Length];
+                var e = new double[a[i].Length];
                 e[i] = 1;
-                solve = LUPSolve(LU, P, e);
-                for (int j = 0; j < solve.Length; j++)
+                var solve = LupSolve(lu, p, e);
+                for (var j = 0; j < solve.Length; j++)
                 {
                     x[j][i] = solve[j];
                 }
@@ -47,21 +38,18 @@ namespace Qwack.Math.Matrix
             return x;
         }
 
-        public static double[] LUPSolve(double[][] LU, int[] pi, double[] b)
+        public static double[] LupSolve(double[][] lu, int[] pi, double[] b)
         {
-            int n = LU.Length - 1;
-            double[] x = new double[n + 1];
-            double[] y = new double[n + 1];
-            double suml = 0;
-            double sumu = 0;
-            double lij = 0;
+            var n = lu.Length - 1;
+            var x = new double[n + 1];
+            var y = new double[n + 1];
 
             /*
             * Solve for y using formward substitution
             * */
-            for (int i = 0; i <= n; i++)
+            for (var i = 0; i <= n; i++)
             {
-                suml = 0;
+                double suml = 0;
                 for (int j = 0; j <= i - 1; j++)
                 {
                     /*
@@ -69,54 +57,42 @@ namespace Qwack.Math.Matrix
                     * the value for L at index i and j will be 1 when i equals j, not LU[i][j], since
                     * the diagonal values are all 1 for L.
                     * */
-                    if (i == j)
-                    {
-                        lij = 1;
-                    }
-                    else
-                    {
-                        lij = LU[i][j];
-                    }
+                    var lij = i == j ? 1 : lu[i][j];
                     suml = suml + (lij * y[j]);
                 }
                 y[i] = b[pi[i]] - suml;
             }
             //Solve for x by using back substitution
-            for (int i = n; i >= 0; i--)
+            for (var i = n; i >= 0; i--)
             {
-                sumu = 0;
-                for (int j = i + 1; j <= n; j++)
+                var sumu = 0.0;
+                for (var j = i + 1; j <= n; j++)
                 {
-                    sumu = sumu + (LU[i][j] * x[j]);
+                    sumu = sumu + (lu[i][j] * x[j]);
                 }
-                x[i] = (y[i] - sumu) / LU[i][i];
+                x[i] = (y[i] - sumu) / lu[i][i];
             }
             return x;
         }
 
-        public static Tuple<double[][], int[]> LUPDecomposition(double[][] A)
+        public static Tuple<double[][], int[]> LupDecomposition(double[][] a)
         {
-            int n = A.Length - 1;
+            var n = a.Length - 1;
             /*
             * pi represents the permutation matrix.  We implement it as an array
             * whose value indicates which column the 1 would appear.  We use it to avoid 
             * dividing by zero or small numbers.
             * */
-            int[] pi = new int[n + 1];
-            double p = 0;
-            int kp = 0;
-            int pik = 0;
-            int pikp = 0;
-            double aki = 0;
-            double akpi = 0;
+            var pi = new int[n + 1];
+            var kp = 0;
 
             //Initialize the permutation matrix, will be the identity matrix
-            for (int j = 0; j <= n; j++)
+            for (var j = 0; j <= n; j++)
             {
                 pi[j] = j;
             }
 
-            for (int k = 0; k <= n; k++)
+            for (var k = 0; k <= n; k++)
             {
                 /*
                 * In finding the permutation matrix p that avoids dividing by zero
@@ -126,14 +102,12 @@ namespace Qwack.Math.Matrix
                 * the current first column are zero then the matrix is singluar and throw an
                 * error.
                 * */
-                p = 0;
-                for (int i = k; i <= n; i++)
+                double p = 0;
+                for (var i = k; i <= n; i++)
                 {
-                    if (Abs(A[i][k]) > p)
-                    {
-                        p = Abs(A[i][k]);
-                        kp = i;
-                    }
+                    if (!(Abs(a[i][k]) > p)) continue;
+                    p = Abs(a[i][k]);
+                    kp = i;
                 }
                 //if (p == 0)
                 //{
@@ -143,8 +117,8 @@ namespace Qwack.Math.Matrix
                 * These lines update the pivot array (which represents the pivot matrix)
                 * by exchanging pi[k] and pi[kp].
                 * */
-                pik = pi[k];
-                pikp = pi[kp];
+                var pik = pi[k];
+                var pikp = pi[kp];
                 pi[k] = pikp;
                 pi[kp] = pik;
 
@@ -153,25 +127,25 @@ namespace Qwack.Math.Matrix
                 * */
                 for (int i = 0; i <= n; i++)
                 {
-                    aki = A[k][i];
-                    akpi = A[kp][i];
-                    A[k][i] = akpi;
-                    A[kp][i] = aki;
+                    var aki = a[k][i];
+                    var akpi = a[kp][i];
+                    a[k][i] = akpi;
+                    a[kp][i] = aki;
                 }
 
                 /*
                     * Compute the Schur complement
                     * */
-                for (int i = k + 1; i <= n; i++)
+                for (var i = k + 1; i <= n; i++)
                 {
-                    A[i][k] = A[i][k] / A[k][k];
-                    for (int j = k + 1; j <= n; j++)
+                    a[i][k] = a[i][k] / a[k][k];
+                    for (var j = k + 1; j <= n; j++)
                     {
-                        A[i][j] = A[i][j] - (A[i][k] * A[k][j]);
+                        a[i][j] = a[i][j] - (a[i][k] * a[k][j]);
                     }
                 }
             }
-            return Tuple.Create(A, pi);
+            return Tuple.Create(a, pi);
         }
         public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
         {

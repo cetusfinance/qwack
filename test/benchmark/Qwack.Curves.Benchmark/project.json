@@ -8,6 +8,7 @@
     "NETStandard.Library": "1.6.0",
     "Qwack.Dates": { "target": "project" },
     "Qwack.Core": { "target": "project" },
+    "Qwack.Providers": {"target": "project"},
     "Qwack.Math.Interpolation": {"target": "project"}, 
     "Microsoft.Extensions.PlatformAbstractions": "1.1.0-alpha1-21955",
     "BenchmarkDotNet": "0.10.0"

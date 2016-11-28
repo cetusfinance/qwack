@@ -61,14 +61,13 @@ namespace Qwack.Core.Models
 
         public FundingModel DeepClone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.GetPillarDates(), c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray());
+            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray());
             return returnValue;
         }
 
         public double GetFxRate(DateTime settlementDate, Currency domesticCcy, Currency foreignCcy)
         { //domestic-per-foreign
-            if (foreignCcy == domesticCcy)
-                return 1.0;
+            if (foreignCcy == domesticCcy) return 1.0;
 
             double spot;
 

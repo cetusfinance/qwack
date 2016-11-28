@@ -11,15 +11,15 @@ namespace Qwack.Curves.Benchmark
         private static readonly Dictionary<string, Type> _benchmarks = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             ["SolveOis"] = typeof(SolvingOisBenchmark),
+            ["LinInterp"] = typeof(InterpolationBenchmark)
         };
 
         public static void Main(string[] args)
         {
             //SolvingOisBenchmark.Setup();
-
-            //for (int i = 0; i < 100; i++)
+            //for(int i = 0; i < 100; i ++)
             //{
-            //    SolvingOisBenchmark.PuttingItTogetherV2();
+            //    SolvingOisBenchmark.PuttingItTogether();
             //}
 
             if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))

@@ -10,7 +10,6 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Dates.Providers;
 using Qwack.Math.Interpolation;
 
 namespace Qwack.Curves.Benchmark
@@ -135,7 +134,6 @@ namespace Qwack.Curves.Benchmark
         [Benchmark]
         public static void PuttingItTogether()
         {
-            InterpolatorFactory.UseNoSearch = true;
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(model, _instruments);

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Qwack.Dates;
 
-namespace Qwack.Dates.Providers
+namespace Qwack.Json.Providers
 {
     public class CalendarsFromJson: ICalendarProvider
     {

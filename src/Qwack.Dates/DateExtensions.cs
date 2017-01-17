@@ -90,6 +90,13 @@ namespace Qwack.Dates
                     double mdiff = endDate.Month - startDate.Month;
                     double ddiff = endDate.Day - startDate.Day;
                     return (ydiff * 360 + mdiff * 30 + ddiff) / 360;
+                case DayCountBasis.ThirtyE360:
+                    double d1E = Math.Min(startDate.Day, 30);
+                    double d2E = Math.Min(endDate.Day, 30);
+                    double ydiffE = endDate.Year - startDate.Year;
+                    double mdiffE = endDate.Month - startDate.Month;
+                    double ddiffE = d2E - d1E;
+                    return (ydiffE * 360 + mdiffE * 30 + ddiffE) / 360;
                 case DayCountBasis.Unity:
                     return 1.0;
             }
@@ -339,5 +346,13 @@ namespace Qwack.Dates
             return AddPeriod(date, rollType, calendar, new Frequency(0 - datePeriod.PeriodCount, datePeriod.PeriodType));
         }
 
+        public static DateTime Min(this DateTime dateA, DateTime dateB)
+        {
+            return dateA < dateB ? dateA : dateB;
+        }
+        public static DateTime Max(this DateTime dateA, DateTime dateB)
+        {
+            return dateA > dateB ? dateA : dateB;
+        }
     }
 }

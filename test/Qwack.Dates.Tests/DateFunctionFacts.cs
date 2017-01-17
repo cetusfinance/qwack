@@ -118,5 +118,15 @@ namespace Qwack.Dates.Tests
             var dt = new DateTime(2016, 11, 20, 10, 20, 10);
             Assert.Equal(new DateTime(2016, 11, 16), dt.ThirdWednesday());
         }
+
+        [Fact]
+        public void MinMax()
+        {
+            var dtA = new DateTime(2016, 11, 20);
+            var dtB = new DateTime(2017, 11, 20);
+
+            Assert.Equal(dtA, dtA.Min(dtB));
+            Assert.Equal(dtB, dtB.Max(dtA));
+        }
     }
 }

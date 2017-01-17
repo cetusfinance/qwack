@@ -96,7 +96,14 @@ namespace Qwack.Dates
             return -1;
         }
 
-        public static DateTime FirstBusinessDayOfMonth(this DateTime input, Calendar calendar)
+
+        public static double CalculateYearFraction(this DayCountBasis basis, DateTime startDate, DateTime endDate)
+        {
+            return startDate.CalculateYearFraction(endDate, basis);
+        }
+    
+
+    public static DateTime FirstBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             var returnDate = input.FirstDayOfMonth();
             if (calendar != null)

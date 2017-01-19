@@ -7,5 +7,6 @@
         double Interpolate(double t);
         double FirstDerivative(double x);
         double SecondDerivative(double x);
+        double[] Sensitivity(double x);
     }
 }

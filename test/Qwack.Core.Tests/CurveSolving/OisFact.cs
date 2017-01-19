@@ -234,7 +234,8 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
 
-            var S = new NewtonRaphsonMultiCurveSolverStaged();
+            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
+            //var S = new NewtonRaphsonMultiCurveSolverStaged();
             S.Solve(engine, FIC);
 
             foreach (var ins in FIC)
@@ -402,6 +403,58 @@ namespace Qwack.Core.Tests.CurveSolving
             engine.SetupFx(fxMatrix);
 
             var S = new NewtonRaphsonMultiCurveSolverStaged();
+            S.Solve(engine, FIC);
+
+            foreach (var ins in FIC)
+            {
+                var pv = ins.Pv(engine, false);
+                Assert.Equal(0.0, pv, 7);
+            }
+
+        }
+
+        [Fact]
+        public void LessComplexCurve()
+        {
+            DateTime startDate = new DateTime(2016, 05, 20);
+            var depoTenors = new Frequency[] { 3.Months() };
+            var OISdepoTenors = new Frequency[] { 1.Bd() };
+            double[] depoPricesZAR = { 0.06 };
+
+            string[] FRATenors = { "3x6", "6x9", "9x12", "12x15", "15x18", "18x21", "21x24" };
+            double[] FRAPricesZAR = { 0.065, 0.07, 0.075, 0.077, 0.08, 0.081, 0.082 };
+  
+            DateTime[] ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            DateTime[] ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            DateTime[] ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
+
+
+
+            var ZARdepos = new IrSwap[depoTenors.Length];
+            var ZARFRAs = new ForwardRateAgreement[FRATenors.Length];
+
+            var FIC = new FundingInstrumentCollection();
+
+            for (int i = 0; i < FRATenors.Length; i++)
+            {
+                ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], _zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M") { SolveCurve = "ZAR.JIBAR.3M" };
+                FIC.Add(ZARFRAs[i]);
+            }
+
+            for (int i = 0; i < depoTenors.Length; i++)
+            {
+                ZARdepos[i] = new IrSwap(startDate, depoTenors[i], _zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M") { SolveCurve = "ZAR.JIBAR.3M" };
+                FIC.Add(ZARdepos[i]);
+             }
+
+
+
+            var ZARcurve3m = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
+        
+            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m });
+
+            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
+            //var S = new NewtonRaphsonMultiCurveSolverStaged();
             S.Solve(engine, FIC);
 
             foreach (var ins in FIC)

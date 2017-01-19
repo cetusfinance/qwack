@@ -43,7 +43,7 @@ namespace Qwack.Core.Curves
         public DateTime[] PillarDates => _pillars;
         public Interpolator1DType InterpolatorType => _interpKind;
         public int SolveStage { get; set; }
-
+        public DayCountBasis Basis { get { return _basis; } }
         public double GetDf(DateTime startDate, DateTime endDate)
         {
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
@@ -154,6 +154,12 @@ namespace Qwack.Core.Curves
                 return returnCurve;
             }
 
+        }
+
+        public double[] GetSensitivity(DateTime valueDate)
+        {
+            var T = _buildDate.CalculateYearFraction(valueDate, _basis);
+            return _interpolator.Sensitivity(T);
         }
     }
 }

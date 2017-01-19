@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -26,14 +27,16 @@ namespace Qwack.Core.Instruments.Funding
 
             PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay)
             {
-                FixedRateOrMargin = (decimal) ParSpreadPay,
-                LegType = SwapLegType.Float
+                FixedRateOrMargin = (decimal)ParSpreadPay,
+                LegType = SwapLegType.Float,
+                Nominal = -1e6M
             };
 
             RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec)
             {
-                FixedRateOrMargin = (decimal) ParSpreadRec,
-                LegType = SwapLegType.Float
+                FixedRateOrMargin = (decimal)ParSpreadRec,
+                LegType = SwapLegType.Float,
+                Nominal = 1e6M
             };
 
 
@@ -104,7 +107,6 @@ namespace Qwack.Core.Instruments.Funding
                         + flow.FixedRateOrMargin;
                     double YF = flow.NotionalByYearFraction;
                     FV = RateLin * YF * flow.Notional;
-                    FV *= -1.0;
                 }
                 else
                     FV = flow.Fv;
@@ -162,5 +164,92 @@ namespace Qwack.Core.Instruments.Funding
             return totalPV;
         }
 
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        {
+            //discounting first
+            var discountDict = new Dictionary<DateTime, double>();
+            var discountCurve = model.Curves[DiscountCurve];
+            foreach (var flow in FlowSchedulePay.Flows.Union(FlowScheduleRec.Flows))
+            {
+                double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
+                if (discountDict.ContainsKey(flow.SettleDate))
+                    discountDict[flow.SettleDate] += -t * flow.Pv;
+                else
+                    discountDict.Add(flow.SettleDate, -t * flow.Pv);
+            }
+
+
+            //then forecast
+            var forecastDictPay = (ForecastCurvePay == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
+            var forecastDictRec = (ForecastCurveRec == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
+            var forecastCurvePay = model.Curves[ForecastCurvePay];
+            var forecastCurveRec = model.Curves[ForecastCurveRec];
+            foreach (var flow in FlowSchedulePay.Flows)
+            {
+                var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+                double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+                double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
+                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+                if (forecastDictPay.ContainsKey(flow.AccrualPeriodStart))
+                    forecastDictPay[flow.AccrualPeriodStart] += dPVdS;
+                else
+                    forecastDictPay.Add(flow.AccrualPeriodStart, dPVdS);
+
+                if (forecastDictPay.ContainsKey(flow.AccrualPeriodEnd))
+                    forecastDictPay[flow.AccrualPeriodEnd] += dPVdE;
+                else
+                    forecastDictPay.Add(flow.AccrualPeriodEnd, dPVdE);
+            }
+            foreach (var flow in FlowScheduleRec.Flows)
+            {
+                var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+                double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+                double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
+                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+                if (forecastDictRec.ContainsKey(flow.AccrualPeriodStart))
+                    forecastDictRec[flow.AccrualPeriodStart] += dPVdS;
+                else
+                    forecastDictRec.Add(flow.AccrualPeriodStart, dPVdS);
+
+                if (forecastDictRec.ContainsKey(flow.AccrualPeriodEnd))
+                    forecastDictRec[flow.AccrualPeriodEnd] += dPVdE;
+                else
+                    forecastDictRec.Add(flow.AccrualPeriodEnd, dPVdE);
+            }
+
+
+            if (ForecastCurvePay == DiscountCurve && ForecastCurveRec == DiscountCurve)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+            };
+            else if (ForecastCurvePay == DiscountCurve)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+                {ForecastCurveRec,forecastDictRec },
+            };
+            else if (ForecastCurveRec == DiscountCurve)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+                {ForecastCurvePay,forecastDictPay },
+            };
+            else
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+                {ForecastCurvePay,forecastDictPay },
+                {ForecastCurveRec,forecastDictRec },
+            };
+        }
     }
 }

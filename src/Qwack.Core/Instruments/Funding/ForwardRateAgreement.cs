@@ -80,7 +80,7 @@ namespace Qwack.Core.Instruments.Funding
                 double RateFix = flow.FixedRateOrMargin;
                 double RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
                 double YF = flow.NotionalByYearFraction;
-                FV = ((RateFloat - RateFix) * YF) / (1 + RateFloat * YF);
+                FV = ((RateFloat - RateFix) * YF) / (1 + RateFloat * YF) * flow.Notional;
 
                 FV *= (PayRec == SwapPayReceiveType.Payer) ? 1.0 : -1.0;
             }
@@ -98,6 +98,63 @@ namespace Qwack.Core.Instruments.Funding
             flow.Fv = FV;
             flow.Pv = totalPV;
             return totalPV;
+        }
+
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        {
+            //discounting first
+            var discountDict = new Dictionary<DateTime, double>();
+            var discountCurve = model.Curves[DiscountCurve];
+            var flow = FlowScheduleFra.Flows.Single();
+            double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
+
+            discountDict.Add(flow.SettleDate, -t * flow.Pv);
+
+
+            //then forecast
+            var forecastDict = (ForecastCurve == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
+            var forecastCurve = model.Curves[ForecastCurve];
+            DateTime s = flow.AccrualPeriodStart;
+            DateTime e = flow.AccrualPeriodEnd;
+            double RateFix = flow.FixedRateOrMargin;
+            double RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
+
+            var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+            double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+            double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+
+            //https://www.mathsisfun.com/calculus/derivatives-rules.html quotient rule
+            var f = (RateFloat - RateFix) * flow.NotionalByYearFraction * flow.Notional * df;
+            var g = (1 + RateFloat * flow.NotionalByYearFraction);
+            var fd = flow.NotionalByYearFraction * flow.Notional * df;
+            var gd = flow.NotionalByYearFraction;
+
+            var dPVdR = (fd * g - gd * f) / (g * g);
+            var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+            var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+            if (forecastDict.ContainsKey(flow.AccrualPeriodStart))
+                forecastDict[flow.AccrualPeriodStart] += dPVdS;
+            else
+                forecastDict.Add(flow.AccrualPeriodStart, dPVdS);
+
+            if (forecastDict.ContainsKey(flow.AccrualPeriodEnd))
+                forecastDict[flow.AccrualPeriodEnd] += dPVdE;
+            else
+                forecastDict.Add(flow.AccrualPeriodEnd, dPVdE);
+
+
+            if (ForecastCurve == DiscountCurve)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+            };
+            else
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+                {ForecastCurve,forecastDict },
+            };
         }
     }
 }

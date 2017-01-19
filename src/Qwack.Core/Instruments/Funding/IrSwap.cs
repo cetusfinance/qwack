@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -10,7 +11,7 @@ namespace Qwack.Core.Instruments.Funding
     public class IrSwap : IFundingInstrument
     {
         public IrSwap(DateTime startDate, Frequency swapTenor, FloatRateIndex rateIndex, double parRate,
-            SwapPayReceiveType swapType, string discountCurve, string forecastCurve)
+            SwapPayReceiveType swapType,  string forecastCurve, string discountCurve)
         {
             SwapTenor = swapTenor;
             ResetFrequency = rateIndex.ResetTenor;
@@ -23,13 +24,15 @@ namespace Qwack.Core.Instruments.Funding
 
             FixedLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFixed);
-            FixedLeg.FixedRateOrMargin = (decimal) parRate;
+            FixedLeg.FixedRateOrMargin = (decimal)parRate;
             FixedLeg.LegType = SwapLegType.Fixed;
+            FixedLeg.Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M);
 
             FloatLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFloat);
             FloatLeg.FixedRateOrMargin = 0.0M;
             FloatLeg.LegType = SwapLegType.Float;
+            FloatLeg.Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M);
 
             FlowScheduleFixed = FixedLeg.GenerateSchedule();
             FlowScheduleFloat = FloatLeg.GenerateSchedule();
@@ -81,7 +84,6 @@ namespace Qwack.Core.Instruments.Funding
                     var rateLin = flow.FixedRateOrMargin;
                     var yf = flow.NotionalByYearFraction;
                     fv = rateLin * yf * flow.Notional;
-                    fv *= SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0;
                 }
                 else
                 {
@@ -120,7 +122,6 @@ namespace Qwack.Core.Instruments.Funding
                     var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, BasisFloat);
                     var yf = flow.NotionalByYearFraction;
                     fv = rateLin * yf * flow.Notional;
-                    fv *= SwapType == SwapPayReceiveType.Payer ? -1.0 : 1.0;
                 }
                 else
                 {
@@ -147,6 +148,61 @@ namespace Qwack.Core.Instruments.Funding
         public CashFlowSchedule ExpectedCashFlows(FundingModel model)
         {
             throw new NotImplementedException();
+        }
+
+        //assumes zero cc rates for now
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        {
+            //discounting first
+            var discountDict = new Dictionary<DateTime, double>();
+            var discountCurve = model.Curves[DiscountCurve];
+            foreach (var flow in FlowScheduleFloat.Flows.Union(FlowScheduleFixed.Flows))
+            {
+                double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
+                if (discountDict.ContainsKey(flow.SettleDate))
+                    discountDict[flow.SettleDate] += -t * flow.Pv;
+                else
+                    discountDict.Add(flow.SettleDate, -t * flow.Pv);
+            }
+
+
+            //then forecast
+            var forecastDict = (ForecastCurve == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
+            var forecastCurve = model.Curves[ForecastCurve];
+            foreach (var flow in FlowScheduleFloat.Flows)
+            {
+                var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+
+                double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+                double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+                if (forecastDict.ContainsKey(flow.AccrualPeriodStart))
+                    forecastDict[flow.AccrualPeriodStart] += dPVdS;
+                else
+                    forecastDict.Add(flow.AccrualPeriodStart, dPVdS);
+
+                if (forecastDict.ContainsKey(flow.AccrualPeriodEnd))
+                    forecastDict[flow.AccrualPeriodEnd] += dPVdE;
+                else
+                    forecastDict.Add(flow.AccrualPeriodEnd, dPVdE);
+            }
+
+
+            if (ForecastCurve == DiscountCurve)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+            };
+            else
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurve,discountDict },
+                {ForecastCurve,forecastDict },
+            };
         }
     }
 }

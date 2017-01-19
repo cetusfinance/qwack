@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
@@ -204,5 +205,106 @@ namespace Qwack.Core.Instruments.Funding
             return totalPVRec * fxRecToBase + totalPVPay * fxPayToBase;
         }
 
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        {
+            //discounting first
+            var discountDictPay = new Dictionary<DateTime, double>();
+            var discountCurvePay = model.Curves[DiscountCurvePay];
+            foreach (var flow in FlowSchedulePay.Flows)
+            {
+                double t = discountCurvePay.Basis.CalculateYearFraction(discountCurvePay.BuildDate, flow.SettleDate);
+                if (discountDictPay.ContainsKey(flow.SettleDate))
+                    discountDictPay[flow.SettleDate] += -t * flow.Pv;
+                else
+                    discountDictPay.Add(flow.SettleDate, -t * flow.Pv);
+            }
+            var discountDictRec = new Dictionary<DateTime, double>();
+            var discountCurveRec = model.Curves[DiscountCurveRec];
+            foreach (var flow in FlowScheduleRec.Flows)
+            {
+                double t = discountCurveRec.Basis.CalculateYearFraction(discountCurveRec.BuildDate, flow.SettleDate);
+                if (discountDictRec.ContainsKey(flow.SettleDate))
+                    discountDictRec[flow.SettleDate] += -t * flow.Pv;
+                else
+                    discountDictRec.Add(flow.SettleDate, -t * flow.Pv);
+            }
+
+
+            //then forecast
+            var forecastDictPay = (ForecastCurvePay == DiscountCurvePay) ? discountDictPay : new Dictionary<DateTime, double>();
+            var forecastDictRec = (ForecastCurveRec == DiscountCurveRec) ? discountDictRec : new Dictionary<DateTime, double>();
+            var forecastCurvePay = model.Curves[ForecastCurvePay];
+            var forecastCurveRec = model.Curves[ForecastCurveRec];
+            foreach (var flow in FlowSchedulePay.Flows)
+            {
+                var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+                double ts = discountCurvePay.Basis.CalculateYearFraction(discountCurvePay.BuildDate, flow.AccrualPeriodStart);
+                double te = discountCurvePay.Basis.CalculateYearFraction(discountCurvePay.BuildDate, flow.AccrualPeriodEnd);
+                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
+                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+                if (forecastDictPay.ContainsKey(flow.AccrualPeriodStart))
+                    forecastDictPay[flow.AccrualPeriodStart] += dPVdS;
+                else
+                    forecastDictPay.Add(flow.AccrualPeriodStart, dPVdS);
+
+                if (forecastDictPay.ContainsKey(flow.AccrualPeriodEnd))
+                    forecastDictPay[flow.AccrualPeriodEnd] += dPVdE;
+                else
+                    forecastDictPay.Add(flow.AccrualPeriodEnd, dPVdE);
+            }
+            foreach (var flow in FlowScheduleRec.Flows)
+            {
+                var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+                double ts = discountCurveRec.Basis.CalculateYearFraction(discountCurveRec.BuildDate, flow.AccrualPeriodStart);
+                double te = discountCurveRec.Basis.CalculateYearFraction(discountCurveRec.BuildDate, flow.AccrualPeriodEnd);
+                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
+                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+
+                if (forecastDictRec.ContainsKey(flow.AccrualPeriodStart))
+                    forecastDictRec[flow.AccrualPeriodStart] += dPVdS;
+                else
+                    forecastDictRec.Add(flow.AccrualPeriodStart, dPVdS);
+
+                if (forecastDictRec.ContainsKey(flow.AccrualPeriodEnd))
+                    forecastDictRec[flow.AccrualPeriodEnd] += dPVdE;
+                else
+                    forecastDictRec.Add(flow.AccrualPeriodEnd, dPVdE);
+            }
+
+
+            if (ForecastCurvePay == DiscountCurvePay && ForecastCurveRec == DiscountCurveRec)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurvePay,discountDictPay },
+                {DiscountCurveRec,discountDictRec },
+            };
+            else if (ForecastCurvePay == DiscountCurvePay)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurvePay,discountDictPay },
+                {DiscountCurveRec,discountDictRec },
+                {ForecastCurveRec,forecastDictRec },
+            };
+            else if (ForecastCurveRec == DiscountCurveRec)
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurvePay,discountDictPay },
+                {DiscountCurveRec,discountDictRec },
+                {ForecastCurvePay,forecastDictPay },
+            };
+            else
+                return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {DiscountCurvePay,discountDictPay },
+                {DiscountCurveRec,discountDictRec },
+                {ForecastCurvePay,forecastDictPay },
+                {ForecastCurveRec,forecastDictRec },
+            };
+        }
     }
 }

@@ -40,5 +40,30 @@ namespace Qwack.Core.Instruments.Funding
         {
             throw new NotImplementedException();
         }
+
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        {
+            //only forecast for STIR future
+            var forecastDict =  new Dictionary<DateTime, double>();
+            var forecastCurve = model.Curves[ForecastCurve];
+
+            DateTime rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
+            DateTime rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
+
+            double ts = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateStart);
+            double te = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateEnd);
+            double fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
+            var dPVdR = -100.0;
+            var dPVdS = dPVdR * (-ts * (fwdRate + 1.0 / DCF));
+            var dPVdE = dPVdR * (te * (fwdRate + 1.0 / DCF));
+
+            forecastDict.Add(rateStart, dPVdS);
+            forecastDict.Add(rateEnd, dPVdE);
+
+            return new Dictionary<string, Dictionary<DateTime, double>>()
+            {
+                {ForecastCurve, forecastDict },
+            };
+        }
     }
 }

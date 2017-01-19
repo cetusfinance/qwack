@@ -63,12 +63,17 @@ namespace Qwack.Math.Interpolation
             return UpdateY(pillar, newY, updateInPlace);
         }
 
-        public double FirstDerivative(double x)
+        public double FirstDerivative(double t)
         {
-            double x1 = Interpolate(x);
-            double x2 = Interpolate(x + xBump);
-            double d1 = (x2 - x1) / xBump;
-            return d1;
+            if (t < _minX || t > _maxX)
+            {
+                return 0;
+            }
+            else
+            {
+                int k = FindFloorPoint(t);
+                return _slope[k];
+            }
         }
 
         public double Interpolate(double t)
@@ -90,10 +95,15 @@ namespace Qwack.Math.Interpolation
 
         public double SecondDerivative(double x)
         {
-            double x1 = FirstDerivative(x);
-            double x2 = FirstDerivative(x + xBump);
-            double d2 = (x2 - x1) / xBump;
-            return d2;
+            if (!_x.Contains(x))
+                return 0;
+            int k = FindFloorPoint(x);
+            if (k == 0)
+                return 0.5 * _slope[0];
+            if(k==_x.Length)
+                return 0.5 * _slope[_slope.Length];
+            
+            return (_slope[k] + _slope[k - 1]) / 2.0;
         }
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
@@ -123,6 +133,27 @@ namespace Qwack.Math.Interpolation
                 var returnValue = new LinearInterpolatorFlatExtrap(_x, newY, newSlope).Bump(pillar, newValue, true);
                 return returnValue;
             }
+        }
+
+        public double[] Sensitivity(double t)
+        {
+            var o = new double[_y.Length];
+            if (t <= _minX)
+            {
+                o[0] = 1;
+            }
+            else if (t >= _maxX)
+            {
+                o[o.Length - 1] = 1;
+            }
+            else
+            {
+                int k = FindFloorPoint(t);
+                var prop = (t - _x[k]) / (_x[k + 1] - _x[k]);
+                o[k + 1] = prop;
+                o[k] = (1.0 - prop);
+            }
+            return o;
         }
     }
 }

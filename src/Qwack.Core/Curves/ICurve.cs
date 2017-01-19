@@ -14,6 +14,8 @@ namespace Qwack.Core.Curves
         ICurve SetRate(int pillarIx, double rate, bool mutate);
         int NumberOfPillars { get; }
         double GetRate(int pillarIx);
+        double GetRate(DateTime valueDate);
+        double[] GetSensitivity(DateTime valueDate);
         IrCurve BumpRate(int pillarIx, double delta, bool mutate);
     }
 }

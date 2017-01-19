@@ -126,5 +126,26 @@ namespace Qwack.Math.Interpolation
                 return returnValue;
             }
         }
+
+        public double[] Sensitivity(double t)
+        {
+            var o = new double[_y.Length];
+            if (t <= _minX)
+            {
+                o[0] = 1;
+            }
+            else if (t >= _maxX)
+            {
+                o[o.Length - 1] = 1;
+            }
+            else
+            {
+                int k = FindFloorPoint(t);
+                var prop = (t - _x[k]) / (_x[k + 1] - _x[k]);
+                o[k + 1] = prop;
+                o[k] = (1.0 - prop);
+            }
+            return o;
+        }
     }
 }

@@ -101,7 +101,7 @@ namespace Qwack.Core.Instruments.Funding
                                 q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
-                                 1.0; q.Notional = (double)Nominal;
+                                 1.0;
                             q.Fv = (LegType == SwapLegType.Fixed) ?
                                 (double)Nominal * q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                 0;
@@ -137,7 +137,7 @@ namespace Qwack.Core.Instruments.Funding
                                 //Q.Currency = CCY;
                                 q.NotionalByYearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
-                                 1.0; q.Notional = (double)Nominal;
+                                 1.0; 
                                 q.Fv = (LegType == SwapLegType.Fixed) ?
                                     (double)Nominal * q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;

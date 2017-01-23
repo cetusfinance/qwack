@@ -4,6 +4,7 @@ namespace Qwack.Math.Solvers
 {
     public static class Brent
     {
+        //https://en.wikipedia.org/w/index.php?title=Brent%27s_method&oldid=605428601
         public static double BrentsMethodSolve(Func<double, double> function, double lowerLimit, double upperLimit, double errorTol)
         {
             double a = lowerLimit;

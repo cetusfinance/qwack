@@ -16,10 +16,25 @@ namespace Qwack.Math.Tests.Solvers
             return y;
         }
 
+        private double QuadraticFunction1dDerivative(double input)
+        {
+            var x = input;
+            var y = 2 * x + 22;
+            return y;
+        }
+
         [Fact]
         public void CanSolveTameQuadratic1dFact()
         {
             var output = Math.Solvers.Newton1d.MethodSolve(QuadraticFunction1d, 10, 1e-8);
+            var functionOutput = QuadraticFunction1d(output);
+            Assert.Equal(0, functionOutput, 8);
+        }
+
+        [Fact]
+        public void CanSolveTameQuadratic1dWithDerivative()
+        {
+            var output = Math.Solvers.Newton1d.MethodSolve(QuadraticFunction1d, QuadraticFunction1dDerivative, 10, 1e-8);
             var functionOutput = QuadraticFunction1d(output);
             Assert.Equal(0, functionOutput, 8);
         }

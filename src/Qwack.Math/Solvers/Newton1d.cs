@@ -19,5 +19,20 @@ namespace Qwack.Math.Solvers
 
             return x;
         }
+
+        public static double MethodSolve(Func<double, double> function, Func<double, double> derivativeFunction, double initialGuess, double errorTol, int maxItterations = 1000)
+        {
+            double x = initialGuess;
+            int itteration = 0;
+
+            while (itteration < maxItterations && System.Math.Abs(function(x)) > errorTol)
+            {
+                var f = function(x);
+                var dfdx = derivativeFunction(x);
+                x -= f / dfdx;
+            }
+
+            return x;
+        }
     }
 }

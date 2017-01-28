@@ -12,7 +12,7 @@
   },
   "buildOptions": {"allowUnsafe": true},
     "dependencies": {
-        "NETStandard.Library": "1.6.0",
+        "NETStandard.Library": "1.6.1",
         "Qwack.Dates": "0.1.0-*"
     },
   "frameworks": {

@@ -49,7 +49,7 @@ namespace Qwack.Curves.Benchmark
             }
         }
 
-        [Benchmark(OperationsPerInvoke = Interpolations,Baseline =true)]
+        [Benchmark(OperationsPerInvoke = Interpolations)]
         public static void SimpleLoop()
         {
             var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y);

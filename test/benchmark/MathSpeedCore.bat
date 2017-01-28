@@ -1,1 +1,1 @@
-dotnet Qwack.Curves.Benchmark\bin\Release\netcoreapp1.0\Qwack.Curves.Benchmark.dll %1
+Qwack.Curves.Benchmark\bin\Release\netcoreapp1.1\win8-x64\Qwack.Curves.Benchmark.exe %1

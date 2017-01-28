@@ -12,7 +12,7 @@
     "Qwack.Dates": { "target": "project" },
     "Qwack.Core": { "target": "project" },
     "Qwack.Providers": {"target": "project"},
-    "Microsoft.Extensions.PlatformAbstractions": "1.1.0-alpha1-21955"
+    "Microsoft.Extensions.PlatformAbstractions": "1.1.0"
   },
   "frameworks": {
     "netcoreapp1.0": {

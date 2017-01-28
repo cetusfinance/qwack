@@ -9,7 +9,8 @@
     "xunit": "2.2.0-beta5-build3474",
     "dotnet-test-xunit": "2.2.0-preview2-build1029",
     "Qwack.Math.Interpolation": { "target": "project" },
-    "Qwack.Math": "0.1.0-*"
+    "Qwack.Math": { "target": "project" },
+    "Qwack.Options": {"target" : "project"}
   },
   "frameworks": {
     "netcoreapp1.1": {

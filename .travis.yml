@@ -4,7 +4,4 @@ sudo: required
 mono: none
 dotnet: 1.0.0-preview2-1-003177
 script:
-  - .script/build.sh --quiet verify
-
-script:
-  - dotnet test test/Qwack.Math.Tests
+  - .script/build.sh

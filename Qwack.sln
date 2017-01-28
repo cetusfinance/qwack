@@ -33,6 +33,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Core", "src\Qwack.Cor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "script", "script", "{EEBFB441-5A3E-4D5B-A546-EB37FB3C5F7E}"
 	ProjectSection(SolutionItems) = preProject
+		build.sh = build.sh
 		script\runtests.bat = script\runtests.bat
 	EndProjectSection
 EndProject

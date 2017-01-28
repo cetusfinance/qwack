@@ -4,4 +4,8 @@ sudo: required
 mono: none
 dotnet: 1.0.0-preview2-1-003177
 script:
-  - .script/build.sh
+  - dotnet restore
+  - dotnet build **/project.json
+  - dotnet test ./test/Qwack.Dates.Tests
+  - dotnet test ./test/Qwack.Math.Tests
+  - dotnet test ./test/Qwack.Core.Tests

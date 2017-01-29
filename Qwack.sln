@@ -47,6 +47,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Providers", "src\Qwac
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Options", "src\Qwack.Options\Qwack.Options.xproj", "{AD3BF73F-2F83-4D8A-AFC4-0B0BE699EDA1}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Qwack.Random", "src\Qwack.Random\Qwack.Random.xproj", "{73CB2A9D-1796-4235-82E9-813F25748B7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{AD3BF73F-2F83-4D8A-AFC4-0B0BE699EDA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD3BF73F-2F83-4D8A-AFC4-0B0BE699EDA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD3BF73F-2F83-4D8A-AFC4-0B0BE699EDA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73CB2A9D-1796-4235-82E9-813F25748B7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73CB2A9D-1796-4235-82E9-813F25748B7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73CB2A9D-1796-4235-82E9-813F25748B7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73CB2A9D-1796-4235-82E9-813F25748B7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,5 +115,6 @@ Global
 		{43415D5C-A8AD-4875-A444-60FFBCA5C605} = {ED011E7E-84F9-4DBE-A4AE-8F4AB2455929}
 		{13A7C8DF-F614-4028-AB8C-F0E624A84CEF} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{AD3BF73F-2F83-4D8A-AFC4-0B0BE699EDA1} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
+		{73CB2A9D-1796-4235-82E9-813F25748B7D} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 	EndGlobalSection
 EndGlobal

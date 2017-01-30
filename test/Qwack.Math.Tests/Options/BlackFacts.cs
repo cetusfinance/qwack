@@ -128,7 +128,23 @@ namespace Qwack.Math.Tests.Options
             Assert.Equal(0, gamma, 8);
             gamma = BlackFunctions.BlackGamma(f, 1e6, rf, t, vol);
             Assert.Equal(0, gamma, 8);
+        }
 
+
+        [Fact]
+        public void DeltaStrikeMappingFacts()
+        {
+            var t = 1.0;
+            var k = 100;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.0;
+            var cp = OptionType.P;
+
+            //black forward delta matches
+            var delta = BlackFunctions.BlackDelta(f, k, rf, t, vol, cp);
+            var absolute = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(f, delta, rf, t, vol);
+            Assert.Equal(k, absolute, 10);
         }
     }
 }

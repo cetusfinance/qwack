@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Utils.Exceptions;
 
 namespace Qwack.Random.Sobol
 {
@@ -14,18 +15,17 @@ namespace Qwack.Random.Sobol
 
         public void LoadFromFile(string fileName)
         {
-
             var allLines = File.ReadAllLines(fileName);
-
             _allDimensions = new SobolDirectionInfo[allLines.Length - 1];
-
             for (int i = 1; i < allLines.Length; i++)
             {
                 string[] lineSplit = allLines[i].Split(_splitArray, StringSplitOptions.RemoveEmptyEntries);
                 var dim = int.Parse(lineSplit[0]);
                 if (dim != (i + 1))
-                    throw new DataMisalignedException("The dimensions in the sobol numbers should be sequential and start at 2 on the second line!");
-                SobolDirectionInfo info = new SobolDirectionInfo()
+                {
+                    ExceptionHelper.ThrowException(ExceptionType.InvalidFileInput, "The dimensions in the sobol numbers should be sequential and start at 2 on the second line");
+                }
+                var info = new SobolDirectionInfo()
                 {
                     Dimension = dim,
                     A = uint.Parse(lineSplit[2]),

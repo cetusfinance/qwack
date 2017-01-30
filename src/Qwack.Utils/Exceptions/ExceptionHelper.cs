@@ -11,12 +11,12 @@ namespace Qwack.Utils.Exceptions
     public class ExceptionHelper
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowException(ExceptionType exceptionType)
+        public static void ThrowException(ExceptionType exceptionType, string extraMessage = null)
         {
             switch(exceptionType)
             {
                 case ExceptionType.InvalidFileInput:
-                    throw new System.IO.InvalidDataException(SR.ResourceManager.GetString(exceptionType.ToString()));
+                    throw new System.IO.InvalidDataException($"{SR.ResourceManager.GetString(exceptionType.ToString())}-{extraMessage}");
                 default:
                     throw new InvalidOperationException($"Unknown exception type {exceptionType}");
             }

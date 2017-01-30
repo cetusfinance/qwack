@@ -17,7 +17,7 @@
     "Qwack.Core": {"target": "project"}
   },
   "frameworks": {
-    "netstandard1.4": {},
+    "netstandard1.6": {},
     "net461": {}
   }
 }

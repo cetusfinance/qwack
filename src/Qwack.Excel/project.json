@@ -1,0 +1,28 @@
+﻿{
+  "version": "0.1.0-*",
+  "authors": [ "Tim Seaward", "Gavin Brennan" ],
+  "packOptions": {
+    "owners": [ "http://cetus.io" ],
+    "licenseUrl": "https://github.com/cetusfinance/qwack/blob/master/LICENSE",
+    "requireLicenseAcceptance": true,
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/cetusfinance/qwack"
+    }
+  },
+  "buildOptions": {
+    "allowUnsafe": true,
+    "copyToOutput": ["QwackDna64.dna","QwackDna64.xll","Calendars.json"]
+  },
+  "dependencies": {
+    "ExcelDna.AddIn": "0.34.1-beta",
+    "ExcelDna.Integration": "0.34.1-beta",
+    "NETStandard.Library": "1.6.1",
+    "Qwack.Dates": "0.1.0-*",
+    "Qwack.Providers": "0.1.0-*"
+  },
+  "frameworks": {
+    "net461": {}
+  }
+
+}

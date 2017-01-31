@@ -9,9 +9,9 @@ namespace Qwack.Options
 {
     public class BlackFunctions
     {
-        public static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, string CP)
+        public static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
-            double cpf = (OptionTypeFromString(CP) == OptionType.Put) ? -1.0 : 1.0;
+            double cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
 
             double d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
             double d2 = d1 - volatility * Sqrt(expTime);
@@ -19,27 +19,6 @@ namespace Qwack.Options
             double num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
             double num3 = num2 - (volatility * Sqrt(expTime));
             return (Exp(-riskFreeRate * expTime) * (((cpf * forward) * Statistics.NormSDist(num2 * cpf)) - ((cpf * strike) * Statistics.NormSDist(num3 * cpf))));
-        }
-
-        public static OptionType OptionTypeFromString(string optionType)
-        {
-            switch(optionType)
-            {
-                case "P":
-                case "p":
-                case "Put":
-                case "put":
-                case "PUT":
-                    return OptionType.Put;
-                case "C":
-                case "c":
-                case "Case":
-                case "case":
-                case "CASE":
-                    return OptionType.Call;
-                default:
-                    throw new ArgumentException(nameof(optionType));
-            }
         }
 
         public static double BlackVega(double forward, double strike, double riskFreeRate, double expTime, double volatility)
@@ -58,7 +37,7 @@ namespace Qwack.Options
             return dF * Statistics.Phi(d1) / (forward * volatility * Sqrt(expTime)) * (0.01 * forward);
         }
         
-        public static double BlackDelta(double forward, double strike, double riskFreeRate, double expTime, double volatility, string CP)
+        public static double BlackDelta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             double d1, d2, DF;
             DF = Exp(-riskFreeRate * expTime);
@@ -66,7 +45,7 @@ namespace Qwack.Options
             d2 = d1 - volatility * Sqrt(expTime);
 
             //Delta
-            if (OptionTypeFromString(CP) == OptionType.Put)
+            if (CP == OptionType.Put)
             {
                 return DF * (Statistics.NormSDist(d1) - 1);
             }
@@ -76,7 +55,7 @@ namespace Qwack.Options
             }
         }
 
-        public static double[] BlackDerivs(double forward, double strike, double riskFreeRate, double expTime, double volatility, string CP)
+        public static double[] BlackDerivs(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             double[] output = new double[3];
             double d1, d2, DF;
@@ -86,7 +65,7 @@ namespace Qwack.Options
             d2 = d1 - volatility * Sqrt(expTime);
 
             //delta
-            if (OptionTypeFromString(CP) == OptionType.Put)
+            if (CP == OptionType.Put)
             {
                 output[0] = DF * (Statistics.NormSDist(d1) - 1);
             }

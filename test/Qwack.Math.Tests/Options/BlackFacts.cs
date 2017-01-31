@@ -17,14 +17,14 @@ namespace Qwack.Math.Tests.Options
             var f = 100;
             var vol = 0.32;
             var rf = 0.05;
-            var cp = "P";
+            var cp = OptionType.P;
 
             //zero strike put is worthless
             var PV = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
             Assert.Equal(0, PV, 10);
 
             //zero strike call is worth discounted fwd
-            cp = "C";
+            cp = OptionType.C;
             PV = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
             Assert.Equal(System.Math.Exp(-rf*t)*f, PV, 10);
 
@@ -37,8 +37,8 @@ namespace Qwack.Math.Tests.Options
             //put-call parity at f==k
             k = f;
             vol = 0.32;
-            var PVcall = BlackFunctions.BlackPV(f, k, rf, t, vol, "C");
-            var PVput = BlackFunctions.BlackPV(f, k, rf, t, vol, "P");
+            var PVcall = BlackFunctions.BlackPV(f, k, rf, t, vol, OptionType.C);
+            var PVput = BlackFunctions.BlackPV(f, k, rf, t, vol, OptionType.P);
             Assert.Equal(PVcall, PVput, 10);
 
             //forward price constant wrt total variance
@@ -47,8 +47,8 @@ namespace Qwack.Math.Tests.Options
             var t2 = t * 2.0;
             var vol2 = System.Math.Sqrt(variance / t2);
 
-            var PVnear = BlackFunctions.BlackPV(f, k, rf, t, vol, "C");
-            var PVfar = BlackFunctions.BlackPV(f, k, rf, t2, vol2, "C");
+            var PVnear = BlackFunctions.BlackPV(f, k, rf, t, vol, OptionType.C);
+            var PVfar = BlackFunctions.BlackPV(f, k, rf, t2, vol2, OptionType.C);
             Assert.Equal(PVnear, PVfar, 10);
         }
 
@@ -60,7 +60,7 @@ namespace Qwack.Math.Tests.Options
             var f = 100;
             var vol = 0.32;
             var rf = 0.05;
-            var cp = "P";
+            var cp = OptionType.P;
 
             //vega closely matches numerical estimate
             var PV1 = BlackFunctions.BlackPV(f, k, rf, t, vol-0.00005, cp);
@@ -80,6 +80,71 @@ namespace Qwack.Math.Tests.Options
 
             vega = BlackFunctions.BlackVega(f, 1e6, rf, t, vol);
             Assert.Equal(0, vega, 8);
+        }
+
+        [Fact]
+        public void DeltaGammaFacts()
+        {
+            var t = 1.0;
+            var k = 100;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.05;
+            var cp = OptionType.P;
+
+            //delta closely matches numerical estimate
+            var PV1 = BlackFunctions.BlackPV(f+0.000005, k, rf, t, vol, cp);
+            var PV2 = BlackFunctions.BlackPV(f-0.000005, k, rf, t, vol, cp);
+            var deltaEst = (PV1 - PV2) / 0.00001;
+            var delta = BlackFunctions.BlackDelta(f, k, rf, t, vol, cp);
+            Assert.Equal(deltaEst, delta, 6);
+
+            //all else the same, more time for OTM option == more delta
+            k = 150;
+            var deltaNear = BlackFunctions.BlackDelta(f, k, rf, t, vol,cp);
+            var deltaFar = BlackFunctions.BlackDelta(f, k, rf, t * 2, vol,cp);
+            Assert.True(deltaFar > deltaNear);
+        
+            //put-call parity
+            var deltaCall = BlackFunctions.BlackDelta(f, k, rf, t, vol, OptionType.C);
+            var deltaPut = BlackFunctions.BlackDelta(f, k, rf, t, vol, OptionType.P);
+
+            var syntheticFwdDelta = deltaCall - deltaPut;
+            Assert.Equal(System.Math.Exp(-rf * t), syntheticFwdDelta, 10);
+
+            //gamma closely matches numerical estimate
+            var delta1 = BlackFunctions.BlackDelta(f + 0.000005, k, rf, t, vol, cp);
+            var delta2 = BlackFunctions.BlackDelta(f - 0.000005, k, rf, t, vol, cp);
+            var gammaEst = (delta1 - delta2) / 0.00001;
+            var gamma = BlackFunctions.BlackGamma(f, k, rf, t, vol);
+            Assert.Equal(gammaEst, gamma, 6);
+
+            //cases for zero delta / gamma
+            delta = BlackFunctions.BlackDelta(f, 0, rf, t, vol, OptionType.P);
+            Assert.Equal(0, delta, 8);
+            delta = BlackFunctions.BlackDelta(f, 1e6, rf, t, vol, OptionType.C);
+            Assert.Equal(0, delta, 8);
+            gamma = BlackFunctions.BlackGamma(f, 0, rf, t, vol);
+            Assert.Equal(0, gamma, 8);
+            gamma = BlackFunctions.BlackGamma(f, 1e6, rf, t, vol);
+            Assert.Equal(0, gamma, 8);
+        }
+
+
+        [Fact]
+        public void DeltaStrikeMappingFacts()
+        {
+            var t = 1.0;
+            var k = 100;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.0;
+            var cp = OptionType.P;
+
+            //black forward delta matches
+            var delta = BlackFunctions.BlackDelta(f, k, rf, t, vol, cp);
+            var absolute = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(f, delta, rf, t, vol);
+            Assert.Equal(k, absolute, 10);
         }
     }
 }

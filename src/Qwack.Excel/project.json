@@ -10,14 +10,19 @@
       "url": "https://github.com/cetusfinance/qwack"
     }
   },
-  "buildOptions": {"allowUnsafe": true},
+  "buildOptions": {
+    "allowUnsafe": true,
+    "copyToOutput": ["QwackDna64.dna","QwackDna64.xll"]
+  },
   "dependencies": {
     "ExcelDna.AddIn": "0.34.1-beta",
     "ExcelDna.Integration": "0.34.1-beta",
     "NETStandard.Library": "1.6.1",
-    "Qwack.Dates": "0.1.0-*"
+    "Qwack.Dates": "0.1.0-*",
+    "Qwack.Providers": "0.1.0-*"
   },
   "frameworks": {
     "net461": {}
   }
+
 }

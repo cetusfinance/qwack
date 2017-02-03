@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Dates;
 using Qwack.Providers;
+using System.Reflection;
+using System.IO;
 
 namespace Qwack.Excel.Services
 {
@@ -42,12 +44,18 @@ namespace Qwack.Excel.Services
                     {
                         if(_calendarProvider==null)
                         {
-                            _calendarProvider = Json.Providers.CalendarsFromJson.Load(null);
+                            _calendarProvider = Json.Providers.CalendarsFromJson.Parse(GetEmbededResourceAsString("Calendars"));
                         }
                     }
                 }
                 return _calendarProvider;
             }
+        }
+
+        private static string GetEmbededResourceAsString(string resourceName)
+        {
+            var obj = StaticResources.ResourceManager.GetObject(resourceName);
+            return null;
         }
     }
 }

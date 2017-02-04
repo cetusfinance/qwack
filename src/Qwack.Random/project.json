@@ -10,11 +10,13 @@
       "url": "https://github.com/cetusfinance/qwack"
     }
   },
+  "buildOptions": { "allowUnsafe": true },
   "dependencies": {
     "NETStandard.Library": "1.6.1",
-    "Newtonsoft.Json": "9.0.1",
     "Qwack.Dates": { "target": "project" },
-    "Qwack.Core": {"target": "project"}
+    "Qwack.Math": { "target": "project" },
+    "Qwack.Utils": { "target": "project" },
+    "Qwack.Paths": { "target": "project" }
   },
   "frameworks": {
     "netstandard1.6": {},

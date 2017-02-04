@@ -13,7 +13,8 @@
   "buildOptions": { "allowUnsafe": true },
   "dependencies": {
     "NETStandard.Library": "1.6.1",
-    "System.Numerics.Vectors": "4.4.0-beta-24913-01"
+    "System.Numerics.Vectors": "4.1.1",
+    "Qwack.Utils": {"target": "project"}
   },
   "frameworks": {
     "netstandard1.6": {},

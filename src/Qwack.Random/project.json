@@ -15,7 +15,8 @@
     "NETStandard.Library": "1.6.1",
     "Qwack.Dates": { "target": "project" },
     "Qwack.Math": { "target": "project" },
-    "Qwack.Utils": { "target": "project" }
+    "Qwack.Utils": { "target": "project" },
+    "Qwack.Paths": { "target": "project" }
   },
   "frameworks": {
     "netstandard1.6": {},

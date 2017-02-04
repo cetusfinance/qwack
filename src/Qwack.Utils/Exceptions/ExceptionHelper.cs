@@ -17,6 +17,8 @@ namespace Qwack.Utils.Exceptions
             {
                 case ExceptionType.InvalidFileInput:
                     throw new System.IO.InvalidDataException($"{SR.ResourceManager.GetString(exceptionType.ToString())}-{extraMessage}");
+                case ExceptionType.InvalidDataAlignment:
+                    throw new DataMisalignedException(extraMessage);
                 default:
                     throw new InvalidOperationException($"Unknown exception type {exceptionType}");
             }

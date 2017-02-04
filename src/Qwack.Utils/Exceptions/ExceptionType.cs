@@ -7,6 +7,7 @@ namespace Qwack.Utils.Exceptions
 {
     public enum ExceptionType
     {
-        InvalidFileInput
+        InvalidFileInput,
+        InvalidDataAlignment
     }
 }

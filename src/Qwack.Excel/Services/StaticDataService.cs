@@ -11,6 +11,7 @@ namespace Qwack.Excel.Services
 {
     public class StaticDataService
     {
+        private const string _calendarJSONFile = "Calendars.json";
         private static StaticDataService _instance;
         private static readonly object _lock = new object();
         private StaticDataService() { }
@@ -44,7 +45,7 @@ namespace Qwack.Excel.Services
                     {
                         if(_calendarProvider==null)
                         {
-                            _calendarProvider = Json.Providers.CalendarsFromJson.Parse(GetEmbededResourceAsString("Calendars"));
+                            _calendarProvider = Json.Providers.CalendarsFromJson.Load(GetCalendarFilename());
                         }
                     }
                 }
@@ -52,10 +53,11 @@ namespace Qwack.Excel.Services
             }
         }
 
-        private static string GetEmbededResourceAsString(string resourceName)
+        private static string GetCalendarFilename()
         {
-            var obj = StaticResources.ResourceManager.GetObject(resourceName);
-            return null;
+            var assemblyLocation = Assembly.GetAssembly(typeof(Calendar)).Location;
+            return Path.Combine(Path.GetDirectoryName(assemblyLocation), _calendarJSONFile);
         }
+    
     }
 }

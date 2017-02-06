@@ -1,0 +1,2 @@
+#recipe Docs
+Settings[DocsKeys.SourceFiles] = "../src/**/{!bin,!obj,!packages,!*.Tests,}/**/*.cs";

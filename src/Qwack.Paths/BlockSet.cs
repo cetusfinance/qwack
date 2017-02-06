@@ -7,6 +7,10 @@ using Qwack.Utils.Exceptions;
 
 namespace Qwack.Paths
 {
+    /// <summary>
+    /// Contains a number of path blocks that make up an entire group of paths
+    /// needed for pricing in memory
+    /// </summary>
     public class BlockSet:IEnumerable<PathBlock>, IDisposable
     {
         private static readonly int _numberOfThreads = Environment.ProcessorCount;

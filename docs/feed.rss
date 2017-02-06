@@ -2,17 +2,17 @@
 <rss version="2.0">
 	<channel>
 		<title />
-		<link>/</link>
+		<link>http://cetus.io/qwack/</link>
 		<description />
 		<copyright>2017</copyright>
-		<pubDate>Mon, 06 Feb 2017 22:33:33 GMT</pubDate>
-		<lastBuildDate>Mon, 06 Feb 2017 22:33:33 GMT</lastBuildDate>
+		<pubDate>Mon, 06 Feb 2017 22:38:19 GMT</pubDate>
+		<lastBuildDate>Mon, 06 Feb 2017 22:38:19 GMT</lastBuildDate>
 		<item>
 			<title>New Release</title>
-			<link>/blog/new-release</link>
+			<link>http://cetus.io/qwack/blog/new-release</link>
 			<description>&lt;p&gt;There is a new release out, go get it now.&lt;/p&gt;</description>
 			<author>me</author>
-			<guid isPermaLink="false">/blog/new-release</guid>
+			<guid>http://cetus.io/qwack/blog/new-release</guid>
 			<pubDate>Fri, 01 Jan 2016 00:00:00 GMT</pubDate>
 		</item>
 	</channel>

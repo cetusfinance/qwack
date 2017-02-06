@@ -1,2 +1,3 @@
 #recipe Docs
 Settings[DocsKeys.SourceFiles] = "../src/**/{!bin,!obj,!packages,!*.Tests,}/**/*.cs";
+Settings[Keys.Host] = "cetus.io/qwack";

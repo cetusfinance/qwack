@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-	<link rel="self" href="/" />
-	<id>/</id>
+	<link rel="self" href="http://cetus.io/qwack/" />
+	<id>http://cetus.io/qwack/</id>
 	<title />
 	<rights>2017</rights>
-	<updated>2017-02-06T22:33:33Z</updated>
+	<updated>2017-02-06T22:38:19Z</updated>
 	<entry>
 		<author>
 			<name>me</name>
 		</author>
-		<link href="/blog/new-release" />
-		<id>/blog/new-release</id>
+		<link href="http://cetus.io/qwack/blog/new-release" />
+		<id>http://cetus.io/qwack/blog/new-release</id>
 		<title>New Release</title>
 		<updated>2016-01-01T00:00:00Z</updated>
 		<summary>&lt;p&gt;There is a new release out, go get it now.&lt;/p&gt;</summary>

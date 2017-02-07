@@ -37,7 +37,7 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Returns an implied volatility for an american futures option using a grid", Category = "QOpt")]
+        [ExcelFunction(Description = "Returns an implied volatility for an american futures option PV using a grid", Category = "QOpt")]
         public static object QOpt_AmericanFutureOptionImpliedVol(
           [ExcelArgument(Description = "Time-to-expiry")] double T,
           [ExcelArgument(Description = "Strike")] double K,

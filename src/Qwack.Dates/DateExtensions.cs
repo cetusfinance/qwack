@@ -201,6 +201,7 @@ namespace Qwack.Dates
             {
                 case RollType.F:
                     return date.IfHolidayRollForward(calendar);
+                case RollType.MF:
                 default:
                     d = date.IfHolidayRollForward(calendar);
                     if (d.Month == date.Month)

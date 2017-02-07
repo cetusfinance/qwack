@@ -7,7 +7,13 @@ using static System.Math;
 
 namespace Qwack.Options
 {
-    //functions for pricing and risking listed options on the London Metal Exchange
+    /// <summary>
+    /// Functions for pricing and risking listed options on the London Metal Exchange.  
+    /// The options are technically American options on a forward contract which leads to them being treated as European options due to the lack of incentive to ever early exercise.
+    /// Risk is given in terms of LME traded forward (rather than spot or future) instruments
+    /// Two time inputs are used - one for the expiry date of the option and another for the delivery date (which is two weeks later for LME listed contracts)
+    /// </summary>
+    
     public class LMEFunctions
     {
         public static double LMEBlackPV(double forward, double strike, double discountingRate, double expiryTime, double deliveryTime, double volatility, OptionType CP)

@@ -73,10 +73,10 @@
             <aside class="main-sidebar ">
                 <section class="infobar" data-spy="affix" data-offset-top="60" data-offset-bottom="200"> 
                     	
-	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#ClassTypes">Class Types</a></p>
-<p><a href="#EnumTypes">Enum Types</a></p>
+	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#StructTypes">Struct Types</a></p>
+<p><a href="#ClassTypes">Class Types</a></p>
 <p><a href="#InterfaceTypes">Interface Types</a></p>
-<p><a href="#StructTypes">Struct Types</a></p>
+<p><a href="#EnumTypes">Enum Types</a></p>
 <hr class="infobar-hidden">
 </div>
 
@@ -149,6 +149,14 @@
 </ul></li>			<li class=" selected"><a href="/qwack/api/Qwack.Dates">Qwack<wbr>.Dates</a></li>
 
 				<li class="treeview">
+				<a href="/qwack/api/Qwack.Excel">Qwack<wbr>.Excel</a> <a href="#" class="expand"></a>
+				<ul class="treeview-menu">
+						<li><a href="/qwack/api/Qwack.Excel.Dates">Qwack<wbr>.Excel<wbr>.Dates</a></li>
+			<li><a href="/qwack/api/Qwack.Excel.Options">Qwack<wbr>.Excel<wbr>.Options</a></li>
+			<li><a href="/qwack/api/Qwack.Excel.Ribbon">Qwack<wbr>.Excel<wbr>.Ribbon</a></li>
+			<li><a href="/qwack/api/Qwack.Excel.Services">Qwack<wbr>.Excel<wbr>.Services</a></li>
+</ul></li>
+				<li class="treeview">
 				<a href="/qwack/api/Qwack.Json">Qwack<wbr>.Json</a> <a href="#" class="expand"></a>
 				<ul class="treeview-menu">
 						<li><a href="/qwack/api/Qwack.Json.Providers">Qwack<wbr>.Json<wbr>.Providers</a></li>
@@ -156,7 +164,8 @@
 				<li class="treeview">
 				<a href="/qwack/api/Qwack.Math">Qwack<wbr>.Math</a> <a href="#" class="expand"></a>
 				<ul class="treeview-menu">
-						<li><a href="/qwack/api/Qwack.Math.Interpolation">Qwack<wbr>.Math<wbr>.Interpolation</a></li>
+						<li><a href="/qwack/api/Qwack.Math.Extensions">Qwack<wbr>.Math<wbr>.Extensions</a></li>
+			<li><a href="/qwack/api/Qwack.Math.Interpolation">Qwack<wbr>.Math<wbr>.Interpolation</a></li>
 			<li><a href="/qwack/api/Qwack.Math.Matrix">Qwack<wbr>.Math<wbr>.Matrix</a></li>
 			<li><a href="/qwack/api/Qwack.Math.Solvers">Qwack<wbr>.Math<wbr>.Solvers</a></li>
 			<li><a href="/qwack/api/Qwack.Math.Utils">Qwack<wbr>.Math<wbr>.Utils</a></li>
@@ -197,6 +206,26 @@
 	
 	
 
+			<h1 id="StructTypes">Struct Types</h1>
+			<div class="box">
+				<div class="box-body no-padding table-responsive">
+					<table class="table table-striped table-hover two-cols">
+						<thead>
+							<tr>
+								<th>Struct</th>
+									<th>Summary</th>
+							</tr>
+						</thead>
+							<tbody><tr>
+								<td><a href="/qwack/api/Qwack.Dates/Frequency">Frequency</a></td>
+									<td>
+    Frequency class which represents a frequency or period as a period type and a number of periods
+    </td>
+							</tr>
+					</tbody></table>
+				</div>
+			</div>
+		
 			<h1 id="ClassTypes">Class Types</h1>
 			<div class="box">
 				<div class="box-body no-padding table-responsive">
@@ -217,11 +246,15 @@
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions">DateExtensions</a></td>
-									<td></td>
+									<td>
+    Business date extension methods
+    </td>
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/FrequencyExtensions">FrequencyExtensions</a></td>
-									<td></td>
+									<td>
+    Extension methods for easy creation of frequency objects
+    </td>
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/ListedUtils">ListedUtils</a></td>
@@ -229,41 +262,15 @@
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/TenorDateAbsolute">TenorDateAbsolute</a></td>
-									<td></td>
+									<td>
+    Absolute date implementation of the ITenorDate interface
+    </td>
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/TenorDateRelative">TenorDateRelative</a></td>
-									<td></td>
-							</tr>
-					</tbody></table>
-				</div>
-			</div>
-		
-			<h1 id="EnumTypes">Enum Types</h1>
-			<div class="box">
-				<div class="box-body no-padding table-responsive">
-					<table class="table table-striped table-hover two-cols">
-						<thead>
-							<tr>
-								<th>Enum</th>
-									<th>Summary</th>
-							</tr>
-						</thead>
-							<tbody><tr>
-								<td><a href="/qwack/api/Qwack.Dates/DatePeriodType">DatePeriodType</a></td>
-									<td></td>
-							</tr>
-							<tr>
-								<td><a href="/qwack/api/Qwack.Dates/DayCountBasis">DayCountBasis</a></td>
-									<td></td>
-							</tr>
-							<tr>
-								<td><a href="/qwack/api/Qwack.Dates/MonthEnum">MonthEnum</a></td>
-									<td></td>
-							</tr>
-							<tr>
-								<td><a href="/qwack/api/Qwack.Dates/RollType">RollType</a></td>
-									<td></td>
+									<td>
+    Relative date implementation of the ITenorDate interface
+    </td>
 							</tr>
 					</tbody></table>
 				</div>
@@ -285,25 +292,47 @@
 							</tr>
 							<tr>
 								<td><a href="/qwack/api/Qwack.Dates/ITenorDate">ITenorDate</a></td>
-									<td></td>
+									<td>
+    Provides a type to be used when a fixed/absolute or relative date might need to be used
+    </td>
 							</tr>
 					</tbody></table>
 				</div>
 			</div>
 		
-			<h1 id="StructTypes">Struct Types</h1>
+			<h1 id="EnumTypes">Enum Types</h1>
 			<div class="box">
 				<div class="box-body no-padding table-responsive">
 					<table class="table table-striped table-hover two-cols">
 						<thead>
 							<tr>
-								<th>Struct</th>
+								<th>Enum</th>
 									<th>Summary</th>
 							</tr>
 						</thead>
 							<tbody><tr>
-								<td><a href="/qwack/api/Qwack.Dates/Frequency">Frequency</a></td>
-									<td></td>
+								<td><a href="/qwack/api/Qwack.Dates/DatePeriodType">DatePeriodType</a></td>
+									<td>
+    List of period types
+    </td>
+							</tr>
+							<tr>
+								<td><a href="/qwack/api/Qwack.Dates/DayCountBasis">DayCountBasis</a></td>
+									<td>
+    A list of methods for calculating a year fraction from a pair of dates
+    </td>
+							</tr>
+							<tr>
+								<td><a href="/qwack/api/Qwack.Dates/MonthEnum">MonthEnum</a></td>
+									<td>
+    A list of month values, including futures codes
+    </td>
+							</tr>
+							<tr>
+								<td><a href="/qwack/api/Qwack.Dates/RollType">RollType</a></td>
+									<td>
+    A list of methods for rolling dates when holidays occur
+    </td>
 							</tr>
 					</tbody></table>
 				</div>

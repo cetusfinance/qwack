@@ -1,5 +1,8 @@
 ﻿namespace Qwack.Dates
 {
+    /// <summary>
+    /// A list of month values, including futures codes
+    /// </summary>
     public enum MonthEnum
     {
         Jan = 1,

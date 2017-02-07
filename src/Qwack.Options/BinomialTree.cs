@@ -6,6 +6,10 @@ using Qwack.Math.Extensions;
 
 namespace Qwack.Options
 {
+    /// <summary>
+    /// American (and European) option pricing performed using a binomial tree
+    /// Includes case of option-on-future where the forward of the underlying future is treated as flat
+    /// </summary>
     public class BinomialTree
     {
         private static double u(double deltaT, double vol)

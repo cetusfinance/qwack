@@ -2,6 +2,9 @@
 
 namespace Qwack.Dates
 {
+    /// <summary>
+    /// Absolute date implementation of the ITenorDate interface
+    /// </summary>
     public class TenorDateAbsolute : ITenorDate
     {
         public TenorDateAbsolute(DateTime absoluteDate)

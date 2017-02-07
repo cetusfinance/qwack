@@ -73,7 +73,8 @@
             <aside class="main-sidebar ">
                 <section class="infobar" data-spy="affix" data-offset-top="60" data-offset-bottom="200"> 
                     	
-	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#Syntax">Syntax</a></p>
+	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#Summary">Summary</a></p>
+<p><a href="#Syntax">Syntax</a></p>
 <p><a href="#Methods">Methods</a></p>
 <hr class="infobar-hidden">
 </div>
@@ -128,6 +129,8 @@
 			<li class="header">Namespace</li>
 		<li><a href="/qwack/api/Qwack.Dates">Qwack<wbr>.Dates</a></li>
 		<li role="separator" class="divider"></li>
+			<li class="header">Struct Types</li>
+				<li><a href="/qwack/api/Qwack.Dates/Frequency">Frequency</a></li>
 			<li class="header">Class Types</li>
 				<li><a href="/qwack/api/Qwack.Dates/Calendar">Calendar</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/CalendarCollection">CalendarCollection</a></li>
@@ -136,16 +139,14 @@
 				<li><a href="/qwack/api/Qwack.Dates/ListedUtils">ListedUtils</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/TenorDateAbsolute">TenorDateAbsolute</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/TenorDateRelative">TenorDateRelative</a></li>
+			<li class="header">Interface Types</li>
+				<li><a href="/qwack/api/Qwack.Dates/ICalendarProvider">ICalendarProvider</a></li>
+				<li><a href="/qwack/api/Qwack.Dates/ITenorDate">ITenorDate</a></li>
 			<li class="header">Enum Types</li>
 				<li><a href="/qwack/api/Qwack.Dates/DatePeriodType">DatePeriodType</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/DayCountBasis">DayCountBasis</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/MonthEnum">MonthEnum</a></li>
 				<li><a href="/qwack/api/Qwack.Dates/RollType">RollType</a></li>
-			<li class="header">Interface Types</li>
-				<li><a href="/qwack/api/Qwack.Dates/ICalendarProvider">ICalendarProvider</a></li>
-				<li><a href="/qwack/api/Qwack.Dates/ITenorDate">ITenorDate</a></li>
-			<li class="header">Struct Types</li>
-				<li><a href="/qwack/api/Qwack.Dates/Frequency">Frequency</a></li>
 
 
                     </ul>
@@ -164,7 +165,11 @@
 <section class="content">
 	
 	
-	
+		<h1 id="Summary">Summary</h1>
+	<div class="lead">
+    Business date extension methods
+    </div>
+
 		<div class="panel panel-default">
   			<div class="panel-body">
 				<div class="row">
@@ -225,7 +230,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/17F8BA3D">AddPeriod<wbr>(DateTime, <wbr>RollType, <wbr>Calendar, <wbr>Frequency)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns a date equal to the input date plus the specified period, adjusted for holidays
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -233,15 +240,21 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/BC877FC0">BusinessDaysInPeriod<wbr>(DateTime, <wbr>DateTime, <wbr>Calendar)<wbr></a></td>
 								<td>List<wbr>&lt;DateTime&gt;<wbr></td>
 								<td>
-									<div></div>
+									<div>
+    Returns a list of business dates according to a specified calendar which are contained within two given dates.  
+    Start and end dates are treated as inclusive
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
 							<tr>
-								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/C80CD703">Calculate<wbr>Year<wbr>Fraction<wbr>(DateTime, <wbr>DateTime, <wbr>DayCountBasis)<wbr></a></td>
+								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/7FD4AAA4">Calculate<wbr>Year<wbr>Fraction<wbr>(DateTime, <wbr>DateTime, <wbr>DayCountBasis, <wbr>bool, <wbr>Calendar)<wbr></a></td>
 								<td>double</td>
 								<td>
-									<div></div>
+									<div>
+    Calculates a year fraction from a day count method and two dates
+    Start date is inclusive, end date exclusive
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -249,7 +262,10 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/3046657C">Calculate<wbr>Year<wbr>Fraction<wbr>(DayCountBasis, <wbr>DateTime, <wbr>DateTime)<wbr></a></td>
 								<td>double</td>
 								<td>
-									<div></div>
+									<div>
+    Calculates a year fraction from a day count method and two dates
+    Start date is inclusive, end date exclusive
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -257,7 +273,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/86BDE8BD">First<wbr>Business<wbr>Day<wbr>Of<wbr>Month<wbr>(DateTime, <wbr>Calendar)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns first business day (according to specified calendar) of month in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -265,7 +283,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/FAA5C98B">FirstDayOfMonth<wbr>(DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns first calendar day of the months in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -273,7 +293,10 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/839FC2EC">GetNextImmDate<wbr>(DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Gets the next IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
+    If an IMM date is given as the input, the following IMM date will be returned.
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -281,7 +304,10 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/F625BBD1">GetPrevImmDate<wbr>(DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Gets the previous IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
+    If an IMM date is given as the input, the previous IMM date will be returned.
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -289,7 +315,10 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/2378B527">IfHolidayRoll<wbr>(DateTime, <wbr>RollType, <wbr>Calendar)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the input date, adjusted by rolling if the input date falls on a holiday according to the specified calendar.  
+    The type of roll is specfied in the input.
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -297,7 +326,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/51B0EB4E">IfHolidayRollBack<wbr>(DateTime, <wbr>Calendar)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the input date, adjusted by rolling backwards if the input date falls on a holiday according to the specified calendar
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -305,7 +336,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/28E78B51">IfHolidayRollForward<wbr>(DateTime, <wbr>Calendar)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the input date, adjusted by rolling forward if the input date falls on a holiday according to the specified calendar
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -313,7 +346,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/519D7207">Last<wbr>Business<wbr>Day<wbr>Of<wbr>Month<wbr>(DateTime, <wbr>Calendar)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns last business day, according to the specified calendar, of the month in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -321,7 +356,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/B27AC418">LastDayOfMonth<wbr>(DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the last calendar day of the month in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -329,7 +366,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/8456188C">Max<wbr>(DateTime, <wbr>DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the greater of two DateTime objects
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -337,7 +376,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/9608E6B8">Min<wbr>(DateTime, <wbr>DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the lesser of two DateTime objects
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -345,7 +386,10 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/9ADF1010">NthSpecificWeekDay<wbr>(DateTime, <wbr>DayOfWeek, <wbr>int)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the Nth instance of a specific week day in the month in which the input date falls
+    E.g. NthSpecificWeekDay(date,DayOfWeek.Wednesday, 3) would return the third wednesday of the month in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -353,7 +397,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/929DC275">SubtractPeriod<wbr>(DateTime, <wbr>RollType, <wbr>Calendar, <wbr>Frequency)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns a date equal to the input date minus the specified period, adjusted for holidays
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>
@@ -361,7 +407,9 @@ class Type type-node
 								<td><a href="/qwack/api/Qwack.Dates/DateExtensions/2D5946C5">ThirdWednesday<wbr>(DateTime)<wbr></a></td>
 								<td>DateTime</td>
 								<td>
-									<div></div>
+									<div>
+    Returns the third wednesday of the month in which the input date falls
+    </div>
 											<div><small><em>static</em></small></div>
 								</td>
 							</tr>

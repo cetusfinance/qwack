@@ -7,6 +7,10 @@ using Qwack.Math.Extensions;
 
 namespace Qwack.Options
 {
+    /// <summary>
+    /// American (and European) option pricing performed using a trinomial tree
+    /// Includes case of option-on-future where the forward of the underlying future is treated as flat
+    /// </summary>
     public class TrinomialTree
     {
         public static double AmericanPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n)

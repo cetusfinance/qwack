@@ -7,6 +7,9 @@ using static System.Math;
 
 namespace Qwack.Options
 {
+    /// <summary>
+    /// Functions for pricing and risking vanilla European options using the Black '76 formula
+    /// </summary>
     public class BlackFunctions
     {
         public static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)

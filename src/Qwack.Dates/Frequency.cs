@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
+    /// <summary>
+    /// Frequency class which represents a frequency or period as a period type and a number of periods
+    /// </summary>
     public struct Frequency
     {
         public Frequency(string frequency)

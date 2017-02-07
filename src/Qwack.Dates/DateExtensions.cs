@@ -3,11 +3,20 @@ using System.Collections.Generic;
 
 namespace Qwack.Dates
 {
+    /// <summary>
+    /// Business date extension methods
+    /// </summary>
     public static class DateExtensions
     {
         private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
         private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
 
+        /// <summary>
+        /// Gets the next IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
+        /// If an IMM date is given as the input, the following IMM date will be returned.
+        /// </summary>
+        /// <param name="input">The reference date</param>
+        /// <returns></returns>
         public static DateTime GetNextImmDate(this DateTime input)
         {
             var m = input.Month;
@@ -26,6 +35,12 @@ namespace Qwack.Dates
             return ThirdWednesday(new DateTime(y, m, 1));
         }
 
+        /// <summary>
+        /// Gets the previous IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
+        /// If an IMM date is given as the input, the previous IMM date will be returned.
+        /// </summary>
+        /// <param name="input">The reference date</param>
+        /// <returns></returns>
         public static DateTime GetPrevImmDate(this DateTime input)
         {
             var m = input.Month;
@@ -42,6 +57,14 @@ namespace Qwack.Dates
             return ThirdWednesday(new DateTime(y, m, 1));
         }
 
+        /// <summary>
+        /// Returns a list of business dates according to a specified calendar which are contained within two given dates.  
+        /// Start and end dates are treated as inclusive
+        /// </summary>
+        /// <param name="startDateInc"></param>
+        /// <param name="endDateInc"></param>
+        /// <param name="calendars"></param>
+        /// <returns></returns>
         public static List<DateTime> BusinessDaysInPeriod(this DateTime startDateInc, DateTime endDateInc, Calendar calendars)
         {
             if(endDateInc < startDateInc)
@@ -58,8 +81,24 @@ namespace Qwack.Dates
             return o;
         }
 
-        public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis)
+        /// <summary>
+        /// Calculates a year fraction from a day count method and two dates
+        /// Start date is inclusive, end date exclusive
+        /// </summary>
+        /// <param name="startDate">Start Date (inclusive)</param>
+        /// <param name="endDate">End Date (exclusive)</param>
+        /// <param name="basis">DayCountBasis enum</param>
+        /// <param name="ignoreTimeComponent">Ignore the time component of the DateTime inputs - defaults to true</param>
+        /// <param name="calendar">Optional calendar object, required only for methods involving business days</param>
+        /// <returns></returns>
+        public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis, bool ignoreTimeComponent=true, Calendar calendar=null)
         {
+            if(ignoreTimeComponent)
+            {
+                startDate = startDate.Date;
+                endDate = endDate.Date;
+            }
+
             switch (basis)
             {
                 case DayCountBasis.Act_360:
@@ -97,20 +136,34 @@ namespace Qwack.Dates
                     double mdiffE = endDate.Month - startDate.Month;
                     double ddiffE = d2E - d1E;
                     return (ydiffE * 360 + mdiffE * 30 + ddiffE) / 360;
+                case DayCountBasis.Bus252:
+                    return startDate.BusinessDaysInPeriod(endDate.AddDays(-1), calendar).Count / 252.0;
                 case DayCountBasis.Unity:
                     return 1.0;
             }
             return -1;
         }
 
-
+        /// <summary>
+        /// Calculates a year fraction from a day count method and two dates
+        /// Start date is inclusive, end date exclusive
+        /// </summary>
+        /// <param name="startDate">Start Date (inclusive)</param>
+        /// <param name="endDate">End Date (exclusive)</param>
+        /// <param name="basis">DayCountBasis enum</param>
+        /// <returns></returns>
         public static double CalculateYearFraction(this DayCountBasis basis, DateTime startDate, DateTime endDate)
         {
             return startDate.CalculateYearFraction(endDate, basis);
         }
-    
 
-    public static DateTime FirstBusinessDayOfMonth(this DateTime input, Calendar calendar)
+        /// <summary>
+        /// Returns first business day (according to specified calendar) of month in which the input date falls
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <param name="calendar">Calendar</param>
+        /// <returns></returns>
+        public static DateTime FirstBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             var returnDate = input.FirstDayOfMonth();
             if (calendar != null)
@@ -120,22 +173,46 @@ namespace Qwack.Dates
             return returnDate;
         }
 
+        /// <summary>
+        /// Returns first calendar day of the months in which the input date falls
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <returns></returns>
         public static DateTime FirstDayOfMonth(this DateTime input)
         {
             return new DateTime(input.Year, input.Month, 1);
         }
 
+        /// <summary>
+        /// Returns last business day, according to the specified calendar, of the month in which the input date falls
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <param name="calendar">Calendar</param>
+        /// <returns></returns>
         public static DateTime LastBusinessDayOfMonth(this DateTime input, Calendar calendar)
         {
             var d = input.Date.AddMonths(1).FirstDayOfMonth();
             return SubtractPeriod(d, RollType.P, calendar, 1.Bd());
         }
 
+        /// <summary>
+        /// Returns the third wednesday of the month in which the input date falls
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <returns></returns>
         public static DateTime ThirdWednesday(this DateTime date)
         {
             return date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
         }
 
+        /// <summary>
+        /// Returns the Nth instance of a specific week day in the month in which the input date falls
+        /// E.g. NthSpecificWeekDay(date,DayOfWeek.Wednesday, 3) would return the third wednesday of the month in which the input date falls
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <param name="dayofWeek">DayOfWeek enum</param>
+        /// <param name="number">N</param>
+        /// <returns></returns>
         public static DateTime NthSpecificWeekDay(this DateTime date, DayOfWeek dayofWeek, int number)
         {
             //Get the first day of the month
@@ -162,6 +239,11 @@ namespace Qwack.Dates
 
         }
 
+        /// <summary>
+        /// Returns the last calendar day of the month in which the input date falls
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <returns></returns>
         public static DateTime LastDayOfMonth(this DateTime input)
         {
             if (input.Month != 12)
@@ -174,6 +256,12 @@ namespace Qwack.Dates
             }
         }
 
+        /// <summary>
+        /// Returns the input date, adjusted by rolling forward if the input date falls on a holiday according to the specified calendar
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <param name="calendar">Calendar</param>
+        /// <returns></returns>
         public static DateTime IfHolidayRollForward(this DateTime input, Calendar calendar)
         {
             input = input.Date;
@@ -183,6 +271,13 @@ namespace Qwack.Dates
             }
             return input;
         }
+
+        /// <summary>
+        /// Returns the input date, adjusted by rolling backwards if the input date falls on a holiday according to the specified calendar
+        /// </summary>
+        /// <param name="input">Input date</param>
+        /// <param name="calendar">Calendar</param>
+        /// <returns></returns>
         public static DateTime IfHolidayRollBack(this DateTime input, Calendar calendar)
         {
             while (calendar.IsHoliday(input))
@@ -191,6 +286,15 @@ namespace Qwack.Dates
             }
             return input;
         }
+
+        /// <summary>
+        /// Returns the input date, adjusted by rolling if the input date falls on a holiday according to the specified calendar.  
+        /// The type of roll is specfied in the input.
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <param name="rollType">RollType enum</param>
+        /// <param name="calendar">Calendar</param>
+        /// <returns></returns>
         public static DateTime IfHolidayRoll(this DateTime date, RollType rollType, Calendar calendar)
         {
             date = date.Date;
@@ -274,6 +378,14 @@ namespace Qwack.Dates
             }
         }
 
+        /// <summary>
+        /// Returns a date equal to the input date plus the specified period, adjusted for holidays
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <param name="rollType">RollType enum</param>
+        /// <param name="calendar">Calendar</param>
+        /// <param name="datePeriod">Period to add in the form of a Frequency object</param>
+        /// <returns></returns>
         public static DateTime AddPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency datePeriod)
         {
             date = date.Date;
@@ -324,6 +436,14 @@ namespace Qwack.Dates
             return IfHolidayRoll(dt, rollType, calendar);
         }
 
+        /// <summary>
+        /// Returns a date equal to the input date minus the specified period, adjusted for holidays
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <param name="rollType">RollType enum</param>
+        /// <param name="calendar">Calendar</param>
+        /// <param name="datePeriod">Period to add in the form of a Frequency object</param>
+        /// <returns></returns>
         public static DateTime SubtractPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency datePeriod)
         {
             date = date.Date;
@@ -347,10 +467,23 @@ namespace Qwack.Dates
             return AddPeriod(date, rollType, calendar, new Frequency(0 - datePeriod.PeriodCount, datePeriod.PeriodType));
         }
 
+        /// <summary>
+        /// Returns the lesser of two DateTime objects
+        /// </summary>
+        /// <param name="dateA"></param>
+        /// <param name="dateB"></param>
+        /// <returns></returns>
         public static DateTime Min(this DateTime dateA, DateTime dateB)
         {
             return dateA < dateB ? dateA : dateB;
         }
+
+        /// <summary>
+        /// Returns the greater of two DateTime objects
+        /// </summary>
+        /// <param name="dateA"></param>
+        /// <param name="dateB"></param>
+        /// <returns></returns>
         public static DateTime Max(this DateTime dateA, DateTime dateB)
         {
             return dateA > dateB ? dateA : dateB;

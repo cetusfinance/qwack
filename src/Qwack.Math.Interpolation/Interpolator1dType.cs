@@ -5,6 +5,7 @@
         CubicSpline,
         Linear,
         LinearFlatExtrap,
+        LinearInVariance,
         FloaterHormannRational,
         LogLinear
     }

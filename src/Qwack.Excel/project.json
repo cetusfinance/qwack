@@ -17,6 +17,7 @@
     "dependencies": {
         "ExcelDna.AddIn": "0.34.1-beta",
         "ExcelDna.Integration": "0.34.1-beta",
+        "Microsoft.Office.Interop.Excel": "15.0.4795.1000",
         "NETStandard.Library": "1.6.1",
         "Qwack.Dates": "0.1.0-*",
         "Qwack.Options": "0.1.0-*",

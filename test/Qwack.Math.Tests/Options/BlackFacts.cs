@@ -146,5 +146,21 @@ namespace Qwack.Math.Tests.Options
             var absolute = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(f, delta, rf, t, vol);
             Assert.Equal(k, absolute, 10);
         }
+
+        [Fact]
+        public void ImpliedVolFacts()
+        {
+            var t = 1.0;
+            var k = 120;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.05;
+            var cp = OptionType.P;
+
+            var PV = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
+            var impliedVol = BlackFunctions.BlackImpliedVol(f, k, rf, t, PV, cp);
+
+            Assert.Equal(vol, impliedVol, 10);
+        }
     }
 }

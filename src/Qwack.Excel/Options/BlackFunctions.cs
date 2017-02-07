@@ -75,5 +75,24 @@ namespace Qwack.Excel.Options
                 return Qwack.Options.BlackFunctions.BlackVega(F, K, R, T, V);
             });
         }
+
+        [ExcelFunction(Description = "Returns an implied volatility using the Black'76 formula", Category = "QOpt")]
+        public static object QOpt_BlackImpliedVol(
+            [ExcelArgument(Description = "Time-to-expiry")] double T,
+            [ExcelArgument(Description = "Strike")] double K,
+            [ExcelArgument(Description = "Forward")] double F,
+            [ExcelArgument(Description = "Discounting rate")] double R,
+            [ExcelArgument(Description = "Option Premium")] double PV,
+            [ExcelArgument(Description = "Call or Putg")] string CP)
+        {
+            return ExcelHelper.Execute(() =>
+            {
+                OptionType optType;
+                if (!Enum.TryParse<OptionType>(CP, out optType))
+                    return $"Could not parse call or put flag - {CP}";
+
+                return Qwack.Options.BlackFunctions.BlackImpliedVol(F, K, R, T, PV, optType);
+            });
+        }
     }
 }

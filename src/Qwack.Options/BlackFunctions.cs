@@ -87,5 +87,16 @@ namespace Qwack.Options
             double q = Statistics.NormInv(psi * delta);
             return forward * Exp(-psi * volatility * sqrtT * q + 0.5 * Pow(volatility, 2) * expTime);
         }
+
+        public static double BlackImpliedVol(double forward, double strike, double riskFreeRate, double expTime, double premium, OptionType CP)
+        {
+            Func<double, double> testBlack = (vol =>
+            {
+                return BlackPV(forward, strike, riskFreeRate, expTime, vol, CP) - premium;
+            });
+
+            var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBlack, 0.000000001, 5.0000000, 1e-10);
+            return impliedVol;
+        }
     }
 }

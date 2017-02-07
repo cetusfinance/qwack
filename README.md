@@ -9,10 +9,15 @@ We are starting to document over at
 
 [Documentation](https://cetus.io/qwack)
 
+
 We have a number of blog posts about the project
 
 [Off the starting line](https://cetus.io/tim/Off-the-starting-line/)
+
 [The multi curve interest rates model](https://cetus.io/gav/It-all-started-in-2007/)
+
 [The details of setting up a CI .net project](https://cetus.io/tim/Digging-in/)
+
 [Builing a quant library starts with the date](https://cetus.io/tim/Time-ticks-on/)
+
 [Solving the post 2007 crisis rate cure](https://cetus.io/gav/Solving-the-problem/)

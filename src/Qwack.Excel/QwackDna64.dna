@@ -6,7 +6,7 @@
         <tabs>
           <tab id='Qwack' label='Qwack' visible='true'>
             <group id='Info' label='Info' visible='true'>
-              <button id='About' label='About' size='large' imageMso='HappyFace' onAction='SayHello' visible='true'/>
+              <button id='About' label='About' size='large' imageMso='CustomActionsMenu' onAction='DisplayAbout' visible='true'/>
             </group >
           </tab>
         </tabs>

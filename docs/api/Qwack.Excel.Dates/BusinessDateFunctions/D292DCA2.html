@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="shortcut icon" href="/qwack/assets/img/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/qwack/assets/img/favicon.ico" type="image/x-icon">
-        <title>Docs - API - DateExtensions.CalculateYearFraction(DateTime, DateTime, DayCountBasis) Method</title>
+        <title>Docs - API - BusinessDateFunctions.QDates_SubtractPeriod(DateTime, string, string, string) Method</title>
         <link href="/qwack/assets/css/mermaid.css" rel="stylesheet">
         <link href="/qwack/assets/css/highlight.css" rel="stylesheet">
         <link href="/qwack/assets/css/bootstrap/bootstrap.css" rel="stylesheet">
@@ -74,6 +74,7 @@
                 <section class="infobar" data-spy="affix" data-offset-top="60" data-offset-bottom="200"> 
                     	
 	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#Syntax">Syntax</a></p>
+<p><a href="#Attributes">Attributes</a></p>
 <p><a href="#Parameters">Parameters</a></p>
 <p><a href="#ReturnValue">Return Value</a></p>
 <hr class="infobar-hidden">
@@ -127,29 +128,19 @@
                     <ul class="sidebar-menu">
                         
 			<li class="header">Namespace</li>
-		<li><a href="/qwack/api/Qwack.Dates">Qwack<wbr>.Dates</a></li>
+		<li><a href="/qwack/api/Qwack.Excel.Dates">Qwack<wbr>.Excel<wbr>.Dates</a></li>
 		<li class="header">Type</li>
-		<li><a href="/qwack/api/Qwack.Dates/DateExtensions">DateExtensions</a></li>
+		<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions">Business<wbr>Date<wbr>Functions</a></li>
 		<li role="separator" class="divider"></li>
 			<li class="header">Method Members</li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/17F8BA3D">AddPeriod<wbr>(DateTime, <wbr>RollType, <wbr>Calendar, <wbr>Frequency)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/BC877FC0">BusinessDaysInPeriod<wbr>(DateTime, <wbr>DateTime, <wbr>Calendar)<wbr></a></li>
-				<li class="selected"><a href="/qwack/api/Qwack.Dates/DateExtensions/C80CD703">Calculate<wbr>Year<wbr>Fraction<wbr>(DateTime, <wbr>DateTime, <wbr>DayCountBasis)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/3046657C">Calculate<wbr>Year<wbr>Fraction<wbr>(DayCountBasis, <wbr>DateTime, <wbr>DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/86BDE8BD">First<wbr>Business<wbr>Day<wbr>Of<wbr>Month<wbr>(DateTime, <wbr>Calendar)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/FAA5C98B">FirstDayOfMonth<wbr>(DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/839FC2EC">GetNextImmDate<wbr>(DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/F625BBD1">GetPrevImmDate<wbr>(DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/2378B527">IfHolidayRoll<wbr>(DateTime, <wbr>RollType, <wbr>Calendar)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/51B0EB4E">IfHolidayRollBack<wbr>(DateTime, <wbr>Calendar)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/28E78B51">IfHolidayRollForward<wbr>(DateTime, <wbr>Calendar)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/519D7207">Last<wbr>Business<wbr>Day<wbr>Of<wbr>Month<wbr>(DateTime, <wbr>Calendar)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/B27AC418">LastDayOfMonth<wbr>(DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/8456188C">Max<wbr>(DateTime, <wbr>DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/9608E6B8">Min<wbr>(DateTime, <wbr>DateTime)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/9ADF1010">NthSpecificWeekDay<wbr>(DateTime, <wbr>DayOfWeek, <wbr>int)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/929DC275">SubtractPeriod<wbr>(DateTime, <wbr>RollType, <wbr>Calendar, <wbr>Frequency)<wbr></a></li>
-				<li><a href="/qwack/api/Qwack.Dates/DateExtensions/2D5946C5">ThirdWednesday<wbr>(DateTime)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/F8F66B60">QDates_AddPeriod<wbr>(DateTime, <wbr>string, <wbr>string, <wbr>string)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/3F6F915E">QDates_IsHoliday<wbr>(DateTime, <wbr>string)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/E5139324">Q<wbr>Dates_<wbr>List<wbr>Business<wbr>Days<wbr>In<wbr>Period<wbr>(DateTime, <wbr>DateTime, <wbr>string)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/FC32C6A3">Q<wbr>Dates_<wbr>Num<wbr>Business<wbr>Days<wbr>In<wbr>Period<wbr>(DateTime, <wbr>DateTime, <wbr>string)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/112CABCE">Q<wbr>Dates_<wbr>Specific<wbr>Weekday<wbr>(DateTime, <wbr>string, <wbr>int)<wbr></a></li>
+				<li class="selected"><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/D292DCA2">Q<wbr>Dates_<wbr>Subtract<wbr>Period<wbr>(DateTime, <wbr>string, <wbr>string, <wbr>string)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/0D918F6B">Q<wbr>Dates_<wbr>Third<wbr>Wednesday<wbr>(DateTime)<wbr></a></li>
+				<li><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions/14A0E6B7">QDates_YearFraction<wbr>(DateTime, <wbr>DateTime, <wbr>string)<wbr></a></li>
 
 
                     </ul>
@@ -163,8 +154,8 @@
 
 
 <section class="content-header">
-			<h3><a href="/qwack/api/Qwack.Dates/DateExtensions">DateExtensions</a>.</h3>
-	<h1>Calculate<wbr>Year<wbr>Fraction<wbr>(DateTime, <wbr>DateTime, <wbr>DayCountBasis)<wbr> <small>Method</small></h1>
+			<h3><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions">Business<wbr>Date<wbr>Functions</a>.</h3>
+	<h1>Q<wbr>Dates_<wbr>Subtract<wbr>Period<wbr>(DateTime, <wbr>string, <wbr>string, <wbr>string)<wbr> <small>Method</small></h1>
 </section>
 <section class="content">
 	
@@ -175,20 +166,38 @@
 				<dl class="dl-horizontal">	
 						
 						<dt>Namespace</dt>
-						<dd><a href="/qwack/api/Qwack.Dates">Qwack<wbr>.Dates</a></dd>
+						<dd><a href="/qwack/api/Qwack.Excel.Dates">Qwack<wbr>.Excel<wbr>.Dates</a></dd>
 					
 						<dt>Containing Type</dt>
-						<dd><a href="/qwack/api/Qwack.Dates/DateExtensions">DateExtensions</a></dd>		
+						<dd><a href="/qwack/api/Qwack.Excel.Dates/BusinessDateFunctions">Business<wbr>Date<wbr>Functions</a></dd>		
 					
 				</dl>
   			</div>
 		</div>
 
 	<h1 id="Syntax">Syntax</h1>
-	<pre><code>public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis)</code></pre>
+	<pre><code>[ExcelFunction(Description = "Subtracts a specified period from a date, adjusting for holidays", Category = "QDates")]
+public static object QDates_SubtractPeriod(DateTime StartDate, string Period, string RollMethod, string Calendar)</code></pre>
 
 
 
+	<h1 id="Attributes">Attributes</h1>
+	<div class="box">
+		<div class="box-body no-padding table-responsive">
+			<table class="table table-striped table-hover two-cols">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+					<tbody><tr>
+						<td>ExcelFunction</td>
+						<td></td>
+					</tr>
+			</tbody></table>
+		</div>
+	</div>	
 
 
 	<h1 id="Parameters">Parameters</h1>
@@ -203,18 +212,23 @@
 					</tr>
 				</thead>
 					<tbody><tr>
-						<td>startDate</td>
+						<td>StartDate</td>
 						<td>DateTime</td>
 						<td></td>
 					</tr>
 					<tr>
-						<td>endDate</td>
-						<td>DateTime</td>
+						<td>Period</td>
+						<td>string</td>
 						<td></td>
 					</tr>
 					<tr>
-						<td>basis</td>
-						<td><a href="/qwack/api/Qwack.Dates/DayCountBasis">DayCountBasis</a></td>
+						<td>RollMethod</td>
+						<td>string</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>Calendar</td>
+						<td>string</td>
 						<td></td>
 					</tr>
 			</tbody></table>
@@ -232,7 +246,7 @@
 					</tr>
 				</thead>
 				<tbody><tr>
-					<td>double</td>
+					<td>object</td>
 					<td></td>
 				</tr>
 			</tbody></table>

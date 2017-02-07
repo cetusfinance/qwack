@@ -1,5 +1,8 @@
 ﻿namespace Qwack.Dates
 {
+    /// <summary>
+    /// List of period types
+    /// </summary>
     public enum DatePeriodType
     {
         BusinessDay = 0,

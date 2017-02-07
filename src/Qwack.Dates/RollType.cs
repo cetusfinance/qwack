@@ -1,5 +1,8 @@
 ﻿namespace Qwack.Dates
 {
+    /// <summary>
+    /// A list of methods for rolling dates when holidays occur
+    /// </summary>
     public enum RollType
     {
         Following = 0,

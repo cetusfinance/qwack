@@ -73,7 +73,8 @@
             <aside class="main-sidebar ">
                 <section class="infobar" data-spy="affix" data-offset-top="60" data-offset-bottom="200"> 
                     	
-	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#Syntax">Syntax</a></p>
+	<div id="infobar-headings"><h6>On This Page</h6><p><a href="#Summary">Summary</a></p>
+<p><a href="#Syntax">Syntax</a></p>
 <p><a href="#Parameters">Parameters</a></p>
 <p><a href="#ReturnValue">Return Value</a></p>
 <hr class="infobar-hidden">
@@ -153,7 +154,11 @@
 <section class="content">
 	
 	
-	
+		<h1 id="Summary">Summary</h1>
+	<div class="lead">
+    Implementation of Newton's method for root finding which uses an exact derivative
+    </div>
+
 		<div class="panel panel-default">
   			<div class="panel-body">	
 				<dl class="dl-horizontal">	
@@ -189,27 +194,27 @@
 					<tbody><tr>
 						<td>function</td>
 						<td>Func<wbr>&lt;double, <wbr>double&gt;<wbr></td>
-						<td></td>
+						<td>The function called to evaluate f(x). Takes a double as input and returns a double</td>
 					</tr>
 					<tr>
 						<td>derivativeFunction</td>
 						<td>Func<wbr>&lt;double, <wbr>double&gt;<wbr></td>
-						<td></td>
+						<td>The function called to evaluate f'(x). Takes a double as input and returns a double</td>
 					</tr>
 					<tr>
 						<td>initialGuess</td>
 						<td>double</td>
-						<td></td>
+						<td>The starting point for solving</td>
 					</tr>
 					<tr>
 						<td>errorTol</td>
 						<td>double</td>
-						<td></td>
+						<td>The tollerance which defines when the problem is solved</td>
 					</tr>
 					<tr>
 						<td>maxItterations</td>
 						<td>int</td>
-						<td></td>
+						<td>Maximum number of itterations to perform. Defaulted to 1000</td>
 					</tr>
 			</tbody></table>
 		</div>

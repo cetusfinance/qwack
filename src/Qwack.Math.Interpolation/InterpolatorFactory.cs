@@ -33,6 +33,10 @@ namespace Qwack.Math.Interpolation
                     {
                         return new LinearInterpolatorFlatExtrap(x, y);
                     }
+                case Interpolator1DType.Linear:
+                    return new LinearInterpolator(x, y);
+                case Interpolator1DType.LinearInVariance:
+                    return new LinearInVarianceInterpolator(x,y);
                 default:
                     throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
             }

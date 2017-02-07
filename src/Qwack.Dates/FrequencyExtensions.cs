@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
+    /// <summary>
+    /// Extension methods for easy creation of frequency objects
+    /// </summary>
     public static class FrequencyExtensions
     {
         public static Frequency Months(this int number)

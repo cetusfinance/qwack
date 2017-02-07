@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
+    /// <summary>
+    /// Relative date implementation of the ITenorDate interface
+    /// </summary>
     public class TenorDateRelative : ITenorDate
     {
         public TenorDateRelative(Frequency relativeTenor)

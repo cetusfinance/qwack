@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Qwack.Options
 {
+    /// <summary>
+    /// Call or Put enum
+    /// </summary>
     public enum OptionType
     {
         C = 0,

@@ -28,7 +28,7 @@ namespace Qwack.Dates.Tests
         {
             var startDate = new DateTime(2016, 02, 10);
             var endDate = new DateTime(2016, 10, 13);
-            Assert.Equal(246,startDate.CalculateYearFraction(endDate, DayCountBasis.Act360) * 360,15);
+            Assert.Equal(246, startDate.CalculateYearFraction(endDate, DayCountBasis.Act360) * 360, 15);
         }
 
         [Fact]
@@ -128,5 +128,83 @@ namespace Qwack.Dates.Tests
             Assert.Equal(dtA, dtA.Min(dtB));
             Assert.Equal(dtB, dtB.Max(dtA));
         }
+
+        [Fact]
+        public void RollingRules()
+        {
+            var calendar = new Calendar();
+            calendar.DaysToAlwaysExclude.Add(DayOfWeek.Saturday);
+            calendar.DaysToAlwaysExclude.Add(DayOfWeek.Sunday);
+            calendar.DaysToExclude.Add(new DateTime(2017, 02, 28));
+
+            //this is a saturday
+            var date = new DateTime(2017, 02, 18);
+
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.F, calendar));
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.MF, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.P, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.NearestFollow, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.NearestPrev, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.MP, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.LME, calendar));
+
+            //now a sunday
+            date = new DateTime(2017, 02, 19);
+
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.F, calendar));
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.MF, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.P, calendar));
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.NearestFollow, calendar));
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.NearestPrev, calendar));
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.MP, calendar));
+            Assert.Equal(new DateTime(2017, 02, 20), date.IfHolidayRoll(RollType.LME, calendar));
+
+            //now month-end holiday
+            date = new DateTime(2017, 02, 28);
+
+            Assert.Equal(new DateTime(2017, 03, 01), date.IfHolidayRoll(RollType.F, calendar));
+            Assert.Equal(new DateTime(2017, 02, 27), date.IfHolidayRoll(RollType.MF, calendar));
+            Assert.Equal(new DateTime(2017, 02, 27), date.IfHolidayRoll(RollType.P, calendar));
+            Assert.Equal(new DateTime(2017, 03, 01), date.IfHolidayRoll(RollType.NearestFollow, calendar));
+            Assert.Equal(new DateTime(2017, 02, 27), date.IfHolidayRoll(RollType.NearestPrev, calendar));
+            Assert.Equal(new DateTime(2017, 02, 27), date.IfHolidayRoll(RollType.MP, calendar));
+            Assert.Equal(new DateTime(2017, 02, 27), date.IfHolidayRoll(RollType.LME, calendar));
+
+            //special case for LME (mod-nearest-follow)
+            calendar.DaysToExclude.Add(new DateTime(2017, 02, 20));
+            date = new DateTime(2017, 02, 19);
+            Assert.Equal(new DateTime(2017, 02, 21), date.IfHolidayRoll(RollType.LME, calendar));
+            date = new DateTime(2017, 02, 18);
+            Assert.Equal(new DateTime(2017, 02, 17), date.IfHolidayRoll(RollType.LME, calendar));
+        }
+
+        [Fact]
+        public void LME3mRule()
+        {
+            var calendar = new Calendar();
+            calendar.DaysToAlwaysExclude.Add(DayOfWeek.Saturday);
+            calendar.DaysToAlwaysExclude.Add(DayOfWeek.Sunday);
+
+            var date = new DateTime(2017, 01, 30);
+            var lme3mDate = date.AddPeriod(RollType.LME, calendar, new Frequency("3m"));
+            Assert.Equal(new DateTime(2017, 04, 28), lme3mDate);
+
+            //easter 2017
+            calendar.DaysToExclude.Add(new DateTime(2017, 04, 14));
+            calendar.DaysToExclude.Add(new DateTime(2017, 04, 17));
+
+            date = new DateTime(2017, 01, 14);
+            lme3mDate = date.AddPeriod(RollType.LME, calendar, new Frequency("3m"));
+            Assert.Equal(new DateTime(2017, 04, 13), lme3mDate);
+
+            date = new DateTime(2017, 01, 15);
+            lme3mDate = date.AddPeriod(RollType.LME, calendar, new Frequency("3m"));
+            Assert.Equal(new DateTime(2017, 04, 13), lme3mDate);
+
+            date = new DateTime(2017, 01, 16);
+            lme3mDate = date.AddPeriod(RollType.LME, calendar, new Frequency("3m"));
+            Assert.Equal(new DateTime(2017, 04, 18), lme3mDate);
+        }
+
     }
 }

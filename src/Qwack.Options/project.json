@@ -13,6 +13,7 @@
   "buildOptions": { "allowUnsafe": true },
   "dependencies": {
     "NETStandard.Library": "1.6.1",
+    "Qwack.Core": "0.1.0-*",
     "Qwack.Dates": { "target": "project" },
     "Qwack.Math": { "target": "project" },
     "Qwack.Math.Interpolation": "0.1.0-*"

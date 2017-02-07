@@ -24,7 +24,7 @@ after_test:
   - dotnet pack -c Release src/Qwack.Dates --version-suffix %APPVEYOR_BUILD_NUMBER%
   - dotnet pack -c Release src/Qwack.Core --version-suffix %APPVEYOR_BUILD_NUMBER%
   - dotnet pack -c Release src/Qwack.Options --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Path --version-suffix %APPVEYOR_BUILD_NUMBER%
+  - dotnet pack -c Release src/Qwack.Paths --version-suffix %APPVEYOR_BUILD_NUMBER%
   - dotnet pack -c Release src/Qwack.Providers --version-suffix %APPVEYOR_BUILD_NUMBER%
   - dotnet pack -c Release src/Qwack.Random --version-suffix %APPVEYOR_BUILD_NUMBER%
   - dotnet pack -c Release src/Qwack.Utils --version-suffix %APPVEYOR_BUILD_NUMBER%

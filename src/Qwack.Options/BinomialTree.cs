@@ -140,6 +140,15 @@ namespace Qwack.Options
             return objArray;
         }
 
+        public static double AmericanFuturesOptionImpliedVol(double forward, double strike, double riskFreeRate, double expTime, double premium, OptionType CP)
+        {
+            Func<double, double> testBinomial = (vol =>
+            {
+                return AmericanFutureOptionPV(forward, strike, riskFreeRate, expTime, vol, CP) - premium;
+            });
 
+            var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBinomial, 0.000000001, 5.0000000, 1e-10);
+            return impliedVol;
+        }
     }
 }

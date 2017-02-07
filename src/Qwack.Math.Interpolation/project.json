@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "0.1.0-*",
   "authors": [ "Tim Seaward", "Gavin Brennan" ],
   "packOptions": {
@@ -10,9 +10,9 @@
       "url": "https://github.com/cetusfinance/qwack"
     }
   },
-  "dependencies": {
-    "NETStandard.Library": "1.6.1"
-  },
+    "dependencies": {
+        "NETStandard.Library": "1.6.1"
+    },
   "frameworks": {
     "netstandard1.6": {},
     "net461": {}

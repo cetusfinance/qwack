@@ -17,7 +17,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Forward")] double F,
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Volatility")] double V,
-            [ExcelArgument(Description = "Call or Putg")] string CP)
+            [ExcelArgument(Description = "Call or Put")] string CP)
         {
             return ExcelHelper.Execute(() =>
             {
@@ -36,7 +36,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Forward")] double F,
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Volatility")] double V,
-            [ExcelArgument(Description = "Call or Putg")] string CP)
+            [ExcelArgument(Description = "Call or Put")] string CP)
         {
             return ExcelHelper.Execute(() =>
             {
@@ -83,7 +83,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Forward")] double F,
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Option Premium")] double PV,
-            [ExcelArgument(Description = "Call or Putg")] string CP)
+            [ExcelArgument(Description = "Call or Put")] string CP)
         {
             return ExcelHelper.Execute(() =>
             {

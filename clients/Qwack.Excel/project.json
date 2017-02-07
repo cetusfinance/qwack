@@ -11,7 +11,7 @@
     }
   },
   "buildOptions": {
-    "allowUnsafe": true,
+    "allowUnsafe": false,
     "copyToOutput": ["QwackDna64.dna","QwackDna64.xll","Calendars.json"]
   },
     "dependencies": {

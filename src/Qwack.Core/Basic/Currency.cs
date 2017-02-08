@@ -2,6 +2,9 @@
 
 namespace Qwack.Core.Basic
 {
+    /// <summary>
+    /// The basic currency class that contains the static data needed to describe a currency
+    /// </summary>
     public class Currency
     {
         public Currency(string ccy, DayCountBasis dayCount, Calendar settlementCalendar)

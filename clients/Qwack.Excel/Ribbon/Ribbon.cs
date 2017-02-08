@@ -13,7 +13,7 @@ namespace Qwack.Excel.Ribbon
     [ComVisible(true)]
     public class QwackRibbon : ExcelRibbon
     {
-        static CustomTaskPane _calViewer;
+        private static CustomTaskPane _calViewer;
 
         public void DisplayAbout(IRibbonControl control1)
         {

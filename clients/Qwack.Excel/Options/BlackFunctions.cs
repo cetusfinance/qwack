@@ -10,8 +10,8 @@ namespace Qwack.Excel.Options
 {
     public static class BlackFunctions
     {
-        [ExcelFunction(Description = "Returns option PV using the Black'76 formula", Category = "QOpt")]
-        public static object QOpt_BlackPV(
+        [ExcelFunction(Description = "Returns option PV using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackPV))]
+        public static object BlackPV(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -22,15 +22,16 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(() =>
             {
                 OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out optType))
+                {
                     return $"Could not parse call or put flag - {CP}";
-
+                }
                 return Qwack.Options.BlackFunctions.BlackPV(F, K, R, T, V, optType);
             });
         }
 
-        [ExcelFunction(Description = "Returns option delta using the Black'76 formula", Category = "QOpt")]
-        public static object QOpt_BlackDelta(
+        [ExcelFunction(Description = "Returns option delta using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackDelta))]
+        public static object BlackDelta(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -41,15 +42,16 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(() =>
             {
                 OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out optType))
+                {
                     return $"Could not parse call or put flag - {CP}";
-
+                }
                 return Qwack.Options.BlackFunctions.BlackDelta(F, K, R, T, V, optType);
             });
         }
 
-        [ExcelFunction(Description = "Returns option gamma using the Black'76 formula", Category = "QOpt")]
-        public static object QOpt_BlackGamma(
+        [ExcelFunction(Description = "Returns option gamma using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackGamma))]
+        public static object BlackGamma(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -62,8 +64,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Returns option vega using the Black'76 formula", Category = "QOpt")]
-        public static object QOpt_BlackVega(
+        [ExcelFunction(Description = "Returns option vega using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackVega))]
+        public static object BlackVega(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -76,8 +78,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Returns an implied volatility using the Black'76 formula", Category = "QOpt")]
-        public static object QOpt_BlackImpliedVol(
+        [ExcelFunction(Description = "Returns an implied volatility using the Black'76 formula", Category = CategoryNames.Options,, Name = CategoryNames.Options + "_" + nameof(BlackImpliedVol))]
+        public static object BlackImpliedVol(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -88,9 +90,10 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(() =>
             {
                 OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out optType))
+                {
                     return $"Could not parse call or put flag - {CP}";
-
+                }
                 return Qwack.Options.BlackFunctions.BlackImpliedVol(F, K, R, T, PV, optType);
             });
         }

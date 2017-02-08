@@ -10,8 +10,8 @@ namespace Qwack.Excel.Options
 {
     public static class AmericanFunctions
     {
-        [ExcelFunction(Description = "Returns an american futures option PV using a grid", Category = "QOpt")]
-        public static object QOpt_AmericanFutureOptionPV(
+        [ExcelFunction(Description = "Returns an american futures option PV using a grid", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(AmericanFutureOptionPV))]
+        public static object AmericanFutureOptionPV(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,
             [ExcelArgument(Description = "Forward")] double F,
@@ -24,21 +24,27 @@ namespace Qwack.Excel.Options
             {
                 OptionType optType;
                 if (!Enum.TryParse(CP, out optType))
+                {
                     return $"Could not parse call or put flag - {CP}";
-
+                }
                 AmericanPricingType method;
                 if (!Enum.TryParse(Method, out method))
+                {
                     return $"Could not parse pricing type - {Method}";
-
-                if(method== AmericanPricingType.Binomial)
+                }
+                if (method == AmericanPricingType.Binomial)
+                {
                     return BinomialTree.AmericanFutureOptionPV(F, K, R, T, V, optType);
+                }
                 else
+                {
                     return TrinomialTree.AmericanFutureOptionPV(F, K, R, T, V, optType);
+                }
             });
         }
 
-        [ExcelFunction(Description = "Returns an implied volatility for an american futures option PV using a grid", Category = "QOpt")]
-        public static object QOpt_AmericanFutureOptionImpliedVol(
+        [ExcelFunction(Description = "Returns an implied volatility for an american futures option PV using a grid", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(AmericanFutureOptionImpliedVol))]
+        public static object AmericanFutureOptionImpliedVol(
           [ExcelArgument(Description = "Time-to-expiry")] double T,
           [ExcelArgument(Description = "Strike")] double K,
           [ExcelArgument(Description = "Forward")] double F,
@@ -50,17 +56,23 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(() =>
             {
                 OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out optType))
+                {
                     return $"Could not parse call or put flag - {CP}";
-
+                }
                 AmericanPricingType method;
                 if (!Enum.TryParse(Method, out method))
+                {
                     return $"Could not parse pricing type - {Method}";
-
+                }
                 if (method == AmericanPricingType.Binomial)
+                {
                     return BinomialTree.AmericanFuturesOptionImpliedVol(F, K, R, T, PV, optType);
+                }
                 else
+                {
                     return TrinomialTree.AmericanFuturesOptionImpliedVol(F, K, R, T, PV, optType);
+                }
             });
         }
     }

@@ -20,4 +20,4 @@ We have a number of blog posts about the project
 
 [Builing a quant library starts with the date](https://cetus.io/tim/Time-ticks-on/)
 
-[Solving the post 2007 crisis rate cure](https://cetus.io/gav/Solving-the-problem/)
+[Solving the post 2007 crisis rate curve](https://cetus.io/gav/Solving-the-problem/)

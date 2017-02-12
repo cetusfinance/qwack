@@ -2,10 +2,10 @@ language: csharp
 dist: trusty
 sudo: required
 mono: none
-dotnet: 1.0.0-rc4-004771
+dotnet: 1.0.0-preview3-004056
 script:
   - dotnet restore
-  - dotnet build -f netstandard1.6 ./src/**/.csproj
+  - dotnet build -f netstandard1.6 ./src/**/*.csproj
   - dotnet test ./test/Qwack.Dates.Tests
   - dotnet test ./test/Qwack.Math.Tests
   - dotnet test ./test/Qwack.Core.Tests

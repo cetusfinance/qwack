@@ -78,7 +78,7 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Returns an implied volatility using the Black'76 formula", Category = CategoryNames.Options,, Name = CategoryNames.Options + "_" + nameof(BlackImpliedVol))]
+        [ExcelFunction(Description = "Returns an implied volatility using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackImpliedVol))]
         public static object BlackImpliedVol(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
             [ExcelArgument(Description = "Strike")] double K,

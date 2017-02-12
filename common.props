@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(eyyMMdd-1))</VersionSuffix>
+    <Copyright>Cetus Finance</Copyright>
+    <VersionPrefix>0.3.0</VersionPrefix>
+    <Authors>Cetus Finance</Authors>
+    <PackageReleaseNotes>Development Package</PackageReleaseNotes>
+    <PackageIconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</PackageIconUrl>
+    <PackageProjectUrl>https://cetus.io/qwack</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/cetusfinance/qwack/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/cetusfinance/qwack</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

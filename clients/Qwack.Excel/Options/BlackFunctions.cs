@@ -5,11 +5,15 @@ using System.Threading.Tasks;
 using ExcelDna.Integration;
 using Qwack.Options;
 using Qwack.Excel.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Qwack.Excel.Options
 {
-    public static class BlackFunctions
+    public class BlackFunctions
     {
+        private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BlackFunctions>();
+
         [ExcelFunction(Description = "Returns option PV using the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(BlackPV))]
         public static object BlackPV(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
@@ -19,10 +23,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Volatility")] double V,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
-                OptionType optType;
-                if (!Enum.TryParse(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }
@@ -39,10 +42,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Volatility")] double V,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
-                OptionType optType;
-                if (!Enum.TryParse(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }
@@ -58,7 +60,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Volatility")] double V)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
                 return Qwack.Options.BlackFunctions.BlackGamma(F, K, R, T, V);
             });
@@ -72,7 +74,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Volatility")] double V)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
                 return Qwack.Options.BlackFunctions.BlackVega(F, K, R, T, V);
             });
@@ -87,10 +89,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Option Premium")] double PV,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
-                OptionType optType;
-                if (!Enum.TryParse(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }

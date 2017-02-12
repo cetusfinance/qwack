@@ -5,7 +5,7 @@ mono: none
 dotnet: 1.0.0-preview4-004233
 script:
   - dotnet restore
-  - dotnet build
+  - dotnet build -f netstandard1.6
   - dotnet test ./test/Qwack.Dates.Tests
   - dotnet test ./test/Qwack.Math.Tests
   - dotnet test ./test/Qwack.Core.Tests

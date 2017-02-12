@@ -31,6 +31,9 @@
   <ItemGroup>
     <PackageReference Include="ExcelDna.AddIn" Version="0.34.1-beta" />
     <PackageReference Include="ExcelDna.Integration" Version="0.34.1-beta" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.0" />
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1000" />
   </ItemGroup>
 

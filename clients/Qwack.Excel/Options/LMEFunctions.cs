@@ -6,11 +6,15 @@ using ExcelDna.Integration;
 using Qwack.Options;
 using Qwack.Excel.Services;
 using Qwack.Dates;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Qwack.Excel.Options
 {
-    public static class LMEFunctions
+    public class LMEFunctions
     {
+        private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<LMEFunctions>();
+
         [ExcelFunction(Description = "Returns option PV using the LME-modified Black'76 formula", Category = "QOpt")]
         public static object QOpt_LMEBlackPV(
             [ExcelArgument(Description = "Today/Value date (origin)")] DateTime ValueDate,
@@ -22,10 +26,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Volatility")] double V,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger,() =>
             {
-                OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
                 double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
@@ -44,10 +47,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Volatility")] double V,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
                 double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
@@ -64,7 +66,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Forward")] double F,
             [ExcelArgument(Description = "Volatility")] double V)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
                 double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
 
@@ -82,7 +84,7 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Discounting rate")] double R,
             [ExcelArgument(Description = "Volatility")] double V)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
                 double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
                 double tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
@@ -102,10 +104,9 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Option Premium")] double PV,
             [ExcelArgument(Description = "Call or Put")] string CP)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                OptionType optType;
-                if (!Enum.TryParse<OptionType>(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
                 double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);

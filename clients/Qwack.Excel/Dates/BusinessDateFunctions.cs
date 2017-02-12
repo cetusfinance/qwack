@@ -5,22 +5,27 @@ using System.Threading.Tasks;
 using ExcelDna.Integration;
 using Qwack.Dates;
 using Qwack.Excel.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 namespace Qwack.Excel.Dates
 {
-    public static class BusinessDateFunctions
+    public class BusinessDateFunctions
     {
+        private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
+
         [ExcelFunction(Description = "Checks if the given date is a holiday according to the specified calendars", Category = "QDates")]
         public static object QDates_IsHoliday(
-            [ExcelArgument(Description = "The date to check")] DateTime DateToCheck, 
-            [ExcelArgument(Description = "The calendar(s) to check against")]string Calendar)
+            [ExcelArgument(Description = "The date to check")] DateTime DateToCheck,
+            [ExcelArgument(Description = "The calendar(s) to check against")]string calendar)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                Calendar cal;
-
-                if (!StaticDataService.Instance.CalendarProvider.Collection.TryGetCalendar(Calendar, out cal))
-                    return $"Calendar {Calendar} not found in cache";
-
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(calendar, out Calendar cal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", calendar);
+                    return $"Calendar {calendar} not found in cache";
+                }
                 return cal.IsHoliday(DateToCheck);
             });
         }
@@ -32,21 +37,19 @@ namespace Qwack.Excel.Dates
             [ExcelArgument(Description = "Roll method")]string RollMethod,
             [ExcelArgument(Description = "Calendar(s) to check against")]string Calendar)
         {
-            return ExcelHelper.Execute(() =>
-            {
-                Calendar cal;
-                if (!StaticDataService.Instance.CalendarProvider.Collection.TryGetCalendar(Calendar, out cal))
-                    return $"Calendar {Calendar} not found in cache";
+            return ExcelHelper.Execute(_logger, () =>
+             {
+                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out Calendar cal))
+                     return $"Calendar {Calendar} not found in cache";
 
-                RollType rollMethod;
-                if(!Enum.TryParse<RollType>(RollMethod,out rollMethod))
-                    return $"Unknown roll method {RollMethod}";
+                 if (!Enum.TryParse(RollMethod, out RollType rollMethod))
+                     return $"Unknown roll method {RollMethod}";
 
-                Frequency period = new Frequency(Period);
+                 Frequency period = new Frequency(Period);
 
-                return StartDate.AddPeriod(rollMethod, cal, period);
+                 return StartDate.AddPeriod(rollMethod, cal, period);
 
-            });
+             });
         }
 
         [ExcelFunction(Description = "Subtracts a specified period from a date, adjusting for holidays", Category = "QDates")]
@@ -56,21 +59,19 @@ namespace Qwack.Excel.Dates
            [ExcelArgument(Description = "Roll method")]string RollMethod,
            [ExcelArgument(Description = "Calendar(s) to check against")]string Calendar)
         {
-            return ExcelHelper.Execute(() =>
-            {
-                Calendar cal;
-                if (!StaticDataService.Instance.CalendarProvider.Collection.TryGetCalendar(Calendar, out cal))
-                    return $"Calendar {Calendar} not found in cache";
+            return ExcelHelper.Execute(_logger, () =>
+             {
+                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out Calendar cal))
+                     return $"Calendar {Calendar} not found in cache";
 
-                RollType rollMethod;
-                if (!Enum.TryParse<RollType>(RollMethod, out rollMethod))
-                    return $"Unknown roll method {RollMethod}";
+                 if (!Enum.TryParse(RollMethod, out RollType rollMethod))
+                     return $"Unknown roll method {RollMethod}";
 
-                Frequency period = new Frequency(Period);
+                 Frequency period = new Frequency(Period);
 
-                return StartDate.SubtractPeriod(rollMethod, cal, period);
+                 return StartDate.SubtractPeriod(rollMethod, cal, period);
 
-            });
+             });
         }
 
         [ExcelFunction(Description = "Returns N-th instance of a specific weekday in a given month", Category = "QDates")]
@@ -79,10 +80,9 @@ namespace Qwack.Excel.Dates
             [ExcelArgument(Description = "Day of week")]string DayOfWeek,
             [ExcelArgument(Description = "Nth day to extract - e.g. 3 would give the 3rd instance of the day")]int N)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                DayOfWeek weekDay;
-                if (!Enum.TryParse<DayOfWeek>(DayOfWeek, out weekDay))
+                if (!Enum.TryParse(DayOfWeek, out DayOfWeek weekDay))
                     return $"Unknown weekday {DayOfWeek}";
 
                 return DateInMonth.NthSpecificWeekDay(weekDay, N);
@@ -93,7 +93,7 @@ namespace Qwack.Excel.Dates
         public static object QDates_ThirdWednesday(
             [ExcelArgument(Description = "Date in month")] DateTime DateInMonth)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
                 return DateInMonth.ThirdWednesday();
             });
@@ -105,10 +105,9 @@ namespace Qwack.Excel.Dates
             [ExcelArgument(Description = "Period end date (exclusive)")] DateTime EndDate,
             [ExcelArgument(Description = "Day count method")] string DayCountMethod)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                DayCountBasis dayCount;
-                if (!Enum.TryParse<DayCountBasis>(DayCountMethod, out dayCount))
+                if (!Enum.TryParse(DayCountMethod, out DayCountBasis dayCount))
                     return $"Unknown daycount method {DayCountMethod}";
 
                 return dayCount.CalculateYearFraction(StartDate, EndDate);
@@ -121,11 +120,9 @@ namespace Qwack.Excel.Dates
             [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
             [ExcelArgument(Description = "Calendar to check")] string Calendar)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                Calendar cal;
-
-                if (!StaticDataService.Instance.CalendarProvider.Collection.TryGetCalendar(Calendar, out cal))
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out Calendar cal))
                     return $"Calendar {Calendar} not found in cache";
 
                 return StartDate.BusinessDaysInPeriod(EndDate, cal).Count;
@@ -136,16 +133,15 @@ namespace Qwack.Excel.Dates
         public static object QDates_ListBusinessDaysInPeriod(
             [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
             [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
-            [ExcelArgument(Description = "Calendar to check")] string Calendar)
+            [ExcelArgument(Description = "Calendar to check")] string calendar)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                Calendar cal;
-
-                if (!StaticDataService.Instance.CalendarProvider.Collection.TryGetCalendar(Calendar, out cal))
-                    return $"Calendar {Calendar} not found in cache";
-
-                return StartDate.BusinessDaysInPeriod(EndDate, cal).Select(x=>x.ToOADate()).ToArray();
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(calendar, out Calendar cal))
+                {
+                    return $"Calendar {calendar} not found in cache";
+                }
+                return StartDate.BusinessDaysInPeriod(EndDate, cal).Select(x => x.ToOADate()).ToArray();
             });
         }
     }

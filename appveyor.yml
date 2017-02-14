@@ -19,15 +19,15 @@ after_test:
   # Build and pack source
   - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\script\runtests.bat" -searchdirs:".\test\Qwack.Math.Tests\bin\Debug\netcoreapp1.0;.\test\Qwack.Dates.Tests\bin\Debug\netcoreapp1.0;.\test\Qwack.Core.Tests\bin\Debug\netcoreapp1.0" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Qwack*]* -[*Tests]* -[*Benchmark]*"')
   - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\coveralls.io'))[0].FullName + '\tools\coveralls.net.exe' + ' --opencover coverage.xml')
-  - dotnet pack -c Release src/Qwack.Math --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Math.Interpolation --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Dates --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Core --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Options --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Paths --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Providers --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Random --version-suffix %APPVEYOR_BUILD_NUMBER%
-  - dotnet pack -c Release src/Qwack.Utils --version-suffix %APPVEYOR_BUILD_NUMBER%
+  - dotnet pack -c Release src/Qwack.Math
+  - dotnet pack -c Release src/Qwack.Math.Interpolation
+  - dotnet pack -c Release src/Qwack.Dates
+  - dotnet pack -c Release src/Qwack.Core
+  - dotnet pack -c Release src/Qwack.Options
+  - dotnet pack -c Release src/Qwack.Paths
+  - dotnet pack -c Release src/Qwack.Providers
+  - dotnet pack -c Release src/Qwack.Random
+  - dotnet pack -c Release src/Qwack.Utils
   
 artifacts:
   path: '**/*.nupkg'

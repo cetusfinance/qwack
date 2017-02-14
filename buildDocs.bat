@@ -1,4 +1,4 @@
-git clone https://github.com/cetusfinance/qwackdocs.git docs -q
+git clone https://github.com/cetusfinance/qwackdocs.git origin_site -q
 wyam build -o docs
 CD docs
 git add -A 2>&1

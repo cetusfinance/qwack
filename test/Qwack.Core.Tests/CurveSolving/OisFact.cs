@@ -18,7 +18,7 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class OisFact
     {
-        private static readonly string _jsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "Calendars.json");
+        private static readonly string _jsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
         private static readonly ICalendarProvider _calendarProvider = CalendarsFromJson.Load(_jsonCalendarPath);
         private static readonly Calendar _jhb = _calendarProvider.Collection["jhb"];
         private static readonly Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, _jhb);

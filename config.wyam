@@ -1,5 +1,0 @@
-#recipe Docs
-Settings[DocsKeys.SourceFiles] = "../src/**/{!bin,!obj,!packages,!*.Tests,}/**/*.cs";
-Settings[Keys.Host] = "cetus.io";
-Settings[Keys.LinkRoot] = "/qwack";
-Settings[DocsKeys.BaseEditUrl] = "https://github.com/cetusfinance/qwack/tree/master/input/";

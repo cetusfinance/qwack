@@ -11,6 +11,7 @@
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ubuntu|AnyCPU'" />
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />

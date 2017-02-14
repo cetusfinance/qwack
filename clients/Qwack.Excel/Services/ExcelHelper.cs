@@ -3,12 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Qwack.Excel.Services
 {
     public static class ExcelHelper
     {
-        public static object Execute(Func<object> functionToRun)
+        private static EventId _eventId = new EventId(1);
+
+        public static object Execute(ILogger logger, Func<object> functionToRun)
         {
             if (ExcelDnaUtil.IsInFunctionWizard()) return "Disabled in function wizard";
 
@@ -18,6 +21,7 @@ namespace Qwack.Excel.Services
             }
             catch (Exception ex)
             {
+                logger?.LogWarning(_eventId, ex, "Unhandled exception");
                 return ex.Message;
             }
         }

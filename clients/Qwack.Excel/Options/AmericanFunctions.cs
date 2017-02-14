@@ -5,11 +5,15 @@ using System.Threading.Tasks;
 using ExcelDna.Integration;
 using Qwack.Options;
 using Qwack.Excel.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Qwack.Excel.Options
 {
-    public static class AmericanFunctions
+    public class AmericanFunctions
     {
+        private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<AmericanFunctions>();
+
         [ExcelFunction(Description = "Returns an american futures option PV using a grid", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(AmericanFutureOptionPV))]
         public static object AmericanFutureOptionPV(
             [ExcelArgument(Description = "Time-to-expiry")] double T,
@@ -20,15 +24,13 @@ namespace Qwack.Excel.Options
             [ExcelArgument(Description = "Call or Put")] string CP,
             [ExcelArgument(Description = "Pricing method (Defult Trinomial)")] string Method)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                OptionType optType;
-                if (!Enum.TryParse(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }
-                AmericanPricingType method;
-                if (!Enum.TryParse(Method, out method))
+                if (!Enum.TryParse(Method, out AmericanPricingType method))
                 {
                     return $"Could not parse pricing type - {Method}";
                 }
@@ -53,15 +55,13 @@ namespace Qwack.Excel.Options
           [ExcelArgument(Description = "Call or Put")] string CP,
           [ExcelArgument(Description = "Pricing method (Defult Trinomial)")] string Method)
         {
-            return ExcelHelper.Execute(() =>
+            return ExcelHelper.Execute(_logger, () =>
             {
-                OptionType optType;
-                if (!Enum.TryParse(CP, out optType))
+                if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }
-                AmericanPricingType method;
-                if (!Enum.TryParse(Method, out method))
+                if (!Enum.TryParse(Method, out AmericanPricingType method))
                 {
                     return $"Could not parse pricing type - {Method}";
                 }

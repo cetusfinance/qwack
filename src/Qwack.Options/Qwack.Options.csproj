@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props" />
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.5;net461</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Qwack.Options</AssemblyName>
+    <PackageId>Qwack.Options</PackageId>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
+    <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
+  </ItemGroup>
+</Project>

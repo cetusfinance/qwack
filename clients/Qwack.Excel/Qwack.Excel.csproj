@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>Qwack.Excel</AssemblyName>
+    <PackageId>Qwack.Excel</PackageId>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <Content Include="QwackDna64.dna;QwackDna64.xll;Calendars.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExcelDna.AddIn" Version="0.34.1-beta" />
+    <PackageReference Include="ExcelDna.Integration" Version="0.34.1-beta" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1000" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Options\Qwack.Options.csproj" />
+  </ItemGroup>
+
+</Project>

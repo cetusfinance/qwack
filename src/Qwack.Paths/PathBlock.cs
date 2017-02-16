@@ -39,6 +39,8 @@ namespace Qwack.Paths
         public int Factors => _factors;
         public int NumberOfSteps => _numberOfSteps;
         public static int MinNumberOfPaths => _minNumberOfPaths;
+        public IntPtr BackingPointer => _handle.AddrOfPinnedObject();
+        public int TotalBlockSize => _numberOfPaths * _factors * _numberOfSteps;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDoubleIndex(int pathNumber, int factor, int step)
@@ -49,6 +51,24 @@ namespace Qwack.Paths
             var factorDelta = _vectorSize * factor;
             var pathDelta = pathNumber % _vectorSize;
             return blockDelta + stepDelta + factorDelta + pathDelta;
+        }
+
+        public unsafe double this[int index]
+        {
+            get
+            {
+                return Unsafe.Read<double>((void*)ByteIndex(index));
+            }
+            set
+            {
+                Unsafe.Write((void*)ByteIndex(index), value);
+            }
+        }
+
+        private IntPtr ByteIndex(int doubleIndex)
+        {
+            var offset = doubleIndex * 8;
+            return IntPtr.Add(_handle.AddrOfPinnedObject(), offset);
         }
 
         public void Dispose()

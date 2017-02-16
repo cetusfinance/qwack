@@ -1,4 +1,4 @@
-[Logo](https://qwack.io/assets/img/logo.png)
+![Logo](https://qwack.io/assets/img/logo.png)
 
 [![Build Status](https://travis-ci.org/cetusfinance/qwack.svg?branch=master)](https://travis-ci.org/cetusfinance/qwack)
 [![Build status](https://ci.appveyor.com/api/projects/status/dkh48o3mel1bkvv0/branch/master?svg=true)](https://ci.appveyor.com/project/Drawaes/qwack/branch/master)
@@ -9,7 +9,7 @@ A modern quantitative finance framework that makes the complex simple
 
 We are starting to document over at
 
-[Documentation](https://cetus.io/qwack)
+[Documentation](https://qwack.io)
 
 
 We have a number of blog posts about the project

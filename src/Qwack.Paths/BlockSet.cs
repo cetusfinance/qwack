@@ -66,13 +66,13 @@ namespace Qwack.Paths
 
             public bool MoveNext()
             {
-                _currentIndex = Math.Max(_currentIndex++, _blocks.Length);
+                _currentIndex = Math.Min(_currentIndex++, _blocks.Length);
                 return _currentIndex < _blocks.Length;
             }
 
             public void Reset()
             {
-                _currentIndex = 0;
+                _currentIndex = -1;
             }
         }
 

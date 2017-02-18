@@ -27,7 +27,7 @@ namespace Qwack.Paths
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
 
-            foreach(var block in this)
+            foreach(var block in _blockset)
             {
                 foreach(var process in _pathProcesses)
                 {

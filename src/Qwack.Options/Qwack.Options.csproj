@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.5;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Qwack.Options</AssemblyName>
     <PackageId>Qwack.Options</PackageId>
@@ -11,6 +11,10 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
 
+  <ItemGroup>
+     <PackageReference Include="NETStandard.Library" Version="1.6.1" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />

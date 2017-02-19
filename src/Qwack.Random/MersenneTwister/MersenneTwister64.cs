@@ -107,5 +107,10 @@ namespace Qwack.Random.MersenneTwister
             }
             
         }
+
+        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        {
+            
+        }
     }
 }

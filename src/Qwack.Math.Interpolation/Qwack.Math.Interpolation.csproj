@@ -4,12 +4,5 @@
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Qwack.Math.Interpolation</AssemblyName>
     <PackageId>Qwack.Math.Interpolation</PackageId>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
-  </ItemGroup>
-</Project>
+ </Project>

@@ -14,7 +14,7 @@ namespace Qwack.MonteCarlo.Test
         {
             var engine = new PathEngine(4 << 2);
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64());
-            engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", 2, 100));
+            engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
             engine.SetupFeatures();
             engine.RunProcess();
         }

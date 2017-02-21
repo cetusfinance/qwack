@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Qwack.Options.VolSurfaces
 {
     /// <summary>
-    /// A volatility which returns a value interpolated from a grid of vols for varying strikes and maturities
+    /// A volatility surface which returns a value interpolated from a grid of vols for varying strikes and maturities
     /// Strikes can be either absolute or delta type
     /// Interpolation method for strike and time dimensions can be specified seperately
     /// </summary>

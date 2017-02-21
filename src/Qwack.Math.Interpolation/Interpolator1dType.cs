@@ -7,6 +7,7 @@
         LinearFlatExtrap,
         LinearInVariance,
         FloaterHormannRational,
-        LogLinear
+        LogLinear,
+        GaussianKernel
     }
 }

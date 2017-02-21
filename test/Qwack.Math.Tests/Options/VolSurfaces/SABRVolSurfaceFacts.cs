@@ -29,9 +29,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 Dates.DayCountBasis.Act_365F);
 
 
-            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(999, origin.AddDays(33)), 12);
+            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(1.5, origin.AddDays(33)), 12);
             Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(-0.3, origin.AddDays(303)), 12);
-            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(4, 0.777), 12);
+            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(3, 0.777), 12);
             Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(0.9, 0.123), 12);
 
             vols = new double[][]

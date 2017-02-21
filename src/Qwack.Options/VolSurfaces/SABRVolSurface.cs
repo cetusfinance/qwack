@@ -77,18 +77,16 @@ namespace Qwack.Options.VolSurfaces
                 Betas[i] = 1.0;
                 Func<double[], double[]> errorFunc = (x =>
                     {
-                        double err = ks
-                         .Select((k, ix) => System.Math.Pow(vs[ix] - SABR.CalcImpVol_Beta1(fwd, k, t, x[0], x[1], x[2]), 2))
-                         .Sum();
-
-                        return new double[] { err, err, err }; //for lack of a non-square solver, we make the output match the input dimensions
+                        var err = ks.Select((k, ix) => vs[ix] - SABR.CalcImpVol_Beta1(fwd, k, t, x[0], x[1], x[2]));
+                        return  err.ToArray(); 
                     });
 
-                var n2Sol = new Math.Solvers.NewtonRaphsonMultiDimensionalSolver
+                var n2Sol = new Math.Solvers.GaussNewton
                 {
                     ObjectiveFunction = errorFunc,
                     InitialGuess = new double[] { vs.Average(), 0.1, 0.1 },
                     Tollerance = 1e-8,
+                    JacobianBump = 0.0000001
                 };
 
                 var paramArr = n2Sol.Solve();

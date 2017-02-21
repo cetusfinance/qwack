@@ -20,32 +20,60 @@ namespace Qwack.Excel.Utils
         [ExcelFunction(Description = "Returns unique entries from a range", Category = "QUtils")]
         public static object QUtils_Unique(
             [ExcelArgument(Description = "The excel range to find unique values in")] object[,] DataRange,
-            [ExcelArgument(Description = "Optional (bool) - Return a column (rather than row) vector of results")]object ReturnColumnVector,
-            [ExcelArgument(Description = "Optional (bool) - Sort vector of results")]object SortResults)
+            [ExcelArgument(Description = "Optional - Sort vector of results - Asc or Desc")] object SortResults)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var unique = DataRange.Cast<object>().Distinct();
 
-                bool returnColumnVector = ReturnColumnVector.OptionalExcel(false);
-                bool sort = SortResults.OptionalExcel(false);
+                string sortString = SortResults.OptionalExcel("");
 
-                if (sort)
-                    unique = unique.OrderBy(x => x);
-
-                if (returnColumnVector)
+                if (sortString!="")
                 {
-                    var o = new object[unique.Count(), 1];
-                    int c = 0;
-                    foreach(var val in unique)
+                    var directionEnum = (SortDirection)Enum.Parse(typeof(SortDirection), sortString);
+                    if (directionEnum == SortDirection.Ascending)
                     {
-                        o[c,1] = val;
-                        c++;
+                        var numericPortion = unique.Where(x => !(x is string)).OrderBy(x => x);
+                        var stringPortion = unique.Where(x => x is string).OrderBy(x => x);
+                        unique = numericPortion.Concat(stringPortion);
                     }
-                    return o;
+                    else // descending
+                    {
+                        var numericPortion = unique.Where(x => !(x is string)).OrderByDescending(x => x);
+                        var stringPortion = unique.Where(x => x is string).OrderByDescending(x => x);
+                        unique = stringPortion.Concat(numericPortion);
+                    }
+
                 }
-                else
-                    return unique.ToArray();
+
+                return unique.ToArray().ReturnExcelRangeVector();
+            });
+        }
+
+        [ExcelFunction(Description = "Returns sorted entries from a range", Category = "QUtils")]
+        public static object QUtils_Sort(
+            [ExcelArgument(Description = "The excel range to find unique values in")] object[,] DataRange,
+            [ExcelArgument(Description = "Sort direction - Asc or Desc")] string Direction)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var unique = DataRange.Cast<object>();
+
+                var directionEnum = (SortDirection)Enum.Parse(typeof(SortDirection), Direction);
+                if (directionEnum == SortDirection.Ascending)
+                {
+                    var numericPortion = unique.Where(x => !(x is string)).OrderBy(x => x);
+                    var stringPortion = unique.Where(x => x is string).OrderBy(x => x);
+                    unique = numericPortion.Concat(stringPortion);
+                }
+                else // descending
+                {
+                    var numericPortion = unique.Where(x => !(x is string)).OrderByDescending(x => x);
+                    var stringPortion = unique.Where(x => x is string).OrderByDescending(x => x);
+                    unique = stringPortion.Concat(numericPortion);
+                }
+
+                return unique.ToArray().ReturnExcelRangeVector();
             });
         }
 

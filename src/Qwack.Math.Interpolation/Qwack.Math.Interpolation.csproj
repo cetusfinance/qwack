@@ -5,4 +5,7 @@
     <AssemblyName>Qwack.Math.Interpolation</AssemblyName>
     <PackageId>Qwack.Math.Interpolation</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
+  </ItemGroup>
  </Project>

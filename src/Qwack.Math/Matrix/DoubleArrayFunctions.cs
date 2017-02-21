@@ -75,8 +75,15 @@ namespace Qwack.Math.Matrix
             return x;
         }
 
-        public static Tuple<double[][], int[]> LupDecomposition(double[][] a)
+        public static Tuple<double[][], int[]> LupDecomposition(double[][] A)
         {
+            var a = new double[A.Length][];
+            for (int i = 0; i < a.Length; i++)
+            {
+                a[i] = new double[A[i].Length];
+                Array.Copy(A[i], a[i], a[i].Length);
+            }
+
             var n = a.Length - 1;
             /*
             * pi represents the permutation matrix.  We implement it as an array
@@ -163,6 +170,24 @@ namespace Qwack.Math.Matrix
             }
             return result;
         }
+
+
+        public static double[][] Transpose(double[][] matrix)
+        {
+            var o = new double[matrix[0].Length][];
+            for (int r = 0; r < matrix[0].Length; r++)
+            {
+                o[r] = new double[matrix.Length];
+                for (int c = 0; c < matrix.Length; c++)
+                {
+                    o[r][c] = matrix[c][r];
+                }
+            }
+            return o;
+        }
+
+        
+
         public static double[][] MatrixProduct(double[][] matrixA, double[][] matrixB)
         {
             int aRows = matrixA.Length;
@@ -198,7 +223,8 @@ namespace Qwack.Math.Matrix
 
         public static double[] MatrixProduct(double[][] matrixA, double[] vectorB)
         {
-            int aRows = matrixA.Length; int aCols = matrixA[0].Length;
+            int aRows = matrixA.Length;
+            int aCols = matrixA[0].Length;
             int bRows = vectorB.Length;
             if (aCols != bRows) throw new Exception("Non-conformable matrices in MatrixProduct");
 

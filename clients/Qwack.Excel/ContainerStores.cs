@@ -20,10 +20,12 @@ namespace Qwack.Excel
              .AddLogging()
              .AddSingleton<ICalendarProvider>(Json.Providers.CalendarsFromJson.Load(GetCalendarFilename()))
              .BuildServiceProvider();
-        }
 
+            SessionContainer = GlobalContainer.CreateScope().ServiceProvider;
+        }
+        
         public static IServiceProvider GlobalContainer { get; internal set; }
-        public static IServiceProvider SessionContainer { get;set;} = GlobalContainer.CreateScope().ServiceProvider;
+        public static IServiceProvider SessionContainer { get;set;}
 
         private static string GetCalendarFilename()
         {

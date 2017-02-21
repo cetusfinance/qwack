@@ -30,5 +30,14 @@ namespace Qwack.Excel.Services
         {
             return datesAsDoubles.Select(DateTime.FromOADate).ToArray();
         }
+
+        public static T OptionalExcel<T>(this object objectInput, T defaultValue)
+        {
+            T returnValue = defaultValue;
+            if (!(objectInput is ExcelMissing))
+                returnValue = (T)objectInput;
+
+            return returnValue;
+        }
     }
 }

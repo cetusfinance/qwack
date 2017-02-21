@@ -4,15 +4,7 @@
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Qwack.Core</AssemblyName>
     <PackageId>Qwack.Core</PackageId>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
-  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />

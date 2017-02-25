@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Qwack.Curves.Benchmark": {
-      "commandName": "Project",
-      "commandLineArgs": "SolveOis"
-    }
-  }
-}

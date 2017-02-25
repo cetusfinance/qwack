@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 
 namespace Qwack.Curves.Benchmark
@@ -11,7 +12,8 @@ namespace Qwack.Curves.Benchmark
         private static readonly Dictionary<string, Type> _benchmarks = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             ["SolveOis"] = typeof(SolvingOisBenchmark),
-            ["LinInterp"] = typeof(InterpolationBenchmark)
+            ["LinInterp"] = typeof(InterpolationBenchmark),
+            ["VectorWrite"] = typeof(WritingDoubleVectorVsDouble)
         };
 
         public static void Main(string[] args)
@@ -40,7 +42,7 @@ namespace Qwack.Curves.Benchmark
                 return;
             }
 
-            BenchmarkRunner.Run(_benchmarks[args[0]]);
+            BenchmarkRunner.Run(_benchmarks[args[0]], DefaultConfig.Instance.KeepBenchmarkFiles());
 
             Console.Read();
         }

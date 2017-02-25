@@ -65,6 +65,16 @@ namespace Qwack.Paths
             }
         }
 
+        public unsafe Vector<double> ReadVector(int index)
+        {
+            return Unsafe.Read<Vector<double>>((void*)ByteIndex(index));
+        }
+
+        public unsafe void WriteVector(Vector<Double> value, int index)
+        {
+            Unsafe.Write((void*)ByteIndex(index), value);
+        }
+
         private IntPtr ByteIndex(int doubleIndex)
         {
             var offset = doubleIndex * 8;

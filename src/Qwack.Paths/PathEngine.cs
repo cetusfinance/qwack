@@ -65,10 +65,10 @@ namespace Qwack.Paths
 
         public void Dispose()
         {
-            foreach(var block in _blockset)
-            {
-                block.Dispose();
-            }
+            //foreach(var block in _blockset)
+            //{
+            //    block.Dispose();
+            //}
         }
     }
 }

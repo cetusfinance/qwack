@@ -15,6 +15,7 @@ namespace Qwack.Curves.Benchmark
         {
             Add(Job.Default.
                 With(Platform.X64).
+                With(Runtime.Core).
                 WithInvocationCount(5).
                 WithLaunchCount(2).
                 WithWarmupCount(1).

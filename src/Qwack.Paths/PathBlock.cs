@@ -13,7 +13,7 @@ namespace Qwack.Paths
         private readonly int _numberOfPaths;
         private readonly int _factors;
         private readonly int _numberOfSteps;
-        private readonly GCHandle _handle;
+        private GCHandle _handle;
         private byte[] _backingArray;
         private int _startPathIndex;
         private readonly int _stepBlockSize;

@@ -18,7 +18,12 @@ namespace Qwack.Curves.Benchmark
 
         public static void Main(string[] args)
         {
-            //SolvingOisBenchmark.Setup();
+            var vect = new WritingDoubleVectorVsDouble();
+            for (int i = 0; i < 10000; i++)
+            {
+                vect.RandsWithNoVectors();
+            }
+            //WritingDoubleVectorVsDouble.RandsWithVectorsNormInv();
             //for(int i = 0; i < 100; i ++)
             //{
             //    SolvingOisBenchmark.PuttingItTogether();

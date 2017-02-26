@@ -7,12 +7,15 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Curves.Benchmark
 {
-    public class WritingDoubleVectorVsDouble : QuickSpinConfig
+    [Config(typeof(QuickSpinConfig))]
+    public class WritingDoubleVectorVsDouble
     {
+        
         [Benchmark(Baseline = true)]
         public void RandsWithNoVectors()
         {
-            using (var engine = new PathEngine(2 ^ 12))
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
             {
                 engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64());
                 engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
@@ -24,7 +27,8 @@ namespace Qwack.Curves.Benchmark
         [Benchmark()]
         public void RandsWithNoVectorsNormInv()
         {
-            using (var engine = new PathEngine(2 ^ 12))
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
             {
                 engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
                 {
@@ -39,7 +43,8 @@ namespace Qwack.Curves.Benchmark
         [Benchmark()]
         public void RandsWithVectorsNormInv()
         {
-            using (var engine = new PathEngine(2 ^ 12))
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
             {
                 engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
                 {
@@ -55,7 +60,8 @@ namespace Qwack.Curves.Benchmark
         [Benchmark()]
         public void RandsWithVectors()
         {
-            using (var engine = new PathEngine(2 ^ 12))
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
             {
                 engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
                 {
@@ -66,6 +72,41 @@ namespace Qwack.Curves.Benchmark
                 engine.RunProcess();
             }
         }
+
+        [Benchmark()]
+        public void RandsPointersNormInv()
+        {
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
+            {
+                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+                {
+                    UseNormalInverse = true,
+                    UseVectorWrite = true,
+                    UsePointerWrite = true
+                });
+                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+                engine.SetupFeatures();
+                engine.RunProcess();
+            }
+        }
+
+        [Benchmark()]
+        public void RandsPointers()
+        {
+            var Paths = (int)System.Math.Pow(2, 14);
+            using (var engine = new PathEngine(Paths))
+            {
+                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+                {
+                    UseVectorWrite = true,
+                    UsePointerWrite = true
+                });
+                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+                engine.SetupFeatures();
+                engine.RunProcess();
+            }
+        } 
 
         private class FakeAssetProcess : IPathProcess
         {

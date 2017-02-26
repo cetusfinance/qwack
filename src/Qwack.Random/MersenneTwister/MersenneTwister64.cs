@@ -21,6 +21,7 @@ namespace Qwack.Random.MersenneTwister
         private ulong[] mt = new ulong[_nN];
         private uint mti;
         private bool _useVectorWrite = false;
+        private bool _usePointerWrite = false;
 
         public MersenneTwister64()
             :this(5489UL)
@@ -62,6 +63,7 @@ namespace Qwack.Random.MersenneTwister
 
         public bool UseNormalInverse { get;set;}
         public bool UseVectorWrite { set => _useVectorWrite = value; }
+        public bool UsePointerWrite { set => _usePointerWrite = value; }
 
         /* generates a random number on [0, 2^64-1]-interval */
         public ulong GenerateInteger()
@@ -120,6 +122,25 @@ namespace Qwack.Random.MersenneTwister
                     for (int i = 0; i < block.TotalBlockSize; i++)
                     {
                         block[i] = Math.Statistics.NormInv(GenerateDouble());
+                    }
+                }
+            }
+            else if (_usePointerWrite)
+            {
+                var blockSize = block.TotalBlockSize;
+                var blockPtr = (double*)block.BackingPointer;
+                if (!UseNormalInverse)
+                {
+                    for (int i = 0; i < blockSize; i++)
+                    {
+                        blockPtr[i] = GenerateDouble();
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < blockSize; i++)
+                    {
+                        blockPtr[i] = Math.Statistics.NormInv(GenerateDouble());
                     }
                 }
             }

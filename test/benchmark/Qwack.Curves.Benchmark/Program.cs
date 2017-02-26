@@ -42,7 +42,7 @@ namespace Qwack.Curves.Benchmark
                 return;
             }
 
-            BenchmarkRunner.Run(_benchmarks[args[0]], DefaultConfig.Instance.KeepBenchmarkFiles());
+            BenchmarkRunner.Run(_benchmarks[args[0]]);
 
             Console.Read();
         }

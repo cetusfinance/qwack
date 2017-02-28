@@ -14,6 +14,7 @@ namespace Qwack.Curves.Benchmark
         {
             Add(Job.Default.
                 With(Platform.X64).
+                With(Runtime.Core).
                 WithLaunchCount(2).
                 WithIterationTime(new BenchmarkDotNet.Horology.TimeInterval(1000, BenchmarkDotNet.Horology.TimeUnit.Millisecond)).
                 WithWarmupCount(1).

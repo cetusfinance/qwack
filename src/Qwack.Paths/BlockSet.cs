@@ -29,7 +29,8 @@ namespace Qwack.Paths
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
-            var numberOfBlocks = numberOfPaths / PathBlock.MinNumberOfPaths;
+            var pathsPerBlock = numberOfPaths / (_numberOfThreads * 2);
+            var numberOfBlocks = numberOfPaths / pathsPerBlock;
             _blocks = new PathBlock[numberOfBlocks];
             for (int i = 0; i < _blocks.Length; i++)
             {
@@ -66,7 +67,7 @@ namespace Qwack.Paths
 
             public bool MoveNext()
             {
-                _currentIndex = Math.Min(_currentIndex++, _blocks.Length);
+                _currentIndex = Math.Min(++_currentIndex, _blocks.Length);
                 return _currentIndex < _blocks.Length;
             }
 

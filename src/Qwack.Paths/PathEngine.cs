@@ -6,7 +6,7 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths
 {
-    public class PathEngine:IEnumerable<PathBlock>
+    public class PathEngine:IEnumerable<PathBlock>, IDisposable
     {
         private List<IPathProcess> _pathProcesses = new List<IPathProcess>();
         private List<object> _pathProcessFeatures = new List<object>();
@@ -61,6 +61,14 @@ namespace Qwack.Paths
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _blockset.GetEnumerator();
+        }
+
+        public void Dispose()
+        {
+            //foreach(var block in _blockset)
+            //{
+            //    block.Dispose();
+            //}
         }
     }
 }

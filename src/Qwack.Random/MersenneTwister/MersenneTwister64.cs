@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Qwack.Paths;
 
@@ -19,6 +20,8 @@ namespace Qwack.Random.MersenneTwister
         private ulong LowerM = 0x7FFFFFFFUL;
         private ulong[] mt = new ulong[_nN];
         private uint mti;
+        private bool _useVectorWrite = false;
+        private bool _usePointerWrite = false;
 
         public MersenneTwister64()
             :this(5489UL)
@@ -57,6 +60,10 @@ namespace Qwack.Random.MersenneTwister
 
             mt[0] = 1UL << 63; /* MSB is 1; assuring non-zero initial array */ 
         }
+
+        public bool UseNormalInverse { get;set;}
+        public bool UseVectorWrite { set => _useVectorWrite = value; }
+        public bool UsePointerWrite { set => _usePointerWrite = value; }
 
         /* generates a random number on [0, 2^64-1]-interval */
         public ulong GenerateInteger()
@@ -99,11 +106,72 @@ namespace Qwack.Random.MersenneTwister
             return (GenerateInteger() >> 11) * (1.0 / 9007199254740991.0);
         }
 
-        public void Process(PathBlock block)
+        public unsafe void Process(PathBlock block)
         {
-            for(int i = 0; i < block.TotalBlockSize; i++)
+            if (!_useVectorWrite)
             {
-                block[i] = GenerateDouble();
+                if (!UseNormalInverse)
+                {
+                    for (int i = 0; i < block.TotalBlockSize; i++)
+                    {
+                        block[i] = GenerateDouble();
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < block.TotalBlockSize; i++)
+                    {
+                        block[i] = Math.Statistics.NormInv(GenerateDouble());
+                    }
+                }
+            }
+            else if (_usePointerWrite)
+            {
+                var blockSize = block.TotalBlockSize;
+                var blockPtr = (double*)block.BackingPointer;
+                if (!UseNormalInverse)
+                {
+                    for (int i = 0; i < blockSize; i++)
+                    {
+                        blockPtr[i] = GenerateDouble();
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < blockSize; i++)
+                    {
+                        blockPtr[i] = Math.Statistics.NormInv(GenerateDouble());
+                    }
+                }
+            }
+            else
+            {
+                if (!UseNormalInverse)
+                {
+                    for (int i = 0; i < block.TotalBlockSize; i+= System.Numerics.Vector<double>.Count)
+                    {
+                        var vector = block.ReadVector(i);
+                        double* doubles = (double*) Unsafe.AsPointer(ref vector);
+                        for(int x = 0; x < System.Numerics.Vector<double>.Count;x++)
+                        {
+                            doubles[x] = GenerateDouble();
+                        }
+                        block.WriteVector(vector, i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < block.TotalBlockSize; i += System.Numerics.Vector<double>.Count)
+                    {
+                        var vector = block.ReadVector(i);
+                        double* doubles = (double*)Unsafe.AsPointer(ref vector);
+                        for (int x = 0; x < System.Numerics.Vector<double>.Count; x++)
+                        {
+                            doubles[x] = Math.Statistics.NormInv(GenerateDouble());
+                        }
+                        block.WriteVector(vector, i);
+                    }
+                }
             }
             
         }

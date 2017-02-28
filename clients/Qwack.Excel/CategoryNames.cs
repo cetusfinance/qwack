@@ -7,6 +7,8 @@ namespace Qwack.Excel
 {
     internal static class CategoryNames
     {
+        internal const string Dates = "QDates";
         internal const string Options = "QOpt";
+        internal const string Volatility = "QVol";
     }
 }

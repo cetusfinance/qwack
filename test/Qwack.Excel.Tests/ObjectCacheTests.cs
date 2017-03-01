@@ -8,7 +8,7 @@ namespace Qwack.Excel.Tests
         [Fact]
         public void CanCreateCache()
         {
-
+            var objectStore = ContainerStores.GetObjectCache<string>();
         }
     }
 }

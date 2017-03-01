@@ -8,9 +8,9 @@ namespace Qwack.Excel.Utils
 {
     public interface IObjectStore<T>
     {
-        SessionItem<T> GetObject(string name);
-        void PutObject(string name, SessionItem<T> obj);
-        bool TryGetObject(string name, out SessionItem<T> obj);
+        ISessionItem<T> GetObject(string name);
+        void PutObject(string name, ISessionItem<T> obj);
+        bool TryGetObject(string name, out ISessionItem<T> obj);
         bool Exists(string name);
     }
 }

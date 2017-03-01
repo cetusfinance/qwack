@@ -19,7 +19,8 @@ namespace Qwack.Excel
         {
             GlobalContainer = new ServiceCollection()
              .AddLogging()
-             .AddSingleton<ICalendarProvider>(Json.Providers.CalendarsFromJson.Load(GetCalendarFilename()))
+             //.AddSingleton<ICalendarProvider>(Json.Providers.CalendarsFromJson.Load(GetCalendarFilename()))
+             .AddSingleton(typeof(IObjectStore<>), typeof(ExcelObjectStore<>))
              .BuildServiceProvider();
 
             SessionContainer = GlobalContainer.CreateScope().ServiceProvider;
@@ -36,7 +37,6 @@ namespace Qwack.Excel
 
         public static IObjectStore<T> GetObjectCache<T>()
         {
-            
             return SessionContainer.GetService<IObjectStore<T>>();
         }
     }

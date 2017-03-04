@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Accord" Version="3.4.2-alpha" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="BenchmarkDotNet" Version="0.10.2.295" />
     <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.2.295" />

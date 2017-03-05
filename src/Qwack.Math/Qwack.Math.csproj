@@ -6,6 +6,9 @@
     <AssemblyName>Qwack.Math</AssemblyName>
     <PackageId>Qwack.Math</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="$(CoreFxVersion)" />
+  </ItemGroup>
  
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />

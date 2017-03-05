@@ -68,6 +68,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Excel", "clients\Qwac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.MonteCarlo.Test", "test\Qwack.MonteCarlo.Test\Qwack.MonteCarlo.Test.csproj", "{A38BE793-0F84-4F32-98D3-825A2B58B4F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.Excel.Tests", "test\Qwack.Excel.Tests\Qwack.Excel.Tests.csproj", "{D12D2E06-612F-419E-9C95-23A8752C3045}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -258,6 +260,18 @@ Global
 		{A38BE793-0F84-4F32-98D3-825A2B58B4F9}.Release|x64.Build.0 = Release|x64
 		{A38BE793-0F84-4F32-98D3-825A2B58B4F9}.Release|x86.ActiveCfg = Release|x86
 		{A38BE793-0F84-4F32-98D3-825A2B58B4F9}.Release|x86.Build.0 = Release|x86
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|x64.ActiveCfg = Debug|x64
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|x64.Build.0 = Debug|x64
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|x86.ActiveCfg = Debug|x86
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Debug|x86.Build.0 = Debug|x86
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x64.ActiveCfg = Release|x64
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x64.Build.0 = Release|x64
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x86.ActiveCfg = Release|x86
+		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -279,5 +293,6 @@ Global
 		{9E5244B7-9669-4E2F-B30D-1C77AC99C193} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{D2C2E98C-DBD3-4996-A200-B2D09E867CBB} = {58641E8B-8AB1-4D21-89DA-B8887907E082}
 		{A38BE793-0F84-4F32-98D3-825A2B58B4F9} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
+		{D12D2E06-612F-419E-9C95-23A8752C3045} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
 	EndGlobalSection
 EndGlobal

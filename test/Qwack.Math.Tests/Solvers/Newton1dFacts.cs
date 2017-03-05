@@ -26,7 +26,7 @@ namespace Qwack.Math.Tests.Solvers
         [Fact]
         public void CanSolveTameQuadratic1dFact()
         {
-            var output = Math.Solvers.Newton1d.MethodSolve(QuadraticFunction1d, 10, 1e-8);
+            var output = Math.Solvers.Newton1D.MethodSolve(QuadraticFunction1d, 10, 1e-8);
             var functionOutput = QuadraticFunction1d(output);
             Assert.Equal(0, functionOutput, 8);
         }
@@ -34,7 +34,7 @@ namespace Qwack.Math.Tests.Solvers
         [Fact]
         public void CanSolveTameQuadratic1dWithDerivative()
         {
-            var output = Math.Solvers.Newton1d.MethodSolve(QuadraticFunction1d, QuadraticFunction1dDerivative, 10, 1e-8);
+            var output = Math.Solvers.Newton1D.MethodSolve(QuadraticFunction1d, QuadraticFunction1dDerivative, 10, 1e-8);
             var functionOutput = QuadraticFunction1d(output);
             Assert.Equal(0, functionOutput, 8);
         }

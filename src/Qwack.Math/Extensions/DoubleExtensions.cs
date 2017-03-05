@@ -103,7 +103,6 @@ namespace Qwack.Math.Extensions
             else
                 return x * Factorial(x - 1);
         }
-
     }
 }
 

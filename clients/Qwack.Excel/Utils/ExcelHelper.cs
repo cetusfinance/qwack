@@ -39,5 +39,27 @@ namespace Qwack.Excel.Services
 
             return returnValue;
         }
+
+        public static object ReturnExcelRangeVector(this object[] data)
+        {
+            ExcelReference caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            // Now you can inspect the size of the caller with 
+            int rows = caller.RowLast - caller.RowFirst + 1;
+            int cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            if(rows>cols) //return column vector
+            {
+                var o = new object[data.Length, 1];
+                for(int r=0;r<o.Length;r++)
+                {
+                    o[r, 0] = data[r];
+                }
+                return o;
+            }
+            else //return row vector == default behaviour
+            {
+                return data;
+            }
+        }
     }
 }

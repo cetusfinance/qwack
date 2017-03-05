@@ -1,16 +1,20 @@
 os: Visual Studio 2017 RC
-build: off
 
 environment:
   COVERALLS_REPO_TOKEN:
-    secure: 9Flz1qTscHObl14SzMvP5PvOHXDf95W83hg6tUn1fg4Uovtu2tcSTexjpnlU/u/5
+    secure: x41DSerLXKgGVbKIokF+zuR3eNRVJXsgJA6j5yggnCB8/TTyYfa/2euNflfGzCot
+  SONARQUBE:
+    secure: HinUSQVVcQgbGUw38sB8GgopaaXJkD1IDeXwNsTIHv/X/IQsQHS1icvTD1ZUjblP
 
 before_test:
   - dotnet --info
+  - VersionNumber.bat
   - dotnet restore
 
 test_script:
   # Build sample
+  - dotnet test test/Qwack.Core.Tests/Qwack.Core.Tests.csproj
+  - dotnet test test/Qwack.Excel.Tests/Qwack.Excel.Tests.csproj
   - dotnet test test/Qwack.Math.Tests/Qwack.Math.Tests.csproj
   - dotnet test test/Qwack.Dates.Tests/Qwack.Dates.Tests.csproj
   - dotnet test test/Qwack.Core.Tests/Qwack.Core.Tests.csproj

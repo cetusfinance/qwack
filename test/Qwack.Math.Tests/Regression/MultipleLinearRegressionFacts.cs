@@ -40,6 +40,37 @@ namespace Qwack.Math.Tests.Regression
         }
 
         [Fact]
+        public void Dim2NoTransposeFacts()
+        {
+            double intercept = 76;
+            double w1 = 5;
+            double w2 = -2;
+
+            Func<double[], double> testFunc = new Func<double[], double>(xs =>
+            {
+                return intercept + xs[0] * w1 + xs[1] * w2;
+            });
+
+            int nExamples = 100;
+            double[][] predictors = new double[nExamples][];
+            double[] predictions = new double[nExamples];
+
+            var R = new System.Random();
+
+            for (int e = 0; e < nExamples; e++)
+            {
+                predictors[e] = new double[2] { R.NextDouble(), R.NextDouble() };
+                predictions[e] = testFunc(predictors[e]);
+            }
+
+            var weights = Math.Regression.MultipleLinearRegression.RegressFaster(predictors, predictions);
+            Assert.Equal(intercept, weights[0], 8);
+            Assert.Equal(w1, weights[1], 8);
+            Assert.Equal(w2, weights[2], 8);
+
+        }
+
+        [Fact]
         public void Dim2NRFacts()
         {
             double[] ws0 = new double[] { 76, 5, -2 };

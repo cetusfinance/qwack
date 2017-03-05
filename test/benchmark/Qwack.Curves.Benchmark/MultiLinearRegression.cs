@@ -74,6 +74,24 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark]
+        public double[] TwoDimensionFasterBounds()
+        {
+            Func<double[], double> testFunc = new Func<double[], double>(xs =>
+            {
+                return s_intercept + xs[0] * s_w1 + xs[1] * s_w2;
+            });
+
+            var predictions = new double[predictors.Length];
+
+            for (int e = 0; e < predictions.Length; e++)
+            {
+                predictions[e] = testFunc(predictors[e]);
+            }
+
+            return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
+        }
+
+        [Benchmark]
         public double[] TwoDimensionFasterNoTranspose()
         {
             Func<double[], double> testFunc = new Func<double[], double>(xs =>

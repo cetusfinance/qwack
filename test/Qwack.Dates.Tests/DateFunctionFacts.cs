@@ -16,7 +16,7 @@ namespace Qwack.Dates.Tests
         {
             var startDate = new DateTime(2016, 02, 10);
             var endDate = new DateTime(2016, 10, 13);
-            Assert.Equal(247, startDate.BusinessDaysInPeriod(endDate, EmptyCalendar).Count());
+            Assert.Equal(247, startDate.BusinessDaysInPeriod(endDate, EmptyCalendar).Count);
 
             var noWeekends = startDate.BusinessDaysInPeriod(endDate, WeekendsOnly);
             Assert.Equal(177, noWeekends.Count);

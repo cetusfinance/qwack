@@ -18,12 +18,12 @@ namespace Qwack.Dates
             {
                 offset--;
                 if (offset < 0)
-                    throw new Exception("Reached the start of the string and did not find the end of numeric data");
+                    throw new ArgumentOutOfRangeException(nameof(futuresCode), "Reached the start of the string and did not find the end of numeric data");
             }
 
             MonthEnum month;
             if (!Enum.TryParse(futuresCode.Substring(offset, 1), out month))
-                throw new Exception($"Month code {futuresCode.Substring(offset, 1)} not recognised");
+                throw new InvalidOperationException($"Month code {futuresCode.Substring(offset, 1)} not recognised");
 
             int year = int.Parse(futuresCode.Substring(offset + 1, futuresCode.Length - offset - 1));
 
@@ -32,8 +32,8 @@ namespace Qwack.Dates
                 int currentYear = refDate.Value.Year % 10;
                 int baseYear = (refDate.Value.Year / 10) * 10;
 
-                if (year<currentYear) // case of year 5 evaluated in 2017 indicating 2025
-                    return new DateTime(baseYear+10+year, (int)month, 1);
+                if (year < currentYear) // case of year 5 evaluated in 2017 indicating 2025
+                    return new DateTime(baseYear + 10 + year, (int)month, 1);
                 else // case of year 8 evaluated in 2017 indicating 2018
                     return new DateTime(baseYear + year, (int)month, 1);
             }

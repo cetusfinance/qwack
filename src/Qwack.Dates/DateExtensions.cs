@@ -117,7 +117,7 @@ namespace Qwack.Dates
                         double nIntermediateYears = endDate.Year - startDate.Year - 1;
 
                         var eoYe = new DateTime(endDate.Year, 12, 31);
-                        double e = endDate.DayOfYear / eoYe.DayOfYear;
+                        double e = endDate.DayOfYear / (double)eoYe.DayOfYear;
 
                         var eoYs = new DateTime(startDate.Year, 12, 31);
                         var s = (eoYs - startDate).TotalDays / eoYs.DayOfYear;
@@ -422,7 +422,7 @@ namespace Qwack.Dates
                     break;
             }
 
-            if ((rollType == RollType.MF_LIBOR) & (date == date.LastBusinessDayOfMonth(calendar)))
+            if ((rollType == RollType.MF_LIBOR) && (date == date.LastBusinessDayOfMonth(calendar)))
             {
                 dt = date.LastBusinessDayOfMonth(calendar);
             }

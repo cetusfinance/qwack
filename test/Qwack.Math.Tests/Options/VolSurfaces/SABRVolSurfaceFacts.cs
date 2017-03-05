@@ -23,7 +23,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                     new double[] { 0.32, 0.32 },
                     new double[] { 0.32, 0.32 }
                 };
-            var surface = new Qwack.Options.VolSurfaces.SABRVolSurface(
+            var surface = new Qwack.Options.VolSurfaces.SabrVolSurface(
                 origin, strikes, maturities, vols, fwdCurve,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Dates.DayCountBasis.Act_365F);
@@ -40,7 +40,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                     new double[] { 0.30, 0.34 }
                  };
 
-            surface = new Qwack.Options.VolSurfaces.SABRVolSurface(
+            surface = new Qwack.Options.VolSurfaces.SabrVolSurface(
              origin, strikes, maturities, vols, fwdCurve,
              Math.Interpolation.Interpolator1DType.Linear,
              Dates.DayCountBasis.Act_365F);

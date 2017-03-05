@@ -42,7 +42,7 @@ namespace Qwack.Math.Solvers
             bool mflag = true;
             int i = 0;
 
-            while (!(fb == 0) && (System.Math.Abs(a - b) > errorTol))
+            while (fb != 0 && (System.Math.Abs(a - b) > errorTol))
             {
                 if ((fa != fc) && (fb != fc))
                     // Inverse quadratic interpolation

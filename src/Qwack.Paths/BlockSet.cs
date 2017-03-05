@@ -50,7 +50,7 @@ namespace Qwack.Paths
 
         private class PathBlockEnumerator:IEnumerator<PathBlock>
         {
-            private PathBlock[] _blocks;
+            private readonly PathBlock[] _blocks;
             private int _currentIndex;
 
             public PathBlockEnumerator(PathBlock[] blocks)
@@ -63,6 +63,7 @@ namespace Qwack.Paths
 
             public void Dispose()
             {
+                //Nothing needed to dispose
             }
 
             public bool MoveNext()

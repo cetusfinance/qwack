@@ -11,11 +11,11 @@ namespace Qwack.Math.Interpolation
     {
         const double xBump = 1e-10;
 
-        private double[] _x;
-        private double[] _y;
+        private readonly double[] _x;
+        private readonly double[] _y;
         private double[] _weights;
-        private double _minX;
-        private double _maxX;
+        private readonly double _minX;
+        private readonly double _maxX;
         private double _bandwidth = 0.25;
 
         public GaussianKernelInterpolator()
@@ -77,7 +77,7 @@ namespace Qwack.Math.Interpolation
 
             for (int i = 0; i < Xmeans.Length; i++)
             {
-                K = Qwack.Math.Distributions.Gaussian.GKern(X, Xmeans[i], Bandwidth);
+                K = Distributions.Gaussian.GKern(X, Xmeans[i], Bandwidth);
                 Q += K;
                 output += weights[i] * K;
             }

@@ -11,7 +11,7 @@ namespace Qwack.Math.Regression
         public static double[] Regress(double[][] predictors, double[] predictions)
         {
             if (predictors.Length != predictions.Length)
-                throw new Exception("Number of predictor rows should equal the number of predictions");
+                throw new InvalidOperationException("Number of predictor rows should equal the number of predictions");
     
             double[] weights = new double[predictors[0].Length + 1]; //first element is intercept
 

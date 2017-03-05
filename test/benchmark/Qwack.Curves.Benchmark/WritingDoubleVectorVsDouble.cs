@@ -110,9 +110,9 @@ namespace Qwack.Curves.Benchmark
 
         private class FakeAssetProcess : IPathProcess
         {
-            private string _name;
-            private int _numberOfDimensions;
-            private int _timesteps;
+            private readonly string _name;
+            private readonly int _numberOfDimensions;
+            private readonly int _timesteps;
 
             public FakeAssetProcess(string name, int numberOfDimensions, int timesteps)
             {

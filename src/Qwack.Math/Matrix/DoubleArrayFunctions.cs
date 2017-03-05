@@ -3,7 +3,7 @@ using static System.Math;
 
 namespace Qwack.Math.Matrix
 {
-    public class DoubleArrayFunctions
+    public static class DoubleArrayFunctions
     {
         public static double[][] InvertMatrix(double[][] a)
         {
@@ -112,7 +112,7 @@ namespace Qwack.Math.Matrix
                 double p = 0;
                 for (var i = k; i <= n; i++)
                 {
-                    if (!(Abs(a[i][k]) > p)) continue;
+                    if (Abs(a[i][k]) <= p) continue;
                     p = Abs(a[i][k]);
                     kp = i;
                 }
@@ -159,7 +159,7 @@ namespace Qwack.Math.Matrix
             int aCols = vectorA.Length;
             int bRows = matrixB.Length;
             int bCols = matrixB[0].Length;
-            if (aCols != bRows) throw new Exception("Non-conformable matrices");
+            if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices");
             var result = new double[vectorA.Length];
             for (int j = 0; j < bCols; ++j) // each col of B
             {
@@ -194,7 +194,7 @@ namespace Qwack.Math.Matrix
             int aCols = matrixA[0].Length;
             int bRows = matrixB.Length;
             int bCols = matrixB[0].Length;
-            if (aCols != bRows) throw new Exception("Non-conformable matrices");
+            if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices");
 
             double[][] result = MatrixCreate(aRows, bCols);
 
@@ -226,7 +226,7 @@ namespace Qwack.Math.Matrix
             int aRows = matrixA.Length;
             int aCols = matrixA[0].Length;
             int bRows = vectorB.Length;
-            if (aCols != bRows) throw new Exception("Non-conformable matrices in MatrixProduct");
+            if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices in MatrixProduct");
 
             double[] result = new double[aRows];
             for (int i = 0; i < aRows; ++i) // each row of A

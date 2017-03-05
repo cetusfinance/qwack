@@ -16,7 +16,7 @@ namespace Qwack.Curves.Benchmark
         public static void Setup()
         {
             int numberOfItems = 200;
-            var rnd = new Random(7777);
+            var rnd = new System.Random(7777);
             XValues = new double[numberOfItems];
             YValues = new double[numberOfItems];
 

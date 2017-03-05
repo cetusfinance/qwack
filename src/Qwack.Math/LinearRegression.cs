@@ -112,10 +112,10 @@ namespace Qwack.Math
 
         public struct LinearRegressionResult
         {
-            private double _alpha;
-            private double _beta;
-            private double _r2;
-            private double _sse;
+            private readonly double _alpha;
+            private readonly double _beta;
+            private readonly double _r2;
+            private readonly double _sse;
 
             public LinearRegressionResult(double Alpha, double Beta, double R2, double SSE = double.NaN)
             {

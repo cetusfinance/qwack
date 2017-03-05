@@ -5,7 +5,7 @@ namespace Qwack.Math.Solvers
     /// <summary>
     /// Implementation(s) of Newton's method for root finding in a single dimension
     /// </summary>
-    public static class Newton1d
+    public static class Newton1D
     {
         /// <summary>
         /// Implementation of Newton's method for root finding which uses a numerical estimate of the first derivative

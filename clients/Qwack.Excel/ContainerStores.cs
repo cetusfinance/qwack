@@ -11,7 +11,7 @@ using Qwack.Excel.Utils;
 
 namespace Qwack.Excel
 {
-    public class ContainerStores
+    public static class ContainerStores
     {
         private const string _calendarJSONFile = "Calendars.json";
 

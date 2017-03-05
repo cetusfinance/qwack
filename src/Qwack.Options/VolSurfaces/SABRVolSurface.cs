@@ -15,7 +15,7 @@ namespace Qwack.Options.VolSurfaces
     /// Can be built from SABR parameters directly or fitted to strike/vol pairs
     /// Interpolates in SABR parameter space in the time dimension using the method specified
     /// </summary>
-    public class SABRVolSurface : IVolSurface
+    public class SabrVolSurface : IVolSurface
     {
         public DateTime OriginDate { get; set; }
         public double[] Alphas { get; set; }
@@ -34,14 +34,14 @@ namespace Qwack.Options.VolSurfaces
         private IInterpolator1D _rhoInterp;
         private IInterpolator1D _nuInterp;
 
-        public SABRVolSurface()         {        }
+        public SabrVolSurface()         {        }
 
-        public SABRVolSurface(DateTime originDate, double[][] strikes, DateTime[] expiries, double[][] vols, Func<double, double> forwardCurve)
+        public SabrVolSurface(DateTime originDate, double[][] strikes, DateTime[] expiries, double[][] vols, Func<double, double> forwardCurve)
         {
             Build(originDate, strikes, expiries, vols, forwardCurve);
         }
 
-        public SABRVolSurface(DateTime originDate, double[][] strikes, DateTime[] expiries, double[][] vols, Func<double, double> forwardCurve,
+        public SabrVolSurface(DateTime originDate, double[][] strikes, DateTime[] expiries, double[][] vols, Func<double, double> forwardCurve,
             Interpolator1DType timeInterpType, DayCountBasis timeBasis)
         {
             TimeInterpolatorType = timeInterpType;
@@ -58,9 +58,13 @@ namespace Qwack.Options.VolSurfaces
             ForwardCurve = forwardCurve;
 
             if (Expiries.Length != strikes.Length)
-                throw new Exception("Expiries and first dimension of Strikes must of same length");
+            {
+                throw new InvalidOperationException("Expiries and first dimension of Strikes must of same length");
+            }
             if (Expiries.Length != vols.Length)
-                throw new Exception("Expiries and first dimension of Vols must of same length");
+            {
+                throw new InvalidOperationException("Expiries and first dimension of Vols must of same length");
+            }
 
             Alphas = new double[Expiries.Length];
             Betas = new double[Expiries.Length];

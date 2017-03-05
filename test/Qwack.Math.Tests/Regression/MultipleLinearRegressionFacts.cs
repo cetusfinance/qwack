@@ -9,7 +9,7 @@ namespace Qwack.Math.Tests.Regression
     public class MultipleLinearRegressionFacts
     {
         [Fact]
-        public void dim2Facts()
+        public void Dim2Facts()
         {
             double intercept = 76;
             double w1 = 5;
@@ -40,7 +40,7 @@ namespace Qwack.Math.Tests.Regression
         }
 
         [Fact]
-        public void dim2NRFacts()
+        public void Dim2NRFacts()
         {
             double[] ws0 = new double[] { 76, 5, -2 };
             

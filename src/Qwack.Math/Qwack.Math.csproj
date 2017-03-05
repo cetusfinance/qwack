@@ -7,7 +7,7 @@
     <PackageId>Qwack.Math</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="$(CoreFxVersion)" />
   </ItemGroup>
  
   <ItemGroup>

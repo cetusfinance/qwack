@@ -6,11 +6,12 @@
     <Copyright>Cetus Finance</Copyright>
     <Authors>Cetus Finance</Authors>
     <PackageReleaseNotes>Development Package</PackageReleaseNotes>
-    <PackageProjectUrl>https://cetus.io/qwack</PackageProjectUrl>
+    <PackageProjectUrl>https://qwack.io</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/cetusfinance/qwack/blob/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/cetusfinance/qwack</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+     <PackageIconUrl>https://qwack.io/assets/img/logo.png</PackageIconUrl>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
   </PropertyGroup>
   

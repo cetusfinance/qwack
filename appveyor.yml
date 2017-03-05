@@ -1,12 +1,20 @@
 os: Visual Studio 2017 RC
-build: off
 
 environment:
-  sonarkey:
-    secure: dqF6V11A7InHKcyOX6WDGE3oA54yZQm0r9VLio85ndCn2B8d9zVI2mJ3lQdDzO3o
   COVERALLS_REPO_TOKEN:
-    secure: x41DSerLXKgGVbKIokF+zuR3eNRVJXsgJA6j5yggnCB8/TTyYfa/2euNflfGzCot   
+    secure: x41DSerLXKgGVbKIokF+zuR3eNRVJXsgJA6j5yggnCB8/TTyYfa/2euNflfGzCot
+  SONARQUBE:
+    secure: HinUSQVVcQgbGUw38sB8GgopaaXJkD1IDeXwNsTIHv/X/IQsQHS1icvTD1ZUjblP
 
+before_build:
+  - dotnet restore
+
+build_script:
+  - choco install "msbuild-sonarqube-runner" -y
+  - MSBuild.SonarQube.Runner.exe begin /k:"Qwack" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=%SONARQUBE%"
+  - msbuild "qwack.sln"
+  - MSBuild.SonarQube.Runner.exe end /d:"sonar.login=%SONARQUBE%"
+  
 before_test:
   - dotnet --info
   - VersionNumber.bat

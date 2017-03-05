@@ -13,22 +13,12 @@ namespace Qwack.Curves.Benchmark
         {
             ["SolveOis"] = typeof(SolvingOisBenchmark),
             ["LinInterp"] = typeof(InterpolationBenchmark),
-            ["VectorWrite"] = typeof(WritingDoubleVectorVsDouble)
+            ["VectorWrite"] = typeof(WritingDoubleVectorVsDouble),
+            ["MultiRegression"] = typeof(MultiLinearRegression)
         };
 
         public static void Main(string[] args)
         {
-            var vect = new WritingDoubleVectorVsDouble();
-            for (int i = 0; i < 10000; i++)
-            {
-                vect.RandsWithNoVectors();
-            }
-            //WritingDoubleVectorVsDouble.RandsWithVectorsNormInv();
-            //for(int i = 0; i < 100; i ++)
-            //{
-            //    SolvingOisBenchmark.PuttingItTogether();
-            //}
-
             if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {
                 Console.WriteLine("Running full benchmarks suite");

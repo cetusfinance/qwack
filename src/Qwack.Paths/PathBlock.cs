@@ -13,7 +13,7 @@ namespace Qwack.Paths
         private readonly int _numberOfPaths;
         private readonly int _factors;
         private readonly int _numberOfSteps;
-        private readonly GCHandle _handle;
+        private GCHandle _handle;
         private byte[] _backingArray;
         private int _startPathIndex;
         private readonly int _stepBlockSize;
@@ -63,6 +63,16 @@ namespace Qwack.Paths
             {
                 Unsafe.Write((void*)ByteIndex(index), value);
             }
+        }
+
+        public unsafe Vector<double> ReadVector(int index)
+        {
+            return Unsafe.Read<Vector<double>>((void*)ByteIndex(index));
+        }
+
+        public unsafe void WriteVector(Vector<Double> value, int index)
+        {
+            Unsafe.Write((void*)ByteIndex(index), value);
         }
 
         private IntPtr ByteIndex(int doubleIndex)

@@ -21,7 +21,7 @@ namespace Qwack.Curves.Benchmark
         [Setup]
         public static void Setup()
         {
-            var rnd = new Random(7777);
+            var rnd = new System.Random(7777);
             _x = new double[NumberOfPillars];
             _y = new double[NumberOfPillars];
             var step = 1.0 / NumberOfPillars;
@@ -30,7 +30,7 @@ namespace Qwack.Curves.Benchmark
                 _x[i] = i * step;
                 _y[i] = rnd.NextDouble();
             }
-            rnd = new Random(99999);
+            rnd = new System.Random(99999);
             _guesses = new double[Interpolations];
             for (int i = 0; i < Interpolations; i++)
             {

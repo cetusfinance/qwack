@@ -11,7 +11,8 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/cetusfinance/qwack</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-     <PackageIconUrl>https://qwack.io/assets/img/logo.png</PackageIconUrl>
+    <PackageIconUrl>https://qwack.io/assets/img/logo.png</PackageIconUrl>
+    <DebugType>full</DebugType>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
   </PropertyGroup>
   

@@ -23,12 +23,13 @@
     <ProjectReference Include="..\..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Random\Qwack.Random.csproj" />
+    <ProjectReference Include="..\AccordForDotNet\AccordForDotNet\AccordForDotNet.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.2.368" />
-    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.2.368" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.10.3.18" />
+    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.3.18" />
     <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 </Project>

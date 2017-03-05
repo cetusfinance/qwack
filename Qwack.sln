@@ -70,6 +70,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.MonteCarlo.Test", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.Excel.Tests", "test\Qwack.Excel.Tests\Qwack.Excel.Tests.csproj", "{D12D2E06-612F-419E-9C95-23A8752C3045}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccordForDotNet", "test\benchmark\AccordForDotNet\AccordForDotNet\AccordForDotNet.csproj", "{1B0E14FE-8360-473D-BF86-BF387E008D62}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -272,6 +274,18 @@ Global
 		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x64.Build.0 = Release|x64
 		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x86.ActiveCfg = Release|x86
 		{D12D2E06-612F-419E-9C95-23A8752C3045}.Release|x86.Build.0 = Release|x86
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|x64.ActiveCfg = Debug|x64
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|x64.Build.0 = Debug|x64
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|x86.ActiveCfg = Debug|x86
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Debug|x86.Build.0 = Debug|x86
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|x64.ActiveCfg = Release|x64
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|x64.Build.0 = Release|x64
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|x86.ActiveCfg = Release|x86
+		{1B0E14FE-8360-473D-BF86-BF387E008D62}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -294,5 +308,6 @@ Global
 		{D2C2E98C-DBD3-4996-A200-B2D09E867CBB} = {58641E8B-8AB1-4D21-89DA-B8887907E082}
 		{A38BE793-0F84-4F32-98D3-825A2B58B4F9} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
 		{D12D2E06-612F-419E-9C95-23A8752C3045} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
+		{1B0E14FE-8360-473D-BF86-BF387E008D62} = {ED011E7E-84F9-4DBE-A4AE-8F4AB2455929}
 	EndGlobalSection
 EndGlobal

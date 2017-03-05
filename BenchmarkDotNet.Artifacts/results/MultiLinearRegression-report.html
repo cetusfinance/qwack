@@ -13,27 +13,23 @@
 </head>
 <body>
 <pre><code>
-BenchmarkDotNet=v0.10.2.368-develop, OS=Microsoft Windows 10.0.15046
+BenchmarkDotNet=v0.10.3.18-nightly, OS=Microsoft Windows 10.0.15048
 Processor=Intel(R) Xeon(R) CPU E3-1505M v5 2.80GHz, ProcessorCount=8
-Frequency=2742185 Hz, Resolution=364.6727 ns, Timer=TSC
+Frequency=2742186 Hz, Resolution=364.6726 ns, Timer=TSC
 dotnet cli version=1.0.0-rc4-004771
   [Host]     : .NET Core 4.6.24628.01, 64bit RyuJIT
-  Job-MBKOSQ : .NET Core 4.6.24628.01, 64bit RyuJIT
+  Job-WOEACL : .NET Core 4.6.24628.01, 64bit RyuJIT
 </code></pre>
-<pre><code>Platform=X64  Runtime=Core  IterationTime=1.0000 s  
-LaunchCount=2  TargetCount=3  WarmupCount=1  
+<pre><code>Platform=X64  Runtime=Core  InvocationCount=10  
+LaunchCount=2  TargetCount=3  UnrollFactor=5  
+WarmupCount=1  
 </code></pre>
 
 <table>
-<thead><tr><th>                 Method</th><th>NumberOfExamples</th><th> Mean</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
+<thead><tr><th>            Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>         TwoDimensionNR</td><td>      2000</td><td>709.2094 us</td><td>2.7299 us</td><td>1.00</td><td>   0.00</td><td>116.6667</td><td>597.51 kB</td>
-</tr><tr><td>     TwoDimensionFaster</td><td>      2000</td><td>174.8033 us</td><td>0.7083 us</td><td>0.25</td><td>   0.00</td><td>46.7466</td><td>225.18 kB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>      2000</td><td>168.6384 us</td><td>0.7770 us</td><td>0.24</td><td>   0.00</td><td>47.0395</td><td>225.18 kB</td>
-</tr><tr><td>TwoDimensionFasterNoTranspose</td><td>      2000</td><td>269.4526 us</td><td>5.4624 us</td><td>0.38</td><td>   0.01</td><td>13.7727</td><td>113.38 kB</td>
+</thead><tbody><tr><td>     AccordVersion</td><td>     10000</td><td>  50</td><td>232.6942 ms</td><td>5.1982 ms</td><td>12.7328 ms</td><td>1.00</td><td>   0.00</td><td>9.34 MB</td>
+</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  50</td><td>252.1211 ms</td><td>2.8981 ms</td><td>7.0989 ms</td><td>1.09</td><td>   0.06</td><td>12.69 MB</td>
 </tr></tbody></table>
-</body>
-</html>
-/tbody></table>
 </body>
 </html>

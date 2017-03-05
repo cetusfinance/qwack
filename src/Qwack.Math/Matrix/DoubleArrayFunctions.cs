@@ -190,23 +190,24 @@ namespace Qwack.Math.Matrix
         {
             int aRows = matrixA.Length;
             int aCols = matrixA[0].Length;
-            int bRows = matrixB.Length;
             int bCols = matrixB[0].Length;
-            if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices");
+            if (aCols != matrixB.Length) throw new InvalidOperationException("Non-conformable matrices");
 
-            double[][] result = MatrixCreate(aRows, bCols);
+            var result = new double[aRows][];
 
             for (int i = 0; i < matrixA.Length; ++i) // each row of A
             {
+                var resultRow = new double[bCols];
+                var matrixARow = matrixA[i];
                 for (int j = 0; j < bCols; ++j) // each col of B
                 {
                     for (int k = 0; k < matrixB.Length; ++k)
                     {
-                        result[i][j] += matrixA[i][k] * matrixB[k][j];
+                        resultRow[j] += matrixARow[k] * matrixB[k][j];
                     }
                 }
+                result[i] = resultRow;
             }
-
             return result;
         }
 

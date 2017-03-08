@@ -23,7 +23,6 @@
     <ProjectReference Include="..\..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Random\Qwack.Random.csproj" />
-    <ProjectReference Include="..\AccordForDotNet\AccordForDotNet\AccordForDotNet.csproj" />
   </ItemGroup>
 
   <ItemGroup>

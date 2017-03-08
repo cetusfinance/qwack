@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Accord.Statistics.Models.Regression.Linear;
 using BenchmarkDotNet.Attributes;
 
 namespace Qwack.Curves.Benchmark
@@ -56,60 +55,11 @@ namespace Qwack.Curves.Benchmark
             }
         }
 
-        [Benchmark(Baseline = true)]
-        public double[] AccordVersion()
-        {
-            var model = MultipleLinearRegression.FromData(predictors, predictions);
-            var weights = model.Weights;
-            return weights;
-        }
-
-
-        //[Benchmark]
-        //public double[] TwoDimensionCominedTransposeProuct()
-        //{
-        //    return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
-        //}
-
-        //[Benchmark]
-        //public double[] TwoDimensionFaster()
-        //{
-        //    return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
-        //}
-
         [Benchmark]
         public double[] TwoDimensionCominedTPReflect()
         {
-            return Math.Regression.MultipleLinearRegression.RegressBetter(predictors, predictions);
+            return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
         }
-        
-        //[Benchmark()]
-        ////public double[] TwoDimensionNR()
-        //{
-        //    double[] ws0 = new double[] { s_intercept, s_w1, s_w2 };
-
-        //    Func<double[], double[], double> testFunc = new Func<double[], double[], double>((xs, ws) =>
-        //    {
-        //        var intercept = ws[0];
-        //        var w1 = ws[1];
-        //        var w2 = ws[2];
-        //        return intercept + xs[0] * w1 + xs[1] * w2;
-        //    });
-
-        //    Func<double[], double[]> solveFunc = new Func<double[], double[]>(ws =>
-        //    {
-        //        return predictors.Select(x => testFunc(x, ws) - testFunc(x, ws0)).ToArray();
-        //    });
-
-        //    var solver = new Math.Solvers.GaussNewton
-        //    {
-        //        ObjectiveFunction = solveFunc,
-        //        InitialGuess = new double[3]
-        //    };
-
-        //    return solver.Solve();
-        //}
-
 
     }
 }

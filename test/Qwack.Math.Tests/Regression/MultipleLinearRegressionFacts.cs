@@ -32,7 +32,7 @@ namespace Qwack.Math.Tests.Regression
                 predictions[e] = testFunc(predictors[e]);
             }
 
-            var weights = Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
+            var weights = Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
             Assert.Equal(intercept, weights[0],8);
             Assert.Equal(w1, weights[1],8);
             Assert.Equal(w2, weights[2],8);

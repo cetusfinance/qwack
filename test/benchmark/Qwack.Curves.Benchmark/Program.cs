@@ -19,13 +19,13 @@ namespace Qwack.Curves.Benchmark
 
         public static void Main(string[] args)
         {
-            var multi = new MultiLinearRegression();
-            multi.NumberOfExamples = 10000;
-            multi.Dimensions = 50;
-            multi.Setup();
+            //var multi = new MultiLinearRegression();
+            //multi.NumberOfExamples = 10000;
+            //multi.Dimensions = 50;
+            //multi.Setup();
 
-            Console.ReadLine();
-            var result1 = multi.TwoDimensionCominedTPReflect();// TwoDimensionFaster();
+            //Console.ReadLine();
+            //var result1 = multi.TwoDimensionCominedTPReflect();// TwoDimensionFaster();
             //var result2 = multi.AccordVersion();
 
             //for(int i = 0; i < result2.Length;i++)

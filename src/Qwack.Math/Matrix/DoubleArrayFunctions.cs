@@ -272,9 +272,10 @@ namespace Qwack.Math.Matrix
             double[] result = new double[aRows];
             for (int i = 0; i < matrixA.Length; ++i) // each row of A
             {
+                var rowA = matrixA[i];
                 for (int k = 0; k < aCols; ++k)
                 {
-                    result[i] += matrixA[i][k] * vectorB[k];
+                    result[i] += rowA[k] * vectorB[k];
                 }
             }
             return result;

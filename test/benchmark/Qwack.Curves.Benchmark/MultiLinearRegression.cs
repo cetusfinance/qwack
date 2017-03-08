@@ -65,17 +65,17 @@ namespace Qwack.Curves.Benchmark
         }
 
 
-        [Benchmark]
-        public double[] TwoDimensionCominedTransposeProuct()
-        {
-            return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
-        }
+        //[Benchmark]
+        //public double[] TwoDimensionCominedTransposeProuct()
+        //{
+        //    return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
+        //}
 
-        [Benchmark]
-        public double[] TwoDimensionFaster()
-        {
-            return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
-        }
+        //[Benchmark]
+        //public double[] TwoDimensionFaster()
+        //{
+        //    return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
+        //}
 
         [Benchmark]
         public double[] TwoDimensionCominedTPReflect()

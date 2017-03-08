@@ -100,7 +100,7 @@ namespace Qwack.Math.Regression
                 throw new InvalidOperationException("Number of predictor rows should equal the number of predictions");
 
             var numberOfCols = predictors[0].Length + 1;
-            var designMatrix = Matrix.DoubleArrayFunctions.MatrixCreate(predictors[0].Length + 1, predictors.Length);
+            var designMatrix = DoubleArrayFunctions.MatrixCreate(predictors[0].Length + 1, predictors.Length);
 
             for (int r = 0; r < predictions.Length; r++)
             {
@@ -113,6 +113,8 @@ namespace Qwack.Math.Regression
             
             var result = new double[designMatrix.Length][];
             var iterations = result.Length * result.Length;
+            var vectors = designMatrix[0].Length / Vector<double>.Count;
+
             for (int i = 0; i < result.Length; i++)
             {
                 result[i] = new double[result.Length];
@@ -127,7 +129,13 @@ namespace Qwack.Math.Regression
                     continue;
                 }
                 double sum = 0.0;
-                for (int i = 0; i < designMatrix[0].Length; i++)
+                var vectorList1 = Unsafe.As<Vector<double>[]>(designMatrix[column1]);
+                var vectorList2 = Unsafe.As<Vector<double>[]>(designMatrix[column2]);
+                for (int i = 0; i < vectors; i++)
+                {
+                    sum += Vector.Dot(vectorList1[i], vectorList2[i]);
+                }
+                for(int i = vectors*Vector<double>.Count; i < designMatrix[0].Length; i++)
                 {
                     sum += designMatrix[column1][i] * designMatrix[column2][i];
                 }
@@ -136,9 +144,9 @@ namespace Qwack.Math.Regression
             }
 
             var Z1 = result;
-            var Z2 = Matrix.DoubleArrayFunctions.InvertMatrix(Z1);
-            var Z3 = Matrix.DoubleArrayFunctions.MatrixProductBounds(Z2, designMatrix);
-            var weights = Matrix.DoubleArrayFunctions.MatrixProductBounds(Z3, predictions);
+            var Z2 = DoubleArrayFunctions.InvertMatrix(Z1);
+            var Z3 = DoubleArrayFunctions.MatrixProductBounds(Z2, designMatrix);
+            var weights = DoubleArrayFunctions.MatrixProductBounds(Z3, predictions);
             return weights;
         }
         

@@ -18,31 +18,23 @@ Processor=Intel(R) Xeon(R) CPU E3-1505M v5 2.80GHz, ProcessorCount=8
 Frequency=2742187 Hz, Resolution=364.6724 ns, Timer=TSC
 dotnet cli version=1.0.0
   [Host]     : .NET Core 4.6.24628.01, 64bit RyuJIT
-  Job-CKVEIM : .NET Core 4.6.25009.03, 64bit RyuJIT
+  Job-EFMOJF : .NET Core 4.6.25009.03, 64bit RyuJIT
 </code></pre>
 <pre><code>Platform=X64  Runtime=Core  IterationTime=2.0000 s  
 LaunchCount=2  TargetCount=3  WarmupCount=1  
 </code></pre>
 
 <table>
-<thead><tr><th>                      Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
+<thead><tr><th>                Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>               AccordVersion</td><td>      1000</td><td>  25</td><td>2.3145 ms</td><td>0.0297 ms</td><td>0.0729 ms</td><td>1.00</td><td>   0.00</td><td>60.2679</td><td>535.57 kB</td>
-</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>      1000</td><td>  25</td><td>2.7588 ms</td><td>0.0821 ms</td><td>0.2011 ms</td><td>1.19</td><td>   0.09</td><td>40.7986</td><td>453.94 kB</td>
-</tr><tr><td>          TwoDimensionFaster</td><td>      1000</td><td>  25</td><td>4.3808 ms</td><td>0.1153 ms</td><td>0.2825 ms</td><td>1.89</td><td>   0.12</td><td>72.9167</td><td>693.18 kB</td>
-</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  25</td><td>2.2436 ms</td><td>0.0351 ms</td><td>0.0859 ms</td><td>0.97</td><td>   0.04</td><td>47.0679</td><td>453.94 kB</td>
-</tr><tr><td>               AccordVersion</td><td>      1000</td><td>  50</td><td>10.4667 ms</td><td>0.1126 ms</td><td>0.2758 ms</td><td>1.00</td><td>   0.00</td><td>4.8077</td><td>935.22 kB</td>
-</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>      1000</td><td>  50</td><td>12.0723 ms</td><td>0.1991 ms</td><td>0.4876 ms</td><td>1.15</td><td>   0.05</td><td> -</td><td>951.43 kB</td>
-</tr><tr><td>          TwoDimensionFaster</td><td>      1000</td><td>  50</td><td>17.3439 ms</td><td>0.2293 ms</td><td>0.5616 ms</td><td>1.66</td><td>   0.06</td><td> -</td><td>1.39 MB</td>
-</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  50</td><td>10.1567 ms</td><td>0.2434 ms</td><td>0.5962 ms</td><td>0.97</td><td>   0.06</td><td>24.0385</td><td>951.42 kB</td>
-</tr><tr><td>               AccordVersion</td><td>     10000</td><td>  25</td><td>38.2165 ms</td><td>0.4834 ms</td><td>1.1842 ms</td><td>1.00</td><td>   0.00</td><td>286.4583</td><td>5.35 MB</td>
-</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>     10000</td><td>  25</td><td>26.0008 ms</td><td>0.4047 ms</td><td>0.9913 ms</td><td>0.68</td><td>   0.03</td><td>558.3333</td><td>4.2 MB</td>
-</tr><tr><td>          TwoDimensionFaster</td><td>     10000</td><td>  25</td><td>46.9991 ms</td><td>0.6387 ms</td><td>1.5644 ms</td><td>1.23</td><td>   0.05</td><td>229.1667</td><td>6.59 MB</td>
-</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  25</td><td>20.8908 ms</td><td>0.1510 ms</td><td>0.3699 ms</td><td>0.55</td><td>   0.02</td><td>672.6190</td><td>4.2 MB</td>
-</tr><tr><td>               AccordVersion</td><td>     10000</td><td>  50</td><td>147.8834 ms</td><td>1.3918 ms</td><td>3.4092 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>9.34 MB</td>
-</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>     10000</td><td>  50</td><td>118.2047 ms</td><td>1.8019 ms</td><td>4.4136 ms</td><td>0.80</td><td>   0.03</td><td> -</td><td>8.3 MB</td>
-</tr><tr><td>          TwoDimensionFaster</td><td>     10000</td><td>  50</td><td>212.2709 ms</td><td>5.9176 ms</td><td>14.4951 ms</td><td>1.44</td><td>   0.09</td><td> -</td><td>12.69 MB</td>
-</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  50</td><td>101.4592 ms</td><td>1.1766 ms</td><td>2.8821 ms</td><td>0.69</td><td>   0.02</td><td>375.0000</td><td>8.3 MB</td>
+</thead><tbody><tr><td>         AccordVersion</td><td>      1000</td><td>  25</td><td>2.9848 ms</td><td>0.0597 ms</td><td>0.1462 ms</td><td>1.00</td><td>   0.00</td><td>58.1395</td><td>535.57 kB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  25</td><td>2.4303 ms</td><td>0.0022 ms</td><td>0.0055 ms</td><td>0.82</td><td>   0.03</td><td>47.6763</td><td>453.95 kB</td>
+</tr><tr><td>         AccordVersion</td><td>      1000</td><td>  50</td><td>13.4208 ms</td><td>0.0584 ms</td><td>0.1429 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>935.26 kB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  50</td><td>11.2484 ms</td><td>0.0308 ms</td><td>0.0755 ms</td><td>0.84</td><td>   0.01</td><td>15.6250</td><td>951.45 kB</td>
+</tr><tr><td>         AccordVersion</td><td>     10000</td><td>  25</td><td>48.7544 ms</td><td>0.3258 ms</td><td>0.7981 ms</td><td>1.00</td><td>   0.00</td><td>180.5556</td><td>5.35 MB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  25</td><td>23.8610 ms</td><td>0.0919 ms</td><td>0.2251 ms</td><td>0.49</td><td>   0.01</td><td>645.8333</td><td>4.2 MB</td>
+</tr><tr><td>         AccordVersion</td><td>     10000</td><td>  50</td><td>201.2647 ms</td><td>1.5873 ms</td><td>3.8881 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>9.34 MB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  50</td><td>114.1702 ms</td><td>0.2509 ms</td><td>0.6147 ms</td><td>0.57</td><td>   0.01</td><td>125.0000</td><td>8.3 MB</td>
 </tr></tbody></table>
 </body>
 </html>

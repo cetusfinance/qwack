@@ -29,15 +29,18 @@ namespace Qwack.Core.Instruments.Funding
             CcyPay = payIndex.Currency;
             CcyRec = recIndex.Currency;
 
-            PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay);
-            PayLeg.FixedRateOrMargin = (decimal)ParSpreadPay;
-            PayLeg.NotionalExchange = NotionalExchange;
-            PayLeg.Direction = SwapPayReceiveType.Payer;
-            PayLeg.LegType = SwapLegType.Float;
-
-            RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec);
-            RecLeg.FixedRateOrMargin = (decimal)ParSpreadRec;
-            RecLeg.NotionalExchange = NotionalExchange;
+            PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay)
+            {
+                FixedRateOrMargin = (decimal)ParSpreadPay,
+                NotionalExchange = NotionalExchange,
+                Direction = SwapPayReceiveType.Payer,
+                LegType = SwapLegType.Float
+            };
+            RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec)
+            {
+                FixedRateOrMargin = (decimal)ParSpreadRec,
+                NotionalExchange = NotionalExchange
+            };
             PayLeg.Direction = SwapPayReceiveType.Receiver;
             RecLeg.LegType = SwapLegType.Float;
 

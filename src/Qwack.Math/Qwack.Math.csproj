@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="$(CoreFxVersion)" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.3.0" />
   </ItemGroup>
  
   <ItemGroup>

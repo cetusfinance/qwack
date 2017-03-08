@@ -10,9 +10,7 @@ namespace Qwack.Curves.Benchmark
     {
         public static double[] XValues;
         public static double[] YValues;
-
-
-
+        
         public static void Setup()
         {
             int numberOfItems = 200;

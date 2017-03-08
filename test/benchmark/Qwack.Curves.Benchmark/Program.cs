@@ -19,6 +19,31 @@ namespace Qwack.Curves.Benchmark
 
         public static void Main(string[] args)
         {
+            //var multi = new MultiLinearRegression();
+            //multi.NumberOfExamples = 10000;
+            //multi.Dimensions = 50;
+            //multi.Setup();
+
+            //Console.ReadLine();
+            //var result1 = multi.TwoDimensionCominedTPReflect();// TwoDimensionFaster();
+            //var result2 = multi.AccordVersion();
+
+            //for(int i = 0; i < result2.Length;i++)
+            //{
+            //    var diff = System.Math.Abs(result1[i+1] - result2[i]);
+            //    if(diff > 1e-10)
+            //    {
+            //        throw new InvalidOperationException();
+            //    }
+            //}
+            ////return;
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    var result = multi.AccordVersion();
+            //}
+            //return;
+
+
             if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {
                 Console.WriteLine("Running full benchmarks suite");

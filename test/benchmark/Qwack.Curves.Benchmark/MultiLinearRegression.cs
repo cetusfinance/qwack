@@ -66,7 +66,7 @@ namespace Qwack.Curves.Benchmark
 
 
         [Benchmark]
-        public double[] TwoDimensionFasterBounds()
+        public double[] TwoDimensionCominedTransposeProuct()
         {
             return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
         }
@@ -77,12 +77,12 @@ namespace Qwack.Curves.Benchmark
             return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
         }
 
-        //[Benchmark]
-        //public double[] TwoDimensionFasterNoTranspose()
-        //{
-        //    return Math.Regression.MultipleLinearRegression.RegressFaster(predictors, predictions);
-        //}
-
+        [Benchmark]
+        public double[] TwoDimensionCominedTPReflect()
+        {
+            return Math.Regression.MultipleLinearRegression.RegressBetter(predictors, predictions);
+        }
+        
         //[Benchmark()]
         ////public double[] TwoDimensionNR()
         //{

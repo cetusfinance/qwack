@@ -18,27 +18,31 @@ Processor=Intel(R) Xeon(R) CPU E3-1505M v5 2.80GHz, ProcessorCount=8
 Frequency=2742187 Hz, Resolution=364.6724 ns, Timer=TSC
 dotnet cli version=1.0.0
   [Host]     : .NET Core 4.6.24628.01, 64bit RyuJIT
-  Job-LEABSF : .NET Core 4.6.25009.03, 64bit RyuJIT
+  Job-CKVEIM : .NET Core 4.6.25009.03, 64bit RyuJIT
 </code></pre>
 <pre><code>Platform=X64  Runtime=Core  IterationTime=2.0000 s  
 LaunchCount=2  TargetCount=3  WarmupCount=1  
 </code></pre>
 
 <table>
-<thead><tr><th>            Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
+<thead><tr><th>                      Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>     AccordVersion</td><td>      1000</td><td>  25</td><td>2.3686 ms</td><td>0.0650 ms</td><td>0.1593 ms</td><td>1.00</td><td>   0.00</td><td>63.9124</td><td>535.57 kB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>      1000</td><td>  25</td><td>2.5240 ms</td><td>0.0040 ms</td><td>0.0098 ms</td><td>1.07</td><td>   0.07</td><td>45.8333</td><td>453.94 kB</td>
-</tr><tr><td>TwoDimensionFaster</td><td>      1000</td><td>  25</td><td>4.0010 ms</td><td>0.0046 ms</td><td>0.0112 ms</td><td>1.70</td><td>   0.10</td><td>74.2188</td><td>693.17 kB</td>
-</tr><tr><td>     AccordVersion</td><td>      1000</td><td>  50</td><td>9.8195 ms</td><td>0.0534 ms</td><td>0.1308 ms</td><td>1.00</td><td>   0.00</td><td>4.8077</td><td>935.22 kB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>      1000</td><td>  50</td><td>11.2220 ms</td><td>0.0262 ms</td><td>0.0643 ms</td><td>1.14</td><td>   0.02</td><td> -</td><td>951.43 kB</td>
-</tr><tr><td>TwoDimensionFaster</td><td>      1000</td><td>  50</td><td>16.5285 ms</td><td>0.1091 ms</td><td>0.2672 ms</td><td>1.68</td><td>   0.03</td><td>15.6250</td><td>1.39 MB</td>
-</tr><tr><td>     AccordVersion</td><td>     10000</td><td>  25</td><td>35.9511 ms</td><td>0.1578 ms</td><td>0.3864 ms</td><td>1.00</td><td>   0.00</td><td>390.6250</td><td>5.35 MB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  25</td><td>24.9792 ms</td><td>0.0469 ms</td><td>0.1150 ms</td><td>0.69</td><td>   0.01</td><td>575.0000</td><td>4.2 MB</td>
-</tr><tr><td>TwoDimensionFaster</td><td>     10000</td><td>  25</td><td>44.6026 ms</td><td>0.6275 ms</td><td>1.5371 ms</td><td>1.24</td><td>   0.04</td><td>256.9444</td><td>6.59 MB</td>
-</tr><tr><td>     AccordVersion</td><td>     10000</td><td>  50</td><td>143.9647 ms</td><td>2.8979 ms</td><td>7.0985 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>9.34 MB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  50</td><td>107.6398 ms</td><td>0.5709 ms</td><td>1.3985 ms</td><td>0.75</td><td>   0.03</td><td>166.6667</td><td>8.3 MB</td>
-</tr><tr><td>TwoDimensionFaster</td><td>     10000</td><td>  50</td><td>182.2976 ms</td><td>4.8567 ms</td><td>11.8964 ms</td><td>1.27</td><td>   0.09</td><td> -</td><td>12.69 MB</td>
+</thead><tbody><tr><td>               AccordVersion</td><td>      1000</td><td>  25</td><td>2.3145 ms</td><td>0.0297 ms</td><td>0.0729 ms</td><td>1.00</td><td>   0.00</td><td>60.2679</td><td>535.57 kB</td>
+</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>      1000</td><td>  25</td><td>2.7588 ms</td><td>0.0821 ms</td><td>0.2011 ms</td><td>1.19</td><td>   0.09</td><td>40.7986</td><td>453.94 kB</td>
+</tr><tr><td>          TwoDimensionFaster</td><td>      1000</td><td>  25</td><td>4.3808 ms</td><td>0.1153 ms</td><td>0.2825 ms</td><td>1.89</td><td>   0.12</td><td>72.9167</td><td>693.18 kB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  25</td><td>2.2436 ms</td><td>0.0351 ms</td><td>0.0859 ms</td><td>0.97</td><td>   0.04</td><td>47.0679</td><td>453.94 kB</td>
+</tr><tr><td>               AccordVersion</td><td>      1000</td><td>  50</td><td>10.4667 ms</td><td>0.1126 ms</td><td>0.2758 ms</td><td>1.00</td><td>   0.00</td><td>4.8077</td><td>935.22 kB</td>
+</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>      1000</td><td>  50</td><td>12.0723 ms</td><td>0.1991 ms</td><td>0.4876 ms</td><td>1.15</td><td>   0.05</td><td> -</td><td>951.43 kB</td>
+</tr><tr><td>          TwoDimensionFaster</td><td>      1000</td><td>  50</td><td>17.3439 ms</td><td>0.2293 ms</td><td>0.5616 ms</td><td>1.66</td><td>   0.06</td><td> -</td><td>1.39 MB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>      1000</td><td>  50</td><td>10.1567 ms</td><td>0.2434 ms</td><td>0.5962 ms</td><td>0.97</td><td>   0.06</td><td>24.0385</td><td>951.42 kB</td>
+</tr><tr><td>               AccordVersion</td><td>     10000</td><td>  25</td><td>38.2165 ms</td><td>0.4834 ms</td><td>1.1842 ms</td><td>1.00</td><td>   0.00</td><td>286.4583</td><td>5.35 MB</td>
+</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>     10000</td><td>  25</td><td>26.0008 ms</td><td>0.4047 ms</td><td>0.9913 ms</td><td>0.68</td><td>   0.03</td><td>558.3333</td><td>4.2 MB</td>
+</tr><tr><td>          TwoDimensionFaster</td><td>     10000</td><td>  25</td><td>46.9991 ms</td><td>0.6387 ms</td><td>1.5644 ms</td><td>1.23</td><td>   0.05</td><td>229.1667</td><td>6.59 MB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  25</td><td>20.8908 ms</td><td>0.1510 ms</td><td>0.3699 ms</td><td>0.55</td><td>   0.02</td><td>672.6190</td><td>4.2 MB</td>
+</tr><tr><td>               AccordVersion</td><td>     10000</td><td>  50</td><td>147.8834 ms</td><td>1.3918 ms</td><td>3.4092 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>9.34 MB</td>
+</tr><tr><td>TwoDimensionCominedTransposeProuct</td><td>     10000</td><td>  50</td><td>118.2047 ms</td><td>1.8019 ms</td><td>4.4136 ms</td><td>0.80</td><td>   0.03</td><td> -</td><td>8.3 MB</td>
+</tr><tr><td>          TwoDimensionFaster</td><td>     10000</td><td>  50</td><td>212.2709 ms</td><td>5.9176 ms</td><td>14.4951 ms</td><td>1.44</td><td>   0.09</td><td> -</td><td>12.69 MB</td>
+</tr><tr><td>TwoDimensionCominedTPReflect</td><td>     10000</td><td>  50</td><td>101.4592 ms</td><td>1.1766 ms</td><td>2.8821 ms</td><td>0.69</td><td>   0.02</td><td>375.0000</td><td>8.3 MB</td>
 </tr></tbody></table>
 </body>
 </html>

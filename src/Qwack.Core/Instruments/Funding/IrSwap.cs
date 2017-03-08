@@ -23,17 +23,19 @@ namespace Qwack.Core.Instruments.Funding
             SwapType = swapType;
 
             FixedLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
-                ResetFrequency, BasisFixed);
-            FixedLeg.FixedRateOrMargin = (decimal)parRate;
-            FixedLeg.LegType = SwapLegType.Fixed;
-            FixedLeg.Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M);
-
+                ResetFrequency, BasisFixed)
+            {
+                FixedRateOrMargin = (decimal)parRate,
+                LegType = SwapLegType.Fixed,
+                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M)
+            };
             FloatLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
-                ResetFrequency, BasisFloat);
-            FloatLeg.FixedRateOrMargin = 0.0M;
-            FloatLeg.LegType = SwapLegType.Float;
-            FloatLeg.Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M);
-
+                ResetFrequency, BasisFloat)
+            {
+                FixedRateOrMargin = 0.0M,
+                LegType = SwapLegType.Float,
+                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M)
+            };
             FlowScheduleFixed = FixedLeg.GenerateSchedule();
             FlowScheduleFloat = FloatLeg.GenerateSchedule();
 

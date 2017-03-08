@@ -707,11 +707,13 @@ namespace Accord.Math.Decompositions
         /// 
         public static CholeskyDecomposition FromLeftTriangularMatrix(Double[,] leftTriangular)
         {
-            var chol = new CholeskyDecomposition();
-            chol.n = leftTriangular.Rows();
-            chol.L = leftTriangular;
-            chol.positiveDefinite = true;
-            chol.robust = false;
+            var chol = new CholeskyDecomposition()
+            {
+                n = leftTriangular.Rows(),
+                L = leftTriangular,
+                positiveDefinite = true,
+                robust = false
+            };
             chol.D = Vector.Ones<Double>(chol.n);
             return chol;
         }

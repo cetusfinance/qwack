@@ -10,5 +10,6 @@ namespace Qwack.Math.Matrix
         unsafe double* Pointer { get; }
         int Rows { get; }
         int Columns { get; }
+        int GetIndex(int row, int column);
     }
 }

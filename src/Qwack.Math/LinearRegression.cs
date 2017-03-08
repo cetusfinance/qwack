@@ -45,10 +45,9 @@ namespace Qwack.Math
         {
             if (X0.Length != Y0.Length) throw new ArgumentOutOfRangeException(nameof(X0), "X and Y must be the same length");
 
-            double[] X, Y;
             int simdLength = Vector<double>.Count;
             int overFlow = X0.Length % simdLength;
-            Utils.SimdHelpers.PadArrayForSIMD(X0, Y0, out X, out Y, overFlow, 0.0, 0.0);
+            Utils.SimdHelpers.PadArrayForSIMD(X0, Y0, out double[] X, out double[] Y, overFlow, 0.0, 0.0);
 
             Vector<double> vSumX = new Vector<double>(0);
             Vector<double> vSumY = new Vector<double>(0);

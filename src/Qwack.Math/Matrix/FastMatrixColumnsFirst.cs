@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -43,9 +44,10 @@ namespace Qwack.Math.Matrix
             return new FastMatrixColumnsFirst(matrixToClone.Pointer, matrixToClone.Columns, matrixToClone.Rows);
         }
 
-        private int GetIndex(int row, int column)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetIndex(int row, int column)
         {
-            return _rows * row + column;
+            return _columns * row + column;
         }
         
         public void Dispose()

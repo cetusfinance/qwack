@@ -47,15 +47,19 @@ namespace Qwack.Core.Models
                 {
                     return kv.Value;
                 }
-            }).ToArray());
-            newModel.FxMatrix = FxMatrix;
+            }).ToArray())
+            {
+                FxMatrix = FxMatrix
+            };
             return newModel;
         }
 
         public FundingModel Clone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray());
-            returnValue.FxMatrix = FxMatrix;
+            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray())
+            {
+                FxMatrix = FxMatrix
+            };
             return returnValue;
         }
 

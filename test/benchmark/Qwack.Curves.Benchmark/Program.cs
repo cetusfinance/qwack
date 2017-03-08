@@ -20,7 +20,8 @@ namespace Qwack.Curves.Benchmark
         public static void Main(string[] args)
         {
             //var multi = new MultiLinearRegression();
-            //multi.NumberOfExamples = 100;
+            //multi.NumberOfExamples = 10000;
+            //multi.Dimensions = 50;
             //multi.Setup();
 
             //var result1 = multi.TwoDimensionFaster();
@@ -34,10 +35,10 @@ namespace Qwack.Curves.Benchmark
             //        throw new InvalidOperationException();
             //    }
             //}
-            //return;
+            ////return;
             //for (int i = 0; i < 1000; i++)
             //{
-            //    var result = multi.TwoDimensionFaster();
+            //    var result = multi.AccordVersion();
             //}
             //return;
 

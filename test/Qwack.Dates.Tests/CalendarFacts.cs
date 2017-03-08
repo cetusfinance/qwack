@@ -21,8 +21,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckUSDCalendarHasHolidayOnJuly4th()
         {
-            Calendar calendar;
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 04)));
         }
@@ -30,8 +29,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckUSDCalendarHasWeekendAsHolidays()
         {
-            Calendar calendar;
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 03)));
         }
@@ -40,10 +38,9 @@ namespace Qwack.Dates.Tests
         [MemberData("GetUSExclusiveHolidays")]
         public void CheckCombinedCalendarHasJuly4th(DateTime dateToCheck)
         {
-            Calendar us, gb, combined;
-            CalendarProvider.Collection.TryGetCalendar("nyc", out us);
-            CalendarProvider.Collection.TryGetCalendar("lon", out gb);
-            CalendarProvider.Collection.TryGetCalendar("lon+nyc", out combined);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar us);
+            CalendarProvider.Collection.TryGetCalendar("lon", out Calendar gb);
+            CalendarProvider.Collection.TryGetCalendar("lon+nyc", out Calendar combined);
 
             Assert.True(us.IsHoliday(dateToCheck));
             Assert.False(gb.IsHoliday(dateToCheck));
@@ -53,8 +50,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckThatClonedCalendarIsEqualButNotTheSame()
         {
-            Calendar usd;
-            CalendarProvider.Collection.TryGetCalendar("nyc", out usd);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar usd);
             var clone = usd.Clone();
 
             Assert.NotSame(usd.DaysToExclude, clone.DaysToExclude);

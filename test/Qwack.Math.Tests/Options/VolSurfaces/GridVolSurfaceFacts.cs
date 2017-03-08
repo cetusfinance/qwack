@@ -48,10 +48,10 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 Core.Basic.StrikeType.Absolute,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
-
-            surface.ForwardCurve = fwdCurve;
-
+                Dates.DayCountBasis.Act_365F)
+            {
+                ForwardCurve = fwdCurve
+            };
             Assert.Equal(vols[0].Average(), surface.GetVolForAbsoluteStrike(1.5, maturities[0]), 12);
             DateTime midPoint = maturities[0].AddDays(((maturities[1] - maturities[0]).TotalDays / 2.0));
             Assert.Equal(vols.Select(x => x.Average()).Average(), surface.GetVolForAbsoluteStrike(1.5, midPoint), 12);

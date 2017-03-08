@@ -13,16 +13,14 @@ namespace Qwack.Dates
                 refDate = DateTime.Today;
 
             int offset = futuresCode.Length - 1;
-            int dummy;
-            while (int.TryParse(futuresCode.Substring(offset, 1), out dummy))
+            while (int.TryParse(futuresCode.Substring(offset, 1), out int dummy))
             {
                 offset--;
                 if (offset < 0)
                     throw new ArgumentOutOfRangeException(nameof(futuresCode), "Reached the start of the string and did not find the end of numeric data");
             }
 
-            MonthEnum month;
-            if (!Enum.TryParse(futuresCode.Substring(offset, 1), out month))
+            if (!Enum.TryParse(futuresCode.Substring(offset, 1), out MonthEnum month))
                 throw new InvalidOperationException($"Month code {futuresCode.Substring(offset, 1)} not recognised");
 
             int year = int.Parse(futuresCode.Substring(offset + 1, futuresCode.Length - offset - 1));

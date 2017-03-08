@@ -15,21 +15,30 @@
 <pre><code>
 BenchmarkDotNet=v0.10.3.18-nightly, OS=Microsoft Windows 10.0.15048
 Processor=Intel(R) Xeon(R) CPU E3-1505M v5 2.80GHz, ProcessorCount=8
-Frequency=2742186 Hz, Resolution=364.6726 ns, Timer=TSC
-dotnet cli version=1.0.0-rc4-004771
+Frequency=2742187 Hz, Resolution=364.6724 ns, Timer=TSC
+dotnet cli version=1.0.0
   [Host]     : .NET Core 4.6.24628.01, 64bit RyuJIT
-  Job-WOEACL : .NET Core 4.6.24628.01, 64bit RyuJIT
+  Job-LEABSF : .NET Core 4.6.25009.03, 64bit RyuJIT
 </code></pre>
-<pre><code>Platform=X64  Runtime=Core  InvocationCount=10  
-LaunchCount=2  TargetCount=3  UnrollFactor=5  
-WarmupCount=1  
+<pre><code>Platform=X64  Runtime=Core  IterationTime=2.0000 s  
+LaunchCount=2  TargetCount=3  WarmupCount=1  
 </code></pre>
 
 <table>
-<thead><tr><th>            Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Allocated</th>
+<thead><tr><th>            Method</th><th>NumberOfExamples</th><th>Dimensions</th><th> Mean</th><th>StdErr</th><th>StdDev</th><th>Scaled</th><th>Scaled-StdDev</th><th>Gen 0</th><th>Allocated</th>
 </tr>
-</thead><tbody><tr><td>     AccordVersion</td><td>     10000</td><td>  50</td><td>232.6942 ms</td><td>5.1982 ms</td><td>12.7328 ms</td><td>1.00</td><td>   0.00</td><td>9.34 MB</td>
-</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  50</td><td>252.1211 ms</td><td>2.8981 ms</td><td>7.0989 ms</td><td>1.09</td><td>   0.06</td><td>12.69 MB</td>
+</thead><tbody><tr><td>     AccordVersion</td><td>      1000</td><td>  25</td><td>2.3686 ms</td><td>0.0650 ms</td><td>0.1593 ms</td><td>1.00</td><td>   0.00</td><td>63.9124</td><td>535.57 kB</td>
+</tr><tr><td>TwoDimensionFasterBounds</td><td>      1000</td><td>  25</td><td>2.5240 ms</td><td>0.0040 ms</td><td>0.0098 ms</td><td>1.07</td><td>   0.07</td><td>45.8333</td><td>453.94 kB</td>
+</tr><tr><td>TwoDimensionFaster</td><td>      1000</td><td>  25</td><td>4.0010 ms</td><td>0.0046 ms</td><td>0.0112 ms</td><td>1.70</td><td>   0.10</td><td>74.2188</td><td>693.17 kB</td>
+</tr><tr><td>     AccordVersion</td><td>      1000</td><td>  50</td><td>9.8195 ms</td><td>0.0534 ms</td><td>0.1308 ms</td><td>1.00</td><td>   0.00</td><td>4.8077</td><td>935.22 kB</td>
+</tr><tr><td>TwoDimensionFasterBounds</td><td>      1000</td><td>  50</td><td>11.2220 ms</td><td>0.0262 ms</td><td>0.0643 ms</td><td>1.14</td><td>   0.02</td><td> -</td><td>951.43 kB</td>
+</tr><tr><td>TwoDimensionFaster</td><td>      1000</td><td>  50</td><td>16.5285 ms</td><td>0.1091 ms</td><td>0.2672 ms</td><td>1.68</td><td>   0.03</td><td>15.6250</td><td>1.39 MB</td>
+</tr><tr><td>     AccordVersion</td><td>     10000</td><td>  25</td><td>35.9511 ms</td><td>0.1578 ms</td><td>0.3864 ms</td><td>1.00</td><td>   0.00</td><td>390.6250</td><td>5.35 MB</td>
+</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  25</td><td>24.9792 ms</td><td>0.0469 ms</td><td>0.1150 ms</td><td>0.69</td><td>   0.01</td><td>575.0000</td><td>4.2 MB</td>
+</tr><tr><td>TwoDimensionFaster</td><td>     10000</td><td>  25</td><td>44.6026 ms</td><td>0.6275 ms</td><td>1.5371 ms</td><td>1.24</td><td>   0.04</td><td>256.9444</td><td>6.59 MB</td>
+</tr><tr><td>     AccordVersion</td><td>     10000</td><td>  50</td><td>143.9647 ms</td><td>2.8979 ms</td><td>7.0985 ms</td><td>1.00</td><td>   0.00</td><td> -</td><td>9.34 MB</td>
+</tr><tr><td>TwoDimensionFasterBounds</td><td>     10000</td><td>  50</td><td>107.6398 ms</td><td>0.5709 ms</td><td>1.3985 ms</td><td>0.75</td><td>   0.03</td><td>166.6667</td><td>8.3 MB</td>
+</tr><tr><td>TwoDimensionFaster</td><td>     10000</td><td>  50</td><td>182.2976 ms</td><td>4.8567 ms</td><td>11.8964 ms</td><td>1.27</td><td>   0.09</td><td> -</td><td>12.69 MB</td>
 </tr></tbody></table>
 </body>
 </html>

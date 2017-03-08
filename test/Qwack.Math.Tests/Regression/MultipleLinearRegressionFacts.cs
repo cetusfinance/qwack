@@ -20,7 +20,7 @@ namespace Qwack.Math.Tests.Regression
                 return intercept + xs[0] * w1 + xs[1] * w2;
             });
 
-            int nExamples = 100;
+            int nExamples = 7;
             double[][] predictors = new double[nExamples][];
             double[] predictions = new double[nExamples];
 
@@ -32,7 +32,7 @@ namespace Qwack.Math.Tests.Regression
                 predictions[e] = testFunc(predictors[e]);
             }
 
-            var weights = Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
+            var weights = Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
             Assert.Equal(intercept, weights[0],8);
             Assert.Equal(w1, weights[1],8);
             Assert.Equal(w2, weights[2],8);

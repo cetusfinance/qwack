@@ -7,7 +7,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace Qwack.Curves.Benchmark
 {
-    [Config(typeof(SolveConfig))]
+    [Config(typeof(QuickSpinConfig))]
     public class MultiLinearRegression
     {
         private static readonly double s_intercept = 76;
@@ -15,9 +15,9 @@ namespace Qwack.Curves.Benchmark
         private double[][] predictors;
         private double[] predictions;
         
-        [Params(10000)]
+        [Params(1000,10000)]
         public int NumberOfExamples { get; set; }
-        [Params(50)]
+        [Params(25,50)]
         public int Dimensions { get; set; }
 
         [Setup]
@@ -71,21 +71,15 @@ namespace Qwack.Curves.Benchmark
             return Math.Regression.MultipleLinearRegression.RegressBounds(predictors, predictions);
         }
 
+        [Benchmark]
+        public double[] TwoDimensionFaster()
+        {
+            return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
+        }
+
         //[Benchmark]
         //public double[] TwoDimensionFasterNoTranspose()
         //{
-        //    Func<double[], double> testFunc = new Func<double[], double>(xs =>
-        //    {
-        //        return s_intercept + xs[0] * s_w1 + xs[1] * s_w2;
-        //    });
-
-        //    var predictions = new double[predictors.Length];
-
-        //    for (int e = 0; e < predictions.Length; e++)
-        //    {
-        //        predictions[e] = testFunc(predictors[e]);
-        //    }
-
         //    return Math.Regression.MultipleLinearRegression.RegressFaster(predictors, predictions);
         //}
 
@@ -116,22 +110,6 @@ namespace Qwack.Curves.Benchmark
         //    return solver.Solve();
         //}
 
-        //[Benchmark]
-        //public double[] TwoDimensionFaster()
-        //{
-        //    Func<double[], double> testFunc = new Func<double[], double>(xs =>
-        //    {
-        //        return s_intercept + xs[0] * s_w1 + xs[1] * s_w2;
-        //    });
 
-        //    var predictions = new double[predictors.Length];
-
-        //    for (int e = 0; e < predictions.Length; e++)
-        //    {
-        //        predictions[e] = testFunc(predictors[e]);
-        //    }
-
-        //    return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
-        //}
     }
 }

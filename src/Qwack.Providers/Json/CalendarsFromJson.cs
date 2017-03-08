@@ -15,8 +15,10 @@ namespace Qwack.Json.Providers
 
         static CalendarsFromJson()
         {
-            _jsonSettings = new JsonSerializerSettings();
-            _jsonSettings.DateFormatString = "yyyyMMdd";
+            _jsonSettings = new JsonSerializerSettings()
+            {
+                DateFormatString = "yyyyMMdd"
+            };
         }
 
         private CalendarsFromJson()
@@ -28,8 +30,10 @@ namespace Qwack.Json.Providers
 
         public static CalendarsFromJson Parse(string jsonString)
         {
-            var returnValue = new CalendarsFromJson();
-            returnValue._loadedCalendars = JsonConvert.DeserializeObject<Dictionary<string, Calendar>>(jsonString, _jsonSettings);
+            var returnValue = new CalendarsFromJson()
+            {
+                _loadedCalendars = JsonConvert.DeserializeObject<Dictionary<string, Calendar>>(jsonString, _jsonSettings)
+            };
             returnValue._calendarCollection = new CalendarCollection(returnValue._loadedCalendars.Values);
             return returnValue;
         }

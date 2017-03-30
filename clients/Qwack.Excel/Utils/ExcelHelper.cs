@@ -31,6 +31,20 @@ namespace Qwack.Excel.Services
             return datesAsDoubles.Select(DateTime.FromOADate).ToArray();
         }
 
+        public static T[][] SquareToJagged<T>(this T[,] data)
+        {
+            var o = new T[data.GetLength(0)][];
+            for(int r=0;r< data.GetLength(0);r++)
+            {
+                o[r] = new T[data.GetLength(1)];
+                for(int c=0;c<data.GetLength(1);c++)
+                {
+                    o[r][c] = data[r, c];
+                }
+            }
+            return o;
+        }
+
         public static T OptionalExcel<T>(this object objectInput, T defaultValue)
         {
             T returnValue = defaultValue;

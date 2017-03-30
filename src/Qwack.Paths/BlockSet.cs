@@ -68,7 +68,7 @@ namespace Qwack.Paths
 
             public bool MoveNext()
             {
-                _currentIndex = Math.Min(++_currentIndex, _blocks.Length);
+                _currentIndex = System.Math.Min(++_currentIndex, _blocks.Length);
                 return _currentIndex < _blocks.Length;
             }
 

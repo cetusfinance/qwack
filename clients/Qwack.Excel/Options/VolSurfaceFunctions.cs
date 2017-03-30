@@ -46,10 +46,10 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(_logger, () =>
             {
                 var stikeType = StrikeType.OptionalExcel<string>("Absolute");
-
-                var surface = new ConstantVolSurface(OriginDate, Volatility);
-                var cache = ContainerStores.GetObjectCache<ConstantVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<ConstantVolSurface> { Name = ObjectName, Value = surface });
+                var expiries = ExcelHelper.ToDateTimeArray(Expiries);
+                var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged());
+                var cache = ContainerStores.GetObjectCache<GridVolSurface>();
+                cache.PutObject(ObjectName, new SessionItem<GridVolSurface> { Name = ObjectName, Value = surface });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }

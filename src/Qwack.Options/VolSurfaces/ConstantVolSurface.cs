@@ -45,5 +45,10 @@ namespace Qwack.Options.VolSurfaces
         {
             return Volatility;
         }
+
+        public double GetFwdATMVol(DateTime startDate, DateTime endDate)
+        {
+            return Volatility;
+        }
     }
 }

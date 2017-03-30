@@ -127,5 +127,23 @@ namespace Qwack.Options.VolSurfaces
         {
             return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry));
         }
+
+        public double GetFwdATMVol(DateTime startDate, DateTime endDate)
+        {
+            double t1 = TimeBasis.CalculateYearFraction(OriginDate, startDate);
+            double t2 = TimeBasis.CalculateYearFraction(OriginDate, endDate);
+            double tt = t2 - t1;
+
+            double vol1 = GetVolForAbsoluteStrike(ForwardCurve(t1), startDate);
+            double vol2 = GetVolForAbsoluteStrike(ForwardCurve(t2), endDate);
+
+            double var1 = vol1 * vol1 * t1;
+            double var2 = vol2 * vol2 * t2;
+
+            double var = var2 - var1;
+            double vol = System.Math.Sqrt(var / tt);
+            return vol;
+        }
+
     }
 }

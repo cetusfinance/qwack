@@ -8,6 +8,7 @@
   </PropertyGroup>
  
   <ItemGroup>
+    <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
   </ItemGroup>
 

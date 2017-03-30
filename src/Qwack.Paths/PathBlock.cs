@@ -21,7 +21,7 @@ namespace Qwack.Paths
         private static readonly int _sizeOfDouble = sizeof(double);
         private static readonly int _minNumberOfPaths = 512 / 8 / _sizeOfDouble;
         private static readonly int _vectorSize = Vector<double>.Count;
-        private static readonly int _vectorShift = (int)Math.Log(_vectorSize, 2);
+        private static readonly int _vectorShift = (int)System.Math.Log(_vectorSize, 2);
 
         public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int startPathIndex)
         {

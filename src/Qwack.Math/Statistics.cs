@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Qwack.Math.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Qwack.Math
 {
+    /// <summary>
+    /// A collection of statistical utility functions
+    /// </summary>
     public class Statistics
     {
         public static double CumulativeNormalDistribution(double d)
@@ -13,12 +17,12 @@ namespace Qwack.Math
         }
         public static double ProbabilityDensityFunction(double z)
         {
-            return System.Math.Exp(-(z * z) / 2) / System.Math.Sqrt(2 * System.Math.PI);
+            return StandardNormalDistribution(z);
         }
-        public static double NormalDistribution(double x)
+        public static double StandardNormalDistribution(double x)
         {
 
-            return System.Math.Exp(-x * x / 2) / System.Math.Sqrt(2 * System.Math.PI);
+            return System.Math.Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
         }
 
         public static double NormInv(double p)
@@ -133,6 +137,12 @@ namespace Qwack.Math
             return System.Math.Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
                 (2 * System.Math.PI * System.Math.Sqrt(1 - rho * rho));
         }
+
+        /// <summary>
+        /// Returns sample variance of an array of values
+        /// </summary>
+        /// <param name="x">Array of samples</param>
+        /// <returns></returns>
         public static double Variance(double[] x)
         {
             double xAvg = x.Average();
@@ -146,6 +156,12 @@ namespace Qwack.Math
             }
             return v / (n - 1);
         }
+
+        /// <summary>
+        /// Returns sample skewness of an array of values
+        /// </summary>
+        /// <param name="x">Array of samples</param>
+        /// <returns></returns>
         public static double Skewness(double[] x)
         {
             double xAvg = x.Average();
@@ -165,6 +181,14 @@ namespace Qwack.Math
             m3 /= n;
             return m3 / System.Math.Pow(m2, 3 / 2);
         }
+
+        /// <summary>
+        /// Returs the moment of Nth order of an array of values
+        /// Order 2==Standard Deviation, 3==Skewness, 4==Kurtosis etc.
+        /// </summary>
+        /// <param name="x">Array of samples</param>
+        /// <param name="order">Order of moment</param>
+        /// <returns></returns>
         public static double StandardizedMoment(double[] x, int order)
         {
             double xAvg = x.Average();
@@ -184,6 +208,13 @@ namespace Qwack.Math
             mO /= n;
             return mO / System.Math.Pow(m2, order / 2);
         }
+
+        /// <summary>
+        /// Compute the sample variance of an array of values with the average already computed
+        /// </summary>
+        /// <param name="x">Array of samples</param>
+        /// <param name="average">The average of the array x</param>
+        /// <returns></returns>
         public static double VarianceWithAverage(double[] x, double average)
         {
             double xAvg = average;

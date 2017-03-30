@@ -8,6 +8,8 @@ namespace Qwack.Math.Extensions
 
     public static class DoubleExtensions
     {
+        public const double Sqrt2Pi = 2.506628274631000502415765284811;
+
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
             T[] result = new T[length];
@@ -47,7 +49,7 @@ namespace Qwack.Math.Extensions
 
         public static double Phi(this double x)
         {
-            return (System.Math.Exp((-x * x) / 2.0) / System.Math.Sqrt(6.28318530717958));
+            return (System.Math.Exp((-x * x) / 2.0) / Sqrt2Pi);
         }
 
         public static double Round(this double x, int nDigits)

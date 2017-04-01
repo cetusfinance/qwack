@@ -14,7 +14,7 @@ namespace Qwack.Paths
         private readonly int _factors;
         private readonly int _numberOfSteps;
         private GCHandle _handle;
-        private byte[] _backingArray;
+        private double[] _backingArray;
         private int _startPathIndex;
         private readonly int _stepBlockSize;
         private readonly int _blockSize;
@@ -22,7 +22,7 @@ namespace Qwack.Paths
         private static readonly int _minNumberOfPaths = 512 / 8 / _sizeOfDouble;
         private static readonly int _vectorSize = Vector<double>.Count;
         private static readonly int _vectorShift = (int)System.Math.Log(_vectorSize, 2);
-
+        
         public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int startPathIndex)
         {
             _startPathIndex = startPathIndex;
@@ -31,7 +31,7 @@ namespace Qwack.Paths
             _numberOfSteps = numberOfSteps;
             _stepBlockSize = _vectorSize * _factors;
             _blockSize = _vectorSize * _factors * _numberOfSteps;
-            _backingArray = new byte[numberOfPaths * factors * numberOfSteps * _sizeOfDouble];
+            _backingArray = new double[numberOfPaths * factors * numberOfSteps];
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
 
@@ -52,35 +52,24 @@ namespace Qwack.Paths
             var pathDelta = pathNumber % _vectorSize;
             return blockDelta + stepDelta + factorDelta + pathDelta;
         }
-
-        public unsafe double this[int index]
+               
+        public double this[int index]
         {
             get
             {
-                return Unsafe.Read<double>((void*)ByteIndex(index));
+                return _backingArray[index];
             }
             set
             {
-                Unsafe.Write((void*)ByteIndex(index), value);
+                _backingArray[index] = value;
             }
         }
 
-        public unsafe Vector<double> ReadVector(int index)
+        public unsafe ref Vector<double> ReadVectorByRef(int index)
         {
-            return Unsafe.Read<Vector<double>>((void*)ByteIndex(index));
+            return ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index * 8));
         }
-
-        public unsafe void WriteVector(Vector<Double> value, int index)
-        {
-            Unsafe.Write((void*)ByteIndex(index), value);
-        }
-
-        private IntPtr ByteIndex(int doubleIndex)
-        {
-            var offset = doubleIndex * 8;
-            return IntPtr.Add(_handle.AddrOfPinnedObject(), offset);
-        }
-
+        
         public void Dispose()
         {
             if (_handle.IsAllocated)

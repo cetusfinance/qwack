@@ -40,73 +40,73 @@ namespace Qwack.Curves.Benchmark
             }
         }
 
-        [Benchmark()]
-        public void RandsWithVectorsNormInv()
-        {
-            var Paths = (int)System.Math.Pow(2, 14);
-            using (var engine = new PathEngine(Paths))
-            {
-                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-                {
-                    UseNormalInverse = true,
-                    UseVectorWrite = true
-                });
-                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
-                engine.SetupFeatures();
-                engine.RunProcess();
-            }
-        }
+        //[Benchmark()]
+        //public void RandsWithVectorsNormInv()
+        //{
+        //    var Paths = (int)System.Math.Pow(2, 14);
+        //    using (var engine = new PathEngine(Paths))
+        //    {
+        //        engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+        //        {
+        //            UseNormalInverse = true,
+        //            UseVectorWrite = true
+        //        });
+        //        engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+        //        engine.SetupFeatures();
+        //        engine.RunProcess();
+        //    }
+        //}
 
-        [Benchmark()]
-        public void RandsWithVectors()
-        {
-            var Paths = (int)System.Math.Pow(2, 14);
-            using (var engine = new PathEngine(Paths))
-            {
-                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-                {
-                    UseVectorWrite = true
-                });
-                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
-                engine.SetupFeatures();
-                engine.RunProcess();
-            }
-        }
+        //[Benchmark()]
+        //public void RandsWithVectors()
+        //{
+        //    var Paths = (int)System.Math.Pow(2, 14);
+        //    using (var engine = new PathEngine(Paths))
+        //    {
+        //        engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+        //        {
+        //            UseVectorWrite = true
+        //        });
+        //        engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+        //        engine.SetupFeatures();
+        //        engine.RunProcess();
+        //    }
+        //}
 
-        [Benchmark()]
-        public void RandsPointersNormInv()
-        {
-            var Paths = (int)System.Math.Pow(2, 14);
-            using (var engine = new PathEngine(Paths))
-            {
-                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-                {
-                    UseNormalInverse = true,
-                    UseVectorWrite = true,
-                    UsePointerWrite = true
-                });
-                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
-                engine.SetupFeatures();
-                engine.RunProcess();
-            }
-        }
+        //[Benchmark()]
+        //public void RandsPointersNormInv()
+        //{
+        //    var Paths = (int)System.Math.Pow(2, 14);
+        //    using (var engine = new PathEngine(Paths))
+        //    {
+        //        engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+        //        {
+        //            UseNormalInverse = true,
+        //            UseVectorWrite = true,
+        //            UsePointerWrite = true
+        //        });
+        //        engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+        //        engine.SetupFeatures();
+        //        engine.RunProcess();
+        //    }
+        //}
 
-        [Benchmark()]
-        public void RandsPointers()
-        {
-            var Paths = (int)System.Math.Pow(2, 14);
-            using (var engine = new PathEngine(Paths))
-            {
-                engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-                {
-                    UseVectorWrite = true,
-                    UsePointerWrite = true
-                });
-                engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
-                engine.SetupFeatures();
-                engine.RunProcess();
-            }
-        } 
+        //[Benchmark()]
+        //public void RandsPointers()
+        //{
+        //    var Paths = (int)System.Math.Pow(2, 14);
+        //    using (var engine = new PathEngine(Paths))
+        //    {
+        //        engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+        //        {
+        //            UseVectorWrite = true,
+        //            UsePointerWrite = true
+        //        });
+        //        engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 100));
+        //        engine.SetupFeatures();
+        //        engine.RunProcess();
+        //    }
+        //} 
 
         private class FakeAssetProcess : IPathProcess
         {

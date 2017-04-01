@@ -51,6 +51,7 @@ namespace Qwack.Paths
             }
             _dimensions = _featureCollection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
             _steps = _featureCollection.GetFeature<ITimeStepsFeature>().TimeStepCount;
+            _featureCollection.FinishSetup();
         }
 
         public IEnumerator<PathBlock> GetEnumerator()

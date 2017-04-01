@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Qwack.Paths.Features;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,6 +21,17 @@ namespace Qwack.Paths
                 return default(T);
             }
             return returnValue as T; 
+        }
+
+        public void FinishSetup()
+        {
+            foreach(var feature in _features)
+            {
+                if (feature.Value is IFeatureRequiresFinish finish)
+                {
+                    finish.Finish(this);
+                }
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Qwack.Random.MersenneTwister
     /// by Takuji Nishimura and Makoto Matsumoto.
     /// MT19937-64 (2004/9/29 version)
     /// </summary>
-    public class MersenneTwister64:IPathProcess
+    public class MersenneTwister64 : IPathProcess
     {
         private static uint _nN = 312;
         private uint MM = 156;
@@ -20,11 +20,9 @@ namespace Qwack.Random.MersenneTwister
         private ulong LowerM = 0x7FFFFFFFUL;
         private ulong[] mt = new ulong[_nN];
         private uint mti;
-        private bool _useVectorWrite = false;
-        private bool _usePointerWrite = false;
 
         public MersenneTwister64()
-            :this(5489UL)
+            : this(5489UL)
         {
         }
 
@@ -38,7 +36,7 @@ namespace Qwack.Random.MersenneTwister
         }
 
         public MersenneTwister64(ulong[] initkey, uint key_length)
-            :this(19650218UL)
+            : this(19650218UL)
         {
             ulong i, j, k;
             i = 1; j = 0;
@@ -51,19 +49,17 @@ namespace Qwack.Random.MersenneTwister
                 if (i >= _nN) { mt[0] = mt[_nN - 1]; i = 1; }
                 if (j >= key_length) j = 0;
             }
-            for (k=_nN-1; k != 0; k--)
+            for (k = _nN - 1; k != 0; k--)
             {
                 mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * 2862933555777941757UL)) - i; /* non linear */
                 i++;
-                if (i>=_nN) { mt[0] = mt[_nN - 1]; i=1; }
+                if (i >= _nN) { mt[0] = mt[_nN - 1]; i = 1; }
             }
 
-            mt[0] = 1UL << 63; /* MSB is 1; assuring non-zero initial array */ 
+            mt[0] = 1UL << 63; /* MSB is 1; assuring non-zero initial array */
         }
 
-        public bool UseNormalInverse { get;set;}
-        public bool UseVectorWrite { set => _useVectorWrite = value; }
-        public bool UsePointerWrite { set => _usePointerWrite = value; }
+        public bool UseNormalInverse { get; set; }
 
         /* generates a random number on [0, 2^64-1]-interval */
         public ulong GenerateInteger()
@@ -99,7 +95,7 @@ namespace Qwack.Random.MersenneTwister
 
             return x;
         }
-        
+
         /* generates a random number on [0,1]-real-interval */
         public double GenerateDouble()
         {
@@ -108,77 +104,25 @@ namespace Qwack.Random.MersenneTwister
 
         public unsafe void Process(PathBlock block)
         {
-            if (!_useVectorWrite)
+            if (!UseNormalInverse)
             {
-                if (!UseNormalInverse)
+                for (int i = 0; i < block.TotalBlockSize; i++)
                 {
-                    for (int i = 0; i < block.TotalBlockSize; i++)
-                    {
-                        block[i] = GenerateDouble();
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < block.TotalBlockSize; i++)
-                    {
-                        block[i] = Math.Statistics.NormInv(GenerateDouble());
-                    }
-                }
-            }
-            else if (_usePointerWrite)
-            {
-                var blockSize = block.TotalBlockSize;
-                var blockPtr = (double*)block.BackingPointer;
-                if (!UseNormalInverse)
-                {
-                    for (int i = 0; i < blockSize; i++)
-                    {
-                        blockPtr[i] = GenerateDouble();
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < blockSize; i++)
-                    {
-                        blockPtr[i] = Math.Statistics.NormInv(GenerateDouble());
-                    }
+                    block[i] = GenerateDouble();
                 }
             }
             else
             {
-                if (!UseNormalInverse)
+                for (int i = 0; i < block.TotalBlockSize; i++)
                 {
-                    for (int i = 0; i < block.TotalBlockSize; i+= System.Numerics.Vector<double>.Count)
-                    {
-                        var vector = block.ReadVector(i);
-                        double* doubles = (double*) Unsafe.AsPointer(ref vector);
-                        for(int x = 0; x < System.Numerics.Vector<double>.Count;x++)
-                        {
-                            doubles[x] = GenerateDouble();
-                        }
-                        block.WriteVector(vector, i);
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < block.TotalBlockSize; i += System.Numerics.Vector<double>.Count)
-                    {
-                        var vector = block.ReadVector(i);
-                        double* doubles = (double*)Unsafe.AsPointer(ref vector);
-                        for (int x = 0; x < System.Numerics.Vector<double>.Count; x++)
-                        {
-                            doubles[x] = Math.Statistics.NormInv(GenerateDouble());
-                        }
-                        block.WriteVector(vector, i);
-                    }
+                    block[i] = Math.Statistics.NormInv(GenerateDouble());
                 }
             }
-            
         }
 
         public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
         {
-            
+
         }
     }
 }

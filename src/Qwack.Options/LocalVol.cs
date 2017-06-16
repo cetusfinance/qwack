@@ -50,14 +50,14 @@ namespace Qwack.Options
                     yMinus2 = System.Math.Log((K - deltaK * 2) / S);
                     Y1 = System.Math.Log(System.Math.Sqrt(K * K + 2 * deltaK * K) / S);
                     Y2 = System.Math.Log(System.Math.Sqrt(K * K - 2 * deltaK * K) / S);
-
-                    V = VanillaSurface.GetVolForAbsoluteStrike(K, T);
+                    var fwd = forwardFunc(T);
+                    V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
                     w = V * V * T;
-                    V_t1 = VanillaSurface.GetVolForAbsoluteStrike(K_tm1, T1);
+                    V_t1 = VanillaSurface.GetVolForAbsoluteStrike(K_tm1, T1, fwd);
                     w_t1 = V_t1 * V_t1 * T1;
-                    V_Kp2 = VanillaSurface.GetVolForAbsoluteStrike(K + deltaK * 2, T);
+                    V_Kp2 = VanillaSurface.GetVolForAbsoluteStrike(K + deltaK * 2, T, fwd);
                     w_kPlus2 = V_Kp2 * V_Kp2 * T;
-                    V_Km2 = VanillaSurface.GetVolForAbsoluteStrike(K - deltaK * 2, T);
+                    V_Km2 = VanillaSurface.GetVolForAbsoluteStrike(K - deltaK * 2, T, fwd);
                     w_kMinus2 = V_Km2 * V_Km2 * T;
 
 

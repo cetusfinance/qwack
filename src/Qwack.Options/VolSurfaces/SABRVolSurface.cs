@@ -27,8 +27,7 @@ namespace Qwack.Options.VolSurfaces
 
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
-        public Func<double,double> ForwardCurve { get; set; }
-
+      
         private IInterpolator1D _alphaInterp;
         private IInterpolator1D _betaInterp;
         private IInterpolator1D _rhoInterp;
@@ -55,8 +54,7 @@ namespace Qwack.Options.VolSurfaces
             OriginDate = originDate;
             Expiries = expiries;
             ExpiriesDouble = Expiries.Select(t => TimeBasis.CalculateYearFraction(originDate, t)).ToArray();
-            ForwardCurve = forwardCurve;
-
+          
             if (Expiries.Length != strikes.Length)
                 throw new Exception("Expiries and first dimension of Strikes must of same length");
             if (Expiries.Length != vols.Length)
@@ -73,7 +71,7 @@ namespace Qwack.Options.VolSurfaces
                 var vs = vols[i];
                 var ks = strikes[i];
                 var t = ExpiriesDouble[i];
-                var fwd = ForwardCurve(t);
+                var fwd = forwardCurve(t);
                 Betas[i] = 1.0;
                 Func<double[], double[]> errorFunc = (x =>
                     {
@@ -102,43 +100,43 @@ namespace Qwack.Options.VolSurfaces
             _nuInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Nus, TimeInterpolatorType);
         }
   
-        public double GetVolForAbsoluteStrike(double strike, double maturity)
+        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
         {
             var alpha = _alphaInterp.Interpolate(maturity);
             var beta = _betaInterp.Interpolate(maturity);
             var nu = _nuInterp.Interpolate(maturity);
             var rho = _rhoInterp.Interpolate(maturity);
-            var fwd = ForwardCurve(maturity);
+            var fwd = forward;
             if (beta >= 1.0)
                 return SABR.CalcImpVol_Beta1(fwd, strike, maturity, alpha, rho, nu);
             else
                 return SABR.CalcImpVol_Hagan(fwd, strike, maturity, alpha, beta, rho, nu);
         }
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry)
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward)
         {
-            return GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry));
+            return GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry),forward);
         }
 
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity)
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
-            var fwd = ForwardCurve(maturity);
+            var fwd = forward;
             var cp = deltaStrike < 0 ? OptionType.Put : OptionType.Call;
             Func<double, double> testFunc = (absK =>
             {
-                var vol = GetVolForAbsoluteStrike(absK, maturity);
+                var vol = GetVolForAbsoluteStrike(absK, maturity, forward);
                 var deltaK = BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol, cp);
                 return deltaK - System.Math.Abs(deltaStrike);
             });
 
             var solvedStrike = Qwack.Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
 
-            return GetVolForAbsoluteStrike(solvedStrike, maturity);
+            return GetVolForAbsoluteStrike(solvedStrike, maturity, forward);
         }
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry)
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward)
         {
-            return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry));
+            return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
         }
     }
 }

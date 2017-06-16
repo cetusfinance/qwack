@@ -22,8 +22,10 @@ namespace Qwack.Core.Instruments.Funding
             Basis = rateIndex.DayCountBasis;
             PayRec = payRec;
 
-            FraLeg = new GenericSwapLeg(StartDate, EndDate.Date(StartDate, rateIndex.RollConvention, rateIndex.HolidayCalendars), rateIndex.HolidayCalendars, rateIndex.Currency, rateIndex.ResetTenor, Basis);
-            FraLeg.FixedRateOrMargin = (decimal)ParRate;
+            FraLeg = new GenericSwapLeg(StartDate, EndDate.Date(StartDate, rateIndex.RollConvention, rateIndex.HolidayCalendars), rateIndex.HolidayCalendars, rateIndex.Currency, rateIndex.ResetTenor, Basis)
+            {
+                FixedRateOrMargin = (decimal)ParRate
+            };
             FlowScheduleFra = FraLeg.GenerateSchedule();
 
             FraLeg.FixedRateOrMargin = (decimal)ParRate;

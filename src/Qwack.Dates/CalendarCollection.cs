@@ -33,8 +33,7 @@ namespace Qwack.Dates
         {
             get
             {
-                Calendar returnCalendar;
-                if(TryGetCalendar(calendarName,out returnCalendar))
+                if (TryGetCalendar(calendarName, out Calendar returnCalendar))
                 {
                     return returnCalendar;
                 }

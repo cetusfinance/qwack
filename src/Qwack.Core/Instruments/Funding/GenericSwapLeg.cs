@@ -91,11 +91,13 @@ namespace Qwack.Core.Instruments.Funding
                         DateTime currentReset = GetNextResetDate(endDate, false);
                         while (GetNextResetDate(currentReset, false) >= startDate)
                         {
-                            var q = new CashFlow();
-                            q.ResetDateStart = currentReset;
-                            q.AccrualPeriodStart = currentReset;
-                            q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                            q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+                            var q = new CashFlow()
+                            {
+                                ResetDateStart = currentReset,
+                                AccrualPeriodStart = currentReset,
+                                FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
+                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
+                            };
                             q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                 q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
@@ -127,10 +129,12 @@ namespace Qwack.Core.Instruments.Funding
                             }
                             else
                             {
-                                var q = new CashFlow();
-                                q.AccrualPeriodStart = startDate;
-                                q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                                q.AccrualPeriodEnd = lf.Count > 0 ? lf.Last().AccrualPeriodStart : endDate;
+                                var q = new CashFlow()
+                                {
+                                    AccrualPeriodStart = startDate,
+                                    FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
+                                    AccrualPeriodEnd = lf.Count > 0 ? lf.Last().AccrualPeriodStart : endDate
+                                };
                                 q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
@@ -158,10 +162,12 @@ namespace Qwack.Core.Instruments.Funding
                         DateTime currentReset = startDate;
                         while (GetNextResetDate(currentReset, true) <= endDate)
                         {
-                            CashFlow Q = new CashFlow();
-                            Q.AccrualPeriodStart = currentReset;
-                            Q.FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                            Q.AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+                            CashFlow Q = new CashFlow()
+                            {
+                                AccrualPeriodStart = currentReset,
+                                FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
+                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
+                            };
                             Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                 Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
@@ -195,10 +201,12 @@ namespace Qwack.Core.Instruments.Funding
                             }
                             else
                             {
-                                CashFlow Q = new CashFlow();
-                                Q.AccrualPeriodStart = lf.Last().AccrualPeriodEnd;
-                                Q.FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset);
-                                Q.AccrualPeriodEnd = endDate;
+                                CashFlow Q = new CashFlow()
+                                {
+                                    AccrualPeriodStart = lf.Last().AccrualPeriodEnd,
+                                    FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
+                                    AccrualPeriodEnd = endDate
+                                };
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
@@ -254,8 +262,7 @@ namespace Qwack.Core.Instruments.Funding
                     return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, 0.Bd());
                 }
 
-            int rollOut;
-            if (int.TryParse(RollDay, out rollOut))
+            if (int.TryParse(RollDay, out int rollOut))
                 if (fwdDirection)
                 {
                     var d1 = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);

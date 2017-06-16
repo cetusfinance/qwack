@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Qwack.Math.Distributions
 {
-    public class Gaussian
+    public static class Gaussian
     {
         public static double GKern(double X, double Xmean, double Bandwidth)
         {

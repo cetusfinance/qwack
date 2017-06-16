@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 
 namespace Qwack.Curves.Benchmark
@@ -11,16 +12,37 @@ namespace Qwack.Curves.Benchmark
         private static readonly Dictionary<string, Type> _benchmarks = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             ["SolveOis"] = typeof(SolvingOisBenchmark),
-            ["LinInterp"] = typeof(InterpolationBenchmark)
+            ["LinInterp"] = typeof(InterpolationBenchmark),
+            ["VectorWrite"] = typeof(WritingDoubleVectorVsDouble),
+            ["MultiRegression"] = typeof(MultiLinearRegression)
         };
 
         public static void Main(string[] args)
         {
-            //SolvingOisBenchmark.Setup();
-            //for(int i = 0; i < 100; i ++)
+            //var multi = new MultiLinearRegression();
+            //multi.NumberOfExamples = 10000;
+            //multi.Dimensions = 50;
+            //multi.Setup();
+
+            //Console.ReadLine();
+            //var result1 = multi.TwoDimensionCominedTPReflect();// TwoDimensionFaster();
+            //var result2 = multi.AccordVersion();
+
+            //for(int i = 0; i < result2.Length;i++)
             //{
-            //    SolvingOisBenchmark.PuttingItTogether();
+            //    var diff = System.Math.Abs(result1[i+1] - result2[i]);
+            //    if(diff > 1e-10)
+            //    {
+            //        throw new InvalidOperationException();
+            //    }
             //}
+            ////return;
+            //for (int i = 0; i < 1000; i++)
+            //{
+            //    var result = multi.AccordVersion();
+            //}
+            //return;
+
 
             if (args.Length > 0 && args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {

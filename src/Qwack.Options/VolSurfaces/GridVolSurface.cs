@@ -29,10 +29,7 @@ namespace Qwack.Options.VolSurfaces
 
         public GridVolSurface()         {        }
 
-        public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols)
-        {
-            Build(originDate, strikes, expiries, vols);
-        }
+        public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols) =>        Build(originDate, strikes, expiries, vols);
 
         public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols, 
             StrikeType strikeType, Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType, 
@@ -87,10 +84,7 @@ namespace Qwack.Options.VolSurfaces
             }
         }
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward)
-        {
-            return GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
-        }
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
@@ -123,27 +117,6 @@ namespace Qwack.Options.VolSurfaces
             }
         }
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward)
-        {
-            return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
-        }
-
-        public double GetFwdATMVol(DateTime startDate, DateTime endDate)
-        {
-            double t1 = TimeBasis.CalculateYearFraction(OriginDate, startDate);
-            double t2 = TimeBasis.CalculateYearFraction(OriginDate, endDate);
-            double tt = t2 - t1;
-
-            double vol1 = GetVolForAbsoluteStrike(ForwardCurve(t1), startDate);
-            double vol2 = GetVolForAbsoluteStrike(ForwardCurve(t2), endDate);
-
-            double var1 = vol1 * vol1 * t1;
-            double var2 = vol2 * vol2 * t2;
-
-            double var = var2 - var1;
-            double vol = System.Math.Sqrt(var / tt);
-            return vol;
-        }
-
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
     }
 }

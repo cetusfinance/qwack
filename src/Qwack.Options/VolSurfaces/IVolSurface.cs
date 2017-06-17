@@ -12,6 +12,5 @@ namespace Qwack.Options.VolSurfaces
         double GetVolForDeltaStrike(double strike, DateTime expiry, double forward);
         double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward);
         DateTime OriginDate { get; }
-        double GetFwdATMVol(DateTime startDate, DateTime endDate);
     }
 }

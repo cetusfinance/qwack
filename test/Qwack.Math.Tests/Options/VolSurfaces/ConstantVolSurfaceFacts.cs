@@ -16,10 +16,10 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var vol = 0.32;
             var surface = new Qwack.Options.VolSurfaces.ConstantVolSurface(origin,vol);
 
-            Assert.Equal(vol, surface.GetVolForAbsoluteStrike(999, origin.AddDays(33)), 12);
-            Assert.Equal(vol, surface.GetVolForDeltaStrike(999, origin.AddDays(303)), 12);
-            Assert.Equal(vol, surface.GetVolForAbsoluteStrike(999, 0.777), 12);
-            Assert.Equal(vol, surface.GetVolForDeltaStrike(999, 0.123), 12);
+            Assert.Equal(vol, surface.GetVolForAbsoluteStrike(999, origin.AddDays(33),1), 12);
+            Assert.Equal(vol, surface.GetVolForDeltaStrike(999, origin.AddDays(303),100), 12);
+            Assert.Equal(vol, surface.GetVolForAbsoluteStrike(999, 0.777,0), 12);
+            Assert.Equal(vol, surface.GetVolForDeltaStrike(999, 0.123,55), 12);
         }
 
 

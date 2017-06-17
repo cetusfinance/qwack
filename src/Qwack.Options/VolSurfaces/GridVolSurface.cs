@@ -24,7 +24,7 @@ namespace Qwack.Options.VolSurfaces
         public double[][] Volatilities { get; set; }
         public DateTime[] Expiries { get; set; }
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
-        public Func<double,double> ForwardCurve { get; set; }
+        
         private IInterpolator1D[] _interpolators;
 
         public GridVolSurface()         {        }
@@ -56,7 +56,7 @@ namespace Qwack.Options.VolSurfaces
                 InterpolatorFactory.GetInterpolator(Strikes, v, StrikeInterpolatorType)).ToArray();
         }
 
-        public double GetVolForAbsoluteStrike(double strike, double maturity)
+        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
         {
             if (StrikeType == StrikeType.Absolute)
             {
@@ -67,7 +67,7 @@ namespace Qwack.Options.VolSurfaces
             }
             else
             {
-                var fwd = ForwardCurve(maturity);
+                var fwd = forward;
                 var cp = strike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double,double> testFunc = (deltaK =>
                 {
@@ -87,12 +87,12 @@ namespace Qwack.Options.VolSurfaces
             }
         }
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry)
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward)
         {
-            return GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry));
+            return GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
         }
 
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity)
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
             if (StrikeType == StrikeType.ForwardDelta)
             {
@@ -103,7 +103,7 @@ namespace Qwack.Options.VolSurfaces
             }
             else
             {
-                var fwd = ForwardCurve(maturity);
+                var fwd = forward;
                 var cp = deltaStrike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (absK =>
                 {
@@ -123,9 +123,9 @@ namespace Qwack.Options.VolSurfaces
             }
         }
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry)
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward)
         {
-            return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry));
+            return GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
         }
 
         public double GetFwdATMVol(DateTime startDate, DateTime endDate)

@@ -26,22 +26,22 @@ namespace Qwack.Options.VolSurfaces
             Volatility = volatility;
         }
 
-        public double GetVolForAbsoluteStrike(double strike, double maturity)
+        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
         {
             return Volatility;
         }
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry)
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward)
         {
             return Volatility;
         }
 
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity)
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
             return Volatility;
         }
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry)
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward)
         {
             return Volatility;
         }

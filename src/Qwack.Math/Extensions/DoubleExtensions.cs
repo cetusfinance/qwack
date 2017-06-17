@@ -12,7 +12,7 @@ namespace Qwack.Math.Extensions
 
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
-            T[] result = new T[length];
+            var result = new T[length];
             Array.Copy(data, index, result, 0, length);
             return result;
         }
@@ -47,32 +47,17 @@ namespace Qwack.Math.Extensions
                 return System.Math.Sign(input);
         }
 
-        public static double Phi(this double x)
-        {
-            return (System.Math.Exp((-x * x) / 2.0) / Sqrt2Pi);
-        }
+        public static double Phi(this double x) => (System.Math.Exp((-x * x) / 2.0) / Sqrt2Pi);
 
-        public static double Round(this double x, int nDigits)
-        {
-            return System.Math.Round(x, nDigits);
-        }
-        public static double Abs(this double x)
-        {
-            return System.Math.Abs(x);
-        }
-        public static double Sqrt(this double x)
-        {
-            return System.Math.Sqrt(x);
-        }
+        public static double Round(this double x, int nDigits) => System.Math.Round(x, nDigits);
+        public static double Abs(this double x) => System.Math.Abs(x);
+        public static double Sqrt(this double x)=> System.Math.Sqrt(x);
+        public static double Pow(this double x, double power) => System.Math.Pow(x, power);
 
-        public static double Pow(this double x, double power)
-        {
-            return System.Math.Pow(x, power);
-        }
         public static double IntPow(this double num, int exponent)
         {
-            double result = 1.0;
-            int exp = System.Math.Abs(exponent);
+            var result = 1.0;
+            var exp = System.Math.Abs(exponent);
             while (exp > 0)
             {
                 if (exp % 2 == 1)
@@ -85,8 +70,8 @@ namespace Qwack.Math.Extensions
         }
         public static int IntPow(this int num, int exponent)
         {
-            double result = 1.0;
-            int exp = System.Math.Abs(exponent);
+            var result = 1.0;
+            var exp = System.Math.Abs(exponent);
             while (exp > 0)
             {
                 if (exp % 2 == 1)

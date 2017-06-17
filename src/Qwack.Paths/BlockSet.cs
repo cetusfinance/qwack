@@ -11,7 +11,7 @@ namespace Qwack.Paths
     /// Contains a number of path blocks that make up an entire group of paths
     /// needed for pricing in memory
     /// </summary>
-    public class BlockSet:IEnumerable<PathBlock>, IDisposable
+    public class BlockSet : IEnumerable<PathBlock>, IDisposable
     {
         private static readonly int _numberOfThreads = Environment.ProcessorCount;
         private int _numberOfPaths;
@@ -39,16 +39,19 @@ namespace Qwack.Paths
         }
 
         public IEnumerator<PathBlock> GetEnumerator() => new PathBlockEnumerator(_blocks);
-        
+        public int Steps => _steps;
+        public int Factors => _factors;
+        public int NumberOfPaths => _numberOfPaths;
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        
-        private class PathBlockEnumerator:IEnumerator<PathBlock>
+
+        private class PathBlockEnumerator : IEnumerator<PathBlock>
         {
             private readonly PathBlock[] _blocks;
-            private int _currentIndex;
+            private int _currentIndex = -1;
 
-            public PathBlockEnumerator(PathBlock[] blocks) =>                 _blocks = blocks;
-            
+            public PathBlockEnumerator(PathBlock[] blocks) => _blocks = blocks;
+
             public PathBlock Current => _currentIndex == _blocks.Length ? null : _blocks[_currentIndex];
             object IEnumerator.Current => Current;
 
@@ -59,19 +62,20 @@ namespace Qwack.Paths
 
             public bool MoveNext()
             {
-                _currentIndex = System.Math.Min(++_currentIndex, _blocks.Length);
+                _currentIndex++;
+                System.Math.Min(_currentIndex, _blocks.Length);
                 return _currentIndex < _blocks.Length;
             }
 
-            public void Reset() =>                _currentIndex = -1;
+            public void Reset() => _currentIndex = -1;
         }
 
 
         public void Dispose()
         {
-            for(var i = 0; i < _blocks.Length;i++)
+            for (var i = 0; i < _blocks.Length; i++)
             {
-               _blocks[i].Dispose();
+                _blocks[i].Dispose();
             }
             _blocks = null;
             GC.SuppressFinalize(this);

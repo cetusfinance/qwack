@@ -38,28 +38,23 @@ namespace Qwack.Paths
         public int Factors => _factors;
         public int NumberOfSteps => _numberOfSteps;
         public static int MinNumberOfPaths => Vector<double>.Count;
-        public IntPtr BackingPointer => _handle.AddrOfPinnedObject();
         public int TotalBlockSize => _numberOfPaths * _factors * _numberOfSteps;
-
-        public unsafe void WriteVector(int currentIndex, Vector<double> currentValue)
-        {
-            Unsafe.Write((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), currentIndex << 4), currentValue);
-        }
+        public double[] RawData => _backingArray;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDoubleIndex(int pathNumber, int factor, int step)
         {
-            pathNumber = pathNumber - _startPathIndex;
-            var blockDelta = (pathNumber / Vector<double>.Count) * _blockSize;
-            var stepDelta = _stepBlockSize * step;
             var factorDelta = Vector<double>.Count * factor;
-            var pathDelta = pathNumber % Vector<double>.Count;
-            return blockDelta + stepDelta + factorDelta + pathDelta;
+            var stepDelta = _factors * step;
+            var pathDelta = _factors * _numberOfSteps * pathNumber / Vector<double>.Count;
+            var index = factorDelta + stepDelta + pathDelta;
+            if (index >= _backingArray.Length) throw new ArgumentOutOfRangeException();
+            return index;
         }
 
         public double this[int index] { get => _backingArray[index]; set => _backingArray[index] = value; }
 
-        public unsafe ref Vector<double> ReadVectorByRef(int index) => ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index << 4));
+        public unsafe ref Vector<double> ReadVectorByRef(int index) => ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index << 3));
 
         public void Dispose()
         {

@@ -20,10 +20,10 @@ namespace Qwack.Curves.Benchmark
         private static FundingModel _fundingModel;
         private static FundingInstrumentCollection _instruments;
         
-        [Setup]
+        [GlobalSetup]
         public static void Setup()
         {
-            DateTime startDate = new DateTime(2016, 05, 20);
+            var startDate = new DateTime(2016, 05, 20);
             var depoTenors = new Frequency[] { 3.Months() };
             var OISdepoTenors = new Frequency[] { 1.Bd() };
             double[] depoPricesZAR = { 0.06 };
@@ -42,22 +42,22 @@ namespace Qwack.Curves.Benchmark
             double[] oisPricesZAR = { 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004 };
             double[] oisPricesUSD = { 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002 };
 
-            DateTime[] ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
-            DateTime[] ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
-            DateTime[] ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
-            DateTime[] ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesSwap).Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
-            DateTime[] ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
-            DateTime[] ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
-            DateTime[] ZARpillarDatesOIS = ZARpillarDatesDepoOIS.Union(ZARpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
+            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
+            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
+            var ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesSwap).Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
+            var ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
+            var ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
+            var ZARpillarDatesOIS = ZARpillarDatesDepoOIS.Union(ZARpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
 
 
-            DateTime[] USDpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
-            DateTime[] USDpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, new Frequency(x.Split('x')[1] + "M"))).ToArray();
-            DateTime[] USDpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
-            DateTime[] USDpillarDates3m = USDpillarDatesDepo.Union(USDpillarDatesSwap).Union(USDpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
-            DateTime[] USDpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
-            DateTime[] USDpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
-            DateTime[] USDpillarDatesOIS = USDpillarDatesDepoOIS.Union(USDpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
+            var USDpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
+            var USDpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var USDpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
+            var USDpillarDates3m = USDpillarDatesDepo.Union(USDpillarDatesSwap).Union(USDpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
+            var USDpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
+            var USDpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._usd, x)).ToArray();
+            var USDpillarDatesOIS = USDpillarDatesDepoOIS.Union(USDpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
 
 
             var ZARswaps = new IrSwap[swapTenors.Length];
@@ -75,7 +75,7 @@ namespace Qwack.Curves.Benchmark
 
             _instruments = new FundingInstrumentCollection();
             
-            for (int i = 0; i < FRATenors.Length; i++)
+            for (var i = 0; i < FRATenors.Length; i++)
             {
                 ZARFRAs[i] = new ForwardRateAgreement(startDate, FRATenors[i], FRAPricesZAR[i], CurveDataSetup._zar3m, SwapPayReceiveType.Payer, FraDiscountingType.Isda, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARFRAs[i]);
@@ -83,7 +83,7 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(USDFRAs[i]);
             }
 
-            for (int i = 0; i < oisTenors.Length; i++)
+            for (var i = 0; i < oisTenors.Length; i++)
             {
                 ZARoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesZAR[i], true, CurveDataSetup.zaron, CurveDataSetup._zar3m, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 _instruments.Add(ZARoisSwaps[i]);
@@ -91,7 +91,7 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(USDoisSwaps[i]);
             }
 
-            for (int i = 0; i < swapTenors.Length; i++)
+            for (var i = 0; i < swapTenors.Length; i++)
             {
                 ZARswaps[i] = new IrSwap(startDate, swapTenors[i], CurveDataSetup._zar3m, swapPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARswaps[i]);
@@ -99,7 +99,7 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(USDswaps[i]);
             }
 
-            for (int i = 0; i < depoTenors.Length; i++)
+            for (var i = 0; i < depoTenors.Length; i++)
             {
                 ZARdepos[i] = new IrSwap(startDate, depoTenors[i], CurveDataSetup._zar3m, depoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.JIBAR.3M" };
                 _instruments.Add(ZARdepos[i]);
@@ -107,7 +107,7 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(USDdepos[i]);
             }
 
-            for (int i = 0; i < OISdepoTenors.Length; i++)
+            for (var i = 0; i < OISdepoTenors.Length; i++)
             {
                 ZARdeposOIS[i] = new IrSwap(startDate, OISdepoTenors[i], CurveDataSetup.zaron, OISdepoPricesZAR[i], SwapPayReceiveType.Payer, "ZAR.DISC.CSA_ZAR", "ZAR.DISC.CSA_ZAR") { SolveCurve = "ZAR.DISC.CSA_ZAR" };
                 _instruments.Add(ZARdeposOIS[i]);

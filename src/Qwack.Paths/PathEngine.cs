@@ -23,6 +23,8 @@ namespace Qwack.Paths
             _featureCollection.AddFeature<ITimeStepsFeature>(new TimeStepsFeature());
         }
 
+        public BlockSet BlockSet => _blockset;
+
         public void RunProcess()
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);

@@ -16,6 +16,7 @@ namespace Qwack.Paths.Processes
         private double _drift;
         private int _numberOfSteps;
         private string _name;
+        private int _factorIndex;
         private ITimeStepsFeature _timesteps;
 
         public ConstantVolSingleAsset(DateTime startDate, DateTime expiry, double vol, double spot, double drift, int numberOfSteps, string name)
@@ -32,7 +33,7 @@ namespace Qwack.Paths.Processes
 
         public void Process(PathBlock block)
         {
-            var currentIndex = 0 * block.NumberOfPaths * block.NumberOfSteps;
+            var currentIndex = _factorIndex * Vector<double>.Count;
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 //This should be set to the spot price here
@@ -42,10 +43,10 @@ namespace Qwack.Paths.Processes
                     ref Vector<double> currentValue = ref block.ReadVectorByRef(currentIndex);
                     var drift = _drift * _timesteps.TimeSteps[step] * previousStep;
                     var delta = _scaledVol * currentValue;
+
                     currentValue = (previousStep + drift + delta);
-                    //block.WriteVector(currentIndex, currentValue);
                     previousStep = currentValue;
-                    currentIndex += Vector<double>.Count;
+                    currentIndex += Vector<double>.Count * block.Factors;
                 }
             }
         }
@@ -53,8 +54,8 @@ namespace Qwack.Paths.Processes
         public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
-            mappingFeature.AddDimension(_name);
-
+            _factorIndex = mappingFeature.AddDimension(_name);
+            
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             var stepSize = (_expiry - _startDate).TotalDays;
             for(var i = 0; i < _numberOfSteps;i++)

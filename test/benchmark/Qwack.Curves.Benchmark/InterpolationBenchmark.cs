@@ -18,21 +18,21 @@ namespace Qwack.Curves.Benchmark
         [Params(500)]
         public static int NumberOfPillars { get; set; }
 
-        [Setup]
+        [GlobalSetup]
         public static void Setup()
         {
             var rnd = new System.Random(7777);
             _x = new double[NumberOfPillars];
             _y = new double[NumberOfPillars];
             var step = 1.0 / NumberOfPillars;
-            for (int i = 0; i < NumberOfPillars; i++)
+            for (var i = 0; i < NumberOfPillars; i++)
             {
                 _x[i] = i * step;
                 _y[i] = rnd.NextDouble();
             }
             rnd = new System.Random(99999);
             _guesses = new double[Interpolations];
-            for (int i = 0; i < Interpolations; i++)
+            for (var i = 0; i < Interpolations; i++)
             {
                 _guesses[i] = rnd.NextDouble();
             }
@@ -43,7 +43,7 @@ namespace Qwack.Curves.Benchmark
         {
             var interp = new Math.Interpolation.LinearInterpolatorFlatExtrap(_x, _y);
             var g = _guesses;
-            for (int i = 0; i < Interpolations; i++)
+            for (var i = 0; i < Interpolations; i++)
             {
                 var interpValue = interp.Interpolate(g[i]);
             }
@@ -54,7 +54,7 @@ namespace Qwack.Curves.Benchmark
         {
             var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y);
             var g = _guesses;
-            for (int i = 0; i < Interpolations; i++)
+            for (var i = 0; i < Interpolations; i++)
             {
                 var interpValue = interp.Interpolate(g[i]);
             }

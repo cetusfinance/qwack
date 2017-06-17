@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Qwack.Math</AssemblyName>
-    <PackageId>Qwack.Math</PackageId>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.3.0" />
+    <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00140" />
+    <PackageReference Include="ImageSharp.Drawing" Version="1.0.0-alpha9-00135" />
     <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
- 
+
   <ItemGroup>
-    <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\Qwack.Paths\Qwack.Paths.csproj" />
   </ItemGroup>
+
 </Project>

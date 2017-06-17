@@ -37,7 +37,7 @@ namespace Qwack.Paths.Features
                     index++;
                     continue;
                 }
-                _timeSteps[index] = (d - firstDate).TotalDays / 365.0;
+                _timeSteps[index] = ((d - firstDate).TotalDays / 365.0 ) - _timeSteps[index-1];
                 index++;
             }
         }

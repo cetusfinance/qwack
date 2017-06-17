@@ -19,7 +19,7 @@ namespace Qwack.Curves.Benchmark
         [Params(25,50)]
         public int Dimensions { get; set; }
 
-        [Setup]
+        [GlobalSetup]
         public void Setup()
         {
             predictors = new double[NumberOfExamples][];
@@ -56,10 +56,6 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark]
-        public double[] TwoDimensionCominedTPReflect()
-        {
-            return Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
-        }
-
+        public double[] TwoDimensionCominedTPReflect() => Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
     }
 }

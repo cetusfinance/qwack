@@ -1,7 +1,5 @@
-<Project>
+﻿<Project>
   <Import Project="version.props" />
-  <Import Project="depend.props" />
-  
   <PropertyGroup>
     <Copyright>Cetus Finance</Copyright>
     <Authors>Cetus Finance</Authors>
@@ -15,8 +13,4 @@
     <DebugType>full</DebugType>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
   </PropertyGroup>
-  
-    <ItemGroup Condition="'$(TargetFrameworkIdentifier)'=='.NETFramework' AND '$(OutputType)'=='library'">
-    <PackageReference Include="NETStandard.Library" Version="$(NetStandardImplicitPackageVersion)" />
-  </ItemGroup>
 </Project>

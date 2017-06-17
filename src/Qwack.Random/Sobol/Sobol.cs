@@ -9,13 +9,10 @@ namespace Qwack.Random.Sobol
 {
     public class Sobol
     {
-        private SobolDirectionNumbers _directionNumbers;
+        //private SobolDirectionNumbers _directionNumbers;
         private static readonly double _convertToDoubleConstant = Pow(2.0, -32.0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double ConvertRandToDouble(uint rand)
-        {
-            return rand * _convertToDoubleConstant;
-        }
+        private static double ConvertRandToDouble(uint rand) => rand * _convertToDoubleConstant;
     }
 }

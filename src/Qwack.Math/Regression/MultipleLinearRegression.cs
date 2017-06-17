@@ -16,12 +16,12 @@ namespace Qwack.Math.Regression
             if (predictors.Length != predictions.Length)
                 throw new InvalidOperationException("Number of predictor rows should equal the number of predictions");
 
-            double[][] designMatrix = DoubleArrayFunctions.MatrixCreate(predictors.Length, predictors[0].Length + 1);
+            var designMatrix = DoubleArrayFunctions.MatrixCreate(predictors.Length, predictors[0].Length + 1);
 
-            for (int r = 0; r < predictions.Length; r++)
+            for (var r = 0; r < predictions.Length; r++)
             {
                 designMatrix[r][0] = 1.0;
-                for (int c = 0; c < predictors[0].Length; c++)
+                for (var c = 0; c < predictors[0].Length; c++)
                 {
                     designMatrix[r][c + 1] = predictors[r][c];
                 }
@@ -47,10 +47,10 @@ namespace Qwack.Math.Regression
             var numberOfCols = predictors[0].Length + 1;
             var designMatrix = DoubleArrayFunctions.MatrixCreate(predictors[0].Length + 1, predictors.Length);
 
-            for (int r = 0; r < predictions.Length; r++)
+            for (var r = 0; r < predictions.Length; r++)
             {
                 designMatrix[0][r] = 1.0;
-                for (int c = 0; c < predictors[0].Length; c++)
+                for (var c = 0; c < predictors[0].Length; c++)
                 {
                     designMatrix[c + 1][r] = predictors[r][c];
                 }
@@ -60,12 +60,12 @@ namespace Qwack.Math.Regression
             var iterations = result.Length * result.Length;
             var vectors = designMatrix[0].Length / Vector<double>.Count;
 
-            for (int i = 0; i < result.Length; i++)
+            for (var i = 0; i < result.Length; i++)
             {
                 result[i] = new double[result.Length];
             }
 
-            for (int counter = 0; counter < iterations; counter++)
+            for (var counter = 0; counter < iterations; counter++)
             {
                 var column1 = counter / result.Length;
                 var column2 = counter % result.Length;
@@ -73,14 +73,14 @@ namespace Qwack.Math.Regression
                 {
                     continue;
                 }
-                double sum = 0.0;
+                var sum = 0.0;
                 var vectorList1 = Unsafe.As<Vector<double>[]>(designMatrix[column1]);
                 var vectorList2 = Unsafe.As<Vector<double>[]>(designMatrix[column2]);
-                for (int i = 0; i < vectors; i++)
+                for (var i = 0; i < vectors; i++)
                 {
                     sum += Vector.Dot(vectorList1[i], vectorList2[i]);
                 }
-                for(int i = vectors*Vector<double>.Count; i < designMatrix[0].Length; i++)
+                for(var i = vectors*Vector<double>.Count; i < designMatrix[0].Length; i++)
                 {
                     sum += designMatrix[column1][i] * designMatrix[column2][i];
                 }

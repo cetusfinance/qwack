@@ -6,7 +6,7 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths
 {
-    public class PathEngine:IEnumerable<PathBlock>, IDisposable
+    public class PathEngine : IEnumerable<PathBlock>, IDisposable
     {
         private List<IPathProcess> _pathProcesses = new List<IPathProcess>();
         private List<object> _pathProcessFeatures = new List<object>();
@@ -27,9 +27,9 @@ namespace Qwack.Paths
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
 
-            foreach(var block in _blockset)
+            foreach (var block in _blockset)
             {
-                foreach(var process in _pathProcesses)
+                foreach (var process in _pathProcesses)
                 {
                     process.Process(block);
                 }
@@ -38,14 +38,11 @@ namespace Qwack.Paths
 
         public FeatureCollection Features => _featureCollection;
 
-        public void AddPathProcess(IPathProcess process)
-        {
-            _pathProcesses.Add(process);
-        }
+        public void AddPathProcess(IPathProcess process) => _pathProcesses.Add(process);
 
         public void SetupFeatures()
         {
-            foreach(var pp in _pathProcesses)
+            foreach (var pp in _pathProcesses)
             {
                 pp.SetupFeatures(_featureCollection);
             }
@@ -54,15 +51,9 @@ namespace Qwack.Paths
             _featureCollection.FinishSetup();
         }
 
-        public IEnumerator<PathBlock> GetEnumerator()
-        {
-            return _blockset.GetEnumerator();
-        }
+        public IEnumerator<PathBlock> GetEnumerator() => _blockset.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _blockset.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => _blockset.GetEnumerator();
 
         public void Dispose()
         {

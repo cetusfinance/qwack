@@ -5,7 +5,6 @@
     <PackageId>Qwack.Curves.Benchmark</PackageId>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <RuntimeIdentifier>win8-x64</RuntimeIdentifier>
   </PropertyGroup>
@@ -29,6 +28,5 @@
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="BenchmarkDotNet" Version="0.10.3.18" />
     <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.3.18" />
-    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 </Project>

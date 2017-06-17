@@ -7,12 +7,9 @@ namespace Qwack.Paths
 {
     public class FeatureCollection
     {
-        private Dictionary<Type,object> _features = new Dictionary<Type, object>();
+        private Dictionary<Type, object> _features = new Dictionary<Type, object>();
 
-        public void AddFeature<T>(T featureToAdd)
-        {
-            _features.Add(typeof(T), featureToAdd);
-        }
+        public void AddFeature<T>(T featureToAdd) => _features.Add(typeof(T), featureToAdd);
 
         public T GetFeature<T>() where T : class
         {
@@ -20,12 +17,12 @@ namespace Qwack.Paths
             {
                 return default(T);
             }
-            return returnValue as T; 
+            return returnValue as T;
         }
 
         public void FinishSetup()
         {
-            foreach(var feature in _features)
+            foreach (var feature in _features)
             {
                 if (feature.Value is IFeatureRequiresFinish finish)
                 {

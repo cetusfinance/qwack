@@ -7,12 +7,12 @@ namespace Qwack.Paths.Features
     public class PathMappingFeature : IPathMappingFeature
     {
         private List<string> _dimensionNames = new List<string>();
-        
+
         public int NumberOfDimensions => _dimensionNames.Count;
 
         public int AddDimension(string dimensionName)
         {
-            int index = _dimensionNames.Count;
+            var index = _dimensionNames.Count;
             _dimensionNames.Add(dimensionName);
             return index;
         }

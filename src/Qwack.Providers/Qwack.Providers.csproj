@@ -4,7 +4,6 @@
     <TargetFrameworks>netstandard1.6;net461</TargetFrameworks>
     <AssemblyName>Qwack.Providers</AssemblyName>
     <PackageId>Qwack.Providers</PackageId>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
   </PropertyGroup>
   
   <ItemGroup>
@@ -13,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonJson)" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 </Project>

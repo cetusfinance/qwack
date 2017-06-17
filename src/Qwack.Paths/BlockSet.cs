@@ -32,32 +32,23 @@ namespace Qwack.Paths
             var pathsPerBlock = numberOfPaths / (_numberOfThreads * 2);
             var numberOfBlocks = numberOfPaths / pathsPerBlock;
             _blocks = new PathBlock[numberOfBlocks];
-            for (int i = 0; i < _blocks.Length; i++)
+            for (var i = 0; i < _blocks.Length; i++)
             {
                 _blocks[i] = new PathBlock(PathBlock.MinNumberOfPaths, factors, steps, PathBlock.MinNumberOfPaths * i);
             }
         }
 
-        public IEnumerator<PathBlock> GetEnumerator()
-        {
-            return new PathBlockEnumerator(_blocks);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
+        public IEnumerator<PathBlock> GetEnumerator() => new PathBlockEnumerator(_blocks);
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
         private class PathBlockEnumerator:IEnumerator<PathBlock>
         {
             private readonly PathBlock[] _blocks;
             private int _currentIndex;
 
-            public PathBlockEnumerator(PathBlock[] blocks)
-            {
-                _blocks = blocks;
-            }
-
+            public PathBlockEnumerator(PathBlock[] blocks) =>                 _blocks = blocks;
+            
             public PathBlock Current => _currentIndex == _blocks.Length ? null : _blocks[_currentIndex];
             object IEnumerator.Current => Current;
 
@@ -72,16 +63,13 @@ namespace Qwack.Paths
                 return _currentIndex < _blocks.Length;
             }
 
-            public void Reset()
-            {
-                _currentIndex = -1;
-            }
+            public void Reset() =>                _currentIndex = -1;
         }
 
 
         public void Dispose()
         {
-            for(int i = 0; i < _blocks.Length;i++)
+            for(var i = 0; i < _blocks.Length;i++)
             {
                _blocks[i].Dispose();
             }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>MultiLinearRegression</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.6, OS=Windows 10.0.16199
+Processor=Intel Xeon CPU E3-1505M v5 2.80GHz, ProcessorCount=8
+Frequency=2742186 Hz, Resolution=364.6726 ns, Timer=TSC
+dotnet cli version=2.0.0-preview1-005977
+  [Host]     : .NET Core 4.6.25009.03, 64bit RyuJIT
+  Job-OHDERR : .NET Core 4.6.25211.01, 64bit RyuJIT
+</code></pre>
+<pre><code>Platform=X64  Runtime=Core  IterationTime=2.0000 s  
+LaunchCount=2  TargetCount=3  WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>                 Method</th><th>NumberOfExamples</th><th>Dimensions</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>TwoDimensionCombinedTPReflect</td><td>     10000</td><td>  50</td><td>239.5 ms</td><td>10.91 ms</td><td>3.891 ms</td><td>12375.0000</td><td>6437.5000</td><td>1916.6667</td><td>1.35 KB</td>
+</tr></tbody></table>
+</body>
+</html>

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Qwack.Paths.Features
 {
@@ -6,7 +8,7 @@ namespace Qwack.Paths.Features
     {
         int TimeStepCount { get; }
         double[] TimeSteps { get; }
-
         void AddDate(DateTime date);
+        void AddDates(IEnumerable<DateTime> dates);
     }
 }

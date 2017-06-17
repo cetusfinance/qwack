@@ -18,13 +18,13 @@ namespace Qwack.Paths.Processes
             _surface = volSurface;
             _expiryDate = expiryDate;
             _nTimeSteps = nTimeSteps;
-      //      _s0 = _surface.
+            //      _s0 = _surface.
         }
         public void Process(PathBlock block)
         {
-            for(int i=0;i<block.TotalBlockSize;i++)
+            for (var i = 0; i < block.TotalBlockSize; i++)
             {
-                var v = block.ReadVector(i);
+                var v = block.ReadVectorByRef(i);
 
             }
             throw new NotImplementedException();
@@ -36,8 +36,8 @@ namespace Qwack.Paths.Processes
             mappingFeature.AddDimension("Black_1");
 
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            double stepSize = (_expiryDate - _surface.OriginDate).TotalDays;
-            for (int i = 0; i < _nTimeSteps; i++)
+            var stepSize = (_expiryDate - _surface.OriginDate).TotalDays;
+            for (var i = 0; i < _nTimeSteps; i++)
             {
                 dates.AddDate(_surface.OriginDate.AddDays(i * stepSize));
             }

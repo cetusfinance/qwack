@@ -26,16 +26,8 @@ namespace Qwack.Core.Models
             DiscountCurveMap = discountCurveMap;
         }
 
+        public void UpdateSpotRates(Dictionary<Currency, double> spotRates) => SpotRates = spotRates;
 
-        public void UpdateSpotRates(Dictionary<Currency, double> spotRates)
-        {
-            SpotRates = spotRates;
-        }
-
-        public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
-        {
-            var P = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
-            return P;
-        }
+        public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy) => FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
     }
 }

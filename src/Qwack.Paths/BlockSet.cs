@@ -34,7 +34,7 @@ namespace Qwack.Paths
             _blocks = new PathBlock[numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)
             {
-                _blocks[i] = new PathBlock(PathBlock.MinNumberOfPaths, factors, steps, PathBlock.MinNumberOfPaths * i);
+                _blocks[i] = new PathBlock(pathsPerBlock, factors, steps, pathsPerBlock * i);
             }
         }
 

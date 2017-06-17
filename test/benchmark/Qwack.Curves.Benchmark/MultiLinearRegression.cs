@@ -27,19 +27,19 @@ namespace Qwack.Curves.Benchmark
             for (var e = 0; e < predictors.Length; e++)
             {
                 predictors[e] = new double[Dimensions];
-                for(int x = 0; x < Dimensions;x++)
+                for(var x = 0; x < Dimensions;x++)
                 {
                     predictors[e][x] = R.NextDouble();
                 }
             }
             solveForValues = new double[Dimensions];
-            for(int e = 0; e < solveForValues.Length;e++)
+            for(var e = 0; e < solveForValues.Length;e++)
             {
                 solveForValues[e] = R.NextDouble();
             }
             predictions = new double[predictors.Length];
 
-            for (int e = 0; e < predictions.Length; e++)
+            for (var e = 0; e < predictions.Length; e++)
             {
                 predictions[e] = TestFunc(predictors[e],solveForValues);
             }
@@ -47,7 +47,7 @@ namespace Qwack.Curves.Benchmark
             double TestFunc(double[] xs, double[] factors)
             {
                 var returnValue = s_intercept;
-                for(int i = 0; i < xs.Length;i++)
+                for(var i = 0; i < xs.Length;i++)
                 {
                     returnValue += xs[i] * factors[i];
                 }

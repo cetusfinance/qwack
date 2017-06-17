@@ -30,14 +30,11 @@ namespace Qwack.Core.Models
         public FxMatrix FxMatrix { get; private set; }
         public string CurrentSolveCurve { get; set; }
 
-        public void UpdateCurves(Dictionary<string, IrCurve> updateCurves)
-        {
-            Curves = new Dictionary<string, IrCurve>(updateCurves);
-        }
+        public void UpdateCurves(Dictionary<string, IrCurve> updateCurves) => Curves = new Dictionary<string, IrCurve>(updateCurves);
 
         public FundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate)
         {
-            FundingModel newModel = new FundingModel(BuildDate, Curves.Select(kv =>
+            var newModel = new FundingModel(BuildDate, Curves.Select(kv =>
             {
                 if (kv.Key == curveName)
                 {
@@ -97,9 +94,6 @@ namespace Qwack.Core.Models
             return spot * dfDom / dfFor;
         }
 
-        public void SetupFx(FxMatrix fxMatrix)
-        {
-            FxMatrix = fxMatrix;
-        }
+        public void SetupFx(FxMatrix fxMatrix) => FxMatrix = fxMatrix;
     }
 }

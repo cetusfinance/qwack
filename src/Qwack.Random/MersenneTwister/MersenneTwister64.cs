@@ -106,14 +106,14 @@ namespace Qwack.Random.MersenneTwister
         {
             if (!UseNormalInverse)
             {
-                for (int i = 0; i < block.TotalBlockSize; i++)
+                for (var i = 0; i < block.TotalBlockSize; i++)
                 {
                     block[i] = GenerateDouble();
                 }
             }
             else
             {
-                for (int i = 0; i < block.TotalBlockSize; i++)
+                for (var i = 0; i < block.TotalBlockSize; i++)
                 {
                     block[i] = Math.Statistics.NormInv(GenerateDouble());
                 }

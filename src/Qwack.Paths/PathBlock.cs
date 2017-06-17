@@ -41,6 +41,11 @@ namespace Qwack.Paths
         public IntPtr BackingPointer => _handle.AddrOfPinnedObject();
         public int TotalBlockSize => _numberOfPaths * _factors * _numberOfSteps;
 
+        public unsafe void WriteVector(int currentIndex, Vector<double> currentValue)
+        {
+            Unsafe.Write((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), currentIndex << 4), currentValue);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDoubleIndex(int pathNumber, int factor, int step)
         {
@@ -54,7 +59,7 @@ namespace Qwack.Paths
 
         public double this[int index] { get => _backingArray[index]; set => _backingArray[index] = value; }
 
-        public unsafe ref Vector<double> ReadVectorByRef(int index) => ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index >> 4));
+        public unsafe ref Vector<double> ReadVectorByRef(int index) => ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index << 4));
 
         public void Dispose()
         {

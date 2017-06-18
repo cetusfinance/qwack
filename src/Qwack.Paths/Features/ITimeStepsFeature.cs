@@ -10,5 +10,6 @@ namespace Qwack.Paths.Features
         double[] TimeSteps { get; }
         void AddDate(DateTime date);
         void AddDates(IEnumerable<DateTime> dates);
+        int GetDateIndex(DateTime date);
     }
 }

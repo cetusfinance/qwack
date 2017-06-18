@@ -11,44 +11,36 @@ namespace Qwack.Paths.Output
 {
     public class OutputPathsToImage
     {
-        public OutputPathsToImage(PathEngine engine)
+        public OutputPathsToImage(PathEngine engine, int width, int height)
         {
-            var height = 1000;
-            var width = engine.BlockSet.Steps * 100;
             var image = new Image<Argb32>(width, height);
             var rnd = new Random();
             
             var minMax = engine.BlockSet.Select(b => b.RawData.MinMax()).Aggregate((currentValues, next) => (System.Math.Min(currentValues.min, next.min), System.Math.Max(currentValues.max, next.max)));
 
             var range = minMax.max - minMax.min;
-            var pixelsPerPoint = height / range;
+            var pixelsPerPointY = height / range;
+            var pixelsPerPointX = width / engine.BlockSet.Steps;
 
             foreach (var block in engine.BlockSet)
             {
-                for (var p = 0; p < block.NumberOfPaths; p++)
+                for (var factor = 0; factor < block.Factors; factor++)
                 {
-                    var points = new Vector2[block.Factors][];
-                    for(var i = 0; i < block.Factors;i++)
+                    for(var path = 0; path < block.NumberOfPaths; path++)
                     {
-                        points[i] = new Vector2[block.NumberOfSteps];
-                    }
-                    for (var s = 0; s < block.NumberOfSteps; s++)
-                    {
-                        for (var f = 0; f < block.Factors; f++)
-                        {
-                            var nextX = s * 100;
-                            var nextY = (int)((block[block.GetDoubleIndex(p, f, s)] - minMax.min) * pixelsPerPoint);
-                            points[f][s] = new Vector2(nextX, nextY);
-                        }
-                    }
-                    for (var f = 0; f < block.Factors; f++)
-                    {
-                        var bytes = new byte[2];
+                        var indexOfPath = block.GetIndexOfPathStart(path, factor);
+                        var bytes = new byte[3];
                         rnd.NextBytes(bytes);
-
-                        var pen = new ImageSharp.Drawing.Pens.Pen<Argb32>(new Argb32(bytes[0], bytes[1], (byte)((255/block.Factors) * f) ), 2.0f);
-                        image.DrawLines(pen, points[f]);
-                    }
+                        var pen = new ImageSharp.Drawing.Pens.Pen<Argb32>(new Argb32(bytes[0], bytes[1], bytes[2]), 2.0f);
+                        var points = new Vector2[block.NumberOfSteps];
+                        for(var step = 0; step < block.NumberOfSteps;step++)
+                        {
+                            var nextX = (float)(step * pixelsPerPointX);
+                            var nextY = (float)((block[indexOfPath + step * Vector<double>.Count] - minMax.min) * pixelsPerPointY);
+                            points[step] = new Vector2(nextX, nextY);
+                        }
+                        image.DrawLines(pen, points);
+                    }                    
                 }
 
             }

@@ -16,5 +16,7 @@ namespace Qwack.Paths.Features
             _dimensionNames.Add(dimensionName);
             return index;
         }
+
+        public int GetDimension(string dimensionName) => _dimensionNames.IndexOf(dimensionName);
     }
 }

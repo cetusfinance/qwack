@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 using Qwack.Paths.Features;
 using static System.Math;
+
 namespace Qwack.Paths.Processes
 {
     public class ConstantVolSingleAsset : IPathProcess
@@ -33,20 +32,19 @@ namespace Qwack.Paths.Processes
 
         public void Process(PathBlock block)
         {
-            var currentIndex = _factorIndex * Vector<double>.Count;
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 //This should be set to the spot price here
                 var previousStep = new Vector<double>(_spot);
-                for (var step = 0; step < block.NumberOfSteps; step++)
+                var steps = block.GetStepsForFactor(path, _factorIndex);
+                steps[0] = previousStep;
+                for (var step = 1; step < block.NumberOfSteps; step++)
                 {
-                    ref Vector<double> currentValue = ref block.ReadVectorByRef(currentIndex);
                     var drift = _drift * _timesteps.TimeSteps[step] * previousStep;
-                    var delta = _scaledVol * currentValue;
+                    var delta = _scaledVol * steps[step] * previousStep;
 
-                    currentValue = (previousStep + drift + delta);
-                    previousStep = currentValue;
-                    currentIndex += Vector<double>.Count * block.Factors;
+                    previousStep = (previousStep + drift + delta);
+                    steps[step] = previousStep;
                 }
             }
         }
@@ -57,11 +55,12 @@ namespace Qwack.Paths.Processes
             _factorIndex = mappingFeature.AddDimension(_name);
             
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            var stepSize = (_expiry - _startDate).TotalDays;
-            for(var i = 0; i < _numberOfSteps;i++)
+            var stepSize = (_expiry - _startDate).TotalDays / _numberOfSteps;
+            for(var i = 0; i < _numberOfSteps - 1;i++)
             {
                 _timesteps.AddDate(_startDate.AddDays(i * stepSize));
             }
+            _timesteps.AddDate(_expiry);
         }
     }
 }

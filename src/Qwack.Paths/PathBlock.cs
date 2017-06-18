@@ -11,50 +11,50 @@ namespace Qwack.Paths
     public class PathBlock : IDisposable
     {
         private readonly int _numberOfPaths;
-        private readonly int _factors;
+        private readonly int _numberOfFactors;
         private readonly int _numberOfSteps;
         private GCHandle _handle;
         private double[] _backingArray;
-        private int _startPathIndex;
-        private readonly int _stepBlockSize;
-        private readonly int _blockSize;
-        private static readonly int _sizeOfDouble = sizeof(double);
-        private static readonly int _minNumberOfPaths = 512 / 8 / _sizeOfDouble;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
 
-        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int startPathIndex)
+        public PathBlock(int numberOfPaths, int factors, int numberOfSteps)
         {
-            _startPathIndex = startPathIndex;
             _numberOfPaths = numberOfPaths;
-            _factors = factors;
+            _numberOfFactors = factors;
             _numberOfSteps = numberOfSteps;
-            _stepBlockSize = Vector<double>.Count * _factors;
-            _blockSize = Vector<double>.Count * _factors * _numberOfSteps;
             _backingArray = new double[numberOfPaths * factors * numberOfSteps];
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
 
         public int NumberOfPaths => _numberOfPaths;
-        public int Factors => _factors;
+        public int Factors => _numberOfFactors;
         public int NumberOfSteps => _numberOfSteps;
         public static int MinNumberOfPaths => Vector<double>.Count;
-        public int TotalBlockSize => _numberOfPaths * _factors * _numberOfSteps;
+        public int TotalBlockSize => _numberOfPaths * _numberOfFactors * _numberOfSteps;
         public double[] RawData => _backingArray;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetDoubleIndex(int pathNumber, int factor, int step)
-        {
-            var factorDelta = Vector<double>.Count * factor;
-            var stepDelta = _factors * step;
-            var pathDelta = _factors * _numberOfSteps * pathNumber / Vector<double>.Count;
-            var index = factorDelta + stepDelta + pathDelta;
-            if (index >= _backingArray.Length) throw new ArgumentOutOfRangeException();
-            return index;
-        }
 
         public double this[int index] { get => _backingArray[index]; set => _backingArray[index] = value; }
 
-        public unsafe ref Vector<double> ReadVectorByRef(int index) => ref Unsafe.AsRef<Vector<double>>((void*)IntPtr.Add(_handle.AddrOfPinnedObject(), index << 3));
+        public unsafe Span<Vector<double>> GetStepsForFactor(int pathId, int factorId)
+        {
+            var byteOffset = GetIndexOfPathStart(pathId, factorId) << 3;
+            var pointer = (void*)IntPtr.Add(_handle.AddrOfPinnedObject(), byteOffset);
+            var span = new Span<Vector<double>>(pointer, _numberOfSteps);
+            return span;
+        }
+
+        public int GetIndexOfPathStart(int pathId, int factorId)
+        {
+            var factorJumpSize = Vector<double>.Count * _numberOfSteps;
+            var pathJumpSize = factorJumpSize * _numberOfFactors;
+            var pathIndex = pathId / Vector<double>.Count;
+
+            var pathDelta = pathIndex * pathJumpSize;
+            var factorDelta = factorJumpSize * factorId;
+
+            var totalIndex = pathDelta + factorDelta;
+            return totalIndex;
+        }
 
         public void Dispose()
         {

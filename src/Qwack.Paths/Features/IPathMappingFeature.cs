@@ -13,5 +13,7 @@ namespace Qwack.Paths.Features
         /// <param name="dimensionName">The reference name of the dimension eg the underlying name</param>
         /// <returns>The index of the dimension which can be used later for indexing the path*dimension arrays</returns>
         int AddDimension(string dimensionName);
+
+        int GetDimension(string dimensionName);
     }
 }

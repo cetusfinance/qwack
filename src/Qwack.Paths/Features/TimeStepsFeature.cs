@@ -10,10 +10,13 @@ namespace Qwack.Paths.Features
     {
         private HashSet<DateTime> _requiredDates = new HashSet<DateTime>();
         private double[] _timeSteps;
+        private Dictionary<DateTime, int> _dateIndexes = new Dictionary<DateTime, int>();
+
         public int TimeStepCount => _requiredDates.Count;
         public double[] TimeSteps => _timeSteps;
 
-        public void AddDate(DateTime date) =>           _requiredDates.Add(date);
+        public int GetDateIndex(DateTime date) => _dateIndexes[date];
+        public void AddDate(DateTime date) => _requiredDates.Add(date);
 
         public void AddDates(IEnumerable<DateTime> dates)
         {
@@ -30,6 +33,7 @@ namespace Qwack.Paths.Features
             var firstDate = default(DateTime);
             foreach (var d in _requiredDates.OrderBy(v => v))
             {
+                _dateIndexes.Add(d, index);
                 if (index == 0)
                 {
                     firstDate = d;
@@ -37,7 +41,7 @@ namespace Qwack.Paths.Features
                     index++;
                     continue;
                 }
-                _timeSteps[index] = ((d - firstDate).TotalDays / 365.0 ) - _timeSteps[index-1];
+                _timeSteps[index] = ((d - firstDate).TotalDays / 365.0) - _timeSteps[index - 1];
                 index++;
             }
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Paths;
@@ -43,12 +43,12 @@ namespace Qwack.MonteCarlo.Test
                     var previousStep = Vector<double>.One;
                     for(var step = 0; step < block.NumberOfSteps;step++)
                     {
-                        ref Vector<double> currentValue = ref block.ReadVectorByRef(currentIndex);
+                        //ref Vector<double> currentValue = ref block.ReadVectorByRef(currentIndex);
 
 
-                        currentValue = Vector.Multiply(previousStep, currentValue);
-                        previousStep = currentValue;
-                        currentIndex += Vector<double>.Count;
+                        //currentValue = Vector.Multiply(previousStep, currentValue);
+                        //previousStep = currentValue;
+                        //currentIndex += Vector<double>.Count;
                     }
                 }
             }

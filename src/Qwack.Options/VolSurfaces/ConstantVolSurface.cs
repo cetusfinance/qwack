@@ -8,7 +8,7 @@ namespace Qwack.Options.VolSurfaces
     /// <summary>
     /// A volatility which returns a single constant number for all strikes and expiries
     /// </summary>
-    public class ConstantVolSurface : IVolSurface
+    public class ConstantVolSurface : IATMVolSurface
     {
         public DateTime OriginDate { get; set; }
         public double Volatility { get; set; }
@@ -47,6 +47,16 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public double GetFwdATMVol(DateTime startDate, DateTime endDate)
+        {
+            return Volatility;
+        }
+
+        public double GetForwardATMVol(DateTime startDate, DateTime endDate)
+        {
+            return Volatility;
+        }
+
+        public double GetForwardATMVol(double start, double end)
         {
             return Volatility;
         }

@@ -20,13 +20,17 @@ namespace Qwack.Paths
             return returnValue as T;
         }
 
-        public void FinishSetup()
+        public void FinishSetup(List<IRequiresFinish> unfinishedFeatures)
         {
             foreach (var feature in _features)
             {
-                if (feature.Value is IFeatureRequiresFinish finish)
+                if (feature.Value is IRequiresFinish finish)
                 {
                     finish.Finish(this);
+                    if(!finish.IsComplete)
+                    {
+                        unfinishedFeatures.Add(finish);
+                    }
                 }
             }
         }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Qwack.Paths.Features
 {
-    public interface ITimeStepsFeature
+    public interface ITimeStepsFeature : IRequiresFinish
     {
         int TimeStepCount { get; }
         double[] TimeSteps { get; }

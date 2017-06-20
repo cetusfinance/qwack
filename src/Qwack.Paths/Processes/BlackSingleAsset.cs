@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace Qwack.Paths.Processes
 {
-    public class BlackSingleAsset : IPathProcess
+    public class BlackSingleAsset : IPathProcess, IRequiresFinish
     {
         private IATMVolSurface _surface;
         private DateTime _expiryDate;
@@ -18,12 +18,12 @@ namespace Qwack.Paths.Processes
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
         private Func<double, double> _forwardCurve;
-
+        private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
 
 
-        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double,double> forwardCurve, string name)
+        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -33,10 +33,33 @@ namespace Qwack.Paths.Processes
             _forwardCurve = forwardCurve;
         }
 
+        public bool IsComplete => _isComplete;
+
+        public void Finish(FeatureCollection collection)
+        {
+            if (!_timesteps.IsComplete)
+            {
+                return;
+            }
+
+            //drifts and vols...
+            _drifts = new double[_timesteps.TimeStepCount];
+            _vols = new double[_timesteps.TimeStepCount];
+
+            var prevSpot = _forwardCurve(0);
+            for (var t = 1; t < _drifts.Length; t++)
+            {
+                var spot = _forwardCurve(_timesteps.Times[t]);
+                _vols[t] = _surface.GetForwardATMVol(_timesteps.Times[t - 1], _timesteps.Times[t]);
+                _vols[t] *= System.Math.Sqrt(_timesteps.TimeSteps[t]);
+                _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
+                prevSpot = spot;
+            }
+            _isComplete = true;
+        }
+
         public void Process(PathBlock block)
         {
-        
-
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 //This should be set to the spot price here
@@ -56,10 +79,6 @@ namespace Qwack.Paths.Processes
 
         public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
         {
-            _drifts = new double[_numberOfSteps];
-            _vols = new double[_numberOfSteps];
-
-
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.AddDimension(_name);
 
@@ -70,18 +89,7 @@ namespace Qwack.Paths.Processes
                 _timesteps.AddDate(_startDate.AddDays(i * stepSize));
             }
             _timesteps.AddDate(_expiryDate);
-            pathProcessFeaturesCollection.FinishSetup();
 
-            //drifts and vols...
-            var prevSpot = _forwardCurve(0);
-            for (var t = 1; t < _drifts.Length; t++)
-            {
-                var spot = _forwardCurve(_timesteps.Times[t]);
-                _vols[t] = _surface.GetForwardATMVol(_timesteps.Times[t - 1], _timesteps.Times[t]);
-                _vols[t] *= System.Math.Sqrt(_timesteps.TimeSteps[t]);
-                _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
-                prevSpot = spot;
-            }
         }
     }
 }

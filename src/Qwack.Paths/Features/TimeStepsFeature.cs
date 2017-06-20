@@ -6,16 +6,19 @@ using System.Text;
 
 namespace Qwack.Paths.Features
 {
-    public class TimeStepsFeature : ITimeStepsFeature, IFeatureRequiresFinish
+    public class TimeStepsFeature : ITimeStepsFeature, IRequiresFinish
     {
         private HashSet<DateTime> _requiredDates = new HashSet<DateTime>();
         private double[] _timeSteps;
         private double[] _times;
+        private bool _isComplete;
         private Dictionary<DateTime, int> _dateIndexes = new Dictionary<DateTime, int>();
 
         public int TimeStepCount => _requiredDates.Count;
         public double[] TimeSteps => _timeSteps;
         public double[] Times => _times;
+
+        public bool IsComplete => _isComplete;
 
         public int GetDateIndex(DateTime date) => _dateIndexes[date];
         public void AddDate(DateTime date) => _requiredDates.Add(date);
@@ -50,6 +53,7 @@ namespace Qwack.Paths.Features
                 _timeSteps[index] = _times[index] - _times[index - 1];
                 index++;
             }
+            _isComplete = true;
         }
     }
 }

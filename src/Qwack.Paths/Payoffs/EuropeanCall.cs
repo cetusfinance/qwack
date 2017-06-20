@@ -7,7 +7,7 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class EuropeanCall : IPathProcess, IFeatureRequiresFinish
+    public class EuropeanCall : IPathProcess, IRequiresFinish
     {
         private DateTime _expiry;
         private double _strike;
@@ -15,6 +15,7 @@ namespace Qwack.Paths.Payoffs
         private int _assetIndex;
         private int _expiryIndex;
         private List<Vector<double>> _results = new List<Vector<double>>();
+        private bool _isComplete;
 
         public EuropeanCall(string assetName, double strike, DateTime expiry)
         {
@@ -23,18 +24,21 @@ namespace Qwack.Paths.Payoffs
             _assetName = assetName;
         }
 
+        public bool IsComplete => _isComplete;
+
         public void Finish(FeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
-            _expiryIndex = dates.GetDateIndex(_expiry);          
+            _expiryIndex = dates.GetDateIndex(_expiry);
+            _isComplete = true;
         }
 
         public void Process(PathBlock block)
         {
-            for(var path = 0; path < block.NumberOfPaths;path += Vector<double>.Count)
+            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 var steps = block.GetStepsForFactor(path, _assetIndex);
                 var finalValues = steps[_expiryIndex] - (new Vector<double>(_strike));
@@ -49,13 +53,11 @@ namespace Qwack.Paths.Payoffs
             dates.AddDate(_expiry);
         }
 
-        public double AverageResult { get {
-                return _results.Select(x =>
+        public double AverageResult => _results.Select(x =>
                 {
                     var vec = new double[Vector<double>.Count];
                     x.CopyTo(vec);
                     return vec.Average();
                 }).Average();
-            } }
     }
 }

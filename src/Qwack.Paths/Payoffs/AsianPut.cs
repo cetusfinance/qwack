@@ -6,7 +6,7 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class AsianPut : IPathProcess, IFeatureRequiresFinish
+    public class AsianPut : IPathProcess, IRequiresFinish
     {
         private List<DateTime> _asianDates;
         private double _strike;
@@ -14,6 +14,7 @@ namespace Qwack.Paths.Payoffs
         private int _assetIndex;
         private int[] _dateIndexes;
         private List<Vector<double>> _results = new List<Vector<double>>();
+        private bool _isComplete;
 
         public AsianPut(string assetName, double strike, List<DateTime> asianingDates)
         {
@@ -21,6 +22,8 @@ namespace Qwack.Paths.Payoffs
             _assetName = assetName;
             _strike = strike;
         }
+
+        public bool IsComplete => _isComplete;
 
         public void Finish(FeatureCollection collection)
         {
@@ -33,6 +36,7 @@ namespace Qwack.Paths.Payoffs
             {
                 _dateIndexes[i] = dates.GetDateIndex(_asianDates[i]);
             }
+            _isComplete = true;
         }
 
         public void Process(PathBlock block)

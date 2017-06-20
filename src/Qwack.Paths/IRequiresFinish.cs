@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Qwack.Paths.Features
+namespace Qwack.Paths
 {
-    public interface IFeatureRequiresFinish
+    public interface IRequiresFinish
     {
         void Finish(FeatureCollection collection);
+        bool IsComplete { get; }
     }
 }

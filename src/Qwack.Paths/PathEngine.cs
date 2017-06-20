@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Paths.Features;
 
@@ -52,14 +53,51 @@ namespace Qwack.Paths
             }
             _dimensions = _featureCollection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
             _steps = _featureCollection.GetFeature<ITimeStepsFeature>().TimeStepCount;
-            _featureCollection.FinishSetup();
+
+            var unfinished = new List<IRequiresFinish>();
+            _featureCollection.FinishSetup(unfinished);
             foreach(var process in _pathProcesses)
             {
-                if (process is IFeatureRequiresFinish finishProcess)
+                if (process is IRequiresFinish finishProcess)
                 {
                     finishProcess.Finish(_featureCollection);
+                    if(!finishProcess.IsComplete)
+                    {
+                        unfinished.Add(finishProcess);
+                    }
                 }
             }
+            if(unfinished.Count > 0)
+            {
+                IterateFinishing(unfinished);
+            }
+        }
+
+        private void IterateFinishing(List<IRequiresFinish> unfinished)
+        {
+            var numberFinished = 1;
+            while(numberFinished > 0)
+            {
+                numberFinished = 0;
+                for(var i = 0; i < unfinished.Count;i++)
+                {
+                    if(unfinished[i] != null)
+                    {
+                        unfinished[i].Finish(_featureCollection);
+                        if(unfinished[i].IsComplete)
+                        {
+                            numberFinished++;
+                            unfinished[i] = null;
+                        }
+                    }
+                }
+                if(unfinished.All(f => f == null))
+                {
+                    //Completed!!
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Cannot make any forward progress iterating the finish phase of setup");
         }
 
         public IEnumerator<PathBlock> GetEnumerator() => _blockset.GetEnumerator();

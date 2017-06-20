@@ -44,7 +44,7 @@ namespace Qwack.MonteCarlo.Test
                 );
 
             engine.AddPathProcess(asset2);
-            var payoff = new Put("TestAsset2", 500, DateTime.Now.Date.AddYears(1));
+            var payoff = new EuropeanPut("TestAsset2", 500, DateTime.Now.Date.AddYears(1));
             engine.AddPathProcess(payoff);
             engine.SetupFeatures();
             engine.RunProcess();

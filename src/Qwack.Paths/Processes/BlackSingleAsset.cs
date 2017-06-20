@@ -77,9 +77,9 @@ namespace Qwack.Paths.Processes
             for (var t = 1; t < _drifts.Length; t++)
             {
                 var spot = _forwardCurve(_timesteps.Times[t]);
-                _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
                 _vols[t] = _surface.GetForwardATMVol(_timesteps.Times[t - 1], _timesteps.Times[t]);
                 _vols[t] *= System.Math.Sqrt(_timesteps.TimeSteps[t]);
+                _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
                 prevSpot = spot;
             }
         }

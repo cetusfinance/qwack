@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using System.Linq;
 using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class Put : IPathProcess, IFeatureRequiresFinish
+    public class EuropeanPut : IPathProcess, IFeatureRequiresFinish
     {
         private DateTime _expiry;
         private double _strike;
@@ -15,7 +16,7 @@ namespace Qwack.Paths.Payoffs
         private int _expiryIndex;
         private List<Vector<double>> _results = new List<Vector<double>>();
 
-        public Put(string assetName, double strike, DateTime expiry)
+        public EuropeanPut(string assetName, double strike, DateTime expiry)
         {
             _expiry = expiry;
             _strike = strike;
@@ -47,5 +48,14 @@ namespace Qwack.Paths.Payoffs
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDate(_expiry);
         }
+
+        public double AverageResult { get {
+                return _results.Select(x =>
+                {
+                    var vec = new double[Vector<double>.Count];
+                    x.CopyTo(vec);
+                    return vec.Average();
+                }).Average();
+            } }
     }
 }

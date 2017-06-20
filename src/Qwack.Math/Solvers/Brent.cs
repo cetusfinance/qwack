@@ -12,17 +12,17 @@ namespace Qwack.Math.Solvers
     {
         public static double BrentsMethodSolve(Func<double, double> function, double lowerLimit, double upperLimit, double errorTol)
         {
-            double a = lowerLimit;
-            double b = upperLimit;
-            double c = 0;
-            double d = double.MaxValue;
+            var a = lowerLimit;
+            var b = upperLimit;
+            var c = 0.0;
+            var d = double.MaxValue;
 
-            double fa = function(a);
-            double fb = function(b);
+            var fa = function(a);
+            var fb = function(b);
 
-            double fc = 0;
-            double s = 0;
-            double fs = 0;
+            var fc = 0.0;
+            var s = 0.0;
+            var fs = 0.0;
 
             // if f(a) f(b) >= 0 then error-exit
             if (fa * fb >= 0)
@@ -35,12 +35,12 @@ namespace Qwack.Math.Solvers
 
             // if |f(a)| < |f(b)| then swap (a,b) end if
             if (System.Math.Abs(fa) < System.Math.Abs(fb))
-            { double tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
+            { var tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
 
             c = a;
             fc = fa;
-            bool mflag = true;
-            int i = 0;
+            var mflag = true;
+            var i = 0;
 
             while (fb != 0 && (System.Math.Abs(a - b) > errorTol))
             {
@@ -51,7 +51,7 @@ namespace Qwack.Math.Solvers
                     // Secant Rule
                     s = b - fb * (b - a) / (fb - fa);
 
-                double tmp2 = (3 * a + b) / 4;
+                var tmp2 = (3 * a + b) / 4;
                 if ((!(((s > tmp2) && (s < b)) || ((s < tmp2) && (s > b)))) || (mflag && (System.Math.Abs(s - b) >= (System.Math.Abs(b - c) / 2))) || (!mflag && (System.Math.Abs(s - b) >= (System.Math.Abs(c - d) / 2))))
                 {
                     s = (a + b) / 2;
@@ -76,7 +76,7 @@ namespace Qwack.Math.Solvers
 
                 // if |f(a)| < |f(b)| then swap (a,b) end if
                 if (System.Math.Abs(fa) < System.Math.Abs(fb))
-                { double tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
+                { var tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
                 i++;
                 if (i > 1000)
                     throw new Exception($"Error is {fb}");

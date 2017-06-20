@@ -14,20 +14,20 @@ namespace Qwack.Options
     {
         public static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
-            double cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
+            var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
 
-            double d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            double d2 = d1 - volatility * Sqrt(expTime);
+            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
+            var d2 = d1 - volatility * Sqrt(expTime);
 
-            double num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
-            double num3 = num2 - (volatility * Sqrt(expTime));
+            var num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
+            var num3 = num2 - (volatility * Sqrt(expTime));
             return (Exp(-riskFreeRate * expTime) * (((cpf * forward) * Statistics.NormSDist(num2 * cpf)) - ((cpf * strike) * Statistics.NormSDist(num3 * cpf))));
         }
 
         public static double BlackVega(double forward, double strike, double riskFreeRate, double expTime, double volatility)
         {
-            double d = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
-            double num5 = Exp(-riskFreeRate * expTime);
+            var d = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
+            var num5 = Exp(-riskFreeRate * expTime);
             return (((forward * num5) * Statistics.Phi(d)) * Sqrt(expTime)) / 100.0;
         }
         
@@ -60,7 +60,7 @@ namespace Qwack.Options
 
         public static double[] BlackDerivs(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
-            double[] output = new double[3];
+            var output = new double[3];
             double d1, d2, DF;
 
             DF = Exp(-riskFreeRate * expTime);
@@ -86,8 +86,8 @@ namespace Qwack.Options
         public static double AbsoluteStrikefromDeltaKAnalytic(double forward, double delta, double riskFreeRate, double expTime, double volatility)
         {
             double psi = Sign(delta);
-            double sqrtT = Sqrt(expTime);
-            double q = Statistics.NormInv(psi * delta);
+            var sqrtT = Sqrt(expTime);
+            var q = Statistics.NormInv(psi * delta);
             return forward * Exp(-psi * volatility * sqrtT * q + 0.5 * Pow(volatility, 2) * expTime);
         }
 

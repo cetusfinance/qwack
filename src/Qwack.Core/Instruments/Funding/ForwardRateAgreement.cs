@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
         {
-            string[] code = fraCode.ToUpper().Split('X');
+            var code = fraCode.ToUpper().Split('X');
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
             ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
             EndDate = new TenorDateRelative(rateIndex.ResetTenor);
@@ -54,8 +54,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(FundingModel model, bool updateState)
         {
-            bool updateDF = updateState || model.CurrentSolveCurve == DiscountCurve;
-            bool updateEst = updateState || model.CurrentSolveCurve == ForecastCurve;
+            var updateDF = updateState || model.CurrentSolveCurve == DiscountCurve;
+            var updateEst = updateState || model.CurrentSolveCurve == ForecastCurve;
             return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDF, updateEst);
         }
 
@@ -73,15 +73,15 @@ namespace Qwack.Core.Instruments.Funding
 
             var flow = FlowScheduleFra.Flows.Single();
 
-            DateTime s = flow.AccrualPeriodStart;
-            DateTime e = flow.AccrualPeriodEnd;
+            var s = flow.AccrualPeriodStart;
+            var e = flow.AccrualPeriodEnd;
 
             double FV, DF;
             if (updateEstimate)
             {
-                double RateFix = flow.FixedRateOrMargin;
-                double RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
-                double YF = flow.NotionalByYearFraction;
+                var RateFix = flow.FixedRateOrMargin;
+                var RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
+                var YF = flow.NotionalByYearFraction;
                 FV = ((RateFloat - RateFix) * YF) / (1 + RateFloat * YF) * flow.Notional;
 
                 FV *= (PayRec == SwapPayReceiveType.Payer) ? 1.0 : -1.0;
@@ -108,7 +108,7 @@ namespace Qwack.Core.Instruments.Funding
             var discountDict = new Dictionary<DateTime, double>();
             var discountCurve = model.Curves[DiscountCurve];
             var flow = FlowScheduleFra.Flows.Single();
-            double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
+            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
 
             discountDict.Add(flow.SettleDate, -t * flow.Pv);
 
@@ -116,14 +116,14 @@ namespace Qwack.Core.Instruments.Funding
             //then forecast
             var forecastDict = (ForecastCurve == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
             var forecastCurve = model.Curves[ForecastCurve];
-            DateTime s = flow.AccrualPeriodStart;
-            DateTime e = flow.AccrualPeriodEnd;
-            double RateFix = flow.FixedRateOrMargin;
-            double RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
+            var s = flow.AccrualPeriodStart;
+            var e = flow.AccrualPeriodEnd;
+            var RateFix = flow.FixedRateOrMargin;
+            var RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
 
             var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
-            double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
-            double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+            var ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+            var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
 
             //https://www.mathsisfun.com/calculus/derivatives-rules.html quotient rule
             var f = (RateFloat - RateFix) * flow.NotionalByYearFraction * flow.Notional * df;

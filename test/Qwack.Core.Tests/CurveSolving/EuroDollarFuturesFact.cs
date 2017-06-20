@@ -25,15 +25,15 @@ namespace Qwack.Core.Tests.CurveSolving
         public void FuturesStripNoConvexity()
         {
             var startDate = new DateTime(2017, 01, 17);
-            int nContracts = 24;
+            var nContracts = 24;
             var currentDate = startDate.GetNextImmDate();
             var expiries = new DateTime[nContracts];
             var pillars = new DateTime[nContracts];
             var instruments = new IFundingInstrument[nContracts];
 
-            Calendar nyc = CalendarProvider.Collection["NYC"];
-            Calendar lon = CalendarProvider.Collection["LON"];
-            Currency ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
+            var nyc = CalendarProvider.Collection["NYC"];
+            var lon = CalendarProvider.Collection["LON"];
+            var ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
 
             var usd3m = new FloatRateIndex()
             {
@@ -46,7 +46,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 RollConvention = RollType.MF
             };
 
-            for (int i=0;i<nContracts;i++)
+            for (var i =0;i<nContracts;i++)
             {
                 var wed3rd = currentDate.ThirdWednesday();
                 expiries[i] = wed3rd.SubtractPeriod(RollType.P, lon, 2.Bd());
@@ -76,7 +76,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
             s.Solve(model, fic);
 
-            for (int i = 0; i < nContracts; i++)
+            for (var i = 0; i < nContracts; i++)
             {
                 var resultPV = instruments[i].Pv(model, false);
                 Assert.Equal(0, resultPV, 6);
@@ -89,15 +89,15 @@ namespace Qwack.Core.Tests.CurveSolving
             var volatility = 0.03;
 
             var startDate = new DateTime(2017, 01, 17);
-            int nContracts = 24;
+            var nContracts = 24;
             var currentDate = startDate.GetNextImmDate();
             var expiries = new DateTime[nContracts];
             var pillars = new DateTime[nContracts];
             var instruments = new IFundingInstrument[nContracts];
 
-            Calendar nyc = CalendarProvider.Collection["NYC"];
-            Calendar lon = CalendarProvider.Collection["LON"];
-            Currency ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
+            var nyc = CalendarProvider.Collection["NYC"];
+            var lon = CalendarProvider.Collection["LON"];
+            var ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
 
             var usd3m = new FloatRateIndex()
             {
@@ -110,7 +110,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 RollConvention = RollType.MF
             };
 
-            for (int i = 0; i < nContracts; i++)
+            for (var i = 0; i < nContracts; i++)
             {
                 var wed3rd = currentDate.ThirdWednesday();
                 expiries[i] = wed3rd.SubtractPeriod(RollType.P, lon, 2.Bd());
@@ -141,7 +141,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
             s.Solve(model, fic);
 
-            for (int i = 0; i < nContracts; i++)
+            for (var i = 0; i < nContracts; i++)
             {
                 var resultPV = instruments[i].Pv(model, false);
                 Assert.Equal(0, resultPV, 6);

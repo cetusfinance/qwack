@@ -23,7 +23,7 @@ namespace Qwack.Core.Calibrators
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<ICurve>();
             var fundingInstruments = new List<IFundingInstrument>();
-            for (int stage = 0; stage <= maxStage; stage++)
+            for (var stage = 0; stage <= maxStage; stage++)
             {
                 curvesForStage.Clear();
                 fundingInstruments.Clear();
@@ -46,7 +46,7 @@ namespace Qwack.Core.Calibrators
                 var bumpedPvs = new double[fundingInstruments.Count];
                 _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
 
-                for (int i = 0; i < MaxItterations; i++)
+                for (var i = 0; i < MaxItterations; i++)
                 {
                     ComputePVs(true, fundingInstruments, fundingModel, _currentPvs);
                     if (_currentPvs.Max(x => System.Math.Abs(x)) < Tollerance)
@@ -68,7 +68,7 @@ namespace Qwack.Core.Calibrators
             var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, jacobianMi);
             var curveIx = 0;
             var pillarIx = 0;
-            for (int j = 0; j < numberOfInstruments; j++)
+            for (var j = 0; j < numberOfInstruments; j++)
             {
                 var curve = curvesForStage[curveIx];
                 currentGuess[j] -= deltaGuess[j];
@@ -85,9 +85,9 @@ namespace Qwack.Core.Calibrators
 
         private void ComputeJacobian(List<IFundingInstrument> instruments, FundingModel model, List<ICurve> curvesForStage, double[] currentGuess, double[] bumpedPvs)
         {
-            int curveIx = 0;
-            int pillarIx = 0;
-            for (int i = 0; i < instruments.Count; i++)
+            var curveIx = 0;
+            var pillarIx = 0;
+            for (var i = 0; i < instruments.Count; i++)
             {
                 var currentCurve = curvesForStage[curveIx];
                 model.CurrentSolveCurve = currentCurve.Name;
@@ -96,7 +96,7 @@ namespace Qwack.Core.Calibrators
                 ComputePVs(false, instruments, model, bumpedPvs);
                 currentCurve.BumpRate(pillarIx, -JacobianBump, true);
 
-                for (int j = 0; j < bumpedPvs.Length; j++)
+                for (var j = 0; j < bumpedPvs.Length; j++)
                 {
                     _jacobian[i][j] = (bumpedPvs[j] - _currentPvs[j]) / JacobianBump;
                 }
@@ -113,7 +113,7 @@ namespace Qwack.Core.Calibrators
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputePVs(bool updateState, List<IFundingInstrument> instruments, FundingModel model, double[] currentPvs)
         {
-            for (int i = 0; i < currentPvs.Length; i++)
+            for (var i = 0; i < currentPvs.Length; i++)
             {
                 currentPvs[i] = instruments[i].Pv(model, updateState);
             }

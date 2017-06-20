@@ -160,7 +160,7 @@ namespace Qwack.Core.Instruments.Funding
             var discountCurve = model.Curves[DiscountCurve];
             foreach (var flow in FlowScheduleFloat.Flows.Union(FlowScheduleFixed.Flows))
             {
-                double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
+                var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
                 if (discountDict.ContainsKey(flow.SettleDate))
                     discountDict[flow.SettleDate] += -t * flow.Pv;
                 else
@@ -174,10 +174,10 @@ namespace Qwack.Core.Instruments.Funding
             foreach (var flow in FlowScheduleFloat.Flows)
             {
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
-                double RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
 
-                double ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
-                double te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
+                var ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
+                var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
                 var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
                 var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
                 var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));

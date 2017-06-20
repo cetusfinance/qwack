@@ -24,9 +24,9 @@ namespace Qwack.Core.Instruments.Funding
         public double Pv(FundingModel Model, bool updateState)
         {
             var discountCurve = Model.Curves[ForeignDiscountCurve];
-            double fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
-            double FV = (fwdRate - Strike) * DomesticQuantity;
-            double PV = discountCurve.Pv(FV, DeliveryDate);
+            var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
+            var FV = (fwdRate - Strike) * DomesticQuantity;
+            var PV = discountCurve.Pv(FV, DeliveryDate);
 
             return PV;
         }
@@ -41,9 +41,9 @@ namespace Qwack.Core.Instruments.Funding
             var foreignCurve = model.FxMatrix.DiscountCurveMap[ForeignCCY];
             var domesticCurve = model.FxMatrix.DiscountCurveMap[DomesticCCY];
             var discountCurve = model.Curves[ForeignDiscountCurve];
-            double df = discountCurve.Pv(1.0, DeliveryDate);
-            double t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, DeliveryDate);
-            double fwdRate = model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
+            var df = discountCurve.Pv(1.0, DeliveryDate);
+            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, DeliveryDate);
+            var fwdRate = model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
 
             var domesticDict = new Dictionary<DateTime, double>() { { DeliveryDate, fwdRate * DomesticQuantity * df * t } };
 

@@ -44,16 +44,16 @@ namespace Qwack.Options
 
         public static double VanillaPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n, bool isAmerican)
         {
-            double deltaT = T / (double)n;
-            double up = System.Math.Exp(sigma * System.Math.Sqrt(deltaT));
-            double p0 = (up * System.Math.Exp(-r * deltaT) - System.Math.Exp(-q * deltaT)) * up / (System.Math.Pow(up, 2) - 1);
-            double p1 = System.Math.Exp(-r * deltaT) - p0;
+            var deltaT = T / (double)n;
+            var up = System.Math.Exp(sigma * System.Math.Sqrt(deltaT));
+            var p0 = (up * System.Math.Exp(-r * deltaT) - System.Math.Exp(-q * deltaT)) * up / (System.Math.Pow(up, 2) - 1);
+            var p1 = System.Math.Exp(-r * deltaT) - p0;
 
-            double[] p = new double[n + 1];
+            var p = new double[n + 1];
             double exercise, spot;
 
             //initial values at time T
-            for (int i = 0; i <= n; i++)
+            for (var i = 0; i <= n; i++)
             {
                 spot = S * System.Math.Pow(up, 2 * i - n);
 
@@ -67,9 +67,9 @@ namespace Qwack.Options
             }
 
             //move back to earlier times
-            for (int j = n - 1; j >= 0; j--)
+            for (var j = n - 1; j >= 0; j--)
             {
-                for (int i = 0; i <= j; i++)
+                for (var i = 0; i <= j; i++)
                 {
                     spot = S * System.Math.Pow(up, 2 * i - j);
                     p[i] = p0 * p[i] + p1 * p[i + 1]; //binomial value
@@ -93,13 +93,13 @@ namespace Qwack.Options
 
         public static double AmericanFutureOptionPV(double forward, double strike, double RiskFree, double expTime, double Volatility, OptionType CP)
         {
-            int n = (int)System.Math.Round(365 * expTime);
-            double blackPV = BlackFunctions.BlackPV(forward, strike, RiskFree, expTime, Volatility, CP);
+            var n = (int)System.Math.Round(365 * expTime);
+            var blackPV = BlackFunctions.BlackPV(forward, strike, RiskFree, expTime, Volatility, CP);
 
             if (RiskFree == 0) //american option under zero rates has no benefit to ever exercise early
                 return blackPV;
 
-            double PV = AmericanPV(expTime, forward, strike, RiskFree, Volatility, CP, RiskFree, n);
+            var PV = AmericanPV(expTime, forward, strike, RiskFree, Volatility, CP, RiskFree, n);
 
 
             return PV.SafeMax(blackPV);
@@ -107,10 +107,10 @@ namespace Qwack.Options
 
         public static object[,] AmericanFutureOption(double forward, double strike, double RiskFree, double expTime, double Volatility, OptionType CP)
         {
-            object[,] objArray = new object[5, 2];
+            var objArray = new object[5, 2];
 
-            double deltaBump = 0.0001;
-            double vegaBump = 0.0001;
+            var deltaBump = 0.0001;
+            var vegaBump = 0.0001;
 
             double PV, PVbumped, PVbumped2;
             double delta, deltaBumped, gamma, vega, theta;

@@ -117,7 +117,7 @@ namespace Qwack.Dates
                         double nIntermediateYears = endDate.Year - startDate.Year - 1;
 
                         var eoYe = new DateTime(endDate.Year, 12, 31);
-                        double e = endDate.DayOfYear / (double)eoYe.DayOfYear;
+                        var e = endDate.DayOfYear / (double)eoYe.DayOfYear;
 
                         var eoYs = new DateTime(startDate.Year, 12, 31);
                         var s = (eoYs - startDate).TotalDays / eoYs.DayOfYear;
@@ -134,7 +134,7 @@ namespace Qwack.Dates
                     double d2E = Math.Min(endDate.Day, 30);
                     double ydiffE = endDate.Year - startDate.Year;
                     double mdiffE = endDate.Month - startDate.Month;
-                    double ddiffE = d2E - d1E;
+                    var ddiffE = d2E - d1E;
                     return (ydiffE * 360 + mdiffE * 30 + ddiffE) / 360;
                 case DayCountBasis.Bus252:
                     return startDate.BusinessDaysInPeriod(endDate.AddDays(-1), calendar).Count / 252.0;
@@ -396,8 +396,8 @@ namespace Qwack.Dates
             if (datePeriod.PeriodType == DatePeriodType.B)
             {
                 //Business day jumping so we need to do something different
-                DateTime d = date;
-                for (int i = 0; i < datePeriod.PeriodCount; i++)
+                var d = date;
+                for (var i = 0; i < datePeriod.PeriodCount; i++)
                 {
                     d = d.AddDays(1);
                     d = IfHolidayRoll(d, rollType, calendar);
@@ -455,8 +455,8 @@ namespace Qwack.Dates
             if (datePeriod.PeriodType == DatePeriodType.B)
             {
                 //Business day jumping so we need to do something different
-                DateTime d = date;
-                for (int i = 0; i < datePeriod.PeriodCount; i++)
+                var d = date;
+                for (var i = 0; i < datePeriod.PeriodCount; i++)
                 {
                     d = d.AddDays(-1);
                     d = IfHolidayRoll(d, rollType, calendar);

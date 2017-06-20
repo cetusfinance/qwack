@@ -10,8 +10,8 @@ namespace Qwack.Math.Utils
     {
         public static double CalculateConvexityAdjustment(DateTime valDate, DateTime futureExpiry, DateTime underlyingDepoExpiry, double volatility, DayCountBasis basis = DayCountBasis.Act_365F)
         {
-            double t1 = basis.CalculateYearFraction(valDate, futureExpiry);
-            double t2 = basis.CalculateYearFraction(valDate, underlyingDepoExpiry);
+            var t1 = basis.CalculateYearFraction(valDate, futureExpiry);
+            var t2 = basis.CalculateYearFraction(valDate, underlyingDepoExpiry);
             return volatility * volatility * t1 * t2 / 2.0;
         }
 

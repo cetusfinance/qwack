@@ -18,20 +18,20 @@ namespace Qwack.Options
     {
         public static double LMEBlackPV(double forward, double strike, double discountingRate, double expiryTime, double deliveryTime, double volatility, OptionType CP)
         {
-            double cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
+            var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
+            
+            var d1 = (Log(forward / strike) + (expiryTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expiryTime));
+            var d2 = d1 - volatility * Sqrt(expiryTime);
 
-            double d1 = (Log(forward / strike) + (expiryTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expiryTime));
-            double d2 = d1 - volatility * Sqrt(expiryTime);
-
-            double num2 = (Log(forward / strike) + ((expiryTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expiryTime));
-            double num3 = num2 - (volatility * Sqrt(expiryTime));
+            var num2 = (Log(forward / strike) + ((expiryTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expiryTime));
+            var num3 = num2 - (volatility * Sqrt(expiryTime));
             return (Exp(-discountingRate * deliveryTime) * (((cpf * forward) * Statistics.NormSDist(num2 * cpf)) - ((cpf * strike) * Statistics.NormSDist(num3 * cpf))));
         }
 
         public static double LMEBlackVega(double forward, double strike, double discountingRate, double expiryTime, double deliveryTime, double volatility)
         {
-            double d = (Log(forward / strike) + ((expiryTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expiryTime));
-            double num5 = Exp(-discountingRate * deliveryTime);
+            var d = (Log(forward / strike) + ((expiryTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expiryTime));
+            var num5 = Exp(-discountingRate * deliveryTime);
             return (((forward * num5) * Statistics.Phi(d)) * Sqrt(expiryTime)) / 100.0;
         }
         
@@ -63,8 +63,8 @@ namespace Qwack.Options
         public static double AbsoluteStrikefromDeltaKAnalytic(double forward, double delta, double expiryTime, double volatility)
         {
             double psi = Sign(delta);
-            double sqrtT = Sqrt(expiryTime);
-            double q = Statistics.NormInv(psi * delta);
+            var sqrtT = Sqrt(expiryTime);
+            var q = Statistics.NormInv(psi * delta);
             return forward * Exp(-psi * volatility * sqrtT * q + 0.5 * Pow(volatility, 2) * expiryTime);
         }
 

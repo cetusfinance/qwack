@@ -25,13 +25,13 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(FundingModel Model, bool updateState)
         {
-            DateTime rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
-            DateTime rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
+            var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
+            var rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
             var forecastCurve = Model.Curves[ForecastCurve];
-            double fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
+            var fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
 
-            double fairPrice = 100.0 - (fwdRate + ConvexityAdjustment) * 100.0;
-            double PV = (Price - fairPrice) * Position * ContractSize * DCF;
+            var fairPrice = 100.0 - (fwdRate + ConvexityAdjustment) * 100.0;
+            var PV = (Price - fairPrice) * Position * ContractSize * DCF;
 
             return PV;
         }
@@ -47,12 +47,12 @@ namespace Qwack.Core.Instruments.Funding
             var forecastDict =  new Dictionary<DateTime, double>();
             var forecastCurve = model.Curves[ForecastCurve];
 
-            DateTime rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
-            DateTime rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
+            var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
+            var rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
 
-            double ts = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateStart);
-            double te = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateEnd);
-            double fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
+            var ts = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateStart);
+            var te = forecastCurve.Basis.CalculateYearFraction(forecastCurve.BuildDate, rateEnd);
+            var fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
             var dPVdR = -100.0;
             var dPVdS = dPVdR * (-ts * (fwdRate + 1.0 / DCF));
             var dPVdE = dPVdR * (te * (fwdRate + 1.0 / DCF));

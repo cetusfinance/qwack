@@ -59,7 +59,7 @@ namespace Qwack.Dates.Tests
 
         public static IEnumerable<object> GetUSExclusiveHolidays()
         {
-            List<object> holidays = new List<object>()
+            var holidays = new List<object>()
             {
                 new object[] { new DateTime(2016,07,04) }
             };

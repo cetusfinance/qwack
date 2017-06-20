@@ -18,8 +18,8 @@ namespace Qwack.Math.Solvers
         /// <returns></returns>
         public static double MethodSolve(Func<double, double> function, double initialGuess, double errorTol, int maxItterations = 1000, double bump = 1e-6)
         {
-            double x = initialGuess;
-            int itteration = 0;
+            var x = initialGuess;
+            var itteration = 0;
 
             while (itteration < maxItterations && System.Math.Abs(function(x)) > errorTol)
             {
@@ -43,8 +43,8 @@ namespace Qwack.Math.Solvers
         /// <returns></returns>
         public static double MethodSolve(Func<double, double> function, Func<double, double> derivativeFunction, double initialGuess, double errorTol, int maxItterations = 1000)
         {
-            double x = initialGuess;
-            int itteration = 0;
+            var x = initialGuess;
+            var itteration = 0;
 
             while (itteration < maxItterations && System.Math.Abs(function(x)) > errorTol)
             {

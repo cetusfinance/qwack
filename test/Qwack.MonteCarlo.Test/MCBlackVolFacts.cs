@@ -8,6 +8,7 @@ using Qwack.Paths.Output;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Options.VolSurfaces;
+using Qwack.Math.Extensions;
 using Xunit;
 
 namespace Qwack.MonteCarlo.Test
@@ -18,7 +19,7 @@ namespace Qwack.MonteCarlo.Test
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2 << 8);
+            var engine = new PathEngine(2.IntPow(16));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true
@@ -41,8 +42,8 @@ namespace Qwack.MonteCarlo.Test
             engine.RunProcess();
 
 
-            var output = new OutputPathsToImage(engine,2000,1000);
-
+            //var output = new OutputPathsToImage(engine,2000,1000);
+            
         }
     }
 }

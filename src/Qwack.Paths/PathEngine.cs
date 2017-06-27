@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Paths.Features;
+using Qwack.Paths.Features.Rates;
 
 namespace Qwack.Paths
 {
@@ -22,6 +23,7 @@ namespace Qwack.Paths
             _numberOfPaths = numberOfPaths;
             _featureCollection.AddFeature<IPathMappingFeature>(new PathMappingFeature());
             _featureCollection.AddFeature<ITimeStepsFeature>(new TimeStepsFeature());
+            _featureCollection.AddFeature<IRatesFeature>(new RatesCollection());
             _featureCollection.AddFeature<IEngineFeature>(this);
         }
 

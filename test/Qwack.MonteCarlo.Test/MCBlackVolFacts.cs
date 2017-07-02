@@ -20,7 +20,7 @@ namespace Qwack.MonteCarlo.Test
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(8));
+            var engine = new PathEngine(2.IntPow(17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true
@@ -33,7 +33,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddYears(1),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps: 250,
+                    nTimeSteps:365,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);
@@ -45,9 +45,9 @@ namespace Qwack.MonteCarlo.Test
             engine.RunProcess();
             var pv = payoff.AverageResult;
             var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, 0.32, OptionType.P);
-            //Assert.Equal(blackPv, pv, 1);
+            Assert.Equal(blackPv, pv, 0);
             var fwd = payoff2.AverageResult;
-            //Assert.Equal(fwdCurve(1), fwd, 2);
+            Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
             //var output = new OutputPathsToImage(engine,2000,1000);
 
         }

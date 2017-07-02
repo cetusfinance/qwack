@@ -50,8 +50,11 @@ namespace Qwack.Paths.Processes
             for (var t = 1; t < _drifts.Length; t++)
             {
                 var spot = _forwardCurve(_timesteps.Times[t]);
-                _vols[t] = _surface.GetForwardATMVol(_timesteps.Times[t - 1], _timesteps.Times[t]);
-                _vols[t] *= System.Math.Sqrt(_timesteps.TimeSteps[t]);
+                var varStart = System.Math.Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
+                var varEnd = System.Math.Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t]), 2) * _timesteps.Times[t];
+                var fwdVariance = (varEnd - varStart);
+                _vols[t] = System.Math.Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
+                //_vols[t] *= _timesteps.TimeStepsSqrt[t];
                 _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
                 prevSpot = spot;
             }
@@ -68,10 +71,14 @@ namespace Qwack.Paths.Processes
                 steps[0] = previousStep;
                 for (var step = 1; step < block.NumberOfSteps; step++)
                 {
-                    var drift = _drifts[step] * _timesteps.TimeSteps[step] * previousStep;
-                    var delta = _vols[step] * steps[step] * previousStep;
-
-                    previousStep = (previousStep + drift + delta);
+                    var W = steps[step];// * _timesteps.TimeStepsSqrt[step];
+                    var nextStep = new double[Vector<double>.Count];
+                    for (var i = 0; i < nextStep.Length; i++)
+                    {
+                        var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * _timesteps.TimeSteps[step] + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W[i]);
+                        nextStep[i] = previousStep[i] * System.Math.Exp(bm);
+                    }
+                    previousStep = new Vector<double>(nextStep);
                     steps[step] = previousStep;
                 }
             }

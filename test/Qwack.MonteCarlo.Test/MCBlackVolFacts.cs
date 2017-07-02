@@ -23,7 +23,8 @@ namespace Qwack.MonteCarlo.Test
             var engine = new PathEngine(2.IntPow(17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
-                 UseNormalInverse = true
+                 UseNormalInverse = true,
+                 UseAnthithetic = false
             });
             var volSurface = new ConstantVolSurface(origin, 0.32);
             var fwdCurve = new Func<double, double>(t => { return 100 + 900*t; });

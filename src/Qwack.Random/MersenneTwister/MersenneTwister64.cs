@@ -60,7 +60,7 @@ namespace Qwack.Random.MersenneTwister
         }
 
         public bool UseNormalInverse { get; set; }
-
+        public bool UseAnthithetic { get; set; }
         /* generates a random number on [0, 2^64-1]-interval */
         public ulong GenerateInteger()
         {
@@ -103,16 +103,20 @@ namespace Qwack.Random.MersenneTwister
         {
             if (!UseNormalInverse)
             {
-                for (var i = 0; i < block.TotalBlockSize; i++)
+                for (var i = 0; i < block.TotalBlockSize; i = i + (UseAnthithetic ? 2 : 1))
                 {
                     block[i] = GenerateDouble();
+                    if (UseAnthithetic)
+                        block[i + 1] = 1.0 - block[i];
                 }
             }
             else
             {
-                for (var i = 0; i < block.TotalBlockSize; i++)
+                for (var i = 0; i < block.TotalBlockSize; i = i + (UseAnthithetic ? 2 : 1))
                 {
                     block[i] = Math.Statistics.NormInv(GenerateDouble());
+                    if (UseAnthithetic)
+                        block[i + 1] = -block[i];
                 }
             }
         }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Underlyings;
 using System.Numerics;
+using Qwack.Math.Extensions;
 
 namespace Qwack.Paths.Processes
 {
@@ -54,8 +55,8 @@ namespace Qwack.Paths.Processes
                 var varEnd = System.Math.Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t]), 2) * _timesteps.Times[t];
                 var fwdVariance = (varEnd - varStart);
                 _vols[t] = System.Math.Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
-                //_vols[t] *= _timesteps.TimeStepsSqrt[t];
                 _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
+    
                 prevSpot = spot;
             }
             _isComplete = true;
@@ -65,20 +66,15 @@ namespace Qwack.Paths.Processes
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                //This should be set to the spot price here
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 steps[0] = previousStep;
                 for (var step = 1; step < block.NumberOfSteps; step++)
                 {
-                    var W = steps[step];// * _timesteps.TimeStepsSqrt[step];
-                    var nextStep = new double[Vector<double>.Count];
-                    for (var i = 0; i < nextStep.Length; i++)
-                    {
-                        var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * _timesteps.TimeSteps[step] + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W[i]);
-                        nextStep[i] = previousStep[i] * System.Math.Exp(bm);
-                    }
-                    previousStep = new Vector<double>(nextStep);
+                    var W = steps[step];
+                    var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                    var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
+                    previousStep *= bm.Exp();
                     steps[step] = previousStep;
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace Qwack.Math.Extensions
@@ -16,6 +17,35 @@ namespace Qwack.Math.Extensions
                 max = System.Math.Max(input[i], max);
             }
             return (min, max);
+        }
+
+        public static Vector<double> Exp (this Vector<double> z)
+        {
+            var exp = new Vector<double>(1.0);
+            var facTotal = z;
+            for(var i=1;i<4;i++)
+            {
+                var fac = i.Factorial();
+                exp += facTotal / new Vector<double>(fac);
+                facTotal *= z;
+            }
+            return exp;
+        }
+
+        public static Vector<double> IntPow(this Vector<double> num, int exponent)
+        {
+
+            var result = new Vector<double>(1.0);
+            var exp = System.Math.Abs(exponent);
+            while (exp > 0)
+            {
+                if (exp % 2 == 1)
+                    result *= num;
+                exp >>= 1;
+                num *= num;
+            }
+
+            return (exponent > 0) ? result : (new Vector<double>(1.0)) / result;
         }
     }
 }

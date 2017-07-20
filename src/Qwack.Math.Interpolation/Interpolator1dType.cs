@@ -8,6 +8,7 @@
         LinearInVariance,
         FloaterHormannRational,
         LogLinear,
-        GaussianKernel
+        GaussianKernel,
+        DummyPoint
     }
 }

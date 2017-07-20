@@ -39,6 +39,8 @@ namespace Qwack.Math.Interpolation
                     return new LinearInVarianceInterpolator(x,y);
                 case Interpolator1DType.GaussianKernel:
                     return new GaussianKernelInterpolator(x, y);
+                case Interpolator1DType.DummyPoint:
+                    return new DummyPointInterpolator(y.First());
                 default:
                     throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,10 +26,7 @@ namespace Qwack.Dates
         public DatePeriodType PeriodType { get; set; }
         public int PeriodCount { get; set; }
 
-        public override string ToString()
-        {
-            return PeriodCount.ToString() + PeriodType.ToString();
-        }
+        public override string ToString() => PeriodCount.ToString() + PeriodType.ToString();
 
         private void SplitPeriod(string period)
         {
@@ -63,15 +60,9 @@ namespace Qwack.Dates
             PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
         }
 
-        public static bool operator ==(Frequency x, Frequency y)
-        {
-            return x.PeriodCount == y.PeriodCount && y.PeriodType == x.PeriodType;
-        }
+        public static bool operator ==(Frequency x, Frequency y) => x.PeriodCount == y.PeriodCount && y.PeriodType == x.PeriodType;
 
-        public static bool operator !=(Frequency x, Frequency y)
-        {
-            return !(x == y);
-        }
+        public static bool operator !=(Frequency x, Frequency y) => !(x == y);
 
         public override int GetHashCode()
         {

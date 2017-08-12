@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
@@ -147,10 +147,7 @@ namespace Qwack.Core.Instruments.Funding
             return totalPv;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model)
-        {
-            throw new NotImplementedException();
-        }
+        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
 
         //assumes zero cc rates for now
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)

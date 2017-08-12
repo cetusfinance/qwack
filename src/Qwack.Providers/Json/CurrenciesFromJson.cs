@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,14 +9,8 @@ namespace Qwack.Providers.Json
 {
     public class CurrenciesFromJson : ICurrencyProvider
     {
-        public static CurrenciesFromJson Parse(string jsonString, ICalendarProvider calendarProvider)
-        {
-            throw new NotImplementedException();
-        }
+        public static CurrenciesFromJson Parse(string jsonString, ICalendarProvider calendarProvider) => throw new NotImplementedException();
 
-        public static CurrenciesFromJson Load(string filename, ICalendarProvider calendarProvider)
-        {
-            return Parse(System.IO.File.ReadAllText(filename), calendarProvider);
-        }
+        public static CurrenciesFromJson Load(string filename, ICalendarProvider calendarProvider) => Parse(System.IO.File.ReadAllText(filename), calendarProvider);
     }
 }

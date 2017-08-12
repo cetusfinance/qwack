@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,10 +15,7 @@ namespace Qwack.Options.VolSurfaces
 
         public ConstantVolSurface()         {        }
 
-        public ConstantVolSurface(DateTime originDate, double volatility)
-        {
-            Build(originDate, volatility);
-        }
+        public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);
 
         public void Build(DateTime originDate, double volatility)
         {
@@ -26,39 +23,18 @@ namespace Qwack.Options.VolSurfaces
             Volatility = volatility;
         }
 
-        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
-        {
-            return Volatility;
-        }
+        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward) => Volatility;
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward)
-        {
-            return Volatility;
-        }
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => Volatility;
 
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
-        {
-            return Volatility;
-        }
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => Volatility;
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward)
-        {
-            return Volatility;
-        }
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => Volatility;
 
-        public double GetFwdATMVol(DateTime startDate, DateTime endDate)
-        {
-            return Volatility;
-        }
+        public double GetFwdATMVol(DateTime startDate, DateTime endDate) => Volatility;
 
-        public double GetForwardATMVol(DateTime startDate, DateTime endDate)
-        {
-            return Volatility;
-        }
+        public double GetForwardATMVol(DateTime startDate, DateTime endDate) => Volatility;
 
-        public double GetForwardATMVol(double start, double end)
-        {
-            return Volatility;
-        }
+        public double GetForwardATMVol(double start, double end) => Volatility;
     }
 }

@@ -1,4 +1,4 @@
-﻿using Qwack.Math.Extensions;
+using Qwack.Math.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,24 +11,11 @@ namespace Qwack.Math
     /// </summary>
     public class Statistics
     {
-        public static double CumulativeNormalDistribution(double d)
-        {
-            return FiNormSDist(d);
-        }
-        public static double ProbabilityDensityFunction(double z)
-        {
-            return StandardNormalDistribution(z);
-        }
-        public static double StandardNormalDistribution(double x)
-        {
+        public static double CumulativeNormalDistribution(double d) => FiNormSDist(d);
+        public static double ProbabilityDensityFunction(double z) => StandardNormalDistribution(z);
+        public static double StandardNormalDistribution(double x) => System.Math.Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
 
-            return System.Math.Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
-        }
-
-        public static double NormInv(double p)
-        {
-            return NormInv(p, 0.0, 1.0);
-        }
+        public static double NormInv(double p) => NormInv(p, 0.0, 1.0);
 
         public static double NormInv(double p, double mu, double sigma)
         {
@@ -43,11 +30,11 @@ namespace Qwack.Math
 
             if (p == 0)
             {
-                return Double.NegativeInfinity;
+                return double.NegativeInfinity;
             }
             if (p == 1)
             {
-                return Double.PositiveInfinity;
+                return double.PositiveInfinity;
             }
             if (sigma == 0)
             {
@@ -132,11 +119,8 @@ namespace Qwack.Math
 
             return mu + sigma * val;
         }
-        public static double BivariateNormalDistribution(double x, double y, double rho)
-        {
-            return System.Math.Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
+        public static double BivariateNormalDistribution(double x, double y, double rho) => System.Math.Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
                 (2 * System.Math.PI * System.Math.Sqrt(1 - rho * rho));
-        }
 
         /// <summary>
         /// Returns sample variance of an array of values
@@ -145,13 +129,13 @@ namespace Qwack.Math
         /// <returns></returns>
         public static double Variance(double[] x)
         {
-            double xAvg = x.Average();
-            int n = x.Length;
-            double v = 0;
+            var xAvg = x.Average();
+            var n = x.Length;
+            var v = 0.0;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
-                double v1 = x[i] - xAvg;
+                var v1 = x[i] - xAvg;
                 v += (v1 * v1);
             }
             return v / (n - 1);
@@ -164,16 +148,16 @@ namespace Qwack.Math
         /// <returns></returns>
         public static double Skewness(double[] x)
         {
-            double xAvg = x.Average();
+            var xAvg = x.Average();
 
-            int n = x.Length;
+            var n = x.Length;
             double m2 = 0;
             double m3 = 0;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
-                double v1 = x[i] - xAvg;
-                double v2 = v1 * v1;
+                var v1 = x[i] - xAvg;
+                var v2 = v1 * v1;
                 m2 += v2;
                 m3 += v2 * v1;
             }
@@ -191,16 +175,16 @@ namespace Qwack.Math
         /// <returns></returns>
         public static double StandardizedMoment(double[] x, int order)
         {
-            double xAvg = x.Average();
+            var xAvg = x.Average();
 
-            int n = x.Length;
-            double m2 = 0;
-            double mO = 0;
+            var n = x.Length;
+            var m2 = 0.0;
+            var mO = 0.0;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
-                double v1 = x[i] - xAvg;
-                double v2 = v1 * v1;
+                var v1 = x[i] - xAvg;
+                var v2 = v1 * v1;
                 m2 += v2;
                 mO += System.Math.Pow(v1, order);
             }
@@ -217,38 +201,31 @@ namespace Qwack.Math
         /// <returns></returns>
         public static double VarianceWithAverage(double[] x, double average)
         {
-            double xAvg = average;
-            int n = x.Length;
-            double v = 0;
+            var xAvg = average;
+            var n = x.Length;
+            var v = 0.0;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
-                double v1 = x[i] - xAvg;
+                var v1 = x[i] - xAvg;
                 v += (v1 * v1);
             }
             return v / (n - 1);
         }
 
-        public static double StdDev(double[] x)
-        {
-            return System.Math.Sqrt(Variance(x));
-        }
-        public static double StdDevWithAverage(double[] x, double average)
-        {
-            return System.Math.Sqrt(VarianceWithAverage(x, average));
-        }
-
-
+        public static double StdDev(double[] x) => System.Math.Sqrt(Variance(x));
+        public static double StdDevWithAverage(double[] x, double average) => System.Math.Sqrt(VarianceWithAverage(x, average));
+        
         public static double Covariance(double[] x, double[] y)
         {
-            double xAvg = x.Average();
-            double yAvg = y.Average();
-            int n = x.Length;
+            var xAvg = x.Average();
+            var yAvg = y.Average();
+            var n = x.Length;
 
             if (n == y.Length)
             {
                 double c = 0;
-                for (int i = 0; i < n; i++)
+                for (var i = 0; i < n; i++)
                 {
                     c += (x[i] - xAvg) * (y[i] - yAvg);
                 }
@@ -265,70 +242,64 @@ namespace Qwack.Math
         public static Tuple<double, double, double> LinearRegression(double[] X, double[] Y)
         {
             if (X.Length != Y.Length) throw new Exception("X and Y not of same length");
-            double beta = Covariance(X, Y) / Variance(X);
+            var beta = Covariance(X, Y) / Variance(X);
 
-            double Ybar = Y.Average();
-            double alpha = Ybar - beta * X.Average();
+            var Ybar = Y.Average();
+            var alpha = Ybar - beta * X.Average();
 
-            double SStot = 0, SSerr = 0;
-            for (int i = 0; i < Y.Length; i++)
+            var SStot = 0.0;
+            var SSerr = 0.0;
+            for (var i = 0; i < Y.Length; i++)
             {
                 SStot += System.Math.Pow(Y[i] - Ybar, 2);
                 SSerr += System.Math.Pow(alpha + beta * X[i] - Ybar, 2);
             }
-            double R2 = 1 - SSerr / SStot;
+            var R2 = 1 - SSerr / SStot;
 
             return new Tuple<double, double, double>(alpha, beta, R2);
         }
 
-        public static double NormSDist(double d)
-        {
-            return FiNormSDist(d);
-        }
+        public static double NormSDist(double d) => FiNormSDist(d);
 
         public static double FiNormSDist(double z)
         {
-            double bm, b, BP, p, T, xa;
-            double RTWO = 1.4142135623731;
+            
+            var RTWO = 1.4142135623731;
 
-            double a0 = 0.6101430819232;
-            double a1 = -0.434841272712578;
-            double a2 = 0.176351193643605;
-            double a3 = -6.07107956092494E-02;
-            double a4 = 1.77120689956941E-02;
-            double a5 = -4.32111938556729E-03;
-            double a6 = 8.54216676887099E-04;
-            double a7 = -1.27155090609163E-04;
-            double a8 = 1.12481672436712E-05;
-            double a9 = 3.13063885421821E-07;
-            double a10 = -2.70988068537762E-07;
-            double a11 = 3.07376227014077E-08;
-            double a12 = 2.51562038481762E-09;
-            double a13 = -1.02892992132032E-09;
-            double a14 = 2.99440521199499E-11;
-            double a15 = 2.60517896872669E-11;
-            double a16 = -2.63483992417197E-12;
-            double a17 = -6.43404509890636E-13;
-            double a18 = 1.12457401801663E-13;
-            double a19 = 1.72815333899861E-14;
-            double a20 = -4.26410169494238E-15;
-            double a21 = -5.45371977880191E-16;
-            double a22 = 1.58697607761671E-16;
-            double a23 = 2.0899837844334E-17;
-            double a24 = -5.900526869409E-18;
+            var a0 = 0.6101430819232;
+            var a1 = -0.434841272712578;
+            var a2 = 0.176351193643605;
+            var a3 = -6.07107956092494E-02;
+            var a4 = 1.77120689956941E-02;
+            var a5 = -4.32111938556729E-03;
+            var a6 = 8.54216676887099E-04;
+            var a7 = -1.27155090609163E-04;
+            var a8 = 1.12481672436712E-05;
+            var a9 = 3.13063885421821E-07;
+            var a10 = -2.70988068537762E-07;
+            var a11 = 3.07376227014077E-08;
+            var a12 = 2.51562038481762E-09;
+            var a13 = -1.02892992132032E-09;
+            var a14 = 2.99440521199499E-11;
+            var a15 = 2.60517896872669E-11;
+            var a16 = -2.63483992417197E-12;
+            var a17 = -6.43404509890636E-13;
+            var a18 = 1.12457401801663E-13;
+            var a19 = 1.72815333899861E-14;
+            var a20 = -4.26410169494238E-15;
+            var a21 = -5.45371977880191E-16;
+            var a22 = 1.58697607761671E-16;
+            var a23 = 2.0899837844334E-17;
+            var a24 = -5.900526869409E-18;
 
-            xa = System.Math.Abs(z) / RTWO;
-
-            if (xa > 100.0)
-            {
-                p = 0.0;
-            }
-            else
-            {
-                BP = 0.0;
-                T = (8.0 * xa - 30.0) / (4 * xa + 15.0);
-                bm = 0.0;
-                b = 0.0;
+            var xa = System.Math.Abs(z) / RTWO;
+            var p = 0.0;
+            if (xa <= 100.0)
+            { 
+                var BP = 0.0;
+                var T = (8.0 * xa - 30.0) / (4 * xa + 15.0);
+                var bm = 0.0;
+                var b = 0.0;
 
                 BP = b;
                 b = bm;
@@ -417,14 +388,14 @@ namespace Qwack.Math
 
         public static double Erf(double z)
         {
-            double erfValue = z;
-            double currentCoefficient = 1.0;
+            var erfValue = z;
+            var currentCoefficient = 1.0;
             double X;
 
             if (z < 5)
             {
-                int termCount = 50 * (int)System.Math.Ceiling(System.Math.Abs(z));
-                for (int n = 1; n < termCount; n++)
+                var termCount = 50 * (int)System.Math.Ceiling(System.Math.Abs(z));
+                for (var n = 1; n < termCount; n++)
                 {
                     currentCoefficient *= -1.0 * (2.0 * (double)n - 1.0) / ((double)n * (2.0 * (double)n + 1.0));
                     X = currentCoefficient * System.Math.Pow(z, (2 * n + 1));
@@ -440,10 +411,7 @@ namespace Qwack.Math
             }
         }
 
-        public static double Phi(double x)
-        {
-            return (System.Math.Exp((-x * x) / 2.0) / System.Math.Sqrt(6.28318530717958));
-        }
+        public static double Phi(double x) => (System.Math.Exp((-x * x) / 2.0) / System.Math.Sqrt(6.28318530717958));
 
         public static double AcklamInvCND(double P)
         {
@@ -503,10 +471,11 @@ namespace Qwack.Math
 
         public static double HistogramMean(double[] Xs, double[] Ys)
         {
-            int n = Xs.Length;
-            double sumXY = 0, sumY = 0;
+            var n = Xs.Length;
+            var sumXY = 0.0;
+            var sumY = 0.0;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 sumXY += Xs[i] * Ys[i];
                 sumY += Ys[i];
@@ -517,12 +486,13 @@ namespace Qwack.Math
 
         public static double HistogramMedian(double[] Xs, double[] Ys)
         {
-            int n = Xs.Length;
-            double m = 0, sumY = 0;
+            var n = Xs.Length;
+            var m = 0.0;
+            var sumY = 0.0;
 
-            double yTarget = Ys.Sum() / 2;
+            var yTarget = Ys.Sum() / 2;
 
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 sumY += Ys[i];
                 if (sumY > yTarget)

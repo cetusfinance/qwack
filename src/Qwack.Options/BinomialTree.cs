@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,35 +12,17 @@ namespace Qwack.Options
     /// </summary>
     public class BinomialTree
     {
-        private static double u(double deltaT, double vol)
-        {
-            return System.Math.Exp(vol * System.Math.Sqrt(deltaT));
-        }
+        private static double U(double deltaT, double vol) => System.Math.Exp(vol * System.Math.Sqrt(deltaT));
 
-        private static double d(double deltaT, double vol)
-        {
-            return 1 / u(deltaT, vol);
-        }
+        private static double D(double deltaT, double vol) => 1 / U(deltaT, vol);
 
-        public static double AmericanPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n)
-        {
-            return VanillaPV(T, S, K, r, sigma, CP, q, n, true);
-        }
+        public static double AmericanPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n) => VanillaPV(T, S, K, r, sigma, CP, q, n, true);
 
-        public static double EuropeanPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n)
-        {
-            return VanillaPV(T, S, K, r, sigma, CP, q, n, false);
-        }
+        public static double EuropeanPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n) => VanillaPV(T, S, K, r, sigma, CP, q, n, false);
 
-        public static double AmericanFuturePV(double T, double S, double K, double r, double sigma, OptionType CP, int n)
-        {
-            return VanillaPV(T, S, K, r, sigma, CP, r, n, true);
-        }
+        public static double AmericanFuturePV(double T, double S, double K, double r, double sigma, OptionType CP, int n) => VanillaPV(T, S, K, r, sigma, CP, r, n, true);
 
-        public static double EuropeanFuturePV(double T, double S, double K, double r, double sigma, OptionType CP, int n)
-        {
-            return VanillaPV(T, S, K, r, sigma, CP, r, n, false);
-        }
+        public static double EuropeanFuturePV(double T, double S, double K, double r, double sigma, OptionType CP, int n) => VanillaPV(T, S, K, r, sigma, CP, r, n, false);
 
         public static double VanillaPV(double T, double S, double K, double r, double sigma, OptionType CP, double q, int n, bool isAmerican)
         {

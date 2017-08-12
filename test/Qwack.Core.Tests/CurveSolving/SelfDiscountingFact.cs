@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,13 +25,13 @@ namespace Qwack.Core.Tests.CurveSolving
         {
             var startDate = new DateTime(2016, 05, 20);
             var swapTenor2 = new Frequency("2y");
-            Calendar jhb = CalendarProvider.Collection["JHB"];
+            var jhb = CalendarProvider.Collection["JHB"];
 
             var pillarDate = startDate.AddPeriod(RollType.MF, jhb, 1.Years());
             var pillarDate2 = startDate.AddPeriod(RollType.MF, jhb, swapTenor2);
             var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, 3.Months());
 
-            Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, jhb);
+            var ccyZar = new Currency("JHB", DayCountBasis.Act_365F, jhb);
 
             var zar3m = new FloatRateIndex()
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Qwack.Math.Solvers
 {
@@ -7,8 +7,8 @@ namespace Qwack.Math.Solvers
         //https://en.wikipedia.org/wiki/Halley%27s_method
         public static double MethodSolve(Func<double, double> function, double initialGuess, double errorTol, int maxItterations = 1000, double bump = 1e-6)
         {
-            double x = initialGuess;
-            int itteration = 0;
+            var x = initialGuess;
+            var itteration = 0;
 
             while (itteration < maxItterations && System.Math.Abs(function(x)) > errorTol)
             {
@@ -27,8 +27,8 @@ namespace Qwack.Math.Solvers
 
         public static double MethodSolve(Func<double, double> function, Func<double, double> derivativeFunction, Func<double, double> secondDerivativeFunction, double initialGuess, double errorTol, int maxItterations = 1000)
         {
-            double x = initialGuess;
-            int itteration = 0;
+            var x = initialGuess;
+            var itteration = 0;
 
             while (itteration < maxItterations && System.Math.Abs(function(x)) > errorTol)
             {

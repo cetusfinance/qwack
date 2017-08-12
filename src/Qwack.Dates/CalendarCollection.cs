@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +10,7 @@ namespace Qwack.Dates
 
         public CalendarCollection(IEnumerable<Calendar> startingCalendars)
         {
-            Queue<Calendar> calendarsToCheck = new Queue<Calendar>(startingCalendars);
+            var calendarsToCheck = new Queue<Calendar>(startingCalendars);
 
             while (calendarsToCheck.Count > 0)
             {

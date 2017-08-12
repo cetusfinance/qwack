@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -25,19 +25,19 @@ namespace Qwack.Options
             double sigma;
             if (fwd != k)
             {
-                double x = System.Math.Log(fwd / k);
-                double z = nu / alpha * (System.Math.Pow(fwd, 1 - beta) - System.Math.Pow(k, 1 - beta)) / (1 - beta);
-                double q = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * z + z * z) + z - rho) / (1 - rho));
+                var x = System.Math.Log(fwd / k);
+                var z = nu / alpha * (System.Math.Pow(fwd, 1 - beta) - System.Math.Pow(k, 1 - beta)) / (1 - beta);
+                var q = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * z + z * z) + z - rho) / (1 - rho));
                 //double e = nu / alpha * (fwd - k) / System.Math.Pow(fwd * k, beta / 2);
 
-                double I0 = nu * x / q;
-                double I1 = System.Math.Pow((beta - 1) * alpha, 2) / (24 * System.Math.Pow(fwd * k, 1 - beta)) + 0.25 * rho * nu * alpha * beta / System.Math.Pow(fwd * k, (1 - beta) / 2) + (2 - 3 * rho * rho) / 24 * nu * nu;
+                var I0 = nu * x / q;
+                var I1 = System.Math.Pow((beta - 1) * alpha, 2) / (24 * System.Math.Pow(fwd * k, 1 - beta)) + 0.25 * rho * nu * alpha * beta / System.Math.Pow(fwd * k, (1 - beta) / 2) + (2 - 3 * rho * rho) / 24 * nu * nu;
                 sigma = I0 * (1 + I1 * t);
             }
             else
             {
-                double I0 = alpha * System.Math.Pow(k, beta - 1);
-                double I1 = System.Math.Pow((beta - 1) * alpha, 2) / (24 * System.Math.Pow(fwd * k, 1 - beta)) + 0.25 * rho * nu * alpha * beta / System.Math.Pow(fwd * k, (1 - beta) / 2) + (2 - 3 * rho * rho) / 24 * nu * nu;
+                var I0 = alpha * System.Math.Pow(k, beta - 1);
+                var I1 = System.Math.Pow((beta - 1) * alpha, 2) / (24 * System.Math.Pow(fwd * k, 1 - beta)) + 0.25 * rho * nu * alpha * beta / System.Math.Pow(fwd * k, (1 - beta) / 2) + (2 - 3 * rho * rho) / 24 * nu * nu;
                 sigma = I0 * (1 + I1 * t);
             }
 
@@ -118,9 +118,9 @@ namespace Qwack.Options
             double sigma;
             if (fwd != k)
             {
-                double lk = System.Math.Log(fwd / k);
-                double y = nu / alpha * lk;
-                double x = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * y + y * y) + y - rho) / (1 - rho));
+                var lk = System.Math.Log(fwd / k);
+                var y = nu / alpha * lk;
+                var x = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * y + y * y) + y - rho) / (1 - rho));
 
                 if (x == y) //trap case of 0/0
                 {
@@ -155,8 +155,8 @@ namespace Qwack.Options
             double sigma;
             if (fwd != k)
             {
-                double y = nu / alpha * System.Math.Log(fwd / k);
-                double x = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * y + y * y) + y - rho) / (1 - rho));
+                var y = nu / alpha * System.Math.Log(fwd / k);
+                var x = System.Math.Log((System.Math.Sqrt(1 - 2 * rho * y + y * y) + y - rho) / (1 - rho));
 
                 if (x == y) //trap case of 0/0
                 {

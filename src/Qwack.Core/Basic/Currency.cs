@@ -1,4 +1,4 @@
-﻿using Qwack.Dates;
+using Qwack.Dates;
 
 namespace Qwack.Core.Basic
 {
@@ -25,10 +25,7 @@ namespace Qwack.Core.Basic
             return (x1 != null) && (x1.Ccy == Ccy);
         }
 
-        public override int GetHashCode()
-        {
-            return Ccy.GetHashCode();
-        }
+        public override int GetHashCode() => Ccy.GetHashCode();
 
         public static bool operator ==(Currency x, Currency y)
         {
@@ -45,9 +42,6 @@ namespace Qwack.Core.Basic
             return x.Ccy == y.Ccy;
         }
 
-        public static bool operator !=(Currency x, Currency y)
-        {
-            return !(x == y);
-        }
+        public static bool operator !=(Currency x, Currency y) => !(x == y);
     }
 }

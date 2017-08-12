@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Qwack.Curves.Benchmark</AssemblyName>
     <PackageId>Qwack.Curves.Benchmark</PackageId>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <RuntimeIdentifier>win8-x64</RuntimeIdentifier>

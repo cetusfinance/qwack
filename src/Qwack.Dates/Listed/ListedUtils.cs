@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace Qwack.Dates
             if (!refDate.HasValue)
                 refDate = DateTime.Today;
 
-            int offset = futuresCode.Length - 1;
+            var offset = futuresCode.Length - 1;
             while (int.TryParse(futuresCode.Substring(offset, 1), out int dummy))
             {
                 offset--;
@@ -23,12 +23,12 @@ namespace Qwack.Dates
             if (!Enum.TryParse(futuresCode.Substring(offset, 1), out MonthEnum month))
                 throw new InvalidOperationException($"Month code {futuresCode.Substring(offset, 1)} not recognised");
 
-            int year = int.Parse(futuresCode.Substring(offset + 1, futuresCode.Length - offset - 1));
+            var year = int.Parse(futuresCode.Substring(offset + 1, futuresCode.Length - offset - 1));
 
             if (year < 10) //single digit year
             {
-                int currentYear = refDate.Value.Year % 10;
-                int baseYear = (refDate.Value.Year / 10) * 10;
+                var currentYear = refDate.Value.Year % 10;
+                var baseYear = (refDate.Value.Year / 10) * 10;
 
                 if (year < currentYear) // case of year 5 evaluated in 2017 indicating 2025
                     return new DateTime(baseYear + 10 + year, (int)month, 1);
@@ -37,7 +37,7 @@ namespace Qwack.Dates
             }
             else //double digit year
             {
-                int baseYear = (refDate.Value.Year / 100) * 100;
+                var baseYear = (refDate.Value.Year / 100) * 100;
                 return new DateTime(baseYear + year, (int)month, 1);
             }
         }

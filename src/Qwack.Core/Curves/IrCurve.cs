@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Dates;
@@ -43,7 +43,7 @@ namespace Qwack.Core.Curves
         public DateTime[] PillarDates => _pillars;
         public Interpolator1DType InterpolatorType => _interpKind;
         public int SolveStage { get; set; }
-        public DayCountBasis Basis { get { return _basis; } }
+        public DayCountBasis Basis => _basis;
         public double GetDf(DateTime startDate, DateTime endDate)
         {
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
@@ -60,15 +60,10 @@ namespace Qwack.Core.Curves
             return GetRate(T);
         }
 
-        public double GetRate(double T)
-        {
-            return _interpolator.Interpolate(T);
-        }
+        public double GetRate(double T) => _interpolator.Interpolate(T);
 
-        public double GetRate(int pillarIx)
-        {
-            return _rates[pillarIx];
-        }
+        public double GetRate(int pillarIx) => _rates[pillarIx];
+
         public double GetForwardRate(DateTime startDate, DateTime endDate, RateType rateType, double tbasis)
         {
             var ccRate = GetForwardRate(startDate, endDate);
@@ -112,10 +107,7 @@ namespace Qwack.Core.Curves
             return Log(q) / (te - ts);
         }
 
-        public double[] GetRates()
-        {
-            return _rates.ToArray();
-        }
+        public double[] GetRates() => _rates.ToArray();
 
         public double Pv(double fv, DateTime payDate)
         {

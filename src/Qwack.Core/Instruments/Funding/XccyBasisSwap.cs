@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
@@ -99,10 +99,8 @@ namespace Qwack.Core.Instruments.Funding
             return PV(model, updateState, updateDfPay, updateDfRec, updatePayEst, updateRecEst);
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model)
-        {
-            throw new NotImplementedException();
-        }
+        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
+
         public double PV(FundingModel model, bool updateState, bool updateDfPay, bool updateDfRec, bool updatePayEst, bool updateRecEst)
         {
             var discountCurvePay = model.Curves[DiscountCurvePay];

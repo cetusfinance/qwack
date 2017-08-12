@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -28,7 +28,7 @@ namespace Qwack.Math.Solvers
             if (_currentOutput.Length!= _n)
                 throw new ArgumentException();
      
-            for (int i = 0; i < MaxItterations; i++)
+            for (var i = 0; i < MaxItterations; i++)
             {
                 if (_currentOutput.Max(x => System.Math.Abs(x)) < Tollerance)
                 {
@@ -45,8 +45,8 @@ namespace Qwack.Math.Solvers
 
         private void ComputeNextGuess()
         {
-            var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentOutput, jacobianMi);
+            var jacobianMi = Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
+            var deltaGuess = Matrix.DoubleArrayFunctions.MatrixProduct(_currentOutput, jacobianMi);
             for (var j = 0; j < _n; j++)
             {
                 _currentGuess[j] -= deltaGuess[j];

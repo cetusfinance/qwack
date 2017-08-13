@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,15 +11,15 @@ namespace Qwack.Curves.Benchmark
     {
         public const int Interpolations = 5000;
 
-        private static double[] _x;
-        private static double[] _y;
-        private static double[] _guesses;
+        private double[] _x;
+        private double[] _y;
+        private double[] _guesses;
 
         [Params(500)]
         public static int NumberOfPillars { get; set; }
 
         [GlobalSetup]
-        public static void Setup()
+        public void Setup()
         {
             var rnd = new System.Random(7777);
             _x = new double[NumberOfPillars];
@@ -39,7 +39,7 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark(Baseline = true, OperationsPerInvoke = Interpolations)]
-        public static void UsingBinarySearch()
+        public void UsingBinarySearch()
         {
             var interp = new Math.Interpolation.LinearInterpolatorFlatExtrap(_x, _y);
             var g = _guesses;
@@ -50,7 +50,7 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark(OperationsPerInvoke = Interpolations)]
-        public static void SimpleLoop()
+        public void SimpleLoop()
         {
             var interp = new Math.Interpolation.LinearInterpolatorFlatExtrapNoBinSearch(_x, _y);
             var g = _guesses;

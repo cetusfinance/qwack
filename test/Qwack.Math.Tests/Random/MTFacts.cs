@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Qwack.Math.Tests.Random
             foreach (var l in File.ReadLines(_IntFile).Skip(1))
             {
                 var values = l.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < values.Length; i++)
+                for (var i = 0; i < values.Length; i++)
                 {
                     testNumbers.Add(ulong.Parse(values[i]));
                 }
@@ -28,7 +28,7 @@ namespace Qwack.Math.Tests.Random
             ulong[] init = { 0x12345UL, 0x23456UL, 0x34567UL, 0x45678UL };
             var mt = new MersenneTwister64(init, 4);
 
-            for (int i = 0; i < testNumbers.Count; i++)
+            for (var i = 0; i < testNumbers.Count; i++)
             {
                 Assert.Equal(testNumbers[i], mt.GenerateInteger());
             }

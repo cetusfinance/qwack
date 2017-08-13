@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -130,7 +130,7 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark(Baseline =true)]
-        public static void InitialOisAttempt()
+        public void InitialOisAttempt()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
@@ -138,7 +138,7 @@ namespace Qwack.Curves.Benchmark
         }
                 
         [Benchmark]
-        public static void Staged()
+        public void Staged()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
@@ -146,7 +146,7 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark]
-        public static void StagedAnalyticJacobian()
+        public void StagedAnalyticJacobian()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Json.Providers;
@@ -13,10 +13,7 @@ namespace Qwack.Dates.Tests
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 
         [Fact]
-        public void LoadsJsonFileAndHasCalendars()
-        {
-            Assert.True(CalendarProvider.OriginalCalendars.Count > 100);
-        }
+        public void LoadsJsonFileAndHasCalendars() => Assert.True(CalendarProvider.OriginalCalendars.Count > 100);
 
         [Fact]
         public void CheckUSDCalendarHasHolidayOnJuly4th()

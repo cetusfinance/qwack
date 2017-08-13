@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Json.Providers;
@@ -18,7 +18,7 @@ namespace Qwack.Dates.Tests
 
         public static IEnumerable<object> GetFutureCodeExamplesSpecificRefDate()
         {
-            List<object> examples = new List<object>()
+            var examples = new List<object>()
             {
                 new object[] { "CLZ7", new DateTime(2017,12,01), new DateTime(2017,01,17) },
                 new object[] { "CLZ17", new DateTime(2017,12,01) , new DateTime(2017,01,17) },

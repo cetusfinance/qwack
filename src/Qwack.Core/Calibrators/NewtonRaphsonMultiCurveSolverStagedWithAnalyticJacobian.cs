@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,7 +17,7 @@ namespace Qwack.Core.Calibrators
         private const double JacobianBump = 0.0001;
 
         private double[][] _jacobian;
-        double[] _currentPvs;
+        private double[] _currentPvs;
 
         public void Solve(FundingModel fundingModel, FundingInstrumentCollection instruments)
         {

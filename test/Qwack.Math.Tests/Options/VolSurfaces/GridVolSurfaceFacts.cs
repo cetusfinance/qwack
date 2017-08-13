@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,7 +51,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 Dates.DayCountBasis.Act_365F);
 
             Assert.Equal(vols[0].Average(), surface.GetVolForAbsoluteStrike(1.5, maturities[0], fwd), 12);
-            DateTime midPoint = maturities[0].AddDays(((maturities[1] - maturities[0]).TotalDays / 2.0));
+            var midPoint = maturities[0].AddDays(((maturities[1] - maturities[0]).TotalDays / 2.0));
             Assert.Equal(vols.Select(x => x.Average()).Average(), surface.GetVolForAbsoluteStrike(1.5, midPoint, fwd), 12);
 
             //test delta-space function

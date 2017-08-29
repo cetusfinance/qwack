@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,10 +27,10 @@ namespace Qwack.Math.Tests.Options
             Func<double, double> fwdCurve = (t => { return 1.5; });
             var localVarianceGrid = impliedSurface.ComputeLocalVarianceOnGrid(strikes, timesteps, fwdCurve);
 
-            for (var t = 0; t < localVarianceGrid.GetLength(0); t++)
+            for (var t = 0; t < localVarianceGrid.Length; t++)
             {
                 var expectedLocalVariance = constVol * constVol;
-                for (var k = 0; k < localVarianceGrid.GetLength(1); k++)
+                for (var k = 0; k < localVarianceGrid[t].Length; k++)
                 {
                     Assert.Equal(expectedLocalVariance, localVarianceGrid[t][k]);
                 }

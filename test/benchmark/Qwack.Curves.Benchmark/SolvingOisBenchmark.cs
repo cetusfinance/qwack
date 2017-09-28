@@ -138,5 +138,13 @@ namespace Qwack.Curves.Benchmark
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(model, _instruments);
         }
+
+        [Benchmark]
+        public static void PuttingItTogetherAnalyticJacobian()
+        {
+            var model = _fundingModel.DeepClone();
+            var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
+            solver.Solve(model, _instruments);
+        }
     }
 }

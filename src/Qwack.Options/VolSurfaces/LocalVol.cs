@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Options.VolSurfaces;
 
-namespace Qwack.Options
+namespace Qwack.Options.VolSurfaces
 {
     public static class LocalVol
     {
@@ -13,20 +13,20 @@ namespace Qwack.Options
             var numberOfStrikes = strikes.GetLength(1);
             double[,] objArray;
 
-            double deltaK = 0.0001 * forwardFunc(timeSteps[0]);
-            double deltaKsqr = deltaK * deltaK;
+            var deltaK = 0.0001 * forwardFunc(timeSteps[0]);
+            var deltaKsqr = deltaK * deltaK;
           
             objArray = new double[numberOfTimesteps-1, numberOfStrikes];
 
 
-            double[] Ss = new double[numberOfTimesteps];
-            for (int i = 0; i < numberOfTimesteps; i++)
+            var Ss = new double[numberOfTimesteps];
+            for (var i = 0; i < numberOfTimesteps; i++)
             {
                 Ss[i] = forwardFunc(timeSteps[i]);
             }
 
            
-            for (int id = 1; id < numberOfTimesteps ; id++)
+            for (var id = 1; id < numberOfTimesteps ; id++)
             {
                 double K, V, S, Td, dwdT, localVariance, TdSq, T, T1;
                 double V_t1, V_Kp2, V_Km2, K_tm1, St;
@@ -39,7 +39,7 @@ namespace Qwack.Options
                 S = Ss[id]; 
                 St = Ss[id - 1]; 
 
-                for (int ik = 0; ik < numberOfStrikes; ik++)
+                for (var ik = 0; ik < numberOfStrikes; ik++)
                 {
                     K = strikes[id, ik];
                     K_tm1 = K * St / S;

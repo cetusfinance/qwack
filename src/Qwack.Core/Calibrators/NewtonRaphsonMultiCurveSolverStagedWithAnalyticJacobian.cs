@@ -24,7 +24,7 @@ namespace Qwack.Core.Calibrators
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<ICurve>();
             var fundingInstruments = new List<IFundingInstrument>();
-            for (int stage = 0; stage <= maxStage; stage++)
+            for (var stage = 0; stage <= maxStage; stage++)
             {
                 curvesForStage.Clear();
                 fundingInstruments.Clear();
@@ -47,7 +47,7 @@ namespace Qwack.Core.Calibrators
                 var bumpedPvs = new double[fundingInstruments.Count];
                 _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
 
-                for (int i = 0; i < MaxItterations; i++)
+                for (var i = 0; i < MaxItterations; i++)
                 {
                     ComputePVs(true, fundingInstruments, fundingModel, _currentPvs);
                     if (_currentPvs.Max(x => System.Math.Abs(x)) < Tollerance)
@@ -69,7 +69,7 @@ namespace Qwack.Core.Calibrators
             var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, jacobianMi);
             var curveIx = 0;
             var pillarIx = 0;
-            for (int j = 0; j < numberOfInstruments; j++)
+            for (var j = 0; j < numberOfInstruments; j++)
             {
                 var curve = curvesForStage[curveIx];
                 currentGuess[j] -= deltaGuess[j];
@@ -86,23 +86,23 @@ namespace Qwack.Core.Calibrators
 
         private void ComputeJacobian(List<IFundingInstrument> instruments, FundingModel model, List<ICurve> curvesForStage)
         {
-            int nPillars = curvesForStage.Sum(x => x.NumberOfPillars);
+            var nPillars = curvesForStage.Sum(x => x.NumberOfPillars);
             
             _jacobian = new double[instruments.Count][];
-            for(int i=0;i<_jacobian.Length;i++)
+            for(var i=0;i<_jacobian.Length;i++)
                 _jacobian[i] = new double[nPillars];
 
-            for (int i = 0; i < instruments.Count; i++)
+            for (var i = 0; i < instruments.Count; i++)
             {
                 var sensitivities = instruments[i].Sensitivities(model);
-                int pillarOffset = 0;
+                var pillarOffset = 0;
                 foreach (var curve in curvesForStage)
                 {
                     if (sensitivities.ContainsKey(curve.Name))
                         foreach (var date in sensitivities[curve.Name].Keys)
                         {
-                            double[] s1 = curve.GetSensitivity(date);
-                            for (int p = 0; p < s1.Length; p++)
+                            var s1 = curve.GetSensitivity(date);
+                            for (var p = 0; p < s1.Length; p++)
                                 _jacobian[pillarOffset + p][i] += s1[p]* sensitivities[curve.Name][date];
                         }
 
@@ -114,7 +114,7 @@ namespace Qwack.Core.Calibrators
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputePVs(bool updateState, List<IFundingInstrument> instruments, FundingModel model, double[] currentPvs)
         {
-            for (int i = 0; i < currentPvs.Length; i++)
+            for (var i = 0; i < currentPvs.Length; i++)
             {
                 currentPvs[i] = instruments[i].Pv(model, updateState);
             }

@@ -9,7 +9,7 @@ namespace Qwack.Math
     /// <summary>
     /// A collection of statistical utility functions
     /// </summary>
-    public class Statistics
+    public static class Statistics
     {
         public static double CumulativeNormalDistribution(double d) => FiNormSDist(d);
         public static double ProbabilityDensityFunction(double z) => StandardNormalDistribution(z);
@@ -127,15 +127,15 @@ namespace Qwack.Math
         /// </summary>
         /// <param name="x">Array of samples</param>
         /// <returns></returns>
-        public static double Variance(double[] x)
+        public static double Variance(this IEnumerable<double> x)
         {
             var xAvg = x.Average();
-            var n = x.Length;
+            var n = x.Count();
             var v = 0.0;
 
-            for (var i = 0; i < n; i++)
+            foreach(var xi in x)
             {
-                var v1 = x[i] - xAvg;
+                var v1 = xi - xAvg;
                 v += (v1 * v1);
             }
             return v / (n - 1);
@@ -146,17 +146,17 @@ namespace Qwack.Math
         /// </summary>
         /// <param name="x">Array of samples</param>
         /// <returns></returns>
-        public static double Skewness(double[] x)
+        public static double Skewness(this IEnumerable<double> x)
         {
             var xAvg = x.Average();
 
-            var n = x.Length;
+            var n = x.Count();
             double m2 = 0;
             double m3 = 0;
 
-            for (var i = 0; i < n; i++)
+            foreach (var xi in x)
             {
-                var v1 = x[i] - xAvg;
+                var v1 = xi - xAvg;
                 var v2 = v1 * v1;
                 m2 += v2;
                 m3 += v2 * v1;
@@ -213,51 +213,8 @@ namespace Qwack.Math
             return v / (n - 1);
         }
 
-        public static double StdDev(double[] x) => System.Math.Sqrt(Variance(x));
-        public static double StdDevWithAverage(double[] x, double average) => System.Math.Sqrt(VarianceWithAverage(x, average));
-        
-        public static double Covariance(double[] x, double[] y)
-        {
-            var xAvg = x.Average();
-            var yAvg = y.Average();
-            var n = x.Length;
-
-            if (n == y.Length)
-            {
-                double c = 0;
-                for (var i = 0; i < n; i++)
-                {
-                    c += (x[i] - xAvg) * (y[i] - yAvg);
-                }
-                return c / n;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
-  
-
-        public static Tuple<double, double, double> LinearRegression(double[] X, double[] Y)
-        {
-            if (X.Length != Y.Length) throw new Exception("X and Y not of same length");
-            var beta = Covariance(X, Y) / Variance(X);
-
-            var Ybar = Y.Average();
-            var alpha = Ybar - beta * X.Average();
-
-            var SStot = 0.0;
-            var SSerr = 0.0;
-            for (var i = 0; i < Y.Length; i++)
-            {
-                SStot += System.Math.Pow(Y[i] - Ybar, 2);
-                SSerr += System.Math.Pow(alpha + beta * X[i] - Ybar, 2);
-            }
-            var R2 = 1 - SSerr / SStot;
-
-            return new Tuple<double, double, double>(alpha, beta, R2);
-        }
+        public static double StdDev(this IEnumerable<double> x) => System.Math.Sqrt(Variance(x));
+        public static double StdDevWithAverage(this double[] x, double average) => System.Math.Sqrt(VarianceWithAverage(x, average));
 
         public static double NormSDist(double d) => FiNormSDist(d);
 
@@ -504,5 +461,161 @@ namespace Qwack.Math
 
             return m;
         }
+
+        public static double Median(this IEnumerable<double> X)
+        {
+            var n = X.Count();
+            if (n % 2 == 0)
+            {
+                var IXlo = n / 2;
+                var IXhi = IXlo + 1;
+                return 0.5 * (X.OrderBy(x => x).ElementAt(IXlo) + X.OrderBy(x => x).ElementAt(IXhi));
+            }
+            else
+            {
+                var IX = (n + 1) / 2;
+                return X.OrderBy(x => x).ElementAt(IX);
+            }
+        }
+
+        public static double Mode(this IEnumerable<double> X)
+        {
+            var D = X.Distinct();
+            var maxN = int.MinValue;
+            var maxNix = 0;
+            var cIX = 0;
+
+            var Ns = new List<int>();
+            foreach (var d in D)
+            {
+                var nd = X.Count(y => y == d);
+                Ns.Add(nd);
+
+                maxN = System.Math.Max(maxN, nd);
+                if (maxN == nd)
+                    maxNix = cIX;
+                //put early exit condition here where maxN is more than remaining elements
+                cIX++;
+            }
+
+            return D.ElementAt(maxNix);
+        }
+
+
+        public static (double Correlation, double Error) Correlation(this double[] x, double[] y)
+        {
+            var xAvg = x.Average();
+            var yAvg = y.Average();
+            var n = x.Length;
+
+            if (n == y.Length)
+            {
+                double c = 0, vX = 0, vY = 0;
+                for (var i = 0; i < n; i++)
+                {
+                    var v1 = x[i] - xAvg;
+                    vX += (v1 * v1);
+                    var v2 = y[i] - yAvg;
+                    vY += (v2 * v2);
+                    c += (v1 * v2);
+                }
+
+                var denom = System.Math.Sqrt(vX * vY);
+                if (denom != 0)
+                {
+                    var rho = c / denom;
+                    var err = System.Math.Sqrt((1.0 - rho * rho) * vY / (double)n);
+                    return (rho, err);
+                }
+                else if ((vX == 0 && vY != 0) || (vX != 0 && vY == 0))
+                    return (0, 0);
+                else
+                    return (1, 0);
+            }
+            else
+            {
+                return (double.NaN, double.NaN);
+            }
+        }
+
+        public static double Covariance(this double[] x, double[] y)
+        {
+            var xAvg = x.Average();
+            var yAvg = y.Average();
+            var n = x.Length;
+
+            if (n == y.Length)
+            {
+                double c = 0;
+                for (var i = 0; i < n; i++)
+                {
+                    c += (x[i] - xAvg) * (y[i] - yAvg);
+                }
+                return c / n;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public static double[] Returns(this IEnumerable<double> x, bool logReturns)
+        {
+            var output = new double[x.Count() - 1];
+            var count = 0;
+            var lastPrice = x.First();
+            foreach (var p in x)
+            {
+                if (count == 0)
+                {
+                    count++;
+                    continue;
+                }
+
+                output[count - 1] = logReturns ?
+                   System.Math.Log(p / lastPrice) :
+                   p / lastPrice - 1.0;
+
+                lastPrice = p;
+                count++;
+            }
+
+            return output;
+        }
+
+        public static (double Alpha, double Beta, double R2, double SSE) LinearRegression(this double[] X, double[] Y, bool computeError = true)
+        {
+
+            if (X.Length != Y.Length) throw new NotImplementedException("X and Y not of same length");
+            var beta = Covariance(X, Y) / Variance(X);
+
+            var Ybar = Y.Average();
+            var Xbar = X.Average();
+            var alpha = Ybar - beta * Xbar;
+
+            double sX = 0, sY = 0;
+            for (var i = 0; i < Y.Length; i++)
+            {
+                sY += System.Math.Pow(Y[i] - Ybar, 2.0);
+                sX += System.Math.Pow(X[i] - Xbar, 2.0);
+            }
+            var R2 = beta * System.Math.Sqrt(sX / sY);
+
+            if (computeError)
+            {
+                double SSE = 0;
+                for (var i = 0; i < Y.Length; i++)
+                {
+                    var e2 = Y[i] - (alpha + beta * X[i]);
+                    e2 *= e2;
+                    SSE += e2;
+                }
+
+                return (alpha, beta, R2, SSE);
+            }
+
+            return (alpha, beta, R2, 0);
+        }
+
     }
 }

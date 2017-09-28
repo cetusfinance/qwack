@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -90,6 +90,10 @@ namespace Qwack.Math.Extensions
             else
                 return x * Factorial(x - 1);
         }
+
+        #region DoubleArray Extensions
+
+        #endregion
     }
 }
 

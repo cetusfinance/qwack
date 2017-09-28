@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using System.Linq;
 using Qwack.Paths.Features;
+using Qwack.Math;
 
 namespace Qwack.Paths.Payoffs
 {
@@ -59,5 +60,12 @@ namespace Qwack.Paths.Payoffs
                     x.CopyTo(vec);
                     return vec.Average();
                 }).Average();
+
+        public double ResultStdError => _results.SelectMany(x =>
+        {
+            var vec = new double[Vector<double>.Count];
+            x.CopyTo(vec);
+            return vec;
+        }).StdDev();
     }
 }

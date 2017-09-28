@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using static System.Math;
 
 namespace Qwack.Math.Matrix
@@ -50,7 +50,7 @@ namespace Qwack.Math.Matrix
             for (var i = 0; i <= n; i++)
             {
                 double suml = 0;
-                for (int j = 0; j <= i - 1; j++)
+                for (var j = 0; j <= i - 1; j++)
                 {
                     /*
                     * Since we've taken L and U as a singular matrix as an input
@@ -78,7 +78,7 @@ namespace Qwack.Math.Matrix
         public static Tuple<double[][], int[]> LupDecomposition(double[][] A)
         {
             var a = new double[A.Length][];
-            for (int i = 0; i < a.Length; i++)
+            for (var i = 0; i < a.Length; i++)
             {
                 a[i] = new double[A[i].Length];
                 Array.Copy(A[i], a[i], a[i].Length);
@@ -132,7 +132,7 @@ namespace Qwack.Math.Matrix
                 /*
                 * Exchange rows k and kpi as determined by the pivot
                 * */
-                for (int i = 0; i <= n; i++)
+                for (var i = 0; i <= n; i++)
                 {
                     var aki = a[k][i];
                     var akpi = a[kp][i];
@@ -156,14 +156,15 @@ namespace Qwack.Math.Matrix
         }
         public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
         {
-            int aCols = vectorA.Length;
-            int bRows = matrixB.Length;
-            int bCols = matrixB[0].Length;
+            var aCols = vectorA.Length;
+            var bRows = matrixB.Length;
+            var bCols = matrixB[0].Length;
             if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices");
+
             var result = new double[vectorA.Length];
-            for (int j = 0; j < bCols; ++j) // each col of B
+            for (var j = 0; j < bCols; ++j) // each col of B
             {
-                for (int k = 0; k < bRows; ++k)
+                for (var k = 0; k < bRows; ++k)
                 {// could use k < bRows
                     result[j] += vectorA[k] * matrixB[k][j];
                 }
@@ -175,57 +176,59 @@ namespace Qwack.Math.Matrix
         public static double[][] Transpose(double[][] matrix)
         {
             var o = new double[matrix[0].Length][];
-            for (int r = 0; r < matrix[0].Length; r++)
+            for (var r = 0; r < matrix[0].Length; r++)
             {
                 o[r] = new double[matrix.Length];
-                for (int c = 0; c < matrix.Length; c++)
+                for (var c = 0; c < matrix.Length; c++)
                 {
                     o[r][c] = matrix[c][r];
                 }
             }
+
             return o;
         }
 
         public static double[][] MatrixProductBounds(double[][] matrixA, double[][] matrixB)
         {
-            int aRows = matrixA.Length;
-            int aCols = matrixA[0].Length;
-            int bCols = matrixB[0].Length;
+            var aRows = matrixA.Length;
+            var aCols = matrixA[0].Length;
+            var bCols = matrixB[0].Length;
             if (aCols != matrixB.Length) throw new InvalidOperationException("Non-conformable matrices");
 
             var result = new double[aRows][];
 
-            for (int i = 0; i < matrixA.Length; ++i) // each row of A
+            for (var i = 0; i < matrixA.Length; ++i) // each row of A
             {
                 var resultRow = new double[bCols];
                 var matrixARow = matrixA[i];
-                for (int j = 0; j < bCols; ++j) // each col of B
+                for (var j = 0; j < bCols; ++j) // each col of B
                 {
-                    for (int k = 0; k < matrixB.Length; ++k)
+                    for (var k = 0; k < matrixB.Length; ++k)
                     {
                         resultRow[j] += matrixARow[k] * matrixB[k][j];
                     }
                 }
                 result[i] = resultRow;
             }
+
             return result;
         }
 
         public static double[][] MatrixProduct(double[][] matrixA, double[][] matrixB)
         {
-            int aRows = matrixA.Length;
-            int aCols = matrixA[0].Length;
-            int bRows = matrixB.Length;
-            int bCols = matrixB[0].Length;
+            var aRows = matrixA.Length;
+            var aCols = matrixA[0].Length;
+            var bRows = matrixB.Length;
+            var bCols = matrixB[0].Length;
             if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices");
 
-            double[][] result = MatrixCreate(aRows, bCols);
+            var result = MatrixCreate(aRows, bCols);
 
-            for (int i = 0; i < aRows; ++i) // each row of A
+            for (var i = 0; i < aRows; ++i) // each row of A
             {
-                for (int j = 0; j < bCols; ++j) // each col of B
+                for (var j = 0; j < bCols; ++j) // each col of B
                 {
-                    for (int k = 0; k < bRows; ++k)
+                    for (var k = 0; k < bRows; ++k)
                     {
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
                     }
@@ -236,44 +239,46 @@ namespace Qwack.Math.Matrix
         }
         public static double[][] MatrixCreate(int rows, int cols)
         {
-            double[][] result = new double[rows][];
-            for (int i = 0; i < rows; ++i)
+            var result = new double[rows][];
+            for (var i = 0; i < rows; ++i)
             {
                 result[i] = new double[cols];
             }
+
             return result;
         }
 
         public static double[] MatrixProduct(double[][] matrixA, double[] vectorB)
         {
-            int aRows = matrixA.Length;
-            int aCols = matrixA[0].Length;
-            int bRows = vectorB.Length;
+            var aRows = matrixA.Length;
+            var aCols = matrixA[0].Length;
+            var bRows = vectorB.Length;
             if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices in MatrixProduct");
 
-            double[] result = new double[aRows];
-            for (int i = 0; i < aRows; ++i) // each row of A
+            var result = new double[aRows];
+            for (var i = 0; i < aRows; ++i) // each row of A
             {
-                for (int k = 0; k < aCols; ++k)
+                for (var k = 0; k < aCols; ++k)
                 {
                     result[i] += matrixA[i][k] * vectorB[k];
                 }
             }
+
             return result;
         }
 
         public static double[] MatrixProductBounds(double[][] matrixA, double[] vectorB)
         {
-            int aRows = matrixA.Length;
-            int aCols = matrixA[0].Length;
-            int bRows = vectorB.Length;
+            var aRows = matrixA.Length;
+            var aCols = matrixA[0].Length;
+            var bRows = vectorB.Length;
             if (aCols != bRows) throw new InvalidOperationException("Non-conformable matrices in MatrixProduct");
 
-            double[] result = new double[aRows];
-            for (int i = 0; i < matrixA.Length; ++i) // each row of A
+            var result = new double[aRows];
+            for (var i = 0; i < matrixA.Length; ++i) // each row of A
             {
                 var rowA = matrixA[i];
-                for (int k = 0; k < aCols; ++k)
+                for (var k = 0; k < aCols; ++k)
                 {
                     result[i] += rowA[k] * vectorB[k];
                 }

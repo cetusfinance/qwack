@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,6 +41,8 @@ namespace Qwack.Curves.Benchmark
             Frequency[] oisTenors = { 3.Months(), 6.Months(), 1.Years(), 18.Months(), 2.Years(), 3.Years(), 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
             double[] oisPricesZAR = { 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004 };
             double[] oisPricesUSD = { 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002 };
+            double[] crossxPrices = { 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002 };
+
 
             var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, x)).ToArray();
             var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, CurveDataSetup._jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
@@ -72,6 +74,7 @@ namespace Qwack.Curves.Benchmark
             var USDoisSwaps = new IrBasisSwap[oisTenors.Length];
             var USDFRAs = new ForwardRateAgreement[FRATenors.Length];
 
+            var ccySwaps = new XccyBasisSwap[oisTenors.Length];
 
             _instruments = new FundingInstrumentCollection();
             
@@ -89,6 +92,8 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(ZARoisSwaps[i]);
                 USDoisSwaps[i] = new IrBasisSwap(startDate, oisTenors[i], oisPricesUSD[i], true, CurveDataSetup.usdon, CurveDataSetup.usd3m, "USD.LIBOR.3M", "USD.DISC.CSA_USD", "USD.DISC.CSA_USD") { SolveCurve = "USD.DISC.CSA_USD" };
                 _instruments.Add(USDoisSwaps[i]);
+                ccySwaps[i] = new XccyBasisSwap(startDate, oisTenors[i], crossxPrices[i], true, CurveDataSetup.usd3m, CurveDataSetup._zar3m, ExchangeType.Both, MTMSwapType.ReceiveNotionalFixed, "USD.LIBOR.3M", "ZAR.JIBAR.3M", "USD.DISC.CSA_USD", "ZAR.DISC.CSA_USD");
+                //_instruments.Add(ccySwaps[i]);
             }
 
             for (var i = 0; i < swapTenors.Length; i++)
@@ -119,12 +124,13 @@ namespace Qwack.Curves.Benchmark
             var ZARcurveOIS = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
             var USDcurve3m = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
             var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
+           // var ZARccyBasisCurve = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 2 };
 
             _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
         }
 
         [Benchmark(Baseline =true)]
-        public static void InitialOisAttempt()
+        public void InitialOisAttempt()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
@@ -132,7 +138,7 @@ namespace Qwack.Curves.Benchmark
         }
                 
         [Benchmark]
-        public static void PuttingItTogether()
+        public void Staged()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
@@ -140,7 +146,7 @@ namespace Qwack.Curves.Benchmark
         }
 
         [Benchmark]
-        public static void PuttingItTogetherAnalyticJacobian()
+        public void StagedAnalyticJacobian()
         {
             var model = _fundingModel.DeepClone();
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();

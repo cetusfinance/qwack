@@ -27,7 +27,7 @@ namespace Qwack.MonteCarlo.Test
                  UseAnthithetic = false
             });
             var volSurface = new ConstantVolSurface(origin, 0.32);
-            var fwdCurve = new Func<double, double>(t => { return 100 + 900*t; });
+            var fwdCurve = new Func<double, double>(t => { return 900 + 100*t; });
             var asset = new BlackSingleAsset
                 (
                     startDate : origin,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -20,7 +20,7 @@ namespace Qwack.Math
 
             var sX = 0.0;
             var sY = 0.0;
-            for (int i = 0; i < Y0.Length; i++)
+            for (var i = 0; i < Y0.Length; i++)
             {
                 sY += System.Math.Pow(Y0[i] - Ybar, 2.0);
                 sX += System.Math.Pow(X0[i] - Xbar, 2.0);
@@ -30,9 +30,9 @@ namespace Qwack.Math
             if (computeError)
             {
                 double SSE = 0;
-                for (int i = 0; i < Y0.Length; i++)
+                for (var i = 0; i < Y0.Length; i++)
                 {
-                    double e2 = Y0[i] - (alpha + beta * X0[i]);
+                    var e2 = Y0[i] - (alpha + beta * X0[i]);
                     e2 *= e2;
                     SSE += e2;
                 }
@@ -45,22 +45,22 @@ namespace Qwack.Math
         {
             if (X0.Length != Y0.Length) throw new ArgumentOutOfRangeException(nameof(X0), "X and Y must be the same length");
 
-            int simdLength = Vector<double>.Count;
-            int overFlow = X0.Length % simdLength;
+            var simdLength = Vector<double>.Count;
+            var overFlow = X0.Length % simdLength;
             Utils.SimdHelpers.PadArrayForSIMD(X0, Y0, out double[] X, out double[] Y, overFlow, 0.0, 0.0);
 
-            Vector<double> vSumX = new Vector<double>(0);
-            Vector<double> vSumY = new Vector<double>(0);
-            for (int i = 0; i < X.Length; i += simdLength)
+            var vSumX = new Vector<double>(0);
+            var vSumY = new Vector<double>(0);
+            for (var i = 0; i < X.Length; i += simdLength)
             {
-                Vector<double> vaX = new Vector<double>(X, i);
+                var vaX = new Vector<double>(X, i);
                 vSumX = Vector.Add(vaX, vSumX);
-                Vector<double> vaY = new Vector<double>(Y, i);
+                var vaY = new Vector<double>(Y, i);
                 vSumY = Vector.Add(vaY, vSumY);
             }
 
             double xAvg = 0, yAvg = 0;
-            for (int i = 0; i < simdLength; ++i)
+            for (var i = 0; i < simdLength; ++i)
             {
                 xAvg += vSumX[i];
                 yAvg += vSumY[i];
@@ -71,40 +71,40 @@ namespace Qwack.Math
 
             Utils.SimdHelpers.PadArrayForSIMDnoAlloc(X0, Y0, X, Y, overFlow, xAvg, yAvg);
             
-            Vector<double> vMeanX = new Vector<double>(xAvg);
-            Vector<double> vMeanY = new Vector<double>(yAvg);
+            var vMeanX = new Vector<double>(xAvg);
+            var vMeanY = new Vector<double>(yAvg);
             vSumX = new Vector<double>(0);
             vSumY = new Vector<double>(0);
-            Vector<double> vSumC = new Vector<double>(0);
+            var vSumC = new Vector<double>(0);
 
-            for (int i = 0; i < X.Length; i += simdLength)
+            for (var i = 0; i < X.Length; i += simdLength)
             {
-                Vector<double> vaX = new Vector<double>(X, i);
-                Vector<double> vaMX = Vector.Subtract(vaX, vMeanX);
-                Vector<double> va2X = Vector.Multiply(vaMX, vaMX);
+                var vaX = new Vector<double>(X, i);
+                var vaMX = Vector.Subtract(vaX, vMeanX);
+                var va2X = Vector.Multiply(vaMX, vaMX);
                 vSumX = Vector.Add(va2X, vSumX);
 
-                Vector<double> vaY = new Vector<double>(Y, i);
-                Vector<double> vaMY = Vector.Subtract(vaY, vMeanY);
-                Vector<double> va2Y = Vector.Multiply(vaMY, vaMY);
+                var vaY = new Vector<double>(Y, i);
+                var vaMY = Vector.Subtract(vaY, vMeanY);
+                var va2Y = Vector.Multiply(vaMY, vaMY);
                 vSumY = Vector.Add(va2Y, vSumY);
 
-                Vector<double> va2C = Vector.Multiply(vaMX, vaMY);
+                var va2C = Vector.Multiply(vaMX, vaMY);
                 vSumC = Vector.Add(va2C, vSumC);
             }
 
             double c = 0, vX = 0, vY = 0;
-            for (int i = 0; i < simdLength; ++i)
+            for (var i = 0; i < simdLength; ++i)
             {
                 c += vSumC[i];
                 vX += vSumX[i];
                 vY += vSumY[i];
             }
 
-            double n = (double)X0.Length;
-            double beta = c / vX;
-            double alpha = yAvg - beta * xAvg;
-            double R2 = beta * System.Math.Sqrt(vX / vY);
+            var n = (double)X0.Length;
+            var beta = c / vX;
+            var alpha = yAvg - beta * xAvg;
+            var R2 = beta * System.Math.Sqrt(vX / vY);
 
             return new LinearRegressionResult(alpha, beta, R2);
         }

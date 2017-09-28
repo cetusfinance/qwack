@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
@@ -85,10 +85,8 @@ namespace Qwack.Core.Instruments.Funding
             return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurvePay], model.Curves[ForecastCurveRec], updateState, updateDF, updatePayEst, updateRecEst);
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model)
-        {
-            throw new NotImplementedException();
-        }
+        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
+
         public double Pv(IrCurve discountCurve, IrCurve forecastCurvePay, IrCurve forecastCurveRec, bool updateState, bool updateDF, bool updatePayEst, bool updateRecEst)
         {
             double totalPV = 0;

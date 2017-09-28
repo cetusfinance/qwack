@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,9 +17,9 @@ namespace Qwack.Random.Sobol
         {
             var allLines = File.ReadAllLines(fileName);
             _allDimensions = new SobolDirectionInfo[allLines.Length - 1];
-            for (int i = 1; i < allLines.Length; i++)
+            for (var i = 1; i < allLines.Length; i++)
             {
-                string[] lineSplit = allLines[i].Split(_splitArray, StringSplitOptions.RemoveEmptyEntries);
+                var lineSplit = allLines[i].Split(_splitArray, StringSplitOptions.RemoveEmptyEntries);
                 var dim = int.Parse(lineSplit[0]);
                 if (dim != (i + 1))
                 {
@@ -32,7 +32,7 @@ namespace Qwack.Random.Sobol
                     S = uint.Parse(lineSplit[1]),
                     DirectionNumbers = new uint[lineSplit.Length - 3]
                 };
-                for (int x = 0; x < info.DirectionNumbers.Length; x++)
+                for (var x = 0; x < info.DirectionNumbers.Length; x++)
                 {
                     info.DirectionNumbers[x] = uint.Parse(lineSplit[x + 3]);
                 }
@@ -40,9 +40,6 @@ namespace Qwack.Random.Sobol
             }
         }
 
-        public SobolDirectionInfo GetInfoForDimension(int dimension)
-        {
-            return _allDimensions[dimension - _dimensionToArrayOffset];
-        }
+        public SobolDirectionInfo GetInfoForDimension(int dimension) => _allDimensions[dimension - _dimensionToArrayOffset];
     }
 }

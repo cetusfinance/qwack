@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -25,21 +25,21 @@ namespace Qwack.Math.Interpolation
             _maxX = _x[x.Length - 1];
             CalculateSlope();
         }
-                
+
         public LinearInVarianceInterpolator()
         { }
 
         private LinearInVarianceInterpolator(double[] x, double[] y, double[] slope)
         {
             _x = x;
-            _y = x.Select((v,ix)=>v*y[ix]*y[ix]).ToArray();
+            _y = x.Select((v, ix) => v * y[ix] * y[ix]).ToArray();
             _slope = slope;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int FindFloorPoint(double t)
         {
-            int index = Array.BinarySearch(_x, t);
+            var index = Array.BinarySearch(_x, t);
             if (index < 0)
             {
                 index = ~index - 1;
@@ -51,7 +51,7 @@ namespace Qwack.Math.Interpolation
         private void CalculateSlope()
         {
             _slope = new double[_x.Length - 1];
-            for (int i = 0; i < _slope.Length; i++)
+            for (var i = 0; i < _slope.Length; i++)
             {
                 _slope[i] = (_y[i + 1] - _y[i]) / (_x[i + 1] - _x[i]);
             }
@@ -71,7 +71,7 @@ namespace Qwack.Math.Interpolation
             }
             else
             {
-                int k = FindFloorPoint(t);
+                var k = FindFloorPoint(t);
                 return _slope[k];
             }
         }
@@ -80,7 +80,7 @@ namespace Qwack.Math.Interpolation
         {
             if (t < _minX)
             {
-                return Sqrt(_y[0]/_x[0]); //extrapolate flat in vol
+                return Sqrt(_y[0] / _x[0]); //extrapolate flat in vol
             }
             else if (t > _maxX)
             {
@@ -88,9 +88,9 @@ namespace Qwack.Math.Interpolation
             }
             else
             {
-                int k = FindFloorPoint(t);
-                double variance = _y[k] + (t - _x[k]) * _slope[k];
-                double vol = Sqrt(variance / t);
+                var k = FindFloorPoint(t);
+                var variance = _y[k] + (t - _x[k]) * _slope[k];
+                var vol = Sqrt(variance / t);
                 return vol;
             }
         }
@@ -99,12 +99,12 @@ namespace Qwack.Math.Interpolation
         {
             if (!_x.Contains(x))
                 return 0;
-            int k = FindFloorPoint(x);
+            var k = FindFloorPoint(x);
             if (k == 0)
                 return 0.5 * _slope[0];
-            if(k==_x.Length)
+            if (k == _x.Length)
                 return 0.5 * _slope[_slope.Length];
-            
+
             return (_slope[k] + _slope[k - 1]) / 2.0;
         }
 
@@ -150,7 +150,7 @@ namespace Qwack.Math.Interpolation
             }
             else
             {
-                int k = FindFloorPoint(t);
+                var k = FindFloorPoint(t);
                 var prop = (t - _x[k]) / (_x[k + 1] - _x[k]);
                 o[k + 1] = prop;
                 o[k] = (1.0 - prop);

@@ -234,9 +234,18 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
 
+            var ZARcurve3m0 = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
+            var ZARcurveOIS0 = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
+            var USDcurve3m0 = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
+            var USDcurveOIS0 = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
+
+            var engine0 = new FundingModel(startDate, new IrCurve[] { ZARcurve3m0, ZARcurveOIS0, USDcurve3m0, USDcurveOIS0 });
+
+
             var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
-            //var S = new NewtonRaphsonMultiCurveSolverStaged();
+            var S0 = new NewtonRaphsonMultiCurveSolverStaged();
             S.Solve(engine, FIC);
+            S0.Solve(engine0, FIC);
 
             foreach (var ins in FIC)
             {
@@ -244,6 +253,17 @@ namespace Qwack.Core.Tests.CurveSolving
                 Assert.Equal(0.0, pv, 7);
             }
 
+            foreach (var curve in engine.Curves)
+            {
+                var otherCurve = engine0.Curves[curve.Key];
+                Assert.Equal(curve.Value.NumberOfPillars, otherCurve.NumberOfPillars);
+                var otherRates = otherCurve.GetRates();
+                var rates = curve.Value.GetRates();
+                for (var i=0;i<otherRates.Length;i++)
+                {
+                    Assert.Equal(otherRates[i], rates[i], 10);
+                }
+            }
         }
 
         [Fact]

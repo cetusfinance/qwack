@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Instruments;
@@ -39,11 +39,11 @@ namespace Qwack.Core.Calibrators
             if (_numberOfPillars != _numberOfInstruments)
                 throw new ArgumentException();
 
-            List<Tuple<int, int>> pillarToCurveMap = new List<Tuple<int, int>>();
-            for (int i = 0; i < _numberOfCurves; i++)
+            var pillarToCurveMap = new List<Tuple<int, int>>();
+            for (var i = 0; i < _numberOfCurves; i++)
             {
                 var currentCurve = _curveEngine.Curves[_curveNames[i]];
-                int nPillarsOnCurve = currentCurve.NumberOfPillars;
+                var nPillarsOnCurve = currentCurve.NumberOfPillars;
                 var i1 = i;
                 pillarToCurveMap.AddRange(Enumerable.Range(0, nPillarsOnCurve).Select(x => new Tuple<int, int>(i1, x)));
             }
@@ -52,7 +52,7 @@ namespace Qwack.Core.Calibrators
 
             ComputeJacobian();
 
-            for (int i = 0; i < MaxItterations; i++)
+            for (var i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
                 _currentPVs = ComputePVs();

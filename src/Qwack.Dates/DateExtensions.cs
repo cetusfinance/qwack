@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Qwack.Dates
@@ -152,10 +152,7 @@ namespace Qwack.Dates
         /// <param name="endDate">End Date (exclusive)</param>
         /// <param name="basis">DayCountBasis enum</param>
         /// <returns></returns>
-        public static double CalculateYearFraction(this DayCountBasis basis, DateTime startDate, DateTime endDate)
-        {
-            return startDate.CalculateYearFraction(endDate, basis);
-        }
+        public static double CalculateYearFraction(this DayCountBasis basis, DateTime startDate, DateTime endDate) => startDate.CalculateYearFraction(endDate, basis);
 
         /// <summary>
         /// Returns first business day (according to specified calendar) of month in which the input date falls
@@ -178,10 +175,7 @@ namespace Qwack.Dates
         /// </summary>
         /// <param name="input">Input date</param>
         /// <returns></returns>
-        public static DateTime FirstDayOfMonth(this DateTime input)
-        {
-            return new DateTime(input.Year, input.Month, 1);
-        }
+        public static DateTime FirstDayOfMonth(this DateTime input) => new DateTime(input.Year, input.Month, 1);
 
         /// <summary>
         /// Returns last business day, according to the specified calendar, of the month in which the input date falls
@@ -200,10 +194,7 @@ namespace Qwack.Dates
         /// </summary>
         /// <param name="date">Input date</param>
         /// <returns></returns>
-        public static DateTime ThirdWednesday(this DateTime date)
-        {
-            return date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
-        }
+        public static DateTime ThirdWednesday(this DateTime date) => date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
 
         /// <summary>
         /// Returns the Nth instance of a specific week day in the month in which the input date falls
@@ -473,10 +464,7 @@ namespace Qwack.Dates
         /// <param name="dateA"></param>
         /// <param name="dateB"></param>
         /// <returns></returns>
-        public static DateTime Min(this DateTime dateA, DateTime dateB)
-        {
-            return dateA < dateB ? dateA : dateB;
-        }
+        public static DateTime Min(this DateTime dateA, DateTime dateB) => dateA < dateB ? dateA : dateB;
 
         /// <summary>
         /// Returns the greater of two DateTime objects
@@ -484,9 +472,6 @@ namespace Qwack.Dates
         /// <param name="dateA"></param>
         /// <param name="dateB"></param>
         /// <returns></returns>
-        public static DateTime Max(this DateTime dateA, DateTime dateB)
-        {
-            return dateA > dateB ? dateA : dateB;
-        }
+        public static DateTime Max(this DateTime dateA, DateTime dateB) => dateA > dateB ? dateA : dateB;
     }
 }

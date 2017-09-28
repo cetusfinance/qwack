@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using ExcelDna.Integration.CustomUI;
 using ExcelDna.Integration;
 using System.Windows.Forms;
@@ -15,28 +15,30 @@ namespace Qwack.Excel.Ribbon
     {
         private static CustomTaskPane _calViewer;
 
+        public static CustomTaskPane CalViewer { get => _calViewer; set => _calViewer = value; }
+
         public void DisplayAbout(IRibbonControl control1)
         {
-            Assembly assembly = Assembly.GetAssembly(typeof(QwackRibbon));
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            var assembly = Assembly.GetAssembly(typeof(QwackRibbon));
+            var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             var versionString = fvi.FileVersion;
             MessageBox.Show($"Qwack version {versionString} \n © Qwack 2017");
         }
 
         public static void ShowCalendarViewer()
         {
-            if (_calViewer == null)
+            if (CalViewer == null)
             {
                 // Make a new one using ExcelDna.Integration.CustomUI.CustomTaskPaneFactory 
                 //_calViewer = CustomTaskPaneFactory.CreateCustomTaskPane(typeof(MyUserControl), "My Super Task Pane");
-                _calViewer.Visible = true;
-                _calViewer.DockPosition = MsoCTPDockPosition.msoCTPDockPositionLeft;
+                CalViewer.Visible = true;
+                CalViewer.DockPosition = MsoCTPDockPosition.msoCTPDockPositionLeft;
                 try
                 {
 
-                    MSExcel.Application xlApp = (MSExcel.Application)ExcelDnaUtil.Application;
-                    MSExcel.Workbook xlWb = (MSExcel.Workbook)xlApp.ActiveWorkbook;
-                  //  xlWb.SheetSelectionChange += new MSExcel.WorkbookEvents_SheetSelectionChangeEventHandler(xlWorkBook_SheetSelectionChange);
+                    var xlApp = (MSExcel.Application)ExcelDnaUtil.Application;
+                    var xlWb = xlApp.ActiveWorkbook;
+                    //  xlWb.SheetSelectionChange += new MSExcel.WorkbookEvents_SheetSelectionChangeEventHandler(xlWorkBook_SheetSelectionChange);
                 }
                 catch (Exception e)
                 {
@@ -46,7 +48,7 @@ namespace Qwack.Excel.Ribbon
             else
             {
                 // Just show it again
-                _calViewer.Visible = true;
+                CalViewer.Visible = true;
             }
         }
     }

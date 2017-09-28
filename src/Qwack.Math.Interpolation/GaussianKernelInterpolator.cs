@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -54,30 +54,20 @@ namespace Qwack.Math.Interpolation
             _weights = n2Sol.Solve();
         }
 
-        public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false)
-        {
-            throw new NotImplementedException();
-        }
+        public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false) => throw new NotImplementedException();
 
-        public double FirstDerivative(double t)
-        {
-            throw new NotImplementedException();
-        }
+        public double FirstDerivative(double t) => throw new NotImplementedException();
 
-        public double Interpolate(double t)
-        {
-            return GKernInterpolate(t, _x, _weights, _bandwidth);
-        }
+        public double Interpolate(double t) => GKernInterpolate(t, _x, _weights, _bandwidth);
 
         private static double GKernInterpolate(double X, double[] Xmeans, double[] weights, double Bandwidth)
         {
-            double output = 0;
-            double Q = 0;
-            double K;
-
-            for (int i = 0; i < Xmeans.Length; i++)
+            var output = 0.0;
+            var Q = 0.0;
+            
+            for (var i = 0; i < Xmeans.Length; i++)
             {
-                K = Distributions.Gaussian.GKern(X, Xmeans[i], Bandwidth);
+                var K = Distributions.Gaussian.GKern(X, Xmeans[i], Bandwidth);
                 Q += K;
                 output += weights[i] * K;
             }
@@ -85,19 +75,10 @@ namespace Qwack.Math.Interpolation
             return output / Q;
         }
 
-        public double SecondDerivative(double x)
-        {
-            throw new NotImplementedException();
-        }
+        public double SecondDerivative(double x) => throw new NotImplementedException();
 
-        public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
-        {
-            throw new NotImplementedException();
-        }
+        public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false) => throw new NotImplementedException();
 
-        public double[] Sensitivity(double t)
-        {
-            throw new NotImplementedException();
-        }
+        public double[] Sensitivity(double t) => throw new NotImplementedException();
     }
 }

@@ -26,9 +26,9 @@ namespace Qwack.Math.Solvers
             Array.Copy(InitialGuess, _currentGuess, _nInputs);
             _currentOutput = ObjectiveFunction(_currentGuess);
             _nConstraints = _currentOutput.Length;
-            double previousRMS = RMS;
+            var previousRMS = RMS;
 
-            for (int i = 0; i < MaxItterations; i++)
+            for (var i = 0; i < MaxItterations; i++)
             {
                 if (_currentOutput.Max(x => System.Math.Abs(x)) < Tollerance || (i > 0 && previousRMS - RMS < Tollerance))
                 {
@@ -59,7 +59,7 @@ namespace Qwack.Math.Solvers
             var term2 = Math.Matrix.DoubleArrayFunctions.MatrixProduct(term1Inverse, jacobianTranspose);
             var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(term2, _currentOutput);
 
-            double[] trialSoltion = _currentGuess.Select((x, ix) => x - deltaGuess[ix]).ToArray();
+            var trialSoltion = _currentGuess.Select((x, ix) => x - deltaGuess[ix]).ToArray();
             while (ObjectiveFunction(trialSoltion).Select(x => x * x).Sum()>RMS && deltaGuess.Any(x=>x!=0))
             {
                 deltaGuess = deltaGuess.Select(x => x / 2.0).ToArray();

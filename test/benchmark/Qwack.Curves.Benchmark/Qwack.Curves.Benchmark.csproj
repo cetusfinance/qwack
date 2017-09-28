@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Qwack.Curves.Benchmark</AssemblyName>
     <PackageId>Qwack.Curves.Benchmark</PackageId>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <RuntimeIdentifier>win8-x64</RuntimeIdentifier>
@@ -28,5 +28,11 @@
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="BenchmarkDotNet" Version="0.10.8" />
     <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\Calendars.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

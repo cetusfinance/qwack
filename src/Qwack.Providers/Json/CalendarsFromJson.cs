@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,13 +13,10 @@ namespace Qwack.Json.Providers
         private Dictionary<string, Calendar> _loadedCalendars;
         private CalendarCollection _calendarCollection;
 
-        static CalendarsFromJson()
+        static CalendarsFromJson() => _jsonSettings = new JsonSerializerSettings()
         {
-            _jsonSettings = new JsonSerializerSettings()
-            {
-                DateFormatString = "yyyyMMdd"
-            };
-        }
+            DateFormatString = "yyyyMMdd"
+        };
 
         private CalendarsFromJson()
         {
@@ -38,9 +35,6 @@ namespace Qwack.Json.Providers
             return returnValue;
         }
 
-        public static CalendarsFromJson Load(string filename)
-        {
-            return Parse(System.IO.File.ReadAllText(filename));
-        }
+        public static CalendarsFromJson Load(string filename) => Parse(System.IO.File.ReadAllText(filename));
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using static System.Math;
 
 namespace Qwack.Math.Matrix
@@ -188,6 +189,28 @@ namespace Qwack.Math.Matrix
             return o;
         }
 
+        public static bool IsSquare(this double[][] matrix)
+        {
+            var rows = matrix.Length;
+            var cols = matrix[0].Length;
+            return rows == cols;
+        }
+
+        public static double MaxElement(this double[][] matrix)
+        {
+            return matrix.Max(x => x.Max());
+        }
+
+        public static double MaxAbsElement(this double[][] matrix)
+        {
+            return matrix.Max(x => x.Max(y=>Abs(y)));
+        }
+
+        public static double MinElement(this double[][] matrix)
+        {
+            return matrix.Min(x => x.Min());
+        }
+
         public static double[][] MatrixProductBounds(double[][] matrixA, double[][] matrixB)
         {
             var aRows = matrixA.Length;
@@ -281,6 +304,48 @@ namespace Qwack.Math.Matrix
                 for (var k = 0; k < aCols; ++k)
                 {
                     result[i] += rowA[k] * vectorB[k];
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The Cholesky decomposition
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
+        public static double[][] Cholesky(this double[][] matrix)
+        {
+            if (!matrix.IsSquare()) throw new InvalidOperationException("Matrix must be square");
+
+            var N = matrix.Length;
+
+            var result = new double[N][];
+            for (var r = 0; r < result.Length; r++)
+            {
+                result[r] = new double[N];
+            }
+
+            for (var r = 0; r < N; r++) // each row of A
+            {
+                for (var c = 0; c < N; c++)
+                {
+                    var element = matrix[r][c];
+
+                    for (var k = 0; k < r; k++)
+                    {
+                        element -= result[r][k] * result[c][k];
+                    }
+
+                    if (r == c)
+                    {
+                        result[r][c] = Sqrt(element);
+                    }
+                    else if (r < c)
+                    {
+                        result[c][r] = element / result[r][r];
+                    }
+
                 }
             }
             return result;

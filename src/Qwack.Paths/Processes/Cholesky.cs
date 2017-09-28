@@ -7,6 +7,7 @@ using Qwack.Core.Underlyings;
 using System.Numerics;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
+using Qwack.Math.Matrix;
 
 namespace Qwack.Paths.Processes
 {
@@ -15,17 +16,17 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
 
         private string _name = "Cholesky";
-        private double _correlation;
-        private double _factor;
+        private double[][] _decompMatrix;
+
 
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
-        public Cholesky(double correlation)
+        public Cholesky(double[][] correlationMatrix)
         {
-            if (System.Math.Abs(correlation) > 1.0)
+            if (correlationMatrix.MaxAbsElement() > 1.0)
                 throw new Exception("Invalid correlation, must be in the range -1.0 to +1.0");
-            _correlation = correlation;
-            _factor = System.Math.Sqrt(1 - _correlation * _correlation);
+
+            _decompMatrix = correlationMatrix.Cholesky();
         }
 
         public bool IsComplete => _isComplete;
@@ -37,22 +38,62 @@ namespace Qwack.Paths.Processes
 
         public void Process(PathBlock block)
         {
-            if (block.Factors != 2)
-                throw new Exception("Expected only 2 factors");
+            var nFactors = block.Factors;
 
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                var r1 = block.GetStepsForFactor(path, 0);
-                var r2 = block.GetStepsForFactor(path, 1);
+                var randsForSteps = new Vector<double>[nFactors][];
+                for(var r=0;r< randsForSteps.Length;r++)
+                {
+                    randsForSteps[r] = block.GetStepsForFactor(path, r).ToArray();
+                }
 
                 for (var step = 1; step < block.NumberOfSteps; step++)
                 {
-                    var W1 = r1[step];
-                    var W2 = _correlation * W1 + _factor * r2[step];
-                    r1[step] = W1;
-                    r2[step] = W2;
+                    var randsForThisStep = new Vector<double>[nFactors];
+
+                    for (var r = 0; r < randsForThisStep.Length; r++)
+                    {
+                        randsForThisStep[r] = randsForSteps[r][step];
+                    }
+
+                    var correlatedRands = Correlate(randsForThisStep);
+
+                    for (var r = 0; r < randsForSteps.Length; r++)
+                    {
+                        var x = block.GetStepsForFactor(path, r);
+                        x[step] = correlatedRands[r];
+                    }
                 }
             }
+        }
+
+        private double[] Correlate(double[] rands)
+        {
+            var returnValues = new double[rands.Length];
+
+            for (var y = 0; y < returnValues.Length; y++)
+            {
+                for (var x = 0; x <= y; x++)
+                {
+                    returnValues[y] += rands[x] * _decompMatrix[y][x];
+                }
+            }
+            return returnValues;
+        }
+
+        private Vector<double>[] Correlate(Vector<double>[] rands)
+        {
+            var returnValues = new Vector<double>[rands.Length];
+
+            for (var y = 0; y < returnValues.Length; y++)
+            {
+                for (var x = 0; x <= y; x++)
+                {
+                    returnValues[y] += rands[x] * _decompMatrix[y][x];
+                }
+            }
+            return returnValues;
         }
 
         public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)

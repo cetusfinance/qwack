@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -17,8 +17,9 @@ namespace Qwack.Paths
         private double[] _backingArray;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
 
-        public PathBlock(int numberOfPaths, int factors, int numberOfSteps)
+        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex)
         {
+            GlobalPathIndex = globalPathIndex;
             _numberOfPaths = numberOfPaths;
             _numberOfFactors = factors;
             _numberOfSteps = numberOfSteps;
@@ -26,6 +27,7 @@ namespace Qwack.Paths
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
 
+        public int GlobalPathIndex { get; }
         public int NumberOfPaths => _numberOfPaths;
         public int Factors => _numberOfFactors;
         public int NumberOfSteps => _numberOfSteps;
@@ -42,6 +44,8 @@ namespace Qwack.Paths
             var span = new Span<Vector<double>>(pointer, _numberOfSteps);
             return span;
         }
+
+        public Span<double> GetEntirePath(int pathId) => new Span<double>(RawData,GetIndexOfPathStart(pathId,0), _numberOfFactors * NumberOfSteps);
 
         public int GetIndexOfPathStart(int pathId, int factorId)
         {

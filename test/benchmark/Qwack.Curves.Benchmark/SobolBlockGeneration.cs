@@ -31,9 +31,7 @@ namespace Qwack.Curves.Benchmark
         [GlobalSetup]
         public void AllocateBuffers()
         {
-            RentThenRetrun(5, 256);
             RentThenRetrun(5, 65536);
-            RentThenRetrun(200, 256);
             RentThenRetrun(200, 65536);
         }
 

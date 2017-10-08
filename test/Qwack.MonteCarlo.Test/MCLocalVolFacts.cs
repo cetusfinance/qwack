@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,21 +13,25 @@ using Qwack.Math.Interpolation;
 using Qwack.Options;
 using Qwack.Dates;
 using Xunit;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Qwack.MonteCarlo.Test
 {
     public class MCBLocalVolFacts
     {
+        private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
+
         [Fact]
         public void LVMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
             var engine = new PathEngine(2.IntPow(17));
-            engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-            {
-                 UseNormalInverse = true,
-                 UseAnthithetic = false
-            });
+            //engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+            //{
+            //     UseNormalInverse = true,
+            //     UseAnthithetic = false
+            //});
+            engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();

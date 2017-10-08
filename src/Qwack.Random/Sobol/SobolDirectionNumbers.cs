@@ -13,7 +13,9 @@ namespace Qwack.Random.Sobol
         private static readonly char[] _splitArray = new char[] { ' ' };
         private int _dimensionToArrayOffset = 2;
 
-        public void LoadFromFile(string fileName)
+        public SobolDirectionNumbers(string fileName) => LoadFromFile(fileName);
+
+        private void LoadFromFile(string fileName)
         {
             var allLines = File.ReadAllLines(fileName);
             _allDimensions = new SobolDirectionInfo[allLines.Length - 1];

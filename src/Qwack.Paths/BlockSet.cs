@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace Qwack.Paths
             _blocks = new PathBlock[numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)
             {
-                _blocks[i] = new PathBlock(pathsPerBlock, factors, steps);
+                _blocks[i] = new PathBlock(pathsPerBlock, factors, steps, i * pathsPerBlock);
             }
         }
 

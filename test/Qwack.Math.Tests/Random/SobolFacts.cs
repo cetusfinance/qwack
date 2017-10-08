@@ -17,8 +17,8 @@ namespace Qwack.Math.Tests.Random
             var dimensions = 3;
             var paths = 9;
 
-            var dn = new SobolDirectionNumbers();
-            dn.LoadFromFile(s_directionNumbers);
+            var dn = new SobolDirectionNumbers(s_directionNumbers);
+            
             var generator = new SobolGenerator(dn)
             {
                 Dimensions = dimensions
@@ -46,8 +46,7 @@ namespace Qwack.Math.Tests.Random
             var dimensions = 50;
             var paths = 512;
 
-            var dn = new SobolDirectionNumbers();
-            dn.LoadFromFile(s_directionNumbers);
+            var dn = new SobolDirectionNumbers(s_directionNumbers);
             var generator = new SobolGenerator(dn)
             {
                 Dimensions = dimensions

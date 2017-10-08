@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>SobolBlockGeneration</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.9, OS=Windows 10 Redstone 2 (10.0.15063)
+Processor=Intel Xeon CPU E3-1505M v5 2.80GHz, ProcessorCount=8
+.NET Core SDK=2.0.2-vspre-006949
+  [Host]     : .NET Core ? (Framework 4.6.00001.0), 64bit RyuJIT
+  Job-YEOZOW : .NET Core 2.0.0 (Framework 4.6.00001.0), 64bit RyuJIT
+</code></pre>
+<pre><code>Platform=X64  Runtime=Core  InvocationCount=10  
+LaunchCount=2  TargetCount=3  UnrollFactor=5  
+WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>NumberOfDimensions</th><th>NumberOfPaths</th><th>   Mean</th><th>Error</th><th>StdDev</th><th>Scaled</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Basic</td><td>           5</td><td>    256</td><td>40.92 us</td><td>33.83 us</td><td>12.07 us</td><td>1.00</td><td> -</td><td> -</td><td> -</td><td>2.96 KB</td>
+</tr><tr><td>Basic</td><td>           5</td><td>  65536</td><td>4,726.74 us</td><td>1,540.40 us</td><td>549.34 us</td><td>1.00</td><td> -</td><td> -</td><td> -</td><td>512.99 KB</td>
+</tr><tr><td>Basic</td><td>         200</td><td>    256</td><td>399.96 us</td><td>192.97 us</td><td>68.82 us</td><td>1.00</td><td> -</td><td> -</td><td> -</td><td>34.95 KB</td>
+</tr><tr><td>Basic</td><td>         200</td><td>  65536</td><td>108,509.36 us</td><td>7,002.77 us</td><td>2,497.33 us</td><td>1.00</td><td>633.3333</td><td>633.3333</td><td>633.3333</td><td>102947.04 KB</td>
+</tr></tbody></table>
+</body>
+</html>

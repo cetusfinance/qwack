@@ -18,6 +18,7 @@ namespace Qwack.Curves.Benchmark
                 typeof(InterpolationBenchmark),
                 typeof(MultiLinearRegression),
                 typeof(WritingDoubleVectorVsDouble),
+                typeof(SobolBlockGeneration),
             };
             var switcher = BenchmarkSwitcher.FromTypes(types);
             switcher.Run(args);

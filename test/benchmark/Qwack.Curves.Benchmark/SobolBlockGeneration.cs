@@ -13,8 +13,7 @@ namespace Qwack.Curves.Benchmark
         private static SobolDirectionNumbers DirectionNumbers()
         {
             var path = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
-            var dirNumbers = new SobolDirectionNumbers();
-            dirNumbers.LoadFromFile(path);
+            var dirNumbers = new SobolDirectionNumbers(path);
             return dirNumbers;
         }
 

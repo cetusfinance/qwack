@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 using Qwack.Math;
 using Qwack.Paths;
@@ -35,39 +37,118 @@ namespace Qwack.Random.Sobol
             InitDimensions();
         }
 
+        //public void Process(PathBlock block)
+        //{
+        //    for (var s = 0; s < block.NumberOfSteps; s++)
+        //    {
+        //        for (var f = 0; f < block.Factors; f++)
+        //        {
+        //            for (var p = 0; p < block.NumberOfPaths; p += Vector<double>.Count)
+        //            {
+        //                var masterGreyCode = (uint)(block.GlobalPathIndex + 1 + p);
+        //                masterGreyCode = masterGreyCode ^ (masterGreyCode >> 1);
+        //                var currentDim = s * block.Factors + f;
+        //                var gCode = masterGreyCode;
+        //                uint x = 0;
+
+        //                //First path
+        //                for (var i = 0; i < _bitsRequired; i++)
+        //                {
+        //                    var mask = (uint)-(gCode & 1);
+        //                    x ^= mask & _v[currentDim + _seed][i];
+        //                    gCode = gCode >> 1;
+        //                }
+        //                gCode = x;
+
+        //                var temp = new double[Vector<double>.Count];
+        //                temp[0] = ConvertRandToDouble(x);
+        //                for (var i = 1; i < Vector<double>.Count; i++)
+        //                {
+        //                    gCode = gCode ^ _v[currentDim + _seed][BitShifting.FindFirstSet(~(uint)(i + p)) - 1];
+        //                    temp[i] = ConvertRandToDouble(gCode);
+        //                }
+        //                var path = block.GetStepsForFactor(p, f);
+        //                path[s] = new Vector<double>(temp);
+        //            }
+        //        }
+        //    }
+        //}
+
         public void Process(PathBlock block)
         {
-            var firstPath = block.GetEntirePath(0);
-
-            var nPath = (uint)block.GlobalPathIndex + 1;
-            var greyMasterCode = nPath ^ (nPath >> 1);
-            var codes = new uint[_numberOfDimensions];
-            for (var d = 0; d < codes.Length; d++)
+            for(var s = 0; s < block.NumberOfSteps;s++)
             {
-                uint x = 0;
-                var gCode = greyMasterCode;
-
-                for (var i = 0; i < _bitsRequired; i++)
+                for(var f = 0; f < block.Factors;f++)
                 {
-                    var mask = (uint)-(gCode & 1);
-                    x ^= mask & _v[d + _seed][i];
-                    gCode = gCode >> 1;
-                }
-                codes[d] = x;
-                firstPath[d] = ConvertRandToDouble(x);
-            }
-
-            for (var p = 1; p < block.NumberOfPaths; p++)
-            {
-                var currentPath = block.GetEntirePath(p);
-                for (var d = 0; d < codes.Length; d++)
-                {
-                    var x = codes[d] ^ _v[d + _seed][BitShifting.FindFirstSet(~(uint)p) - 1];
-                    codes[d] = x;
-                    currentPath[d] = ConvertRandToDouble(x);
+                    var dim = f * block.NumberOfSteps + s;
+                    for(var p = 0; p < block.NumberOfPaths;p += Vector<double>.Count)
+                    {
+                        var temp = new double[Vector<double>.Count];
+                        for(var i = 0; i < Vector<double>.Count;i++)
+                        {
+                            var path = i + p + block.GlobalPathIndex;
+                            temp[i] = GetValueViaGreyCode(path, dim);
+                        }
+                        var pathSpan = block.GetStepsForFactor(p, f);
+                        pathSpan[s] = new Vector<double>(temp);
+                    }
                 }
             }
         }
+
+        public void Finish()
+        {
+        }
+
+        public double GetValueViaGreyCode(int path, int dimension)
+        {
+            var nPath = (uint)path + 1;
+            var greyMasterCode = nPath ^ (nPath >> 1);
+            uint x = 0;
+            var gCode = greyMasterCode;
+            for (var i = 0; i < _bitsRequired; i++)
+            {
+                var mask = (uint)-(gCode & 1);
+                x ^= mask & _v[dimension + _seed][i];
+                gCode = gCode >> 1;
+            }
+            return ConvertRandToDouble(x);
+        }
+        
+
+        //public void Process(PathBlock block)
+        //{
+        //    var firstPath = block.GetEntirePath(0);
+
+        //    var nPath = (uint)block.GlobalPathIndex + 1;
+        //    var greyMasterCode = nPath ^ (nPath >> 1);
+        //    var codes = new uint[_numberOfDimensions];
+        //    for (var d = 0; d < codes.Length; d++)
+        //    {
+        //        uint x = 0;
+        //        var gCode = greyMasterCode;
+
+        //        for (var i = 0; i < _bitsRequired; i++)
+        //        {
+        //            var mask = (uint)-(gCode & 1);
+        //            x ^= mask & _v[d + _seed][i];
+        //            gCode = gCode >> 1;
+        //        }
+        //        codes[d] = x;
+        //        var val = ConvertRandToDouble(x);
+        //        Debug.Assert(!double.IsNaN(val));
+        //        firstPath[d] = val;
+        //    }
+
+        //    for (var p = 1; p < block.NumberOfPaths; p++)
+        //    {
+        //        var currentPath = block.GetEntirePath(p);
+        //        for (var d = 0; d < codes.Length; d++)
+        //        {
+
+        //        }
+        //    }
+        //}
 
         public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
         {

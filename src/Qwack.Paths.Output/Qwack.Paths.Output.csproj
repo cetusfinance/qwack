@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00140" />
     <PackageReference Include="ImageSharp.Drawing" Version="1.0.0-alpha9-00135" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>

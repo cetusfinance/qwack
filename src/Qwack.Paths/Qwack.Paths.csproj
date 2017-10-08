@@ -6,15 +6,12 @@
     <AssemblyName>Qwack.Paths</AssemblyName>
     <PackageId>Qwack.Paths</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.4.0-preview2-25405-01" />
+  </ItemGroup>
  
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.4.0-preview1-25305-02" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0-preview1-25305-02" />
   </ItemGroup>
 </Project>

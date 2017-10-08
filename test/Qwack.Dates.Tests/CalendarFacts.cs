@@ -32,7 +32,7 @@ namespace Qwack.Dates.Tests
         }
 
         [Theory]
-        [MemberData("GetUSExclusiveHolidays")]
+        [MemberData(nameof(GetUSExclusiveHolidays))]
         public void CheckCombinedCalendarHasJuly4th(DateTime dateToCheck)
         {
             CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar us);
@@ -54,9 +54,9 @@ namespace Qwack.Dates.Tests
             Assert.Equal(usd.DaysToExclude, clone.DaysToExclude);
         }
 
-        public static IEnumerable<object> GetUSExclusiveHolidays()
+        public static IEnumerable<object[]> GetUSExclusiveHolidays()
         {
-            var holidays = new List<object>()
+            var holidays = new List<object[]>()
             {
                 new object[] { new DateTime(2016,07,04) }
             };

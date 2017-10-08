@@ -9,16 +9,16 @@ namespace Qwack.Dates.Tests
     public class ListedFacts
     {
         [Theory]
-        [MemberData("GetFutureCodeExamplesSpecificRefDate")]
+        [MemberData(nameof(GetFutureCodeExamplesSpecificRefDate))]
         public void CheckCodeExamplesSpecificRefDate(string futureCode, DateTime expiryMonth, DateTime refDate)
         {
             var date = ListedUtils.FuturesCodeToDateTime(futureCode, refDate);
             Assert.Equal(expiryMonth, date);
         }
 
-        public static IEnumerable<object> GetFutureCodeExamplesSpecificRefDate()
+        public static IEnumerable<object[]> GetFutureCodeExamplesSpecificRefDate()
         {
-            var examples = new List<object>()
+            var examples = new List<object[]>()
             {
                 new object[] { "CLZ7", new DateTime(2017,12,01), new DateTime(2017,01,17) },
                 new object[] { "CLZ17", new DateTime(2017,12,01) , new DateTime(2017,01,17) },

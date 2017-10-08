@@ -17,7 +17,7 @@ namespace Qwack.Random.Sobol
 
         public SobolGenerator(SobolDirectionNumbers directionNumbers) => _directionNumbers = directionNumbers;
 
-        public void GetPathsRaw(int numberOfPaths, ref double[] memory)
+        public void GetPathsRaw(int numberOfPaths, double[] memory)
         {
             _n = (uint)numberOfPaths + 1;
             var D = (uint)Dimensions;

@@ -34,6 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{E7E258E0-9
 		data\Calendars.json = data\Calendars.json
 		data\mt19937-64-Ints.txt = data\mt19937-64-Ints.txt
 		data\SobolDirectionNumbers.txt = data\SobolDirectionNumbers.txt
+		..\SobolTestOutput50x512.txt = ..\SobolTestOutput50x512.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "clients", "clients", "{58641E8B-8AB1-4D21-89DA-B8887907E082}"

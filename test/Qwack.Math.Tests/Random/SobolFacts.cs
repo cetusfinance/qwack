@@ -24,7 +24,7 @@ namespace Qwack.Math.Tests.Random
                 Dimensions = dimensions
             };
             var results = new double[paths * dimensions];
-            generator.GetPathsRaw(paths, ref results);
+            generator.GetPathsRaw(paths, results);
 
             var expectSequence = new double[]
             {
@@ -39,6 +39,41 @@ namespace Qwack.Math.Tests.Random
                 0.6875, 0.8125, 0.4375,
             };
             Assert.Equal(expectSequence, results);
+        }
+
+        private static void OutputHelperFunction()
+        {
+            var dimensions = 50;
+            var paths = 512;
+
+            var dn = new SobolDirectionNumbers();
+            dn.LoadFromFile(s_directionNumbers);
+            var generator = new SobolGenerator(dn)
+            {
+                Dimensions = dimensions
+            };
+                        
+            var results = new double[dimensions * paths];
+            generator.GetPathsRaw(paths, results);
+
+            var sb = new StringBuilder();
+            for (var i = 0; i < paths; i++)
+            {
+                for (var d = 0; d < dimensions; d++)
+                {
+                    var index = i * dimensions + d;
+                    var val = results[index];
+                    if (d != 0)
+                    {
+                        sb.Append(",");
+                    }
+                    sb.Append(val);
+
+                }
+                sb.AppendLine();
+            }
+
+            System.IO.File.WriteAllText("C:\\code\\sobolOuput.txt", sb.ToString());
         }
     }
 }

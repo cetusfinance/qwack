@@ -94,35 +94,17 @@ namespace Qwack.Math.Tests.Random
 
             public int NumberOfDimensions => 1;
 
-            public void AddDate(DateTime date)
-            {
-                throw new NotImplementedException();
-            }
+            public void AddDate(DateTime date) => throw new NotImplementedException();
 
-            public void AddDates(IEnumerable<DateTime> dates)
-            {
-                throw new NotImplementedException();
-            }
+            public void AddDates(IEnumerable<DateTime> dates) => throw new NotImplementedException();
 
-            public int AddDimension(string dimensionName)
-            {
-                throw new NotImplementedException();
-            }
+            public int AddDimension(string dimensionName) => throw new NotImplementedException();
 
-            public void Finish(FeatureCollection collection)
-            {
-                throw new NotImplementedException();
-            }
+            public void Finish(FeatureCollection collection) => throw new NotImplementedException();
 
-            public int GetDateIndex(DateTime date)
-            {
-                throw new NotImplementedException();
-            }
+            public int GetDateIndex(DateTime date) => throw new NotImplementedException();
 
-            public int GetDimension(string dimensionName)
-            {
-                throw new NotImplementedException();
-            }
+            public int GetDimension(string dimensionName) => throw new NotImplementedException();
         }
 
         private static void OutputHelperFunction()

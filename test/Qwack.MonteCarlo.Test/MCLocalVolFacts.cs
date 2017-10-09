@@ -31,7 +31,7 @@ namespace Qwack.MonteCarlo.Test
             //    UseNormalInverse = true,
             //    UseAnthithetic = false
             //});
-            engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
+            engine.AddPathProcess(new Random.Sobol.SobolShiftedPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();

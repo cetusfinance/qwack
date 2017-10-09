@@ -11,7 +11,7 @@ namespace Qwack.Random.Sobol
 {
     public class SobolPathGenerator : IPathProcess, IRequiresFinish
     {
-        private static double s_convertToDoubleConstant = System.Math.Pow(2.0, -32.0);
+        protected static double s_convertToDoubleConstant = Pow(2.0, -32.0);
 
         private int _numberOfDimensions;
         private SobolDirectionNumbers _directionNumbers;
@@ -28,70 +28,35 @@ namespace Qwack.Random.Sobol
 
         public bool IsComplete => true;
         public bool UseNormalInverse { get; set; }
+        public int Seed => _seed;
+        public int Dimensions => _numberOfDimensions;
 
-        public void Finish(FeatureCollection collection)
+        public virtual void Finish(FeatureCollection collection)
         {
             _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths + 1;
             _numberOfDimensions = collection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
             _numberOfDimensions *= collection.GetFeature<ITimeStepsFeature>().TimeStepCount;
             InitDimensions();
         }
-
-        //public void Process(PathBlock block)
-        //{
-        //    for (var s = 0; s < block.NumberOfSteps; s++)
-        //    {
-        //        for (var f = 0; f < block.Factors; f++)
-        //        {
-        //            for (var p = 0; p < block.NumberOfPaths; p += Vector<double>.Count)
-        //            {
-        //                var masterGreyCode = (uint)(block.GlobalPathIndex + 1 + p);
-        //                masterGreyCode = masterGreyCode ^ (masterGreyCode >> 1);
-        //                var currentDim = s * block.Factors + f;
-        //                var gCode = masterGreyCode;
-        //                uint x = 0;
-
-        //                //First path
-        //                for (var i = 0; i < _bitsRequired; i++)
-        //                {
-        //                    var mask = (uint)-(gCode & 1);
-        //                    x ^= mask & _v[currentDim + _seed][i];
-        //                    gCode = gCode >> 1;
-        //                }
-        //                gCode = x;
-
-        //                var temp = new double[Vector<double>.Count];
-        //                temp[0] = ConvertRandToDouble(x);
-        //                for (var i = 1; i < Vector<double>.Count; i++)
-        //                {
-        //                    gCode = gCode ^ _v[currentDim + _seed][BitShifting.FindFirstSet(~(uint)(i + p)) - 1];
-        //                    temp[i] = ConvertRandToDouble(gCode);
-        //                }
-        //                var path = block.GetStepsForFactor(p, f);
-        //                path[s] = new Vector<double>(temp);
-        //            }
-        //        }
-        //    }
-        //}
-
+                
         public void Process(PathBlock block)
         {
             var temp = new double[Vector<double>.Count];
-            for (var s = 0; s < block.NumberOfSteps;s++)
+            for (var s = 0; s < block.NumberOfSteps; s++)
             {
-                for(var f = 0; f < block.Factors;f++)
+                for (var f = 0; f < block.Factors; f++)
                 {
                     var dim = f * block.NumberOfSteps + s;
-                    for(var p = 0; p < block.NumberOfPaths;p += Vector<double>.Count)
+                    for (var p = 0; p < block.NumberOfPaths; p += Vector<double>.Count)
                     {
                         var path = p + block.GlobalPathIndex + 1;
                         var x = GetValueViaGreyCode(path, dim);
-                        temp[0] = ConvertRandToDouble(x);
-                        for (var i = 1; i < Vector<double>.Count;i++)
+                        temp[0] = ConvertRandToDouble(x, dim);
+                        for (var i = 1; i < Vector<double>.Count; i++)
                         {
                             path = i + p + block.GlobalPathIndex + 1;
                             x ^= _v[dim + _seed][BitShifting.FindFirstSet(~(uint)path) - 1];
-                            temp[i] = ConvertRandToDouble(x);
+                            temp[i] = ConvertRandToDouble(x, dim);
                         }
                         var pathSpan = block.GetStepsForFactor(p, f);
                         pathSpan[s] = new Vector<double>(temp);
@@ -118,7 +83,7 @@ namespace Qwack.Random.Sobol
             }
             return x;
         }
-        
+
 
         //public void Process(PathBlock block)
         //{
@@ -158,7 +123,7 @@ namespace Qwack.Random.Sobol
         {
         }
 
-        private double ConvertRandToDouble(uint rand)
+        protected virtual double ConvertRandToDouble(uint rand, int dimension)
         {
             var val = rand * s_convertToDoubleConstant;
             if (UseNormalInverse)

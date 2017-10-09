@@ -31,7 +31,7 @@ namespace Qwack.Random.Sobol
 
         public void Finish(FeatureCollection collection)
         {
-            _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths;
+            _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths + 1;
             _numberOfDimensions = collection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
             _numberOfDimensions *= collection.GetFeature<ITimeStepsFeature>().TimeStepCount;
             InitDimensions();
@@ -76,18 +76,22 @@ namespace Qwack.Random.Sobol
 
         public void Process(PathBlock block)
         {
-            for(var s = 0; s < block.NumberOfSteps;s++)
+            var temp = new double[Vector<double>.Count];
+            for (var s = 0; s < block.NumberOfSteps;s++)
             {
                 for(var f = 0; f < block.Factors;f++)
                 {
                     var dim = f * block.NumberOfSteps + s;
                     for(var p = 0; p < block.NumberOfPaths;p += Vector<double>.Count)
                     {
-                        var temp = new double[Vector<double>.Count];
-                        for(var i = 0; i < Vector<double>.Count;i++)
+                        var path = p + block.GlobalPathIndex + 1;
+                        var x = GetValueViaGreyCode(path, dim);
+                        temp[0] = ConvertRandToDouble(x);
+                        for (var i = 1; i < Vector<double>.Count;i++)
                         {
-                            var path = i + p + block.GlobalPathIndex;
-                            temp[i] = GetValueViaGreyCode(path, dim);
+                            path = i + p + block.GlobalPathIndex + 1;
+                            x ^= _v[dim + _seed][BitShifting.FindFirstSet(~(uint)path) - 1];
+                            temp[i] = ConvertRandToDouble(x);
                         }
                         var pathSpan = block.GetStepsForFactor(p, f);
                         pathSpan[s] = new Vector<double>(temp);
@@ -100,7 +104,7 @@ namespace Qwack.Random.Sobol
         {
         }
 
-        public double GetValueViaGreyCode(int path, int dimension)
+        public uint GetValueViaGreyCode(int path, int dimension)
         {
             var nPath = (uint)path + 1;
             var greyMasterCode = nPath ^ (nPath >> 1);
@@ -112,7 +116,7 @@ namespace Qwack.Random.Sobol
                 x ^= mask & _v[dimension + _seed][i];
                 gCode = gCode >> 1;
             }
-            return ConvertRandToDouble(x);
+            return x;
         }
         
 

@@ -28,8 +28,8 @@ namespace Qwack.MonteCarlo.Test
             var engine = new PathEngine(2.IntPow(17));
             //engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             //{
-            //     UseNormalInverse = true,
-            //     UseAnthithetic = false
+            //    UseNormalInverse = true,
+            //    UseAnthithetic = false
             //});
             engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
@@ -39,18 +39,18 @@ namespace Qwack.MonteCarlo.Test
             var smileVols = new[] { 0.32, 0.3, 0.29, 0.3, 0.32 };
             var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
 
-            var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols, 
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap, 
+            var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols,
+                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap,
                 Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
-            var fwdCurve = new Func<double, double>(t => { return 900 + 100*t; });
+            var fwdCurve = new Func<double, double>(t => { return 900 + 100 * t; });
             var asset = new LVSingleAsset
                 (
-                    startDate : origin,
+                    startDate: origin,
                     expiryDate: origin.AddYears(1),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps:365,
+                    nTimeSteps: 365,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,5 +12,6 @@ namespace Qwack.Options.VolSurfaces
         double GetVolForDeltaStrike(double strike, DateTime expiry, double forward);
         double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward);
         DateTime OriginDate { get; }
+
     }
 }

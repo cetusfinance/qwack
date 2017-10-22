@@ -1,0 +1,25 @@
+Start of the language design document for scripting so I have something we can work against.
+
+
+Unary Operators
+/ = Division
+* = Multiply
++ = Addition
+- = Subtraction
+
+
+
+Math Functions
+Mean(ListOfNumbers) = Arthimatic Mean
+Mean(arg1, arg2... argN) = Arthimatic mean with unlimited list of args
+Median(ListOfNumbers) = Median
+Median(arg1, arg2... argN) = Median with unlimited list of args
+Mode(ListOfNumbers) = Mode
+Mode(arg1, arg2... argN) = Mode with list of unlimited list of args
+Percentile(percentile,ListOfNumbers) = nth percentile from the list of numbers
+Percentile(percentile, arg1, arg2... argN) = nth percentile from the unlimited list of args
+Max(arg1.... argN) = Maximum from unlimited list of args
+Max(ListOfNumbers) = Maximum from the list of numbers
+Min(arg1.... argN) = Minimum from unlimited list of args
+Min(ListOfNumbers) = Minimum from list of numbers
+

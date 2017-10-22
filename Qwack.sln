@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{754E413D-24A5-4779-8B70-FC66F040D042}"
 	ProjectSection(SolutionItems) = preProject
@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		common.props = common.props
 		LICENSE = LICENSE
 		nuget.config = nuget.config
+		PayoffLangauge.txt = PayoffLangauge.txt
 		README.md = README.md
 		version.props = version.props
 	EndProjectSection
@@ -74,6 +75,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Paths.Output", "src\Qwack.Paths.Output\Qwack.Paths.Output.csproj", "{09BC02D6-8BB6-4D04-BA46-C4A8B42AC0B7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Futures", "src\Qwack.Futures\Qwack.Futures.csproj", "{312D53A0-2428-4203-A13B-3A161E50F114}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Storage", "src\Qwack.Storage\Qwack.Storage.csproj", "{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -301,6 +304,18 @@ Global
 		{312D53A0-2428-4203-A13B-3A161E50F114}.Release|x64.Build.0 = Release|Any CPU
 		{312D53A0-2428-4203-A13B-3A161E50F114}.Release|x86.ActiveCfg = Release|Any CPU
 		{312D53A0-2428-4203-A13B-3A161E50F114}.Release|x86.Build.0 = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|x64.Build.0 = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Debug|x86.Build.0 = Debug|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|x64.ActiveCfg = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|x64.Build.0 = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|x86.ActiveCfg = Release|Any CPU
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -325,6 +340,7 @@ Global
 		{D12D2E06-612F-419E-9C95-23A8752C3045} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
 		{09BC02D6-8BB6-4D04-BA46-C4A8B42AC0B7} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{312D53A0-2428-4203-A13B-3A161E50F114} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
+		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {54AAD5D1-3F1A-43DC-80BB-2C61D8945F25}

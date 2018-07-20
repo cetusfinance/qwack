@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -110,6 +110,27 @@ namespace Qwack.Dates.Tests
         {
             var dt = new DateTime(2016, 11, 1);
             Assert.Equal(new DateTime(2016, 11, 11), dt.NthSpecificWeekDay(DayOfWeek.Friday, 2));
+        }
+
+        [Fact]
+        public void NthLastSpecificWeekdaySameDay()
+        {
+            var dt = new DateTime(2018, 7, 1);
+            Assert.Equal(new DateTime(2018, 07, 31), dt.NthLastSpecificWeekDay(DayOfWeek.Tuesday, 1));
+        }
+
+        [Fact]
+        public void NthLastSpecificWeekdayDayBefore()
+        {
+            var dt = new DateTime(2018, 7, 1);
+            Assert.Equal(new DateTime(2018, 07, 17), dt.NthLastSpecificWeekDay(DayOfWeek.Tuesday, 3));
+        }
+
+        [Fact]
+        public void NthLastSpecificWeekdayDayAfter()
+        {
+            var dt = new DateTime(2018, 7, 1);
+            Assert.Equal(new DateTime(2018, 7, 20), dt.NthLastSpecificWeekDay(DayOfWeek.Friday, 2));
         }
 
         [Fact]

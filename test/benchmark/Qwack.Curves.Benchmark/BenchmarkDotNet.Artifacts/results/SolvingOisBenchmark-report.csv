@@ -1,0 +1,4 @@
+Method,Job,AnalyzeLaunchVariance,EvaluateOverhead,MaxAbsoluteError,MaxRelativeError,MinInvokeCount,MinIterationTime,RemoveOutliers,Affinity,Jit,Platform,Runtime,AllowVeryLargeObjects,Concurrent,CpuGroups,Force,RetainVm,Server,Clock,EngineFactory,Toolchain,InvocationCount,IterationTime,LaunchCount,RunStrategy,TargetCount,UnrollFactor,WarmupCount,Mean,Error,Scaled,ScaledSD,Allocated
+InitialOisAttempt,Default,False,Default,Default,Default,Default,Default,Default,15,RyuJit,X64,Core,False,True,False,True,False,True,Default,Default,Default,10,Default,2,Default,3,5,1,NA,NA,?,?,N/A
+Staged,Default,False,Default,Default,Default,Default,Default,Default,15,RyuJit,X64,Core,False,True,False,True,False,True,Default,Default,Default,10,Default,2,Default,3,5,1,NA,NA,?,?,N/A
+StagedAnalyticJacobian,Default,False,Default,Default,Default,Default,Default,Default,15,RyuJit,X64,Core,False,True,False,True,False,True,Default,Default,Default,10,Default,2,Default,3,5,1,NA,NA,?,?,N/A

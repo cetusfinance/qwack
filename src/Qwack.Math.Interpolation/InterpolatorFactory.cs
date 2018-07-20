@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,8 +39,25 @@ namespace Qwack.Math.Interpolation
                     return new LinearInVarianceInterpolator(x,y);
                 case Interpolator1DType.GaussianKernel:
                     return new GaussianKernelInterpolator(x, y);
+                case Interpolator1DType.NextValue:
+                    return new NextInterpolator(x, y);
+                case Interpolator1DType.PreviousValue:
+                    return new PreviousInterpolator(x, y);
                 case Interpolator1DType.DummyPoint:
                     return new DummyPointInterpolator(y.First());
+                default:
+                    throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
+            }
+        }
+
+        public static IInterpolator2D GetInterpolator(double[] x, double[] y, double[,] z, Interpolator2DType kind)
+        {
+            switch (kind)
+            {
+                case Interpolator2DType.Bilinear:
+                    return new BilinearInterpolator(x, y, z);
+                case Interpolator2DType.DummyPoint:
+                    return new DummyPointInterpolator(z[0,0]);
                 default:
                     throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +40,8 @@ namespace Qwack.Excel.Utils
 
         public bool TryGetObject(string name, out ISessionItem<T> obj)
         {
-            return _store.TryGetValue(name, out obj);
+            var cleanName = name.Split('¬')[0];
+            return _store.TryGetValue(cleanName, out obj);
         }
     }
 }

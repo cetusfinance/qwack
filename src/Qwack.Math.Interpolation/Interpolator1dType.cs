@@ -1,4 +1,4 @@
-﻿namespace Qwack.Math.Interpolation
+namespace Qwack.Math.Interpolation
 {
     public enum Interpolator1DType
     {
@@ -9,6 +9,8 @@
         FloaterHormannRational,
         LogLinear,
         GaussianKernel,
-        DummyPoint
+        DummyPoint,
+        NextValue,
+        PreviousValue
     }
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>SolvingOisBenchmark</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.8, OS=Windows 10 Redstone 2 (10.0.15063)
+Processor=Intel Core i5-6200U CPU 2.30GHz (Skylake), ProcessorCount=4
+Frequency=2343751 Hz, Resolution=426.6665 ns, Timer=TSC
+dotnet cli version=1.0.4
+  [Host] : .NET Core 4.6.25211.01, 64bit RyuJITDEBUG [AttachedDebugger]
+</code></pre>
+<pre><code>Platform=X64  Runtime=Core  InvocationCount=10  
+LaunchCount=2  TargetCount=3  UnrollFactor=5  
+WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>          Method</th><th>Mean</th><th>Error</th><th>Scaled</th><th>ScaledSD</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>InitialOisAttempt</td><td>NA</td><td>NA</td><td>?</td><td> ?</td><td>N/A</td>
+</tr><tr><td>          Staged</td><td>NA</td><td>NA</td><td>?</td><td> ?</td><td>N/A</td>
+</tr><tr><td>StagedAnalyticJacobian</td><td>NA</td><td>NA</td><td>?</td><td> ?</td><td>N/A</td>
+</tr></tbody></table>
+</body>
+</html>

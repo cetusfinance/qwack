@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,5 +10,8 @@ namespace Qwack.Excel
         internal const string Dates = "QDates";
         internal const string Options = "QOpt";
         internal const string Volatility = "QVol";
+        internal const string Interpolation = "QInterp";
+        internal const string Curves = "QCurves";
+
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Qwack.Dates
+namespace Qwack.Dates
 {
     /// <summary>
     /// A list of methods for rolling dates when holidays occur
@@ -28,6 +28,7 @@
         EndToEnd = MF_LIBOR,
         IMM = 8,
         EOM = 9,
-        ShortFLongMF = 10
+        ShortFLongMF = 10,
+        None=11
     }
 }

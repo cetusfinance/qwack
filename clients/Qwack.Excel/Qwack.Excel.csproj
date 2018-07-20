@@ -5,8 +5,18 @@
     <AssemblyName>Qwack.Excel</AssemblyName>
     <PackageId>Qwack.Excel</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="QwackDna.dna" />
+    <None Remove="QwackDna.xll" />
+  </ItemGroup>
  
   <ItemGroup>
+    <Content Include="QwackDna.dna">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="QwackDna.xll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="QwackDna64.dna;QwackDna64.xll;Calendars.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

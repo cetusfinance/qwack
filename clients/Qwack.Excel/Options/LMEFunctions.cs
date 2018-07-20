@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,8 +31,8 @@ namespace Qwack.Excel.Options
                 if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
-                double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
-                double tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
+                var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
+                var tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
 
                 return Qwack.Options.LMEFunctions.LMEBlackPV(F, K, R, tExpiry, tDelivery, V, optType);
             });
@@ -52,7 +52,7 @@ namespace Qwack.Excel.Options
                 if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
-                double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
+                var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
   
                 return Qwack.Options.LMEFunctions.LMEBlackDelta(F, K, tExpiry, V, optType);
             });
@@ -68,7 +68,7 @@ namespace Qwack.Excel.Options
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
+                var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
 
                 return Qwack.Options.LMEFunctions.LMEBlackGamma(F, K, tExpiry, V);
             });
@@ -86,8 +86,8 @@ namespace Qwack.Excel.Options
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
-                double tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
+                var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
+                var tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
 
                 return Qwack.Options.LMEFunctions.LMEBlackVega(F, K, R, tExpiry, tDelivery, V);
             });
@@ -109,8 +109,8 @@ namespace Qwack.Excel.Options
                 if (!Enum.TryParse(CP, out OptionType optType))
                     return $"Could not parse call or put flag - {CP}";
 
-                double tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
-                double tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
+                var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);
+                var tDelivery = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, DeliveryDate);
 
                 return Qwack.Options.LMEFunctions.LMEBlackImpliedVol(F, K, R, tExpiry, tDelivery, PV, optType);
             });

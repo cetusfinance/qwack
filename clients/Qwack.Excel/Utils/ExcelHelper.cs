@@ -1,4 +1,4 @@
-﻿using ExcelDna.Integration;
+using ExcelDna.Integration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,10 +34,10 @@ namespace Qwack.Excel.Services
         public static T[][] SquareToJagged<T>(this T[,] data)
         {
             var o = new T[data.GetLength(0)][];
-            for(int r=0;r< data.GetLength(0);r++)
+            for(var r=0;r< data.GetLength(0);r++)
             {
                 o[r] = new T[data.GetLength(1)];
-                for(int c=0;c<data.GetLength(1);c++)
+                for(var c=0;c<data.GetLength(1);c++)
                 {
                     o[r][c] = data[r, c];
                 }
@@ -47,7 +47,7 @@ namespace Qwack.Excel.Services
 
         public static T OptionalExcel<T>(this object objectInput, T defaultValue)
         {
-            T returnValue = defaultValue;
+            var returnValue = defaultValue;
             if (!(objectInput is ExcelMissing))
                 returnValue = (T)objectInput;
 
@@ -56,15 +56,15 @@ namespace Qwack.Excel.Services
 
         public static object ReturnExcelRangeVector(this object[] data)
         {
-            ExcelReference caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
             // Now you can inspect the size of the caller with 
-            int rows = caller.RowLast - caller.RowFirst + 1;
-            int cols = caller.ColumnLast - caller.ColumnFirst + 1;
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
 
             if(rows>cols) //return column vector
             {
                 var o = new object[data.Length, 1];
-                for(int r=0;r<o.Length;r++)
+                for(var r=0;r<o.Length;r++)
                 {
                     o[r, 0] = data[r];
                 }

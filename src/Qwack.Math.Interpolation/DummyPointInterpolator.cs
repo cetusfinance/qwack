@@ -7,7 +7,7 @@ using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
-    public class DummyPointInterpolator:IInterpolator1D
+    public class DummyPointInterpolator:IInterpolator1D,IInterpolator2D
     {
         private readonly double _point;
      
@@ -31,5 +31,8 @@ namespace Qwack.Math.Interpolation
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false) => new DummyPointInterpolator(newValue);
 
         public double[] Sensitivity(double t) => new double[] { 1.0 };
+
+        public double Interpolate(double x, double y) => _point;
+ 
     }
 }

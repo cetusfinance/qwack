@@ -1,0 +1,16 @@
+<DnaLibrary Name="Qwack.Excel" RuntimeVersion="v4.0">
+   <ExternalLibrary Path="Qwack.Excel.dll" />
+  <CustomUI>
+    <customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
+      <ribbon>
+        <tabs>
+          <tab id='Qwack' label='Qwack' visible='true'>
+            <group id='Info' label='Info' visible='true'>
+              <button id='About' label='About' size='large' imageMso='CustomActionsMenu' onAction='DisplayAbout' visible='true'/>
+            </group >
+          </tab>
+        </tabs>
+      </ribbon>
+    </customUI>
+  </CustomUI>
+</DnaLibrary>

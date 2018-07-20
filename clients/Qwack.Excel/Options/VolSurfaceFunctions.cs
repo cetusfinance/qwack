@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,13 +25,13 @@ namespace Qwack.Excel.Options
             return ExcelHelper.Execute(_logger, () =>
             {
                 var surface = new ConstantVolSurface(OriginDate, Volatility);
-                var cache = ContainerStores.GetObjectCache<ConstantVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<ConstantVolSurface> { Name = ObjectName, Value = surface });
+                var cache = ContainerStores.GetObjectCache<IVolSurface>();
+                cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
 
-        [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface))]
+        [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface))]
         public static object CreateGridVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
@@ -48,9 +48,49 @@ namespace Qwack.Excel.Options
                 var stikeType = StrikeType.OptionalExcel<string>("Absolute");
                 var expiries = ExcelHelper.ToDateTimeArray(Expiries);
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged());
-                var cache = ContainerStores.GetObjectCache<GridVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<GridVolSurface> { Name = ObjectName, Value = surface });
+                var cache = ContainerStores.GetObjectCache<IVolSurface>();
+                cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Gets a volatility for a delta strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForDeltaStrike))]
+        public static object GetVolForDeltaStrike(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Delta Strike")] double DeltaStrike,
+             [ExcelArgument(Description = "Expiry")] DateTime Expiry,
+             [ExcelArgument(Description = "Forward")] double Forward
+             )
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(ObjectName, out var volSurface))
+                {
+                    return volSurface.Value.GetVolForDeltaStrike(DeltaStrike, Expiry, Forward);
+                }
+
+                return $"Vol surface {ObjectName} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Gets a volatility for an absolute strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForAbsoluteStrike))]
+        public static object GetVolForAbsoluteStrike(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Absolute Strike")] double Strike,
+             [ExcelArgument(Description = "Expiry")] DateTime Expiry,
+             [ExcelArgument(Description = "Forward")] double Forward
+             )
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(ObjectName, out var volSurface))
+                {
+                    return volSurface.Value.GetVolForAbsoluteStrike(Strike, Expiry, Forward);
+                }
+
+                return $"Vol surface {ObjectName} not found in cache";
             });
         }
     }

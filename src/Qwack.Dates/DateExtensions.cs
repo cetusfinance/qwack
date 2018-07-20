@@ -82,6 +82,34 @@ namespace Qwack.Dates
         }
 
         /// <summary>
+        /// Returns a list of friday dates according to a specified calendar which are contained within two given dates.  
+        /// If a friday is a holiday, the preceeding good business day is returned  
+        /// Start and end dates are treated as inclusive
+        /// </summary>
+        /// <param name="startDateInc"></param>
+        /// <param name="endDateInc"></param>
+        /// <param name="calendars"></param>
+        /// <returns></returns>
+        public static List<DateTime> FridaysInPeriod(this DateTime startDateInc, DateTime endDateInc, Calendar calendars)
+        {
+            if (endDateInc < startDateInc)
+            {
+                throw new ArgumentException(nameof(endDateInc), "End date is before the start date");
+            }
+            var o = new List<DateTime>((int)(endDateInc - startDateInc).TotalDays);
+            var date = startDateInc;
+            while (date <= endDateInc)
+            {
+                if(date.DayOfWeek==DayOfWeek.Friday)
+                {
+                    o.Add(date.IfHolidayRoll(RollType.P, calendars));
+                }
+                date = date.AddPeriod(RollType.None, null, 1.Day());
+            }
+            return o;
+        }
+
+        /// <summary>
         /// Calculates a year fraction from a day count method and two dates
         /// Start date is inclusive, end date exclusive
         /// </summary>
@@ -231,6 +259,39 @@ namespace Qwack.Dates
         }
 
         /// <summary>
+        /// Returns the Nth instance of a specific week day (from the end of the month) in the month in which the input date falls
+        /// E.g. NthSpecificWeekDay(date,DayOfWeek.Wednesday, 2) would return the 2nd last wednesday of the month in which the input date falls
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <param name="dayofWeek">DayOfWeek enum</param>
+        /// <param name="number">N</param>
+        /// <returns></returns>
+        public static DateTime NthLastSpecificWeekDay(this DateTime date, DayOfWeek dayofWeek, int number)
+        {
+            //Get the first day of the month
+            var lastDate = LastDayOfMonth(date);
+            //Get the current day 0=sunday
+            var currentDay = (int)lastDate.DayOfWeek;
+            var targetDow = (int)dayofWeek;
+
+            int daysToAdd;
+
+            if (currentDay == targetDow)
+                return lastDate.AddDays(-(number - 1) * 7);
+
+            if (currentDay > targetDow)
+            {
+                daysToAdd = currentDay - targetDow;
+            }
+            else
+            {
+                daysToAdd = 7 +  currentDay - targetDow;
+            }
+
+            return lastDate.AddDays(-daysToAdd).AddDays(-(number - 1) * 7);
+        }
+
+        /// <summary>
         /// Returns the last calendar day of the month in which the input date falls
         /// </summary>
         /// <param name="input">Input date</param>
@@ -366,6 +427,8 @@ namespace Qwack.Dates
                     {
                         return d1;
                     }
+                case RollType.None:
+                    return date;
             }
         }
 
@@ -473,5 +536,13 @@ namespace Qwack.Dates
         /// <param name="dateB"></param>
         /// <returns></returns>
         public static DateTime Max(this DateTime dateA, DateTime dateB) => dateA > dateB ? dateA : dateB;
+
+        /// <summary>
+        /// Returns the average of two DateTime objects
+        /// </summary>
+        /// <param name="dateA"></param>
+        /// <param name="dateB"></param>
+        /// <returns></returns>
+        public static DateTime Average(this DateTime dateA, DateTime dateB) => new DateTime((dateB.Ticks + dateA.Ticks) / 2);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Dates;
+using Qwack.Core.Basic;
 using System.Linq;
 
 namespace Qwack.Options.Asians

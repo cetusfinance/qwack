@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Options;
 using Xunit;
+using Qwack.Core.Basic;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
 {

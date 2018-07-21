@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using Qwack.Options;
 using Qwack.Excel.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Core.Basic;
 
 namespace Qwack.Excel.Options
 {

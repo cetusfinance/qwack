@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Qwack.Options.VolSurfaces
+namespace Qwack.Core.Basic
 {
     public interface IVolSurface
     {

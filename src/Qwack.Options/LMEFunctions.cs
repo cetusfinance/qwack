@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
+using Qwack.Core.Basic;
 using static System.Math;
 
 namespace Qwack.Options

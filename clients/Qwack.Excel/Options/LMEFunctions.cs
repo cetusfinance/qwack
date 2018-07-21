@@ -8,6 +8,8 @@ using Qwack.Excel.Services;
 using Qwack.Dates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Core.Basic;
+
 
 namespace Qwack.Excel.Options
 {
@@ -106,7 +108,7 @@ namespace Qwack.Excel.Options
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (!Enum.TryParse(CP, out OptionType optType))
+                if (!Enum.TryParse<OptionType>(CP, out var optType))
                     return $"Could not parse call or put flag - {CP}";
 
                 var tExpiry = DayCountBasis.Act_365F.CalculateYearFraction(ValueDate, ExpiryDate);

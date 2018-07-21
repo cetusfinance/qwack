@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Extensions;
+using Qwack.Core.Basic;
 
 namespace Qwack.Options
 {

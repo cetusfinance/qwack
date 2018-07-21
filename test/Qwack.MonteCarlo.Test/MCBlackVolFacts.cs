@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +11,8 @@ using Qwack.Options.VolSurfaces;
 using Qwack.Math.Extensions;
 using Qwack.Options;
 using Xunit;
+using Qwack.Core.Basic;
+
 
 namespace Qwack.MonteCarlo.Test
 {

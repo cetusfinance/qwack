@@ -5,7 +5,7 @@ mono: none
 dotnet: 2.1.302
 script:
   - dotnet restore
-  - dotnet build -f netstandard1.6
+  - dotnet build -f netstandard2.0
   - dotnet test ./test/Qwack.Dates.Tests
   - dotnet test ./test/Qwack.Math.Tests
   - dotnet test ./test/Qwack.Core.Tests

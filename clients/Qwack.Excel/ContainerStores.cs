@@ -31,8 +31,10 @@ namespace Qwack.Excel
 
         private static string GetCalendarFilename()
         {
-            var assemblyLocation = Assembly.GetAssembly(typeof(Calendar)).Location;
-            return Path.Combine(Path.GetDirectoryName(assemblyLocation), _calendarJSONFile);
+            var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+            var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
+            var dirPath = Path.GetDirectoryName(codeBasePath);
+            return Path.Combine(dirPath, _calendarJSONFile);
         }
 
         public static IObjectStore<T> GetObjectCache<T>()

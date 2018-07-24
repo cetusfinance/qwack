@@ -151,6 +151,16 @@ namespace Qwack.Dates.Tests
         }
 
         [Fact]
+        public void Average()
+        {
+            var dtA = new DateTime(2016, 11, 20);
+            var dtB = new DateTime(2017, 11, 20);
+            var avgTicks = (dtA.Ticks + dtB.Ticks) / 2L;
+            Assert.Equal(new DateTime(avgTicks), dtA.Average(dtB));
+           
+        }
+
+        [Fact]
         public void RollingRules()
         {
             var calendar = new Calendar();

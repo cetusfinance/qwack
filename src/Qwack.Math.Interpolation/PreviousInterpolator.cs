@@ -37,7 +37,7 @@ namespace Qwack.Math.Interpolation
                 index = ~index - 1;
             }
 
-            return Min(Max(index, 0), _x.Length - 2);
+            return Min(Max(index, 0), _x.Length - 1);
         }
 
         public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false)

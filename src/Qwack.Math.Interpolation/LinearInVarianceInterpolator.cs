@@ -78,7 +78,11 @@ namespace Qwack.Math.Interpolation
 
         public double Interpolate(double t)
         {
-            if (t < _minX)
+            if(t==0)
+            {
+                return 0.0;
+            }
+            else if (t < _minX)
             {
                 return Sqrt(_y[0] / _x[0]); //extrapolate flat in vol
             }

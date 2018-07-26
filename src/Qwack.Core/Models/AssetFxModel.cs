@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Instruments.Asset;
 
 namespace Qwack.Core.Models
 {
@@ -12,7 +13,11 @@ namespace Qwack.Core.Models
         private Dictionary<string, IPriceCurve> _assetCurves;
         private readonly DateTime _buildDate;
         private readonly FundingModel _fundingModel;
+
         public FundingModel FundingModel => _fundingModel;
+        public DateTime BuildDate => _buildDate;
+
+        public object TurnbullWakeman { get; private set; }
 
         public AssetFxModel(DateTime buildDate, FundingModel fundingModel)
         {
@@ -31,6 +36,16 @@ namespace Qwack.Core.Models
         public void AddVolSurface(string name, IVolSurface surface)
         {
             _assetVols[name] = surface;
+        }
+
+        public IPriceCurve GetPriceCurve(string name)
+        {
+            return _assetCurves[name];
+        }
+
+        public IVolSurface GetVolSurface(string name)
+        {
+            return _assetVols[name];
         }
     }
 }

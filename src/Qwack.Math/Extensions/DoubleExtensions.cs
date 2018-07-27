@@ -92,7 +92,15 @@ namespace Qwack.Math.Extensions
         }
 
         #region DoubleArray Extensions
-
+        public static double[] GetRow(this double[,] z, int row)
+        {
+            var r = new double[z.GetLength(1)];
+            for (var i = 0; i < r.Length; i++)
+            {
+                r[i] = z[row, i];
+            }
+            return r;
+        }
         #endregion
     }
 }

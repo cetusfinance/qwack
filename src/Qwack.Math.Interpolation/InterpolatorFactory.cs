@@ -55,7 +55,9 @@ namespace Qwack.Math.Interpolation
             switch (kind)
             {
                 case Interpolator2DType.Bilinear:
-                    return new BilinearInterpolator(x, y, z);
+                    return new Generic2dInterpolator(x, y, z, Interpolator1DType.Linear, Interpolator1DType.Linear);
+                case Interpolator2DType.BiCubic:
+                    return new Generic2dInterpolator(x, y, z, Interpolator1DType.CubicSpline, Interpolator1DType.CubicSpline);
                 case Interpolator2DType.DummyPoint:
                     return new DummyPointInterpolator(z[0,0]);
                 default:

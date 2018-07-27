@@ -1,4 +1,4 @@
-﻿using Qwack.Core.Basic;
+using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using System;
@@ -76,7 +76,7 @@ namespace Qwack.Options.VolSurfaces
                     return absK - strike;
                 });
 
-                var solvedStrike = Qwack.Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 0.999999999, 1e-8);
+                var solvedStrike = -Qwack.Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
                    TimeInterpolatorType);

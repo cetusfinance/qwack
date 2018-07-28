@@ -18,12 +18,15 @@
 
   <ItemGroup>
     <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00140" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0" />
-    <PackageReference Include="coveralls.io" Version="1.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coveralls.io" Version="1.4.2" />
     <PackageReference Include="OpenCover" Version="4.6.519" />
-    <PackageReference Include="xunit" Version="2.3.0" />
+    <PackageReference Include="xunit" Version="2.4.0" />
   </ItemGroup>
 
   <ItemGroup>

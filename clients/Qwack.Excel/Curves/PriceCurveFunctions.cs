@@ -39,6 +39,30 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a sparse price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurve))]
+        public static object CreateSparsePriceCurve(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+            [ExcelArgument(Description = "Array of prices values")] double[] Prices,
+            [ExcelArgument(Description = "Type of curve, e.g. Coal etc")] object CurveType)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveTypeStr = CurveType.OptionalExcel<string>("Coal");
+                if (!Enum.TryParse(curveTypeStr, out SparsePriceCurveType cType))
+                {
+                    return $"Could not parse price curve type - {curveTypeStr}";
+                }
+
+                var pDates = Pillars.ToDateTimeArray();
+                var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType);
+                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Queries a price curve for a price for a give date", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetPrice))]
         public static object GetPrice(
             [ExcelArgument(Description = "Object name")] string ObjectName,

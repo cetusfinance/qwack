@@ -82,6 +82,29 @@ namespace Qwack.Dates
         }
 
         /// <summary>
+        /// Returns a list of calendar dates which are contained within two given dates.  
+        /// Start and end dates are treated as inclusive
+        /// </summary>
+        /// <param name="startDateInc"></param>
+        /// <param name="endDateInc"></param>
+        /// <returns></returns>
+        public static List<DateTime> CalendarDaysInPeriod(this DateTime startDateInc, DateTime endDateInc)
+        {
+            if (endDateInc < startDateInc)
+            {
+                throw new ArgumentException(nameof(endDateInc), "End date is before the start date");
+            }
+            var o = new List<DateTime>((int)(endDateInc - startDateInc).TotalDays);
+            var date = startDateInc;
+            while (date <= endDateInc)
+            {
+                o.Add(date);
+                date = date.AddDays(1);
+            }
+            return o;
+        }
+
+        /// <summary>
         /// Returns a list of friday dates according to a specified calendar which are contained within two given dates.  
         /// If a friday is a holiday, the preceeding good business day is returned  
         /// Start and end dates are treated as inclusive
@@ -544,5 +567,14 @@ namespace Qwack.Dates
         /// <param name="dateB"></param>
         /// <returns></returns>
         public static DateTime Average(this DateTime dateA, DateTime dateB) => new DateTime((dateB.Ticks + dateA.Ticks) / 2);
+
+        public static (DateTime, DateTime) ParsePeriod(this string period)
+        {
+            //switch(period)
+            //{
+            //    case var p when p.StartsWith("CAL"):
+            //}
+            return (Start: new DateTime(), End: new DateTime());
+        }
     }
 }

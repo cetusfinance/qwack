@@ -13,4 +13,9 @@ namespace Qwack.Core.Curves
         NextButOnExpiry=2,
         ICE=2
     }
+
+    public enum SparsePriceCurveType
+    {
+        Coal
+    }
 }

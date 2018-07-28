@@ -3,9 +3,7 @@ build: off
 
 environment:
   COVERALLS_REPO_TOKEN:
-    secure: x41DSerLXKgGVbKIokF+zuR3eNRVJXsgJA6j5yggnCB8/TTyYfa/2euNflfGzCot
-  SONARQUBE:
-    secure: HinUSQVVcQgbGUw38sB8GgopaaXJkD1IDeXwNsTIHv/X/IQsQHS1icvTD1ZUjblP
+    secure: 9Flz1qTscHObl14SzMvP5PvOHXDf95W83hg6tUn1fg4Uovtu2tcSTexjpnlU/u/5
 
 before_test:
   - dotnet --info

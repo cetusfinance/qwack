@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Qwack.Dates
@@ -10,6 +11,7 @@ namespace Qwack.Dates
     {
         private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
         private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
+        private static readonly string[] _months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
         /// <summary>
         /// Gets the next IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
@@ -67,7 +69,7 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static List<DateTime> BusinessDaysInPeriod(this DateTime startDateInc, DateTime endDateInc, Calendar calendars)
         {
-            if(endDateInc < startDateInc)
+            if (endDateInc < startDateInc)
             {
                 throw new ArgumentException(nameof(endDateInc), "End date is before the start date");
             }
@@ -123,7 +125,7 @@ namespace Qwack.Dates
             var date = startDateInc;
             while (date <= endDateInc)
             {
-                if(date.DayOfWeek==DayOfWeek.Friday)
+                if (date.DayOfWeek == DayOfWeek.Friday)
                 {
                     o.Add(date.IfHolidayRoll(RollType.P, calendars));
                 }
@@ -142,9 +144,9 @@ namespace Qwack.Dates
         /// <param name="ignoreTimeComponent">Ignore the time component of the DateTime inputs - defaults to true</param>
         /// <param name="calendar">Optional calendar object, required only for methods involving business days</param>
         /// <returns></returns>
-        public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis, bool ignoreTimeComponent=true, Calendar calendar=null)
+        public static double CalculateYearFraction(this DateTime startDate, DateTime endDate, DayCountBasis basis, bool ignoreTimeComponent = true, Calendar calendar = null)
         {
-            if(ignoreTimeComponent)
+            if (ignoreTimeComponent)
             {
                 startDate = startDate.Date;
                 endDate = endDate.Date;
@@ -260,8 +262,8 @@ namespace Qwack.Dates
             //Get the first day of the month
             var firstDate = new DateTime(date.Year, date.Month, 1);
             //Get the current day 0=sunday
-            var currentDay = (int) firstDate.DayOfWeek;
-            var targetDow = (int) dayofWeek;
+            var currentDay = (int)firstDate.DayOfWeek;
+            var targetDow = (int)dayofWeek;
 
             int daysToAdd;
 
@@ -308,7 +310,7 @@ namespace Qwack.Dates
             }
             else
             {
-                daysToAdd = 7 +  currentDay - targetDow;
+                daysToAdd = 7 + currentDay - targetDow;
             }
 
             return lastDate.AddDays(-daysToAdd).AddDays(-(number - 1) * 7);
@@ -513,6 +515,11 @@ namespace Qwack.Dates
             return IfHolidayRoll(dt, rollType, calendar);
         }
 
+        public static DateTime[] AddPeriod(this DateTime[] dates, RollType rollType, Calendar calendar, Frequency datePeriod)
+        {
+            return dates.Select(d => d.AddPeriod(rollType, calendar, datePeriod)).ToArray();
+        }        
+
         /// <summary>
         /// Returns a date equal to the input date minus the specified period, adjusted for holidays
         /// </summary>
@@ -568,13 +575,42 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime Average(this DateTime dateA, DateTime dateB) => new DateTime((dateB.Ticks + dateA.Ticks) / 2);
 
-        public static (DateTime, DateTime) ParsePeriod(this string period)
+        /// <summary>
+        /// Returns the start and end dates for a specified period string
+        /// e.g. CAL19, Q120, CAL-20, JAN-22
+        /// </summary>
+        /// <param name="dateA"></param>
+        /// <param name="dateB"></param>
+        /// <returns></returns>
+        public static (DateTime Start, DateTime End) ParsePeriod(this string period)
         {
-            //switch(period)
-            //{
-            //    case var p when p.StartsWith("CAL"):
-            //}
-            return (Start: new DateTime(), End: new DateTime());
+
+            switch (period.ToUpper())
+            {
+                case string p when p.StartsWith("CAL"):
+                    if (!int.TryParse(p.Substring(3).Trim('-',' '), out var y))
+                        throw new Exception($"Could not parse year from {period}");
+                    return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31));
+                case string p when p.StartsWith("Q"):
+                    if (!int.TryParse(p.Substring(1, 1), out var q))
+                        throw new Exception($"Could not parse quarter from {period}");
+                    if (!int.TryParse(p.Substring(2).Trim('-',' '), out var yq))
+                        throw new Exception($"Could not parse year from {period}");
+                    return (Start: new DateTime(2000 + yq, 3 * (q - 1) + 1, 1), End: (new DateTime(2000 + yq, 3 * q, 1)).LastDayOfMonth());
+                case string p when p.StartsWith("H"):
+                    if (!int.TryParse(p.Substring(1, 1), out var h))
+                        throw new Exception($"Could not parse half-year from {period}");
+                    if (!int.TryParse(p.Substring(2).Trim('-',' '), out var yh))
+                        throw new Exception($"Could not parse year from {period}");
+                    return (Start: new DateTime(2000 + yh, (h-1)*6+1, 1), End: (new DateTime(2000 + yh, h * 6, 1)).LastDayOfMonth());
+                case string p when _months.Any(x => x == p.Substring(0, 3)):
+                    if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
+                        throw new Exception($"Could not parse year from {period}");
+                    var m = _months.ToList().IndexOf(p.Substring(0, 3))+1;
+                    return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth());
+                default:
+                    throw new Exception($"Could not parse period {period}");
+            }
         }
     }
 }

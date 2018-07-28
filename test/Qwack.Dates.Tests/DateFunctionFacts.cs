@@ -157,7 +157,7 @@ namespace Qwack.Dates.Tests
             var dtB = new DateTime(2017, 11, 20);
             var avgTicks = (dtA.Ticks + dtB.Ticks) / 2L;
             Assert.Equal(new DateTime(avgTicks), dtA.Average(dtB));
-           
+
         }
 
         [Fact]
@@ -237,5 +237,49 @@ namespace Qwack.Dates.Tests
             Assert.Equal(new DateTime(2017, 04, 18), lme3mDate);
         }
 
+        [Fact]
+        public void PeriodParser()
+        {
+            var (startDate, endDate) = "CAL19".ParsePeriod();
+            Assert.Equal(new DateTime(2019, 1, 1), startDate);
+            Assert.Equal(new DateTime(2019, 12, 31), endDate);
+
+            (startDate, endDate) = "CAL-30".ParsePeriod();
+            Assert.Equal(new DateTime(2030, 1, 1), startDate);
+            Assert.Equal(new DateTime(2030, 12, 31), endDate);
+
+            (startDate, endDate) = "Q4-22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 10, 1), startDate);
+            Assert.Equal(new DateTime(2022, 12, 31), endDate);
+
+            (startDate, endDate) = "Q422".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 10, 1), startDate);
+            Assert.Equal(new DateTime(2022, 12, 31), endDate);
+
+            (startDate, endDate) = "Q1-22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 1, 1), startDate);
+            Assert.Equal(new DateTime(2022, 3, 31), endDate);
+
+            (startDate, endDate) = "H122".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 1, 1), startDate);
+            Assert.Equal(new DateTime(2022, 6, 30), endDate);
+
+            (startDate, endDate) = "H2-22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 7, 1), startDate);
+            Assert.Equal(new DateTime(2022, 12, 31), endDate);
+
+            (startDate, endDate) = "FEB-22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 2, 1), startDate);
+            Assert.Equal(new DateTime(2022, 2, 28), endDate);
+
+            (startDate, endDate) = "FEB 22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 2, 1), startDate);
+            Assert.Equal(new DateTime(2022, 2, 28), endDate);
+
+            (startDate, endDate) = "FEB22".ParsePeriod();
+            Assert.Equal(new DateTime(2022, 2, 1), startDate);
+            Assert.Equal(new DateTime(2022, 2, 28), endDate);
+
+        }
     }
 }

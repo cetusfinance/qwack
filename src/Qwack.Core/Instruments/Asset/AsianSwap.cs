@@ -14,10 +14,12 @@ namespace Qwack.Core.Instruments.Asset
 
         public DateTime AverageStartDate { get; set; }
         public DateTime AverageEndDate { get; set; }
+        public DateTime[] FixingDates { get; set; }
         public Calendar FixingCalendar { get; set; }
         public Calendar PaymentCalendar { get; set; }
         public Frequency SpotLag { get; set; }
         public Frequency PaymentLag { get; set; }
+        public DateTime PaymentDate { get; set; }
         public double Strike { get; set; }
         public string AssetId { get; set; }
         public Currency PaymentCurrency { get; set; }

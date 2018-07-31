@@ -15,7 +15,6 @@ using Qwack.Dates;
 using Qwack.Core.Basic;
 using Xunit;
 using Microsoft.Extensions.PlatformAbstractions;
-using Qwack.Core.Basic;
 
 
 namespace Qwack.MonteCarlo.Test

@@ -61,6 +61,28 @@ namespace Qwack.Excel.Options
             });
         }
 
+        [ExcelFunction(Description = "Returns asian option delta using the Turnbull-Wakeman formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(TurnbullWakemanDelta))]
+        public static object TurnbullWakemanDelta(
+            [ExcelArgument(Description = "Evaluation Date")] DateTime EvalDate,
+            [ExcelArgument(Description = "Average Start Date")] DateTime AverageStartDate,
+            [ExcelArgument(Description = "Average End Date")] DateTime AverageEndDate,
+            [ExcelArgument(Description = "Average-to-date")] double KnownAverage,
+            [ExcelArgument(Description = "Strike")] double K,
+            [ExcelArgument(Description = "Forward")] double F,
+            [ExcelArgument(Description = "Discounting rate")] double R,
+            [ExcelArgument(Description = "Volatility")] double V,
+            [ExcelArgument(Description = "Call or Put")] string CP)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Enum.TryParse(CP, out OptionType optType))
+                {
+                    return $"Could not parse call or put flag - {CP}";
+                }
+                return Qwack.Options.Asians.TurnbullWakeman.Delta(F, KnownAverage, V, K, EvalDate, AverageStartDate, AverageEndDate, R, optType);
+            });
+        }
+
         [ExcelFunction(Description = "Returns strike for asian option with specified PV, using the Turnbull-Wakeman formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(TurnbullWakemanStrikeForPV))]
         public static object TurnbullWakemanStrikeForPV(
             [ExcelArgument(Description = "Evaluation Date")] DateTime EvalDate,
@@ -113,6 +135,34 @@ namespace Qwack.Excel.Options
                     return $"Could not parse call or put flag - {CP}";
                 }
                 return Qwack.Options.Asians.LME_Clewlow.PV(F, KnownAverage, V, K, EvalDate, AverageStartDate, AverageEndDate, R, optType, cal);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns asian option delta using the Clewlow/LME formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(ClewlowDelta))]
+        public static object ClewlowDelta(
+            [ExcelArgument(Description = "Evaluation Date")] DateTime EvalDate,
+            [ExcelArgument(Description = "Average Start Date")] DateTime AverageStartDate,
+            [ExcelArgument(Description = "Average End Date")] DateTime AverageEndDate,
+            [ExcelArgument(Description = "Average-to-date")] double KnownAverage,
+            [ExcelArgument(Description = "Strike")] double K,
+            [ExcelArgument(Description = "Forward")] double F,
+            [ExcelArgument(Description = "Discounting rate")] double R,
+            [ExcelArgument(Description = "Volatility")] double V,
+            [ExcelArgument(Description = "Call or Put")] string CP,
+            [ExcelArgument(Description = "Fixing Calendar")] object FixingCalendar)
+        {
+
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixCal = FixingCalendar.OptionalExcel<string>("Weekends");
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixCal, out var cal))
+                    return $"Calendar {FixingCalendar} not found in cache";
+
+                if (!Enum.TryParse(CP, out OptionType optType))
+                {
+                    return $"Could not parse call or put flag - {CP}";
+                }
+                return Qwack.Options.Asians.LME_Clewlow.Delta(F, KnownAverage, V, K, EvalDate, AverageStartDate, AverageEndDate, R, optType, cal);
             });
         }
     }

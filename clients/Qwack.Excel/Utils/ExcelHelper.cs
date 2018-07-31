@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Qwack.Dates;
 
 namespace Qwack.Excel.Services
 {
@@ -53,6 +54,8 @@ namespace Qwack.Excel.Services
 
             return returnValue;
         }
+
+        
 
         public static object ReturnExcelRangeVector(this object[] data)
         {

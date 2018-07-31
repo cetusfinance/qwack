@@ -8,6 +8,7 @@ using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Core.Instruments.Asset;
 
 namespace Qwack.Excel.Curves
 {
@@ -57,6 +58,38 @@ namespace Qwack.Excel.Curves
 
                 var pDates = Pillars.ToDateTimeArray();
                 var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType);
+                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a sparse price curve from swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurveFromSwaps))]
+        public static object CreateSparsePriceCurveFromSwaps(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+            [ExcelArgument(Description = "Array of swap objects")] object[] Swaps,
+            [ExcelArgument(Description = "Discount curve name")] string DiscountCurveName,
+            [ExcelArgument(Description = "Type of curve, e.g. Coal etc")] object CurveType)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveTypeStr = CurveType.OptionalExcel<string>("Coal");
+                if (!Enum.TryParse(curveTypeStr, out SparsePriceCurveType cType))
+                {
+                    return $"Could not parse price curve type - {curveTypeStr}";
+                }
+
+                var irCache = ContainerStores.GetObjectCache<ICurve>();
+                var irCurve = irCache.GetObject(DiscountCurveName).Value;
+
+                var swapCache = ContainerStores.GetObjectCache<AsianSwapStrip>();
+                var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value);
+
+                var pDates = Pillars.ToDateTimeArray();
+                var fitter = new Qwack.Core.Calibrators.NewtonRaphsonAssetCurveSolver();
+                var cObj = fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate);
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;

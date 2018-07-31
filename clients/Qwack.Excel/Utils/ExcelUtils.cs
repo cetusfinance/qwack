@@ -1,4 +1,4 @@
-﻿using ExcelDna.Integration;
+using ExcelDna.Integration;
 using Microsoft.Extensions.Logging;
 using Qwack.Dates;
 using Qwack.Excel.Dates;
@@ -26,7 +26,7 @@ namespace Qwack.Excel.Utils
             {
                 var unique = DataRange.Cast<object>().Distinct();
 
-                string sortString = SortResults.OptionalExcel("");
+                var sortString = SortResults.OptionalExcel("");
 
                 if (sortString!="")
                 {
@@ -77,5 +77,30 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcelFunction(Description = "Removes all whitespace from a string", Category = "QUtils")]
+        public static object QUtils_RemoveWhitespace(
+            [ExcelArgument(Description = "Input text")] string Text,
+            [ExcelArgument(Description = "Characters to remove")] object Characters)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var charArr = Characters.OptionalExcel(" ");
+
+                return Text.Where(x => charArr.Contains(x)).ToString();
+            });
+        }
+
+        [ExcelFunction(Description = "Returns values from a range, filtered on another range", Category = "QUtils")]
+        public static object QUtils_Filter(
+           [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange,
+           [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) ? -1 : ix).Where(ix => ix > 0);
+                var filtered = DataRange.Where((x, ix) => validIx.Contains(ix)).ToArray();
+                return filtered.ReturnExcelRangeVector();
+            });
+        }
     }
 }

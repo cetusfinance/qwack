@@ -22,7 +22,7 @@ namespace Qwack.Core.Calibrators
         private FundingModel _curveEngine;
         private List<AsianSwapStrip> _curveInstruments;
         private DateTime[] _pillars;
-        private IrCurve _discountCurve;
+        private ICurve _discountCurve;
         private IPriceCurve _currentCurve;
 
         private int _numberOfInstruments;
@@ -32,7 +32,7 @@ namespace Qwack.Core.Calibrators
         private double[][] _jacobian;
         private string[] _curveNames;
 
-        public IPriceCurve Solve(List<AsianSwapStrip> instruments, List<DateTime> pillars, IrCurve discountCurve, DateTime buildDate)
+        public IPriceCurve Solve(List<AsianSwapStrip> instruments, List<DateTime> pillars, ICurve discountCurve, DateTime buildDate)
         {
             _curveInstruments = instruments;
             _pillars = pillars.ToArray();
@@ -101,7 +101,7 @@ namespace Qwack.Core.Calibrators
             return o;
         }
 
-        public static double SwapPv(IPriceCurve priceCurve, AsianSwapStrip swap, IrCurve discountCurve)
+        public static double SwapPv(IPriceCurve priceCurve, AsianSwapStrip swap, ICurve discountCurve)
         {
             var swapletPVs = swap.Swaplets.Select(s => 
             (priceCurve.GetAveragePriceForDates(s.FixingDates.AddPeriod(RollType.F, s.FixingCalendar, s.SpotLag))-s.Strike)

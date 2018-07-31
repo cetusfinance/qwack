@@ -12,6 +12,6 @@ namespace Qwack.Excel
         internal const string Volatility = "QVol";
         internal const string Interpolation = "QInterp";
         internal const string Curves = "QCurves";
-
+        internal const string Instruments = "QIns";
     }
 }

@@ -97,7 +97,7 @@ namespace Qwack.Excel.Utils
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) ? -1 : ix).Where(ix => ix > 0);
+                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i as string)=="") ? -1 : ix).Where(ix => ix >= 0);
                 var filtered = DataRange.Where((x, ix) => validIx.Contains(ix)).ToArray();
                 return filtered.ReturnExcelRangeVector();
             });

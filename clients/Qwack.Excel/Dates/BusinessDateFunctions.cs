@@ -175,5 +175,44 @@ namespace Qwack.Excel.Dates
                 return StartDate.FridaysInPeriod(EndDate, cal).Select(x => x.ToOADate()).ToArray();
             });
         }
+
+        [ExcelFunction(Description = "Returns start and end dates for a period code", Category = "QDates")]
+        public static object QDates_DatesForPeriodCode(
+           [ExcelArgument(Description = "Period code")] string Code)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var dates = DateExtensions.ParsePeriod(Code);
+                return (new object[] { dates.Start, dates.End }).ReturnExcelRangeVector();
+            });
+        }
+
+        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates")]
+        public static object QDates_LastBusinessDay(
+            [ExcelArgument(Description = "Date in month")] DateTime Date,
+            [ExcelArgument(Description = "Calendar to check")] string Calendar)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
+                    return $"Calendar {Calendar} not found in cache";
+
+                return Date.LastBusinessDayOfMonth(cal);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates")]
+        public static object QDates_FirstBusinessDay(
+           [ExcelArgument(Description = "Date in month")] DateTime Date,
+           [ExcelArgument(Description = "Calendar to check")] string Calendar)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
+                    return $"Calendar {Calendar} not found in cache";
+
+                return Date.FirstBusinessDayOfMonth(cal);
+            });
+        }
     }
 }

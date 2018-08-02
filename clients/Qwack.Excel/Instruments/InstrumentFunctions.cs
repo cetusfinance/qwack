@@ -59,7 +59,7 @@ namespace Qwack.Excel.Curves
                 var sLag = new Frequency(spotLag);
                 if (!Enum.TryParse(dGenType, out DateGenerationType dType))
                 {
-                    return $"Could not parse price curve type - {dGenType}";
+                    return $"Could not parse date generation type - {dGenType}";
                 }
                 var currency = new Core.Basic.Currency(Currency, DayCountBasis.Act365F, pCal);
 

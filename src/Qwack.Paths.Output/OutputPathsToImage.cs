@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -16,9 +16,9 @@ namespace Qwack.Paths.Output
             var image = new Image<Argb32>(width, height);
             var rnd = new Random();
             
-            var minMax = engine.BlockSet.Select(b => b.RawData.MinMax()).Aggregate((currentValues, next) => (System.Math.Min(currentValues.min, next.min), System.Math.Max(currentValues.max, next.max)));
+            var (min, max) = engine.BlockSet.Select(b => b.RawData.MinMax()).Aggregate((currentValues, next) => (System.Math.Min(currentValues.min, next.min), System.Math.Max(currentValues.max, next.max)));
 
-            var range = minMax.max - minMax.min;
+            var range = max - min;
             var pixelsPerPointY = height / range;
             var pixelsPerPointX = width / engine.BlockSet.Steps;
 
@@ -36,7 +36,7 @@ namespace Qwack.Paths.Output
                         for(var step = 0; step < block.NumberOfSteps;step++)
                         {
                             var nextX = (float)(step * pixelsPerPointX);
-                            var nextY = (float)((block[indexOfPath + step * Vector<double>.Count] - minMax.min) * pixelsPerPointY);
+                            var nextY = (float)((block[indexOfPath + step * Vector<double>.Count] - min) * pixelsPerPointY);
                             points[step] = new Vector2(nextX, nextY);
                         }
                         image.DrawLines(pen, points);

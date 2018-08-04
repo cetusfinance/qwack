@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Qwack.Dates;
 
-namespace Qwack.Json.Providers
+namespace Qwack.Providers.Json
 {
     public class CalendarsFromJson: ICalendarProvider
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
-using Qwack.Json.Providers;
+using Qwack.Providers.Json;
 
 namespace Qwack.Curves.Benchmark
 {

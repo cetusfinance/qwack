@@ -182,8 +182,8 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var dates = DateExtensions.ParsePeriod(Code);
-                return (new object[] { dates.Start, dates.End }).ReturnExcelRangeVector();
+                var (Start, End) = DateExtensions.ParsePeriod(Code);
+                return (new object[] { Start, End }).ReturnExcelRangeVector();
             });
         }
 

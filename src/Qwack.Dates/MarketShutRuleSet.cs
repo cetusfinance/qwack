@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Qwack.Dates
 {
@@ -14,10 +15,23 @@ namespace Qwack.Dates
         public string Calendar { get; set; }
         public TimePeriod[] MarketPauses { get; set; }
 
+        private Calendar _calendar;
         private ICalendarProvider _calendarProvider;
 
         public MarketShutRuleSet(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
-
+        
+        public void LoadFromXml(XElement elementToLoad, string calendar, TimeZoneInfo timezone)
+        {
+            Calendar = calendar;
+            TimeZone = timezone;
+            _calendar = _calendarProvider.Collection[calendar];
+            ShutWholeDay = elementToLoad.Elements("ShutWholeDay").Select(e => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), e.Value)).ToArray();
+            CloseWhenHolidayFollows = TimeSpan.Parse(elementToLoad.Element("CloseWhenHolidayFollows").Value);
+            OpenOnHolidayWhenNormalDayFollows = TimeSpan.Parse(elementToLoad.Element("OpenOnHolidayWhenNormalDayFollows").Value);
+            MarketPauses = elementToLoad.Elements("MarketPause").Select(e =>
+                new TimePeriod() { Start = TimeSpan.Parse(e.Element("Start").Value), End = TimeSpan.Parse(e.Element("End").Value) }).ToArray();
+        }
+                
         public bool IsOpenFromUTC(DateTime checkDate)
         {
             checkDate = TimeZoneInfo.ConvertTimeFromUtc(checkDate, TimeZone);
@@ -79,7 +93,7 @@ namespace Qwack.Dates
             return true;
         }
 
-        public Tuple<DateTime, DateTime> NextMarketPause(DateTime inDate)
+        public (DateTime pauseStart, DateTime pauseEnd) NextMarketPause(DateTime inDate)
         {
             inDate = TimeZoneInfo.ConvertTimeFromUtc(inDate, TimeZone);
 
@@ -100,11 +114,11 @@ namespace Qwack.Dates
                     {
                         pEnd = pEnd.AddPeriod(RollType.F, _calendarProvider.Collection[Calendar], new Frequency(1, DatePeriodType.B));
                     }
-                    return new Tuple<DateTime, DateTime>(TimeZoneInfo.ConvertTimeToUtc(pStart, TimeZone), TimeZoneInfo.ConvertTimeToUtc(pEnd, TimeZone));
+                    return (TimeZoneInfo.ConvertTimeToUtc(pStart, TimeZone), TimeZoneInfo.ConvertTimeToUtc(pEnd, TimeZone));
                 }
             }
 
-            return new Tuple<DateTime, DateTime>(DateTime.MaxValue, DateTime.MaxValue);
+            return (DateTime.MaxValue, DateTime.MaxValue);
         }
     }
 }

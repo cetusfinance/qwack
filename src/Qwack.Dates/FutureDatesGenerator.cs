@@ -7,11 +7,10 @@ namespace Qwack.Dates
 {
     public class FutureDatesGenerator
     {
-        private bool _DoMToStartIsNumber;
-
         public string Calendar { get; set; }
         public int MonthModifier { get; set; }
-        public object DayOfMonthToStart { get; set; }
+        public int DayOfMonthToStart { get; set; }
+        public string DayOfMonthToStartOther { get; set; }
         public string DateOffsetModifier { get; set; }
         public bool DoMToStartIsNumber { get; set; }
         public bool NeverExpires { get; set; }
@@ -31,12 +30,11 @@ namespace Qwack.Dates
                 if (int.TryParse(element.Element("DayOfMonthToStart").Value.ToString(), out var X))
                 {
                     DayOfMonthToStart = X;
-                    _DoMToStartIsNumber = true;
+                    DayOfMonthToStartOther = null;
                 }
                 else
                 {
-                    DayOfMonthToStart = element.Element("DayOfMonthToStart").Value;
-                    _DoMToStartIsNumber = false;
+                    DayOfMonthToStartOther = element.Element("DayOfMonthToStart").Value;
                 }
 
                 DateOffsetModifier = (string)element.Element("DayOfMonthModifier");

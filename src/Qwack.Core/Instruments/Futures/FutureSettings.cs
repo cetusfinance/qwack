@@ -34,6 +34,8 @@ namespace Qwack.Core.Instruments.Futures
 
         public FutureSettings(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 
+        public override string ToString() => string.Join(",", Names);
+
         public void LoadXml(XElement element)
         {
             Names = element.Elements("Name").Select(e => e.Value).ToList();

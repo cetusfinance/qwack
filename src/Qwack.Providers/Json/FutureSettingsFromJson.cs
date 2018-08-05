@@ -11,15 +11,21 @@ namespace Qwack.Providers.Json
 {
     public class FutureSettingsFromJson: IFutureSettingsProvider
     {
-        private static readonly JsonSerializerSettings _jsonSettings;
-        
-        static FutureSettingsFromJson() => _jsonSettings = new JsonSerializerSettings()
+        private readonly JsonSerializerSettings _jsonSettings;
+        private readonly ICalendarProvider _calendarProvider;
+
+        private FutureSettingsFromJson() => _jsonSettings = new JsonSerializerSettings()
         {
-            DateFormatString = "yyyyMMdd"
+            DateFormatString = "yyyyMMdd",
+            Converters = new JsonConverter[]
+            {
+                new MarketShutRuleSetConverter(_calendarProvider),
+            },
         };
                                 
         public FutureSettingsFromJson(ICalendarProvider calendarProvider, string fileName)
         {
+            _calendarProvider = calendarProvider;
             var filename = @"C:\code\FinanceLibrary\FinanceLibrary\Settings\FutureDateSettings.xml";
             var xdoc = XDocument.Load(filename);
             var list = new List<FutureSettings>();
@@ -29,6 +35,11 @@ namespace Qwack.Providers.Json
                 future.LoadXml(topelment);
                 list.Add(future);
             }
+
+            var output = JsonConvert.SerializeObject(list);
+            System.IO.File.WriteAllText("c:\\code\\futuresettings.json", output);
+
+            var newList = JsonConvert.DeserializeObject<List<FutureSettings>>(output, _jsonSettings);
         }
     }
 }

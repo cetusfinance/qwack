@@ -46,10 +46,7 @@ namespace Qwack.Math.Interpolation
             return UpdateY(pillar, newY, updateInPlace);
         }
 
-        public double FirstDerivative(double t)
-        {
-            return 0;
-        }
+        public double FirstDerivative(double t) => 0;
 
         public double Interpolate(double t)
         {
@@ -57,10 +54,7 @@ namespace Qwack.Math.Interpolation
             return _y[k];
         }
 
-        public double SecondDerivative(double x)
-        {
-            return 0;
-        }
+        public double SecondDerivative(double x) => 0;
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
         {
@@ -80,9 +74,6 @@ namespace Qwack.Math.Interpolation
             }
         }
 
-        public double[] Sensitivity(double t)
-        {
-            throw new NotImplementedException();
-        }
+        public double[] Sensitivity(double t) => throw new NotImplementedException();
     }
 }

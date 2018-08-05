@@ -100,7 +100,7 @@ namespace Qwack.Dates
             var nF = MarketPauses.Where(g => inDate.TimeOfDay < g.Start).Count();
             if (nF == 0)
             {
-                inDate = inDate.AddPeriod(RollType.F, _calendarProvider.Collection[Calendar], new Frequency(1, DatePeriodType.B));
+                inDate = inDate.AddPeriod(RollType.F, _calendar, new Frequency(1, DatePeriodType.B));
                 inDate = new DateTime(inDate.Year, inDate.Month, inDate.Day);
             }
 

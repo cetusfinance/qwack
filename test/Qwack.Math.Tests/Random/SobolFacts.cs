@@ -58,7 +58,7 @@ namespace Qwack.Math.Tests.Random
             gen.Finish(fetCollection);
             gen.Process(block);
 
-            var totalIndex = 0;
+            //var totalIndex = 0;
 
             //for (var dim = 0; dim < 50; dim++)
             //{

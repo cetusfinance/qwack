@@ -1,4 +1,4 @@
-﻿using Qwack.Dates;
+using Qwack.Dates;
 
 namespace Qwack.Core.Basic
 {
@@ -11,8 +11,7 @@ namespace Qwack.Core.Basic
 
         public override bool Equals(object x)
         {
-            var x1 = x as FxPair;
-            if (x1 == null)
+            if (!(x is FxPair x1))
             {
                 return false;
             }

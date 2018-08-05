@@ -10,15 +10,15 @@ namespace Qwack.Core.Instruments.Futures
     public class FutureOptionsGenerator
     {
         private FutureSettings _parent;
-        private decimal StrikeRounding;
+        public decimal StrikeRounding { get; set; }
         public OptionDateGeneratorKind Kind { get; set; }
         public OptionStrikeRuleKind StrikeRule { get; set; }
         public string OffsetSize { get; set; }
         public string Generator { get; set; }
-        private int numberOfPeriodsToOffset;
-        private string periodToOffset;
-        private List<KeyValuePair<int, double>> Strikes;
-        private List<CBOTOptionRule> CBOTRules;
+        public int NumberOfPeriodsToOffset { get; set; }
+        public string PeriodToOffset { get; set; }
+        public List<KeyValuePair<int, double>> Strikes { get; set; }
+        public List<CBOTOptionRule> CBOTRules { get; set; }
 
         public decimal RoundToStrike(decimal price)
         {
@@ -64,8 +64,8 @@ namespace Qwack.Core.Instruments.Futures
             var atmPrice = RoundToStrike(price);
             returnValues.Add(atmPrice);
 
-            var upperPrice = (decimal)atmPrice;
-            var lowerPrice = (decimal)atmPrice;
+            var upperPrice = atmPrice;
+            var lowerPrice = atmPrice;
             foreach (var kv in Strikes.OrderBy(x => x.Value))
             {
                 for (var i = 0; i < kv.Key; i++)
@@ -84,24 +84,28 @@ namespace Qwack.Core.Instruments.Futures
             var atmPrice = RoundToStrike(price);
             returnValues.Add(atmPrice);
 
-            var X = CBOTRules.OrderBy(x => x.appliesWhenNMonthsOut).ToList();
+            var X = CBOTRules.OrderBy(x => x.AppliesWhenNMonthsOut).ToList();
             foreach (var R in X)
             {
-                if (R.appliesWhenNMonthsOut == 0 || nMonthsOut <= R.appliesWhenNMonthsOut)
+                if (R.AppliesWhenNMonthsOut == 0 || nMonthsOut <= R.AppliesWhenNMonthsOut)
                 {
                     var upperPrice = atmPrice;
                     var lowerPrice = atmPrice;
-                    var strikeModAbove = (decimal)R.strikeIncrementAboveBoundary;
-                    var strikeModBelow = (decimal)R.strikeIncrementBelowBoundary;
+                    var strikeModAbove = (decimal)R.StrikeIncrementAboveBoundary;
+                    var strikeModBelow = (decimal)R.StrikeIncrementBelowBoundary;
 
-                    while ((upperPrice < (1 + (decimal)R.percentRange) * atmPrice) || (lowerPrice > (1 - (decimal)R.percentRange) * atmPrice))
+                    while ((upperPrice < (1 + (decimal)R.PercentRange) * atmPrice) || (lowerPrice > (1 - (decimal)R.PercentRange) * atmPrice))
                     {
-                        upperPrice = upperPrice + (upperPrice >= (decimal)R.boundary ? strikeModAbove : strikeModBelow);
-                        lowerPrice = lowerPrice - (lowerPrice <= (decimal)R.boundary ? strikeModBelow : strikeModAbove);
-                        if (!returnValues.Contains(upperPrice) && (upperPrice <= (1 + (decimal)R.percentRange) * atmPrice))
+                        upperPrice = upperPrice + (upperPrice >= (decimal)R.Boundary ? strikeModAbove : strikeModBelow);
+                        lowerPrice = lowerPrice - (lowerPrice <= (decimal)R.Boundary ? strikeModBelow : strikeModAbove);
+                        if (!returnValues.Contains(upperPrice) && (upperPrice <= (1 + (decimal)R.PercentRange) * atmPrice))
+                        {
                             returnValues.Add(upperPrice);
-                        if (!returnValues.Contains(lowerPrice) && (lowerPrice >= (1 - (decimal)R.percentRange) * atmPrice))
+                        }
+                        if (!returnValues.Contains(lowerPrice) && (lowerPrice >= (1 - (decimal)R.PercentRange) * atmPrice))
+                        {
                             returnValues.Add(lowerPrice);
+                        }
                     }
                 }
             }
@@ -109,8 +113,6 @@ namespace Qwack.Core.Instruments.Futures
             returnValues.Sort();
             return returnValues;
         }
-
-
 
         //public DateTime GetOptionExpiry(string futureCode)
         //{
@@ -152,11 +154,11 @@ namespace Qwack.Core.Instruments.Futures
 
         public class CBOTOptionRule
         {
-            public int appliesWhenNMonthsOut { get; set; }
-            public double boundary { get; set; }
-            public double strikeIncrementAboveBoundary { get; set; }
-            public double strikeIncrementBelowBoundary { get; set; }
-            public double percentRange { get; set; }
+            public int AppliesWhenNMonthsOut { get; set; }
+            public double Boundary { get; set; }
+            public double StrikeIncrementAboveBoundary { get; set; }
+            public double StrikeIncrementBelowBoundary { get; set; }
+            public double PercentRange { get; set; }
         }
 
         public void LoadXml(XElement element, FutureSettings parent)
@@ -166,8 +168,6 @@ namespace Qwack.Core.Instruments.Futures
             Kind = (OptionDateGeneratorKind)Enum.Parse(typeof(OptionDateGeneratorKind), element.Element("Type").Value);
 
             StrikeRounding = decimal.Parse(element.Element("StrikeRounding").Value, CultureInfo.InvariantCulture.NumberFormat);
-
-
 
             if (element.Element("StrikeRule") == null)
             {
@@ -182,12 +182,14 @@ namespace Qwack.Core.Instruments.Futures
                     CBOTRules = new List<CBOTOptionRule>();
                     foreach (var E in element.Elements("Rule"))
                     {
-                        var C = new CBOTOptionRule();
-                        C.appliesWhenNMonthsOut = int.Parse(E.Element("appliesWhenNMonthsOut").Value);
-                        C.boundary = double.Parse(E.Element("boundary").Value, CultureInfo.InvariantCulture.NumberFormat);
-                        C.strikeIncrementAboveBoundary = double.Parse(E.Element("strikeIncrementAboveBoundary").Value, CultureInfo.InvariantCulture.NumberFormat);
-                        C.strikeIncrementBelowBoundary = double.Parse(E.Element("strikeIncrementBelowBoundary").Value, CultureInfo.InvariantCulture.NumberFormat);
-                        C.percentRange = double.Parse(E.Element("percentRange").Value, CultureInfo.InvariantCulture.NumberFormat);
+                        var C = new CBOTOptionRule
+                        {
+                            AppliesWhenNMonthsOut = int.Parse(E.Element("appliesWhenNMonthsOut").Value),
+                            Boundary = double.Parse(E.Element("boundary").Value, CultureInfo.InvariantCulture.NumberFormat),
+                            StrikeIncrementAboveBoundary = double.Parse(E.Element("strikeIncrementAboveBoundary").Value, CultureInfo.InvariantCulture.NumberFormat),
+                            StrikeIncrementBelowBoundary = double.Parse(E.Element("strikeIncrementBelowBoundary").Value, CultureInfo.InvariantCulture.NumberFormat),
+                            PercentRange = double.Parse(E.Element("percentRange").Value, CultureInfo.InvariantCulture.NumberFormat)
+                        };
 
                         CBOTRules.Add(C);
                     }
@@ -204,8 +206,8 @@ namespace Qwack.Core.Instruments.Futures
             {
                 case OptionDateGeneratorKind.Offset:
                     OffsetSize = element.Element("OffsetSize").Value;
-                    numberOfPeriodsToOffset = int.Parse(OffsetSize.Substring(0, OffsetSize.Length - 1));
-                    periodToOffset = OffsetSize[OffsetSize.Length - 1].ToString();
+                    NumberOfPeriodsToOffset = int.Parse(OffsetSize.Substring(0, OffsetSize.Length - 1));
+                    PeriodToOffset = OffsetSize[OffsetSize.Length - 1].ToString();
                     break;
                 case OptionDateGeneratorKind.GenCode:
                     Generator = element.Element("Generator").Value;

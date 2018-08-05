@@ -48,16 +48,8 @@ namespace Qwack.Core.Curves
             }
         }
 
-        public double GetAveragePriceForDates(DateTime[] dates)
-        {
-            return _interpB.Average(dates.Select(x=>x.ToOADate()));
-        }
+        public double GetAveragePriceForDates(DateTime[] dates) => _interpB.Average(dates.Select(x => x.ToOADate()));
 
-        public double GetPriceForDate(DateTime date)
-        {
-            return _interpB.Interpolate(date.ToOADate());
-        }
-
-
+        public double GetPriceForDate(DateTime date) => _interpB.Interpolate(date.ToOADate());
     }
 }

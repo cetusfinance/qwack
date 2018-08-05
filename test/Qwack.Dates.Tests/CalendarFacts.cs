@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.PlatformAbstractions;
-using Qwack.Json.Providers;
+using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Dates.Tests
@@ -18,7 +18,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckUSDCalendarHasHolidayOnJuly4th()
         {
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out var calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 04)));
         }
@@ -26,7 +26,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckUSDCalendarHasWeekendAsHolidays()
         {
-            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar calendar));
+            Assert.True(CalendarProvider.Collection.TryGetCalendar("nyc", out var calendar));
 
             Assert.True(calendar.IsHoliday(new DateTime(2016, 07, 03)));
         }
@@ -35,9 +35,9 @@ namespace Qwack.Dates.Tests
         [MemberData(nameof(GetUSExclusiveHolidays))]
         public void CheckCombinedCalendarHasJuly4th(DateTime dateToCheck)
         {
-            CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar us);
-            CalendarProvider.Collection.TryGetCalendar("lon", out Calendar gb);
-            CalendarProvider.Collection.TryGetCalendar("lon+nyc", out Calendar combined);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out var us);
+            CalendarProvider.Collection.TryGetCalendar("lon", out var gb);
+            CalendarProvider.Collection.TryGetCalendar("lon+nyc", out var combined);
 
             Assert.True(us.IsHoliday(dateToCheck));
             Assert.False(gb.IsHoliday(dateToCheck));
@@ -47,7 +47,7 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void CheckThatClonedCalendarIsEqualButNotTheSame()
         {
-            CalendarProvider.Collection.TryGetCalendar("nyc", out Calendar usd);
+            CalendarProvider.Collection.TryGetCalendar("nyc", out var usd);
             var clone = usd.Clone();
 
             Assert.NotSame(usd.DaysToExclude, clone.DaysToExclude);

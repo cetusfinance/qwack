@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
@@ -6,11 +6,15 @@
     <PackageId>Qwack.Excel</PackageId>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="futuresettings.json" />
     <None Remove="QwackDna.dna" />
     <None Remove="QwackDna.xll" />
   </ItemGroup>
  
   <ItemGroup>
+    <Content Include="futuresettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="QwackDna.dna">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

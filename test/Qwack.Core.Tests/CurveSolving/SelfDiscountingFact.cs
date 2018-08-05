@@ -9,8 +9,8 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Json.Providers;
 using Qwack.Math.Interpolation;
+using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving

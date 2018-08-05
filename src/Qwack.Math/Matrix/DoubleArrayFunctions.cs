@@ -196,20 +196,11 @@ namespace Qwack.Math.Matrix
             return rows == cols;
         }
 
-        public static double MaxElement(this double[][] matrix)
-        {
-            return matrix.Max(x => x.Max());
-        }
+        public static double MaxElement(this double[][] matrix) => matrix.Max(x => x.Max());
 
-        public static double MaxAbsElement(this double[][] matrix)
-        {
-            return matrix.Max(x => x.Max(y=>Abs(y)));
-        }
+        public static double MaxAbsElement(this double[][] matrix) => matrix.Max(x => x.Max(y => Abs(y)));
 
-        public static double MinElement(this double[][] matrix)
-        {
-            return matrix.Min(x => x.Min());
-        }
+        public static double MinElement(this double[][] matrix) => matrix.Min(x => x.Min());
 
         public static double[][] MatrixProductBounds(double[][] matrixA, double[][] matrixB)
         {

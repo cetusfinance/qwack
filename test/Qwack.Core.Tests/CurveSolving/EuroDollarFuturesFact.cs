@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,9 +9,9 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Json.Providers;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
+using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving

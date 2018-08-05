@@ -515,10 +515,7 @@ namespace Qwack.Dates
             return IfHolidayRoll(dt, rollType, calendar);
         }
 
-        public static DateTime[] AddPeriod(this DateTime[] dates, RollType rollType, Calendar calendar, Frequency datePeriod)
-        {
-            return dates.Select(d => d.AddPeriod(rollType, calendar, datePeriod)).ToArray();
-        }        
+        public static DateTime[] AddPeriod(this DateTime[] dates, RollType rollType, Calendar calendar, Frequency datePeriod) => dates.Select(d => d.AddPeriod(rollType, calendar, datePeriod)).ToArray();
 
         /// <summary>
         /// Returns a date equal to the input date minus the specified period, adjusted for holidays

@@ -12,14 +12,11 @@ namespace Qwack.Paths.Processes
 {
     public class Returns : IPathProcess
     {
-
-        private string _assetName;
+        private readonly string _assetName;
         private int _assetIndex;
         private int _outputIndex;
-        private string _name = "Returns";
-        private bool _logReturns;
-
-
+        private readonly string _name = "Returns";
+        private readonly bool _logReturns;
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
         public Returns(string assetName, string outputName, bool logReturns)

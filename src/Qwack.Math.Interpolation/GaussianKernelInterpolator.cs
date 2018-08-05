@@ -16,7 +16,7 @@ namespace Qwack.Math.Interpolation
         private double[] _weights;
         private readonly double _minX;
         private readonly double _maxX;
-        private double _bandwidth = 0.25;
+        private readonly double _bandwidth = 0.25;
 
         public GaussianKernelInterpolator()
         {

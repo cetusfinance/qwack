@@ -10,7 +10,7 @@ namespace Qwack.Core.Instruments.Futures
 {
     public class FutureSettings
     {
-        private ICalendarProvider _calendarProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public List<string> Names { get; set; }
         public FutureDatesGenerator ExpiryGen { get; set; }

@@ -10,8 +10,8 @@ namespace Qwack.Paths.Payoffs
 {
     public class Correlation : IPathProcess, IRequiresFinish
     {
-        private string _assetName1;
-        private string _assetName2;
+        private readonly string _assetName1;
+        private readonly string _assetName2;
         private int _assetIndex1;
         private int _assetIndex2;
 

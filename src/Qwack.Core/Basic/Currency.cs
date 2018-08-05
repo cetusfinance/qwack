@@ -35,7 +35,7 @@ namespace Qwack.Core.Basic
                 return true;
             }
             // If one is null, but not both, return false.
-            if (((object)x == null) || ((object)y == null))
+            if ((x is null) || (y is null))
             {
                 return false;
             }

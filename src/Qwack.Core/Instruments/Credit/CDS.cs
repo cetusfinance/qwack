@@ -24,17 +24,15 @@ namespace Qwack.Core.Instruments.Credit
         public CashFlowSchedule FixedSchedule { get; set; }
         public CDS()
         {
-            FixedLeg = new GenericSwapLeg(OriginDate, Tenor, HolidayCalendar, Currency, new Frequency("1m"), Basis);
-            FixedLeg.RollDay = "IMM";
+            FixedLeg = new GenericSwapLeg(OriginDate, Tenor, HolidayCalendar, Currency, new Frequency("1m"), Basis)
+            {
+                RollDay = "IMM"
+            };
             FixedSchedule = FixedLeg.GenerateSchedule();
-            
         }
 
         //http://www.bnikolic.co.uk/cds/cdsvaluation.html 
-        public double PV(HazzardCurve hazzardCurve, ICurve discountCurve, double recoveryRate, bool payAccruedOnDefault=true)
-        {
-            //var contingentLeg = (1.0 - recoveryRate) *
-            return 0;
-        }
+        //var contingentLeg = (1.0 - recoveryRate) *
+        public double PV(HazzardCurve hazzardCurve, ICurve discountCurve, double recoveryRate, bool payAccruedOnDefault = true) => 0;
     }
 }

@@ -14,11 +14,8 @@ namespace Qwack.Paths.Processes
     public class Cholesky : IPathProcess, IRequiresFinish
     {
         private bool _isComplete;
-
-        private string _name = "Cholesky";
-        private double[][] _decompMatrix;
-
-
+        //private readonly string _name = "Cholesky";
+        private readonly double[][] _decompMatrix;
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
         public Cholesky(double[][] correlationMatrix)
@@ -31,10 +28,7 @@ namespace Qwack.Paths.Processes
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(FeatureCollection collection)
-        {
-            _isComplete = true;
-        }
+        public void Finish(FeatureCollection collection) => _isComplete = true;
 
         public void Process(PathBlock block)
         {

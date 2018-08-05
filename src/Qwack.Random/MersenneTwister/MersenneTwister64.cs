@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,12 +14,12 @@ namespace Qwack.Random.MersenneTwister
     public class MersenneTwister64 : IPathProcess
     {
         private static uint _nN = 312;
-        private uint MM = 156;
-        private ulong Matrix_A = 0xB5026F5AA96619E9UL;
-        private ulong UpperM = 0xFFFFFFFF80000000UL;
-        private ulong LowerM = 0x7FFFFFFFUL;
-        private ulong[] mt = new ulong[_nN];
-        private uint mti;
+        private readonly uint _mm = 156;
+        private readonly ulong _matrix_A = 0xB5026F5AA96619E9UL;
+        private readonly ulong _upperM = 0xFFFFFFFF80000000UL;
+        private readonly ulong _lowerM = 0x7FFFFFFFUL;
+        private readonly ulong[] _mt = new ulong[_nN];
+        private uint _mti;
 
         public MersenneTwister64()
             : this(5489UL)
@@ -28,10 +28,10 @@ namespace Qwack.Random.MersenneTwister
 
         public MersenneTwister64(ulong seed)
         {
-            mt[0] = seed;
-            for (mti = 1; mti < _nN; mti++)
+            _mt[0] = seed;
+            for (_mti = 1; _mti < _nN; _mti++)
             {
-                mt[mti] = (6364136223846793005UL * (mt[mti - 1] ^ (mt[mti - 1] >> 62)) + mti);
+                _mt[_mti] = (6364136223846793005UL * (_mt[_mti - 1] ^ (_mt[_mti - 1] >> 62)) + _mti);
             }
         }
 
@@ -43,20 +43,20 @@ namespace Qwack.Random.MersenneTwister
             k = (_nN > key_length ? _nN : key_length);
             for (; k != 0; k--)
             {
-                mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * 3935559000370003845UL)) + initkey[j] + j; /* non linear */
+                _mt[i] = (_mt[i] ^ ((_mt[i - 1] ^ (_mt[i - 1] >> 62)) * 3935559000370003845UL)) + initkey[j] + j; /* non linear */
                 i++;
                 j++;
-                if (i >= _nN) { mt[0] = mt[_nN - 1]; i = 1; }
+                if (i >= _nN) { _mt[0] = _mt[_nN - 1]; i = 1; }
                 if (j >= key_length) j = 0;
             }
             for (k = _nN - 1; k != 0; k--)
             {
-                mt[i] = (mt[i] ^ ((mt[i - 1] ^ (mt[i - 1] >> 62)) * 2862933555777941757UL)) - i; /* non linear */
+                _mt[i] = (_mt[i] ^ ((_mt[i - 1] ^ (_mt[i - 1] >> 62)) * 2862933555777941757UL)) - i; /* non linear */
                 i++;
-                if (i >= _nN) { mt[0] = mt[_nN - 1]; i = 1; }
+                if (i >= _nN) { _mt[0] = _mt[_nN - 1]; i = 1; }
             }
 
-            mt[0] = 1UL << 63; /* MSB is 1; assuring non-zero initial array */
+            _mt[0] = 1UL << 63; /* MSB is 1; assuring non-zero initial array */
         }
 
         public bool UseNormalInverse { get; set; }
@@ -66,27 +66,27 @@ namespace Qwack.Random.MersenneTwister
         {
             uint i;
             ulong x;
-            ulong[] mag01 = { 0UL, Matrix_A };
+            ulong[] mag01 = { 0UL, _matrix_A };
 
-            if (mti >= _nN)
+            if (_mti >= _nN)
             { /* generate NN words at one time */
-                for (i = 0; i < _nN - MM; i++)
+                for (i = 0; i < _nN - _mm; i++)
                 {
-                    x = (mt[i] & UpperM) | (mt[i + 1] & LowerM);
-                    mt[i] = mt[i + MM] ^ (x >> 1) ^ mag01[(uint)(x & 1U)];
+                    x = (_mt[i] & _upperM) | (_mt[i + 1] & _lowerM);
+                    _mt[i] = _mt[i + _mm] ^ (x >> 1) ^ mag01[(uint)(x & 1U)];
                 }
                 for (; i < _nN - 1; i++)
                 {
-                    x = (mt[i] & UpperM) | (mt[i + 1] & LowerM);
-                    mt[i] = mt[i + (MM - _nN)] ^ (x >> 1) ^ mag01[(uint)(x & 1UL)];
+                    x = (_mt[i] & _upperM) | (_mt[i + 1] & _lowerM);
+                    _mt[i] = _mt[i + (_mm - _nN)] ^ (x >> 1) ^ mag01[(uint)(x & 1UL)];
                 }
-                x = (mt[_nN - 1] & UpperM) | (mt[0] & LowerM);
-                mt[_nN - 1] = mt[MM - 1] ^ (x >> 1) ^ mag01[(uint)(x & 1UL)];
+                x = (_mt[_nN - 1] & _upperM) | (_mt[0] & _lowerM);
+                _mt[_nN - 1] = _mt[_mm - 1] ^ (x >> 1) ^ mag01[(uint)(x & 1UL)];
 
-                mti = 0;
+                _mti = 0;
             }
 
-            x = mt[mti++];
+            x = _mt[_mti++];
 
             x ^= (x >> 29) & 0x5555555555555555U;
             x ^= (x << 17) & 0x71D67FFFEDA60000U;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,8 +9,8 @@ namespace Qwack.Math.Tests.Solvers
 {
     public class GaussNewtonFacts
     {
-        double[] years = new double[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-        double[] population = new double[] { 8.3, 11, 14.7, 19.7, 26.7, 35.2, 44.4, 55.9 };
+        private readonly double[] years = new double[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+        private readonly double[] population = new double[] { 8.3, 11, 14.7, 19.7, 26.7, 35.2, 44.4, 55.9 };
         //https://www.math.lsu.edu/system/files/MunozGroup1%20-%20Paper.pdf
 
         private double[] Residuals(double[] inputs)

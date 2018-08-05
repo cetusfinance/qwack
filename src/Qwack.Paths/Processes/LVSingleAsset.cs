@@ -14,13 +14,13 @@ namespace Qwack.Paths.Processes
     public class LVSingleAsset : IPathProcess, IRequiresFinish
     {
         private IVolSurface _surface;
-        private DateTime _expiryDate;
+        private readonly DateTime _expiryDate;
         private DateTime _startDate;
-        private int _numberOfSteps;
-        private string _name;
+        private readonly int _numberOfSteps;
+        private readonly string _name;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
-        private Func<double, double> _forwardCurve;
+        private readonly Func<double, double> _forwardCurve;
         private bool _isComplete;
         private double[] _drifts;
         private IInterpolator1D[] _lvInterps;

@@ -10,7 +10,7 @@ namespace Qwack.Excel.Services
 {
     public static class ExcelHelper
     {
-        private static EventId _eventId = new EventId(1);
+        private static readonly EventId _eventId = new EventId(1);
 
         public static object Execute(ILogger logger, Func<object> functionToRun)
         {
@@ -27,10 +27,7 @@ namespace Qwack.Excel.Services
             }
         }
 
-        public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles)
-        {
-            return datesAsDoubles.Select(DateTime.FromOADate).ToArray();
-        }
+        public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles) => datesAsDoubles.Select(DateTime.FromOADate).ToArray();
 
         public static T[][] SquareToJagged<T>(this T[,] data)
         {

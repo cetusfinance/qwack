@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +12,6 @@ namespace Qwack.Excel.Utils
         public int Version { get; set; }
         public T Value { get; set; }
 
-        public override string ToString()
-        {
-            return $"{Name}|{Version}";
-        }
+        public override string ToString() => $"{Name}|{Version}";
     }
 }

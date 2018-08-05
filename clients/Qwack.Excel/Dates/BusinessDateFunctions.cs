@@ -39,11 +39,8 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
              {
-                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
-                     return $"Calendar {Calendar} not found in cache";
-
-                 if (!Enum.TryParse(RollMethod, out RollType rollMethod))
-                     return $"Unknown roll method {RollMethod}";
+                 if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
+                     return errorMessage;
 
                  var period = new Frequency(Period);
 
@@ -61,17 +58,34 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
              {
-                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
-                     return $"Calendar {Calendar} not found in cache";
-
-                 if (!Enum.TryParse(RollMethod, out RollType rollMethod))
-                     return $"Unknown roll method {RollMethod}";
-
+                 if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
+                     return errorMessage;
+                 
                  var period = new Frequency(Period);
 
                  return StartDate.SubtractPeriod(rollMethod, cal, period);
 
              });
+        }
+
+        private static bool ValidateCalendarAndRoll(string rollMethod, string calendar, out RollType rollType, out Calendar calendarObject, out string errorMessage)
+        {
+            rollType = default;
+            calendarObject = default;
+            errorMessage = default;
+            if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(calendar, out calendarObject))
+            {
+                errorMessage = $"Calendar {calendar} not found in cache";
+                return false;
+            }
+
+            if (!Enum.TryParse(rollMethod, out rollType))
+            {
+                errorMessage = $"Unknown roll method {rollMethod}";
+                return false;
+            }
+
+            return true;
         }
 
         [ExcelFunction(Description = "Returns N-th instance of a specific weekday in a given month", Category = "QDates")]

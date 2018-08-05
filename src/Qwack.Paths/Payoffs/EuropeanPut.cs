@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -9,9 +9,9 @@ namespace Qwack.Paths.Payoffs
 {
     public class EuropeanPut : IPathProcess, IRequiresFinish
     {
-        private DateTime _expiry;
-        private double _strike;
-        private string _assetName;
+        private readonly DateTime _expiry;
+        private readonly double _strike;
+        private readonly string _assetName;
         private int _assetIndex;
         private int _expiryIndex;
         private bool _isComplete;

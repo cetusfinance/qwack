@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Qwack.Paths.Features;
 using static System.Math;
@@ -8,13 +8,13 @@ namespace Qwack.Paths.Processes
     public class ConstantVolSingleAsset : IPathProcess
     {
         private DateTime _startDate;
-        private DateTime _expiry;
-        private double _vol;
-        private double _scaledVol;
-        private double _spot;
-        private double _drift;
-        private int _numberOfSteps;
-        private string _name;
+        private readonly DateTime _expiry;
+        private readonly double _vol;
+        private readonly double _scaledVol;
+        private readonly double _spot;
+        private readonly double _drift;
+        private readonly int _numberOfSteps;
+        private readonly string _name;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
 

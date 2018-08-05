@@ -4,6 +4,7 @@
     <TargetFramework>net461</TargetFramework>
     <AssemblyName>Qwack.Excel</AssemblyName>
     <PackageId>Qwack.Excel</PackageId>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="futuresettings.json" />

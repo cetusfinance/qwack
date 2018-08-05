@@ -56,7 +56,7 @@ namespace Qwack.Core.Tests.CurveSolving
             HolidayCalendars = _usd,
             RollConvention = RollType.F
         };
-        FloatRateIndex usd3m = new FloatRateIndex()
+        private readonly FloatRateIndex usd3m = new FloatRateIndex()
         {
             Currency = ccyUsd,
             DayCountBasis = DayCountBasis.Act_360,

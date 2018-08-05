@@ -15,7 +15,7 @@ namespace Qwack.Random.Sobol
 
         private int _numberOfDimensions;
         private SobolDirectionNumbers _directionNumbers;
-        private int _seed;
+        private readonly int _seed;
         private uint _bitsRequired;
         private uint[][] _v;
         private int _numberOfPaths;

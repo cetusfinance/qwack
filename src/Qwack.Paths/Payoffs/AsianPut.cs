@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -9,8 +9,8 @@ namespace Qwack.Paths.Payoffs
     public class AsianPut : IPathProcess, IRequiresFinish
     {
         private List<DateTime> _asianDates;
-        private double _strike;
-        private string _assetName;
+        private readonly double _strike;
+        private readonly string _assetName;
         private int _assetIndex;
         private int[] _dateIndexes;
         private List<Vector<double>> _results = new List<Vector<double>>();

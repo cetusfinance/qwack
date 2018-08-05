@@ -14,8 +14,8 @@ namespace Qwack.Math.Interpolation
         private double[] _x;
         private double[] _y;
         private double[] _slope;
-        private double _minX;
-        private double _maxX;
+        private readonly double _minX;
+        private readonly double _maxX;
 
         public LinearInterpolatorFlatExtrapNoBinSearch(double[] x, double[] y)
         {

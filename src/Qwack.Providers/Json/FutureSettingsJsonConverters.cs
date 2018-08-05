@@ -8,7 +8,7 @@ namespace Qwack.Providers.Json
 {
     public class MarketShutRuleSetConverter : CustomCreationConverter<MarketShutRuleSet>
     {
-        private ICalendarProvider _calendarProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public MarketShutRuleSetConverter(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 

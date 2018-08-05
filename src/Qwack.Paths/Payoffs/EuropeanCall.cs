@@ -10,9 +10,9 @@ namespace Qwack.Paths.Payoffs
 {
     public class EuropeanCall : IPathProcess, IRequiresFinish
     {
-        private DateTime _expiry;
-        private double _strike;
-        private string _assetName;
+        private readonly DateTime _expiry;
+        private readonly double _strike;
+        private readonly string _assetName;
         private int _assetIndex;
         private int _expiryIndex;
         private List<Vector<double>> _results = new List<Vector<double>>();

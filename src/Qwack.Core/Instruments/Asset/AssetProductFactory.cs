@@ -10,10 +10,10 @@ namespace Qwack.Core.Instruments.Asset
     {
         public static AsianSwapStrip CreateMonthlyAsianSwap(string period, double strike, string assetId, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection=TradeDirection.Long, Frequency spotLag = new Frequency(), double notional=1, DateGenerationType fixingDateType=DateGenerationType.BusinessDays)
         {
-            var pDates = period.ParsePeriod();
-            var m = pDates.Start;
+            var (Start, End) = period.ParsePeriod();
+            var m = Start;
             var swaplets = new List<AsianSwap>();
-            while ((m.Month+m.Year*12)<=(pDates.End.Month+pDates.End.Year*12))
+            while ((m.Month+m.Year*12)<=(End.Month+End.Year*12))
             {
                 var fixingDates = fixingDateType==DateGenerationType.BusinessDays?
                     m.BusinessDaysInPeriod(m.LastDayOfMonth(), fixingCalendar) :

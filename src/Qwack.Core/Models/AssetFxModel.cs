@@ -9,8 +9,8 @@ namespace Qwack.Core.Models
 {
     public class AssetFxModel
     {
-        private Dictionary<string, IVolSurface> _assetVols;
-        private Dictionary<string, IPriceCurve> _assetCurves;
+        private readonly Dictionary<string, IVolSurface> _assetVols;
+        private readonly Dictionary<string, IPriceCurve> _assetCurves;
         private readonly DateTime _buildDate;
         private readonly FundingModel _fundingModel;
 
@@ -28,24 +28,12 @@ namespace Qwack.Core.Models
             _fundingModel = fundingModel;
         }
 
-        public void AddPriceCurve(string name, IPriceCurve curve)
-        {
-            _assetCurves[name] = curve;
-        }
+        public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
 
-        public void AddVolSurface(string name, IVolSurface surface)
-        {
-            _assetVols[name] = surface;
-        }
+        public void AddVolSurface(string name, IVolSurface surface) => _assetVols[name] = surface;
 
-        public IPriceCurve GetPriceCurve(string name)
-        {
-            return _assetCurves[name];
-        }
+        public IPriceCurve GetPriceCurve(string name) => _assetCurves[name];
 
-        public IVolSurface GetVolSurface(string name)
-        {
-            return _assetVols[name];
-        }
+        public IVolSurface GetVolSurface(string name) => _assetVols[name];
     }
 }

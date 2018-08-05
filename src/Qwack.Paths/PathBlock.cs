@@ -14,7 +14,7 @@ namespace Qwack.Paths
         private readonly int _numberOfFactors;
         private readonly int _numberOfSteps;
         private GCHandle _handle;
-        private double[] _backingArray;
+        private readonly double[] _backingArray;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
 
         public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex)

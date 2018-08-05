@@ -14,9 +14,9 @@ namespace Qwack.Paths
     public class BlockSet : IEnumerable<PathBlock>, IDisposable
     {
         private static readonly int _numberOfThreads = Environment.ProcessorCount;
-        private int _numberOfPaths;
-        private int _factors;
-        private int _steps;
+        private readonly int _numberOfPaths;
+        private readonly int _factors;
+        private readonly int _steps;
         private PathBlock[] _blocks;
 
         public BlockSet(int numberOfPaths, int factors, int steps)

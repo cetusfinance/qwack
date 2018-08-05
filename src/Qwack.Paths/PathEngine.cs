@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +11,8 @@ namespace Qwack.Paths
     public class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
         private List<IPathProcess> _pathProcesses = new List<IPathProcess>();
-        private List<object> _pathProcessFeatures = new List<object>();
-        private int _numberOfPaths;
+        private readonly List<object> _pathProcessFeatures = new List<object>();
+        private readonly int _numberOfPaths;
         private FeatureCollection _featureCollection = new FeatureCollection();
         private int _dimensions;
         private int _steps;

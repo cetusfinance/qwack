@@ -16,7 +16,7 @@ namespace Qwack.Excel
     public static class ContainerStores
     {
         private const string _calendarJSONFile = "Calendars.json";
-        private const string _futureSettingsFile = "Futures.json";
+        private const string _futureSettingsFile = "futuresettings.json";
 
         static ContainerStores()
         {

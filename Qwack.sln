@@ -33,6 +33,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{E7E258E0-9AE9-4ECD-B46C-740BBED8AFB6}"
 	ProjectSection(SolutionItems) = preProject
 		data\Calendars.json = data\Calendars.json
+		data\futuresettings.json = data\futuresettings.json
 		data\mt19937-64-Ints.txt = data\mt19937-64-Ints.txt
 		data\SobolDirectionNumbers.txt = data\SobolDirectionNumbers.txt
 		data\SobolTestOutput50x512.txt = data\SobolTestOutput50x512.txt

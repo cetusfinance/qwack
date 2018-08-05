@@ -9,37 +9,32 @@ using Qwack.Dates;
 
 namespace Qwack.Providers.Json
 {
-    public class FutureSettingsFromJson: IFutureSettingsProvider
+    public class FutureSettingsFromJson : IFutureSettingsProvider
     {
         private readonly JsonSerializerSettings _jsonSettings;
         private readonly ICalendarProvider _calendarProvider;
+        private readonly List<FutureSettings> _allFutureSettings;
+        private readonly Dictionary<string, FutureSettings> _allSettingsByName = new Dictionary<string, FutureSettings>(StringComparer.OrdinalIgnoreCase);
 
-        private FutureSettingsFromJson() => _jsonSettings = new JsonSerializerSettings()
-        {
-            DateFormatString = "yyyyMMdd",
-            Converters = new JsonConverter[]
-            {
-                new MarketShutRuleSetConverter(_calendarProvider),
-            },
-        };
-                                
         public FutureSettingsFromJson(ICalendarProvider calendarProvider, string fileName)
         {
             _calendarProvider = calendarProvider;
-            var filename = @"C:\code\FinanceLibrary\FinanceLibrary\Settings\FutureDateSettings.xml";
-            var xdoc = XDocument.Load(filename);
-            var list = new List<FutureSettings>();
-            foreach (var topelment in xdoc.Elements().First().Elements())
+            _jsonSettings = new JsonSerializerSettings()
             {
-                var future = new FutureSettings(calendarProvider);
-                future.LoadXml(topelment);
-                list.Add(future);
+                DateFormatString = "yyyyMMdd",
+                Converters = new JsonConverter[]
+                {
+                    new MarketShutRuleSetConverter(_calendarProvider),
+                },
+            };
+            _allFutureSettings = JsonConvert.DeserializeObject<List<FutureSettings>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
+            foreach(var fs in _allFutureSettings)
+            {
+                foreach(var n in fs.Names)
+                {
+                    _allSettingsByName.Add(n, fs);
+                }
             }
-
-            var output = JsonConvert.SerializeObject(list);
-            System.IO.File.WriteAllText("c:\\code\\futuresettings.json", output);
-
-            var newList = JsonConvert.DeserializeObject<List<FutureSettings>>(output, _jsonSettings);
         }
     }
 }

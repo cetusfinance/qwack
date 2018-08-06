@@ -25,6 +25,7 @@ namespace Qwack.Providers.Json
                 Converters = new JsonConverter[]
                 {
                     new MarketShutRuleSetConverter(_calendarProvider),
+                    new FutureDatesGeneratorConverter(_calendarProvider),
                 },
             };
             _allFutureSettings = JsonConvert.DeserializeObject<List<FutureSettings>>(System.IO.File.ReadAllText(fileName), _jsonSettings);

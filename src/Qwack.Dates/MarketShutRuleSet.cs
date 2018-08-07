@@ -8,30 +8,29 @@ namespace Qwack.Dates
 {
     public class MarketShutRuleSet
     {
+        private string _calendarName;
+        private Calendar _calendar;
+        private ICalendarProvider _calendarProvider;
+
         public DayOfWeek[] ShutWholeDay { get; set; }
         public TimeSpan CloseWhenHolidayFollows { get; set; }
         public TimeSpan OpenOnHolidayWhenNormalDayFollows { get; set; }
         public TimeZoneInfo TimeZone { get; set; }
-        public string Calendar { get; set; }
+
+        public string Calendar
+        {
+            get => _calendarName;
+            set
+            {
+                _calendarName = value;
+                if (!_calendarProvider.Collection.TryGetCalendar(_calendarName, out _calendar)) throw new KeyNotFoundException($"Unable to find calendar {_calendarName}");
+            }
+        }
+
         public TimePeriod[] MarketPauses { get; set; }
 
-        private Calendar _calendar;
-        private ICalendarProvider _calendarProvider;
-
         public MarketShutRuleSet(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
-        
-        public void LoadFromXml(XElement elementToLoad, string calendar, TimeZoneInfo timezone)
-        {
-            Calendar = calendar;
-            TimeZone = timezone;
-            _calendar = _calendarProvider.Collection[calendar];
-            ShutWholeDay = elementToLoad.Elements("ShutWholeDay").Select(e => (DayOfWeek)Enum.Parse(typeof(DayOfWeek), e.Value)).ToArray();
-            CloseWhenHolidayFollows = TimeSpan.Parse(elementToLoad.Element("CloseWhenHolidayFollows").Value);
-            OpenOnHolidayWhenNormalDayFollows = TimeSpan.Parse(elementToLoad.Element("OpenOnHolidayWhenNormalDayFollows").Value);
-            MarketPauses = elementToLoad.Elements("MarketPause").Select(e =>
-                new TimePeriod() { Start = TimeSpan.Parse(e.Element("Start").Value), End = TimeSpan.Parse(e.Element("End").Value) }).ToArray();
-        }
-                
+
         public bool IsOpenFromUTC(DateTime checkDate)
         {
             checkDate = TimeZoneInfo.ConvertTimeFromUtc(checkDate, TimeZone);

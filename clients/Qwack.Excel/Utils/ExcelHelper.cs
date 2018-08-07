@@ -52,8 +52,6 @@ namespace Qwack.Excel.Services
             return returnValue;
         }
 
-        
-
         public static object ReturnExcelRangeVector(this object[] data)
         {
             var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-using Qwack.Core.Instruments.Futures;
 using Qwack.Dates;
+using Qwack.Futures;
 
 namespace Qwack.Providers.Json
 {
@@ -15,5 +15,7 @@ namespace Qwack.Providers.Json
                     var calendars = sp.GetRequiredService<ICalendarProvider>();
                     return new FutureSettingsFromJson(calendars, fileName);
                 });
+
+        public static IServiceCollection AddCalendarsFromJson(this IServiceCollection serviceCollection, string fileName) => serviceCollection.AddSingleton<ICalendarProvider>(CalendarsFromJson.Load(fileName));
     }
 }

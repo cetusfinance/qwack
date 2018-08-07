@@ -19,7 +19,7 @@ namespace Qwack.Excel.Utils
 
         public void PutObject(string name, ISessionItem<T> obj) => _store.AddOrUpdate(name.StripVersion(), obj, (n, o) =>
                                                                  {
-                                                                     if (o == obj)
+                                                                     if (o.GetType() == obj.GetType())
                                                                          obj.Version++;
                                                                      else
                                                                          obj.Version = 1;

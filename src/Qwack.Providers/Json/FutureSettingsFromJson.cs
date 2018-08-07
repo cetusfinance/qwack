@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json;
-using Qwack.Core.Instruments.Futures;
 using Qwack.Dates;
+using Qwack.Futures;
 
 namespace Qwack.Providers.Json
 {
@@ -25,16 +25,21 @@ namespace Qwack.Providers.Json
                 Converters = new JsonConverter[]
                 {
                     new MarketShutRuleSetConverter(_calendarProvider),
+                    new FutureDatesGeneratorConverter(_calendarProvider),
                 },
             };
             _allFutureSettings = JsonConvert.DeserializeObject<List<FutureSettings>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
-            foreach(var fs in _allFutureSettings)
+            foreach (var fs in _allFutureSettings)
             {
-                foreach(var n in fs.Names)
+                foreach (var n in fs.Names)
                 {
                     _allSettingsByName.Add(n, fs);
                 }
             }
         }
+
+        public FutureSettings this[string futureName] => _allSettingsByName[futureName];
+
+        public bool TryGet(string futureName, out FutureSettings futureSettings) => _allSettingsByName.TryGetValue(futureName, out futureSettings);
     }
 }

@@ -19,7 +19,5 @@ namespace Qwack.Math.Tests.Interpolation
             interp = InterpolatorFactory.GetInterpolator(new double[] { 0, 10 }, new double[] { 20, 30 }, new double[,] { { 20, 10 }, { 20, 10 } }, Interpolator2DType.Bilinear);
             Assert.True(double.IsNaN(interp.Interpolate(500, 500)));
         }
-
-
     }
 }

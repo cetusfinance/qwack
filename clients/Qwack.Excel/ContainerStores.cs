@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Qwack.Core.Instruments.Futures;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
+using Qwack.Futures;
 using Qwack.Providers.Json;
 
 namespace Qwack.Excel
@@ -22,7 +18,7 @@ namespace Qwack.Excel
         {
             GlobalContainer = ((IServiceCollection)new ServiceCollection())
              .AddLogging()
-             .AddSingleton<ICalendarProvider>(CalendarsFromJson.Load(GetCalendarFilename()))
+             .AddCalendarsFromJson(GetCalendarFilename())
              .AddFutureSettingsFromJson(GetFutureSettingsFile())
              .AddSingleton(typeof(IObjectStore<>), typeof(ExcelObjectStore<>))
              .BuildServiceProvider();

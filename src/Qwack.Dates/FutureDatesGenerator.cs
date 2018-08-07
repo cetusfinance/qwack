@@ -20,7 +20,7 @@ namespace Qwack.Dates
             }
         }
 
-        public Calendar CalenderObject => _calendarObject;
+        public Calendar CalendarObject => _calendarObject;
         public int MonthModifier { get; set; }
         public int DayOfMonthToStart { get; set; }
         public string DayOfMonthToStartOther { get; set; }

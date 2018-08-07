@@ -38,16 +38,16 @@ namespace Qwack.Futures
         public FutureSettings(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 
         public override string ToString() => string.Join(",", Names);
-        
+
         public DateTime GetUTCCloseFromDay(DateTime date)
         {
             if (ExpiryGen.NeverExpires)
             {
                 return date.Date.Add(new TimeSpan(23, 59, 59));
             }
-            if (ExpiryGen.CalenderObject.IsHoliday(date))
+            if (ExpiryGen.CalendarObject.IsHoliday(date))
             {
-                date = date.AddDays(-1).AddPeriod( RollType.F, ExpiryGen.CalenderObject, new Frequency(1, DatePeriodType.B)).Date;
+                date = date.AddDays(-1).AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B)).Date;
             }
 
             DateTime tempDate;
@@ -66,6 +66,133 @@ namespace Qwack.Futures
             }
 
             return TimeZoneInfo.ConvertTimeToUtc(tempDate, TimeZone);
+        }
+
+        public bool IsOpenFromUTC(DateTime timeToCheck)
+        {
+            if ((MarketShutRulesValidUntil.Count == 1) && (MarketShutRulesValidUntil[0] == DateTime.MaxValue))
+            {
+                return MarketShutRules[0].IsOpenFromUTC(timeToCheck);
+            }
+            else
+            {
+                var X = MarketShutRulesValidUntil.BinarySearch(timeToCheck);
+                if (X < 0)
+                    X = ~X;
+                return MarketShutRules[X].IsOpenFromUTC(timeToCheck);
+            }
+        }
+
+        public (DateTime pauseStart, DateTime pauseEnd) GetNextMarketPause(DateTime inDate)
+        {
+            if ((MarketShutRulesValidUntil.Count == 1) && (MarketShutRulesValidUntil[0] == DateTime.MaxValue))
+            {
+                return MarketShutRules[0].NextMarketPause(inDate);
+            }
+            else
+            {
+                var X = MarketShutRulesValidUntil.BinarySearch(inDate);
+                if (X < 0)
+                    X = ~X;
+                return MarketShutRules[X].NextMarketPause(inDate);
+            }
+        }
+
+        public DateTime GetNextUTCOpen(DateTime UTCDateTime)
+        {
+            var U0 = UTCDateTime;
+
+            if (ExpiryGen.CalendarObject.IsHoliday(UTCDateTime))
+            {
+                UTCDateTime = UTCDateTime.AddDays(-1).AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B)).Date;
+            }
+
+            var openToday = GetUTCOpenFromDay(UTCDateTime);
+            if ((UTCDateTime < openToday) || (U0 < UTCDateTime && UTCDateTime <= openToday))
+                return openToday;
+            else
+            {
+                var tomorrow = UTCDateTime.AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B));
+                var nextOpen = GetUTCOpenFromDay(tomorrow);
+                if (nextOpen <= U0)
+                {
+                    tomorrow = tomorrow.AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B));
+                    nextOpen = GetUTCOpenFromDay(tomorrow);
+                }
+
+                return nextOpen;
+            }
+        }
+        public DateTime GetUTCOpenFromDay(DateTime date)
+        {
+            DateTime tempDate;
+            if ((MarketOpenRulesValidUntil.Count == 1) && (MarketOpenRulesValidUntil[0] == DateTime.MaxValue))
+            {
+                date = date.AddDays(MarketOpenModifier[0]);
+                if (ExpiryGen.CalendarObject.IsHoliday(date))
+                {
+                    var OOHWNDF = GetOpenOnHolidayWhenNormalDayFollows(date);
+                    tempDate = new DateTime(date.Year, date.Month, date.Day, OOHWNDF.Hours, OOHWNDF.Minutes, OOHWNDF.Seconds);
+                }
+                else
+                {
+                    tempDate = new DateTime(date.Year, date.Month, date.Day, MarketOpenTime[0].Hours, MarketOpenTime[0].Minutes, MarketOpenTime[0].Seconds);
+                }
+            }
+            else
+            {
+                var q = MarketOpenRulesValidUntil.BinarySearch(date);
+
+                if (q < 0)
+                    q = ~q;
+
+                date = date.AddDays(MarketOpenModifier[q]);
+                if (ExpiryGen.CalendarObject.IsHoliday(date))
+                {
+                    var OOHWNDF = GetOpenOnHolidayWhenNormalDayFollows(date);
+                    tempDate = new DateTime(date.Year, date.Month, date.Day, OOHWNDF.Hours, OOHWNDF.Minutes, OOHWNDF.Seconds);
+                }
+                else
+                {
+                    tempDate = new DateTime(date.Year, date.Month, date.Day, MarketOpenTime[q].Hours, MarketOpenTime[q].Minutes, MarketOpenTime[q].Seconds);
+                }
+            }
+
+            return TimeZoneInfo.ConvertTimeToUtc(tempDate, TimeZone);
+        }
+
+        public DateTime GetNextUTCClose(DateTime UTCDateTime)
+        {
+            if (ExpiryGen.CalendarObject.IsHoliday(UTCDateTime))
+            {
+                UTCDateTime = UTCDateTime.AddDays(-1).AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B)).Date;
+            }
+
+            var closeToday = GetUTCCloseFromDay(UTCDateTime);
+            if (UTCDateTime < closeToday)
+                return closeToday;
+            else
+            {
+                var tomorrow = UTCDateTime.AddPeriod(RollType.F, ExpiryGen.CalendarObject, new Frequency(1, DatePeriodType.B));
+                return GetUTCCloseFromDay(tomorrow);
+            }
+        }
+
+        public TimeSpan GetOpenOnHolidayWhenNormalDayFollows(DateTime valDate)
+        {
+            if ((MarketShutRules.Count == 1) && (MarketShutRulesValidUntil[0] == DateTime.MaxValue))
+            {
+                return MarketShutRules[0].OpenOnHolidayWhenNormalDayFollows;
+            }
+            else
+            {
+                var q = MarketShutRulesValidUntil.BinarySearch(valDate);
+
+                if (q < 0)
+                    q = ~q;
+
+                return MarketShutRules[q].OpenOnHolidayWhenNormalDayFollows;
+            }
         }
     }
 }

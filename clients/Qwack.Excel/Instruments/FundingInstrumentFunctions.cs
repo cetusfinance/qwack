@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Qwack.Dates;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
+using Qwack.Core.Models;
+using Qwack.Core.Calibrators;
 
 namespace Qwack.Excel.Curves
 {
@@ -19,7 +21,7 @@ namespace Qwack.Excel.Curves
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<FundingInstrumentFunctions>();
 
-        
+
         [ExcelFunction(Description = "Creates a FRA object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFRA))]
         public static object CreateFRA(
              [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -38,7 +40,7 @@ namespace Qwack.Excel.Curves
             {
                 var discType = DiscountingType.OptionalExcel("Isda");
                 var payRec = PayRec.OptionalExcel("Pay");
-           
+
                 if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndex, out var rIndex))
                 {
                     _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
@@ -76,10 +78,10 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-              
+
                 var product = new FxForward
                 {
-                    DomesticCCY = new Currency(DomesticCcy,DayCountBasis.Act365F,null),
+                    DomesticCCY = new Currency(DomesticCcy, DayCountBasis.Act365F, null),
                     ForeignCCY = new Currency(ForeignCcy, DayCountBasis.Act365F, null),
                     DomesticQuantity = DomesticNotional,
                     DeliveryDate = SettleDate,
@@ -134,7 +136,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a collection of funding instruments to calibrate a curve engine", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
         public static object CreateFundingInstrumentCollection(
            [ExcelArgument(Description = "Object name")] string ObjectName,
-           [ExcelArgument(Description = "Value date")] object[] Instruments)
+           [ExcelArgument(Description = "Instruments")] object[] Instruments)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -191,7 +193,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-               
+
                 if (!Enum.TryParse(DaycountBasisFixed, out DayCountBasis dFixed))
                 {
                     return $"Could not parse fixed daycount - {DaycountBasisFixed}";
@@ -227,10 +229,49 @@ namespace Qwack.Excel.Curves
                     DayCountBasis = dFloat,
                     DayCountBasisFixed = dFixed
                 };
-               
+
                 var cache = ContainerStores.GetObjectCache<FloatRateIndex>();
                 cache.PutObject(IndexName, new SessionItem<FloatRateIndex> { Name = IndexName, Value = rIndex });
                 return IndexName + '¬' + cache.GetObject(IndexName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Calibrates a funding model to a funding instrument collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
+        public static object CalibrateFundingModel(
+            [ExcelArgument(Description = "Output funding model")] string ObjectName,
+            [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
+            [ExcelArgument(Description = "Input funding model")] string FundingModel)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                var modelInput = modelCache.GetObject(FundingModel).Value;
+
+                var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
+                calibrator.Solve(modelInput, null);
+                return "";
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingModelFromCurves))]
+        public static object CreateFundingModelFromCurves(
+           [ExcelArgument(Description = "Output funding model")] string ObjectName,
+           [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+           [ExcelArgument(Description = "Curves")] object[] Curves)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveCache = ContainerStores.GetObjectCache<IrCurve>();
+                var curves = Curves
+                    .Where(s => curveCache.Exists(s as string))
+                    .Select(s => curveCache.GetObject(s as string).Value)
+                    .ToArray();
+
+                var fModel = new FundingModel(BuildDate, curves);
+
+                var cache = ContainerStores.GetObjectCache<FundingModel>();
+                cache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = fModel });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
     }

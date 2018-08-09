@@ -41,6 +41,12 @@ namespace Qwack.Dates
             }
         }
 
+        public string[] ListCalendarNames()
+        {
+            return _mergedCalendars.Keys.ToArray();
+        }
+
+
         public bool TryGetCalendar(string calendarName, out Calendar calendar)
         {
             if (calendarName.Contains("+"))

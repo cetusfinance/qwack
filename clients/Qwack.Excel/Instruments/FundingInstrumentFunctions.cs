@@ -238,18 +238,22 @@ namespace Qwack.Excel.Curves
 
         [ExcelFunction(Description = "Calibrates a funding model to a funding instrument collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
         public static object CalibrateFundingModel(
-            [ExcelArgument(Description = "Output funding model")] string ObjectName,
-            [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
-            [ExcelArgument(Description = "Input funding model")] string FundingModel)
-        {
+            [ExcelArgument(Description = "Funding model")] string ObjectName,
+            [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection)
+         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var modelCache = ContainerStores.GetObjectCache<FundingModel>();
-                var modelInput = modelCache.GetObject(FundingModel).Value;
+                var modelInput = modelCache.GetObject(ObjectName);
+
+                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
+                var fic = ficCache.GetObject(FundingInstrumentCollection).Value;
+
 
                 var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
-                calibrator.Solve(modelInput, null);
-                return "";
+                calibrator.Solve(modelInput.Value, fic);
+                modelCache.PutObject(ObjectName, modelInput);
+                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version; 
             });
         }
 

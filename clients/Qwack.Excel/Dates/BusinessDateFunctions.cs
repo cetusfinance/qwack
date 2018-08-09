@@ -228,5 +228,14 @@ namespace Qwack.Excel.Dates
                 return Date.FirstBusinessDayOfMonth(cal);
             });
         }
+
+        [ExcelFunction(Description = "Returns a list of all calendar names", Category = "QDates")]
+        public static object QDates_ListCalendars()
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.ListCalendarNames();
+            });
+        }
     }
 }

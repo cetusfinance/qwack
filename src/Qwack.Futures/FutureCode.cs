@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Qwack.Dates;
 
 namespace Qwack.Futures
 {
@@ -146,6 +147,16 @@ namespace Qwack.Futures
             var futureCode = Prefix + _settings.Months[monthIndex] + yearNumber.ToString() + Postfix;
 
             return futureCode;
+        }
+
+        public DateTime GetExpiry()
+        {
+            var d = new DateTime(Year, Month, _settings.ExpiryGen.DayOfMonthToStart);
+
+            d = d.AddMonths(-_settings.ExpiryGen.MonthModifier);
+            d = d.AddPeriod(RollType.P, _settings.ExpiryGen.CalendarObject, new Frequency(_settings.ExpiryGen.DateOffsetModifier));
+
+            return d;
         }
 
         private void ConvertYearCode()

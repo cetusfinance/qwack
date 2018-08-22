@@ -19,7 +19,7 @@ namespace Qwack.Core.Calibrators
         private const double JacobianBump = 0.0001;
 
         private DateTime _buildDate;
-        private readonly FundingModel _curveEngine;
+        private readonly IFundingModel _curveEngine;
         private List<AsianSwapStrip> _curveInstruments;
         private DateTime[] _pillars;
         private ICurve _discountCurve;

@@ -22,8 +22,9 @@ namespace Qwack.Core.Instruments.Funding
 
         public string ForecastCurve { get; set; }
         public string SolveCurve { get; set; }
+        public DateTime PillarDate { get; set; }
 
-        public double Pv(FundingModel Model, bool updateState)
+        public double Pv(IFundingModel Model, bool updateState)
         {
             var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
             var rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
@@ -36,9 +37,9 @@ namespace Qwack.Core.Instruments.Funding
             return PV;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
+        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
-        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             //only forecast for STIR future
             var forecastDict =  new Dictionary<DateTime, double>();

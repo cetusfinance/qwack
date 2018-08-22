@@ -11,13 +11,14 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
+using Qwack.Models;
 
 namespace Qwack.Curves.Benchmark
 {
     [Config(typeof(SolveConfig))]
     public class SolvingOisBenchmark
     {
-        private static FundingModel _fundingModel;
+        private static IFundingModel _fundingModel;
         private static FundingInstrumentCollection _instruments;
         
         [GlobalSetup]

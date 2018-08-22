@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Models\Qwack.Models.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,14 +8,14 @@ namespace Qwack.Dates
     {
         public Calendar()
         {
-            InheritedCalendars = new List<string>();
+            InheritedCalendar = new List<string>();
             DaysToAlwaysExclude = new List<DayOfWeek>();
             DaysToExclude = new HashSet<DateTime>();
             MonthsToExclude = new List<MonthEnum>();
         }
 
         public bool IsMerged { get; set; }
-        public List<string> InheritedCalendars { get; set; }
+        public List<string> InheritedCalendar { get; set; }
         public string Name { get; set; }
         public List<DayOfWeek> DaysToAlwaysExclude { get; set; }
         public HashSet<DateTime> DaysToExclude { get; set; }
@@ -35,6 +35,7 @@ namespace Qwack.Dates
             {
                 return true;
             }
+
             return false;
         }
         public Calendar Clone()
@@ -42,7 +43,7 @@ namespace Qwack.Dates
             var newCalender = new Calendar()
             {
                 DaysToAlwaysExclude = DaysToAlwaysExclude.ToList(),
-                InheritedCalendars = InheritedCalendars.ToList(),
+                InheritedCalendar = InheritedCalendar.ToList(),
                 DaysToExclude = new HashSet<DateTime>(DaysToExclude),
                 MonthsToExclude = MonthsToExclude.ToList(),
                 Name = Name

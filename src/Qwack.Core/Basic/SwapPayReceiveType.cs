@@ -1,8 +1,10 @@
-﻿namespace Qwack.Core.Basic
+namespace Qwack.Core.Basic
 {
     public enum SwapPayReceiveType
     {
-        Payer,
-        Receiver
+        Payer=0,
+        Pay=0,
+        Receiver=1,
+        Rec=1
     }
 }

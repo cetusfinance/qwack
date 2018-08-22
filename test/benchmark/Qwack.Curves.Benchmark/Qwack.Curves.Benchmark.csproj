@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Qwack.Models\Qwack.Models.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Paths\Qwack.Paths.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
     <ProjectReference Include="..\..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />

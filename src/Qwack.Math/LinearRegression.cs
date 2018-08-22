@@ -47,7 +47,7 @@ namespace Qwack.Math
 
             var simdLength = Vector<double>.Count;
             var overFlow = X0.Length % simdLength;
-            Utils.SimdHelpers.PadArrayForSIMD(X0, Y0, out double[] X, out double[] Y, overFlow, 0.0, 0.0);
+            Utils.SimdHelpers.PadArrayForSIMD(X0, Y0, out var X, out var Y, overFlow, 0.0, 0.0);
 
             var vSumX = new Vector<double>(0);
             var vSumY = new Vector<double>(0);

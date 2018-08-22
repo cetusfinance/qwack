@@ -25,12 +25,61 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var c = new FutureCode(FuturesCode, 2000, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
-              
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
                 return c.GetExpiry();
             });
         }
 
-     
+        [ExcelFunction(Description = "Returns roll date for a given futures code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesRollFromCode))]
+        public static object FuturesRollFromCode(
+            [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                return c.GetRollDate();
+            });
+        }
+
+        [ExcelFunction(Description = "Returns front month code for a given futures root and value date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesGetFrontMonth))]
+        public static object FuturesGetFrontMonth(
+            [ExcelArgument(Description = "Value date")] DateTime ValueDate,
+            [ExcelArgument(Description = "Futures code root, e.g. CL")] string FuturesCodeRoot)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var dummyFutureCode = $"{FuturesCodeRoot}Z{DateExtensions.SingleDigitYear(DateTime.Today.Year + 2)}";
+
+                var c = new FutureCode(dummyFutureCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                return c.GetFrontMonth(ValueDate);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns next code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesNextCode))]
+        public static object FuturesNextCode(
+        [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+                
+                return c.GetNextCode(false);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns previous code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesPreviousCode))]
+        public static object FuturesPreviousCode(
+        [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                return c.GetPreviousCode();
+            });
+        }
     }
 }

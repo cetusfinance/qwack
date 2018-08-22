@@ -11,6 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Qwack.Math.Interpolation;
 using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Core.Models;
+using Qwack.Core.Calibrators;
+using Qwack.Core.Instruments.Funding;
+using Qwack.Models;
 
 namespace Qwack.Excel.Curves
 {
@@ -116,5 +120,110 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates and calibrates a funding model to a funding instrument collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModel))]
+        public static object CreateFundingModel(
+            [ExcelArgument(Description = "Funding model name")] string ObjectName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
+            [ExcelArgument(Description = "Curve to solve stage mappings")] object SolveStages,
+            [ExcelArgument(Description = "Fx matrix object")] object FxMatrix)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
+                var fic = ficCache.GetObject(FundingInstrumentCollection).Value;
+
+                var emptyCurves = fic.ImplyContainedCurves(BuildDate, Math.Interpolation.Interpolator1DType.Linear);
+
+                if(!(SolveStages is ExcelMissing))
+                {
+                    var stageDict = ((object[,])SolveStages).RangeToDictionary<string,int>();
+                    foreach(var kv in stageDict)
+                    {
+                        if(emptyCurves.TryGetValue(kv.Key, out var curve))
+                        {
+                            curve.SolveStage = kv.Value;
+                        }
+                        else
+                        {
+                            throw new Exception($"Solve stage specified for curve {kv.Key} but curve not present");
+                        }
+                    }
+                }
+
+                var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray());
+
+                if(!(FxMatrix is ExcelMissing))
+                {
+                    var fxMatrixCache = ContainerStores.GetObjectCache<FxMatrix>();
+                    var fxMatrix = fxMatrixCache.GetObject((string)FxMatrix);
+                    model.SetupFx(fxMatrix.Value);
+                }
+
+                var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
+                calibrator.Solve(model, fic);
+
+                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                modelCache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = model });
+                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModelFromCurves))]
+        public static object CreateFundingModelFromCurves(
+           [ExcelArgument(Description = "Output funding model")] string ObjectName,
+           [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+           [ExcelArgument(Description = "Curves")] object[] Curves)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveCache = ContainerStores.GetObjectCache<ICurve>();
+                var curves = Curves
+                    .Where(s => curveCache.Exists(s as string))
+                    .Select(s => curveCache.GetObject(s as string).Value as IrCurve)
+                    .ToArray();
+
+                var fModel = new FundingModel(BuildDate, curves);
+
+                var cache = ContainerStores.GetObjectCache<FundingModel>();
+                cache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = fModel });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Lists curves in a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ListCurvesInModel))]
+        public static object ListCurvesInModel(
+          [ExcelArgument(Description = "Funding model name")] string FundingModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                var model = modelCache.GetObject(FundingModelName).Value;
+
+                return model.Curves.Keys.Select(x=>x as string).ToArray().ReturnExcelRangeVector();
+            });
+        }
+
+        [ExcelFunction(Description = "Extracts a curve from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ExtractCurveFromModel))]
+        public static object ExtractCurveFromModel(
+           [ExcelArgument(Description = "Funding model name")] string FundingModelName,
+           [ExcelArgument(Description = "Curve name")]  string CurveName,
+           [ExcelArgument(Description = "Output curve object name")] string OutputName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                var model = modelCache.GetObject(FundingModelName).Value;
+
+                if (!model.Curves.TryGetValue(CurveName, out var curve))
+                {
+                    return $"Curve {CurveName} not found in model";
+                }
+
+                var curveCache = ContainerStores.GetObjectCache<ICurve>();
+                curveCache.PutObject(OutputName, new SessionItem<ICurve> { Name = OutputName, Value = curve });
+                return OutputName + '¬' + curveCache.GetObject(OutputName).Version;
+            });
+        }
     }
 }

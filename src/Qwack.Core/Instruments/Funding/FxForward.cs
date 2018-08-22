@@ -21,7 +21,9 @@ namespace Qwack.Core.Instruments.Funding
 
         public string SolveCurve { get; set; }
 
-        public double Pv(FundingModel Model, bool updateState)
+        public DateTime PillarDate { get; set; }
+
+        public double Pv(IFundingModel Model, bool updateState)
         {
             var discountCurve = Model.Curves[ForeignDiscountCurve];
             var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
@@ -31,9 +33,9 @@ namespace Qwack.Core.Instruments.Funding
             return PV;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
+        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
-        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             var foreignCurve = model.FxMatrix.DiscountCurveMap[ForeignCCY];
             var domesticCurve = model.FxMatrix.DiscountCurveMap[DomesticCCY];

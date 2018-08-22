@@ -52,14 +52,16 @@ namespace Qwack.Core.Instruments.Funding
         public FraDiscountingType FraType { get; set; }
         public string SolveCurve { get; set; }
 
-        public double Pv(FundingModel model, bool updateState)
+        public DateTime PillarDate { get; set; }
+
+        public double Pv(IFundingModel model, bool updateState)
         {
             var updateDF = updateState || model.CurrentSolveCurve == DiscountCurve;
             var updateEst = updateState || model.CurrentSolveCurve == ForecastCurve;
             return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDF, updateEst);
         }
 
-        public CashFlowSchedule ExpectedCashFlows(FundingModel model) => throw new NotImplementedException();
+        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
         public double Pv(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
         {
@@ -99,7 +101,7 @@ namespace Qwack.Core.Instruments.Funding
             return totalPV;
         }
 
-        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(FundingModel model)
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             //discounting first
             var discountDict = new Dictionary<DateTime, double>();

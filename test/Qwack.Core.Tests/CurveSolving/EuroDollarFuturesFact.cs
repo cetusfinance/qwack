@@ -11,6 +11,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
+using Qwack.Models;
 using Qwack.Providers.Json;
 using Xunit;
 

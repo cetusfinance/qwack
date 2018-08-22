@@ -43,6 +43,19 @@ namespace Qwack.Excel.Services
             return o;
         }
 
+        public static Dictionary<T1,T2> RangeToDictionary<T1,T2>(this object[,] input)
+        {
+            if (input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 range for dictionary");
+
+            var o = new Dictionary<T1, T2>();
+            for(var r=0;r<input.GetLength(0);r++)
+            {
+                o.Add((T1)Convert.ChangeType(input[r, 0], typeof(T1)), (T2)Convert.ChangeType(input[r, 1], typeof(T2)));
+            }
+            return o;
+        }
+
         public static T OptionalExcel<T>(this object objectInput, T defaultValue)
         {
             var returnValue = defaultValue;

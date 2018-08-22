@@ -9,7 +9,7 @@ namespace Qwack.Options.Asians
 {
     public static class AsianOptionEx
     {
-        public static double PV(this AssetFxModel model, AsianOption option)
+        public static double PV(this IAssetFxModel model, AsianOption option)
         {
             var fixingDates = option.AverageStartDate.BusinessDaysInPeriod(option.AverageEndDate, option.FixingCalendar);
             var curve = model.GetPriceCurve(option.AssetId);

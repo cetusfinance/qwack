@@ -15,13 +15,13 @@ namespace Qwack.Dates
             while (calendarsToCheck.Count > 0)
             {
                 var currentCalendar = calendarsToCheck.Dequeue();
-                if (!currentCalendar.InheritedCalendars.All(inher => _mergedCalendars.ContainsKey(inher)))
+                if (!currentCalendar.InheritedCalendar.All(inher => _mergedCalendars.ContainsKey(inher)))
                 {
                     calendarsToCheck.Enqueue(currentCalendar);
                     continue;
                 }
 
-                foreach (var dc in currentCalendar.InheritedCalendars)
+                foreach (var dc in currentCalendar.InheritedCalendar)
                 {
                     MergeCalendar(_mergedCalendars[dc], currentCalendar);
                 }
@@ -33,7 +33,7 @@ namespace Qwack.Dates
         {
             get
             {
-                if (TryGetCalendar(calendarName, out Calendar returnCalendar))
+                if (TryGetCalendar(calendarName, out var returnCalendar))
                 {
                     return returnCalendar;
                 }

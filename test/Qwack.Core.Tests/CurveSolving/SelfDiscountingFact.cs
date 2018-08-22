@@ -10,6 +10,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
+using Qwack.Models;
 using Qwack.Providers.Json;
 using Xunit;
 

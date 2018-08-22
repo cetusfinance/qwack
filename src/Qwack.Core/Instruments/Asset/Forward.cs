@@ -7,7 +7,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class Forward
+    public class Forward : IInstrument
     {
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }

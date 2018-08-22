@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ExcelDna.Integration;
-using Qwack.Core.Curves;
 using Qwack.Core.Basic;
 using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Dates;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
+using Qwack.Futures;
 using Qwack.Core.Models;
-using Qwack.Core.Calibrators;
+using Qwack.Models;
 
 namespace Qwack.Excel.Curves
 {
@@ -34,7 +33,9 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
              [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
              [ExcelArgument(Description = "DiscountingType")] object DiscountingType,
-             [ExcelArgument(Description = "Pay / Receive")] object PayRec)
+             [ExcelArgument(Description = "Pay / Receive")] object PayRec,
+             [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+             [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -45,7 +46,7 @@ namespace Qwack.Excel.Curves
                 {
                     _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
                     return $"Rate index {RateIndex} not found in cache";
-                }
+                }      
 
                 if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
                 {
@@ -58,6 +59,12 @@ namespace Qwack.Excel.Curves
                 }
 
                 var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve);
+
+                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
+                var solvePillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
+
+                product.SolveCurve = solveCurve;
+                product.PillarDate = solvePillarDate;
 
                 var cache = ContainerStores.GetObjectCache<ForwardRateAgreement>();
                 cache.PutObject(ObjectName, new SessionItem<ForwardRateAgreement> { Name = ObjectName, Value = product });
@@ -74,10 +81,12 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Domestic Notional")] double DomesticNotional,
            [ExcelArgument(Description = "Strike")] double Strike,
            [ExcelArgument(Description = "Foreign Discount Curve")] string DiscountCurve,
-           [ExcelArgument(Description = "Solve Curve")] string SolveCurve)
+           [ExcelArgument(Description = "Solve Curve name ")] string SolveCurve,
+           [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var solvePillarDate = SolvePillarDate.OptionalExcel(SettleDate);
 
                 var product = new FxForward
                 {
@@ -87,6 +96,7 @@ namespace Qwack.Excel.Curves
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
                     SolveCurve = SolveCurve,
+                    PillarDate = solvePillarDate,
                     Strike = Strike
                 };
 
@@ -106,7 +116,9 @@ namespace Qwack.Excel.Curves
                [ExcelArgument(Description = "Notional")] double Notional,
                [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
                [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
-               [ExcelArgument(Description = "Pay / Receive")] object PayRec)
+               [ExcelArgument(Description = "Pay / Receive")] object PayRec,
+               [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+               [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -127,8 +139,114 @@ namespace Qwack.Excel.Curves
 
                 var product = new IrSwap(ValDate, tenor, rIndex.Value, ParRate, pType, ForecastCurve, DiscountCurve);
 
+                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
+                var solvePillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+
+                product.SolveCurve = solveCurve;
+                product.PillarDate = solvePillarDate;
+
                 var cache = ContainerStores.GetObjectCache<IrSwap>();
                 cache.PutObject(ObjectName, new SessionItem<IrSwap> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a short-term interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode))]
+        public static object CreateSTIRFromCode(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Value date")] DateTime ValDate,
+              [ExcelArgument(Description = "Futures Code, e.g. EDZ9")] string FuturesCode,
+              [ExcelArgument(Description = "Rate Index")] string RateIndex,
+              [ExcelArgument(Description = "Price")] double Price,
+              [ExcelArgument(Description = "Quantity in lots")] double Quantity,
+              [ExcelArgument(Description = "Convexity adjustment")] double ConvexityAdjustment,
+              [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
+              [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+              [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
+                    return $"Rate index {RateIndex} not found in cache";
+                }
+
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                var expiry = c.GetExpiry();
+                var accrualStart = expiry.AddPeriod(RollType.F, rIndex.Value.HolidayCalendars, rIndex.Value.FixingOffset);
+                var accrualEnd = accrualStart.AddPeriod(rIndex.Value.RollConvention, rIndex.Value.HolidayCalendars, rIndex.Value.ResetTenor);
+                var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
+                var product = new STIRFuture
+                {
+                    CCY = rIndex.Value.Currency,
+                    ContractSize = c.Settings.LotSize,
+                    DCF = dcf,
+                    ConvexityAdjustment= ConvexityAdjustment,
+                    Expiry =expiry,
+                    ForecastCurve = ForecastCurve,
+                    Index =rIndex.Value,
+                    Position = Quantity,
+                    Price= Price,
+                };
+
+                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
+                var solvePillarDate = SolvePillarDate.OptionalExcel(accrualEnd);
+
+                product.SolveCurve = solveCurve;
+                product.PillarDate = solvePillarDate;
+
+                var cache = ContainerStores.GetObjectCache<STIRFuture>();
+                cache.PutObject(ObjectName, new SessionItem<STIRFuture> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an interest rate basis swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRBasisSwap))]
+        public static object CreateIRBasisSwap(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Value date")] DateTime ValDate,
+              [ExcelArgument(Description = "Tenor")] string SwapTenor,
+              [ExcelArgument(Description = "Rate Index Pay")] string RateIndexPay,
+              [ExcelArgument(Description = "Rate Index Receive")] string RateIndexRec,
+              [ExcelArgument(Description = "Par Spread Pay")] double ParSpread,
+              [ExcelArgument(Description = "Spread on Pay leg?")] object ParSpreadOnPay,
+              [ExcelArgument(Description = "Notional")] double Notional,
+              [ExcelArgument(Description = "Forecast Curve Pay")] string ForecastCurvePay,
+              [ExcelArgument(Description = "Forecast Curve Receive")] string ForecastCurveRec,
+              [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
+              [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+              [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndexPay, out var rIndexPay))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndexPay);
+                    return $"Rate index {RateIndexPay} not found in cache";
+                }
+
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndexRec, out var rIndexRec))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndexRec);
+                    return $"Rate index {RateIndexRec} not found in cache";
+                }
+
+                var spreadOnPay = ParSpreadOnPay.OptionalExcel(true);
+
+                var tenor = new Frequency(SwapTenor);
+
+                var product = new IrBasisSwap(ValDate, tenor, ParSpread, spreadOnPay, rIndexPay.Value, rIndexRec.Value, ForecastCurvePay, ForecastCurveRec, DiscountCurve);
+
+                var solveCurve = SolveCurve.OptionalExcel(rIndexPay.Name);
+                var solvePillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+
+                product.SolveCurve = solveCurve;
+                product.PillarDate = solvePillarDate;
+
+                var cache = ContainerStores.GetObjectCache<IrBasisSwap>();
+                cache.PutObject(ObjectName, new SessionItem<IrBasisSwap> { Name = ObjectName, Value = product });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
@@ -165,16 +283,29 @@ namespace Qwack.Excel.Curves
                     .Where(s => xccySwapCache.Exists(s as string))
                     .Select(s => xccySwapCache.GetObject(s as string).Value);
 
+                var basisSwapCache = ContainerStores.GetObjectCache<IrBasisSwap>();
+                var basisSwaps = Instruments
+                    .Where(s => basisSwapCache.Exists(s as string))
+                    .Select(s => basisSwapCache.GetObject(s as string).Value);
+
+                //allows merging of FICs into FICs
+                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
+                var ficInstruments = Instruments
+                    .Where(s => ficCache.Exists(s as string))
+                    .Select(s => ficCache.GetObject(s as string).Value)
+                    .SelectMany(s => s);
+
                 var fic = new FundingInstrumentCollection();
                 fic.AddRange(swaps);
                 fic.AddRange(fras);
                 fic.AddRange(futures);
                 fic.AddRange(fxFwds);
                 fic.AddRange(xccySwaps);
+                fic.AddRange(basisSwaps);
+                fic.AddRange(ficInstruments);
 
-                var cache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
-                cache.PutObject(ObjectName, new SessionItem<FundingInstrumentCollection> { Name = ObjectName, Value = fic });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                ficCache.PutObject(ObjectName, new SessionItem<FundingInstrumentCollection> { Name = ObjectName, Value = fic });
+                return ObjectName + '¬' + ficCache.GetObject(ObjectName).Version;
             });
         }
 
@@ -193,7 +324,6 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-
                 if (!Enum.TryParse(DaycountBasisFixed, out DayCountBasis dFixed))
                 {
                     return $"Could not parse fixed daycount - {DaycountBasisFixed}";
@@ -236,45 +366,64 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Calibrates a funding model to a funding instrument collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
-        public static object CalibrateFundingModel(
-            [ExcelArgument(Description = "Funding model")] string ObjectName,
-            [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection)
-         {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
-                var modelInput = modelCache.GetObject(ObjectName);
-
-                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
-                var fic = ficCache.GetObject(FundingInstrumentCollection).Value;
-
-
-                var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
-                calibrator.Solve(modelInput.Value, fic);
-                modelCache.PutObject(ObjectName, modelInput);
-                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version; 
-            });
-        }
-
-        [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingModelFromCurves))]
-        public static object CreateFundingModelFromCurves(
-           [ExcelArgument(Description = "Output funding model")] string ObjectName,
-           [ExcelArgument(Description = "Build date")] DateTime BuildDate,
-           [ExcelArgument(Description = "Curves")] object[] Curves)
+        [ExcelFunction(Description = "Creates a new fx spot rate matrix", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxMatrix))]
+        public static object CreateFxMatrix(
+              [ExcelArgument(Description = "Fx matrix name")] string ObjectName,
+              [ExcelArgument(Description = "Base currency")] string BaseCurrency,
+              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+              [ExcelArgument(Description = "Spot rates")] object[,] SpotRateMap,
+              [ExcelArgument(Description = "Fx pair definitions")] object[] FxPairDefinitions,
+              [ExcelArgument(Description = "DiscountCurves")] object[,] DiscountCurves)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var curveCache = ContainerStores.GetObjectCache<IrCurve>();
-                var curves = Curves
-                    .Where(s => curveCache.Exists(s as string))
-                    .Select(s => curveCache.GetObject(s as string).Value)
-                    .ToArray();
+                var fxPairsCache = ContainerStores.GetObjectCache<FxPair>();
+                var fxPairs = FxPairDefinitions
+                    .Where(s => fxPairsCache.Exists(s as string))
+                    .Select(s => fxPairsCache.GetObject(s as string).Value)
+                    .ToList();
 
-                var fModel = new FundingModel(BuildDate, curves);
+                var spotRatesRaw = SpotRateMap.RangeToDictionary<string, double>();
+                var spotRates = spotRatesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
 
-                var cache = ContainerStores.GetObjectCache<FundingModel>();
-                cache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = fModel });
+                var discountCurvesRaw = DiscountCurves.RangeToDictionary<string, string>();
+                var discountCurves = discountCurvesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
+
+
+                var matrix = new FxMatrix();
+                matrix.Init(new Currency(BaseCurrency, DayCountBasis.Act365F, null), BuildDate, spotRates, fxPairs, discountCurves);
+
+                var cache = ContainerStores.GetObjectCache<FxMatrix>();
+                cache.PutObject(ObjectName, new SessionItem<FxMatrix> { Name = ObjectName, Value = matrix });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new fx pair definition", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxPair))]
+        public static object CreateFxPair(
+              [ExcelArgument(Description = "Fx pair name")] string ObjectName,
+              [ExcelArgument(Description = "Domestic currency")] string DomesticCurrency,
+              [ExcelArgument(Description = "Foreign currency")] string ForeignCurrency,
+              [ExcelArgument(Description = "Settlement calendar")] string Calendar,
+              [ExcelArgument(Description = "Spot lag")] string SpotLag)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
+                {
+                    return $"Calendar {Calendar} not found in cache";
+                }
+
+                var pair = new FxPair()
+                {
+                    Domestic = new Currency(DomesticCurrency,DayCountBasis.Act365F,null),
+                    Foreign = new Currency(ForeignCurrency, DayCountBasis.Act365F, null),
+                    SettlementCalendar = cal,
+                    SpotLag = new Frequency(SpotLag)
+                };
+
+                var cache = ContainerStores.GetObjectCache<FxPair>();
+                cache.PutObject(ObjectName, new SessionItem<FxPair> { Name = ObjectName, Value = pair });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }

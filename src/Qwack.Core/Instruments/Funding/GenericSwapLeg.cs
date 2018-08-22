@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
@@ -262,7 +262,7 @@ namespace Qwack.Core.Instruments.Funding
                     return d1.LastDayOfMonth().AddPeriod(RollType.P, ResetCalendar, 0.Bd());
                 }
 
-            if (int.TryParse(RollDay, out int rollOut))
+            if (int.TryParse(RollDay, out var rollOut))
                 if (fwdDirection)
                 {
                     var d1 = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency);

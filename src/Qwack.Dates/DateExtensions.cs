@@ -472,8 +472,14 @@ namespace Qwack.Dates
             {
                 return IfHolidayRoll(date, rollType, calendar);
             }
+
             if (datePeriod.PeriodType == DatePeriodType.B)
             {
+                if (datePeriod.PeriodCount < 0) //actually a subtract
+                {
+                    return date.SubtractPeriod(rollType, calendar, new Frequency(-datePeriod.PeriodCount, datePeriod.PeriodType));
+                }
+
                 //Business day jumping so we need to do something different
                 var d = date;
                 for (var i = 0; i < datePeriod.PeriodCount; i++)
@@ -608,6 +614,18 @@ namespace Qwack.Dates
                 default:
                     throw new Exception($"Could not parse period {period}");
             }
+        }
+
+        public static int SingleDigitYear(int fullYear)
+        {
+            var floor = (int)Math.Floor(fullYear / 10.0) * 10;
+            return fullYear - floor;
+        }
+
+        public static int DoubleDigitYear(int fullYear)
+        {
+            var floor = (int)Math.Floor(fullYear / 100.0) * 100;
+            return fullYear - floor;
         }
     }
 }

@@ -28,12 +28,19 @@ namespace Qwack.Futures
 
         public FutureSettings Settings => _settings;
 
-        public FutureCode(string futureCodeRoot, IFutureSettingsProvider futureSettings) => _settings = futureSettings[futureCodeRoot];
+        private IFutureSettingsProvider _futureSettingsProvider;
+
+        public FutureCode(string futureCodeRoot, IFutureSettingsProvider futureSettings)
+        {
+            _settings = futureSettings[futureCodeRoot];
+            _futureSettingsProvider = futureSettings;
+        }
 
         public FutureCode(string futureCode, int yearBeforeWhich2DigitDatesAreUsed, IFutureSettingsProvider futureSettings)
         {
             OriginalCode = futureCode;
             YearBeforeWhich2DigitDatesAreUsed = yearBeforeWhich2DigitDatesAreUsed;
+            _futureSettingsProvider = futureSettings;
 
             //Find the last number
             var i = 0;
@@ -151,12 +158,64 @@ namespace Qwack.Futures
 
         public DateTime GetExpiry()
         {
-            var d = new DateTime(Year, Month, _settings.ExpiryGen.DayOfMonthToStart);
+            var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
 
-            d = d.AddMonths(-_settings.ExpiryGen.MonthModifier);
-            d = d.AddPeriod(RollType.P, _settings.ExpiryGen.CalendarObject, new Frequency(_settings.ExpiryGen.DateOffsetModifier));
+            var dayOfMonthToStart= _settings.ExpiryGen.DayOfMonthToStart;
+            if (!_settings.ExpiryGen.DoMToStartIsNumber)
+            {
+                switch (_settings.ExpiryGen.DayOfMonthToStartOther)
+                {
+                    case "WED3":
+                        var dateInMonth = new DateTime(YearNumber + baseYear, MonthNumber, 1);
+                        dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
+                        break;
+                    default:
+                        throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
+                }
+            }
+            var d = new DateTime(YearNumber + baseYear, MonthNumber, dayOfMonthToStart);
+
+            d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
+            var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
+
+            foreach (var part in parts)
+                d = d.AddPeriod(RollType.P, _settings.ExpiryGen.CalendarObject, new Frequency(part));
 
             return d;
+        }
+
+        public DateTime GetRollDate()
+        {
+            var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
+            var d = new DateTime(YearNumber + baseYear, MonthNumber, _settings.RollGen.DayOfMonthToStart);
+
+            d = d.AddMonths(_settings.RollGen.MonthModifier);
+            var parts = _settings.RollGen.DateOffsetModifier.Split(';');
+
+            foreach (var part in parts)
+                d = d.AddPeriod(RollType.P, _settings.RollGen.CalendarObject, new Frequency(part));
+
+            return d;
+        }
+
+        public string GetFrontMonth(DateTime date)
+        {
+            var d = date.AddMonths(-_settings.RollGen.MonthModifier);
+            var trialMonth = s_futureMonths[d.Month - 1];
+            var trialYear = d.Year > YearBeforeWhich2DigitDatesAreUsed ? DateExtensions.SingleDigitYear(d.Year) : DateExtensions.DoubleDigitYear(d.Year);
+            var trialCodeString = $"{Prefix}{trialMonth}{trialYear}";
+            var trialCode = new FutureCode(trialCodeString, YearBeforeWhich2DigitDatesAreUsed, _futureSettingsProvider);
+            trialCodeString = trialCode.GetPreviousCode();
+            trialCode = new FutureCode(trialCodeString, YearBeforeWhich2DigitDatesAreUsed, _futureSettingsProvider);
+            trialCodeString = trialCode.GetNextCode(false);
+            trialCode = new FutureCode(trialCodeString, YearBeforeWhich2DigitDatesAreUsed, _futureSettingsProvider);
+
+            if(trialCode.GetRollDate()<date)
+            {
+                trialCodeString = trialCode.GetNextCode(false);
+            }
+
+            return trialCodeString;
         }
 
         private void ConvertYearCode()

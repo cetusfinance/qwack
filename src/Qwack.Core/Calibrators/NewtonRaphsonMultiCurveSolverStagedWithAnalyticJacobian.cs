@@ -19,7 +19,7 @@ namespace Qwack.Core.Calibrators
         private double[][] _jacobian;
         private double[] _currentPvs;
 
-        public void Solve(FundingModel fundingModel, FundingInstrumentCollection instruments)
+        public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments)
         {
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<ICurve>();
@@ -84,7 +84,7 @@ namespace Qwack.Core.Calibrators
             }
         }
 
-        private void ComputeJacobian(List<IFundingInstrument> instruments, FundingModel model, List<ICurve> curvesForStage)
+        private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<ICurve> curvesForStage)
         {
             var nPillars = curvesForStage.Sum(x => x.NumberOfPillars);
             
@@ -112,7 +112,7 @@ namespace Qwack.Core.Calibrators
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ComputePVs(bool updateState, List<IFundingInstrument> instruments, FundingModel model, double[] currentPvs)
+        private void ComputePVs(bool updateState, List<IFundingInstrument> instruments, IFundingModel model, double[] currentPvs)
         {
             for (var i = 0; i < currentPvs.Length; i++)
             {

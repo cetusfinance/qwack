@@ -14,7 +14,7 @@ namespace Qwack.Core.Calibrators
         public int UsedItterations { get; set; }
         private const double JacobianBump = 0.0001;
 
-        private FundingModel _curveEngine;
+        private IFundingModel _curveEngine;
         private List<IFundingInstrument> _fundingInstruments;
         private int _numberOfInstruments;
         private int _numberOfPillars;
@@ -26,7 +26,7 @@ namespace Qwack.Core.Calibrators
 
         private Tuple<int, int>[] _pillarToCurveMapping;
 
-        public void Solve(FundingModel fundingModel, FundingInstrumentCollection instruments)
+        public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments)
         {
             _curveEngine = fundingModel;
             _fundingInstruments = instruments;

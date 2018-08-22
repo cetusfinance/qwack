@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\Qwack.Futures\Qwack.Futures.csproj" />
+    <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
+    <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
+    <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
+    <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
+    <ProjectReference Include="..\Qwack.Storage\Qwack.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

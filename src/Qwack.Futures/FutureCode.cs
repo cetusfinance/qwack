@@ -88,13 +88,19 @@ namespace Qwack.Futures
         public string GetPreviousCode()
         {
             //We need to move back 2 months because the month number starts at 1 but our list is 0 indexed
-            var monthIndex = _settings.Months.IndexOf(MonthCode) - 1;
+            var monthsAsNumbers = _settings.Months.Select(x => s_futureMonths.ToList().IndexOf(x)).ToList();
+            var monthNum = s_futureMonths.ToList().IndexOf(MonthCode);
+            var monthRawIx = monthsAsNumbers.BinarySearch(monthNum);
+            monthRawIx = monthRawIx < 0 ? ~monthRawIx : monthRawIx;
+
+            var monthIndex = monthRawIx - 1;
             var yearNumber = YearNumber;
-            if (monthIndex < 0)
+            if (monthIndex <= 0)
             {
                 //We are wrapping over the end of year
                 monthIndex = monthIndex + _settings.Months.Count;
                 yearNumber--;
+                if (yearNumber < 0) yearNumber += 10;
             }
 
             //Now we need to figure out if we are using 1 digit or 2 digit year codes or 4 digit
@@ -105,14 +111,16 @@ namespace Qwack.Futures
                 return futureCode;
             }
 
-            if (YearBeforeWhich2DigitDatesAreUsed < 10)
-            {
-                yearNumber = yearNumber <= YearBeforeWhich2DigitDatesAreUsed ? yearNumber - 2010 : yearNumber - 2000;
-            }
-            else
-            {
-                yearNumber = yearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 10) ? yearNumber - 2020 : yearNumber - 2010;
-            }
+            //hack... this isnt working:
+            //if (YearBeforeWhich2DigitDatesAreUsed < 10)
+            //{
+            //    yearNumber = yearNumber <= YearBeforeWhich2DigitDatesAreUsed ? yearNumber - 10 : yearNumber;
+            //}
+            //else
+            //{
+            //    yearNumber = yearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 10) ? yearNumber - 20 : yearNumber - 10;
+            //}
+
 
             //now we have the year number sorted we can put it all together
             //Prefix then the month code, and then the year code and finally any postfix
@@ -130,6 +138,8 @@ namespace Qwack.Futures
                 //We are wrapping over the end of year
                 monthIndex -= _settings.Months.Count;
                 yearNumber++;
+                if (yearNumber == 10)
+                    yearNumber = 0;
             }
 
             if (return4Digits)
@@ -140,14 +150,14 @@ namespace Qwack.Futures
 
             //Now we need to figure out if we are using 1 digit or 2 digit year codes
 
-            if (YearBeforeWhich2DigitDatesAreUsed < 10)
-            {
-                yearNumber = yearNumber <= YearBeforeWhich2DigitDatesAreUsed ? yearNumber - 2010 : yearNumber - 2000;
-            }
-            else
-            {
-                yearNumber = yearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 10) ? yearNumber - 2020 : yearNumber - 2010;
-            }
+            //if (YearBeforeWhich2DigitDatesAreUsed < 10)
+            //{
+            //    yearNumber = yearNumber <= YearBeforeWhich2DigitDatesAreUsed ? yearNumber - 2010 : yearNumber - 2000;
+            //}
+            //else
+            //{
+            //    yearNumber = yearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 10) ? yearNumber - 2020 : yearNumber - 2010;
+            //}
 
             //now we have the year number sorted we can put it all together
             //Prefix then the month code, and then the year code and finally any postfix
@@ -159,21 +169,22 @@ namespace Qwack.Futures
         public DateTime GetExpiry()
         {
             var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
+            var monthNum = s_futureMonths.ToList().IndexOf(MonthCode) + 1;
 
             var dayOfMonthToStart= _settings.ExpiryGen.DayOfMonthToStart;
-            if (!_settings.ExpiryGen.DoMToStartIsNumber)
+            if (_settings.ExpiryGen.DayOfMonthToStart==0 && !string.IsNullOrWhiteSpace(_settings.ExpiryGen.DayOfMonthToStartOther))
             {
                 switch (_settings.ExpiryGen.DayOfMonthToStartOther)
                 {
                     case "WED3":
-                        var dateInMonth = new DateTime(YearNumber + baseYear, MonthNumber, 1);
+                        var dateInMonth = new DateTime(YearNumber + baseYear, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
                 }
             }
-            var d = new DateTime(YearNumber + baseYear, MonthNumber, dayOfMonthToStart);
+            var d = new DateTime(YearNumber + baseYear, monthNum, dayOfMonthToStart);
 
             d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
             var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
@@ -186,8 +197,23 @@ namespace Qwack.Futures
 
         public DateTime GetRollDate()
         {
+
             var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
-            var d = new DateTime(YearNumber + baseYear, MonthNumber, _settings.RollGen.DayOfMonthToStart);
+            var monthNum = s_futureMonths.ToList().IndexOf(MonthCode) + 1;
+            var dayOfMonthToStart = _settings.RollGen.DayOfMonthToStart;
+            if (_settings.RollGen.DayOfMonthToStart == 0 && !string.IsNullOrWhiteSpace(_settings.RollGen.DayOfMonthToStartOther))
+            {
+                switch (_settings.RollGen.DayOfMonthToStartOther)
+                {
+                    case "WED3":
+                        var dateInMonth = new DateTime(YearNumber + baseYear, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
+                        break;
+                    default:
+                        throw new Exception($"Dont know how to handle date code {_settings.RollGen.DayOfMonthToStartOther}");
+                }
+            }
+            var d = new DateTime(YearNumber + baseYear, monthNum, dayOfMonthToStart);
 
             d = d.AddMonths(_settings.RollGen.MonthModifier);
             var parts = _settings.RollGen.DateOffsetModifier.Split(';');

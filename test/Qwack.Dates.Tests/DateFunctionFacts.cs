@@ -279,6 +279,16 @@ namespace Qwack.Dates.Tests
             (startDate, endDate) = "FEB22".ParsePeriod();
             Assert.Equal(new DateTime(2022, 2, 1), startDate);
             Assert.Equal(new DateTime(2022, 2, 28), endDate);
+        }
+
+        [Fact]
+        public void NextWeekday()
+        {
+            var d = DateTime.Parse("2018-08-24"); //Friday 24th Aug 2018
+            Assert.Equal(new DateTime(2018, 08, 29), d.GetNextWeekday(DayOfWeek.Wednesday));
+            Assert.Equal(new DateTime(2018, 08, 30), d.GetNextWeekday(DayOfWeek.Thursday));
+            Assert.Equal(new DateTime(2018, 08, 31), d.GetNextWeekday(DayOfWeek.Friday));
+            Assert.Equal(new DateTime(2018, 08, 27), d.GetNextWeekday(DayOfWeek.Monday));
 
         }
     }

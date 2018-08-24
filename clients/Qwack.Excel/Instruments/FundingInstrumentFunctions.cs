@@ -259,40 +259,15 @@ namespace Qwack.Excel.Curves
             return ExcelHelper.Execute(_logger, () =>
             {
                 var swapCache = ContainerStores.GetObjectCache<IrSwap>();
-                var swaps = Instruments
-                    .Where(s => swapCache.Exists(s as string))
-                    .Select(s => swapCache.GetObject(s as string).Value);
+                var swaps = Instruments.GetAnyFromCache<IrSwap>();
+                var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();
+                var futures = Instruments.GetAnyFromCache<STIRFuture>();
+                var fxFwds = Instruments.GetAnyFromCache<FxForward>();
+                var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
+                var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
 
-                var fraCache = ContainerStores.GetObjectCache<ForwardRateAgreement>();
-                var fras = Instruments
-                    .Where(s => fraCache.Exists(s as string))
-                    .Select(s => fraCache.GetObject(s as string).Value);
-
-                var stirCache = ContainerStores.GetObjectCache<STIRFuture>();
-                var futures = Instruments
-                    .Where(s => stirCache.Exists(s as string))
-                    .Select(s => stirCache.GetObject(s as string).Value);
-
-                var fxFwdCache = ContainerStores.GetObjectCache<FxForward>();
-                var fxFwds = Instruments
-                    .Where(s => fxFwdCache.Exists(s as string))
-                    .Select(s => fxFwdCache.GetObject(s as string).Value);
-
-                var xccySwapCache = ContainerStores.GetObjectCache<XccyBasisSwap>();
-                var xccySwaps = Instruments
-                    .Where(s => xccySwapCache.Exists(s as string))
-                    .Select(s => xccySwapCache.GetObject(s as string).Value);
-
-                var basisSwapCache = ContainerStores.GetObjectCache<IrBasisSwap>();
-                var basisSwaps = Instruments
-                    .Where(s => basisSwapCache.Exists(s as string))
-                    .Select(s => basisSwapCache.GetObject(s as string).Value);
-
-                //allows merging of FICs into FICs
-                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
-                var ficInstruments = Instruments
-                    .Where(s => ficCache.Exists(s as string))
-                    .Select(s => ficCache.GetObject(s as string).Value)
+                //allows merging of FICs into portfolios
+                var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
                     .SelectMany(s => s);
 
                 var fic = new FundingInstrumentCollection();
@@ -303,6 +278,8 @@ namespace Qwack.Excel.Curves
                 fic.AddRange(xccySwaps);
                 fic.AddRange(basisSwaps);
                 fic.AddRange(ficInstruments);
+
+                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
 
                 ficCache.PutObject(ObjectName, new SessionItem<FundingInstrumentCollection> { Name = ObjectName, Value = fic });
                 return ObjectName + '¬' + ficCache.GetObject(ObjectName).Version;

@@ -12,6 +12,7 @@ namespace Qwack.Options.VolSurfaces
     {
         public DateTime OriginDate { get; set; }
         public double Volatility { get; set; }
+        public string Name { get; set; }
 
         public ConstantVolSurface()         {        }
 

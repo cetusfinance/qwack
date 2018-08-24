@@ -8,8 +8,8 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class AsianSwapStrip : IInstrument
     {
-        public AsianSwap[] Swaplets { get; set; }
+        public string TradeId { get; set; }
 
-        public double PV(IAssetFxModel model) => Swaplets.Sum(x => x.PV(model));
+        public AsianSwap[] Swaplets { get; set; }
     }
 }

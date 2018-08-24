@@ -9,6 +9,10 @@ using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Models;
+using Qwack.Models;
+using Qwack.Core.Basic;
+using Qwack.Models.Models;
 
 namespace Qwack.Excel.Curves
 {
@@ -33,7 +37,10 @@ namespace Qwack.Excel.Curves
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType);
+                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType)
+                {
+                    Name = ObjectName
+                };
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -57,7 +64,10 @@ namespace Qwack.Excel.Curves
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType);
+                var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType)
+                {
+                    Name = ObjectName
+                };
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -90,6 +100,7 @@ namespace Qwack.Excel.Curves
                 var pDates = Pillars.ToDateTimeArray();
                 var fitter = new Qwack.Core.Calibrators.NewtonRaphsonAssetCurveSolver();
                 var cObj = fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate);
+                cObj.Name = ObjectName;
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -125,6 +136,59 @@ namespace Qwack.Excel.Curves
                 }
 
                 return $"Price curve {ObjectName} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new Asset-FX model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateAssetFxModel))]
+        public static object CreateAssetFxModel(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Price curves")] object[] PriceCurves,
+            [ExcelArgument(Description = "Vol surfaces")] object[] VolSurfaces,
+            [ExcelArgument(Description = "Funding model")] object[] FundingModel,
+            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curves = PriceCurves.GetAnyFromCache<IPriceCurve>();
+                var fundingModel = FundingModel.GetAnyFromCache<IFundingModel>().First();
+                var fixings = FundingModel.GetAnyFromCache<IFixingDictionary>();
+                var volSurfaces = VolSurfaces.GetAnyFromCache<IVolSurface>();
+
+                var model = new AssetFxModel(BuildDate, fundingModel);
+
+                foreach (var curve in curves)
+                    model.AddPriceCurve(curve.Name, curve);
+                foreach (var vs in volSurfaces)
+                    model.AddVolSurface(vs.Name, vs);
+                foreach (var f in fixings)
+                    model.AddFixingDictionary(f.Name, f);
+
+                var cache = ContainerStores.GetObjectCache<IAssetFxModel>();
+                cache.PutObject(ObjectName, new SessionItem<IAssetFxModel> { Name = ObjectName, Value = model });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionary))]
+        public static object CreateFixingDictionary(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var dict = new FixingDictionary
+                {
+                    Name = AssetId
+                };
+                var dictData = Fixings.RangeToDictionary<DateTime, double>();
+                foreach (var kv in dictData)
+                    dict.Add(kv.Key, kv.Value);
+
+                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
+                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
     }

@@ -12,6 +12,6 @@ namespace Qwack.Core.Basic
         double GetVolForDeltaStrike(double strike, DateTime expiry, double forward);
         double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward);
         DateTime OriginDate { get; }
-
+        string Name { get; }
     }
 }

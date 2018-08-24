@@ -15,6 +15,7 @@ namespace Qwack.Options.VolSurfaces
     /// </summary>
     public class GridVolSurface : IVolSurface
     {
+        public string Name { get; set; }
         public DateTime OriginDate { get; set; }
         public double[] Strikes { get; set; }
         public StrikeType StrikeType { get; set; }

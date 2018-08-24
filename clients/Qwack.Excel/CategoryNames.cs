@@ -13,5 +13,6 @@ namespace Qwack.Excel
         internal const string Interpolation = "QInterp";
         internal const string Curves = "QCurves";
         internal const string Instruments = "QIns";
+        internal const string Cubes = "QCube";
     }
 }

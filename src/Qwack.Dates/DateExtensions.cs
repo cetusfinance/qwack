@@ -60,6 +60,27 @@ namespace Qwack.Dates
         }
 
         /// <summary>
+        /// Gets the next occurence of a specific weekday from the input date
+        /// If the input date is the target day of the week, the following occurence is returned
+        /// </summary>
+        /// <param name="input">The reference date</param>
+        /// <returns></returns>
+        public static DateTime GetNextWeekday(this DateTime input, DayOfWeek weekDay)
+        {
+            var d = input.DayOfWeek;
+            if(d<weekDay)
+            {
+                var deltaD = weekDay - d;
+                return input.AddDays(deltaD);
+            }
+            else
+            {
+                var deltaD = 7 - (int)d + (int)weekDay;
+                return input.AddDays(deltaD);
+            }
+        }
+
+        /// <summary>
         /// Returns a list of business dates according to a specified calendar which are contained within two given dates.  
         /// Start and end dates are treated as inclusive
         /// </summary>

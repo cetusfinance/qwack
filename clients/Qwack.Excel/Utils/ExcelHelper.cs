@@ -86,5 +86,15 @@ namespace Qwack.Excel.Services
                 return data;
             }
         }
+
+        public static IEnumerable<T> GetAnyFromCache<T>(this object[] Names)
+        {
+            var tCache = ContainerStores.GetObjectCache<T>();
+            var tS = Names
+                .Where(s => !(s is ExcelMissing) && tCache.Exists(s as string))
+                .Select(s => tCache.GetObject(s as string).Value);
+
+            return tS;
+        }
     }
 }

@@ -12,6 +12,7 @@ namespace Qwack.Models
     {
         private readonly Dictionary<string, IVolSurface> _assetVols;
         private readonly Dictionary<string, IPriceCurve> _assetCurves;
+        private readonly Dictionary<string, IDictionary<DateTime, double>> _fixings;
         private readonly DateTime _buildDate;
         private readonly IFundingModel _fundingModel;
 
@@ -24,6 +25,7 @@ namespace Qwack.Models
         {
             _assetCurves = new Dictionary<string, IPriceCurve>();
             _assetVols = new Dictionary<string, IVolSurface>();
+            _fixings = new Dictionary<string, IDictionary<DateTime, double>>();
             _buildDate = buildDate;
             _fundingModel = fundingModel;
         }
@@ -35,5 +37,11 @@ namespace Qwack.Models
         public IPriceCurve GetPriceCurve(string name) => _assetCurves[name];
 
         public IVolSurface GetVolSurface(string name) => _assetVols[name];
+
+        public void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings) => _fixings[name] = fixings;
+
+        public IDictionary<DateTime, double> GetFixingDictionary(string name) => _fixings[name];
+
+        public bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings) => _fixings.TryGetValue(name, out fixings);
     }
 }

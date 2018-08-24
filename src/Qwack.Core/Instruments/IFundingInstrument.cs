@@ -4,7 +4,7 @@ using System;
 
 namespace Qwack.Core.Instruments
 {
-    public interface IFundingInstrument
+    public interface IFundingInstrument : IInstrument
     {
         DateTime PillarDate { get; set; }
         double Pv(IFundingModel model, bool updateState);

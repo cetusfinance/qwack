@@ -10,6 +10,8 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class AsianSwap : IInstrument
     {
+        public string TradeId { get; set; }
+
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
 
@@ -27,18 +29,5 @@ namespace Qwack.Core.Instruments.Asset
         public string FxFixingSource { get; set; }
         public FxConversionType FxConversionType { get; set; }
         public string DiscountCurve { get; set; }
-
-        public double PV(IAssetFxModel model)
-        {
-            var priceCurve = model.GetPriceCurve(AssetId);
-            var discountCurve = model.FundingModel.Curves[DiscountCurve];
-
-            var pv = priceCurve.GetAveragePriceForDates(FixingDates.AddPeriod(RollType.F, FixingCalendar, SpotLag)) - Strike;
-            pv *= Direction == TradeDirection.Long ? 1.0 : -1.0;
-            pv *= Notional;
-            pv *= discountCurve.GetDf(priceCurve.BuildDate, PaymentDate);
-
-            return pv;
-        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 
@@ -12,7 +13,11 @@ namespace Qwack.Core.Models
 
         void AddPriceCurve(string name, IPriceCurve curve);
         void AddVolSurface(string name, IVolSurface surface);
+        void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings);
+
         IPriceCurve GetPriceCurve(string name);
         IVolSurface GetVolSurface(string name);
+        IDictionary<DateTime, double> GetFixingDictionary(string name);
+        bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings);
     }
 }

@@ -65,7 +65,7 @@ namespace Qwack.Excel.Dates
             return ExcelHelper.Execute(_logger, () =>
             {
                 var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
-                
+
                 return c.GetNextCode(false);
             });
         }
@@ -79,6 +79,64 @@ namespace Qwack.Excel.Dates
                 var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
 
                 return c.GetPreviousCode();
+            });
+        }
+
+        [ExcelFunction(Description = "Generates next LME curve date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(NextLMECurveDate))]
+        public static object NextLMECurveDate(
+            [ExcelArgument(Description = "Previous date")] DateTime PrevDate,
+            [ExcelArgument(Description = "3m date")] DateTime ThreeMonthDate,
+            [ExcelArgument(Description = "Whether all daily expiries are required")] bool DailyExpiries)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                ContainerStores.
+                SessionContainer.
+                GetService<ICalendarProvider>().
+                Collection.
+                TryGetCalendar("LON+NYC", out var cal);
+
+                if (DailyExpiries)
+                {
+                    if (PrevDate < ThreeMonthDate)
+                        return PrevDate.AddPeriod(RollType.F, cal, new Frequency(1, DatePeriodType.B));
+
+                    if (PrevDate < ThreeMonthDate.AddMonths(3))
+                        return PrevDate.GetNextWeekday(DayOfWeek.Wednesday).IfHolidayRollForward(cal);
+
+                    if (PrevDate < PrevDate.ThirdWednesday())
+                        return PrevDate.ThirdWednesday();
+
+                    return PrevDate.AddMonths(1).ThirdWednesday();
+                }
+                else
+                {
+                    var next3w = (PrevDate < PrevDate.ThirdWednesday()) ? 
+                                    PrevDate.ThirdWednesday() : 
+                                    PrevDate.AddMonths(1).ThirdWednesday();
+
+                    if (PrevDate < ThreeMonthDate && next3w > ThreeMonthDate)
+                        return ThreeMonthDate;
+
+                    return next3w;
+                }
+
+            });
+        }
+
+        [ExcelFunction(Description = "Generates LME 3m date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetLME3mDate))]
+        public static object GetLME3mDate(
+            [ExcelArgument(Description = "Value date")] DateTime ValueDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                ContainerStores.
+                SessionContainer.
+                GetService<ICalendarProvider>().
+                Collection.
+                TryGetCalendar("LON+NYC", out var cal);
+
+                return ValueDate.AddPeriod(RollType.LME_Nearest, cal, new Frequency(3, DatePeriodType.M));
             });
         }
     }

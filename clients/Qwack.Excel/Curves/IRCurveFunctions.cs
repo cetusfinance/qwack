@@ -163,8 +163,8 @@ namespace Qwack.Excel.Curves
                 var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
                 calibrator.Solve(model, fic);
 
-                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
-                modelCache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = model });
+                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
+                modelCache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = model });
                 return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version;
             });
         }
@@ -185,8 +185,8 @@ namespace Qwack.Excel.Curves
 
                 var fModel = new FundingModel(BuildDate, curves);
 
-                var cache = ContainerStores.GetObjectCache<FundingModel>();
-                cache.PutObject(ObjectName, new SessionItem<FundingModel> { Name = ObjectName, Value = fModel });
+                var cache = ContainerStores.GetObjectCache<IFundingModel>();
+                cache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = fModel });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
@@ -197,7 +197,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
                 var model = modelCache.GetObject(FundingModelName).Value;
 
                 return model.Curves.Keys.Select(x=>x as string).ToArray().ReturnExcelRangeVector();
@@ -212,7 +212,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var modelCache = ContainerStores.GetObjectCache<FundingModel>();
+                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
                 var model = modelCache.GetObject(FundingModelName).Value;
 
                 if (!model.Curves.TryGetValue(CurveName, out var curve))

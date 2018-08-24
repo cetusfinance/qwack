@@ -12,7 +12,7 @@ namespace Qwack.Core.Curves
     
         double GetAveragePriceForDates(DateTime[] dates);
 
-        string Name { get; }
+        string Name { get; set; }
         
         int NumberOfPillars { get; }
 

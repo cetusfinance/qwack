@@ -237,5 +237,19 @@ namespace Qwack.Excel.Dates
                 return ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.ListCalendarNames();
             });
         }
+
+        [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates")]
+        public static object QDates_NextWeekday(
+           [ExcelArgument(Description = "Date")] DateTime Date,
+           [ExcelArgument(Description = "Weekday")] string Weekday)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Enum.TryParse(Weekday, out DayOfWeek weekday))
+                    return $"Unknown daycount method {Weekday}";
+
+                return Date.GetNextWeekday(weekday);
+            });
+        }
     }
 }

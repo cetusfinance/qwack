@@ -1,4 +1,4 @@
-﻿using Qwack.Core.Basic;
+using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Options;
@@ -17,6 +17,7 @@ namespace Qwack.Options.VolSurfaces
     /// </summary>
     public class SabrVolSurface : IVolSurface
     {
+        public string Name { get; set; }
         public DateTime OriginDate { get; set; }
         public double[] Alphas { get; set; }
         public double[] Betas { get; set; }

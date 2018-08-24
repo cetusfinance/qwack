@@ -9,6 +9,8 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class Forward : IInstrument
     {
+        public string TradeId { get; set; }
+
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
 
@@ -22,5 +24,6 @@ namespace Qwack.Core.Instruments.Asset
         public string AssetId { get; set; }
         public Currency PaymentCurrency { get; set; }
         public string FxFixingSource { get; set; }
+        public string DiscountCurve { get; set; }
     }
 }

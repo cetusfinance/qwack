@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -18,8 +19,6 @@ namespace Qwack.Models
 
         public IFundingModel FundingModel => _fundingModel;
         public DateTime BuildDate => _buildDate;
-
-        public object TurnbullWakeman { get; private set; }
 
         public AssetFxModel(DateTime buildDate, IFundingModel fundingModel)
         {
@@ -43,5 +42,30 @@ namespace Qwack.Models
         public IDictionary<DateTime, double> GetFixingDictionary(string name) => _fixings[name];
 
         public bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings) => _fixings.TryGetValue(name, out fixings);
+
+        public string[] CurveNames { get { return _assetCurves.Keys.Select(x => x).ToArray(); } }
+
+        public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
+        {
+            var fwd = _assetCurves[name].GetPriceForDate(expiry); //needs to account for spot/fwd offset
+            var vol = _assetVols[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
+            return vol;
+        }
+
+        public IAssetFxModel Clone()
+        {
+            var c = new AssetFxModel(BuildDate, FundingModel);
+
+            foreach (var kv in _assetCurves)
+                c.AddPriceCurve(kv.Key, kv.Value);
+
+            foreach (var kv in _assetVols)
+                c.AddVolSurface(kv.Key, kv.Value);
+
+            foreach (var kv in _fixings)
+                c.AddFixingDictionary(kv.Key, kv.Value);
+
+            return c;
+        }
     }
 }

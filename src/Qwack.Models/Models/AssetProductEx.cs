@@ -181,5 +181,44 @@ namespace Qwack.Models.Models
 
             return cube;
         }
+
+        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("PointLabel", typeof(string));
+            dataTypes.Add("Delta", typeof(double));
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model);
+            var pvRows = pvCube.GetAllRows();
+
+            foreach (var curveName in model.CurveNames)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize);
+                foreach (var bCurve in bumpedCurves)
+                {
+                    var newModel = model.Clone();
+                    newModel.AddPriceCurve(curveName, bCurve.Value);
+                    var bumpedPVCube = portfolio.PV(newModel);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        var delta = ((double)bumpedRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize;
+                        var row = new Dictionary<string, object>();
+                        row.Add("TradeId", bumpedRows[i]["TradeId"]);
+                        row.Add("PointLabel", bCurve.Key);
+                        row.Add("Delta", delta);
+                        cube.AddRow(row);
+                    }
+                }
+            }
+            return cube;
+        }
     }
 }

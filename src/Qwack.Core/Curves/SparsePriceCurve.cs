@@ -11,6 +11,8 @@ namespace Qwack.Core.Curves
     {
         private readonly DateTime[] _pillarDates = new DateTime[0];
         private readonly double[] _prices;
+        private readonly string[] _pillarLabels;
+
         private readonly SparsePriceCurveType _curveType;
         private IInterpolator1D _interpA;
         private IInterpolator1D _interpB;
@@ -22,12 +24,17 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => _pillarDates.Length;
 
-        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType)
+        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, string[] pillarLabels=null)
         {
             BuildDate = buildDate;
             _pillarDates = PillarDates;
             _prices = Prices;
             _curveType = curveType;
+
+            if (pillarLabels == null)
+                _pillarLabels = _pillarDates.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
+            else
+                _pillarLabels = pillarLabels;
 
             Initialize();
         }
@@ -51,5 +58,18 @@ namespace Qwack.Core.Curves
         public double GetAveragePriceForDates(DateTime[] dates) => _interpB.Average(dates.Select(x => x.ToOADate()));
 
         public double GetPriceForDate(DateTime date) => _interpB.Interpolate(date.ToOADate());
+
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize)
+        {
+            var o = new Dictionary<string, IPriceCurve>();
+            for (var i = 0; i < _pillarDates.Length; i++)
+            {
+                var bumpedCurve = _prices.Select((x, ix) => ix == i ? x + bumpSize : x).ToArray();
+                var c = new SparsePriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType);
+                var name = _pillarLabels[i];
+                o.Add(name, c);
+            }
+            return o;
+        }
     }
 }

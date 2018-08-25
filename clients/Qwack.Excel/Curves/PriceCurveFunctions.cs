@@ -47,6 +47,30 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a contango price curve for precious metals", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateContangoPriceCurve))]
+        public static object CreateContangoPriceCurve(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Spot date")] DateTime SpotDate,
+            [ExcelArgument(Description = "Spot price")] double SpotPrice,
+            [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+            [ExcelArgument(Description = "Array of contango values")] double[] ContangoRates,
+            [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var labels = (PillarLabels is ExcelMissing) ? null : (string[])PillarLabels;
+                var pDates = Pillars.ToDateTimeArray();
+                var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, Qwack.Dates.DayCountBasis.Act360, labels)
+                {
+                    Name = ObjectName
+                };
+                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a sparse price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurve))]
         public static object CreateSparsePriceCurve(
             [ExcelArgument(Description = "Object name")] string ObjectName,

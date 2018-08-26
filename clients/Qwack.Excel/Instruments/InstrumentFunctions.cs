@@ -95,10 +95,29 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioDelta))]
+        public static object AssetPortfolioDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+
+                var result = pfolio.Value.AssetDelta(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio))]
         public static object CreatePortfolio(
-          [ExcelArgument(Description = "Object name")] string ObjectName,
-          [ExcelArgument(Description = "Instruments")] object[] Instruments)
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Instruments")] object[] Instruments)
         {
             return ExcelHelper.Execute(_logger, () =>
             {

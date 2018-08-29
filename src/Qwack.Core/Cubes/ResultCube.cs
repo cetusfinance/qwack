@@ -63,25 +63,39 @@ namespace Qwack.Core.Cubes
 
         public ICube Pivot(string fieldToAggregateBy, AggregationAction aggregationAction)
         {
+            return Pivot(new[] { fieldToAggregateBy }, aggregationAction);
+        }
+
+            public ICube Pivot(string[] fieldsToAggregateBy, AggregationAction aggregationAction)
+        {
             //for now, aggregate only works on numerical fields and performs a sum
+            foreach(var fieldToAggregateBy in fieldsToAggregateBy)
             if (!_types.ContainsKey(fieldToAggregateBy))
                 throw new Exception($"Cannot aggregate on field {fieldToAggregateBy} as it is not present");
 
-            var ix = _fieldNames.IndexOf(fieldToAggregateBy);
+            var ixs = fieldsToAggregateBy.Select(f=>_fieldNames.IndexOf(f)).ToArray();
 
-            var distinctValues = _rows.Select(x => x.MetaData[ix]).Distinct();
+            var distinctValues = _rows.Select(x => string.Join("~",ixs.Select(ix=>x.MetaData[ix].ToString()))).Distinct();
 
             var outCube = new ResultCube();
-            outCube.Initialize(new Dictionary<string, Type> { { fieldToAggregateBy, _types[fieldToAggregateBy] } });
-            var aggData = new Dictionary<object, double>();
-            var aggDataCount = new Dictionary<object, int>();
+            var oT = new Dictionary<string, Type>();
+            foreach (var fieldToAggregateBy in fieldsToAggregateBy)
+                oT.Add(fieldToAggregateBy, _types[fieldToAggregateBy]);
+            outCube.Initialize(oT);
+            var aggData = new Dictionary<string, double>();
+            var aggDataCount = new Dictionary<string, int>();
+            var metaDict = new Dictionary<string,object[]>();
             foreach (var row in _rows)
             {
-                var rowKey = row.MetaData[ix];
+                var rowKey = string.Join("~", ixs.Select(i=>row.MetaData[i].ToString()));
                 if (!aggData.ContainsKey(rowKey))
                 {
                     aggData[rowKey] = 0;
                     aggDataCount[rowKey] = 0;
+                    var filetedMetaData = new object[ixs.Length];
+                    for (var i = 0; i < ixs.Length; i++)
+                        filetedMetaData[i] = row.MetaData[i];
+                    metaDict[rowKey] = filetedMetaData;
                 }
                 switch (aggregationAction)
                 {
@@ -121,11 +135,10 @@ namespace Qwack.Core.Cubes
             {
                 var rowDict = new Dictionary<string, object>();
                 var rowKey = aggRow.Key;
-                rowDict.Add(fieldToAggregateBy, rowKey);
                 if (aggregationAction == AggregationAction.Average)
                     aggData[rowKey] /= aggDataCount[rowKey];
 
-                outCube.AddRow(rowDict, aggData[rowKey]);
+                outCube.AddRow(metaDict[rowKey], aggData[rowKey]);
             }
 
 

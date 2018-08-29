@@ -8,9 +8,11 @@ namespace Qwack.Core.Cubes
     {
         Dictionary<string, Type> DataTypes { get; }
         void Initialize(Dictionary<string, Type> dataTypes);
-        void AddRow(Dictionary<string, object> data);
-        Dictionary<string, object>[] GetAllRows();
-        ICube Pivot(string fieldToAggregateBy, Dictionary<string, AggregationAction> aggregatedFields);
+        void AddRow(Dictionary<string, object> descriptiveData, double value);
+        ResultCubeRow[] GetAllRows();
+        ICube Pivot(string fieldToAggregateBy, AggregationAction aggregationAction);
         ICube Filter(Dictionary<string, object> fieldsToFilterOn);
+
+        int GetColumnIndex(string columnName);
     }
 }

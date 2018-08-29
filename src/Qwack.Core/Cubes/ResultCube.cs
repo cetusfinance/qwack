@@ -5,108 +5,127 @@ using System.Linq;
 
 namespace Qwack.Core.Cubes
 {
+    public class ResultCubeRow
+    {
+        public double Value { get; set; }
+        public object[] MetaData { get; set; }
+
+        public ResultCubeRow() { }
+
+        public ResultCubeRow(object[] metaData, double value)
+        {
+            MetaData = metaData;
+            Value = value;
+        }
+    }
+
     public class ResultCube : ICube
     {
         private Type[] _numericalTypes = { typeof(double) };
-        private List<Dictionary<string, object>> _rows;
+        private List<ResultCubeRow> _rows;
         private Dictionary<string, Type> _types;
+        private List<string> _fieldNames;
 
         public void Initialize(Dictionary<string, Type> dataTypes)
         {
             _types = dataTypes;
-            _rows = new List<Dictionary<string, object>>();
+            _fieldNames = dataTypes.Keys.ToList();
+            _rows = new List<ResultCubeRow>();
         }
 
         public Dictionary<string, Type> DataTypes { get { return _types; } }
 
-        public void AddRow(Dictionary<string, object> data)
+        public int GetColumnIndex(string columnName) => _fieldNames.IndexOf(columnName);
+
+
+        public void AddRow(Dictionary<string, object> data, double value)
         {
-            _rows.Add(data);
+            var row = new object[data.Count];
+            foreach (var d in data)
+            {
+                if (!_types.ContainsKey(d.Key))
+                    throw new Exception($"Could not map field {d.Key}");
+
+                var valAsType = Convert.ChangeType(d.Value, _types[d.Key]);
+                if (valAsType == null)
+                    throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
+
+                var ix = _fieldNames.IndexOf(d.Key);
+                row[ix] = d.Value;
+            }
+            _rows.Add(new ResultCubeRow(row,value));
         }
 
-        public ICube Pivot(string fieldToAggregateBy, Dictionary<string, AggregationAction> aggregatedFields)
+        public void AddRow(object[] data, double value)
+        {
+            _rows.Add(new ResultCubeRow(data, value));
+        }
+
+        public ICube Pivot(string fieldToAggregateBy, AggregationAction aggregationAction)
         {
             //for now, aggregate only works on numerical fields and performs a sum
             if (!_types.ContainsKey(fieldToAggregateBy))
                 throw new Exception($"Cannot aggregate on field {fieldToAggregateBy} as it is not present");
 
-            foreach(var f in aggregatedFields)
-            {
-                if (!_types.ContainsKey(f.Key))
-                    throw new Exception($"Cannot aggregate field {f.Key} as it is not present");
-            }
+            var ix = _fieldNames.IndexOf(fieldToAggregateBy);
 
-            var numericalFields = _types.Where(x => _numericalTypes.Contains(x.Value));
-
-            var outputTypes = new Dictionary<string, Type>();
-            outputTypes.Add(fieldToAggregateBy, _types[fieldToAggregateBy]);
-
-            foreach (var kv in aggregatedFields)
-            {
-                if(!numericalFields.Any(x=>x.Key==kv.Key))
-                    throw new Exception($"Cannot aggregate field {kv.Key} as it is not numeric");
-                outputTypes.Add(kv.Key, _types[kv.Key]);
-            }
-
-            var distinctValues = _rows.Select(x => x[fieldToAggregateBy]).Distinct();
+            var distinctValues = _rows.Select(x => x.MetaData[ix]).Distinct();
 
             var outCube = new ResultCube();
-            outCube.Initialize(outputTypes);
-            var aggData = new Dictionary<object, Dictionary<string,object>>();
+            outCube.Initialize(new Dictionary<string, Type> { { fieldToAggregateBy, _types[fieldToAggregateBy] } });
+            var aggData = new Dictionary<object, double>();
+            var aggDataCount = new Dictionary<object, int>();
             foreach (var row in _rows)
             {
-                var rowKey = row[fieldToAggregateBy];
+                var rowKey = row.MetaData[ix];
                 if (!aggData.ContainsKey(rowKey))
-                    aggData[rowKey] = new Dictionary<string, object>();
-
-                foreach (var av in aggregatedFields)
                 {
-                    switch (av.Value)
-                    {
-                        case AggregationAction.Sum:
-                            if (!aggData[rowKey].ContainsKey(av.Key))
-                                aggData[rowKey][av.Key] = 0.0;
-
-                            aggData[rowKey][av.Key] = (double)aggData[rowKey][av.Key] + (double)row[av.Key];
-                            break;
-                        case AggregationAction.Average:
-                            if (!aggData[rowKey].ContainsKey(av.Key))
-                                aggData[rowKey][av.Key] = new List<double>();
-                            ((List<double>)aggData[rowKey][av.Key]).Add((double)row[av.Key]);
-                            break;
-                        case AggregationAction.Min:
-                            if (!aggData[rowKey].ContainsKey(av.Key))
-                                aggData[rowKey][av.Key] = double.MaxValue;
-                            aggData[rowKey][av.Key] = System.Math.Min((double)aggData[rowKey][av.Key], (double)row[av.Key]);
-                            break;
-                        case AggregationAction.Max:
-                            if (!aggData[rowKey].ContainsKey(av.Key))
-                                aggData[rowKey][av.Key] = double.MinValue;
-                            aggData[rowKey][av.Key] = System.Math.Min((double)aggData[rowKey][av.Key], (double)row[av.Key]);
-                            break;
-                    }
+                    aggData[rowKey] = 0;
+                    aggDataCount[rowKey] = 0;
                 }
+                switch (aggregationAction)
+                {
+                    case AggregationAction.Sum:
+                        if (!aggData.ContainsKey(rowKey))
+                        {
+                            aggData[rowKey] = 0;
+                            aggDataCount[rowKey] = 0;
+                        }
+                        aggData[rowKey] += row.Value;
+                        break;
+                    case AggregationAction.Average:
+                        if (!aggData.ContainsKey(rowKey))
+                        {
+                            aggData[rowKey] = 0;
+                            aggDataCount[rowKey] = 0;
+                        }
+                        aggData[rowKey] += row.Value;
+                        aggDataCount[rowKey]++;
+                        break;
+                    case AggregationAction.Min:
+                        if (!aggData.ContainsKey(rowKey))
+                            aggData[rowKey] = double.MaxValue;
+                        aggData[rowKey] = System.Math.Min(aggData[rowKey], row.Value);
+                        break;
+                    case AggregationAction.Max:
+                        if (!aggData.ContainsKey(rowKey))
+                            aggData[rowKey] = double.MinValue;
+                        aggData[rowKey] = System.Math.Max(aggData[rowKey], row.Value);
+                        break;
+                }
+
             }
 
             //final post-processing for average
-            foreach(var aggRow in aggData)
+            foreach (var aggRow in aggData)
             {
                 var rowDict = new Dictionary<string, object>();
                 var rowKey = aggRow.Key;
                 rowDict.Add(fieldToAggregateBy, rowKey);
-                foreach (var av in aggregatedFields)
-                {
-                    switch (av.Value)
-                    {
-                        case AggregationAction.Average:
-                            aggData[rowKey][av.Key] = ((List<double>)aggData[rowKey][av.Key]).Average();
-                            break;
-                    }
+                if (aggregationAction == AggregationAction.Average)
+                    aggData[rowKey] /= aggDataCount[rowKey];
 
-                    rowDict.Add(av.Key, aggData[rowKey][av.Key]);
-                }
-
-                outCube.AddRow(rowDict);
+                outCube.AddRow(rowDict, aggData[rowKey]);
             }
 
 
@@ -122,25 +141,27 @@ namespace Qwack.Core.Cubes
             var outCube = new ResultCube();
             outCube.Initialize(_types);
 
+            var indexes = fieldsToFilterOn.Keys.ToDictionary(x => x, x => _fieldNames.IndexOf(x));
+
             foreach (var row in _rows)
             {
                 var rowIsRelevant = true;
                 foreach (var kv in fieldsToFilterOn)
                 {
-                    if (!IsEqual(row[kv.Key], kv.Value))
+                    if (!IsEqual(row.MetaData[indexes[kv.Key]], kv.Value))
                     {
                         rowIsRelevant = false;
                         break;
                     }
                 }
                 if (rowIsRelevant)
-                    outCube.AddRow(row);
+                    outCube.AddRow(row.MetaData,row.Value);
             }
             
             return outCube;
         }
 
-        public Dictionary<string, object>[] GetAllRows()
+        public ResultCubeRow[] GetAllRows()
         {
             return _rows.ToArray();
         }

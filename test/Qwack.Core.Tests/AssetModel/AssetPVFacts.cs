@@ -84,19 +84,19 @@ namespace Qwack.Core.Tests.AssetModel
 
             var portfolio = new Portfolio() { Instruments = new List<IInstrument> { asianSwap } };
             var pfPvCube = portfolio.PV(aModel);
-            var pfPv = (double)pfPvCube.GetAllRows().First()["PV"];
+            var pfPv = (double)pfPvCube.GetAllRows().First().Value;
             Assert.Equal(0.0, pfPv, 8); 
 
             var deltaCube = portfolio.AssetDelta(aModel);
-            var dAgg = deltaCube.Pivot("TradeId", new Dictionary<string, Cubes.AggregationAction> { { "Delta", Cubes.AggregationAction.Sum } });
-            var delta = (double)dAgg.GetAllRows().First()["Delta"];
+            var dAgg = deltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);
             var df = xafCurve.GetDf(startDate, settleDate);
             Assert.Equal(1000 * df * fxFwd / t0Spot, delta,8);
 
             var fxDeltaCube = portfolio.FxDelta(aModel);
-            var dfxAgg = fxDeltaCube.Pivot("TradeId", new Dictionary<string, Cubes.AggregationAction> { { "Delta", Cubes.AggregationAction.Sum } });
-            var fxDelta = (double)dfxAgg.GetAllRows().First()["Delta"];
+            var dfxAgg = fxDeltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
             Assert.Equal(1000 * df * fxFwd / fxSpot * 100, fxDelta, 8);
         }
 

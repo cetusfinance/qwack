@@ -24,7 +24,7 @@ namespace Qwack.Excel.Cubes
 
                 var rows = cube.Value.GetAllRows();
 
-                var o = new object[rows.Length + 1, cube.Value.DataTypes.Count];
+                var o = new object[rows.Length + 1, cube.Value.DataTypes.Count+1];
 
                 var c = 0;
                 foreach (var t in cube.Value.DataTypes)
@@ -32,16 +32,18 @@ namespace Qwack.Excel.Cubes
                     o[0, c] = t.Key;
                     c++;
                 }
+                o[0, o.GetLength(1) - 1] = "Value";
 
                 var r = 1;
                 foreach (var row in rows)
                 {
-                    c = 0;
-                    foreach (var t in cube.Value.DataTypes)
+                    for (c = 0; c < cube.Value.DataTypes.Count; c++)
                     {
-                        o[r, c] = row[t.Key];
+                        o[r, c] = row.MetaData[c];
                         c++;
                     }
+                    o[r, o.GetLength(1) - 1] = row.Value;
+
                     r++;
                 }
 
@@ -85,7 +87,7 @@ namespace Qwack.Excel.Cubes
             [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
             [ExcelArgument(Description = "Field to aggregate by")] string AggregationField,
-            [ExcelArgument(Description = "Aggregation details")] object[,] AggregateDetails)
+            [ExcelArgument(Description = "Aggregation details")] string AggregateAction)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -96,7 +98,7 @@ namespace Qwack.Excel.Cubes
                     throw new Exception($"Could not find input cube {InputObjectName}");
                 }
 
-                var aggDeets = AggregateDetails.RangeToDictionary<string, AggregationAction>();
+                var aggDeets = (AggregationAction)Enum.Parse(typeof(AggregationAction), AggregateAction);
 
                 var outCube = inCube.Value.Pivot(AggregationField, aggDeets);
 

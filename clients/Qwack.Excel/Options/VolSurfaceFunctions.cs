@@ -25,7 +25,10 @@ namespace Qwack.Excel.Options
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var surface = new ConstantVolSurface(OriginDate, Volatility);
+                var surface = new ConstantVolSurface(OriginDate, Volatility)
+                {
+                    Name = ObjectName
+                };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -41,14 +44,20 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Volatilities")] double[,] Volatilities,
               [ExcelArgument(Description = "Stike Type - default Absolute")] object StrikeType,
               [ExcelArgument(Description = "Stike Interpolation - default Linear")] object StrikeInterpolation,
-              [ExcelArgument(Description = "Time Interpolation - default Linear")] object TimeInterpolation
+              [ExcelArgument(Description = "Time Interpolation - default Linear")] object TimeInterpolation,
+              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels
               )
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
+
                 var stikeType = StrikeType.OptionalExcel<string>("Absolute");
                 var expiries = ExcelHelper.ToDateTimeArray(Expiries);
-                var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged());
+                var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), labels)
+                {
+                    Name = ObjectName
+                };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;

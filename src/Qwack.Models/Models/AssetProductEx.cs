@@ -23,30 +23,10 @@ namespace Qwack.Models.Models
              asianOption.AverageEndDate.AddPeriod(RollType.F, asianOption.PaymentCalendar, asianOption.PaymentLag) :
              asianOption.PaymentDate;
 
-            double fwd, fixedAvg=0;
-
-            if (model.BuildDate < asianOption.AverageStartDate)
-            {
-                fwd = curve.GetAveragePriceForDates(asianOption.FixingDates.AddPeriod(RollType.F, asianOption.FixingCalendar, asianOption.SpotLag));
-            }
-            else
-            {
-                var fixingForToday = asianOption.AverageStartDate <= model.BuildDate &&
-                        model.TryGetFixingDictionary(asianOption.AssetId, out var fixings) &&
-                        fixings.TryGetValue(model.BuildDate, out var todayFixing);
-
-                var alreadyFixed = asianOption.FixingDates.Where(d => d > model.BuildDate || (d == model.BuildDate && fixingForToday));
-                var stillToFix = asianOption.FixingDates.Where(d => !alreadyFixed.Contains(d)).ToArray();
-
-                if (alreadyFixed.Any())
-                {
-                    model.TryGetFixingDictionary(asianOption.AssetId, out var fixingDict);
-                    fixedAvg = alreadyFixed.Select(d => fixingDict[d]).Average();
-                }
-
-                fwd = curve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, asianOption.FixingCalendar, asianOption.SpotLag));      
-            }
-
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            var fwd = FloatAverage;
+            var fixedAvg = FixedAverage;
+            
             var volDate = asianOption.AverageStartDate.Average(asianOption.AverageEndDate);
             var volFwd = curve.GetPriceForDate(volDate);
             var sigma = model.GetVolSurface(asianOption.AssetId).GetVolForAbsoluteStrike(asianOption.Strike, volDate, volFwd);
@@ -54,92 +34,127 @@ namespace Qwack.Models.Models
 
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
-            return TurnbullWakeman.PV(fwd, fixedAvg, sigma, asianOption.Strike, model.BuildDate, asianOption.AverageStartDate, asianOption.AverageEndDate, riskFree, asianOption.CallPut);
+            return TurnbullWakeman.PV(fwd, fixedAvg, sigma, asianOption.Strike, model.BuildDate, asianOption.AverageStartDate, asianOption.AverageEndDate, riskFree, asianOption.CallPut) * asianOption.Notional;
         }
 
         public static double PV(this AsianSwap asianSwap, IAssetFxModel model)
         {
-            var priceCurve = model.GetPriceCurve(asianSwap.AssetId);
             var discountCurve = model.FundingModel.Curves[asianSwap.DiscountCurve];
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
                 asianSwap.AverageEndDate.AddPeriod(RollType.F, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
                 asianSwap.PaymentDate;
 
-            double avg;
-
-            if (model.BuildDate < asianSwap.AverageStartDate)
-            {
-                avg = priceCurve.GetAveragePriceForDates(asianSwap.FixingDates.AddPeriod(RollType.F, asianSwap.FixingCalendar, asianSwap.SpotLag));
-            }
-            else
-            {
-                var fixingForToday = asianSwap.AverageStartDate <= model.BuildDate &&
-                        model.TryGetFixingDictionary(asianSwap.AssetId, out var fixings) &&
-                        fixings.TryGetValue(model.BuildDate, out var todayFixing);
-
-                var alreadyFixed = asianSwap.FixingDates.Where(d => d > model.BuildDate || (d == model.BuildDate && fixingForToday));
-                var stillToFix = asianSwap.FixingDates.Where(d => !alreadyFixed.Contains(d)).ToArray();
-
-                double fixedSum = 0;
-                if (alreadyFixed.Any())
-                {
-                    model.TryGetFixingDictionary(asianSwap.AssetId, out var fixingDict);
-                    fixedSum = alreadyFixed.Select(d => fixingDict[d]).Sum();
-                }
-                var floatSum = priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, asianSwap.FixingCalendar, asianSwap.SpotLag)) * stillToFix.Length;
-                avg = (fixedSum + floatSum) / asianSwap.FixingDates.Length;
-            }
-
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
+            var avg = (FixedAverage * FixedCount + FloatAverage * FloatCount) / (FloatCount + FixedCount);
             var pv = avg - asianSwap.Strike;
             pv *= asianSwap.Direction == TradeDirection.Long ? 1.0 : -1.0;
             pv *= asianSwap.Notional;
-            pv *= discountCurve.GetDf(priceCurve.BuildDate, payDate);
-
-            return pv;
-        }
-
-        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model)
-        {
-            return asianSwap.Swaplets.Sum(x => x.PV(model));
-        }
-
-        public static double PV(this Forward fwd, IAssetFxModel model)
-        {
-            var payDate = fwd.ExpiryDate.AddPeriod(RollType.F, fwd.PaymentCalendar, fwd.PaymentLag);
-            if (model.BuildDate > payDate)
-                return 0;
-
-            double fwdPrice;
-            if (fwd.ExpiryDate >= model.BuildDate)
-            {
-                if (fwd.ExpiryDate == model.BuildDate && 
-                    model.TryGetFixingDictionary(fwd.AssetId, out var fixings) && 
-                    fixings.TryGetValue(fwd.ExpiryDate, out var fixing))
-                {
-                    fwdPrice = fixing;
-                }
-                else
-                {
-                    var priceCurve = model.GetPriceCurve(fwd.AssetId);
-                    fwdPrice = priceCurve.GetPriceForDate(fwd.ExpiryDate.AddPeriod(RollType.F, fwd.FixingCalendar, fwd.SpotLag));
-                }
-            }
-            else
-            {
-                var fixingCurve = model.GetFixingDictionary(fwd.AssetId);
-                fwdPrice = fixingCurve[fwd.ExpiryDate];
-            }
-
-            var discountCurve = model.FundingModel.Curves[fwd.DiscountCurve];
-            var pv = fwdPrice - fwd.Strike;
-            pv *= fwd.Direction == TradeDirection.Long ? 1.0 : -1.0;
-            pv *= fwd.Notional;
             pv *= discountCurve.GetDf(model.BuildDate, payDate);
 
             return pv;
         }
 
-        public static ICube PV(this Portfolio portfolio, IAssetFxModel model)
+        public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
+        {
+            var fxDates = swap.FxFixingDates ?? swap.FixingDates;
+            var priceCurve = model.GetPriceCurve(swap.AssetId);
+            var fxFixingId = string.IsNullOrEmpty(swap.FxFixingId) ? $"{priceCurve.Currency}/{swap.PaymentCurrency}" : swap.FxFixingId;
+
+            if (swap.PaymentCurrency == priceCurve.Currency || swap.FxConversionType == FxConversionType.AverageThenConvert)
+            {
+                var fxAverage = 1.0;
+
+                if (model.BuildDate < swap.FixingDates.First())
+                {
+                    var avg = priceCurve.GetAveragePriceForDates(swap.FixingDates.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag));
+
+                    if (swap.FxConversionType == FxConversionType.AverageThenConvert)
+                    {
+                        fxAverage = model.FundingModel.GetFxAverage(fxDates, priceCurve.Currency, swap.PaymentCurrency);
+                        avg *= fxAverage;
+                    }
+
+                    return (FixedAverage: 0, FloatAverage: avg, FixedCount:0, FloatCount:swap.FixingDates.Length);
+                }
+                else
+                {
+                    var fixingForToday = swap.AverageStartDate <= model.BuildDate &&
+                            model.TryGetFixingDictionary(swap.AssetId, out var fixings) &&
+                            fixings.TryGetValue(model.BuildDate, out var todayFixing);
+
+                    var alreadyFixed = swap.FixingDates.Where(d => d < model.BuildDate || (d == model.BuildDate && fixingForToday));
+                    var stillToFix = swap.FixingDates.Where(d => !alreadyFixed.Contains(d)).ToArray();
+
+                    double fixedAvg = 0;
+                    if (alreadyFixed.Any())
+                    {
+                        model.TryGetFixingDictionary(swap.AssetId, out var fixingDict);
+                        fixedAvg = alreadyFixed.Select(d => fixingDict[d]).Average();
+                    }
+                    var floatAvg = priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag));
+                    
+                    if (swap.FxConversionType == FxConversionType.AverageThenConvert)
+                    {
+                        var fixingForTodayFx = fxDates.First() <= model.BuildDate &&
+                            model.TryGetFixingDictionary(fxFixingId, out var fxFixings) &&
+                            fxFixings.TryGetValue(model.BuildDate, out var todayFxFixing);
+
+                        var alreadyFixedFx = fxDates.Where(d => d < model.BuildDate || (d == model.BuildDate && fixingForTodayFx));
+                        var stillToFixFx = fxDates.Where(d => !alreadyFixedFx.Contains(d)).ToArray();
+
+                        double fixedFxAvg = 0;
+                        if (alreadyFixedFx.Any())
+                        {
+                            model.TryGetFixingDictionary(fxFixingId, out var fxFixingDict);
+                            fixedFxAvg = alreadyFixedFx.Select(d => fxFixingDict[d]).Average();
+                        }
+                        var floatFxAvg = model.FundingModel.GetFxAverage(stillToFixFx, priceCurve.Currency, swap.PaymentCurrency);
+
+                        floatAvg *= floatFxAvg;
+                        fixedAvg *= fixedFxAvg;
+                    }
+
+                    return (FixedAverage: fixedAvg, FloatAverage: floatAvg, FixedCount: alreadyFixed.Count(), FloatCount: stillToFix.Count());
+                }
+            }
+            else // convert then average...
+            {
+                var fixingForTodayAsset = swap.AverageStartDate <= model.BuildDate &&
+                           model.TryGetFixingDictionary(swap.AssetId, out var fixings) &&
+                           fixings.TryGetValue(model.BuildDate, out var todayFixing);
+                var fixingForTodayFx = fxDates.First() <= model.BuildDate &&
+                          model.TryGetFixingDictionary(fxFixingId, out var fxFixings) &&
+                          fxFixings.TryGetValue(model.BuildDate, out var todayFxFixing);
+
+                var fixingForToday = fixingForTodayAsset && fixingForTodayFx;
+
+                var alreadyFixed = swap.FixingDates.Where(d => d < model.BuildDate || (d == model.BuildDate && fixingForToday));
+                var stillToFix = swap.FixingDates.Where(d => !alreadyFixed.Contains(d)).ToArray();
+
+                double fixedAvg = 0;
+                if (alreadyFixed.Any())
+                {
+                    model.TryGetFixingDictionary(swap.AssetId, out var fixingDict);
+                    var assetFixings = alreadyFixed.Select(d => fixingDict[d]);
+                    model.TryGetFixingDictionary(fxFixingId, out var fxFixingDict);
+                    var fxFixingsA = alreadyFixed.Select(d => fxFixingDict[d]).ToArray();
+                    fixedAvg = assetFixings.Select((x, ix) => x * fxFixingsA[ix]).Average();
+                }
+
+                var floatAsset = stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag)
+                    .Select(d => priceCurve.GetPriceForDate(d));
+                var floatFx = model.FundingModel.GetFxRates(stillToFix, priceCurve.Currency, swap.PaymentCurrency).ToArray();
+                var floatCompoAvg = floatAsset.Select((x, ix) => x * floatFx[ix]).Average();
+
+                return (FixedAverage: fixedAvg, FloatAverage: floatCompoAvg, FixedCount: alreadyFixed.Count(), FloatCount: stillToFix.Count());
+            }
+        }
+
+        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.Sum(x => x.PV(model));
+
+        public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
+
+        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency=null)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>();
@@ -149,33 +164,43 @@ namespace Qwack.Models.Models
 
             foreach(var ins in portfolio.Instruments)
             {
-                double pv = 0;
+                var pv = 0.0;
+                var fxRate = 1.0;
                 string tradeId = null;
-                switch(ins)
+                switch (ins)
                 {
                     case AsianOption asianOption:
                         pv = asianOption.PV(model);
                         tradeId = asianOption.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, asianOption.PaymentCurrency);
                         break;
                     case AsianSwap swap:
                         pv = swap.PV(model);
                         tradeId = swap.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swap.PaymentCurrency);
                         break;
                     case AsianSwapStrip swapStrip:
                         pv = swapStrip.PV(model);
                         tradeId = swapStrip.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
                         break;
                     case Forward fwd:
                         pv = fwd.PV(model);
                         tradeId = fwd.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
                 }
 
+
                 var row = new Dictionary<string, object>();
                 row.Add("TradeId", tradeId);
-                row.Add("PV", pv);
+                row.Add("PV", pv/fxRate);
                 cube.AddRow(row);
             }
 
@@ -188,8 +213,100 @@ namespace Qwack.Models.Models
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>();
             dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("AssetId", typeof(string));
             dataTypes.Add("PointLabel", typeof(string));
             dataTypes.Add("Delta", typeof(double));
+            cube.Initialize(dataTypes);
+
+            foreach (var curveName in model.CurveNames)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+
+                var pvCube = portfolio.PV(model, curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize);
+
+                foreach (var bCurve in bumpedCurves)
+                {
+                    var newModel = model.Clone();
+                    newModel.AddPriceCurve(curveName, bCurve.Value);
+                    var bumpedPVCube = portfolio.PV(newModel, curveObj.Currency);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        var delta = ((double)bumpedRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize;
+                        if (delta != 0.0)
+                        {
+                            var row = new Dictionary<string, object>();
+                            row.Add("TradeId", bumpedRows[i]["TradeId"]);
+                            row.Add("AssetId", curveName);
+                            row.Add("PointLabel", bCurve.Key);
+                            row.Add("Delta", delta);
+                            cube.AddRow(row);
+                        }
+                    }
+                }
+            }
+            return cube;
+        }
+
+        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("AssetId", typeof(string));
+            dataTypes.Add("PointLabel", typeof(string));
+            dataTypes.Add("Delta", typeof(double));
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model);
+            var pvRows = pvCube.GetAllRows();
+
+            var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
+
+            foreach (var currency in model.FundingModel.FxMatrix.SpotRates.Keys)
+            {
+                var fxPair = $"{currency}/{domCcy}";
+                var spot = model.FundingModel.FxMatrix.SpotRates[currency];
+                var bumpedSpot = spot + bumpSize;
+                var newModel = model.Clone();
+                newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
+                var bumpedPVCube = portfolio.PV(newModel);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = ((double)bumpedRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize;
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>();
+                        row.Add("TradeId", bumpedRows[i]["TradeId"]);
+                        row.Add("FxPair", fxPair);
+                        row.Add("Delta", delta);
+                        cube.AddRow(row);
+                    }
+                }
+
+            }
+            return cube;
+        }
+
+        public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("AssetId", typeof(string));
+            dataTypes.Add("PointLabel", typeof(string));
+            dataTypes.Add("Delta", typeof(double));
+            dataTypes.Add("Gamma", typeof(double));
             cube.Initialize(dataTypes);
 
             var pvCube = portfolio.PV(model);
@@ -198,23 +315,84 @@ namespace Qwack.Models.Models
             foreach (var curveName in model.CurveNames)
             {
                 var curveObj = model.GetPriceCurve(curveName);
-                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize);
-                foreach (var bCurve in bumpedCurves)
+                var bumpedUpCurves = curveObj.GetDeltaScenarios(bumpSize);
+                var bumpedDownCurves = curveObj.GetDeltaScenarios(-bumpSize);
+                foreach (var bUpCurve in bumpedUpCurves)
+                {
+                    var newModelUp = model.Clone();
+                    var newModelDown = model.Clone();
+                    newModelUp.AddPriceCurve(curveName, bUpCurve.Value);
+                    newModelDown.AddPriceCurve(curveName, bumpedDownCurves[bUpCurve.Key]);
+                    var bumpedUpPVCube = portfolio.PV(newModelUp);
+                    var bumpedDownPVCube = portfolio.PV(newModelDown);
+                    var bumpedUpRows = bumpedUpPVCube.GetAllRows();
+                    var bumpedDownRows = bumpedDownPVCube.GetAllRows();
+
+                    if (bumpedUpRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedUpRows.Length; i++)
+                    {
+                        var deltaUp = ((double)bumpedUpRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize;
+                        var deltaDown = ((double)pvRows[i]["PV"] - (double)bumpedDownRows[i]["PV"] ) / bumpSize;
+                        var gamma = (deltaUp - deltaDown) / bumpSize;
+                        var delta = 0.5 * (deltaUp + deltaDown);
+
+                        if (delta != 0.0)
+                        {
+                            var row = new Dictionary<string, object>();
+                            row.Add("TradeId", bumpedUpRows[i]["TradeId"]);
+                            row.Add("AssetId", curveName);
+                            row.Add("PointLabel", bUpCurve.Key);
+                            row.Add("Delta", delta);
+                            row.Add("Gamma", gamma);
+                            cube.AddRow(row);
+                        }
+                    }
+                }
+            }
+            return cube;
+        }
+
+        public static ICube AssetVega(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("AssetId", typeof(string));
+            dataTypes.Add("PointLabel", typeof(string));
+            dataTypes.Add("Vega", typeof(double));
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model);
+            var pvRows = pvCube.GetAllRows();
+
+            foreach (var surfaceName in model.VolSurfaceNames)
+            {
+                var volObj = model.GetVolSurface(surfaceName);
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize);
+                foreach (var bCurve in bumpedSurfaces)
                 {
                     var newModel = model.Clone();
-                    newModel.AddPriceCurve(curveName, bCurve.Value);
+                    newModel.AddVolSurface(surfaceName, bCurve.Value);
                     var bumpedPVCube = portfolio.PV(newModel);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
-                        var delta = ((double)bumpedRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize;
-                        var row = new Dictionary<string, object>();
-                        row.Add("TradeId", bumpedRows[i]["TradeId"]);
-                        row.Add("PointLabel", bCurve.Key);
-                        row.Add("Delta", delta);
-                        cube.AddRow(row);
+                        //vega quoted for a 1% shift, irrespective of bump size
+                        var vega = ((double)bumpedRows[i]["PV"] - (double)pvRows[i]["PV"]) / bumpSize * 0.01;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>();
+                            row.Add("TradeId", bumpedRows[i]["TradeId"]);
+                            row.Add("AssetId", surfaceName);
+                            row.Add("PointLabel", bCurve.Key);
+                            row.Add("Vega", vega);
+                            cube.AddRow(row);
+                        }
                     }
                 }
             }

@@ -17,6 +17,12 @@ namespace Qwack.Excel.Utils
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
+        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils")]
+        public static object QUtils_Now()
+        {
+            return DateTime.Now.ToString("s");
+        }
+
         [ExcelFunction(Description = "Returns unique entries from a range", Category = "QUtils")]
         public static object QUtils_Unique(
             [ExcelArgument(Description = "The excel range to find unique values in")] object[,] DataRange,

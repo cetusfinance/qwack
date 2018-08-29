@@ -25,8 +25,9 @@ namespace Qwack.Core.Instruments.Asset
         public DateTime PaymentDate { get; set; }
         public double Strike { get; set; }
         public string AssetId { get; set; }
+        public string FxFixingId { get; set; }
+        public DateTime[] FxFixingDates { get; set; }
         public Currency PaymentCurrency { get; set; }
-        public string FxFixingSource { get; set; }
         public FxConversionType FxConversionType { get; set; }
         public string DiscountCurve { get; set; }
     }

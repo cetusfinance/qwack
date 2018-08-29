@@ -16,6 +16,8 @@ namespace Qwack.Core.Models
         IFundingModel Clone();
         IFundingModel DeepClone();
         double GetFxRate(DateTime settlementDate, Currency domesticCcy, Currency foreignCcy);
+        double[] GetFxRates(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
+        double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
         void SetupFx(IFxMatrix fxMatrix);
         void UpdateCurves(Dictionary<string, IrCurve> updateCurves);
     }

@@ -26,7 +26,8 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
              [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
              [ExcelArgument(Description = "Array of prices values")] double[] Prices,
-             [ExcelArgument(Description = "Type of curve, e.g. LME, ICE, NYMEX etc")] object CurveType)
+             [ExcelArgument(Description = "Type of curve, e.g. LME, ICE, NYMEX etc")] object CurveType,
+             [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -36,8 +37,10 @@ namespace Qwack.Excel.Curves
                     return $"Could not parse price curve type - {curveTypeStr}";
                 }
 
+                var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
+
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType)
+                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType, labels)
                 {
                     Name = ObjectName
                 };
@@ -59,7 +62,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var labels = (PillarLabels is ExcelMissing) ? null : (string[])PillarLabels;
+                var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
                 var pDates = Pillars.ToDateTimeArray();
                 var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, Qwack.Dates.DayCountBasis.Act360, labels)
                 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Core.Basic;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -37,5 +38,13 @@ namespace Qwack.Options.VolSurfaces
         public double GetForwardATMVol(DateTime startDate, DateTime endDate) => Volatility;
 
         public double GetForwardATMVol(double start, double end) => Volatility;
+
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        {
+            return new Dictionary<string, IVolSurface>
+            {
+                { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) }
+            };
+        }
     }
 }

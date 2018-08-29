@@ -44,6 +44,7 @@ namespace Qwack.Models
         public bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings) => _fixings.TryGetValue(name, out fixings);
 
         public string[] CurveNames { get { return _assetCurves.Keys.Select(x => x).ToArray(); } }
+        public string[] VolSurfaceNames { get { return _assetVols.Keys.Select(x => x).ToArray(); } }
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
@@ -54,7 +55,7 @@ namespace Qwack.Models
 
         public IAssetFxModel Clone()
         {
-            var c = new AssetFxModel(BuildDate, FundingModel);
+            var c = new AssetFxModel(BuildDate, FundingModel.DeepClone());
 
             foreach (var kv in _assetCurves)
                 c.AddPriceCurve(kv.Key, kv.Value);

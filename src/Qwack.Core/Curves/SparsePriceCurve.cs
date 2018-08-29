@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
+using Qwack.Core.Basic;
 
 namespace Qwack.Core.Curves
 {
@@ -23,6 +24,8 @@ namespace Qwack.Core.Curves
         public string Name { get; set; }
 
         public int NumberOfPillars => _pillarDates.Length;
+
+        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
 
         public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, string[] pillarLabels=null)
         {

@@ -43,5 +43,10 @@ namespace Qwack.Core.Basic
         }
 
         public static bool operator !=(Currency x, Currency y) => !(x == y);
+
+        public new string ToString()
+        {
+            return Ccy;
+        }
     }
 }

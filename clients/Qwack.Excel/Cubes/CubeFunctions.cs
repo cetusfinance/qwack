@@ -79,5 +79,54 @@ namespace Qwack.Excel.Cubes
                 return ObjectName + '¬' + cubeCache.GetObject(ObjectName).Version;
             });
         }
+
+        [ExcelFunction(Description = "Creates a new cube object by aggregating another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(AggregateCube))]
+        public static object AggregateCube(
+            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Field to aggregate by")] string AggregationField,
+            [ExcelArgument(Description = "Aggregation details")] object[,] AggregateDetails)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+
+                if(!cubeCache.TryGetObject(InputObjectName, out var inCube))
+                {
+                    throw new Exception($"Could not find input cube {InputObjectName}");
+                }
+
+                var aggDeets = AggregateDetails.RangeToDictionary<string, AggregationAction>();
+
+                var outCube = inCube.Value.Pivot(AggregationField, aggDeets);
+
+                cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
+                return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new cube object by filtering another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FilterCube))]
+        public static object FilterCube(
+           [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
+           [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+           [ExcelArgument(Description = "Filter fields and values")] object[,] FilterDetails)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+
+                if (!cubeCache.TryGetObject(InputObjectName, out var inCube))
+                {
+                    throw new Exception($"Could not find input cube {InputObjectName}");
+                }
+
+                var filterDeets = FilterDetails.RangeToDictionary<string, object>();
+
+                var outCube = inCube.Value.Filter(filterDeets);
+
+                cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
+                return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
     }
 }

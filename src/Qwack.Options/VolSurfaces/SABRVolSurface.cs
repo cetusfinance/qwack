@@ -135,5 +135,10 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
+
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

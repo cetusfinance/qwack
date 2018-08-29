@@ -51,7 +51,20 @@ namespace Qwack.Excel.Services
             var o = new Dictionary<T1, T2>();
             for(var r=0;r<input.GetLength(0);r++)
             {
-                o.Add((T1)Convert.ChangeType(input[r, 0], typeof(T1)), (T2)Convert.ChangeType(input[r, 1], typeof(T2)));
+                T1 val1;
+                T2 val2;
+
+                if (typeof(T1).IsEnum)
+                    val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
+                else
+                    val1 = (T1)Convert.ChangeType(input[r, 0], typeof(T1));
+
+                if (typeof(T2).IsEnum)
+                    val2 = (T2)Enum.Parse(typeof(T2), (string)input[r, 1]);
+                else
+                    val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
+
+                o.Add(val1, val2);
             }
             return o;
         }
@@ -95,6 +108,28 @@ namespace Qwack.Excel.Services
                 .Select(s => tCache.GetObject(s as string).Value);
 
             return tS;
+        }
+
+        public static T[] ObjectRangeToVector<T>(this object[,] input)
+        {      
+            if(input.GetLength(0)> input.GetLength(1))
+            {
+                var o = new T[input.GetLength(0)];
+                for(var i=0;i<input.GetLength(0);i++)
+                {
+                    o[i] = (T)Convert.ChangeType(input[i, 0],typeof(T));
+                }
+                return o;
+            }
+            else
+            {
+                var o = new T[input.GetLength(1)];
+                for (var i = 0; i < input.GetLength(1); i++)
+                {
+                    o[i] = (T)Convert.ChangeType(input[0, i], typeof(T));
+                }
+                return o;
+            }
         }
     }
 }

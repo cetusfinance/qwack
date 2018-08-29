@@ -29,5 +29,7 @@ namespace Qwack.Core.Basic
                 return result;
             }
         }
+
+        public new string ToString => $"{Domestic}/{Foreign}";
     }
 }

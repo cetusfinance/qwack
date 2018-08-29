@@ -26,7 +26,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates an asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap))]
         public static object CreateAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,
-             [ExcelArgument(Description = "Period code")] string PeriodCode,
+             [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
              [ExcelArgument(Description = "Asset Id")] string AssetId,
              [ExcelArgument(Description = "Currency")] string Currency,
              [ExcelArgument(Description = "Strike")] double Strike,
@@ -64,7 +64,15 @@ namespace Qwack.Excel.Curves
                 }
                 var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
 
-                var product = AssetProductFactory.CreateMonthlyAsianSwap(PeriodCode, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                AsianSwapStrip product;
+                if(PeriodCodeOrDates is object[,])
+                {
+                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0],dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else
+                    product = AssetProductFactory.CreateMonthlyAsianSwap(PeriodCodeOrDates as string, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+
                 product.TradeId = ObjectName;
                 foreach(var s in product.Swaplets)
                 {
@@ -73,6 +81,63 @@ namespace Qwack.Excel.Curves
 
                 var cache = ContainerStores.GetObjectCache<AsianSwapStrip>();
                 cache.PutObject(ObjectName, new SessionItem<AsianSwapStrip> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an asian option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianOption))]
+        public static object CreateAsianOption(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Period code")] string PeriodCode,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Strike")] double Strike,
+             [ExcelArgument(Description = "Put/Call")] string PutOrCall,
+             [ExcelArgument(Description = "Notional")] double Notional,
+             [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+             [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
+             [ExcelArgument(Description = "Spot lag")] object SpotLag,
+             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var paymentOffset = PaymentOffset.OptionalExcel("0b");
+                var spotLag = PaymentOffset.OptionalExcel("0b");
+                var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+
+                if (!Enum.TryParse(PutOrCall, out OptionType oType))
+                {
+                    return $"Could not parse put/call flag - {PutOrCall}";
+                }
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCal);
+                    return $"Calendar {fixingCal} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+                var pOffset = new Frequency(paymentOffset);
+                var sLag = new Frequency(spotLag);
+                if (!Enum.TryParse(dGenType, out DateGenerationType dType))
+                {
+                    return $"Could not parse date generation type - {dGenType}";
+                }
+                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+
+                var product = AssetProductFactory.CreatAsianOption(PeriodCode, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                product.TradeId = ObjectName;
+                product.DiscountCurve = DiscountCurve;
+                
+                var cache = ContainerStores.GetObjectCache<AsianOption>();
+                cache.PutObject(ObjectName, new SessionItem<AsianOption> { Name = ObjectName, Value = product });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
@@ -113,6 +178,59 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns asset delta and gamma of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioDeltaGamma))]
+        public static object AssetPortfolioDeltaGamma(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+
+                var result = pfolio.Value.AssetDeltaGamma(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns asset vega of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioVega))]
+        public static object AssetPortfolioVega(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+
+                var result = pfolio.Value.AssetVega(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioFxDelta))]
+        public static object AssetPortfolioFxDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+
+                var result = pfolio.Value.FxDelta(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
 
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio))]
         public static object CreatePortfolio(

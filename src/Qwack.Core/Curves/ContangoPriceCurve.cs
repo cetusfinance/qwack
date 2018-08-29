@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
+using Qwack.Core.Basic;
 
 namespace Qwack.Core.Curves
 {
@@ -22,6 +23,8 @@ namespace Qwack.Core.Curves
         public string Name { get; set; }
 
         public int NumberOfPillars => _pillarDates.Length;
+
+        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
 
         public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)
         {
@@ -59,20 +62,32 @@ namespace Qwack.Core.Curves
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize)
         {
             var o = new Dictionary<string, IPriceCurve>();
-            
+
             //spot scenario first
+            //var contangosAdjusted = new double[_contangos.Length];
+            //for (var i = 0; i < _contangos.Length; i++)
+            //{
+            //    var t = _spotDate.CalculateYearFraction(_pillarDates[i], _basis);
+            //    var contango = _contangos[i];
+            //    var f = _spot * (1.0 + contango * t);
+            //    contangosAdjusted[i] = (f / (_spot + bumpSize) - 1.0) / t;
+            //}
+
             var cSpot = new ContangoPriceCurve(BuildDate, _spot+bumpSize, _spotDate, _pillarDates, _contangos, _basis);
             o.Add("Spot", cSpot);
 
-            for (var i = 0; i < _pillarDates.Length; i++)
-            {
-                var t = _spotDate.CalculateYearFraction(_pillarDates[i], _basis);
-                var deltaContango = bumpSize / _spot / t;  
-                var bumpedCurve = _contangos.Select((x, ix) => ix == i ? x + deltaContango : x).ToArray();
-                var c = new ContangoPriceCurve(BuildDate, _spot, _spotDate, _pillarDates, bumpedCurve, _basis); 
-                var name = _pillarLabels[i];
-                o.Add(name, c);
-            }
+            //now each contango point bumped for the same difference in fwd
+            //for (var i = 0; i < _pillarDates.Length; i++)
+            //{
+            //    var t = _spotDate.CalculateYearFraction(_pillarDates[i], _basis);
+            //    var contango = _contangos[i];
+            //    var f = _spot * (1.0 + contango * t);
+            //    var deltaContango = ((f + bumpSize) / _spot - 1.0) / t - contango;
+            //    var bumpedCurve = _contangos.Select((x, ix) => ix == i ? x + deltaContango : x).ToArray();
+            //    var c = new ContangoPriceCurve(BuildDate, _spot, _spotDate, _pillarDates, bumpedCurve, _basis); 
+            //    var name = _pillarLabels[i];
+            //    o.Add(name, c);
+            //}
             return o;
         }
     }

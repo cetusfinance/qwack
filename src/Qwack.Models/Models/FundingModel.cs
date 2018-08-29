@@ -64,6 +64,8 @@ namespace Qwack.Models
         public IFundingModel DeepClone()
         {
             var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray());
+            if (FxMatrix != null)
+                returnValue.SetupFx(FxMatrix.Clone());
             return returnValue;
         }
 
@@ -93,6 +95,24 @@ namespace Qwack.Models
             var dfFor = Curves[FxMatrix.DiscountCurveMap[foreignCcy]].GetDf(spotDate, settlementDate);
 
             return spot * dfDom / dfFor;
+        }
+
+        public double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy)
+        {
+            return GetFxRates(fixingDates, domesticCcy, foreignCcy).Average();
+        }
+
+        public double[] GetFxRates(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy)
+        {
+            if (foreignCcy == domesticCcy)
+                return Enumerable.Repeat(1.0, fixingDates.Length).ToArray();
+            else
+            {
+                var pair = FxMatrix.FxPairDefinitions.First(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
+                var settleDates = fixingDates.Select(x => x.AddPeriod(RollType.F, pair.SettlementCalendar, pair.SpotLag));
+                var rates = settleDates.Select(d => GetFxRate(d, domesticCcy, foreignCcy)).ToArray();
+                return rates;
+            }
         }
 
         public void SetupFx(IFxMatrix fxMatrix) => FxMatrix = fxMatrix;

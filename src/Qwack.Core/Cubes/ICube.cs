@@ -11,6 +11,6 @@ namespace Qwack.Core.Cubes
         void AddRow(Dictionary<string, object> data);
         Dictionary<string, object>[] GetAllRows();
         ICube Pivot(string fieldToAggregateBy, Dictionary<string, AggregationAction> aggregatedFields);
-
+        ICube Filter(Dictionary<string, object> fieldsToFilterOn);
     }
 }

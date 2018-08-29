@@ -16,6 +16,8 @@ namespace Qwack.Core.Curves
 
         string Name { get; set; }
         
+        Currency Currency { get; set; }
+
         int NumberOfPillars { get; }
 
         Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize);

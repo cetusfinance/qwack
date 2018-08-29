@@ -24,5 +24,6 @@ namespace Qwack.Core.Models
         IAssetFxModel Clone();
 
         string[] CurveNames { get; }
+        string[] VolSurfaceNames { get; }
     }
 }

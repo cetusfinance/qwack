@@ -13,5 +13,7 @@ namespace Qwack.Core.Basic
         double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward);
         DateTime OriginDate { get; }
         string Name { get; }
+
+        Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize);
     }
 }

@@ -192,11 +192,15 @@ namespace Qwack.Excel.Dates
 
         [ExcelFunction(Description = "Returns start and end dates for a period code", Category = "QDates")]
         public static object QDates_DatesForPeriodCode(
-           [ExcelArgument(Description = "Period code")] string Code)
+           [ExcelArgument(Description = "Period code")] object Code)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var (Start, End) = DateExtensions.ParsePeriod(Code);
+                if(Code is double)
+                {
+                    Code = DateTime.FromOADate((double)Code).ToString("MMM-yy");
+                }
+                var (Start, End) = DateExtensions.ParsePeriod((string)Code);
                 return (new object[] { Start, End }).ReturnExcelRangeVector();
             });
         }

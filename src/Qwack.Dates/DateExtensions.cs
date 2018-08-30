@@ -601,16 +601,17 @@ namespace Qwack.Dates
 
         /// <summary>
         /// Returns the start and end dates for a specified period string
-        /// e.g. CAL19, Q120, CAL-20, JAN-22
+        /// e.g. CAL19, Q120, CAL-20, JAN-22, BALMO
         /// </summary>
         /// <param name="dateA"></param>
         /// <param name="dateB"></param>
         /// <returns></returns>
         public static (DateTime Start, DateTime End) ParsePeriod(this string period)
         {
-
             switch (period.ToUpper())
             {
+                case string p when p.StartsWith("BALM"):
+                    return (Start: DateTime.Today, End: (DateTime.Today).LastDayOfMonth());
                 case string p when p.StartsWith("CAL"):
                     if (!int.TryParse(p.Substring(3).Trim('-',' '), out var y))
                         throw new Exception($"Could not parse year from {period}");

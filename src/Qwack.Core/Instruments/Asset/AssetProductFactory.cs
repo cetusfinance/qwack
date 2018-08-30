@@ -47,25 +47,32 @@ namespace Qwack.Core.Instruments.Asset
         public static AsianOption CreatAsianOption(string period, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();
+            return CreatAsianOption(Start, End, strike, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
+        }
+
+
+        public static AsianOption CreatAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
-                    Start.BusinessDaysInPeriod(End.LastDayOfMonth(), fixingCalendar) :
-                    Start.FridaysInPeriod(End.LastDayOfMonth(), fixingCalendar);
+                    start.BusinessDaysInPeriod(end.LastDayOfMonth(), fixingCalendar) :
+                    start.FridaysInPeriod(end.LastDayOfMonth(), fixingCalendar);
             return new AsianOption
-                {
+            {
                 AssetId = assetId,
-                    AverageStartDate = Start,
-                    AverageEndDate = End,
-                    FixingCalendar = fixingCalendar,
-                    Strike = strike,
-                    FixingDates = fixingDates.ToArray(),
-                    CallPut = putCall,
-                    PaymentCalendar = payCalendar,
-                    PaymentLag = payOffset,
-                    PaymentDate = End.AddPeriod(RollType.F, fixingCalendar, payOffset),
-                    PaymentCurrency = currency,
-                    Direction = tradeDirection,
-                    Notional = notional
-                };
+                AverageStartDate = start,
+                AverageEndDate = end,
+                FixingCalendar = fixingCalendar,
+                Strike = strike,
+                FixingDates = fixingDates.ToArray(),
+                CallPut = putCall,
+                PaymentCalendar = payCalendar,
+                PaymentLag = payOffset,
+                PaymentDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset),
+                PaymentCurrency = currency,
+                Direction = tradeDirection,
+                Notional = notional
+            };
 
         }
     }

@@ -70,6 +70,11 @@ namespace Qwack.Excel.Curves
                     var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
                     product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0],dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                 }
+                else if (PeriodCodeOrDates is double)
+                {
+                    PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
+                    product = AssetProductFactory.CreateMonthlyAsianSwap(PeriodCodeOrDates as string, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
                 else
                     product = AssetProductFactory.CreateMonthlyAsianSwap(PeriodCodeOrDates as string, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
 
@@ -88,7 +93,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates an asian option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianOption))]
         public static object CreateAsianOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
-             [ExcelArgument(Description = "Period code")] string PeriodCode,
+             [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
              [ExcelArgument(Description = "Asset Id")] string AssetId,
              [ExcelArgument(Description = "Currency")] string Currency,
              [ExcelArgument(Description = "Strike")] double Strike,
@@ -132,7 +137,20 @@ namespace Qwack.Excel.Curves
                 }
                 var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
 
-                var product = AssetProductFactory.CreatAsianOption(PeriodCode, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                AsianOption product;
+                if (PeriodCodeOrDates is object[,])
+                {
+                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else if (PeriodCodeOrDates is double)
+                {
+                    PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
+                    product = AssetProductFactory.CreatAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else
+                    product = AssetProductFactory.CreatAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
                 

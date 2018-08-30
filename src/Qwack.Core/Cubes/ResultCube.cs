@@ -94,7 +94,7 @@ namespace Qwack.Core.Cubes
                     aggDataCount[rowKey] = 0;
                     var filetedMetaData = new object[ixs.Length];
                     for (var i = 0; i < ixs.Length; i++)
-                        filetedMetaData[i] = row.MetaData[i];
+                        filetedMetaData[i] = row.MetaData[ixs[i]];
                     metaDict[rowKey] = filetedMetaData;
                 }
                 switch (aggregationAction)

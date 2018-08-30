@@ -40,7 +40,6 @@ namespace Qwack.Excel.Cubes
                     for (c = 0; c < cube.Value.DataTypes.Count; c++)
                     {
                         o[r, c] = row.MetaData[c];
-                        c++;
                     }
                     o[r, o.GetLength(1) - 1] = row.Value;
 
@@ -86,7 +85,7 @@ namespace Qwack.Excel.Cubes
         public static object AggregateCube(
             [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
-            [ExcelArgument(Description = "Field to aggregate by")] string AggregationField,
+            [ExcelArgument(Description = "Field to aggregate by")] object[] AggregationField,
             [ExcelArgument(Description = "Aggregation details")] string AggregateAction)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -100,7 +99,7 @@ namespace Qwack.Excel.Cubes
 
                 var aggDeets = (AggregationAction)Enum.Parse(typeof(AggregationAction), AggregateAction);
 
-                var outCube = inCube.Value.Pivot(AggregationField, aggDeets);
+                var outCube = inCube.Value.Pivot(AggregationField.ObjectRangeToVector<string>(), aggDeets);
 
                 cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
                 return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;

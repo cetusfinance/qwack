@@ -131,5 +131,15 @@ namespace Qwack.Excel.Services
                 return o;
             }
         }
+
+        public static T[] ObjectRangeToVector<T>(this object[] input)
+        {
+            var o = new T[input.Length];
+            for (var i = 0; i < input.Length; i++)
+            {
+                o[i] = (T)Convert.ChangeType(input[i], typeof(T));
+            }
+            return o;
+        }
     }
 }

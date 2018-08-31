@@ -60,7 +60,7 @@ namespace Qwack.Excel.Dates
              {
                  if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
                      return errorMessage;
-                 
+
                  var period = new Frequency(Period);
 
                  return StartDate.SubtractPeriod(rollMethod, cal, period);
@@ -196,7 +196,7 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if(Code is double)
+                if (Code is double)
                 {
                     Code = DateTime.FromOADate((double)Code).ToString("MMM-yy");
                 }
@@ -221,8 +221,8 @@ namespace Qwack.Excel.Dates
 
         [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates")]
         public static object QDates_FirstBusinessDay(
-           [ExcelArgument(Description = "Date in month")] DateTime Date,
-           [ExcelArgument(Description = "Calendar to check")] string Calendar)
+            [ExcelArgument(Description = "Date in month")] DateTime Date,
+            [ExcelArgument(Description = "Calendar to check")] string Calendar)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -244,8 +244,8 @@ namespace Qwack.Excel.Dates
 
         [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates")]
         public static object QDates_NextWeekday(
-           [ExcelArgument(Description = "Date")] DateTime Date,
-           [ExcelArgument(Description = "Weekday")] string Weekday)
+            [ExcelArgument(Description = "Date")] DateTime Date,
+            [ExcelArgument(Description = "Weekday")] string Weekday)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -253,6 +253,26 @@ namespace Qwack.Excel.Dates
                     return $"Unknown daycount method {Weekday}";
 
                 return Date.GetNextWeekday(weekday);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates")]
+        public static object QDates_SpotDate(
+            [ExcelArgument(Description = "Value Date")] DateTime ValDate,
+            [ExcelArgument(Description = "Spot Lag")] string SpotLag,
+            [ExcelArgument(Description = "Primary calendar")] string PrimaryCalendar,
+            [ExcelArgument(Description = "Secondary calendar")] string SecondaryCalendar)
+        {
+
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(PrimaryCalendar, out var cal1))
+                    return $"Calendar {PrimaryCalendar} not found in cache";
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(SecondaryCalendar, out var cal2))
+                    return $"Calendar {SecondaryCalendar} not found in cache";
+
+                return ValDate.SpotDate(new Frequency(SpotLag), cal1, cal2);
             });
         }
     }

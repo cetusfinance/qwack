@@ -139,5 +139,16 @@ namespace Qwack.Excel.Dates
                 return ValueDate.AddPeriod(RollType.LME_Nearest, cal, new Frequency(3, DatePeriodType.M));
             });
         }
+
+        [ExcelFunction(Description = "Gets month code and year for a given date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetMonthCodeAndYear))]
+        public static object GetMonthCodeAndYear(
+            [ExcelArgument(Description = "Value date")] DateTime ValueDate,
+            [ExcelArgument(Description = "Number of year digits - 1,2 or 4")] int NumYearDigits)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return ListedUtils.DateTimeToFuturesCode("", ValueDate, NumYearDigits);
+            });
+        }
     }
 }

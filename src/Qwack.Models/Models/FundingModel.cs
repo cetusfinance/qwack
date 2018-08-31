@@ -27,6 +27,8 @@ namespace Qwack.Models
         }
 
         public Dictionary<string, IrCurve> Curves { get; private set; }
+        public Dictionary<string, IVolSurface> VolSurfaces { get; set; }
+
         public DateTime BuildDate { get; private set; }
         public IFxMatrix FxMatrix { get; private set; }
         public string CurrentSolveCurve { get; set; }
@@ -56,14 +58,19 @@ namespace Qwack.Models
         {
             var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray())
             {
-                FxMatrix = FxMatrix
+                FxMatrix = FxMatrix,
+                VolSurfaces = VolSurfaces
             };
             return returnValue;
         }
 
         public IFundingModel DeepClone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray());
+            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray())
+            {
+                VolSurfaces = new Dictionary<string, IVolSurface>(VolSurfaces)
+            };
+
             if (FxMatrix != null)
                 returnValue.SetupFx(FxMatrix.Clone());
             return returnValue;

@@ -16,7 +16,6 @@ namespace Qwack.Models.Models
     {
         public static double PV(this AsianOption asianOption, IAssetFxModel model)
         {
-            var fixingDates = asianOption.AverageStartDate.BusinessDaysInPeriod(asianOption.AverageEndDate, asianOption.FixingCalendar);
             var curve = model.GetPriceCurve(asianOption.AssetId);
 
             var payDate = asianOption.PaymentDate == DateTime.MinValue ?
@@ -26,10 +25,30 @@ namespace Qwack.Models.Models
             var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
             var fwd = FloatAverage;
             var fixedAvg = FixedAverage;
-            
-            var volDate = asianOption.AverageStartDate.Average(asianOption.AverageEndDate);
+
+            if (asianOption.FixingDates.Last() <= model.BuildDate)
+            {
+                var avg = (FixedAverage * FixedCount + FloatAverage * FloatCount) / (FixedCount + FloatCount);
+                return asianOption.Notional * (asianOption.CallPut == OptionType.Call ? System.Math.Max(0, avg - asianOption.Strike) : System.Math.Max(0, asianOption.Strike - avg));
+            }
+
+            var surface = model.GetVolSurface(asianOption.AssetId);
+            var isCompo = asianOption.PaymentCurrency != curve.Currency; //should reference vol surface, not curve
+
+
+            var volDate = model.BuildDate.Max(asianOption.AverageStartDate.Average(asianOption.AverageEndDate));
             var volFwd = curve.GetPriceForDate(volDate);
-            var sigma = model.GetVolSurface(asianOption.AssetId).GetVolForAbsoluteStrike(asianOption.Strike, volDate, volFwd);
+            var sigma = surface.GetVolForAbsoluteStrike(asianOption.Strike, volDate, volFwd);
+
+            if(isCompo)
+            {
+                var fxId = $"{curve.Currency.Ccy}{asianOption.PaymentCurrency.Ccy}";
+                var fxVolFwd = model.FundingModel.GetFxRate(volDate, curve.Currency, asianOption.PaymentCurrency);
+                var fxVol = model.FundingModel.VolSurfaces[fxId].GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
+                var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
+                sigma = System.Math.Sqrt(sigma * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
+            }
+
             var discountCurve = model.FundingModel.Curves[asianOption.DiscountCurve];
 
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
@@ -58,7 +77,7 @@ namespace Qwack.Models.Models
         {
             var fxDates = swap.FxFixingDates ?? swap.FixingDates;
             var priceCurve = model.GetPriceCurve(swap.AssetId);
-            var fxFixingId = string.IsNullOrEmpty(swap.FxFixingId) ? $"{priceCurve.Currency}/{swap.PaymentCurrency}" : swap.FxFixingId;
+            var fxFixingId = string.IsNullOrEmpty(swap.FxFixingId) ? $"{priceCurve.Currency.Ccy}{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
 
             if (swap.PaymentCurrency == priceCurve.Currency || swap.FxConversionType == FxConversionType.AverageThenConvert)
             {
@@ -91,7 +110,7 @@ namespace Qwack.Models.Models
                         model.TryGetFixingDictionary(swap.AssetId, out var fixingDict);
                         fixedAvg = alreadyFixed.Select(d => fixingDict[d]).Average();
                     }
-                    var floatAvg = priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag));
+                    var floatAvg = stillToFix.Any() ? priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag)) : 0.0;
                     
                     if (swap.FxConversionType == FxConversionType.AverageThenConvert)
                     {
@@ -144,7 +163,7 @@ namespace Qwack.Models.Models
                 var floatAsset = stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag)
                     .Select(d => priceCurve.GetPriceForDate(d));
                 var floatFx = model.FundingModel.GetFxRates(stillToFix, priceCurve.Currency, swap.PaymentCurrency).ToArray();
-                var floatCompoAvg = floatAsset.Select((x, ix) => x * floatFx[ix]).Average();
+                var floatCompoAvg = floatAsset.Any() ? floatAsset.Select((x, ix) => x * floatFx[ix]).Average() : 0.0;
 
                 return (FixedAverage: fixedAvg, FloatAverage: floatCompoAvg, FixedCount: alreadyFixed.Count(), FloatCount: stillToFix.Count());
             }

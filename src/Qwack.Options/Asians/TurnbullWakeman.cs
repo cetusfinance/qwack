@@ -11,10 +11,15 @@ namespace Qwack.Options.Asians
     {
         public static double PV(double forward, double knownAverage, double sigma, double K, double tAvgStart, double tExpiry, double riskFree, OptionType callPut)
         {
+            if(tExpiry<=0) //work out intrinsic
+            {
+                return callPut == OptionType.Call ? System.Math.Max(0, knownAverage - K) : System.Math.Max(0, K - knownAverage);
+            }
+
             var M = 2 * (System.Math.Exp(sigma * sigma * tExpiry) - System.Math.Exp(sigma * sigma * tAvgStart) * (1 + sigma * sigma * (tExpiry - tAvgStart)));
             M /= System.Math.Pow(sigma, 4.0) * (tExpiry - tAvgStart) * (tExpiry - tAvgStart);
 
-            var sigma_a = System.Math.Sqrt(System.Math.Log(M) / tExpiry);
+            var sigma_a = tExpiry == 0 ? 0.0 : System.Math.Sqrt(System.Math.Log(M) / tExpiry);
 
             if (tAvgStart < 0)
             {

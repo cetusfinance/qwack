@@ -33,7 +33,7 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Notional")] double Notional,
              [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
              [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
-             [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
+             [ExcelArgument(Description = "Payment offset or date")] object PaymentOffsetOrDate,
              [ExcelArgument(Description = "Spot lag")] object SpotLag,
              [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
              [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
@@ -42,9 +42,9 @@ namespace Qwack.Excel.Curves
             {
                 var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
                 var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
-                var paymentOffset = PaymentOffset.OptionalExcel("0b");
-                var spotLag = PaymentOffset.OptionalExcel("0b");
+                var spotLag = SpotLag.OptionalExcel("0b");
                 var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+                var paymentOffset = PaymentOffsetOrDate is double ? "0b" : PaymentOffsetOrDate.OptionalExcel("0b");
 
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
                 {
@@ -65,10 +65,13 @@ namespace Qwack.Excel.Curves
                 var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
 
                 AsianSwapStrip product;
-                if(PeriodCodeOrDates is object[,])
+                if (PeriodCodeOrDates is object[,])
                 {
                     var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
-                    product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0],dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    if (PaymentOffsetOrDate is double)
+                        product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                    else
+                        product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                 }
                 else if (PeriodCodeOrDates is double)
                 {
@@ -101,7 +104,7 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Notional")] double Notional,
              [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
              [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
-             [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
+             [ExcelArgument(Description = "Payment offset")] object PaymentOffsetOrDate,
              [ExcelArgument(Description = "Spot lag")] object SpotLag,
              [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
              [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
@@ -110,9 +113,9 @@ namespace Qwack.Excel.Curves
             {
                 var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
                 var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
-                var paymentOffset = PaymentOffset.OptionalExcel("0b");
-                var spotLag = PaymentOffset.OptionalExcel("0b");
+                var spotLag = SpotLag.OptionalExcel("0b");
                 var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+                var paymentOffset = PaymentOffsetOrDate is double ? "0b" : PaymentOffsetOrDate.OptionalExcel("0b");
 
                 if (!Enum.TryParse(PutOrCall, out OptionType oType))
                 {
@@ -141,7 +144,12 @@ namespace Qwack.Excel.Curves
                 if (PeriodCodeOrDates is object[,])
                 {
                     var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
-                    product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    if (PaymentOffsetOrDate is double)
+                        product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                    else
+                    {
+                        product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    }
                 }
                 else if (PeriodCodeOrDates is double)
                 {

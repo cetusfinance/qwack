@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Math;
 
 namespace Qwack.Math
 {
@@ -13,7 +14,7 @@ namespace Qwack.Math
     {
         public static double CumulativeNormalDistribution(double d) => FiNormSDist(d);
         public static double ProbabilityDensityFunction(double z) => StandardNormalDistribution(z);
-        public static double StandardNormalDistribution(double x) => System.Math.Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
+        public static double StandardNormalDistribution(double x) => Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
 
         public static double NormInv(double p) => NormInv(p, 0.0, 1.0);
 
@@ -52,7 +53,7 @@ namespace Qwack.Math
                     Produces the normal deviate Z corresponding to a given lower
                     tail area of P; Z is accurate to about 1 part in 10**16.
             */
-            if (System.Math.Abs(q) <= .425)
+            if (Abs(q) <= .425)
             {/* 0.075 <= p <= 0.925 */
                 r = .180625 - q * q;
                 val =
@@ -75,7 +76,7 @@ namespace Qwack.Math
                 else
                     r = p;
 
-                r = System.Math.Sqrt(-System.Math.Log(r));
+                r = Sqrt(-Log(r));
                 /* r = sqrt(-log(r))  <==>  min(p, 1-p) = exp( - r^2 ) */
 
                 if (r <= 5)
@@ -119,8 +120,8 @@ namespace Qwack.Math
 
             return mu + sigma * val;
         }
-        public static double BivariateNormalDistribution(double x, double y, double rho) => System.Math.Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
-                (2 * System.Math.PI * System.Math.Sqrt(1 - rho * rho));
+        public static double BivariateNormalDistribution(double x, double y, double rho) => Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
+                (2 * PI * Sqrt(1 - rho * rho));
 
         /// <summary>
         /// Returns sample variance of an array of values
@@ -163,7 +164,7 @@ namespace Qwack.Math
             }
             m2 /= n;
             m3 /= n;
-            return m3 / System.Math.Pow(m2, 3 / 2);
+            return m3 / Pow(m2, 3 / 2);
         }
 
         /// <summary>
@@ -186,11 +187,11 @@ namespace Qwack.Math
                 var v1 = x[i] - xAvg;
                 var v2 = v1 * v1;
                 m2 += v2;
-                mO += System.Math.Pow(v1, order);
+                mO += Pow(v1, order);
             }
             m2 /= n;
             mO /= n;
-            return mO / System.Math.Pow(m2, order / 2);
+            return mO / Pow(m2, order / 2);
         }
 
         /// <summary>
@@ -213,8 +214,8 @@ namespace Qwack.Math
             return v / (n - 1);
         }
 
-        public static double StdDev(this IEnumerable<double> x) => System.Math.Sqrt(Variance(x));
-        public static double StdDevWithAverage(this double[] x, double average) => System.Math.Sqrt(VarianceWithAverage(x, average));
+        public static double StdDev(this IEnumerable<double> x) => Sqrt(Variance(x));
+        public static double StdDevWithAverage(this double[] x, double average) => Sqrt(VarianceWithAverage(x, average));
 
         public static double NormSDist(double d) => FiNormSDist(d);
 
@@ -249,7 +250,7 @@ namespace Qwack.Math
             var a23 = 2.0899837844334E-17;
             var a24 = -5.900526869409E-18;
 
-            var xa = System.Math.Abs(z) / RTWO;
+            var xa = Abs(z) / RTWO;
             var p = 0.0;
             if (xa <= 100.0)
             { 
@@ -334,7 +335,7 @@ namespace Qwack.Math
                 b = bm;
                 bm = T * b - BP + a0;
 
-                p = System.Math.Exp(-xa * xa) * (bm - BP) / 4.0;
+                p = Exp(-xa * xa) * (bm - BP) / 4.0;
             }
 
 
@@ -351,16 +352,16 @@ namespace Qwack.Math
 
             if (z < 5)
             {
-                var termCount = 50 * (int)System.Math.Ceiling(System.Math.Abs(z));
+                var termCount = 50 * (int)Ceiling(Abs(z));
                 for (var n = 1; n < termCount; n++)
                 {
                     currentCoefficient *= -1.0 * (2.0 * (double)n - 1.0) / ((double)n * (2.0 * (double)n + 1.0));
-                    X = currentCoefficient * System.Math.Pow(z, (2 * n + 1));
+                    X = currentCoefficient * Pow(z, (2 * n + 1));
                     if (double.IsNaN(X)) { X = 0; }
                     erfValue += X;
                 }
 
-                return erfValue * (2.0 / System.Math.Sqrt(System.Math.PI));
+                return erfValue * (2.0 / Sqrt(PI));
             }
             else
             {
@@ -368,7 +369,7 @@ namespace Qwack.Math
             }
         }
 
-        public static double Phi(double x) => (System.Math.Exp((-x * x) / 2.0) / System.Math.Sqrt(6.28318530717958));
+        public static double Phi(double x) => (Exp((-x * x) / 2.0) / Sqrt(6.28318530717958));
 
         public static double AcklamInvCND(double P)
         {
@@ -402,7 +403,7 @@ namespace Qwack.Math
 
             if (P < low)
             {
-                z = System.Math.Sqrt(-2.0 * System.Math.Log(P));
+                z = Sqrt(-2.0 * Log(P));
                 z = (((((c1 * z + c2) * z + c3) * z + c4) * z + c5) * z + c6) /
                     ((((d1 * z + d2) * z + d3) * z + d4) * z + 1.0);
             }
@@ -410,7 +411,7 @@ namespace Qwack.Math
             {
                 if (P > high)
                 {
-                    z = System.Math.Sqrt(-2.0 * System.Math.Log(1.0 - P));
+                    z = Sqrt(-2.0 * Log(1.0 - P));
                     z = -(((((c1 * z + c2) * z + c3) * z + c4) * z + c5) * z + c6) /
                          ((((d1 * z + d2) * z + d3) * z + d4) * z + 1.0);
                 }
@@ -491,7 +492,7 @@ namespace Qwack.Math
                 var nd = X.Count(y => y == d);
                 Ns.Add(nd);
 
-                maxN = System.Math.Max(maxN, nd);
+                maxN = Max(maxN, nd);
                 if (maxN == nd)
                     maxNix = cIX;
                 //put early exit condition here where maxN is more than remaining elements
@@ -520,11 +521,11 @@ namespace Qwack.Math
                     c += (v1 * v2);
                 }
 
-                var denom = System.Math.Sqrt(vX * vY);
+                var denom = Sqrt(vX * vY);
                 if (denom != 0)
                 {
                     var rho = c / denom;
-                    var err = System.Math.Sqrt((1.0 - rho * rho) * vY / (double)n);
+                    var err = Sqrt((1.0 - rho * rho) * vY / (double)n);
                     return (rho, err);
                 }
                 else if ((vX == 0 && vY != 0) || (vX != 0 && vY == 0))
@@ -573,7 +574,7 @@ namespace Qwack.Math
                 }
 
                 output[count - 1] = logReturns ?
-                   System.Math.Log(p / lastPrice) :
+                   Log(p / lastPrice) :
                    p / lastPrice - 1.0;
 
                 lastPrice = p;
@@ -596,10 +597,10 @@ namespace Qwack.Math
             double sX = 0, sY = 0;
             for (var i = 0; i < Y.Length; i++)
             {
-                sY += System.Math.Pow(Y[i] - Ybar, 2.0);
-                sX += System.Math.Pow(X[i] - Xbar, 2.0);
+                sY += Pow(Y[i] - Ybar, 2.0);
+                sX += Pow(X[i] - Xbar, 2.0);
             }
-            var R2 = beta * System.Math.Sqrt(sX / sY);
+            var R2 = beta * Sqrt(sX / sY);
 
             if (computeError)
             {
@@ -617,5 +618,12 @@ namespace Qwack.Math
             return (alpha, beta, R2, 0);
         }
 
+        public static double FisherTransform(double correl, double conf, double sampleSize, bool isBid)
+        {
+            var mean = 0.5 * Log((1 + correl) / (1 - correl));
+            var sigma = Sqrt(1 / (sampleSize - 3));
+            return isBid ? Tanh(NormInv((1 - conf) / 2, mean, sigma))
+                : Tanh(NormInv(1 - (1 - conf) / 2, mean, sigma));
+        }
     }
 }

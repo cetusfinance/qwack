@@ -20,6 +20,8 @@ namespace Qwack.Models
         public IFundingModel FundingModel => _fundingModel;
         public DateTime BuildDate => _buildDate;
 
+        public ICorrelationMatrix CorrelationMatrix { get; set; }
+
         public AssetFxModel(DateTime buildDate, IFundingModel fundingModel)
         {
             _assetCurves = new Dictionary<string, IPriceCurve>();
@@ -65,6 +67,8 @@ namespace Qwack.Models
 
             foreach (var kv in _fixings)
                 c.AddFixingDictionary(kv.Key, kv.Value);
+
+            c.CorrelationMatrix = CorrelationMatrix;
 
             return c;
         }

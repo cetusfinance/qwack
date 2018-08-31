@@ -173,14 +173,16 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Price curves")] object[] PriceCurves,
             [ExcelArgument(Description = "Vol surfaces")] object[] VolSurfaces,
             [ExcelArgument(Description = "Funding model")] object[] FundingModel,
-            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings)
+            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings,
+            [ExcelArgument(Description = "Correlation matrix")] object[] CorrelationMatrix)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var curves = PriceCurves.GetAnyFromCache<IPriceCurve>();
                 var fundingModel = FundingModel.GetAnyFromCache<IFundingModel>().First();
-                var fixings = FundingModel.GetAnyFromCache<IFixingDictionary>();
+                var fixings = Fixings.GetAnyFromCache<IFixingDictionary>();
                 var volSurfaces = VolSurfaces.GetAnyFromCache<IVolSurface>();
+                var correlatinMatrix = CorrelationMatrix.GetAnyFromCache<ICorrelationMatrix>();
 
                 var model = new AssetFxModel(BuildDate, fundingModel);
 
@@ -190,6 +192,11 @@ namespace Qwack.Excel.Curves
                     model.AddVolSurface(vs.Name, vs);
                 foreach (var f in fixings)
                     model.AddFixingDictionary(f.Name, f);
+
+                if(correlatinMatrix.Any())
+                {
+                    model.CorrelationMatrix = correlatinMatrix.First();
+                }
 
                 var cache = ContainerStores.GetObjectCache<IAssetFxModel>();
                 cache.PutObject(ObjectName, new SessionItem<IAssetFxModel> { Name = ObjectName, Value = model });
@@ -216,6 +223,61 @@ namespace Qwack.Excel.Curves
                 var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
                 cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryFromVectors))]
+        public static object CreateFixingDictionaryFromVectors(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Fixings dates")] double[] FixingDates, 
+            [ExcelArgument(Description = "Fixings dates")] double[] Fixings)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (FixingDates.Length != Fixings.Length)
+                    throw new Exception("Fixings and FixingDates must be of same length");
+
+                var dict = new FixingDictionary
+                {
+                    Name = AssetId
+                };
+                for(var i=0;i<FixingDates.Length;i++)
+                    dict.Add(DateTime.FromOADate(FixingDates[i]), Fixings[i]);
+
+                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
+                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a correlation matrix", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrix))]
+        public static object CreateCorrelationMatrix(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Labels X")] object[] LabelsX,
+            [ExcelArgument(Description = "Labels Y")] object[] LabelsY,
+            [ExcelArgument(Description = "Correlations")] double[,] Correlations)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var matrix = new CorrelationMatrix(LabelsX.ObjectRangeToVector<string>(), LabelsY.ObjectRangeToVector<string>(), Correlations);
+
+                var cache = ContainerStores.GetObjectCache<ICorrelationMatrix>();
+                cache.PutObject(ObjectName, new SessionItem<ICorrelationMatrix> { Name = ObjectName, Value = matrix });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Bends a spread curve to a sparse set of updated spreads", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(BendCurve))]
+        public static object BendCurve(
+            [ExcelArgument(Description = "Input spreads")] double[] InputSpreads,
+            [ExcelArgument(Description = "Sparse new spreads")] object[] SparseNewSpreads)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var sparseSpreads = SparseNewSpreads.Select(x => x is ExcelEmpty ? null : (double?)x).ToArray();
+                var o = Math.CurveBender.Bend(InputSpreads, sparseSpreads);
+                return o.ReturnExcelRangeVectorFromDouble();
             });
         }
     }

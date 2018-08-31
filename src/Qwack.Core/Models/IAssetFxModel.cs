@@ -9,7 +9,9 @@ namespace Qwack.Core.Models
     {
         DateTime BuildDate { get; }
         IFundingModel FundingModel { get; }
-     
+
+        ICorrelationMatrix CorrelationMatrix { get; set; }
+
         void AddPriceCurve(string name, IPriceCurve curve);
         void AddVolSurface(string name, IVolSurface surface);
         void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings);

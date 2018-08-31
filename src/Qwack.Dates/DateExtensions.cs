@@ -649,5 +649,21 @@ namespace Qwack.Dates
             var floor = (int)Math.Floor(fullYear / 100.0) * 100;
             return fullYear - floor;
         }
+
+        /// <summary>
+        /// Returns spot date for a given val date
+        /// e.g. for USD/ZAR, calendar would be for ZAR and otherCal would be for USD
+        /// </summary>
+        /// <param name="valDate"></param>
+        /// <param name="spotLag"></param>
+        /// <param name="calendar"></param>
+        /// <param name="otherCal"></param>
+        /// <returns></returns>
+        public static DateTime SpotDate(this DateTime valDate, Frequency spotLag, Calendar calendar, Calendar otherCal)
+        {
+            var d = valDate.AddPeriod(RollType.F, calendar, spotLag);
+            d = d.IfHolidayRollForward(otherCal);
+            return d;
+        }
     }
 }

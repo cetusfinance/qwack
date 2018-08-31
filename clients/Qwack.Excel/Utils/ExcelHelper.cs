@@ -100,6 +100,28 @@ namespace Qwack.Excel.Services
             }
         }
 
+        public static object ReturnExcelRangeVectorFromDouble(this double[] data)
+        {
+            var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            // Now you can inspect the size of the caller with 
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            if (rows > cols) //return column vector
+            {
+                var o = new object[data.Length, 1];
+                for (var r = 0; r < o.Length; r++)
+                {
+                    o[r, 0] = data[r];
+                }
+                return o;
+            }
+            else //return row vector == default behaviour
+            {
+                return data;
+            }
+        }
+
         public static IEnumerable<T> GetAnyFromCache<T>(this object[] Names)
         {
             var tCache = ContainerStores.GetObjectCache<T>();

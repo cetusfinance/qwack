@@ -34,7 +34,7 @@ namespace Qwack.Excel.Utils
 
                 var sortString = SortResults.OptionalExcel("");
 
-                if (sortString!="")
+                if (sortString != "")
                 {
                     var directionEnum = (SortDirection)Enum.Parse(typeof(SortDirection), sortString);
                     if (directionEnum == SortDirection.Ascending)
@@ -90,22 +90,36 @@ namespace Qwack.Excel.Utils
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var charArr = Characters.OptionalExcel(" ");
-
-                return Text.Where(x => charArr.Contains(x)).ToString();
+                var charArr = Characters.OptionalExcel<string>(" ");
+                return Text.Where(x => !charArr.Contains(x)).ToString();
             });
         }
 
         [ExcelFunction(Description = "Returns values from a range, filtered on another range", Category = "QUtils")]
         public static object QUtils_Filter(
-           [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange,
-           [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange)
+            [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange,
+            [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i as string)=="") ? -1 : ix).Where(ix => ix >= 0);
+                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i as string) == "") ? -1 : ix).Where(ix => ix >= 0);
                 var filtered = DataRange.Where((x, ix) => validIx.Contains(ix)).ToArray();
                 return filtered.ReturnExcelRangeVector();
+            });
+        }
+
+        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils")]
+        public static object QUtils_Trim(
+            [ExcelArgument(Description = "Input text")] string Text,
+            [ExcelArgument(Description = "Characters to trim")] object Characters)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (Characters is ExcelMissing)
+                    return Text.Trim();
+
+                var charArr = Characters as string;
+                return Text.Trim(charArr.ToCharArray());
             });
         }
     }

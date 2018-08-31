@@ -7,13 +7,15 @@ namespace Qwack.Dates
 {
     public static class ListedUtils
     {
+        private static readonly string[] s_futureMonths = new string[] { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
+
         public static DateTime FuturesCodeToDateTime(string futuresCode, DateTime? refDate = null)
         {
             if (!refDate.HasValue)
                 refDate = DateTime.Today;
 
             var offset = futuresCode.Length - 1;
-            while (int.TryParse(futuresCode.Substring(offset, 1), out int dummy))
+            while (int.TryParse(futuresCode.Substring(offset, 1), out var dummy))
             {
                 offset--;
                 if (offset < 0)
@@ -40,6 +42,19 @@ namespace Qwack.Dates
                 var baseYear = (refDate.Value.Year / 100) * 100;
                 return new DateTime(baseYear + year, (int)month, 1);
             }
+        }
+
+        public static string DateTimeToFuturesCode(string futuresCodeRoot, DateTime targetMonthDate, int numYearDigits)
+        {
+            var validNumYearDigits = new[] { 1, 2, 4 };
+            if (!validNumYearDigits.Contains(numYearDigits))
+                throw new Exception($"Only 1, 2 and 4 year digits can be returned, not {numYearDigits}");
+
+            var m = targetMonthDate.Month;
+            var y = targetMonthDate.Year;
+            var mStr = s_futureMonths[m - 1];
+            var yStr = y.ToString().Substring(4 - numYearDigits);
+            return $"{futuresCodeRoot}{mStr}{yStr}";
         }
     }
 }

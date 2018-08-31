@@ -68,7 +68,7 @@ namespace Qwack.Models
         {
             var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray())
             {
-                VolSurfaces = new Dictionary<string, IVolSurface>(VolSurfaces)
+                VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };
 
             if (FxMatrix != null)

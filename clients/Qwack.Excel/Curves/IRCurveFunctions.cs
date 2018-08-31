@@ -126,14 +126,15 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
             [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
             [ExcelArgument(Description = "Curve to solve stage mappings")] object SolveStages,
-            [ExcelArgument(Description = "Fx matrix object")] object FxMatrix)
+            [ExcelArgument(Description = "Fx matrix object")] object FxMatrix,
+            [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
                 var fic = ficCache.GetObject(FundingInstrumentCollection).Value;
 
-                var emptyCurves = fic.ImplyContainedCurves(BuildDate, Math.Interpolation.Interpolator1DType.Linear);
+                var emptyCurves = fic.ImplyContainedCurves(BuildDate, Interpolator1DType.Linear);
 
                 if(!(SolveStages is ExcelMissing))
                 {
@@ -159,6 +160,14 @@ namespace Qwack.Excel.Curves
                     var fxMatrix = fxMatrixCache.GetObject((string)FxMatrix);
                     model.SetupFx(fxMatrix.Value);
                 }
+
+                if (!(FxVolSurfaces is ExcelMissing))
+                {
+                    var surfaces = (new object[] { FxVolSurfaces }).GetAnyFromCache<IVolSurface>();
+                    if (surfaces.Any())
+                        model.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
+                }
+
 
                 var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
                 calibrator.Solve(model, fic);

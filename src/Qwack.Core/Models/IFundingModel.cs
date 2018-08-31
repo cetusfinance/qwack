@@ -10,6 +10,7 @@ namespace Qwack.Core.Models
         DateTime BuildDate { get; }
         string CurrentSolveCurve { get; set; }
         Dictionary<string, IrCurve> Curves { get; }
+        Dictionary<string, IVolSurface> VolSurfaces { get; set; }
         IFxMatrix FxMatrix { get; }
 
         IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate);

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Curves
 {
-    public interface IPriceCurve
+    public interface IPriceCurve : IHasDescriptors
     {
         DateTime BuildDate { get; }
         
@@ -15,7 +16,9 @@ namespace Qwack.Core.Curves
         double GetAveragePriceForDates(DateTime[] dates);
 
         string Name { get; set; }
-        
+
+        string AssetId { get; }
+
         Currency Currency { get; set; }
 
         int NumberOfPillars { get; }

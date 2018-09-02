@@ -5,6 +5,7 @@ using System.Linq;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Curves
 {
@@ -20,12 +21,23 @@ namespace Qwack.Core.Curves
         public DateTime BuildDate { get; private set; }
 
         public string Name { get; set; }
+        public string AssetId { get; set; }
 
         public int NumberOfPillars => _pillarDates.Length;
 
         public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
 
-        public PriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, PriceCurveType curveType, string[] pillarLabels=null)
+        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
+            {
+                    new AssetCurveDescriptor {
+                        AssetId =AssetId,
+                        Currency =Currency,
+                        Name =Name,
+                        ValDate =BuildDate}
+            };
+        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+
+        public PriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, PriceCurveType curveType, string[] pillarLabels = null)
         {
             BuildDate = buildDate;
             _pillarDates = PillarDates;
@@ -43,7 +55,7 @@ namespace Qwack.Core.Curves
         private void Initialize()
         {
             var pillarsAsDoubles = _pillarDates.Select(x => x.ToOADate()).ToArray();
-            switch(_curveType)
+            switch (_curveType)
             {
                 case PriceCurveType.Linear:
                     _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.Linear);
@@ -76,7 +88,5 @@ namespace Qwack.Core.Curves
             }
             return o;
         }
-
-        
     }
 }

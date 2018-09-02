@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using static System.Math;
@@ -44,6 +46,18 @@ namespace Qwack.Core.Curves
         public Interpolator1DType InterpolatorType => _interpKind;
         public int SolveStage { get; set; }
         public DayCountBasis Basis => _basis;
+        public Currency Currency;
+
+        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
+            {
+                    new DiscountCurveDescriptor {
+                        CollateralSpec = Name.Split('.').Last().Trim("[]".ToCharArray()),
+                        Currency = Currency,
+                        Name =Name,
+                        ValDate =BuildDate}
+            };
+        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+
         public double GetDf(DateTime startDate, DateTime endDate)
         {
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 using Qwack.Dates;
 
 namespace Qwack.Core.Curves
 {
-    public interface ICurve
+    public interface ICurve : IHasDescriptors
     {
         DateTime BuildDate { get; }
         double GetDf(DateTime startDate, DateTime endDate);

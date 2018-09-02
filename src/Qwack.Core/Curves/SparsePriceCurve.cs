@@ -5,6 +5,7 @@ using System.Linq;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Curves
 {
@@ -22,10 +23,22 @@ namespace Qwack.Core.Curves
         public DateTime BuildDate { get; private set; }
 
         public string Name { get; set; }
+        public string AssetId { get; set; }
 
         public int NumberOfPillars => _pillarDates.Length;
 
         public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+
+        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
+            {
+                    new AssetCurveDescriptor {
+                        AssetId =AssetId,
+                        Currency =Currency,
+                        Name =Name,
+                        ValDate =BuildDate}
+            };
+        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+
 
         public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, string[] pillarLabels=null)
         {

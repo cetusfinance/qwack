@@ -6,6 +6,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Models;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Curves
 {
@@ -22,6 +23,17 @@ namespace Qwack.Core.Curves
 
         private Func<IFundingModel> fModelFunc;
 
+        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
+            {
+                    new AssetCurveDescriptor {
+                        AssetId = ForeignCurrency.Ccy,
+                        Currency =Currency,
+                        Name =Name,
+                        ValDate =BuildDate}
+            };
+        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+
+        public string AssetId => ForeignCurrency.Ccy;
 
         public FxForwardCurve(DateTime buildDate, Func<IFundingModel> fundingModel, Currency domesticCurrency, Currency foreignCurrency)
         {

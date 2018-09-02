@@ -203,6 +203,57 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a compounded overnight interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode))]
+        public static object CreateÖISFromCode(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Value date")] DateTime ValDate,
+              [ExcelArgument(Description = "Futures Code, e.g. EDZ9")] string FuturesCode,
+              [ExcelArgument(Description = "Rate Index")] string RateIndex,
+              [ExcelArgument(Description = "Price")] double Price,
+              [ExcelArgument(Description = "Quantity in lots")] double Quantity,
+              [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
+              [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+              [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
+                    return $"Rate index {RateIndex} not found in cache";
+                }
+
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                var expiry = c.GetExpiry();
+                var accrualStart = expiry.FirstDayOfMonth();
+                var accrualEnd = expiry.LastDayOfMonth();
+                var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
+                var product = new OISFuture
+                {
+                    CCY = rIndex.Value.Currency,
+                    ContractSize = c.Settings.LotSize,
+                    DCF = dcf,
+                    AverageStartDate = accrualStart,
+                    AverageEndDate = accrualEnd,
+                    ForecastCurve = ForecastCurve,
+                    Index = rIndex.Value,
+                    Position = Quantity,
+                    Price = Price,
+                };
+
+                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
+                var solvePillarDate = SolvePillarDate.OptionalExcel(accrualEnd);
+
+                product.SolveCurve = solveCurve;
+                product.PillarDate = solvePillarDate;
+
+                var cache = ContainerStores.GetObjectCache<OISFuture>();
+                cache.PutObject(ObjectName, new SessionItem<OISFuture> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates an interest rate basis swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRBasisSwap))]
         public static object CreateIRBasisSwap(
               [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -262,6 +313,7 @@ namespace Qwack.Excel.Curves
                 var swaps = Instruments.GetAnyFromCache<IrSwap>();
                 var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();
                 var futures = Instruments.GetAnyFromCache<STIRFuture>();
+                var oisFutures = Instruments.GetAnyFromCache<OISFuture>();
                 var fxFwds = Instruments.GetAnyFromCache<FxForward>();
                 var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
@@ -274,6 +326,7 @@ namespace Qwack.Excel.Curves
                 fic.AddRange(swaps);
                 fic.AddRange(fras);
                 fic.AddRange(futures);
+                fic.AddRange(oisFutures);
                 fic.AddRange(fxFwds);
                 fic.AddRange(xccySwaps);
                 fic.AddRange(basisSwaps);

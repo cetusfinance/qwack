@@ -95,7 +95,7 @@ namespace Qwack.Dates
                 throw new ArgumentException(nameof(endDateInc), "End date is before the start date");
             }
             var o = new List<DateTime>((int)(endDateInc - startDateInc).TotalDays);
-            var date = startDateInc;
+            var date = startDateInc.IfHolidayRollForward(calendars);
             while (date <= endDateInc)
             {
                 o.Add(date);

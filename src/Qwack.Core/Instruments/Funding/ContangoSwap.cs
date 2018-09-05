@@ -20,7 +20,7 @@ namespace Qwack.Core.Instruments.Funding
         public Currency CashCCY { get; set; }
 
         public string CashDiscountCurve { get; set; }
-
+        public string TradeId { get; set; }
         public string SolveCurve { get; set; }
 
         public DateTime PillarDate { get; set; }

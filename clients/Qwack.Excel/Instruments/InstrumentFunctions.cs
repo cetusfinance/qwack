@@ -23,20 +23,20 @@ namespace Qwack.Excel.Curves
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<InstrumentFunctions>();
 
-        [ExcelFunction(Description = "Creates an asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap))]
+        [ExcelFunction(Description = "Creates an asian swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap))]
         public static object CreateAsianSwap(
-             [ExcelArgument(Description = "Object name")] string ObjectName,
-             [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
-             [ExcelArgument(Description = "Asset Id")] string AssetId,
-             [ExcelArgument(Description = "Currency")] string Currency,
-             [ExcelArgument(Description = "Strike")] double Strike,
-             [ExcelArgument(Description = "Notional")] double Notional,
-             [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
-             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
-             [ExcelArgument(Description = "Payment offset or date")] object PaymentOffsetOrDate,
-             [ExcelArgument(Description = "Spot lag")] object SpotLag,
-             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
-             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Strike")] double Strike,
+            [ExcelArgument(Description = "Notional")] double Notional,
+            [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+            [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+            [ExcelArgument(Description = "Payment offset or date")] object PaymentOffsetOrDate,
+            [ExcelArgument(Description = "Spot lag")] object SpotLag,
+            [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -64,14 +64,78 @@ namespace Qwack.Excel.Curves
                 }
                 var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
 
-                AsianSwapStrip product;
+                AsianSwap product;
                 if (PeriodCodeOrDates is object[,])
                 {
                     var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
                     if (PaymentOffsetOrDate is double)
-                        product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                        product = AssetProductFactory.CreateTermAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
                     else
-                        product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                        product = AssetProductFactory.CreateTermAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else if (PeriodCodeOrDates is double)
+                {
+                    PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
+                    product = AssetProductFactory.CreateTermAsianSwap(PeriodCodeOrDates as string, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else
+                    product = AssetProductFactory.CreateTermAsianSwap(PeriodCodeOrDates as string, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+
+                product.TradeId = ObjectName;
+                product.DiscountCurve = DiscountCurve;
+                
+                var cache = ContainerStores.GetObjectCache<AsianSwap>();
+                cache.PutObject(ObjectName, new SessionItem<AsianSwap> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap))]
+        public static object CreateMonthlyAsianSwap(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Strike")] double Strike,
+             [ExcelArgument(Description = "Notional")] double Notional,
+             [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+             [ExcelArgument(Description = "Payment offset or date")] object PaymentOffset,
+             [ExcelArgument(Description = "Spot lag")] object SpotLag,
+             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+                var paymentOffset = PaymentOffset.OptionalExcel("0b");
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCal);
+                    return $"Calendar {fixingCal} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+                var pOffset = new Frequency(paymentOffset);
+                var sLag = new Frequency(spotLag);
+                if (!Enum.TryParse(dGenType, out DateGenerationType dType))
+                {
+                    return $"Could not parse date generation type - {dGenType}";
+                }
+                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+
+                AsianSwapStrip product;
+                if (PeriodCodeOrDates is object[,])
+                {
+                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    product = AssetProductFactory.CreateMonthlyAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                 }
                 else if (PeriodCodeOrDates is double)
                 {

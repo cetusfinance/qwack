@@ -17,6 +17,8 @@ namespace Qwack.Core.Models
         void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings);
 
         double GetVolForStrikeAndDate(string name, DateTime expiry, double strike);
+        double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike);
+        double GetAverageVolForMoneynessAndDates(string name, DateTime[] expiries, double moneyness);
 
         IPriceCurve GetPriceCurve(string name);
         IVolSurface GetVolSurface(string name);

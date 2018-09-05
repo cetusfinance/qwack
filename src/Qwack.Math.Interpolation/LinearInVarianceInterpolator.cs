@@ -82,11 +82,11 @@ namespace Qwack.Math.Interpolation
             {
                 return 0.0;
             }
-            else if (t < _minX)
+            else if (t <= _minX)
             {
                 return Sqrt(_y[0] / _x[0]); //extrapolate flat in vol
             }
-            else if (t > _maxX)
+            else if (t >= _maxX)
             {
                 return Sqrt(_y[_y.Length - 1] / _x[_y.Length - 1]);
             }

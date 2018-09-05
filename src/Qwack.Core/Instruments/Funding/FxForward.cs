@@ -20,6 +20,7 @@ namespace Qwack.Core.Instruments.Funding
         public string ForeignDiscountCurve { get; set; }
 
         public string SolveCurve { get; set; }
+        public string TradeId { get; set; }
 
         public DateTime PillarDate { get; set; }
 

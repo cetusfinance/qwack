@@ -122,5 +122,16 @@ namespace Qwack.Excel.Utils
                 return Text.Trim(charArr.ToCharArray());
             });
         }
+
+        [ExcelFunction(Description = "Returns values from a range, removing any errors", Category = "QUtils")]
+        public static object QUtils_GoodValues(
+            [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var filtered = DataRange.Where(x => !(x is ExcelEmpty) && !(x is ExcelDna.Integration.ExcelError)).ToArray();
+                return filtered.ReturnExcelRangeVector();
+            });
+        }
     }
 }

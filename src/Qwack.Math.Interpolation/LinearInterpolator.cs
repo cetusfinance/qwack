@@ -83,7 +83,11 @@ namespace Qwack.Math.Interpolation
 
         public double Interpolate(double t)
         {
-            if (t < _minX)
+            if (_x.Length == 1)
+            {
+                return _y[0];
+            }
+            else if (t < _minX)
             {
                 var tDiff = t - _minX;
                 return _y[0] +  _slope[0] * tDiff;

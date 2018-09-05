@@ -87,5 +87,21 @@ namespace Qwack.Core.Curves
             }
             return o;
         }
+
+        public IPriceCurve RebaseDate(DateTime newAnchorDate)
+        {
+            if (_pillarDates.First() < newAnchorDate) //remove first point as it has expired tomorrow
+            {
+                var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
+                newPillars.RemoveAt(0);
+                var newPrices = ((double[])_prices.Clone()).ToList();
+                newPrices.RemoveAt(0);
+                return new SparsePriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels);
+            }
+            else
+            {
+                return new SparsePriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
+            }
+        }
     }
 }

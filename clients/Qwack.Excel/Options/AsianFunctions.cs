@@ -1,14 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ExcelDna.Integration;
-using Qwack.Options;
 using Qwack.Excel.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Qwack.Options.VolSurfaces;
-using Qwack.Excel.Utils;
 using Qwack.Dates;
 using Qwack.Core.Basic;
 

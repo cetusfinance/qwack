@@ -83,6 +83,6 @@ namespace Qwack.Core.Curves
             return o;
         }
 
-        
+        public IPriceCurve RebaseDate(DateTime newAnchorDate) => new CompositePriceCurve(newAnchorDate, pCurveFunc.Invoke().RebaseDate(newAnchorDate), fModelFunc.Invoke(), DomesticCurrency, ForeignCurrency);
     }
 }

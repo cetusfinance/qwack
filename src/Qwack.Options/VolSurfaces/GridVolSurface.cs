@@ -85,7 +85,7 @@ namespace Qwack.Options.VolSurfaces
                 Func<double,double> testFunc = (deltaK =>
                 {
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
-                   _interpolators.Select(x => x.Interpolate(deltaK)).ToArray(),
+                   _interpolators.Select(x => x.Interpolate(-deltaK)).ToArray(),
                    TimeInterpolatorType);
                     var vol = interpForStrike.Interpolate(maturity);
                     var absK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, maturity, vol);

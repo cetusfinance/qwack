@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Options.Asians;
@@ -14,6 +15,8 @@ namespace Qwack.Models.Models
 {
     public static class AssetProductEx
     {
+        private static bool _useVarianceAverage = false;
+
         public static double PV(this AsianOption asianOption, IAssetFxModel model)
         {
             var curve = model.GetPriceCurve(asianOption.AssetId);
@@ -35,10 +38,30 @@ namespace Qwack.Models.Models
             var surface = model.GetVolSurface(asianOption.AssetId);
             var isCompo = asianOption.PaymentCurrency != curve.Currency; //should reference vol surface, not curve
 
-
+            double sigma;
             var volDate = model.BuildDate.Max(asianOption.AverageStartDate.Average(asianOption.AverageEndDate));
-            var volFwd = curve.GetPriceForDate(volDate);
-            var sigma = surface.GetVolForAbsoluteStrike(asianOption.Strike, volDate, volFwd);
+
+            var adjustedStrike = asianOption.Strike;
+            if (asianOption.AverageStartDate < model.BuildDate)
+            {
+                var tAvgStart = (asianOption.AverageStartDate - model.BuildDate).Days / 365.0;
+                var tExpiry = (asianOption.AverageEndDate - model.BuildDate).Days / 365.0;
+                var t2 = tExpiry - tAvgStart;
+                adjustedStrike = asianOption.Strike * t2 / tExpiry - FixedAverage * (t2 - tExpiry) / tExpiry;
+            }
+
+            if (_useVarianceAverage)
+            {
+                var toFix = asianOption.FixingDates.Where(x => x > model.BuildDate).ToArray();
+                var moneyness = adjustedStrike / FloatAverage;
+                sigma = model.GetAverageVolForMoneynessAndDates(asianOption.AssetId, toFix, moneyness);
+            }
+            else
+            {
+                var volFwd = curve.GetPriceForDate(volDate);
+                sigma = surface.GetVolForAbsoluteStrike(adjustedStrike, volDate, volFwd);
+            }
+
 
             if(isCompo)
             {
@@ -221,6 +244,14 @@ namespace Qwack.Models.Models
                         else
                             ccy = fwd.PaymentCurrency.ToString();
                         break;
+                    case FxForward fxFwd:
+                        pv = fxFwd.Pv(model.FundingModel, false);
+                        tradeId = fxFwd.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
+                        else
+                            ccy = fxFwd.ForeignCCY.ToString();
+                        break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
                 }
@@ -293,21 +324,22 @@ namespace Qwack.Models.Models
             dataTypes.Add("Metric", typeof(string));
             cube.Initialize(dataTypes);
 
-            var pvCube = portfolio.PV(model);
-            var pvRows = pvCube.GetAllRows();
 
-            var tidIx = pvCube.GetColumnIndex("TradeId");
 
             var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
 
             foreach (var currency in model.FundingModel.FxMatrix.SpotRates.Keys)
             {
+                var pvCube = portfolio.PV(model, currency);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+
                 var fxPair = $"{currency}/{domCcy}";
                 var spot = model.FundingModel.FxMatrix.SpotRates[currency];
                 var bumpedSpot = spot + bumpSize;
                 var newModel = model.Clone();
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var bumpedPVCube = portfolio.PV(newModel);
+                var bumpedPVCube = portfolio.PV(newModel, currency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
                     throw new Exception("Dimensions do not match");

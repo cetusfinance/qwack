@@ -51,6 +51,7 @@ namespace Qwack.Core.Instruments.Funding
         public string DiscountCurve { get; set; }
         public FraDiscountingType FraType { get; set; }
         public string SolveCurve { get; set; }
+        public string TradeId { get; set; }
 
         public DateTime PillarDate { get; set; }
 

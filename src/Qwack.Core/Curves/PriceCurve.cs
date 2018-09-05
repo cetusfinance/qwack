@@ -23,6 +23,9 @@ namespace Qwack.Core.Curves
         public string Name { get; set; }
         public string AssetId { get; set; }
 
+        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Calendar SpotCalendar { get; set; }
+
         public int NumberOfPillars => _pillarDates.Length;
 
         public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
@@ -87,6 +90,55 @@ namespace Qwack.Core.Curves
                 o.Add(name, c);
             }
             return o;
+        }
+
+        public IPriceCurve RebaseDate(DateTime newAnchorDate)
+        {
+            switch (_curveType)
+            {
+                case PriceCurveType.Linear:
+                    var todaySpotDate = BuildDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar); //this should use currency calendar!
+                    if (_pillarDates.First() <= todaySpotDate)
+                    {
+                        var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+                        var newSpot = GetPriceForDate(newSpotDate);
+                        var newPillars = (DateTime[])_pillarDates.Clone();
+                        newPillars[0] = newSpotDate;
+                        var newPrices = (double[])_prices.Clone();
+                        newPrices[0] = newSpot;
+                        return new PriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _pillarLabels);
+                    }
+                    else
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
+                case PriceCurveType.NYMEX:
+                    if (_pillarDates.First() < newAnchorDate) //remove first point as it has expired tomorrow
+                    {
+                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
+                        newPillars.RemoveAt(0);
+                        var newPrices = ((double[])_prices.Clone()).ToList();
+                        newPrices.RemoveAt(0);
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels);
+                    }
+                    else
+                    {
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
+                    }
+                case PriceCurveType.ICE:
+                    if (_pillarDates.First() <= newAnchorDate) //difference to NYMEX case is "<=" vs "<"
+                    {
+                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
+                        newPillars.RemoveAt(0);
+                        var newPrices = ((double[])_prices.Clone()).ToList();
+                        newPrices.RemoveAt(0);
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels);
+                    }
+                    else
+                    {
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
+                    }
+                default:
+                    throw new Exception("Unknown curve type");
+            }
         }
     }
 }

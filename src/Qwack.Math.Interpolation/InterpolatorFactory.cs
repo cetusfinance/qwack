@@ -43,6 +43,8 @@ namespace Qwack.Math.Interpolation
                     return new NextInterpolator(x, y);
                 case Interpolator1DType.PreviousValue:
                     return new PreviousInterpolator(x, y);
+                case Interpolator1DType.CubicSpline:
+                    return new CubicHermiteSplineInterpolator(x, y);
                 case Interpolator1DType.DummyPoint:
                     return new DummyPointInterpolator(y.First());
                 default:

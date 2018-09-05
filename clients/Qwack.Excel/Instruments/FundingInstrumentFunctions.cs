@@ -65,6 +65,7 @@ namespace Qwack.Excel.Curves
 
                 product.SolveCurve = solveCurve;
                 product.PillarDate = solvePillarDate;
+                product.TradeId = ObjectName;
 
                 var cache = ContainerStores.GetObjectCache<ForwardRateAgreement>();
                 cache.PutObject(ObjectName, new SessionItem<ForwardRateAgreement> { Name = ObjectName, Value = product });
@@ -97,7 +98,8 @@ namespace Qwack.Excel.Curves
                     ForeignDiscountCurve = DiscountCurve,
                     SolveCurve = SolveCurve,
                     PillarDate = solvePillarDate,
-                    Strike = Strike
+                    Strike = Strike,
+                    TradeId = ObjectName
                 };
 
                 var cache = ContainerStores.GetObjectCache<FxForward>();
@@ -144,6 +146,7 @@ namespace Qwack.Excel.Curves
 
                 product.SolveCurve = solveCurve;
                 product.PillarDate = solvePillarDate;
+                product.TradeId = ObjectName;
 
                 var cache = ContainerStores.GetObjectCache<IrSwap>();
                 cache.PutObject(ObjectName, new SessionItem<IrSwap> { Name = ObjectName, Value = product });
@@ -196,6 +199,7 @@ namespace Qwack.Excel.Curves
 
                 product.SolveCurve = solveCurve;
                 product.PillarDate = solvePillarDate;
+                product.TradeId = ObjectName;
 
                 var cache = ContainerStores.GetObjectCache<STIRFuture>();
                 cache.PutObject(ObjectName, new SessionItem<STIRFuture> { Name = ObjectName, Value = product });
@@ -203,8 +207,8 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a compounded overnight interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode))]
-        public static object CreateÖISFromCode(
+        [ExcelFunction(Description = "Creates a compounded overnight interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOISFutureFromCode))]
+        public static object CreateOISFutureFromCode(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Value date")] DateTime ValDate,
               [ExcelArgument(Description = "Futures Code, e.g. EDZ9")] string FuturesCode,
@@ -247,6 +251,7 @@ namespace Qwack.Excel.Curves
 
                 product.SolveCurve = solveCurve;
                 product.PillarDate = solvePillarDate;
+                product.TradeId = ObjectName;
 
                 var cache = ContainerStores.GetObjectCache<OISFuture>();
                 cache.PutObject(ObjectName, new SessionItem<OISFuture> { Name = ObjectName, Value = product });
@@ -295,6 +300,7 @@ namespace Qwack.Excel.Curves
 
                 product.SolveCurve = solveCurve;
                 product.PillarDate = solvePillarDate;
+                product.TradeId = ObjectName;
 
                 var cache = ContainerStores.GetObjectCache<IrBasisSwap>();
                 cache.PutObject(ObjectName, new SessionItem<IrBasisSwap> { Name = ObjectName, Value = product });

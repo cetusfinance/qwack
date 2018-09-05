@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
+using Qwack.Dates;
 
 namespace Qwack.Models
 {
@@ -53,6 +54,31 @@ namespace Qwack.Models
             var fwd = _assetCurves[name].GetPriceForDate(expiry); //needs to account for spot/fwd offset
             var vol = _assetVols[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
+        }
+
+
+        public double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike)
+        {
+            var surface = _assetVols[name];
+            var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
+            var fwds = expiries.Select(expiry=>_assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
+            var vols = fwds.Select((fwd,ix)=> surface.GetVolForAbsoluteStrike(strike, expiries[ix], fwd));
+            var varianceAvg = vols.Select((v, ix) => v * v * ts[ix]).Sum();
+            varianceAvg /= ts.Sum();
+            var sigma = System.Math.Sqrt(varianceAvg/ts.Average());
+            return sigma;
+        }
+
+        public double GetAverageVolForMoneynessAndDates(string name, DateTime[] expiries, double moneyness)
+        {
+            var surface = _assetVols[name];
+            var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
+            var fwds = expiries.Select(expiry => _assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
+            var vols = fwds.Select((fwd, ix) => surface.GetVolForAbsoluteStrike(fwd * moneyness, expiries[ix], fwd));
+            var varianceAvg = vols.Select((v, ix) => v * v * ts[ix]).Sum();
+            varianceAvg /= ts.Sum();
+            var sigma = System.Math.Sqrt(varianceAvg / ts.Average());
+            return sigma;
         }
 
         public IAssetFxModel Clone()

@@ -71,6 +71,9 @@ namespace Qwack.Core.Curves
             return o;
         }
 
-        
+        public IPriceCurve RebaseDate(DateTime newAnchorDate)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

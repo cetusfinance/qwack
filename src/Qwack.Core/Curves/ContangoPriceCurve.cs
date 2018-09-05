@@ -24,6 +24,8 @@ namespace Qwack.Core.Curves
         public string Name { get; set; }
         public string AssetId { get; set; }
 
+        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Calendar SpotCalendar { get; set; }
 
         public int NumberOfPillars => _pillarDates.Length;
 
@@ -76,32 +78,16 @@ namespace Qwack.Core.Curves
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize)
         {
             var o = new Dictionary<string, IPriceCurve>();
-
-            //spot scenario first
-            //var contangosAdjusted = new double[_contangos.Length];
-            //for (var i = 0; i < _contangos.Length; i++)
-            //{
-            //    var t = _spotDate.CalculateYearFraction(_pillarDates[i], _basis);
-            //    var contango = _contangos[i];
-            //    var f = _spot * (1.0 + contango * t);
-            //    contangosAdjusted[i] = (f / (_spot + bumpSize) - 1.0) / t;
-            //}
-
             var cSpot = new ContangoPriceCurve(BuildDate, _spot+bumpSize, _spotDate, _pillarDates, _contangos, _basis);
             o.Add("Spot", cSpot);
+            return o;
+        }
 
-            //now each contango point bumped for the same difference in fwd
-            //for (var i = 0; i < _pillarDates.Length; i++)
-            //{
-            //    var t = _spotDate.CalculateYearFraction(_pillarDates[i], _basis);
-            //    var contango = _contangos[i];
-            //    var f = _spot * (1.0 + contango * t);
-            //    var deltaContango = ((f + bumpSize) / _spot - 1.0) / t - contango;
-            //    var bumpedCurve = _contangos.Select((x, ix) => ix == i ? x + deltaContango : x).ToArray();
-            //    var c = new ContangoPriceCurve(BuildDate, _spot, _spotDate, _pillarDates, bumpedCurve, _basis); 
-            //    var name = _pillarLabels[i];
-            //    o.Add(name, c);
-            //}
+        public IPriceCurve RebaseDate(DateTime newAnchorDate)
+        {
+            var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+            var newSpot = GetPriceForDate(newSpotDate);
+            var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, _contangos, _basis, _pillarLabels);
             return o;
         }
     }

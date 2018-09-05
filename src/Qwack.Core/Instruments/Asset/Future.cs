@@ -11,18 +11,17 @@ namespace Qwack.Core.Instruments.Asset
     {
         public string TradeId { get; set; }
 
-        public double Notional { get; set; }
+        public double ContractQuantity { get; set; }
+        public double LotSize { get; set; }
+        public double PriceMultiplier { get; set; } = 1.0;
         public TradeDirection Direction { get; set; }
 
         public DateTime ExpiryDate { get; set; }
 
-        public Calendar FixingCalendar { get; set; }
-        public Calendar PaymentCalendar { get; set; }
-        public Frequency SpotLag { get; set; }
-        public Frequency PaymentLag { get; set; }
         public double Strike { get; set; }
         public string AssetId { get; set; }
-        public Currency PaymentCurrency { get; set; }
-        public string FxFixingSource { get; set; }
+
+        public Currency Currency { get; set; }
+
     }
 }

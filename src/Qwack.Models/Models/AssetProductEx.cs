@@ -63,7 +63,7 @@ namespace Qwack.Models.Models
             }
 
 
-            if(isCompo)
+            if (isCompo)
             {
                 var fxId = $"{curve.Currency.Ccy}{asianOption.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(volDate, curve.Currency, asianOption.PaymentCurrency);
@@ -116,7 +116,7 @@ namespace Qwack.Models.Models
                         avg *= fxAverage;
                     }
 
-                    return (FixedAverage: 0, FloatAverage: avg, FixedCount:0, FloatCount:swap.FixingDates.Length);
+                    return (FixedAverage: 0, FloatAverage: avg, FixedCount: 0, FloatCount: swap.FixingDates.Length);
                 }
                 else
                 {
@@ -134,7 +134,7 @@ namespace Qwack.Models.Models
                         fixedAvg = alreadyFixed.Select(d => fixingDict[d]).Average();
                     }
                     var floatAvg = stillToFix.Any() ? priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(RollType.F, swap.FixingCalendar, swap.SpotLag)) : 0.0;
-                    
+
                     if (swap.FxConversionType == FxConversionType.AverageThenConvert)
                     {
                         var fixingForTodayFx = fxDates.First() <= model.BuildDate &&
@@ -194,6 +194,19 @@ namespace Qwack.Models.Models
 
         public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.Sum(x => x.PV(model));
 
+        public static double PV(this AsianBasisSwap asianBasisSwap, IAssetFxModel model)
+        {
+            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.PV(model));
+            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.PV(model));
+            return payPV + recPV;
+        }
+
+        public static double PV(this Future future, IAssetFxModel model)
+        {
+            var price = model.GetPriceCurve(future.AssetId).GetPriceForDate(future.ExpiryDate);
+            return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
+        }
+
         public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
 
         public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency=null)
@@ -236,6 +249,14 @@ namespace Qwack.Models.Models
                         else
                             ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
                         break;
+                    case AsianBasisSwap basisSwap:
+                        pv = basisSwap.PV(model);
+                        tradeId = basisSwap.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
+                        else
+                            ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
+                        break;
                     case Forward fwd:
                         pv = fwd.PV(model);
                         tradeId = fwd.TradeId;
@@ -243,6 +264,14 @@ namespace Qwack.Models.Models
                             fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
                         else
                             ccy = fwd.PaymentCurrency.ToString();
+                        break;
+                    case Future fut:
+                        pv = fut.PV(model);
+                        tradeId = fut.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fut.Currency);
+                        else
+                            ccy = fut.Currency.ToString();
                         break;
                     case FxForward fxFwd:
                         pv = fxFwd.Pv(model.FundingModel, false);

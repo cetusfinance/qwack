@@ -90,6 +90,41 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a commodity future position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFuture))]
+        public static object CreateFuture(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Strike")] double Strike,
+            [ExcelArgument(Description = "Quantity of contracts")] double Quantity,
+            [ExcelArgument(Description = "Contract lot size")] double LotSize,
+            [ExcelArgument(Description = "Price multiplier - default 1.0")] object PriceMultiplier)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var multiplier = PriceMultiplier.OptionalExcel(1.0);
+                var currency = new Currency(Currency, DayCountBasis.Act365F, null);
+
+                var product = new Future
+                {
+                    AssetId = AssetId,
+                     ContractQuantity = Quantity,
+                     LotSize = LotSize,
+                     PriceMultiplier = multiplier,
+                     Currency = currency,
+                     Strike = Strike,
+                     Direction = TradeDirection.Long,
+                     ExpiryDate = ExpiryDate,
+                     TradeId = ObjectName
+                };
+                
+                var cache = ContainerStores.GetObjectCache<Future>();
+                cache.PutObject(ObjectName, new SessionItem<Future> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap))]
         public static object CreateMonthlyAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,

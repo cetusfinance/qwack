@@ -1,0 +1,17 @@
+[
+  {
+    "Ccy": "USD",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "NYC"
+  },
+  {
+    "Ccy": "EUR",
+    "DayCount": "Act_360",
+    "HolidayCalendars": "TARGET"
+  },
+  {
+    "Ccy": "GBP",
+    "DayCount": "Act_360",
+    "HolidayCalendars": "LON"
+  }
+]

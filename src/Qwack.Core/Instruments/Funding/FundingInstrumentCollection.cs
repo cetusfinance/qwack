@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Math.Interpolation;
 
@@ -29,7 +30,9 @@ namespace Qwack.Core.Instruments.Funding
                     throw new Exception($"More than one instrument has the same solve pillar on curve {curveName}");
 
                 var dummyRates = pillars.Select(x => 0.05).ToArray();
-                var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType);
+                var ccy = new Currency(curveName.Split('.')[0], Dates.DayCountBasis.ACT365F, null);
+                var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Split('.').Last();
+                var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType, ccy, colSpec);
                 o.Add(curveName, irCurve);
             }
             return o;

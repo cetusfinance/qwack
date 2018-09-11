@@ -14,7 +14,11 @@ namespace Qwack.Core.Models
 
         void AddPriceCurve(string name, IPriceCurve curve);
         void AddVolSurface(string name, IVolSurface surface);
-        void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings);
+        void AddFixingDictionary(string name, IFixingDictionary fixings);
+
+        void AddPriceCurves(Dictionary<string, IPriceCurve> curves);
+        void AddVolSurfaces(Dictionary<string, IVolSurface> surfaces);
+        void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings);
 
         double GetVolForStrikeAndDate(string name, DateTime expiry, double strike);
         double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike);
@@ -22,12 +26,13 @@ namespace Qwack.Core.Models
 
         IPriceCurve GetPriceCurve(string name);
         IVolSurface GetVolSurface(string name);
-        IDictionary<DateTime, double> GetFixingDictionary(string name);
-        bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings);
+        IFixingDictionary GetFixingDictionary(string name);
+        bool TryGetFixingDictionary(string name, out IFixingDictionary fixings);
 
         IAssetFxModel Clone();
 
         string[] CurveNames { get; }
         string[] VolSurfaceNames { get; }
+        string[] FixingDictionaryNames { get; }
     }
 }

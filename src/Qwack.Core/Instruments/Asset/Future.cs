@@ -7,7 +7,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class Future : IInstrument
+    public class Future : IAssetInstrument
     {
         public string TradeId { get; set; }
 
@@ -23,5 +23,6 @@ namespace Qwack.Core.Instruments.Asset
 
         public Currency Currency { get; set; }
 
+        public string[] AssetIds => new[] { AssetId };
     }
 }

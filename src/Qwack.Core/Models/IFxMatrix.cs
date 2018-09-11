@@ -17,5 +17,6 @@ namespace Qwack.Core.Models
         void UpdateSpotRates(Dictionary<Currency, double> spotRates);
 
         IFxMatrix Clone();
+        IFxMatrix Rebase(DateTime newBuildDate, Dictionary<Currency, double> newSpotRates);
     }
 }

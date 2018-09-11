@@ -21,7 +21,11 @@ namespace Qwack.Core.Curves
 
         public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
 
+        public bool UnderlyingsAreForwards => true;
+
         private Func<IFundingModel> fModelFunc;
+
+        public DateTime[] PillarDates => null;
 
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
             {
@@ -72,6 +76,11 @@ namespace Qwack.Core.Curves
         }
 
         public IPriceCurve RebaseDate(DateTime newAnchorDate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DateTime PillarDatesForLabel(string label)
         {
             throw new NotImplementedException();
         }

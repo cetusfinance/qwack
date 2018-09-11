@@ -39,7 +39,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             DateTime[] dPillars = { startDate, startDate.AddDays(1000) };
             double[] dRates = { 0, 0 };
-            var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap);
+            var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, xaf);
 
             var s = new Calibrators.NewtonRaphsonAssetCurveSolver();
             var curve = s.Solve(instruments, pillars, discountCurve, startDate);

@@ -12,6 +12,7 @@ using Qwack.Excel.Utils;
 using Qwack.Core.Basic;
 using Qwack.Math.Interpolation;
 using Qwack.Core.Curves;
+using Qwack.Dates;
 
 namespace Qwack.Excel.Options
 {
@@ -23,13 +24,18 @@ namespace Qwack.Excel.Options
         public static object CreateConstantVolSurface(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
-            [ExcelArgument(Description = "Volatility")] double Volatility)
+            [ExcelArgument(Description = "Volatility")] double Volatility,
+            [ExcelArgument(Description = "Currency - default USD")] object Currency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var ccyStr = Currency.OptionalExcel("USD");
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+
                 var surface = new ConstantVolSurface(OriginDate, Volatility)
                 {
-                    Name = ObjectName
+                    Name = ObjectName,
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -48,12 +54,16 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Stike Interpolation - default Linear")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default Linear")] object TimeInterpolation,
               [ExcelArgument(Description = "Time basis - default ACT365F")] object TimeBasis,
-              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels
-              )
+              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
+              [ExcelArgument(Description = "Currency - default USD")] object Currency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
+
+                var ccyStr = Currency.OptionalExcel("USD");
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+
 
                 var stikeType = StrikeType.OptionalExcel<string>("Absolute");
                 var strikeInterpType = StrikeInterpolation.OptionalExcel<string>("Linear");
@@ -76,7 +86,8 @@ namespace Qwack.Excel.Options
 
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), sType, siType, tiType, basis, labels)
                 {
-                    Name = ObjectName
+                    Name = ObjectName,
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -99,11 +110,15 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Wing quote type - Simple or Market")] object WingType,
               [ExcelArgument(Description = "Stike Interpolation - default Linear")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
-              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels)
+              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
+              [ExcelArgument(Description = "Currency - default USD")] object Currency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
+
+                var ccyStr = Currency.OptionalExcel("USD");
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
 
                 var atmType = ATMType.OptionalExcel<string>("ZeroDeltaStraddle");
                 var wingType = WingType.OptionalExcel<string>("Simple");
@@ -144,7 +159,8 @@ namespace Qwack.Excel.Options
 
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
                 {
-                    Name = ObjectName
+                    Name = ObjectName,
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });

@@ -56,11 +56,19 @@ namespace Qwack.Excel.Services
 
                 if (typeof(T1).IsEnum)
                     val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
+                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double )
+                {
+                    val1 = (T1)((object)DateTime.FromOADate((double)input[r, 0]));
+                }
                 else
                     val1 = (T1)Convert.ChangeType(input[r, 0], typeof(T1));
 
                 if (typeof(T2).IsEnum)
                     val2 = (T2)Enum.Parse(typeof(T2), (string)input[r, 1]);
+                else if (typeof(T2) == typeof(DateTime) && input[r, 1] is double)
+                {
+                    val2 = (T2)((object)DateTime.FromOADate((double)input[r, 1]));
+                }
                 else
                     val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
 

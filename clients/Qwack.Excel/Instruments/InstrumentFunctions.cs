@@ -325,14 +325,15 @@ namespace Qwack.Excel.Curves
         public static object AssetPortfolioVega(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
-
-                var result = pfolio.Value.AssetVega(model.Value);
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.AssetVega(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -351,6 +352,46 @@ namespace Qwack.Excel.Curves
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
 
                 var result = pfolio.Value.FxDelta(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns theta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioTheta))]
+        public static object AssetPortfolioTheta(
+           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+           [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
+           [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.AssetTheta(model.Value, FwdValDate, ccy);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns theta and charm of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioThetaCharm))]
+        public static object AssetPortfolioThetaCharm(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.AssetThetaCharm(model.Value, FwdValDate, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -378,6 +419,7 @@ namespace Qwack.Excel.Curves
                 var asianStrips = Instruments.GetAnyFromCache<AsianSwapStrip>();
                 var asianSwaps = Instruments.GetAnyFromCache<AsianSwap>();
                 var forwards = Instruments.GetAnyFromCache<Forward>();
+                var assetFutures = Instruments.GetAnyFromCache<Future>();
                 var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
 
                 //allows merging of FICs into portfolios
@@ -406,8 +448,9 @@ namespace Qwack.Excel.Curves
                 pf.Instruments.AddRange(asianStrips);
                 pf.Instruments.AddRange(asianSwaps);
                 pf.Instruments.AddRange(forwards);
+                pf.Instruments.AddRange(assetFutures);
                 pf.Instruments.AddRange(europeanOptions);
-
+                
                 var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
 
                 pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });

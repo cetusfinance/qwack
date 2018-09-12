@@ -89,10 +89,14 @@ namespace Qwack.Excel.Curves
             {
                 var solvePillarDate = SolvePillarDate.OptionalExcel(SettleDate);
 
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(DomesticCcy, out var domesticCal);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ForeignCcy, out var foreignCal);
+
+
                 var product = new FxForward
                 {
-                    DomesticCCY = new Currency(DomesticCcy, DayCountBasis.Act365F, null),
-                    ForeignCCY = new Currency(ForeignCcy, DayCountBasis.Act365F, null),
+                    DomesticCCY = new Currency(DomesticCcy, DayCountBasis.Act365F, domesticCal),
+                    ForeignCCY = new Currency(ForeignCcy, DayCountBasis.Act365F, foreignCal),
                     DomesticQuantity = DomesticNotional,
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
@@ -420,6 +424,7 @@ namespace Qwack.Excel.Curves
                     .ToList();
 
                 var spotRatesRaw = SpotRateMap.RangeToDictionary<string, double>();
+
                 var spotRates = spotRatesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
 
                 var discountCurvesRaw = DiscountCurves.RangeToDictionary<string, string>();
@@ -450,10 +455,13 @@ namespace Qwack.Excel.Curves
                     return $"Calendar {Calendar} not found in cache";
                 }
 
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(DomesticCurrency, out var domesticCal);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ForeignCurrency, out var foreignCal);
+
                 var pair = new FxPair()
                 {
-                    Domestic = new Currency(DomesticCurrency,DayCountBasis.Act365F,null),
-                    Foreign = new Currency(ForeignCurrency, DayCountBasis.Act365F, null),
+                    Domestic = new Currency(DomesticCurrency,DayCountBasis.Act365F, domesticCal),
+                    Foreign = new Currency(ForeignCurrency, DayCountBasis.Act365F, foreignCal),
                     SettlementCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };

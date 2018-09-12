@@ -28,46 +28,28 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
              [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
              [ExcelArgument(Description = "Array of CC zero rates")] double[] ZeroRates,
-             [ExcelArgument(Description = "Type of interpolation")] object InterpolationType)
+             [ExcelArgument(Description = "Type of interpolation")] object InterpolationType,
+             [ExcelArgument(Description = "Currency - default USD")] object Currency,
+             [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var curveTypeStr = InterpolationType.OptionalExcel<string>("Linear");
+                var curveTypeStr = InterpolationType.OptionalExcel("Linear");
+                var ccyStr = Currency.OptionalExcel("USD");
+                var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
+
                 if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
                 {
                     return $"Could not parse price curve type - {curveTypeStr}";
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new IrCurve(pDates, ZeroRates, BuildDate, ObjectName, iType);
-                var cache = ContainerStores.GetObjectCache<ICurve>();
-                cache.PutObject(ObjectName, new SessionItem<ICurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
-            });
-        }
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+                var ccy = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal);
 
-        [ExcelFunction(Description = "Creates a discount curve for fitting via a solver", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateShellCurveForSolving))]
-        public static object CreateShellCurveForSolving(
-            [ExcelArgument(Description = "Object name")] string ObjectName,
-            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
-            [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
-            [ExcelArgument(Description = "Solve Stage")] int SolveStage,
-            [ExcelArgument(Description = "Type of interpolation")] object InterpolationType)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var curveTypeStr = InterpolationType.OptionalExcel<string>("Linear");
-                if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
-                {
-                    return $"Could not parse price curve type - {curveTypeStr}";
-                }
-
-                var pDates = Pillars.ToDateTimeArray();
-                var zeroRates = Pillars.Select(x => 0.01).ToArray();
-                var cObj = new IrCurve(pDates, zeroRates, BuildDate, ObjectName, iType);
-                cObj.SolveStage = SolveStage;
-                var cache = ContainerStores.GetObjectCache<ICurve>();
-                cache.PutObject(ObjectName, new SessionItem<ICurve> { Name = ObjectName, Value = cObj });
+                var cObj = new IrCurve(pDates, ZeroRates, BuildDate, ObjectName, iType, ccy, colSpecStr);
+                var cache = ContainerStores.GetObjectCache<IIrCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
@@ -80,7 +62,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (ContainerStores.GetObjectCache<ICurve>().TryGetObject(ObjectName, out var curve))
+                if (ContainerStores.GetObjectCache<IIrCurve>().TryGetObject(ObjectName, out var curve))
                 {
                     return curve.Value.GetDf(StartDate,EndDate);
                 }
@@ -111,7 +93,7 @@ namespace Qwack.Excel.Curves
                     return $"Could not daycount basis - {basis}";
                 }
 
-                if (ContainerStores.GetObjectCache<ICurve>().TryGetObject(ObjectName, out var curve))
+                if (ContainerStores.GetObjectCache<IIrCurve>().TryGetObject(ObjectName, out var curve))
                 {
                     return curve.Value.GetForwardRate(StartDate, EndDate, rType, dType);
                 }
@@ -186,7 +168,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var curveCache = ContainerStores.GetObjectCache<ICurve>();
+                var curveCache = ContainerStores.GetObjectCache<IIrCurve>();
                 var curves = Curves
                     .Where(s => curveCache.Exists(s as string))
                     .Select(s => curveCache.GetObject(s as string).Value as IrCurve)
@@ -229,8 +211,8 @@ namespace Qwack.Excel.Curves
                     return $"Curve {CurveName} not found in model";
                 }
 
-                var curveCache = ContainerStores.GetObjectCache<ICurve>();
-                curveCache.PutObject(OutputName, new SessionItem<ICurve> { Name = OutputName, Value = curve });
+                var curveCache = ContainerStores.GetObjectCache<IIrCurve>();
+                curveCache.PutObject(OutputName, new SessionItem<IIrCurve> { Name = OutputName, Value = curve });
                 return OutputName + '¬' + curveCache.GetObject(OutputName).Version;
             });
         }

@@ -14,7 +14,7 @@ namespace Qwack.Models
     {
         private readonly Dictionary<string, IVolSurface> _assetVols;
         private readonly Dictionary<string, IPriceCurve> _assetCurves;
-        private readonly Dictionary<string, IDictionary<DateTime, double>> _fixings;
+        private readonly Dictionary<string, IFixingDictionary> _fixings;
         private readonly DateTime _buildDate;
         private readonly IFundingModel _fundingModel;
 
@@ -27,7 +27,7 @@ namespace Qwack.Models
         {
             _assetCurves = new Dictionary<string, IPriceCurve>();
             _assetVols = new Dictionary<string, IVolSurface>();
-            _fixings = new Dictionary<string, IDictionary<DateTime, double>>();
+            _fixings = new Dictionary<string, IFixingDictionary>();
             _buildDate = buildDate;
             _fundingModel = fundingModel;
         }
@@ -40,14 +40,15 @@ namespace Qwack.Models
 
         public IVolSurface GetVolSurface(string name) => _assetVols[name];
 
-        public void AddFixingDictionary(string name, IDictionary<DateTime, double> fixings) => _fixings[name] = fixings;
+        public void AddFixingDictionary(string name, IFixingDictionary fixings) => _fixings[name] = fixings;
 
-        public IDictionary<DateTime, double> GetFixingDictionary(string name) => _fixings[name];
+        public IFixingDictionary GetFixingDictionary(string name) => _fixings[name];
 
-        public bool TryGetFixingDictionary(string name, out IDictionary<DateTime, double> fixings) => _fixings.TryGetValue(name, out fixings);
+        public bool TryGetFixingDictionary(string name, out IFixingDictionary fixings) => _fixings.TryGetValue(name, out fixings);
 
         public string[] CurveNames { get { return _assetCurves.Keys.Select(x => x).ToArray(); } }
         public string[] VolSurfaceNames { get { return _assetVols.Keys.Select(x => x).ToArray(); } }
+        public string[] FixingDictionaryNames { get { return _fixings.Keys.Select(x => x).ToArray(); } }
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
@@ -97,6 +98,24 @@ namespace Qwack.Models
             c.CorrelationMatrix = CorrelationMatrix;
 
             return c;
+        }
+
+        public void AddPriceCurves(Dictionary<string, IPriceCurve> curves)
+        {
+            foreach (var kv in curves)
+                _assetCurves[kv.Key] = kv.Value;
+        }
+
+        public void AddVolSurfaces(Dictionary<string, IVolSurface> surfaces)
+        {
+            foreach (var kv in surfaces)
+                _assetVols[kv.Key] = kv.Value;
+        }
+
+        public void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings)
+        {
+            foreach (var kv in fixings)
+                _fixings[kv.Key] = kv.Value;
         }
     }
 }

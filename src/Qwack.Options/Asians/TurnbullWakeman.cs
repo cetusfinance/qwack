@@ -4,6 +4,7 @@ using System.Text;
 using Qwack.Dates;
 using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
+using static System.Math;
 
 namespace Qwack.Options.Asians
 {
@@ -11,15 +12,19 @@ namespace Qwack.Options.Asians
     {
         public static double PV(double forward, double knownAverage, double sigma, double K, double tAvgStart, double tExpiry, double riskFree, OptionType callPut)
         {
-            if(tExpiry<=0) //work out intrinsic
+            if (tExpiry <= 0) //work out intrinsic
             {
-                return callPut == OptionType.Call ? System.Math.Max(0, knownAverage - K) : System.Math.Max(0, K - knownAverage);
+                return callPut == OptionType.Call ? Max(0, knownAverage - K) : Max(0, K - knownAverage);
             }
 
-            var M = 2 * (System.Math.Exp(sigma * sigma * tExpiry) - System.Math.Exp(sigma * sigma * tAvgStart) * (1 + sigma * sigma * (tExpiry - tAvgStart)));
-            M /= System.Math.Pow(sigma, 4.0) * (tExpiry - tAvgStart) * (tExpiry - tAvgStart);
+            var tau = Max(0, tAvgStart);
+            var M = 2 * (Exp(sigma * sigma * tExpiry) - Exp(sigma * sigma * tau) * (1 + sigma * sigma * (tExpiry - tau)));
+            M /= Pow(sigma, 4.0) * (tExpiry - tau) * (tExpiry - tau);
 
-            var sigma_a = tExpiry == 0 ? 0.0 : System.Math.Sqrt(System.Math.Log(M) / tExpiry);
+            //hack to fix deep ITM options have imaginary vol
+
+
+            var sigma_a = tExpiry == 0 ? 0.0 : Sqrt(Log(M) / tExpiry);
 
             if (tAvgStart < 0)
             {
@@ -38,6 +43,11 @@ namespace Qwack.Options.Asians
             }
 
             var pv = BlackFunctions.BlackPV(forward, K, riskFree, tExpiry, sigma_a, callPut);
+
+            if (tAvgStart < 0)
+            {
+                pv *= tExpiry / (tExpiry - tAvgStart);
+            }
             return pv;
         }
 

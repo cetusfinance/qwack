@@ -9,6 +9,13 @@ namespace Qwack.Models
 {
     public class FxMatrix : IFxMatrix
     {
+        public FxMatrix()
+        {
+            SpotRates = new Dictionary<Currency, double>();
+            DiscountCurveMap = new Dictionary<Currency, string>();
+            FxPairDefinitions = new List<FxPair>();
+        }
+
         public Currency BaseCurrency { get; private set; }
 
         public DateTime BuildDate { get; private set; }
@@ -35,6 +42,13 @@ namespace Qwack.Models
         {
             var o = new FxMatrix();
             o.Init(BaseCurrency, BuildDate, new Dictionary<Currency, double>(SpotRates), new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
+            return o;
+        }
+
+        public IFxMatrix Rebase(DateTime newBuildDate, Dictionary<Currency,double> newSpotRates)
+        {
+            var o = new FxMatrix();
+            o.Init(BaseCurrency, newBuildDate, newSpotRates, new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
             return o;
         }
     }

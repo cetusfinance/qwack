@@ -26,6 +26,8 @@ namespace Qwack.Options.VolSurfaces
         public DateTime[] Expiries { get; set; }
         public double[] ExpiriesDouble { get; set; }
 
+        public Currency Currency { get; set; }
+
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
 

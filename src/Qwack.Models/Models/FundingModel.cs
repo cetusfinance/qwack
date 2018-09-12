@@ -18,16 +18,40 @@ namespace Qwack.Models
         {
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
+            FxMatrix = new FxMatrix();
+            SetupMappings();
         }
 
         public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves)
         {
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves);
+            FxMatrix = new FxMatrix();
+            SetupMappings();
+        }
+
+        private void SetupMappings()
+        {
+            foreach(var curve in Curves)
+            {
+                var key = $"{curve.Value.Currency.Ccy}é{curve.Value.CollateralSpec}";
+                _curvesBySpec.Add(key, curve.Key);
+            }
+        }
+
+        public IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec)
+        {
+            var key = $"{ccy.Ccy}é{collateralSpec}";
+            if (!_curvesBySpec.TryGetValue(key, out var curveName))
+                throw new Exception($"Could not find a curve with currency {ccy.Ccy} and collateral spec {collateralSpec}");
+
+            return Curves[curveName];
         }
 
         public Dictionary<string, IrCurve> Curves { get; private set; }
         public Dictionary<string, IVolSurface> VolSurfaces { get; set; }
+
+        private Dictionary<string, string> _curvesBySpec = new Dictionary<string, string>();
 
         public DateTime BuildDate { get; private set; }
         public IFxMatrix FxMatrix { get; private set; }
@@ -66,7 +90,7 @@ namespace Qwack.Models
 
         public IFundingModel DeepClone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType)).ToArray())
+            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray())
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };

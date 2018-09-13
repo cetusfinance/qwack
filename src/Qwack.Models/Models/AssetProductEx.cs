@@ -313,6 +313,14 @@ namespace Qwack.Models.Models
                         else
                             ccy = fxFwd.ForeignCCY.ToString();
                         break;
+                    case FixedRateLoanDeposit loanDepo:
+                        pv = loanDepo.Pv(model.FundingModel, false);
+                        tradeId = loanDepo.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Ccy);
+                        else
+                            ccy = loanDepo.Ccy.ToString();
+                        break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
                 }
@@ -616,7 +624,7 @@ namespace Qwack.Models.Models
                 }
             }
 
-            //charm
+            //charm-asset
             var baseDeltaCube = AssetDelta(portfolio, model);
             var rolledDeltaCube = AssetDelta(portfolio, rolledModel);
             var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
@@ -628,6 +636,21 @@ namespace Qwack.Models.Models
                 row.Add("TradeId", charmRow.MetaData[tidIx]);
                 row.Add("AssetId", charmRow.MetaData[aId]);
                 row.Add("PointLabel", charmRow.MetaData[plId]);
+                row.Add("Metric", "Charm");
+                cube.AddRow(row, charmRow.Value);
+            }
+
+            //charm-fx
+            baseDeltaCube = FxDelta(portfolio, model);
+            rolledDeltaCube = FxDelta(portfolio, rolledModel);
+            charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+            var fId = charmCube.GetColumnIndex("FxPair");
+            foreach (var charmRow in charmCube.GetAllRows())
+            {
+                var row = new Dictionary<string, object>();
+                row.Add("TradeId", charmRow.MetaData[tidIx]);
+                row.Add("AssetId", charmRow.MetaData[fId]);
+                row.Add("PointLabel", string.Empty);
                 row.Add("Metric", "Charm");
                 cube.AddRow(row, charmRow.Value);
             }

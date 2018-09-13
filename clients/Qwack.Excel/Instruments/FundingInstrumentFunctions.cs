@@ -312,6 +312,38 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a fixed-rate loan/depo object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFixedRateLoanDepo))]
+        public static object CreateFixedRateLoanDepo(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Start date")] DateTime StartDate,
+             [ExcelArgument(Description = "End date")] DateTime EndDate,
+             [ExcelArgument(Description = "Fixed rate")] double FixedRate,
+             [ExcelArgument(Description = "Daycount basis, e.g. Act360")] string Basis,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Notional, negative for loan")] double Notional,
+             [ExcelArgument(Description = "Discount Curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Currency, out var cal);
+                var ccy = new Currency(Currency, DayCountBasis.Act365F, cal);
+
+                if (!Enum.TryParse(Basis, out DayCountBasis basis))
+                {
+                    return $"Could not parse daycount basis - {Basis}";
+                }
+
+                var product = new FixedRateLoanDeposit(StartDate, EndDate, FixedRate, ccy, basis, Notional, DiscountCurve)
+                {
+                    TradeId = ObjectName
+                };
+
+                var cache = ContainerStores.GetObjectCache<FixedRateLoanDeposit>();
+                cache.PutObject(ObjectName, new SessionItem<FixedRateLoanDeposit> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a collection of funding instruments to calibrate a curve engine", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
         public static object CreateFundingInstrumentCollection(
            [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -327,6 +359,7 @@ namespace Qwack.Excel.Curves
                 var fxFwds = Instruments.GetAnyFromCache<FxForward>();
                 var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
+                var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
 
                 //allows merging of FICs into portfolios
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -341,6 +374,7 @@ namespace Qwack.Excel.Curves
                 fic.AddRange(xccySwaps);
                 fic.AddRange(basisSwaps);
                 fic.AddRange(ficInstruments);
+                fic.AddRange(loanDepos);
 
                 var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
 

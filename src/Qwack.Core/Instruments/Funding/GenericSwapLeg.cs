@@ -146,6 +146,7 @@ namespace Qwack.Core.Instruments.Funding
                                     (double)Nominal * q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
                                 q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                                q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
                                 q.Notional = (double)Nominal;
                                 lf.Add(q);
                                 nQ++;
@@ -218,6 +219,7 @@ namespace Qwack.Core.Instruments.Funding
                                     (double)Nominal * Q.NotionalByYearFraction * (double)FixedRateOrMargin :
                                     0;
                                 Q.FixedRateOrMargin = (double)FixedRateOrMargin;
+                                Q.FlowType = (LegType == SwapLegType.Fixed) ? FlowType.FixedRate : FlowType.FloatRate;
                                 Q.Notional = (double)Nominal;
                                 lf.Add(Q);
                                 nQ++;

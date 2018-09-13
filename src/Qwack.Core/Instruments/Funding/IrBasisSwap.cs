@@ -10,7 +10,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class IrBasisSwap : IFundingInstrument
     {
-        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve)
+        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null)
         {
             SwapTenor = swapTenor;
 
@@ -29,14 +29,16 @@ namespace Qwack.Core.Instruments.Funding
             {
                 FixedRateOrMargin = (decimal)ParSpreadPay,
                 LegType = SwapLegType.Float,
-                Nominal = -1e6M
+                Nominal = -(notional ?? 1e6M),
+                AccrualDCB = payIndex.DayCountBasis
             };
 
             RecLeg = new GenericSwapLeg(StartDate, swapTenor, recIndex.HolidayCalendars, recIndex.Currency, ResetFrequencyRec, BasisRec)
             {
                 FixedRateOrMargin = (decimal)ParSpreadRec,
                 LegType = SwapLegType.Float,
-                Nominal = 1e6M
+                Nominal = notional ?? 1e6M,
+                AccrualDCB = recIndex.DayCountBasis
             };
 
 
@@ -84,85 +86,16 @@ namespace Qwack.Core.Instruments.Funding
             var updatePayEst = updateState || model.CurrentSolveCurve == ForecastCurvePay;
             var updateRecEst = updateState || model.CurrentSolveCurve == ForecastCurveRec;
 
-            return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurvePay], model.Curves[ForecastCurveRec], updateState, updateDF, updatePayEst, updateRecEst);
+            var discountCurve = model.Curves[DiscountCurve];
+            var forecastCurvePay = model.Curves[ForecastCurvePay];
+            var forecastCurveRec = model.Curves[ForecastCurveRec];
+            var payPV = FlowSchedulePay.PV(discountCurve, forecastCurvePay, updateState, updateDF, updatePayEst, BasisPay, null);
+            var recPV = FlowScheduleRec.PV(discountCurve, forecastCurveRec, updateState, updateDF, updateRecEst, BasisRec, null);
+
+            return payPV + recPV;
         }
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
-        public double Pv(IrCurve discountCurve, IrCurve forecastCurvePay, IrCurve forecastCurveRec, bool updateState, bool updateDF, bool updatePayEst, bool updateRecEst)
-        {
-            double totalPV = 0;
-
-            for (var i = 0; i < FlowSchedulePay.Flows.Count; i++)
-            {
-                double FV, DF;
-
-                var flow = FlowSchedulePay.Flows[i];
-
-                if (updatePayEst)
-                {
-                    var s = flow.AccrualPeriodStart;
-                    var e = flow.AccrualPeriodEnd;
-                    var RateLin = forecastCurvePay.GetForwardRate(s, e, RateType.Linear, BasisPay)
-                        + flow.FixedRateOrMargin;
-                    var YF = flow.NotionalByYearFraction;
-                    FV = RateLin * YF * flow.Notional;
-                }
-                else
-                    FV = flow.Fv;
-
-                if (updateDF)
-                    DF = discountCurve.Pv(1, flow.SettleDate);
-                else
-                    DF = (flow.Fv == flow.Pv) ? 1.0 : flow.Pv / flow.Fv;
-
-                var PV = DF * FV;
-
-                if (updateState)
-                {
-                    flow.Fv = FV;
-                    flow.Pv = PV;
-                }
-
-                totalPV += PV;
-            }
-
-            for (var i = 0; i < FlowScheduleRec.Flows.Count; i++)
-            {
-                double FV, DF;
-
-                var flow = FlowScheduleRec.Flows[i];
-
-                if (updateRecEst)
-                {
-                    var s = flow.AccrualPeriodStart;
-                    var e = flow.AccrualPeriodEnd;
-                    var RateLin = forecastCurveRec.GetForwardRate(s, e, RateType.Linear, BasisRec)
-                        + flow.FixedRateOrMargin;
-                    var YF = flow.NotionalByYearFraction;
-                    FV = RateLin * YF * flow.Notional;
-                }
-                else
-                    FV = flow.Fv;
-
-                if (updateDF)
-                    DF = discountCurve.Pv(1, flow.SettleDate);
-                else
-                    DF = (flow.Fv == flow.Pv) ? 1.0 : flow.Pv / flow.Fv;
-
-                var PV = DF * FV;
-
-                if (updateState)
-                {
-                    flow.Fv = FV;
-                    flow.Pv = PV;
-                }
-
-                totalPV += PV;
-            }
-
-            return totalPV;
-        }
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {

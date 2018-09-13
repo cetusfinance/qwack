@@ -271,14 +271,20 @@ namespace Qwack.Excel.Curves
         public static object AssetPortfolioPV(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-           [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+           [ExcelArgument(Description = "Reporting currency (optional)")] object ReportingCcy)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                Currency ccy = null;
+                if (!(ReportingCcy is ExcelMissing))
+                {
+                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
+                }
 
-                var result = pfolio.Value.PV(model.Value);
+                var result = pfolio.Value.PV(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -414,6 +420,7 @@ namespace Qwack.Excel.Curves
                 var fxFwds = Instruments.GetAnyFromCache<FxForward>(); 
                 var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();      
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
+                var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
 
                 var asianOptions = Instruments.GetAnyFromCache<AsianOption>();
                 var asianStrips = Instruments.GetAnyFromCache<AsianSwapStrip>();
@@ -441,6 +448,7 @@ namespace Qwack.Excel.Curves
                 pf.Instruments.AddRange(fxFwds);
                 pf.Instruments.AddRange(xccySwaps);
                 pf.Instruments.AddRange(basisSwaps);
+                pf.Instruments.AddRange(loanDepos);
                 pf.Instruments.AddRange(ficInstruments);
 
                 pf.Instruments.AddRange(pfInstruments);

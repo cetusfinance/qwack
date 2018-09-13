@@ -27,14 +27,16 @@ namespace Qwack.Core.Instruments.Funding
             {
                 FixedRateOrMargin = (decimal)parRate,
                 LegType = SwapLegType.Fixed,
-                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M)
+                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M),
+                AccrualDCB = rateIndex.DayCountBasisFixed
             };
             FloatLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFloat)
             {
                 FixedRateOrMargin = 0.0M,
                 LegType = SwapLegType.Float,
-                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M)
+                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M),
+                AccrualDCB = rateIndex.DayCountBasis
             };
             FlowScheduleFixed = FixedLeg.GenerateSchedule();
             FlowScheduleFloat = FloatLeg.GenerateSchedule();
@@ -71,81 +73,12 @@ namespace Qwack.Core.Instruments.Funding
             var updateDf = updateState || (model.CurrentSolveCurve == DiscountCurve);
             var updateEst = updateState || (model.CurrentSolveCurve == ForecastCurve);
 
-            return PV(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDf, updateEst);
-        }
+            var discountCurve = model.Curves[DiscountCurve];
+            var forecastCurve = model.Curves[ForecastCurve];
+            var fixedPv = FlowScheduleFixed.PV(discountCurve, forecastCurve, updateState, updateDf, updateEst, BasisFloat, null);
+            var floatPv = FlowScheduleFloat.PV(discountCurve, forecastCurve, updateState, updateDf, updateEst, BasisFloat, null);
 
-        private double PV(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate)
-        {
-            double totalPv = 0;
-
-            for (var i = 0; i < FlowScheduleFixed.Flows.Count; i++)
-            {
-                var flow = FlowScheduleFixed.Flows[i];
-                double fv, df;
-                if (updateState)
-                {
-                    var rateLin = flow.FixedRateOrMargin;
-                    var yf = flow.NotionalByYearFraction;
-                    fv = rateLin * yf * flow.Notional;
-                }
-                else
-                {
-                    fv = flow.Fv;
-                }
-
-                if (updateDf)
-                {
-                    df = discountCurve.Pv(1, flow.SettleDate);
-                }
-                else
-                {
-                    df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
-                }
-
-                var pv = fv * df;
-
-                totalPv += pv;
-
-                if (updateState)
-                {
-                    flow.Fv = fv;
-                    flow.Pv = pv;
-                }
-            }
-
-            for (var i = 0; i < FlowScheduleFloat.Flows.Count; i++)
-            {
-                var flow = FlowScheduleFloat.Flows[i];
-                double fv, df;
-
-                if (updateEstimate)
-                {
-                    var s = flow.AccrualPeriodStart;
-                    var e = flow.AccrualPeriodEnd;
-                    var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, BasisFloat);
-                    var yf = flow.NotionalByYearFraction;
-                    fv = rateLin * yf * flow.Notional;
-                }
-                else
-                {
-                    fv = flow.Fv;
-                }
-
-                if (updateDf)
-                    df = discountCurve.Pv(1, flow.SettleDate);
-                else
-                    df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
-
-                var pv = fv * df;
-                totalPv += pv;
-
-                if (updateState)
-                {
-                    flow.Fv = fv;
-                    flow.Pv = pv;
-                }
-            }
-            return totalPv;
+            return fixedPv + floatPv;
         }
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();

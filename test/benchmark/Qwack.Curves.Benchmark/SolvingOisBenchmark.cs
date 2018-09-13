@@ -121,10 +121,10 @@ namespace Qwack.Curves.Benchmark
                 _instruments.Add(USDdeposOIS[i]);
             }
 
-            var ZARcurve3m = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
-            var ZARcurveOIS = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap) { SolveStage = 0 };
-            var USDcurve3m = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
-            var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 1 };
+            var ZARcurve3m = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyZar) { SolveStage = 0 };
+            var ZARcurveOIS = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyZar) { SolveStage = 0 };
+            var USDcurve3m = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyUsd) { SolveStage = 1 };
+            var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyUsd) { SolveStage = 1 };
            // var ZARccyBasisCurve = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 2 };
 
             _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });

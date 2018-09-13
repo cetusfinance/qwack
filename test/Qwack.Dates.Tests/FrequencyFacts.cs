@@ -28,6 +28,8 @@ namespace Qwack.Dates.Tests
             Assert.Equal(3.Years(), new Frequency("3y"));
             Assert.Equal(3.Bd(), new Frequency("3b"));
             Assert.Equal(3.Months(), new Frequency("3m"));
+
+            Assert.Equal("3M", 3.Months().ToString());
         }
 
    

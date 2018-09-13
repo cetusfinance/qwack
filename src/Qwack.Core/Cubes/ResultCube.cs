@@ -66,7 +66,8 @@ namespace Qwack.Core.Cubes
             return Pivot(new[] { fieldToAggregateBy }, aggregationAction);
         }
 
-            public ICube Pivot(string[] fieldsToAggregateBy, AggregationAction aggregationAction)
+
+        public ICube Pivot(string[] fieldsToAggregateBy, AggregationAction aggregationAction)
         {
             //for now, aggregate only works on numerical fields and performs a sum
             foreach(var fieldToAggregateBy in fieldsToAggregateBy)

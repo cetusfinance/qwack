@@ -35,9 +35,12 @@ namespace Qwack.Core.Tests.AssetModel
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars);
-            curve.Currency = usd;
-            curve.Name = "Coconuts";
+            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars)
+            {
+                Currency = usd,
+                CollateralSpec = "CURVE",
+                Name = "Coconuts"
+            };
 
             var fxMatrix = new FxMatrix();
             var fxSpot = 7;
@@ -55,8 +58,8 @@ namespace Qwack.Core.Tests.AssetModel
             var irPillars = new[] { startDate, startDate.AddYears(10) };
             var xafRates = new[] { 0.1, 0.1 };
             var usdRates = new[] { 0.01, 0.01 };
-            var xafCurve = new IrCurve(irPillars, xafRates, startDate, "XAF.CURVE", Interpolator1DType.Linear);
-            var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear);
+            var xafCurve = new IrCurve(irPillars, xafRates, startDate, "XAF.CURVE", Interpolator1DType.Linear, xaf, "CURVE");
+            var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
             var fModel = new FundingModel(startDate, new[] { xafCurve, usdCurve });
             fModel.SetupFx(fxMatrix);
@@ -92,7 +95,7 @@ namespace Qwack.Core.Tests.AssetModel
             var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);
             var df = xafCurve.GetDf(startDate, settleDate);
-            Assert.Equal(1000 * df * fxFwd / t0Spot, delta,7);
+            Assert.Equal(994.673992862018, delta,7);
 
             var fxDeltaCube = portfolio.FxDelta(aModel);
             var dfxAgg = fxDeltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);

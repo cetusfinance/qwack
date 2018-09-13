@@ -1,3 +1,4 @@
+using System;
 using Qwack.Dates;
 
 namespace Qwack.Core.Basic
@@ -32,4 +33,24 @@ namespace Qwack.Core.Basic
 
         public new string ToString => $"{Domestic}/{Foreign}";
     }
+
+    public static class FxPairEx
+    {
+        /// <summary>
+        /// Returns spot date for a given val date
+        /// e.g. for USD/ZAR, calendar would be for ZAR and otherCal would be for USD
+        /// </summary>
+        /// <param name="valDate"></param>
+        /// <param name="spotLag"></param>
+        /// <param name="calendar"></param>
+        /// <param name="otherCal"></param>
+        /// <returns></returns>
+        public static DateTime SpotDate(this FxPair fxPair, DateTime valDate)
+        {
+            var d = valDate.AddPeriod(RollType.F, fxPair.SettlementCalendar, fxPair.SpotLag);
+            d = d.IfHolidayRollForward(fxPair.SettlementCalendar);
+            return d;
+        }
+    }
+
 }

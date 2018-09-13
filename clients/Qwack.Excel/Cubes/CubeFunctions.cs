@@ -20,7 +20,8 @@ namespace Qwack.Excel.Cubes
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var cube = ContainerStores.GetObjectCache<ICube>().GetObject(ObjectName);
+                if (!ContainerStores.GetObjectCache<ICube>().TryGetObject(ObjectName, out var cube))
+                    throw new Exception($"Could not find cube {ObjectName}");
 
                 var rows = cube.Value.GetAllRows();
 

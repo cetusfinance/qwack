@@ -21,7 +21,7 @@ namespace Qwack.Core.Calibrators
         private DateTime _buildDate;
         private List<AsianBasisSwap> _curveInstruments;
         private DateTime[] _pillars;
-        private ICurve _discountCurve;
+        private IIrCurve _discountCurve;
         private IPriceCurve _currentCurve;
         private IPriceCurve _baseCurve;
 
@@ -31,7 +31,7 @@ namespace Qwack.Core.Calibrators
         private double[] _currentPVs;
         private double[][] _jacobian;
        
-        public IPriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, ICurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType)
+        public IPriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType)
         {
             _curveInstruments = instruments;
             _pillars = pillars.ToArray();
@@ -64,7 +64,7 @@ namespace Qwack.Core.Calibrators
             return _currentCurve;
         }
 
-        public IPriceCurve SolveCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, ICurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
+        public IPriceCurve SolveCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
         {
             _curveInstruments = instruments;
             _pillars = pillars.ToArray();
@@ -134,7 +134,7 @@ namespace Qwack.Core.Calibrators
             return o;
         }
 
-        public static double BasisSwapPv(IPriceCurve priceCurve, AsianBasisSwap swap, ICurve discountCurve, IPriceCurve baseCurve)
+        public static double BasisSwapPv(IPriceCurve priceCurve, AsianBasisSwap swap, IIrCurve discountCurve, IPriceCurve baseCurve)
         {
             var baseIsPay = (swap.PaySwaplets.First().AssetId == baseCurve.AssetId);
             var payCurve = baseIsPay ? baseCurve : priceCurve;

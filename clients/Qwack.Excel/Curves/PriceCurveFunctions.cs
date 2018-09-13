@@ -13,6 +13,8 @@ using Qwack.Core.Models;
 using Qwack.Models;
 using Qwack.Core.Basic;
 using Qwack.Models.Models;
+using Qwack.Futures;
+using Qwack.Dates;
 
 namespace Qwack.Excel.Curves
 {
@@ -23,27 +25,47 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreatePriceCurve))]
         public static object CreatePriceCurve(
              [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
              [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
              [ExcelArgument(Description = "Array of prices values")] double[] Prices,
              [ExcelArgument(Description = "Type of curve, e.g. LME, ICE, NYMEX etc")] object CurveType,
-             [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels)
+             [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels,
+             [ExcelArgument(Description = "Currency - default USD")] object Currency,
+             [ExcelArgument(Description = "Collateral spec, required for delta calculation - default LIBOR.3M")] object CollateralSpec,
+             [ExcelArgument(Description = "Spot lag, required for theta, default 0b")] object SpotLag,
+             [ExcelArgument(Description = "Spot calendar, required for theta, default USD")] object SpotCalendar)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var curveTypeStr = CurveType.OptionalExcel<string>("Linear");
+                var curveTypeStr = CurveType.OptionalExcel("Linear");
+                var ccy = Currency.OptionalExcel("USD");
+                var colSpec = CollateralSpec.OptionalExcel("LIBOR.3M");
+                var spotLagStr = SpotLag.OptionalExcel("0b");
+                var spotCalStr = SpotCalendar.OptionalExcel("USD");
+
                 if (!Enum.TryParse(curveTypeStr, out PriceCurveType cType))
                 {
                     return $"Could not parse price curve type - {curveTypeStr}";
                 }
+
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccy, out var ccyCal);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(spotCalStr, out var spotCal);
+                var ccyObj = new Currency(ccy, DayCountBasis.Act365F, ccyCal);
 
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
 
                 var pDates = Pillars.ToDateTimeArray();
                 var cObj = new PriceCurve(BuildDate, pDates, Prices, cType, labels)
                 {
-                    Name = ObjectName
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName,
+                    Currency = ccyObj,
+                    CollateralSpec = colSpec,
+                    SpotCalendar = spotCal,
+                    SpotLag = new Frequency(spotLagStr)
                 };
+
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -53,6 +75,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a contango price curve for precious metals", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateContangoPriceCurve))]
         public static object CreateContangoPriceCurve(
             [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
             [ExcelArgument(Description = "Spot date")] DateTime SpotDate,
             [ExcelArgument(Description = "Spot price")] double SpotPrice,
@@ -66,7 +89,8 @@ namespace Qwack.Excel.Curves
                 var pDates = Pillars.ToDateTimeArray();
                 var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, Qwack.Dates.DayCountBasis.Act360, labels)
                 {
-                    Name = ObjectName
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName
                 };
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
@@ -77,6 +101,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a sparse price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurve))]
         public static object CreateSparsePriceCurve(
             [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
             [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
             [ExcelArgument(Description = "Array of prices values")] double[] Prices,
@@ -93,7 +118,8 @@ namespace Qwack.Excel.Curves
                 var pDates = Pillars.ToDateTimeArray();
                 var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType)
                 {
-                    Name = ObjectName
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName
                 };
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
@@ -104,6 +130,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a sparse price curve from swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurveFromSwaps))]
         public static object CreateSparsePriceCurveFromSwaps(
             [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
             [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
             [ExcelArgument(Description = "Array of swap objects")] object[] Swaps,
@@ -118,16 +145,18 @@ namespace Qwack.Excel.Curves
                     return $"Could not parse price curve type - {curveTypeStr}";
                 }
 
-                var irCache = ContainerStores.GetObjectCache<ICurve>();
+                var irCache = ContainerStores.GetObjectCache<IIrCurve>();
                 var irCurve = irCache.GetObject(DiscountCurveName).Value;
 
                 var swapCache = ContainerStores.GetObjectCache<AsianSwapStrip>();
                 var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value);
 
                 var pDates = Pillars.ToDateTimeArray();
-                var fitter = new Qwack.Core.Calibrators.NewtonRaphsonAssetCurveSolver();
-                var cObj = fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate);
-                cObj.Name = ObjectName;
+                var fitter = new Core.Calibrators.NewtonRaphsonAssetCurveSolver();
+                var cObj = (SparsePriceCurve)fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate);
+                cObj.Name = AssetId ?? ObjectName;
+                cObj.AssetId = AssetId ?? ObjectName;
+
                 var cache = ContainerStores.GetObjectCache<IPriceCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -208,14 +237,23 @@ namespace Qwack.Excel.Curves
         public static object CreateFixingDictionary(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
-            [ExcelArgument(Description = "Fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings)
+            [ExcelArgument(Description = "Fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings,
+            [ExcelArgument(Description = "Type, Asset or FX - default Asset")] object FixingType)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var fixTypeStr = FixingType.OptionalExcel("Asset");
+                if(!Enum.TryParse<FixingDictionaryType>(fixTypeStr, out var fixType))
+                {
+                    throw new Exception($"Unknown fixing dictionary type {fixTypeStr}");
+                }
                 var dict = new FixingDictionary
                 {
-                    Name = AssetId
+                    Name = AssetId,
+                    AssetId = AssetId,
+                    FixingDictionaryType = fixType
                 };
+
                 var dictData = Fixings.RangeToDictionary<DateTime, double>();
                 foreach (var kv in dictData)
                     dict.Add(kv.Key, kv.Value);
@@ -231,23 +269,118 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Fixings dates")] double[] FixingDates, 
-            [ExcelArgument(Description = "Fixings dates")] double[] Fixings)
+            [ExcelArgument(Description = "Fixings dates")] double[] Fixings,
+            [ExcelArgument(Description = "Type, Asset or FX - default Asset")] object FixingType)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 if (FixingDates.Length != Fixings.Length)
                     throw new Exception("Fixings and FixingDates must be of same length");
 
+                var fixTypeStr = FixingType.OptionalExcel("Asset");
+                if (!Enum.TryParse<FixingDictionaryType>(fixTypeStr, out var fixType))
+                {
+                    throw new Exception($"Unknown fixing dictionary type {fixTypeStr}");
+                }
+
                 var dict = new FixingDictionary
                 {
-                    Name = AssetId
+                    Name = AssetId,
+                    AssetId = AssetId,
+                    FixingDictionaryType = fixType
                 };
-                for(var i=0;i<FixingDates.Length;i++)
-                    dict.Add(DateTime.FromOADate(FixingDates[i]), Fixings[i]);
+                for (var i = 0; i < FixingDates.Length; i++)
+                    if (FixingDates[i] != 0)
+                        dict.Add(DateTime.FromOADate(FixingDates[i]), Fixings[i]);
 
                 var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
                 cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a fixing dictionary for a rolling futures index", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryForRollingFuture))]
+        public static object CreateFixingDictionaryForRollingFuture(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Futures code, e.g. QS or CO")] string FuturesCode,
+            [ExcelArgument(Description = "1st month fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings1m,
+            [ExcelArgument(Description = "2nd month fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings2m)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var dict = new FixingDictionary
+                {
+                    Name = AssetId,
+                    AssetId = AssetId,
+                    FixingDictionaryType = FixingDictionaryType.Asset
+                };
+                var futuresProvider = ContainerStores.SessionContainer.GetRequiredService<IFutureSettingsProvider>();
+                var dictData1m = Fixings1m.RangeToDictionary<DateTime, double>();
+                var dictData2m = Fixings2m.RangeToDictionary<DateTime, double>();
+                var fc = new FutureCode(FuturesCode, futuresProvider);
+                fc.YearBeforeWhich2DigitDatesAreUsed = DateTime.Today.Year - 2;
+
+                foreach (var kv in dictData1m)
+                {
+                    var currentFM = fc.GetFrontMonth(kv.Key, true);
+                    var cfm = new FutureCode(currentFM, DateTime.Today.Year - 2, futuresProvider);
+                    if(kv.Key<=cfm.GetRollDate())
+                        dict.Add(kv.Key, kv.Value);
+                    else
+                        dict.Add(kv.Key, dictData2m[kv.Key]);
+                }
+
+                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
+                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Display contents of a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(DisplayFixingDictionary))]
+        public static object DisplayFixingDictionary(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Optional - fixing date")] object FixingDate,
+            [ExcelArgument(Description = "Reverse sort order, False (default) or True")] bool ReverseSort)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
+                if(!cache.TryGetObject(ObjectName,out var dict))
+                {
+                    throw new Exception($"Fixing dictionary not found with name {ObjectName}");
+                }
+
+                if (FixingDate is ExcelMissing)
+                {
+                    var o = new object[dict.Value.Count, 2];
+                    var c = 0;
+
+                    if (ReverseSort)
+                        foreach (var kv in dict.Value.OrderByDescending(x=>x.Key))
+                        {
+                            o[c, 0] = kv.Key;
+                            o[c, 1] = kv.Value;
+                            c++;
+                        }
+                    else
+                        foreach (var kv in dict.Value)
+                        {
+                            o[c, 0] = kv.Key;
+                            o[c, 1] = kv.Value;
+                            c++;
+                        }
+
+                    return o;
+                }
+                else
+                {
+                    var d = FixingDate as double?;
+                    if (!d.HasValue || !dict.Value.TryGetValue(DateTime.FromOADate(d.Value), out var fixing))
+                        throw new Exception($"Fixing not found for date {FixingDate}");
+
+                    return fixing;
+                }
             });
         }
 
@@ -275,7 +408,9 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var sparseSpreads = SparseNewSpreads.Select(x => x is ExcelEmpty ? null : (double?)x).ToArray();
+                var sparseSpreads = SparseNewSpreads
+                    .Select(x => x is ExcelEmpty || !(x is double) ? 
+                    null : (double?)x).ToArray();
                 var o = Math.CurveBender.Bend(InputSpreads, sparseSpreads);
                 return o.ReturnExcelRangeVectorFromDouble();
             });

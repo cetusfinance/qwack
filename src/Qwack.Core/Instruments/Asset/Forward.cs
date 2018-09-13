@@ -7,7 +7,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class Forward : IInstrument
+    public class Forward : IAssetInstrument
     {
         public string TradeId { get; set; }
         public double Notional { get; set; }
@@ -48,5 +48,7 @@ namespace Qwack.Core.Instruments.Asset
                 PaymentDate = PaymentDate
             };
         }
+
+        public string[] AssetIds => new[] { AssetId };
     }
 }

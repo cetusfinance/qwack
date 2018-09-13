@@ -19,6 +19,9 @@ namespace Qwack.Core.Curves
 
         public string AssetId => pCurveFunc.Invoke().AssetId;
 
+        public bool UnderlyingsAreForwards => pCurveFunc.Invoke().UnderlyingsAreForwards;
+        public DateTime[] PillarDates => pCurveFunc.Invoke().PillarDates;
+
         public int NumberOfPillars => 0;
 
         public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
@@ -84,5 +87,10 @@ namespace Qwack.Core.Curves
         }
 
         public IPriceCurve RebaseDate(DateTime newAnchorDate) => new CompositePriceCurve(newAnchorDate, pCurveFunc.Invoke().RebaseDate(newAnchorDate), fModelFunc.Invoke(), DomesticCurrency, ForeignCurrency);
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

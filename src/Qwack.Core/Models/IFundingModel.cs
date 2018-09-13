@@ -21,5 +21,7 @@ namespace Qwack.Core.Models
         double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
         void SetupFx(IFxMatrix fxMatrix);
         void UpdateCurves(Dictionary<string, IrCurve> updateCurves);
+
+        IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
     }
 }

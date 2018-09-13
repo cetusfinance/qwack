@@ -22,7 +22,7 @@ namespace Qwack.Core.Calibrators
         public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments)
         {
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
-            var curvesForStage = new List<ICurve>();
+            var curvesForStage = new List<IIrCurve>();
             var fundingInstruments = new List<IFundingInstrument>();
             for (var stage = 0; stage <= maxStage; stage++)
             {
@@ -62,7 +62,7 @@ namespace Qwack.Core.Calibrators
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<ICurve> curvesForStage)
+        private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<IIrCurve> curvesForStage)
         {
             // f = f - d/f'
             var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
@@ -84,7 +84,7 @@ namespace Qwack.Core.Calibrators
             }
         }
 
-        private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<ICurve> curvesForStage)
+        private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<IIrCurve> curvesForStage)
         {
             var nPillars = curvesForStage.Sum(x => x.NumberOfPillars);
             

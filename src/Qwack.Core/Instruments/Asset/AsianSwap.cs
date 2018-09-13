@@ -8,7 +8,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianSwap : IInstrument
+    public class AsianSwap : IAssetInstrument
     {
         public string TradeId { get; set; }
 
@@ -21,14 +21,19 @@ namespace Qwack.Core.Instruments.Asset
         public Calendar FixingCalendar { get; set; }
         public Calendar PaymentCalendar { get; set; }
         public Frequency SpotLag { get; set; }
+        public RollType SpotLagRollType { get; set; } = RollType.F;
         public Frequency PaymentLag { get; set; }
+        public RollType PaymentLagRollType { get; set; } = RollType.F;
         public DateTime PaymentDate { get; set; }
         public double Strike { get; set; }
         public string AssetId { get; set; }
+        public string AssetFixingId { get; set; }
         public string FxFixingId { get; set; }
         public DateTime[] FxFixingDates { get; set; }
         public Currency PaymentCurrency { get; set; }
-        public FxConversionType FxConversionType { get; set; }
+        public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
+
+        public string[] AssetIds => new[] { AssetId };
     }
 }

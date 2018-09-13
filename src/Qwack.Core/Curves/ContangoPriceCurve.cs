@@ -19,6 +19,8 @@ namespace Qwack.Core.Curves
         private readonly DayCountBasis _basis;
         private IInterpolator1D _interp;
 
+        public bool UnderlyingsAreForwards => true;
+
         public DateTime BuildDate { get; private set; }
 
         public string Name { get; set; }
@@ -26,6 +28,8 @@ namespace Qwack.Core.Curves
 
         public Frequency SpotLag { get; set; } = new Frequency("0b");
         public Calendar SpotCalendar { get; set; }
+
+        public DateTime[] PillarDates => _pillarDates;
 
         public int NumberOfPillars => _pillarDates.Length;
 
@@ -89,6 +93,14 @@ namespace Qwack.Core.Curves
             var newSpot = GetPriceForDate(newSpotDate);
             var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, _contangos, _basis, _pillarLabels);
             return o;
+        }
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            if (label == "Spot")
+                return _spotDate;
+            var labelIx = Array.IndexOf(_pillarLabels, label);
+            return _pillarDates[labelIx];
         }
     }
 }

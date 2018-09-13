@@ -26,5 +26,11 @@ namespace Qwack.Core.Curves
         Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize);
 
         IPriceCurve RebaseDate(DateTime newAnchorDate);
+
+        bool UnderlyingsAreForwards { get; }
+
+        DateTime[] PillarDates { get; }
+
+        DateTime PillarDatesForLabel(string label);
     }
 }

@@ -6,6 +6,7 @@ namespace Qwack.Core.Basic
 {
     public enum FxConversionType
     {
+        None,
         ConvertThenAverage,
         AverageThenConvert
     }

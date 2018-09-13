@@ -76,6 +76,7 @@ namespace Qwack.Dates.Tests
                 new object[] { "EDU8", "EDZ8"},
                 new object[] { "C N9","C U9" },
                 new object[] { "W Z9","W H0" },
+                new object[] { "COF8", "COG8" },
             };
 
             return examples;

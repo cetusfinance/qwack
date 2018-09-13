@@ -46,7 +46,8 @@ namespace Qwack.Excel.Dates
         [ExcelFunction(Description = "Returns front month code for a given futures root and value date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesGetFrontMonth))]
         public static object FuturesGetFrontMonth(
             [ExcelArgument(Description = "Value date")] DateTime ValueDate,
-            [ExcelArgument(Description = "Futures code root, e.g. CL")] string FuturesCodeRoot)
+            [ExcelArgument(Description = "Futures code root, e.g. CL")] string FuturesCodeRoot,
+            [ExcelArgument(Description = "Use expiry rather than roll date")] bool UseExpiryRatherThanRoll)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -54,7 +55,7 @@ namespace Qwack.Excel.Dates
 
                 var c = new FutureCode(dummyFutureCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
 
-                return c.GetFrontMonth(ValueDate);
+                return c.GetFrontMonth(ValueDate, UseExpiryRatherThanRoll);
             });
         }
 

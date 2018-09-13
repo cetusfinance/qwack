@@ -15,6 +15,8 @@ namespace Qwack.Options.VolSurfaces
         public double Volatility { get; set; }
         public string Name { get; set; }
 
+        public Currency Currency { get; set; }
+
         public ConstantVolSurface()         {        }
 
         public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);
@@ -43,7 +45,7 @@ namespace Qwack.Options.VolSurfaces
         {
             return new Dictionary<string, IVolSurface>
             {
-                { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) }
+                { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency } }
             };
         }
     }

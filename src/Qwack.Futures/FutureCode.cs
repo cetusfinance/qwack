@@ -23,6 +23,7 @@ namespace Qwack.Futures
         public string Postfix { get; set; }
         public string OriginalCode { get; set; }
         public int YearNumber { get; set; }
+        public int YearNumberShort { get; set; }
         public int MonthNumber { get; set; }
         public int MonthNumber12 { get; set; }
 
@@ -34,6 +35,7 @@ namespace Qwack.Futures
         {
             _settings = futureSettings[futureCodeRoot];
             _futureSettingsProvider = futureSettings;
+            Prefix = futureCodeRoot;
         }
 
         public FutureCode(string futureCode, int yearBeforeWhich2DigitDatesAreUsed, IFutureSettingsProvider futureSettings)
@@ -68,6 +70,7 @@ namespace Qwack.Futures
 
             YearCode = futureCode.Substring(i);
             YearNumber = int.Parse(YearCode);
+            YearNumberShort = YearNumber;
 
             futureCode = futureCode.Substring(0, i);
 
@@ -94,8 +97,8 @@ namespace Qwack.Futures
             monthRawIx = monthRawIx < 0 ? ~monthRawIx : monthRawIx;
 
             var monthIndex = monthRawIx - 1;
-            var yearNumber = YearNumber;
-            if (monthIndex <= 0)
+            var yearNumber = YearNumberShort;
+            if (monthIndex < 0)
             {
                 //We are wrapping over the end of year
                 monthIndex = monthIndex + _settings.Months.Count;
@@ -132,7 +135,7 @@ namespace Qwack.Futures
         public string GetNextCode(bool return4Digits)
         {
             var monthIndex = _settings.Months.IndexOf(MonthCode) + 1;
-            var yearNumber = YearNumber;
+            var yearNumber = YearNumberShort;
             if (MonthNumber == _settings.Months.Count)
             {
                 //We are wrapping over the end of year
@@ -177,14 +180,14 @@ namespace Qwack.Futures
                 switch (_settings.ExpiryGen.DayOfMonthToStartOther)
                 {
                     case "WED3":
-                        var dateInMonth = new DateTime(YearNumber + baseYear, monthNum, 1);
+                        var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
                 }
             }
-            var d = new DateTime(YearNumber + baseYear, monthNum, dayOfMonthToStart);
+            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
 
             d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
             var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
@@ -198,7 +201,6 @@ namespace Qwack.Futures
         public DateTime GetRollDate()
         {
 
-            var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
             var monthNum = s_futureMonths.ToList().IndexOf(MonthCode) + 1;
             var dayOfMonthToStart = _settings.RollGen.DayOfMonthToStart;
             if (_settings.RollGen.DayOfMonthToStart == 0 && !string.IsNullOrWhiteSpace(_settings.RollGen.DayOfMonthToStartOther))
@@ -206,14 +208,14 @@ namespace Qwack.Futures
                 switch (_settings.RollGen.DayOfMonthToStartOther)
                 {
                     case "WED3":
-                        var dateInMonth = new DateTime(YearNumber + baseYear, monthNum, 1);
+                        var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.RollGen.DayOfMonthToStartOther}");
                 }
             }
-            var d = new DateTime(YearNumber + baseYear, monthNum, dayOfMonthToStart);
+            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
 
             d = d.AddMonths(_settings.RollGen.MonthModifier);
             var parts = _settings.RollGen.DateOffsetModifier.Split(';');
@@ -224,7 +226,7 @@ namespace Qwack.Futures
             return d;
         }
 
-        public string GetFrontMonth(DateTime date)
+        public string GetFrontMonth(DateTime date, bool useExpiryRatherThanRoll=false)
         {
             var d = date.AddMonths(-_settings.RollGen.MonthModifier);
             var trialMonth = s_futureMonths[d.Month - 1];
@@ -236,7 +238,9 @@ namespace Qwack.Futures
             trialCodeString = trialCode.GetNextCode(false);
             trialCode = new FutureCode(trialCodeString, YearBeforeWhich2DigitDatesAreUsed, _futureSettingsProvider);
 
-            if(trialCode.GetRollDate()<date)
+            var testDate = useExpiryRatherThanRoll ? trialCode.GetExpiry() : trialCode.GetRollDate();
+
+            if (testDate < date)
             {
                 trialCodeString = trialCode.GetNextCode(false);
             }
@@ -246,7 +250,7 @@ namespace Qwack.Futures
 
         private void ConvertYearCode()
         {
-            var YearNumber = int.Parse(YearCode);
+            YearNumber = int.Parse(YearCode);
             if (YearNumber > 1000)
             {
                 return;
@@ -258,13 +262,13 @@ namespace Qwack.Futures
             }
             else
             {
-                if (YearBeforeWhich2DigitDatesAreUsed < 10)
+                if (YearBeforeWhich2DigitDatesAreUsed < 2010)
                 {
-                    YearNumber = YearNumber <= YearBeforeWhich2DigitDatesAreUsed ? 2010 + YearNumber : 2000 + YearNumber;
+                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed-2000) ? 2010 + YearNumber : 2000 + YearNumber;
                 }
                 else
                 {
-                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 10) ? 2020 + YearNumber : 2010 + YearNumber;
+                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2010) ? 2020 + YearNumber : 2010 + YearNumber;
                 }
             }
         }

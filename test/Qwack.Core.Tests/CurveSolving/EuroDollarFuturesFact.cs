@@ -71,7 +71,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var fic = new FundingInstrumentCollection();
             fic.AddRange(instruments);
 
-            var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap);
+            var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve });
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
@@ -136,7 +136,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var fic = new FundingInstrumentCollection();
             fic.AddRange(instruments);
 
-            var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap);
+            var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve });
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();

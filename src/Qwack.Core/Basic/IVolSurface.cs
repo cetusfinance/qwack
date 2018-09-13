@@ -15,5 +15,7 @@ namespace Qwack.Core.Basic
         string Name { get; }
 
         Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize);
+
+        Currency Currency { get; set; }
     }
 }

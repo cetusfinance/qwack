@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Descriptors;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using static System.Math;
 
 namespace Qwack.Core.Curves
 {
-    public class IrCurve : ICurve
+    public class IrCurve : IIrCurve
     {
         private DateTime _buildDate;
         private readonly DateTime[] _pillars;
@@ -19,11 +20,11 @@ namespace Qwack.Core.Curves
         private readonly Interpolator1DType _interpKind;
         private readonly string _name;
 
-        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind)
+        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null)
         {
             _interpKind = interpKind;
             _pillars = new DateTime[pillars.Length];
-            pillars.CopyTo(_pillars,0);
+            pillars.CopyTo(_pillars, 0);
             _rates = new double[_pillars.Length];
 
             var pillarsD = new double[_pillars.Length];
@@ -37,25 +38,47 @@ namespace Qwack.Core.Curves
 
             _interpolator = InterpolatorFactory.GetInterpolator(pillarsD.ToArray(), _rates.ToArray(), interpKind, isSorted: true, noCopy: true);
             _name = name;
+            Currency = ccy;
+            CollateralSpec = collateralSpec ?? (
+                (_name.Contains("[")) ? _name.Split('[').Last().Trim("[]".ToCharArray()) : _name.Split('.').Last());
         }
-        
+
         public DateTime BuildDate => _buildDate;
         public string Name => _name;
         public int NumberOfPillars => _pillars.Length;
         public DateTime[] PillarDates => _pillars;
         public Interpolator1DType InterpolatorType => _interpKind;
+
         public int SolveStage { get; set; }
         public DayCountBasis Basis => _basis;
         public Currency Currency;
 
-        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
+        public string CollateralSpec { get; private set; }
+        public FloatRateIndex RateIndex { get; private set; }
+
+        public void SetCollateralSpec(string collateralSpec) => CollateralSpec = collateralSpec;
+
+        public void SetRateIndex(FloatRateIndex rateIndex) => RateIndex = rateIndex;
+
+        public List<MarketDataDescriptor> Descriptors
+        {
+            get
             {
-                    new DiscountCurveDescriptor {
-                        CollateralSpec = Name.Split('.').Last().Trim("[]".ToCharArray()),
+                var o = new List<MarketDataDescriptor>
+                    {new DiscountCurveDescriptor {
+                        CollateralSpec = CollateralSpec,
                         Currency = Currency,
                         Name =Name,
-                        ValDate =BuildDate}
-            };
+                        ValDate =BuildDate}};
+                if (RateIndex != null)
+                    o.Add(new ForecastCurveDescriptor
+                    {
+                        Index = RateIndex,
+                        Name = Name,
+                        ValDate = BuildDate});
+                return o;
+            }
+        }
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
 
         public double GetDf(DateTime startDate, DateTime endDate)
@@ -130,7 +153,7 @@ namespace Qwack.Core.Curves
             var df = Exp(-rate * T);
             return fv * df;
         }
-        
+
         public IrCurve BumpRate(int pillarIx, double delta, bool mutate)
         {
             if (mutate)
@@ -141,12 +164,12 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
                 return returnCurve;
             }
         }
 
-        public ICurve SetRate(int pillarIx, double rate, bool mutate)
+        public IIrCurve SetRate(int pillarIx, double rate, bool mutate)
         {
             if (mutate)
             {
@@ -156,7 +179,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, _name, _interpKind);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
                 return returnCurve;
             }
 
@@ -166,6 +189,19 @@ namespace Qwack.Core.Curves
         {
             var T = _buildDate.CalculateYearFraction(valueDate, _basis);
             return _interpolator.Sensitivity(T);
+        }
+
+        public IrCurve RebaseDate(DateTime newAnchorDate)
+        {
+            var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
+            var newPillars = new DateTime[newLength];
+            var isShorter = newLength < _pillars.Length;
+            Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
+            var newDfs = newPillars.Select(x => GetDf(BuildDate, x)).ToArray();
+            var newRates = newDfs.Select((x, ix) => Log(x) / -newAnchorDate.CalculateYearFraction(newPillars[ix], _basis)).ToArray();
+            var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec);
+
+            return newCurve;
         }
     }
 }

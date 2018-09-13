@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Dates;
@@ -89,6 +90,12 @@ namespace Qwack.Core.Instruments.Asset
                    start.BusinessDaysInPeriod(end, fixingCalendar) :
                    start.FridaysInPeriod(end, fixingCalendar);
 
+            if(!fixingDates.Any() && start==end) //hack for bullet swaps where system returns fixing date on holiday
+            {
+                start = start.IfHolidayRollForward(fixingCalendar);
+                end = start;
+                fixingDates.Add(start);
+            }
             var swap = new AsianSwap
             {
                 AssetId = assetId,

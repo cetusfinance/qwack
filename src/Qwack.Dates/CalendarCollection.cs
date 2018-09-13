@@ -17,7 +17,14 @@ namespace Qwack.Dates
                 var currentCalendar = calendarsToCheck.Dequeue();
                 if (!currentCalendar.InheritedCalendar.All(inher => _mergedCalendars.ContainsKey(inher)))
                 {
-                    calendarsToCheck.Enqueue(currentCalendar);
+                    if (!startingCalendars.Any(c => c.Name == currentCalendar.Name))
+                    {
+                        //log calendar referencing a non-existing parent
+                    }
+                    else
+                    {
+                        calendarsToCheck.Enqueue(currentCalendar);
+                    }
                     continue;
                 }
 

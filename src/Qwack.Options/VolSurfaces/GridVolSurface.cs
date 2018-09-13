@@ -26,7 +26,9 @@ namespace Qwack.Options.VolSurfaces
         public DateTime[] Expiries { get; set; }
         public string[] PillarLabels { get; set; }
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
-        
+
+        public Currency Currency { get; set; }
+
         private IInterpolator1D[] _interpolators;
 
         public GridVolSurface()         {        }
@@ -143,7 +145,7 @@ namespace Qwack.Options.VolSurfaces
             {
                 var volsBumped = (double[][])Volatilities.Clone();
                 volsBumped[i] = volsBumped[i].Select(x => x + bumpSize).ToArray();
-                o.Add(PillarLabels[i], new GridVolSurface(OriginDate, Strikes, Expiries, volsBumped));
+                o.Add(PillarLabels[i], new GridVolSurface(OriginDate, Strikes, Expiries, volsBumped) { Currency = Currency });
             }
 
             return o;

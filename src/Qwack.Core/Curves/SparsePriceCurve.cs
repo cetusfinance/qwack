@@ -19,6 +19,7 @@ namespace Qwack.Core.Curves
         private IInterpolator1D _interpA;
         private IInterpolator1D _interpB;
 
+        public bool UnderlyingsAreForwards => _curveType == SparsePriceCurveType.Coal;
 
         public DateTime BuildDate { get; private set; }
 
@@ -39,6 +40,7 @@ namespace Qwack.Core.Curves
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
 
+        public DateTime[] PillarDates => _pillarDates;
 
         public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, string[] pillarLabels=null)
         {
@@ -102,6 +104,12 @@ namespace Qwack.Core.Curves
             {
                 return new SparsePriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
             }
+        }
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            var labelIx = Array.IndexOf(_pillarLabels, label);
+            return _pillarDates[labelIx];
         }
     }
 }

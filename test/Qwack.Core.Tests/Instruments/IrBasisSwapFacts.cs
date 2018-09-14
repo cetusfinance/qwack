@@ -23,7 +23,7 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void IrBasisSwap()
         {
-            var bd = DateTime.Today;
+            var bd = DateTime.Parse("2018-09-13");
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRate3m = 0.05;
             var flatRate6m = 0.06;

@@ -21,6 +21,26 @@ namespace Qwack.Dates.Tests
             var noWeekends = startDate.BusinessDaysInPeriod(endDate, WeekendsOnly);
             Assert.Equal(177, noWeekends.Count);
             Assert.Equal(0, noWeekends.Count(d => d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday));
+
+            Assert.Throws<ArgumentException>(()=>endDate.BusinessDaysInPeriod(startDate, WeekendsOnly));
+        }
+
+        [Fact]
+        public void CalendarDaysInPeriod()
+        {
+            var startDate = new DateTime(2016, 02, 10);
+            var endDate = new DateTime(2016, 10, 13);
+            Assert.Equal((endDate - startDate).TotalDays + 1, startDate.CalendarDaysInPeriod(endDate).Count);
+            Assert.Throws<ArgumentException>(() => endDate.CalendarDaysInPeriod(startDate));
+        }
+
+        [Fact]
+        public void FridaysInPeriod()
+        {
+            var startDate = new DateTime(2018, 08, 01);
+            var endDate = new DateTime(2018, 08, 31);
+            Assert.Equal(5, startDate.FridaysInPeriod(endDate, EmptyCalendar).Count);
+            Assert.Throws<ArgumentException>(() => endDate.FridaysInPeriod(startDate, EmptyCalendar));
         }
 
         [Fact]
@@ -290,6 +310,59 @@ namespace Qwack.Dates.Tests
             Assert.Equal(new DateTime(2018, 08, 31), d.GetNextWeekday(DayOfWeek.Friday));
             Assert.Equal(new DateTime(2018, 08, 27), d.GetNextWeekday(DayOfWeek.Monday));
 
+            d = DateTime.Parse("2018-08-20"); //Monday 20th Aug 2018
+            Assert.Equal(new DateTime(2018, 08, 22), d.GetNextWeekday(DayOfWeek.Wednesday));
+            Assert.Equal(new DateTime(2018, 08, 23), d.GetNextWeekday(DayOfWeek.Thursday));
+        }
+
+        [Fact]
+        public void NextPrevIMMDate()
+        {
+            Assert.Equal(new DateTime(2018, 09, 19), DateTime.Parse("2018-08-24").GetNextImmDate());
+            Assert.Equal(new DateTime(2018, 09, 19), DateTime.Parse("2018-09-10").GetNextImmDate());
+            Assert.Equal(new DateTime(2018, 12, 19), DateTime.Parse("2018-09-19").GetNextImmDate());
+            Assert.Equal(new DateTime(2019, 03, 20), DateTime.Parse("2018-12-20").GetNextImmDate());
+
+            Assert.Equal(new DateTime(2018, 06, 20), DateTime.Parse("2018-08-24").GetPrevImmDate());
+            Assert.Equal(new DateTime(2018, 06, 20), DateTime.Parse("2018-09-19").GetPrevImmDate());
+            Assert.Equal(new DateTime(2018, 09, 19), DateTime.Parse("2018-09-20").GetPrevImmDate());
+            Assert.Equal(new DateTime(2018, 12, 19), DateTime.Parse("2019-03-19").GetPrevImmDate());
+        }
+
+        [Theory]
+        [MemberData(nameof(GetYFExamples))]
+        public void YearFraction(DateTime startDate, DateTime endDate, DayCountBasis basis, double yf)
+        {
+            Assert.Equal(yf, startDate.CalculateYearFraction(endDate, basis));
+        }
+
+        public static IEnumerable<object[]> GetYFExamples()
+        {
+            var holidays = new List<object[]>()
+            {
+                new object[] { new DateTime(2015,07,04), new DateTime(2015, 08, 04), DayCountBasis.Act_Act, 31.0/365.0 }, //year is not leap
+                new object[] { new DateTime(2016,07,04), new DateTime(2016, 08, 04), DayCountBasis.Act_Act, 31.0/366.0 }, //year is leap
+                new object[] { new DateTime(2016,07,04), new DateTime(2017, 07, 04), DayCountBasis.Act_Act, 180/366.0 + 185/365.0 },  //cross years
+
+                new object[] { new DateTime(2015,07,04), new DateTime(2015, 08, 04), DayCountBasis._30_360, 1.0/12 }, 
+                new object[] { new DateTime(2016,07,04), new DateTime(2016, 08, 04), DayCountBasis._30_360, 1.0/12 }, 
+                new object[] { new DateTime(2016,07,04), new DateTime(2017, 07, 04), DayCountBasis._30_360, 1.0 },
+
+                new object[] { new DateTime(2016,03,04), new DateTime(2017, 09, 04), DayCountBasis.Unity, 1.0 },
+
+            };
+
+            return holidays;
+        }
+
+        [Fact]
+        public void xDigitYear()
+        {
+            Assert.Equal(18,DateExtensions.DoubleDigitYear(2018));
+            Assert.Equal(8, DateExtensions.SingleDigitYear(2018));
+
+            Assert.Equal(28, DateExtensions.DoubleDigitYear(2028));
+            Assert.Equal(8, DateExtensions.SingleDigitYear(2028));
         }
     }
 }

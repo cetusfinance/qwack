@@ -14,9 +14,15 @@
     <DefineConstants>DEBUG;TRACE;RELEASE;NETCOREAPP;NETCOREAPP2_1</DefineConstants>
     <Optimize>false</Optimize>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="futuresettings.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\..\data\Calendars.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="futuresettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -272,5 +272,11 @@ namespace Qwack.Futures
                 }
             }
         }
+
+        public static DateTime GetExpiryFromCode(string code, IFutureSettingsProvider futureSettingsProvider)
+        {
+            var c = new FutureCode(code, DateTime.Today.Year - 2, futureSettingsProvider);
+            return c.GetExpiry();
+        }
     }
 }

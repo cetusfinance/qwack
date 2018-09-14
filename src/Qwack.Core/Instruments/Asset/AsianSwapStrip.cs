@@ -13,5 +13,17 @@ namespace Qwack.Core.Instruments.Asset
         public AsianSwap[] Swaplets { get; set; }
 
         public string[] AssetIds => Swaplets.Select(x => x.AssetId).ToArray();
+
+        public IAssetInstrument Clone() => new AsianSwapStrip
+        {
+            TradeId = TradeId,
+            Swaplets = Swaplets.Select(x => (AsianSwap)x.Clone()).ToArray()
+        };
+
+        public IAssetInstrument SetStrike(double strike) => new AsianSwapStrip
+        {
+            TradeId = TradeId,
+            Swaplets = Swaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray()
+        };
     }
 }

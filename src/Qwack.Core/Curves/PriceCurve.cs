@@ -110,11 +110,16 @@ namespace Qwack.Core.Curves
                     {
                         var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
                         var newSpot = GetPriceForDate(newSpotDate);
-                        var newPillars = (DateTime[])_pillarDates.Clone();
+                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
                         newPillars[0] = newSpotDate;
-                        var newPrices = (double[])_prices.Clone();
+                        var newPrices = ((double[])_prices.Clone()).ToList();
                         newPrices[0] = newSpot;
-                        return new PriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency };
+                        if(newPillars[0]==newPillars[1])
+                        {
+                            newPillars.RemoveAt(0);
+                            newPrices.RemoveAt(0);
+                        }
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency };
                     }
                     else
                         return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency };

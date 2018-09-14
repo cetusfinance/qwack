@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Qwack.Core.Models;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -14,5 +13,19 @@ namespace Qwack.Core.Instruments.Asset
         public AsianSwap[] RecSwaplets { get; set; }
 
         public string[] AssetIds => PaySwaplets.Select(x => x.AssetId).Concat(RecSwaplets.Select(x => x.AssetId)).Distinct().ToArray();
+
+        public IAssetInstrument Clone() => new AsianBasisSwap
+        {
+            TradeId = TradeId,
+            PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
+            RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
+        };
+
+        public IAssetInstrument SetStrike(double strike) => new AsianBasisSwap
+        {
+            TradeId = TradeId,
+            PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray(),
+            RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
+        };
     }
 }

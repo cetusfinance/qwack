@@ -49,6 +49,31 @@ namespace Qwack.Core.Instruments.Asset
             };
         }
 
+        public IAssetInstrument Clone() => new Forward
+        {
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            ExpiryDate = ExpiryDate,
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            PaymentLag = PaymentLag,
+            Strike = Strike,
+            AssetId = AssetId,
+            PaymentCurrency = PaymentCurrency,
+            FxFixingId = FxFixingId,
+            DiscountCurve = DiscountCurve,
+            PaymentDate = PaymentDate,
+        };
+
+        public IAssetInstrument SetStrike(double strike)
+        {
+            var o = (Forward)Clone();
+            o.Strike = strike;
+            return o;
+        }
+
         public string[] AssetIds => new[] { AssetId };
     }
 }

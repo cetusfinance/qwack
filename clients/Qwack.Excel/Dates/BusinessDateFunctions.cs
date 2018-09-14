@@ -233,6 +233,26 @@ namespace Qwack.Excel.Dates
             });
         }
 
+        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates")]
+        public static object QDates_LastDay(
+            [ExcelArgument(Description = "Date in month")] DateTime Date)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return Date.LastDayOfMonth();
+            });
+        }
+
+        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates")]
+        public static object QDates_FirstDay(
+            [ExcelArgument(Description = "Date in month")] DateTime Date)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return Date.FirstDayOfMonth();
+            });
+        }
+
         [ExcelFunction(Description = "Returns a list of all calendar names", Category = "QDates")]
         public static object QDates_ListCalendars()
         {

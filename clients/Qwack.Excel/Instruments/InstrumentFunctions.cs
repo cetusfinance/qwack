@@ -90,6 +90,77 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates an asian crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianCrackDiffSwap))]
+        public static object CreateAsianCrackDiffSwap(
+           [ExcelArgument(Description = "Object name")] string ObjectName,
+           [ExcelArgument(Description = "Period code")] object PeriodCode,
+           [ExcelArgument(Description = "Asset Id pay")] string AssetIdPay,
+           [ExcelArgument(Description = "Asset Id receive")] string AssetIdRec,
+           [ExcelArgument(Description = "Currency")] string Currency,
+           [ExcelArgument(Description = "Strike")] double Strike,
+           [ExcelArgument(Description = "Notional pay")] double NotionalPay,
+           [ExcelArgument(Description = "Notional receive")] double NotionalRec,
+           [ExcelArgument(Description = "Fixing calendar pay")] object FixingCalendarPay,
+           [ExcelArgument(Description = "Fixing calendar receive")] object FixingCalendarRec,
+           [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+           [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
+           [ExcelArgument(Description = "Spot lag pay")] object SpotLagPay,
+           [ExcelArgument(Description = "Spot lag receive")] object SpotLagRec,
+           [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCalPay = FixingCalendarPay.OptionalExcel("WeekendsOnly");
+                var fixingCalRec = FixingCalendarRec.OptionalExcel("WeekendsOnly");
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var spotLagPay = SpotLagPay.OptionalExcel("0b");
+                var spotLagRec = SpotLagRec.OptionalExcel("0b");
+
+                var paymentOffset = PaymentOffset.OptionalExcel("0b");
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCalPay, out var fCalPay))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalPay);
+                    return $"Calendar {fixingCalPay} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCalRec, out var fCalRec))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalRec);
+                    return $"Calendar {fixingCalRec} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+
+                var pOffset = new Frequency(paymentOffset);
+                var sLagPay = new Frequency(spotLagPay);
+                var sLagRec = new Frequency(spotLagRec);
+
+                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+
+                AsianBasisSwap product;
+                if (PeriodCode is double)
+                {
+                    PeriodCode = DateTime.FromOADate((double)PeriodCode).ToString("MMM-yy");
+                    
+                }
+
+                product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCode as string, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+
+                product.TradeId = ObjectName;
+                foreach (var ps in product.PaySwaplets)
+                    ps.DiscountCurve = DiscountCurve;
+                foreach (var rs in product.RecSwaplets)
+                    rs.DiscountCurve = DiscountCurve;
+
+                var cache = ContainerStores.GetObjectCache<AsianBasisSwap>();
+                cache.PutObject(ObjectName, new SessionItem<AsianBasisSwap> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a commodity future position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFuture))]
         public static object CreateFuture(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -267,6 +338,30 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns par rate of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductParRate))]
+        public static object ProductParRate(
+           [ExcelArgument(Description = "Trade object name")] string TradeName,
+           [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<IAssetFxModel>().TryGetObject(ModelName, out var model))
+                    throw new Exception($"Could not find model with name {ModelName}");
+
+                var pf = GetPortfolio(new[] { TradeName });
+
+                if(!pf.Instruments.Any())
+                    throw new Exception($"Could not find any trade with name {TradeName}");
+
+                if (!(pf.Instruments.First() is IAssetInstrument trade))
+                    throw new Exception($"Could not find asset trade with name {TradeName}");
+
+                var result = trade.ParRate(model.Value);
+
+                return result;
+            });
+        }
+
         [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioPV))]
         public static object AssetPortfolioPV(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
@@ -346,6 +441,45 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns fx vega of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioFxVega))]
+        public static object AssetPortfolioFxVega(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.FxVega(model.Value, ccy);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns correlation delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioCorrelationDelta))]
+        public static object AssetPortfolioCorrelationDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy,
+            [ExcelArgument(Description = "Epsilon bump size, rho' = rho + epsilon * (1-rho)")] double Epsilon)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.CorrelationDelta(model.Value, ccy, Epsilon);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioFxDelta))]
         public static object AssetPortfolioFxDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
@@ -411,59 +545,62 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var swapCache = ContainerStores.GetObjectCache<IrSwap>();
-                var swaps = Instruments.GetAnyFromCache<IrSwap>(); 
-                var fraCache = ContainerStores.GetObjectCache<ForwardRateAgreement>();
-                var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>(); 
-                var stirCache = ContainerStores.GetObjectCache<STIRFuture>();
-                var futures = Instruments.GetAnyFromCache<STIRFuture>(); 
-                var fxFwds = Instruments.GetAnyFromCache<FxForward>(); 
-                var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();      
-                var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
-                var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
-
-                var asianOptions = Instruments.GetAnyFromCache<AsianOption>();
-                var asianStrips = Instruments.GetAnyFromCache<AsianSwapStrip>();
-                var asianSwaps = Instruments.GetAnyFromCache<AsianSwap>();
-                var forwards = Instruments.GetAnyFromCache<Forward>();
-                var assetFutures = Instruments.GetAnyFromCache<Future>();
-                var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
-
-                //allows merging of FICs into portfolios
-                var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
-                    .SelectMany(s => s);
-
-                //allows merging of portfolios into portfolios
-                var pfInstruments = Instruments.GetAnyFromCache<Portfolio>()
-                    .SelectMany(s => s.Instruments);
-
-                var pf = new Portfolio
-                {
-                    Instruments = new List<IInstrument>()
-                };
-
-                pf.Instruments.AddRange(swaps);
-                pf.Instruments.AddRange(fras);
-                pf.Instruments.AddRange(futures);
-                pf.Instruments.AddRange(fxFwds);
-                pf.Instruments.AddRange(xccySwaps);
-                pf.Instruments.AddRange(basisSwaps);
-                pf.Instruments.AddRange(loanDepos);
-                pf.Instruments.AddRange(ficInstruments);
-
-                pf.Instruments.AddRange(pfInstruments);
-                pf.Instruments.AddRange(asianOptions);
-                pf.Instruments.AddRange(asianStrips);
-                pf.Instruments.AddRange(asianSwaps);
-                pf.Instruments.AddRange(forwards);
-                pf.Instruments.AddRange(assetFutures);
-                pf.Instruments.AddRange(europeanOptions);
-                
+                var pf = GetPortfolio(Instruments);
                 var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
 
                 pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });
                 return ObjectName + '¬' + pFolioCache.GetObject(ObjectName).Version;
             });
+        }
+
+        private static Portfolio GetPortfolio(object[] Instruments)
+        {
+            var swaps = Instruments.GetAnyFromCache<IrSwap>();
+            var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();
+            var futures = Instruments.GetAnyFromCache<STIRFuture>();
+            var fxFwds = Instruments.GetAnyFromCache<FxForward>();
+            var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
+            var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
+            var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
+
+            var asianOptions = Instruments.GetAnyFromCache<AsianOption>();
+            var asianStrips = Instruments.GetAnyFromCache<AsianSwapStrip>();
+            var asianSwaps = Instruments.GetAnyFromCache<AsianSwap>();
+            var forwards = Instruments.GetAnyFromCache<Forward>();
+            var assetFutures = Instruments.GetAnyFromCache<Future>();
+            var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
+
+            //allows merging of FICs into portfolios
+            var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
+                .SelectMany(s => s);
+
+            //allows merging of portfolios into portfolios
+            var pfInstruments = Instruments.GetAnyFromCache<Portfolio>()
+                .SelectMany(s => s.Instruments);
+
+            var pf = new Portfolio
+            {
+                Instruments = new List<IInstrument>()
+            };
+
+            pf.Instruments.AddRange(swaps);
+            pf.Instruments.AddRange(fras);
+            pf.Instruments.AddRange(futures);
+            pf.Instruments.AddRange(fxFwds);
+            pf.Instruments.AddRange(xccySwaps);
+            pf.Instruments.AddRange(basisSwaps);
+            pf.Instruments.AddRange(loanDepos);
+            pf.Instruments.AddRange(ficInstruments);
+
+            pf.Instruments.AddRange(pfInstruments);
+            pf.Instruments.AddRange(asianOptions);
+            pf.Instruments.AddRange(asianStrips);
+            pf.Instruments.AddRange(asianSwaps);
+            pf.Instruments.AddRange(forwards);
+            pf.Instruments.AddRange(assetFutures);
+            pf.Instruments.AddRange(europeanOptions);
+
+            return pf;
         }
     }
 }

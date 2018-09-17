@@ -35,5 +35,42 @@ namespace Qwack.Core.Instruments.Asset
         public string DiscountCurve { get; set; }
 
         public string[] AssetIds => new[] { AssetId };
+
+        public IAssetInstrument Clone()
+        {
+            return new AsianSwap
+            {
+                TradeId = TradeId,
+                Notional = Notional,
+                Direction = Direction,
+                AverageStartDate = AverageStartDate,
+                AverageEndDate = AverageEndDate,
+                FixingDates = (DateTime[])FixingDates.Clone(),
+                FixingCalendar = FixingCalendar,
+                PaymentCalendar = PaymentCalendar,
+                SpotLag = SpotLag,
+                SpotLagRollType = SpotLagRollType,
+                PaymentLag = PaymentLag,
+                PaymentLagRollType = PaymentLagRollType,
+                PaymentDate = PaymentDate,
+                PaymentCurrency = PaymentCurrency,
+                AssetFixingId = AssetFixingId,
+                AssetId = AssetId,
+                DiscountCurve = DiscountCurve,
+                FxConversionType = FxConversionType,
+                FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+                FxFixingId = FxFixingId,
+                Strike = Strike
+            };
+        }
+
+        public IAssetInstrument SetStrike(double strike)
+        {
+            var c = (AsianSwap)Clone();
+            c.Strike = strike;
+            return c;
+        }
+
+      
     }
 }

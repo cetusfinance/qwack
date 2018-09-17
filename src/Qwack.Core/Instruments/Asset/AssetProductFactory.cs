@@ -80,7 +80,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public static AsianSwap CreateTermAsianSwap(DateTime start, DateTime end, double strike, string assetId, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
-            var payDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset);
+            var payDate = end.AddPeriod(RollType.F, payCalendar, payOffset);
             return CreateTermAsianSwap(start, end, strike, assetId, fixingCalendar, payDate, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
 
@@ -114,6 +114,31 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
+        public static AsianBasisSwap CreateTermAsianBasisSwap(string period, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var (Start, End) = period.ParsePeriod();
+            return CreateTermAsianBasisSwap(Start, End, strike, assetIdPay, assetIdRec, fixingCalendarPay, fixingCalendarRec, payCalendar, payOffset, currency, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+        }
+
+        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var payDate = end.AddPeriod(RollType.F, payCalendar, payOffset);
+            return CreateTermAsianBasisSwap(start, end, strike, assetIdPay, assetIdRec, fixingCalendarPay, fixingCalendarRec, payDate, currency, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+        }
+
+        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, DateTime payDate, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var swapPay = CreateTermAsianSwap(start, end, -strike, assetIdPay, fixingCalendarPay, payDate, currency, TradeDirection.Long, spotLagPay, notionalPay);
+            var swapRec = CreateTermAsianSwap(start, end, 0, assetIdRec, fixingCalendarRec, payDate, currency, TradeDirection.Short, spotLagRec, notionalRec);
+
+            var swap = new AsianBasisSwap
+            {
+                PaySwaplets = new [] {swapPay},
+                RecSwaplets = new [] {swapRec},
+            };
+
+            return swap;
+        }
 
         public static AsianOption CreatAsianOption(string period, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {

@@ -52,7 +52,7 @@ namespace Qwack.Dates
             if (m % 3 == 0 && input > ThirdWednesday(input))
                 return ThirdWednesday(input);
 
-            m = m - m % 3; //roll to next IMM month
+            m = m - (m % 3 == 0 ? 3 : m % 3); //roll to next IMM month
             if (m >= 1) return ThirdWednesday(new DateTime(y, m, 1));
             m += 12;
             y--;

@@ -25,9 +25,7 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
-
-                return c.GetExpiry();
+                return FutureCode.GetExpiryFromCode(FuturesCode, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
             });
         }
 

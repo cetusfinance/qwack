@@ -41,5 +41,18 @@ namespace Qwack.Models.Models
 
             throw new Exception($"Correlation not found for {label1}/{label2}");
         }
+
+        public ICorrelationMatrix Clone() => new CorrelationMatrix((string[])LabelsX.Clone(), (string[])LabelsY.Clone(), (double[,])Correlations.Clone());
+
+        public ICorrelationMatrix Bump(double epsilon)
+        {
+            var bumpedCorrels = new double[Correlations.GetLength(0), Correlations.GetLength(1)];
+
+            for (var i = 0; i < bumpedCorrels.GetLength(0); i++)
+                for (var j = 0; j < bumpedCorrels.GetLength(1); j++)
+                    bumpedCorrels[i, j] = Correlations[i, j] + epsilon * (1 - Correlations[i, j]);
+
+            return new CorrelationMatrix((string[])LabelsX.Clone(), (string[])LabelsY.Clone(), bumpedCorrels);
+        }
     }
 }

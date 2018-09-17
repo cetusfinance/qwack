@@ -24,5 +24,25 @@ namespace Qwack.Core.Instruments.Asset
         public Currency Currency { get; set; }
 
         public string[] AssetIds => new[] { AssetId };
+
+        public IAssetInstrument Clone() => new Future
+        {
+            AssetId = AssetId,
+            ContractQuantity = ContractQuantity,
+            Currency = Currency,
+            Direction = Direction,
+            ExpiryDate = ExpiryDate,
+            LotSize = LotSize,
+            PriceMultiplier = PriceMultiplier,
+            Strike = Strike,
+            TradeId = TradeId
+        };
+
+        public IAssetInstrument SetStrike(double strike)
+        {
+            var c = (Future)Clone();
+            c.Strike = strike;
+            return c;
+        }
     }
 }

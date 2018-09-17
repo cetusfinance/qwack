@@ -51,6 +51,25 @@ namespace Qwack.Excel.Cubes
             });
         }
 
+        [ExcelFunction(Description = "Displays value of a cube object for given row", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCubeValueForRow))]
+        public static object DisplayCubeValueForRow(
+            [ExcelArgument(Description = "Cube name")] string ObjectName,
+            [ExcelArgument(Description = "Row index, zero-based")] int RowIndex)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<ICube>().TryGetObject(ObjectName, out var cube))
+                    throw new Exception($"Could not find cube {ObjectName}");
+
+                var rows = cube.Value.GetAllRows();
+
+                if(rows.Length<RowIndex)
+                    throw new Exception($"Only {rows.Length} rows in cube");
+
+                return rows[RowIndex].Value;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CreateCube))]
         public static object CreateCube(
              [ExcelArgument(Description = "Cube name")] string ObjectName,

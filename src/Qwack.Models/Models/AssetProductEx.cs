@@ -558,6 +558,90 @@ namespace Qwack.Models.Models
             return cube;
         }
 
+        public static ICube FxVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("FxPair", typeof(string));
+            dataTypes.Add("PointLabel", typeof(string));
+            dataTypes.Add("Metric", typeof(string));
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model, reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+
+            foreach (var surfaceName in model.FundingModel.VolSurfaces.Keys)
+            {
+                var volObj = model.FundingModel.VolSurfaces[surfaceName];
+
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize);
+                foreach (var bCurve in bumpedSurfaces)
+                {
+                    var newModel = model.Clone();
+                    newModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
+                    var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //vega quoted for a 1% shift, irrespective of bump size
+                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>();
+                            row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
+                            row.Add("FxPair", surfaceName);
+                            row.Add("PointLabel", bCurve.Key);
+                            row.Add("Metric", "Vega");
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                }
+            }
+            return cube;
+        }
+
+        public static ICube CorrelationDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, double epsilon)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>();
+            dataTypes.Add("TradeId", typeof(string));
+            dataTypes.Add("Metric", typeof(string));
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model, reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+
+            var bumpedCorrelMatrix = model.CorrelationMatrix.Bump(epsilon);
+
+            var newModel = model.Clone();
+            newModel.CorrelationMatrix = bumpedCorrelMatrix;
+            var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
+            var bumpedRows = bumpedPVCube.GetAllRows();
+            if (bumpedRows.Length != pvRows.Length)
+                throw new Exception("Dimensions do not match");
+            for (var i = 0; i < bumpedRows.Length; i++)
+            {
+                //flat bump of correlation matrix by single epsilon parameter, reported as PnL
+                var cDelta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value); 
+                if (cDelta != 0.0)
+                {
+                    var row = new Dictionary<string, object>();
+                    row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
+                    row.Add("Metric", "CorrelDelta");
+                    cube.AddRow(row, cDelta);
+                }
+            }
+
+            return cube;
+        }
+
         public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
         {
             var cube = new ResultCube();
@@ -804,6 +888,19 @@ namespace Qwack.Models.Models
             }
 
             return o;
+        }
+
+        public static double ParRate(this IAssetInstrument instrument, IAssetFxModel model)
+        {
+            var objectiveFunc = new Func<double, double>(k =>
+            {
+                var ik = instrument.SetStrike(k);
+                var p = new Portfolio { Instruments = new List<IInstrument> { ik } };
+                return p.PV(model).GetAllRows().First().Value;
+            });
+
+            var fairK = Math.Solvers.Brent.BrentsMethodSolve(objectiveFunc, -1e6, 1e6, 1e-10);
+            return fairK;
         }
     }
 }

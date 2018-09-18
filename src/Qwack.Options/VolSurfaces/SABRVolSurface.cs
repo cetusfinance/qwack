@@ -30,6 +30,7 @@ namespace Qwack.Options.VolSurfaces
 
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
+        public string AssetId { get; set; }
 
         private IInterpolator1D _alphaInterp;
         private IInterpolator1D _betaInterp;
@@ -138,7 +139,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             throw new NotImplementedException();
         }

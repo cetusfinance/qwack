@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -13,6 +14,8 @@ namespace Qwack.Core.Instruments.Asset
         public AsianSwap[] RecSwaplets { get; set; }
 
         public string[] AssetIds => PaySwaplets.Select(x => x.AssetId).Concat(RecSwaplets.Select(x => x.AssetId)).Distinct().ToArray();
+
+        public DateTime LastSensitivityDate => PaySwaplets.Max(x => x.LastSensitivityDate).Max(PaySwaplets.Max(x => x.LastSensitivityDate));
 
         public IAssetInstrument Clone() => new AsianBasisSwap
         {

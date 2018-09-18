@@ -198,7 +198,7 @@ namespace Qwack.Excel.Curves
                     Price= Price,
                 };
 
-                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
+                var solveCurve = SolveCurve.OptionalExcel(ForecastCurve);
                 var solvePillarDate = SolvePillarDate.OptionalExcel(accrualEnd);
 
                 product.SolveCurve = solveCurve;

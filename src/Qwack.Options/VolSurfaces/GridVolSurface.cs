@@ -28,6 +28,7 @@ namespace Qwack.Options.VolSurfaces
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
 
         public Currency Currency { get; set; }
+        public string AssetId { get; set; }
 
         private IInterpolator1D[] _interpolators;
 
@@ -137,15 +138,30 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
 
-            for(var i=0;i<Expiries.Length;i++)
+            var lastBumpIx = Expiries.Length;
+
+            if (LastSensitivityDate.HasValue)
+            {
+                var ix = Array.BinarySearch(Expiries, LastSensitivityDate.Value);
+                ix = (ix < 0) ? ~ix : ix;
+                ix += 2;
+                lastBumpIx = System.Math.Min(ix, lastBumpIx); //cap at last pillar
+            }
+
+            for (var i=0;i< lastBumpIx; i++)
             {
                 var volsBumped = (double[][])Volatilities.Clone();
                 volsBumped[i] = volsBumped[i].Select(x => x + bumpSize).ToArray();
-                o.Add(PillarLabels[i], new GridVolSurface(OriginDate, Strikes, Expiries, volsBumped) { Currency = Currency });
+                o.Add(PillarLabels[i],
+                    new GridVolSurface(OriginDate, Strikes, Expiries, volsBumped, StrikeType, StrikeInterpolatorType, TimeInterpolatorType, TimeBasis, PillarLabels)
+                    {
+                        Currency = Currency,
+                        AssetId = AssetId
+                    });
             }
 
             return o;

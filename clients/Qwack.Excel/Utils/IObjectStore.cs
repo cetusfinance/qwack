@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +9,7 @@ namespace Qwack.Excel.Utils
     public interface IObjectStore<T>
     {
         ISessionItem<T> GetObject(string name);
+        ISessionItem<T> GetObjectOrThrow(string name, string errMsg);
         void PutObject(string name, ISessionItem<T> obj);
         bool TryGetObject(string name, out ISessionItem<T> obj);
         bool Exists(string name);

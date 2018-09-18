@@ -44,5 +44,7 @@ namespace Qwack.Core.Instruments.Asset
             c.Strike = strike;
             return c;
         }
+
+        public DateTime LastSensitivityDate => ExpiryDate;
     }
 }

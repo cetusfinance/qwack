@@ -17,6 +17,15 @@ namespace Qwack.Excel.Utils
 
         public ISessionItem<T> GetObject(string name) => _store[name.StripVersion()];
 
+        public ISessionItem<T> GetObjectOrThrow(string name, string errMsg)
+        {
+            if (!_store.TryGetValue(name.StripVersion(), out var obj))
+            {
+                throw new Exception(errMsg);
+            }
+            return obj;
+        }
+
         public void PutObject(string name, ISessionItem<T> obj) => _store.AddOrUpdate(name.StripVersion(), obj, (n, o) =>
                                                                  {
                                                                      if (n == name)

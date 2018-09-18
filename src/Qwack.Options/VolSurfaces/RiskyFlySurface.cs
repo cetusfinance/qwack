@@ -121,7 +121,7 @@ namespace Qwack.Options.VolSurfaces
             base.Build(originDate, strikes, expiries, vols);
         }
 
-        public new Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        public new Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
 

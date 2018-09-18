@@ -36,19 +36,34 @@ namespace Qwack.Models
 
         public void AddVolSurface(string name, IVolSurface surface) => _assetVols[name] = surface;
 
-        public IPriceCurve GetPriceCurve(string name) => _assetCurves[name];
+        public IPriceCurve GetPriceCurve(string name)
+        {
+            if (!_assetCurves.TryGetValue(name, out var curve))
+                throw new Exception($"Curve with name {name} not found");
+            return curve;
+        }
 
-        public IVolSurface GetVolSurface(string name) => _assetVols[name];
+        public IVolSurface GetVolSurface(string name)
+        {
+            if (!_assetVols.TryGetValue(name, out var surface))
+                throw new Exception($"Vol surface with name {name} not found");
+            return surface;
+        }
 
         public void AddFixingDictionary(string name, IFixingDictionary fixings) => _fixings[name] = fixings;
 
-        public IFixingDictionary GetFixingDictionary(string name) => _fixings[name];
+        public IFixingDictionary GetFixingDictionary(string name)
+        {
+            if (!_fixings.TryGetValue(name, out var dict))
+                throw new Exception($"Fixing dictionary with name {name} not found");
+            return dict;
+        }
 
         public bool TryGetFixingDictionary(string name, out IFixingDictionary fixings) => _fixings.TryGetValue(name, out fixings);
 
-        public string[] CurveNames { get { return _assetCurves.Keys.Select(x => x).ToArray(); } }
-        public string[] VolSurfaceNames { get { return _assetVols.Keys.Select(x => x).ToArray(); } }
-        public string[] FixingDictionaryNames { get { return _fixings.Keys.Select(x => x).ToArray(); } }
+        public string[] CurveNames => _assetCurves.Keys.Select(x => x).ToArray();
+        public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x).ToArray();
+        public string[] FixingDictionaryNames => _fixings.Keys.Select(x => x).ToArray();
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
@@ -56,7 +71,6 @@ namespace Qwack.Models
             var vol = _assetVols[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
         }
-
 
         public double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike)
         {

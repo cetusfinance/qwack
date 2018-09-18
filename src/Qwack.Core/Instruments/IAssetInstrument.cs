@@ -8,7 +8,7 @@ namespace Qwack.Core.Instruments
     public interface IAssetInstrument : IInstrument
     {
         string[] AssetIds { get; }
-
+        DateTime LastSensitivityDate { get; }
         IAssetInstrument Clone();
         IAssetInstrument SetStrike(double strike);
     }

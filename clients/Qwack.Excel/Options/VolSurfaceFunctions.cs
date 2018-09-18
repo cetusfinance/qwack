@@ -23,6 +23,7 @@ namespace Qwack.Excel.Options
         [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface))]
         public static object CreateConstantVolSurface(
             [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
             [ExcelArgument(Description = "Volatility")] double Volatility,
             [ExcelArgument(Description = "Currency - default USD")] object Currency)
@@ -35,7 +36,8 @@ namespace Qwack.Excel.Options
                 var surface = new ConstantVolSurface(OriginDate, Volatility)
                 {
                     Name = ObjectName,
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    AssetId = AssetId
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -46,6 +48,7 @@ namespace Qwack.Excel.Options
         [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface))]
         public static object CreateGridVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Asset Id")] string AssetId,
               [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
               [ExcelArgument(Description = "Strikes")] double[] Strikes,
               [ExcelArgument(Description = "Expiries")] double[] Expiries,
@@ -87,7 +90,8 @@ namespace Qwack.Excel.Options
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), sType, siType, tiType, basis, labels)
                 {
                     Name = ObjectName,
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    AssetId = AssetId
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -99,6 +103,7 @@ namespace Qwack.Excel.Options
         [ExcelFunction(Description = "Creates a grid vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateRiskyFlyVolSurface))]
         public static object CreateRiskyFlyVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Asset Id")] string AssetId,
               [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
               [ExcelArgument(Description = "Wing deltas")] double[] WingDeltas,
               [ExcelArgument(Description = "Expiries")] double[] Expiries,
@@ -160,7 +165,8 @@ namespace Qwack.Excel.Options
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
                 {
                     Name = ObjectName,
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal)
+                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    AssetId = AssetId
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });

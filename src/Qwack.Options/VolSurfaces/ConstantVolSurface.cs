@@ -16,6 +16,7 @@ namespace Qwack.Options.VolSurfaces
         public string Name { get; set; }
 
         public Currency Currency { get; set; }
+        public string AssetId { get; set; }
 
         public ConstantVolSurface()         {        }
 
@@ -41,7 +42,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => Volatility;
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize)
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             return new Dictionary<string, IVolSurface>
             {

@@ -350,18 +350,28 @@ namespace Qwack.Models.Models
             {
                 var curveObj = model.GetPriceCurve(curveName);
 
-                var pvCube = portfolio.PV(model, curveObj.Currency);
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = portfolio.Instruments.Where(x => (x is IAssetInstrument ia) && ia.AssetIds.Contains(curveObj.AssetId)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var pvCube = subPortfolio.PV(model, curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
                 var tidIx = pvCube.GetColumnIndex("TradeId");
 
-                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize);
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
 
                 foreach (var bCurve in bumpedCurves)
                 {
                     var newModel = model.Clone();
                     newModel.AddPriceCurve(curveName, bCurve.Value);
-                    var bumpedPVCube = portfolio.PV(newModel, curveObj.Currency);
+                    var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
@@ -369,11 +379,11 @@ namespace Qwack.Models.Models
                     {
                         var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize;
 
-                        if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                            delta /= GetUsdDF(model, (PriceCurve) bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
-
                         if (delta != 0.0)
                         {
+                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
                             var row = new Dictionary<string, object>();
                             row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
                             row.Add("AssetId", curveName);
@@ -458,8 +468,8 @@ namespace Qwack.Models.Models
             foreach (var curveName in model.CurveNames)
             {
                 var curveObj = model.GetPriceCurve(curveName);
-                var bumpedUpCurves = curveObj.GetDeltaScenarios(bumpSize);
-                var bumpedDownCurves = curveObj.GetDeltaScenarios(-bumpSize);
+                var bumpedUpCurves = curveObj.GetDeltaScenarios(bumpSize,null);
+                var bumpedDownCurves = curveObj.GetDeltaScenarios(-bumpSize,null);
                 foreach (var bUpCurve in bumpedUpCurves)
                 {
                     var newModelUp = model.Clone();
@@ -479,31 +489,34 @@ namespace Qwack.Models.Models
                         var deltaUp = ((double)bumpedUpRows[i].Value - (double)pvRows[i].Value) / bumpSize;
                         var deltaDown = ((double)pvRows[i].Value - (double)bumpedDownRows[i].Value ) / bumpSize;
 
-                        if (bUpCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                        if (deltaUp != 0.0 || deltaDown != 0.0)
                         {
-                            var df = model.FundingModel.Curves["USD.LIBOR.3M"].GetDf(model.BuildDate, bUpCurve.Value.PillarDatesForLabel(bUpCurve.Key));
-                            deltaUp /= df;
-                            deltaDown /= df;
-                        }
+                            if (bUpCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                            {
+                                var df = model.FundingModel.Curves["USD.LIBOR.3M"].GetDf(model.BuildDate, bUpCurve.Value.PillarDatesForLabel(bUpCurve.Key));
+                                deltaUp /= df;
+                                deltaDown /= df;
+                            }
 
-                        var gamma = (deltaUp - deltaDown) / bumpSize;
-                        var delta = 0.5 * (deltaUp + deltaDown);
+                            var gamma = (deltaUp - deltaDown) / bumpSize;
+                            var delta = 0.5 * (deltaUp + deltaDown);
 
-                        if (delta != 0.0)
-                        {
-                            var row = new Dictionary<string, object>();
-                            row.Add("TradeId", bumpedUpRows[i].MetaData[tidIx]);
-                            row.Add("AssetId", curveName);
-                            row.Add("PointLabel", bUpCurve.Key);
-                            row.Add("Metric", "Delta");
-                            cube.AddRow(row, delta);
+                            if (delta != 0.0 || gamma != 0.0)
+                            {
+                                var row = new Dictionary<string, object>();
+                                row.Add("TradeId", bumpedUpRows[i].MetaData[tidIx]);
+                                row.Add("AssetId", curveName);
+                                row.Add("PointLabel", bUpCurve.Key);
+                                row.Add("Metric", "Delta");
+                                cube.AddRow(row, delta);
 
-                            var rowG = new Dictionary<string, object>();
-                            rowG.Add("TradeId", bumpedUpRows[i].MetaData[tidIx]);
-                            rowG.Add("AssetId", curveName);
-                            rowG.Add("PointLabel", bUpCurve.Key);
-                            rowG.Add("Metric", "Gamma");
-                            cube.AddRow(rowG, gamma);
+                                var rowG = new Dictionary<string, object>();
+                                rowG.Add("TradeId", bumpedUpRows[i].MetaData[tidIx]);
+                                rowG.Add("AssetId", curveName);
+                                rowG.Add("PointLabel", bUpCurve.Key);
+                                rowG.Add("Metric", "Gamma");
+                                cube.AddRow(rowG, gamma);
+                            }
                         }
                     }
                 }
@@ -522,20 +535,32 @@ namespace Qwack.Models.Models
             dataTypes.Add("Metric", typeof(string));
             cube.Initialize(dataTypes);
 
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
 
             foreach (var surfaceName in model.VolSurfaceNames)
             {
                 var volObj = model.GetVolSurface(surfaceName);
 
-                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize);
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var pvCube = subPortfolio.PV(model, reportingCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
+
                 foreach (var bCurve in bumpedSurfaces)
                 {
                     var newModel = model.Clone();
                     newModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
+                    var bumpedPVCube = subPortfolio.PV(newModel, reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
@@ -569,20 +594,32 @@ namespace Qwack.Models.Models
             dataTypes.Add("Metric", typeof(string));
             cube.Initialize(dataTypes);
 
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
+
 
             foreach (var surfaceName in model.FundingModel.VolSurfaces.Keys)
             {
                 var volObj = model.FundingModel.VolSurfaces[surfaceName];
 
-                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize);
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = portfolio.Instruments.Where(x => (x is IHasVega)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var pvCube = subPortfolio.PV(model, reportingCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
                 foreach (var bCurve in bumpedSurfaces)
                 {
                     var newModel = model.Clone();
                     newModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
-                    var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
+                    var bumpedPVCube = subPortfolio.PV(newModel, reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
@@ -607,7 +644,6 @@ namespace Qwack.Models.Models
 
         public static ICube CorrelationDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, double epsilon)
         {
-            var bumpSize = 0.01;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>();
             dataTypes.Add("TradeId", typeof(string));

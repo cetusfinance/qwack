@@ -23,6 +23,20 @@ namespace Qwack.Dates
             PeriodType = periodType;
         }
 
+        public static bool TryParse(string frequency, out Frequency output)
+        {
+            try
+            {
+                output = new Frequency(frequency);
+                return true;
+            }
+            catch
+            {
+                output = new Frequency(0,DatePeriodType.D);
+                return false;
+            }
+        }
+
         public DatePeriodType PeriodType { get; set; }
         public int PeriodCount { get; set; }
 

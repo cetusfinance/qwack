@@ -40,9 +40,32 @@ namespace Qwack.Models.Models
                 };
                 cube.AddRow(row, r.Value);
             }
+            var lastPVCuve = newPVCube;
+
+            //next replace fixings with actual values
+            foreach (var fixingDictName in endModel.FixingDictionaryNames)
+            {
+                model.AddFixingDictionary(fixingDictName, endModel.GetFixingDictionary(fixingDictName));
+                newPVCube = portfolio.PV(model, reportingCcy);
+
+                step = newPVCube.QuickDifference(lastPVCuve);
+                foreach (var r in step.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", r.MetaData[tidIx] },
+                        { "Step", "Fixings" },
+                        { "SubStep", fixingDictName }
+                    };
+                    cube.AddRow(row, r.Value);
+                }
+
+                lastPVCuve = newPVCube;
+            }
 
             //next move ir curves
-            var lastPVCuve = newPVCube;
             foreach (var irCurve in endModel.FundingModel.Curves)
             {
                 model.FundingModel.Curves[irCurve.Key] = irCurve.Value;
@@ -80,7 +103,7 @@ namespace Qwack.Models.Models
                     {
                         { "TradeId", r.MetaData[tidIx] },
                         { "Step", "FxSpots" },
-                        { "SubStep", fxSpot.Key }
+                        { "SubStep", fxSpot.Key.Ccy }
                     };
                     cube.AddRow(row, r.Value);
                 }

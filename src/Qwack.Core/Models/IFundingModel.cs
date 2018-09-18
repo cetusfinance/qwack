@@ -15,7 +15,8 @@ namespace Qwack.Core.Models
 
         IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate);
         IFundingModel Clone();
-        IFundingModel DeepClone();
+        IFundingModel DeepClone(DateTime? newBuildDate);
+
         double GetFxRate(DateTime settlementDate, Currency domesticCcy, Currency foreignCcy);
         double[] GetFxRates(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
         double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
@@ -23,5 +24,8 @@ namespace Qwack.Core.Models
         void UpdateCurves(Dictionary<string, IrCurve> updateCurves);
 
         IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
+
+        double GetDf(string curveName, DateTime startDate, DateTime endDate);
+        double GetDf(Currency ccy, DateTime startDate, DateTime endDate);
     }
 }

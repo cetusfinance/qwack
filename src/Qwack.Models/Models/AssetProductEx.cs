@@ -83,7 +83,6 @@ namespace Qwack.Models.Models
 
         public static double PV(this AsianSwap asianSwap, IAssetFxModel model)
         {
-            var discountCurve = model.FundingModel.Curves[asianSwap.DiscountCurve];
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
                 asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
                 asianSwap.PaymentDate;
@@ -93,15 +92,12 @@ namespace Qwack.Models.Models
             var pv = avg - asianSwap.Strike;
             pv *= asianSwap.Direction == TradeDirection.Long ? 1.0 : -1.0;
             pv *= asianSwap.Notional;
-            pv *= discountCurve.GetDf(model.BuildDate, payDate);
+            pv *= model.FundingModel.GetDf(asianSwap.DiscountCurve, model.BuildDate, payDate);
 
             return pv;
         }
 
-        public static string GetFxFixingId(this AsianSwap swap, string curveCcy)
-        {
-            return string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
-        }
+        public static string GetFxFixingId(this AsianSwap swap, string curveCcy) => string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
 
         public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
         {
@@ -803,7 +799,7 @@ namespace Qwack.Models.Models
             var rolledFxMatrix = model.FundingModel.FxMatrix.Rebase(fwdValDate, newSpotRates);
 
 
-            var rolledFundingModel = model.FundingModel.DeepClone();
+            var rolledFundingModel = model.FundingModel.DeepClone(fwdValDate);
             rolledFundingModel.UpdateCurves(rolledIrCurves);
             rolledFundingModel.VolSurfaces = rolledFxVolSurfaces;
             rolledFundingModel.SetupFx(rolledFxMatrix);

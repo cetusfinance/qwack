@@ -67,12 +67,8 @@ namespace Qwack.Excel.Interpolation
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (ContainerStores.GetObjectCache<IInterpolator1D>().TryGetObject(ObjectName, out var interpolator))
-                {
-                    return interpolator.Value.Interpolate(X);
-                }
-
-                return $"1d interpolator {ObjectName} not found in cache";
+                var interpolator = ContainerStores.GetObjectCache<IInterpolator1D>().GetObjectOrThrow(ObjectName, $"1d interpolator {ObjectName} not found in cache");
+                return interpolator.Value.Interpolate(X);
             });
         }
 
@@ -84,12 +80,8 @@ namespace Qwack.Excel.Interpolation
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (ContainerStores.GetObjectCache<IInterpolator2D>().TryGetObject(ObjectName, out var interpolator))
-                {
-                    return interpolator.Value.Interpolate(X,Y);
-                }
-
-                return $"2d interpolator {ObjectName} not found in cache";
+                var interpolator = ContainerStores.GetObjectCache<IInterpolator2D>().GetObjectOrThrow(ObjectName, $"2d interpolator {ObjectName} not found in cache");
+                return interpolator.Value.Interpolate(X,Y);
             });
         }
 
@@ -100,12 +92,8 @@ namespace Qwack.Excel.Interpolation
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (ContainerStores.GetObjectCache<IInterpolator1D>().TryGetObject(ObjectName, out var interpolator))
-                {
-                    return interpolator.Value.Average(Xs);
-                }
-
-                return $"1d interpolator {ObjectName} not found in cache";
+                var interpolator = ContainerStores.GetObjectCache<IInterpolator1D>().GetObjectOrThrow(ObjectName, $"1d interpolator {ObjectName} not found in cache");
+                return interpolator.Value.Average(Xs);
             });
         }
     }

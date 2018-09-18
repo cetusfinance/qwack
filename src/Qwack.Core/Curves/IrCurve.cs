@@ -199,6 +199,9 @@ namespace Qwack.Core.Curves
             Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
             var newDfs = newPillars.Select(x => GetDf(BuildDate, x)).ToArray();
             var newRates = newDfs.Select((x, ix) => Log(x) / -newAnchorDate.CalculateYearFraction(newPillars[ix], _basis)).ToArray();
+            if (newPillars.First() == newAnchorDate && newRates.Length > 1)
+                newRates[0] = newRates[1];
+
             var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec);
 
             return newCurve;

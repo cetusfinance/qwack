@@ -35,9 +35,9 @@ namespace Qwack.Excel.Options
 
                 var surface = new ConstantVolSurface(OriginDate, Volatility)
                 {
-                    Name = ObjectName,
                     Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
-                    AssetId = AssetId
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName,
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -89,9 +89,9 @@ namespace Qwack.Excel.Options
 
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), sType, siType, tiType, basis, labels)
                 {
-                    Name = ObjectName,
                     Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
-                    AssetId = AssetId
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName,
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
@@ -163,10 +163,10 @@ namespace Qwack.Excel.Options
                 }
 
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
-                {
-                    Name = ObjectName,
+                { 
                     Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
-                    AssetId = AssetId
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName,
                 };
                 var cache = ContainerStores.GetObjectCache<IVolSurface>();
                 cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });

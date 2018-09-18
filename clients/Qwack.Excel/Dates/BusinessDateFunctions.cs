@@ -276,13 +276,13 @@ namespace Qwack.Excel.Dates
             return ExcelHelper.Execute(_logger, () =>
             {
                 if (!Enum.TryParse(Weekday, out DayOfWeek weekday))
-                    return $"Unknown daycount method {Weekday}";
+                    return $"Unknown weekday {Weekday}";
 
                 return Date.GetNextWeekday(weekday);
             });
         }
 
-        [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the spot date for a lag and calendar pair", Category = "QDates")]
         public static object QDates_SpotDate(
             [ExcelArgument(Description = "Value Date")] DateTime ValDate,
             [ExcelArgument(Description = "Spot Lag")] string SpotLag,
@@ -292,13 +292,16 @@ namespace Qwack.Excel.Dates
 
             return ExcelHelper.Execute(_logger, () =>
             {
+                if (!Frequency.TryParse(SpotLag, out var lag))
+                    return $"Could not parse lag string {SpotLag}";
+
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(PrimaryCalendar, out var cal1))
                     return $"Calendar {PrimaryCalendar} not found in cache";
 
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(SecondaryCalendar, out var cal2))
                     return $"Calendar {SecondaryCalendar} not found in cache";
 
-                return ValDate.SpotDate(new Frequency(SpotLag), cal1, cal2);
+                return ValDate.SpotDate(lag, cal1, cal2);
             });
         }
     }

@@ -203,7 +203,9 @@ namespace Qwack.Excel.Curves
         public static object CreateFundingModelFromCurves(
            [ExcelArgument(Description = "Output funding model")] string ObjectName,
            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
-           [ExcelArgument(Description = "Curves")] object[] Curves)
+           [ExcelArgument(Description = "Curves")] object[] Curves,
+           [ExcelArgument(Description = "Fx matrix object")] object FxMatrix,
+           [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -215,6 +217,20 @@ namespace Qwack.Excel.Curves
 
                 var fModel = new FundingModel(BuildDate, curves);
 
+                if (!(FxMatrix is ExcelMissing))
+                {
+                    var fxMatrixCache = ContainerStores.GetObjectCache<FxMatrix>();
+                    var fxMatrix = fxMatrixCache.GetObject((string)FxMatrix);
+                    fModel.SetupFx(fxMatrix.Value);
+                }
+
+                if (!(FxVolSurfaces is ExcelMissing))
+                {
+                    var surfaces = (new object[] { FxVolSurfaces }).GetAnyFromCache<IVolSurface>();
+                    if (surfaces.Any())
+                        fModel.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
+                }
+
                 var cache = ContainerStores.GetObjectCache<IFundingModel>();
                 cache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = fModel });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -225,7 +241,7 @@ namespace Qwack.Excel.Curves
         public static object MergeFundingModels(
            [ExcelArgument(Description = "Output funding model")] string ObjectName,
            [ExcelArgument(Description = "Funding model A")] string FundingModelA,
-           [ExcelArgument(Description = "Funding model A")] string FundingModelB)
+           [ExcelArgument(Description = "Funding model B")] string FundingModelB)
         {
             return ExcelHelper.Execute(_logger, () =>
             {

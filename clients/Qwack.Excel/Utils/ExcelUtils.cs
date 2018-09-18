@@ -141,8 +141,8 @@ namespace Qwack.Excel.Utils
             return ExcelHelper.Execute(_logger, () =>
             {
                 var filtered = DataRange
-                .Where(x => !(x is ExcelEmpty) && !(x is ExcelDna.Integration.ExcelError))
-                .Select(x => x as string);
+                .Where(x => !(x is ExcelEmpty) && !(x is ExcelError))
+                .Select(x => Convert.ToString(x));
                 filtered = filtered.Select(x => x.Trim())
                 .Select(x => x.Trim(", ".ToCharArray()))
                 .Select(x => x.Replace(" ", ""))

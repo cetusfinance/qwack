@@ -371,8 +371,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
                 {
@@ -394,8 +397,10 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
                 var result = pfolio.Value.AssetDelta(model.Value);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -412,8 +417,10 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
                 var result = pfolio.Value.AssetDeltaGamma(model.Value);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -431,8 +438,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
                 var result = pfolio.Value.AssetVega(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -450,8 +460,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
                 var result = pfolio.Value.FxVega(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -470,8 +483,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
                 var result = pfolio.Value.CorrelationDelta(model.Value, ccy, Epsilon);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -488,8 +504,10 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
                 var result = pfolio.Value.FxDelta(model.Value);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -508,8 +526,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
                 var result = pfolio.Value.AssetTheta(model.Value, FwdValDate, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -528,10 +549,38 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var pfolio = ContainerStores.GetObjectCache<Portfolio>().GetObject(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObject(ModelName);
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
                 var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
                 var result = pfolio.Value.AssetThetaCharm(model.Value, FwdValDate, ccy);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution))]
+        public static object AssetPnLAttribution(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Starting Asset-FX model name")] string ModelNameStart,
+            [ExcelArgument(Description = "Ending Asset-FX model name")] string ModelNameEnd,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var modelStart = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelNameStart, $"Could not find model with name {ModelNameStart}");
+                var modelEnd = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+
+                var result = pfolio.Value.BasicAttribution(modelStart.Value, modelEnd.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

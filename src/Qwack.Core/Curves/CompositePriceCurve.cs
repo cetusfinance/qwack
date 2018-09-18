@@ -80,7 +80,7 @@ namespace Qwack.Core.Curves
             return commofwd * fxfwd;
         }
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();
             return o;

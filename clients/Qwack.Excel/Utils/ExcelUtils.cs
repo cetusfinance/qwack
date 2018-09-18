@@ -133,5 +133,23 @@ namespace Qwack.Excel.Utils
                 return filtered.ReturnExcelRangeVector();
             });
         }
+
+        [ExcelFunction(Description = "Casts all values in a range to numbers", Category = "QUtils")]
+        public static object QUtils_ToNumbers(
+            [ExcelArgument(Description = "The excel range to cast as numbers")] object[] DataRange)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var filtered = DataRange
+                .Where(x => !(x is ExcelEmpty) && !(x is ExcelDna.Integration.ExcelError))
+                .Select(x => x as string);
+                filtered = filtered.Select(x => x.Trim())
+                .Select(x => x.Trim(", ".ToCharArray()))
+                .Select(x => x.Replace(" ", ""))
+                .Select(x => x.Replace(",", ""));
+                var asNumbers = filtered.Select(x => (object)double.Parse(x)).ToArray();
+                return asNumbers.ReturnExcelRangeVector();
+            });
+        }
     }
 }

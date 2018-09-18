@@ -69,7 +69,7 @@ namespace Qwack.Core.Curves
             return model.GetFxRate(date, DomesticCurrency, ForeignCurrency);
         }
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();
             return o;

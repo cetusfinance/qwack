@@ -42,7 +42,10 @@ namespace Qwack.Excel.Dates
                  if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
                      return errorMessage;
 
-                 var period = new Frequency(Period);
+                 if(!Frequency.TryParse(Period, out var period))
+                 {
+                     return $"Could not parse period {Period}";
+                 }
 
                  return StartDate.AddPeriod(rollMethod, cal, period);
 
@@ -61,7 +64,10 @@ namespace Qwack.Excel.Dates
                  if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
                      return errorMessage;
 
-                 var period = new Frequency(Period);
+                 if (!Frequency.TryParse(Period, out var period))
+                 {
+                     return $"Could not parse period {Period}";
+                 }
 
                  return StartDate.SubtractPeriod(rollMethod, cal, period);
 

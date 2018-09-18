@@ -8,7 +8,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianOption : AsianSwap
+    public class AsianOption : AsianSwap, IHasVega
     {
         public OptionType CallPut { get; set; }
 

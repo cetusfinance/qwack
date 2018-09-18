@@ -54,6 +54,45 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromDFs))]
+        public static object CreateDiscountCurveFromDFs(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+             [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+             [ExcelArgument(Description = "Array of discount factors")] double[] DiscountFactors,
+             [ExcelArgument(Description = "Type of interpolation")] object InterpolationType,
+             [ExcelArgument(Description = "Currency - default USD")] object Currency,
+             [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveTypeStr = InterpolationType.OptionalExcel("Linear");
+                var ccyStr = Currency.OptionalExcel("USD");
+                var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
+
+                if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
+                {
+                    return $"Could not parse price curve type - {curveTypeStr}";
+                }
+
+                var pDates = Pillars.ToDateTimeArray();
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+                var ccy = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal);
+
+                var zeroRates = DiscountFactors
+                .Select((df, ix) => DateTime.FromOADate(Pillars[ix])==BuildDate ? 0.0 : -System.Math.Log(df) / BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F))
+                .ToArray();
+
+                if (DateTime.FromOADate(Pillars[0]) == BuildDate && zeroRates.Length > 1)
+                    zeroRates[0] = zeroRates[1];
+
+                var cObj = new IrCurve(pDates, zeroRates, BuildDate, ObjectName, iType, ccy, colSpecStr);
+                var cache = ContainerStores.GetObjectCache<IIrCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Gets a discount factor from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetDF))]
         public static object GetDF(
           [ExcelArgument(Description = "Curve object name")] string ObjectName,
@@ -179,6 +218,65 @@ namespace Qwack.Excel.Curves
                 var cache = ContainerStores.GetObjectCache<IFundingModel>();
                 cache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = fModel });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new funding model by combining two others", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(MergeFundingModels))]
+        public static object MergeFundingModels(
+           [ExcelArgument(Description = "Output funding model")] string ObjectName,
+           [ExcelArgument(Description = "Funding model A")] string FundingModelA,
+           [ExcelArgument(Description = "Funding model A")] string FundingModelB)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
+                if(!modelCache.TryGetObject(FundingModelA,out var modelA))
+                {
+                    return $"Could not find funding model {FundingModelA}";
+                }
+                if (!modelCache.TryGetObject(FundingModelB, out var modelB))
+                {
+                    return $"Could not find funding model {FundingModelB}";
+                }
+
+                var combinedCurves = modelA.Value.Curves.Values.Concat(modelB.Value.Curves.Values).ToArray();
+
+                if(combinedCurves.Length != combinedCurves.Select(x=>x.Name).Distinct().Count())
+                {
+                    return $"Not all curves have unique names";
+                }
+
+                var outModel = new FundingModel(modelA.Value.BuildDate, combinedCurves);
+
+                foreach (var vs in modelA.Value.VolSurfaces)
+                    outModel.VolSurfaces.Add(vs.Key, vs.Value);
+                foreach (var vs in modelB.Value.VolSurfaces)
+                    outModel.VolSurfaces.Add(vs.Key, vs.Value);
+
+                var fxA = modelA.Value.FxMatrix;
+                var fxB = modelB.Value.FxMatrix;
+
+                var spotRates = new Dictionary<Currency, double>();
+                foreach (var s in fxA.SpotRates)
+                    spotRates.Add(s.Key, s.Value);
+                foreach (var s in fxB.SpotRates)
+                    spotRates.Add(s.Key, s.Value);
+
+                var discoMap = new Dictionary<Currency, string>();
+                foreach (var s in fxA.DiscountCurveMap)
+                    discoMap.Add(s.Key, s.Value);
+                foreach (var s in fxB.DiscountCurveMap)
+                    discoMap.Add(s.Key, s.Value);
+
+                var pairs = fxA.FxPairDefinitions.Concat(fxB.FxPairDefinitions).Distinct().ToList();
+
+                var fxMatrix = new FxMatrix();
+                fxMatrix.Init(fxA.BaseCurrency, modelA.Value.BuildDate, spotRates, pairs, discoMap);
+
+                outModel.SetupFx(fxMatrix);
+
+                modelCache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = outModel });
+                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version;
             });
         }
 

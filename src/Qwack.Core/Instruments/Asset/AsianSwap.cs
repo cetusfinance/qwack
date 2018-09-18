@@ -36,6 +36,8 @@ namespace Qwack.Core.Instruments.Asset
 
         public string[] AssetIds => new[] { AssetId };
 
+        public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate);
+
         public IAssetInstrument Clone()
         {
             return new AsianSwap

@@ -7,7 +7,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class EuropeanOption : Forward
+    public class EuropeanOption : Forward, IHasVega
     {
         public OptionType CallPut { get; set; }
 

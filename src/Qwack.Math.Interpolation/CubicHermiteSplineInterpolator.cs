@@ -41,6 +41,8 @@ namespace Qwack.Math.Interpolation
             _y = y;
 
             _tangents = tangents;
+
+            Setup();
         }
 
         private int FindFloorPoint(double t)
@@ -120,31 +122,13 @@ namespace Qwack.Math.Interpolation
         {
             var newY = new double[_y.Length];
             Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
+            newY[pillar] = newValue;
             var newT = new double[_tangents.Length];
             Buffer.BlockCopy(_tangents, 0, newT, 0, _tangents.Length * 8);
-             var returnValue = new CubicHermiteSplineInterpolator(_x, newY, newT).Bump(pillar, newValue, true);
+             var returnValue = new CubicHermiteSplineInterpolator(_x, newY, newT);
             return returnValue;
         }
 
-        public double[] Sensitivity(double t)
-        {
-            var o = new double[_y.Length];
-            if (t <= _minX)
-            {
-                o[0] = 1;
-            }
-            else if (t >= _maxX)
-            {
-                o[o.Length - 1] = 1;
-            }
-            else
-            {
-                var k = FindFloorPoint(t);
-                var prop = (t - _x[k]) / (_x[k + 1] - _x[k]);
-                o[k + 1] = prop;
-                o[k] = (1.0 - prop);
-            }
-            return o;
-        }
+        public double[] Sensitivity(double t) => throw new NotImplementedException();
     }
 }

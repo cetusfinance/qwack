@@ -69,7 +69,7 @@ namespace Qwack.Math.Interpolation
             {
                 var newY = new double[_y.Length];
                 Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
-                var returnValue = new NextInterpolator(_x, newY).Bump(pillar, newValue, true);
+                var returnValue = new NextInterpolator(_x, newY).Bump(pillar, newValue - _y[pillar], true);
                 return returnValue;
             }
         }

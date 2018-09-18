@@ -39,7 +39,8 @@ namespace Qwack.Core.Tests.AssetModel
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",
-                Name = "Coconuts"
+                Name = "Coconuts",
+                AssetId = "Coconuts"
             };
 
             var fxMatrix = new FxMatrix();

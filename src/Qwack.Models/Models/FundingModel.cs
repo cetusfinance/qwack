@@ -19,6 +19,7 @@ namespace Qwack.Models
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
             FxMatrix = new FxMatrix();
+            VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
 
@@ -27,6 +28,7 @@ namespace Qwack.Models
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves);
             FxMatrix = new FxMatrix();
+            VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
 
@@ -35,6 +37,8 @@ namespace Qwack.Models
             foreach(var curve in Curves)
             {
                 var key = $"{curve.Value.Currency.Ccy}é{curve.Value.CollateralSpec}";
+                if (_curvesBySpec.ContainsKey(key))
+                    throw new Exception($"More than one curve specifed with collateral key {key}");
                 _curvesBySpec.Add(key, curve.Key);
             }
         }
@@ -122,10 +126,29 @@ namespace Qwack.Models
             }
             var fxPair = FxMatrix.GetFxPair(domesticCcy, foreignCcy);
             var spotDate = BuildDate.AddPeriod(RollType.F, fxPair.SettlementCalendar, fxPair.SpotLag);
-            var dfDom = Curves[FxMatrix.DiscountCurveMap[domesticCcy]].GetDf(spotDate, settlementDate);
-            var dfFor = Curves[FxMatrix.DiscountCurveMap[foreignCcy]].GetDf(spotDate, settlementDate);
+            var dfDom = GetDf(domesticCcy, spotDate, settlementDate);
+            var dfFor = GetDf(foreignCcy, spotDate, settlementDate);
 
             return spot * dfDom / dfFor;
+        }
+
+        public double GetDf(string curveName, DateTime startDate, DateTime endDate)
+        {
+            if (!Curves.TryGetValue(curveName, out var curve))
+                throw new Exception($"Curve with name {curveName} not found");
+
+            return curve.GetDf(startDate, endDate);
+        }
+
+        public double GetDf(Currency ccy, DateTime startDate, DateTime endDate)
+        {
+            if (!FxMatrix.DiscountCurveMap.TryGetValue(ccy, out var curveName))
+                throw new Exception($"Currency {ccy} not found in discounting map");
+
+            if (!Curves.TryGetValue(curveName, out var curve))
+                throw new Exception($"Curve with name {curveName} not found");
+
+            return curve.GetDf(startDate, endDate);
         }
 
         public double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy)

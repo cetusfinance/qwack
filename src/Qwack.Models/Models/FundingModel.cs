@@ -92,9 +92,9 @@ namespace Qwack.Models
             return returnValue;
         }
 
-        public IFundingModel DeepClone()
+        public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray())
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), newBuildDate ?? c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray())
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };

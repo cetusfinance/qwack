@@ -44,9 +44,8 @@ namespace Qwack.Core.Basic
 
         public static bool operator !=(Currency x, Currency y) => !(x == y);
 
-        public override string ToString()
-        {
-            return Ccy;
-        }
+        public override string ToString() => Ccy;
+
+        public static implicit operator string(Currency c) => c.Ccy;
     }
 }

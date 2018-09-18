@@ -58,9 +58,7 @@ namespace Qwack.Excel.Cubes
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (!ContainerStores.GetObjectCache<ICube>().TryGetObject(ObjectName, out var cube))
-                    throw new Exception($"Could not find cube {ObjectName}");
-
+                var cube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(ObjectName, $"Could not find cube {ObjectName}");
                 var rows = cube.Value.GetAllRows();
 
                 if(rows.Length<RowIndex)
@@ -74,26 +72,29 @@ namespace Qwack.Excel.Cubes
         public static object CreateCube(
              [ExcelArgument(Description = "Cube name")] string ObjectName,
              [ExcelArgument(Description = "Header range")] object[] Headers,
-             [ExcelArgument(Description = "Data range")] object[,] Data)
+             [ExcelArgument(Description = "Metadata range")] object[,] MetaData,
+             [ExcelArgument(Description = "Value range")] double[] Data)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (Headers.Length != Data.GetLength(1))
-                    throw new Exception("Headers must match width of data range");
+                if (Headers.Length != MetaData.GetLength(1))
+                    throw new Exception("Headers must match width of metadata range");
+
+                if (Data.Length != MetaData.GetLength(0))
+                    throw new Exception("Data vector must match length of metadata range");
 
                 var cube = new ResultCube();
-                var dataTypes = Headers
-                                .Select(h => new Tuple<string, Type>((string)h, typeof(string)))
-                                .ToDictionary(kv => kv.Item1, kv => kv.Item2);
+                var dataTypes = Headers.ToDictionary(h => (string)h, h => typeof(string));
                 cube.Initialize(dataTypes);
 
-                for (var r = 0; r < Data.GetLength(0); r++)
+                for (var r = 0; r < MetaData.GetLength(0); r++)
                 {
-                    var rowDict = new Dictionary<string, object>();
-                    for (var c = 0; c < Data.GetLength(1); c++)
+                    var rowMeta = new object[MetaData.GetLength(1)];
+                    for (var c = 0; c < MetaData.GetLength(1); c++)
                     {
-                        rowDict.Add((string)Headers[c], Data[r,c]);
+                        rowMeta[c] = MetaData[r, c];
                     }
+                    cube.AddRow(rowMeta, Data[r]);
                 }
                 var cubeCache = ContainerStores.GetObjectCache<ICube>();
                 cubeCache.PutObject(ObjectName, new SessionItem<ICube> { Name = ObjectName, Value = cube });
@@ -111,11 +112,7 @@ namespace Qwack.Excel.Cubes
             return ExcelHelper.Execute(_logger, () =>
             {
                 var cubeCache = ContainerStores.GetObjectCache<ICube>();
-
-                if(!cubeCache.TryGetObject(InputObjectName, out var inCube))
-                {
-                    throw new Exception($"Could not find input cube {InputObjectName}");
-                }
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
 
                 var aggDeets = (AggregationAction)Enum.Parse(typeof(AggregationAction), AggregateAction);
 
@@ -135,15 +132,31 @@ namespace Qwack.Excel.Cubes
             return ExcelHelper.Execute(_logger, () =>
             {
                 var cubeCache = ContainerStores.GetObjectCache<ICube>();
-
-                if (!cubeCache.TryGetObject(InputObjectName, out var inCube))
-                {
-                    throw new Exception($"Could not find input cube {InputObjectName}");
-                }
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
 
                 var filterDeets = FilterDetails.RangeToDictionary<string, object>();
 
                 var outCube = inCube.Value.Filter(filterDeets);
+
+                cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
+                return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new cube object by sorting another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(SortCube))]
+        public static object SortCube(
+           [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
+           [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+           [ExcelArgument(Description = "Fields to sort on")] object[] SortDetails)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                var sortDeets = SortDetails.ObjectRangeToVector<string>().ToList();
+
+                var outCube = inCube.Value.Sort(sortDeets);
 
                 cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
                 return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;

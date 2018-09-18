@@ -396,11 +396,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
-                if(!cache.TryGetObject(ObjectName,out var dict))
-                {
-                    throw new Exception($"Fixing dictionary not found with name {ObjectName}");
-                }
+                var dict = ContainerStores.GetObjectCache<IFixingDictionary>().GetObjectOrThrow(ObjectName, $"Fixing dictionary not found with name {ObjectName}");
 
                 if (FixingDate is ExcelMissing)
                 {

@@ -98,7 +98,7 @@ namespace Qwack.Models
 
         public IAssetFxModel Clone()
         {
-            var c = new AssetFxModel(BuildDate, FundingModel.DeepClone());
+            var c = new AssetFxModel(BuildDate, FundingModel.DeepClone(null));
 
             foreach (var kv in _assetCurves)
                 c.AddPriceCurve(kv.Key, kv.Value);

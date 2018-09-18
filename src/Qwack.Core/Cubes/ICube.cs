@@ -10,9 +10,6 @@ namespace Qwack.Core.Cubes
         void Initialize(Dictionary<string, Type> dataTypes);
         void AddRow(Dictionary<string, object> descriptiveData, double value);
         ResultCubeRow[] GetAllRows();
-        ICube Pivot(string fieldToAggregateBy, AggregationAction aggregationAction);
-        ICube Pivot(string[] fieldsToAggregateBy, AggregationAction aggregationAction);
-        ICube Filter(Dictionary<string, object> fieldsToFilterOn);
 
         int GetColumnIndex(string columnName);
     }

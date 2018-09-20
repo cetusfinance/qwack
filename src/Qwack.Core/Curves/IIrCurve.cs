@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Descriptors;
 using Qwack.Dates;
@@ -18,5 +19,8 @@ namespace Qwack.Core.Curves
         double GetRate(DateTime valueDate);
         double[] GetSensitivity(DateTime valueDate);
         IrCurve BumpRate(int pillarIx, double delta, bool mutate);
+        IrCurve BumpRateFlat(double delta, bool mutate);
+
+        Dictionary<DateTime, IrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate);
     }
 }

@@ -27,6 +27,9 @@ namespace Qwack.Models.Models
              asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
              asianOption.PaymentDate;
 
+            if (payDate < model.BuildDate)
+                return 0.0;
+
             var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
             var fwd = FloatAverage;
             var fixedAvg = FixedAverage;
@@ -86,6 +89,9 @@ namespace Qwack.Models.Models
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
                 asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
                 asianSwap.PaymentDate;
+
+            if (payDate < model.BuildDate)
+                return 0.0;
 
             var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
             var avg = (FixedAverage * FixedCount + FloatAverage * FloatCount) / (FloatCount + FixedCount);
@@ -231,18 +237,73 @@ namespace Qwack.Models.Models
 
         public static double PV(this Future future, IAssetFxModel model)
         {
+            if (future.ExpiryDate < model.BuildDate)
+                return 0.0;
+
             var price = model.GetPriceCurve(future.AssetId).GetPriceForDate(future.ExpiryDate);
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
 
         public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
 
+        public static double FlowsT0(this AsianOption asianOption, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianOption.AssetId);
+
+            var payDate = asianOption.PaymentDate == DateTime.MinValue ?
+             asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
+             asianOption.PaymentDate;
+
+            if (payDate != model.BuildDate)
+                return 0.0;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            return asianOption.Notional * (asianOption.CallPut == OptionType.Call ? System.Math.Max(0, FixedAverage - asianOption.Strike) : System.Math.Max(0, asianOption.Strike - FixedAverage));
+        }
+
+        public static double FlowsT0(this AsianSwap asianSwap, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianSwap.AssetId);
+
+            var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
+             asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
+             asianSwap.PaymentDate;
+
+            if (payDate != model.BuildDate)
+                return 0.0;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
+            return asianSwap.Notional * (FixedAverage - asianSwap.Strike);
+        }
+
+        public static double FlowsT0(this Future future, IAssetFxModel model)
+        {
+            if (future.ExpiryDate != model.BuildDate)
+                return 0.0;
+
+            var price = model.GetPriceCurve(future.AssetId).GetPriceForDate(future.ExpiryDate);
+            return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
+        }
+
+        public static double FlowsT0(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().FlowsT0(model);
+
+        public static double FlowsT0(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.Sum(x => x.FlowsT0(model));
+
+        public static double FlowsT0(this AsianBasisSwap asianBasisSwap, IAssetFxModel model)
+        {
+            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.FlowsT0(model));
+            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.FlowsT0(model));
+            return payPV + recPV;
+        }
+
         public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency=null)
         {
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("Currency", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Currency", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             foreach(var ins in portfolio.Instruments)
@@ -322,10 +383,110 @@ namespace Qwack.Models.Models
                 }
 
 
-                var row = new Dictionary<string, object>();
-                row.Add("TradeId", tradeId);
-                row.Add("Currency", ccy);
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", tradeId },
+                    { "Currency", ccy }
+                };
                 cube.AddRow(row,pv/fxRate);
+            }
+
+            return cube;
+        }
+
+        public static ICube FlowsT0(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Currency", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            foreach (var ins in portfolio.Instruments)
+            {
+                var pv = 0.0;
+                var fxRate = 1.0;
+                string tradeId = null;
+                var ccy = reportingCurrency?.ToString();
+                switch (ins)
+                {
+                    case AsianOption asianOption:
+                        pv = asianOption.FlowsT0(model);
+                        tradeId = asianOption.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, asianOption.PaymentCurrency);
+                        else
+                            ccy = asianOption.PaymentCurrency.ToString();
+                        break;
+                    case AsianSwap swap:
+                        pv = swap.FlowsT0(model);
+                        tradeId = swap.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swap.PaymentCurrency);
+                        else
+                            ccy = swap.PaymentCurrency.ToString();
+                        break;
+                    case AsianSwapStrip swapStrip:
+                        pv = swapStrip.FlowsT0(model);
+                        tradeId = swapStrip.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
+                        else
+                            ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
+                        break;
+                    case AsianBasisSwap basisSwap:
+                        pv = basisSwap.FlowsT0(model);
+                        tradeId = basisSwap.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
+                        else
+                            ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
+                        break;
+                    case Forward fwd:
+                        pv = fwd.FlowsT0(model);
+                        tradeId = fwd.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
+                        else
+                            ccy = fwd.PaymentCurrency.ToString();
+                        break;
+                    case Future fut:
+                        pv = fut.FlowsT0(model);
+                        tradeId = fut.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fut.Currency);
+                        else
+                            ccy = fut.Currency.ToString();
+                        break;
+                    case FxForward fxFwd:
+                        pv = fxFwd.FlowsT0(model.FundingModel);
+                        tradeId = fxFwd.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
+                        else
+                            ccy = fxFwd.ForeignCCY.ToString();
+                        break;
+                    case FixedRateLoanDeposit loanDepo:
+                        pv = loanDepo.FlowsT0(model.FundingModel);
+                        tradeId = loanDepo.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Ccy);
+                        else
+                            ccy = loanDepo.Ccy.ToString();
+                        break;
+                    default:
+                        throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                }
+
+
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", tradeId },
+                    { "Currency", ccy }
+                };
+                cube.AddRow(row, pv / fxRate);
             }
 
             return cube;
@@ -335,11 +496,13 @@ namespace Qwack.Models.Models
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("AssetId", typeof(string));
-            dataTypes.Add("PointLabel", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             foreach (var curveName in model.CurveNames)
@@ -380,11 +543,13 @@ namespace Qwack.Models.Models
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
                                 delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
-                            var row = new Dictionary<string, object>();
-                            row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
-                            row.Add("AssetId", curveName);
-                            row.Add("PointLabel", bCurve.Key);
-                            row.Add("Metric", "Delta");
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "AssetId", curveName },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" }
+                            };
                             cube.AddRow(row, delta);
                         }
                     }
@@ -405,10 +570,12 @@ namespace Qwack.Models.Models
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("FxPair", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "FxPair", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
@@ -450,11 +617,13 @@ namespace Qwack.Models.Models
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("AssetId", typeof(string));
-            dataTypes.Add("PointLabel", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             var pvCube = portfolio.PV(model);
@@ -524,11 +693,13 @@ namespace Qwack.Models.Models
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("AssetId", typeof(string));
-            dataTypes.Add("PointLabel", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
 
@@ -583,11 +754,13 @@ namespace Qwack.Models.Models
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("FxPair", typeof(string));
-            dataTypes.Add("PointLabel", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "FxPair", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
 
@@ -638,12 +811,80 @@ namespace Qwack.Models.Models
             return cube;
         }
 
+        public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var bumpSize = 0.0001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "CurveName", typeof(string) },
+                { "PointLabel", typeof(DateTime) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            foreach (var curve in model.FundingModel.Curves)
+            {
+                var curveObj = curve.Value;
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves.Contains(curve.Key))
+                    .Concat(portfolio.Instruments.Where(x=>(x is FxForward fx) && (model.FundingModel.FxMatrix.DiscountCurveMap[fx.DomesticCCY]==curve.Key || model.FundingModel.FxMatrix.DiscountCurveMap[fx.ForeignCCY] == curve.Key || fx.ForeignDiscountCurve == curve.Key)))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var pvCube = subPortfolio.PV(model, curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+
+                var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
+
+                foreach (var bCurve in bumpedCurves)
+                {
+                    var newModel = model.Clone();
+                    newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
+                    var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value);
+
+                        if (delta != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "CurveName", curve.Key },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "IrDelta" }
+                            };
+                            cube.AddRow(row, delta);
+                        }
+                    }
+                }
+            }
+            return cube;
+        }
+
         public static ICube CorrelationDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, double epsilon)
         {
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             var pvCube = portfolio.PV(model, reportingCcy);
@@ -677,13 +918,17 @@ namespace Qwack.Models.Models
         public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
         {
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             var pvCube = portfolio.PV(model, reportingCcy);
+            var cashCube = portfolio.FlowsT0(model, reportingCcy);
             var pvRows = pvCube.GetAllRows();
+            var cashRows = cashCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex("TradeId");
 
             var rolledModel = model.RollModel(fwdValDate);
@@ -696,10 +941,26 @@ namespace Qwack.Models.Models
                 var theta = pvRowsFwd[i].Value - pvRows[i].Value;
                 if (theta != 0.0)
                 {
-                    var row = new Dictionary<string, object>();
-                    row.Add("TradeId", pvRowsFwd[i].MetaData[tidIx]);
-                    row.Add("Metric", "Theta");
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
+                        { "Metric", "Theta" }
+                    };
                     cube.AddRow(row, theta);
+                }
+            }
+
+            for (var i = 0; i < cashRows.Length; i++)
+            {
+                var cash = cashRows[i].Value;
+                if (cash != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "Metric", "CashMove" }
+                    };
+                    cube.AddRow(row, cash);
                 }
             }
 
@@ -709,15 +970,21 @@ namespace Qwack.Models.Models
         public static ICube AssetThetaCharm(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
         {
             var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>();
-            dataTypes.Add("TradeId", typeof(string));
-            dataTypes.Add("AssetId", typeof(string));
-            dataTypes.Add("PointLabel", typeof(string));
-            dataTypes.Add("Metric", typeof(string));
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
             cube.Initialize(dataTypes);
 
             var pvCube = portfolio.PV(model, reportingCcy);
             var pvRows = pvCube.GetAllRows();
+
+            var cashCube = portfolio.FlowsT0(model, reportingCcy);
+            var cashRows = cashCube.GetAllRows();
+
             var tidIx = pvCube.GetColumnIndex("TradeId");
 
             var rolledModel = model.RollModel(fwdValDate);
@@ -731,12 +998,31 @@ namespace Qwack.Models.Models
                 var theta = pvRowsFwd[i].Value - pvRows[i].Value;
                 if (theta != 0.0)
                 {
-                    var row = new Dictionary<string, object>();
-                    row.Add("TradeId", pvRowsFwd[i].MetaData[tidIx]);
-                    row.Add("AssetId", string.Empty);
-                    row.Add("PointLabel", string.Empty);
-                    row.Add("Metric", "Theta");
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", string.Empty },
+                        { "Metric", "Theta" }
+                    };
                     cube.AddRow(row, theta);
+                }
+            }
+
+            //cash move
+            for (var i = 0; i < cashRows.Length; i++)
+            {
+                var cash = cashRows[i].Value;
+                if (cash != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", "CashMove" },
+                        { "Metric", "Theta" }
+                    };
+                    cube.AddRow(row, cash);
                 }
             }
 
@@ -748,11 +1034,13 @@ namespace Qwack.Models.Models
             var aId = charmCube.GetColumnIndex("AssetId");
             foreach (var charmRow in charmCube.GetAllRows())
             {
-                var row = new Dictionary<string, object>();
-                row.Add("TradeId", charmRow.MetaData[tidIx]);
-                row.Add("AssetId", charmRow.MetaData[aId]);
-                row.Add("PointLabel", charmRow.MetaData[plId]);
-                row.Add("Metric", "Charm");
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "AssetId", charmRow.MetaData[aId] },
+                    { "PointLabel", charmRow.MetaData[plId] },
+                    { "Metric", "Charm" }
+                };
                 cube.AddRow(row, charmRow.Value);
             }
 
@@ -763,11 +1051,94 @@ namespace Qwack.Models.Models
             var fId = charmCube.GetColumnIndex("FxPair");
             foreach (var charmRow in charmCube.GetAllRows())
             {
-                var row = new Dictionary<string, object>();
-                row.Add("TradeId", charmRow.MetaData[tidIx]);
-                row.Add("AssetId", charmRow.MetaData[fId]);
-                row.Add("PointLabel", string.Empty);
-                row.Add("Metric", "Charm");
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "AssetId", charmRow.MetaData[fId] },
+                    { "PointLabel", string.Empty },
+                    { "Metric", "Charm" }
+                };
+                cube.AddRow(row, charmRow.Value);
+            }
+
+            return cube;
+        }
+
+        public static ICube AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
+        {
+            ICube cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) },
+                { "Currency", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var pvCube = portfolio.PV(model, reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+
+            var cashCube = portfolio.FlowsT0(model, reportingCcy);
+            var cashRows = cashCube.GetAllRows();
+
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+
+            var rolledModel = model.RollModel(fwdValDate);
+
+            var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
+            var pvRowsFwd = pvCubeFwd.GetAllRows();
+
+            //theta
+            var thetaCube = pvCubeFwd.QuickDifference(pvCube);
+            cube = cube.Merge(thetaCube, new Dictionary<string, object>
+            {
+                 { "AssetId", string.Empty },
+                 { "PointLabel", string.Empty },
+                 { "Metric", "Theta" }
+            });
+
+
+            //cash move
+            cube = cube.Merge(cashCube, new Dictionary<string, object>
+            {
+                 { "AssetId", string.Empty },
+                 { "PointLabel", "CashMove"  },
+                 { "Metric", "Theta" }
+            });
+
+            //delta
+            var baseDeltaCube = AssetDelta(portfolio, model);
+            cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            });
+
+            //charm-asset
+            var rolledDeltaCube = AssetDelta(portfolio, rolledModel);
+            var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+            cube = cube.Merge(charmCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+                 { "Metric", "Charm"},
+            });
+
+            //charm-fx
+            baseDeltaCube = FxDelta(portfolio, model);
+            rolledDeltaCube = FxDelta(portfolio, rolledModel);
+            charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+            var fId = charmCube.GetColumnIndex("FxPair");
+            foreach (var charmRow in charmCube.GetAllRows())
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "AssetId", charmRow.MetaData[fId] },
+                    { "PointLabel", string.Empty },
+                    { "Currency", string.Empty },
+                    { "Metric", "Charm" }
+                };
                 cube.AddRow(row, charmRow.Value);
             }
 

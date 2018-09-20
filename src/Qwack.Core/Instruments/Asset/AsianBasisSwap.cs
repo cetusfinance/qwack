@@ -13,7 +13,10 @@ namespace Qwack.Core.Instruments.Asset
         public AsianSwap[] PaySwaplets { get; set; }
         public AsianSwap[] RecSwaplets { get; set; }
 
+
         public string[] AssetIds => PaySwaplets.Select(x => x.AssetId).Concat(RecSwaplets.Select(x => x.AssetId)).Distinct().ToArray();
+
+        public string[] IrCurves => PaySwaplets.SelectMany(x => x.IrCurves).Concat(RecSwaplets.SelectMany(x => x.IrCurves)).Distinct().ToArray();
 
         public DateTime LastSensitivityDate => PaySwaplets.Max(x => x.LastSensitivityDate).Max(PaySwaplets.Max(x => x.LastSensitivityDate));
 

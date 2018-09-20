@@ -134,7 +134,7 @@ namespace Qwack.Excel.Services
         {
             var tCache = ContainerStores.GetObjectCache<T>();
             var tS = Names
-                .Where(s => !(s is ExcelMissing) && tCache.Exists(s as string))
+                .Where(s => !(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) && tCache.Exists(s as string))
                 .Select(s => tCache.GetObject(s as string).Value);
 
             return tS;
@@ -169,6 +169,27 @@ namespace Qwack.Excel.Services
             {
                 o[i] = (T)Convert.ChangeType(input[i], typeof(T));
             }
+            return o;
+        }
+
+        public static object ReturnPrettyExcelRangeVector(this object[,] data)
+        {
+            var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            // Now you can inspect the size of the caller with 
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            var o = new object[rows, cols];
+
+            for(var r=0;r<o.GetLength(0);r++)
+                for(var c=0;c<o.GetLength(1);c++)
+                {
+                    if (r < data.GetLength(0) && c < data.GetLength(1))
+                        o[r, c] = data[r, c];
+                    else
+                        o[r, c] = string.Empty;
+                }
+
             return o;
         }
     }

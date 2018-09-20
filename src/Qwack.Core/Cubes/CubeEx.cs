@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -224,6 +225,140 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
+        public static ICube Merge(this ICube baseCube, ICube otherCube)
+        {
+            if (!Enumerable.SequenceEqual(baseCube.DataTypes.Keys, otherCube.DataTypes.Keys) ||
+                !Enumerable.SequenceEqual(baseCube.DataTypes.Values, otherCube.DataTypes.Values))
+                throw new Exception("Cubes must be of same type to be merged");
+
+            var o = new ResultCube();
+            o.Initialize(baseCube.DataTypes);
+            var baseRows = baseCube.GetAllRows().ToArray();
+            var otherRows = otherCube.GetAllRows().ToArray();
+
+            for (var i = 0; i < baseRows.Length; i++)
+            {
+                var br = baseRows[i];
+                o.AddRow(br.MetaData, br.Value);
+            }
+
+            for (var i = 0; i < otherRows.Length; i++)
+            {
+                var br = otherRows[i];
+                o.AddRow(br.MetaData, br.Value);
+            }
+
+            return o;
+        }
+
+        public static T[] KeysForField<T>(this ICube cube, string fieldName)
+        {
+            if(!cube.DataTypes.ContainsKey(fieldName))
+                throw new Exception($"Cubes does contain field {fieldName}");
+            if (cube.DataTypes[fieldName] != typeof(T))
+                throw new Exception($"Field type does not match");
+
+
+            var o = new List<T>();
+            var ix = cube.DataTypes.Keys.ToList().IndexOf(fieldName);
+            foreach (var r in cube.GetAllRows())
+            {
+                o.Add((T)r.MetaData[ix]);
+            }
+
+            return o.Distinct().ToArray();
+        }
+
+        public static object[,] ToMatrix(this ICube cube, string verticalField, string horizontalField, bool sort)
+        {
+            if (!cube.DataTypes.ContainsKey(verticalField))
+                throw new Exception($"Cubes does contain field {verticalField}");
+
+            if (!cube.DataTypes.ContainsKey(horizontalField))
+                throw new Exception($"Cubes does contain field {horizontalField}");
+
+            var aggregated = cube.Pivot(new string[] { verticalField, horizontalField }, AggregationAction.Sum);
+
+            var distinctV = cube.KeysForField(verticalField);
+            var distinctH = cube.KeysForField(horizontalField);
+
+            if (sort)
+            {
+                //catch date labels
+                if (distinctH.All(x => DateTime.TryParseExact(x as string, new string[] { "MMMyy", "MMM-yy" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)))
+                    distinctH = distinctH.OrderBy(x => DateTime.ParseExact(x as string, new string[] { "MMMyy", "MMM-yy" }, CultureInfo.InvariantCulture, DateTimeStyles.None)).ToArray();
+                else
+                    distinctH = distinctH.OrderBy(x => x).ToArray();
+
+                if (distinctV.All(x => DateTime.TryParseExact(x as string, new string[] { "MMMyy", "MMM-yy" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)))
+                    distinctV = distinctV.OrderBy(x => DateTime.ParseExact(x as string, new string[] { "MMMyy", "MMM-yy" }, CultureInfo.InvariantCulture, DateTimeStyles.None)).ToArray();
+                else
+                    distinctV = distinctV.OrderBy(x => x).ToArray();
+            }
+
+            var o = new object[distinctV.Length+1, distinctH.Length+1];
+            for(var r=0;r<o.GetLength(0);r++)
+            {
+                for(var c=0;c<o.GetLength(1);c++)
+                {
+                    if (r == 0 && c == 0)
+                        continue;
+                    else if (r == 0) //titles
+                    {
+                        o[r, c] = distinctH[c - 1];
+                    }
+                    else if (c == 0)
+                    {
+                        o[r, c] = distinctV[r - 1];
+                    }
+                    else
+                    {
+                        var data = aggregated.Filter(new Dictionary<string, object> {
+                            { verticalField, distinctV[r - 1] },
+                            { horizontalField, distinctH[c - 1] }
+                        }).GetAllRows();
+                        if(data.Any())
+                        {
+                            o[r, c] = data.First().Value;
+                        }
+                    }
+                }
+            }
+            return o;
+        }
+
+        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd)
+        {
+            var o = new ResultCube();
+            o.Initialize(baseCube.DataTypes);
+            var baseRows = baseCube.GetAllRows().ToArray();
+            var otherRows = otherCube.GetAllRows().ToArray();
+            var otherFieldNames = otherCube.DataTypes.Keys.ToArray();
+
+            for (var i = 0; i < baseRows.Length; i++)
+            {
+                var br = baseRows[i];
+                o.AddRow(br.MetaData, br.Value);
+            }
+
+            for (var i = 0; i < otherRows.Length; i++)
+            {
+                var br = otherRows[i];
+                var rowDict = new Dictionary<string, object>();
+                for(var j=0;j<br.MetaData.Length;j++)
+                {
+                    rowDict.Add(otherFieldNames[j], br.MetaData[j]);
+                }
+                foreach(var fa in fieldsToAdd)
+                {
+                    rowDict[fa.Key] = fa.Value;
+                }
+                o.AddRow(rowDict, br.Value);
+            }
+
+            return o;
+        }
+
         public static bool IsEqual(object v1, object v2)
         {
             switch (v1)
@@ -244,7 +379,26 @@ namespace Qwack.Core.Cubes
                     return (int)v1 == (int)v2;
             }
             return false;
+        }
 
+        public static object[] KeysForField(this ICube cube, string fieldName)
+        {
+            if (!cube.DataTypes.ContainsKey(fieldName))
+                throw new Exception($"Cubes does contain field {fieldName}");
+
+            switch(Type.GetTypeCode(cube.DataTypes[fieldName]))
+            {
+                case TypeCode.String:
+                    return cube.KeysForField<string>(fieldName);
+                case TypeCode.DateTime:
+                    return cube.KeysForField<DateTime>(fieldName).Select(x=>(object)x).ToArray();
+                case TypeCode.Int32:
+                    return cube.KeysForField<int>(fieldName).Select(x => (object)x).ToArray();
+                case TypeCode.Boolean:
+                    return cube.KeysForField<bool>(fieldName).Select(x => (object)x).ToArray();
+                default:
+                    throw new Exception("Unknown type");
+            }
         }
     }
 }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Instruments.Funding;
+using Qwack.Dates;
 
 namespace Qwack.Core.Instruments
 {
@@ -18,8 +20,18 @@ namespace Qwack.Core.Instruments
                 return DateTime.MinValue;
 
             var assetTrades = portfolio.Instruments
-                .Where(x => x is IAssetInstrument).Select(x => x as IAssetInstrument);
-            return assetTrades.Max(x => x.LastSensitivityDate);
+                .Where(x => x is IAssetInstrument);
+
+            var fxTrades = portfolio.Instruments
+                .Where(x => x is FxForward);
+
+            if (!fxTrades.Any() && !assetTrades.Any())
+                return DateTime.MinValue;
+            else if (!fxTrades.Any())
+                return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate); 
+            else if (!assetTrades.Any())
+                return fxTrades.Max(x => ((FxForward)x).DeliveryDate);
+            return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate).Max(fxTrades.Max(x => ((FxForward)x).DeliveryDate));
         }
     }
 }

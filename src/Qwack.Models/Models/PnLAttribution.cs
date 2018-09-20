@@ -25,6 +25,10 @@ namespace Qwack.Models.Models
             var pvRows = pvCubeBase.GetAllRows();
             var tidIx = pvCubeBase.GetColumnIndex("TradeId");
 
+            var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
+            var cashRows = cashCube.GetAllRows();
+
+
             //first step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate);
             var newPVCube = portfolio.PV(model, reportingCcy);
@@ -41,6 +45,22 @@ namespace Qwack.Models.Models
                 cube.AddRow(row, r.Value);
             }
             var lastPVCuve = newPVCube;
+
+            //next cash move
+            for (var i = 0; i < cashRows.Length; i++)
+            {
+                var cash = cashRows[i].Value;
+                if (cash != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "Step", "Theta" },
+                        { "SubStep", "CashMove" }
+                    };
+                    cube.AddRow(row, cash);
+                }
+            }
 
             //next replace fixings with actual values
             foreach (var fixingDictName in endModel.FixingDictionaryNames)

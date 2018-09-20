@@ -72,6 +72,20 @@ namespace Qwack.Core.Instruments.Funding
             return pv;
         }
 
+        public double FlowsT0(IFundingModel model)
+        {
+            if(StartDate==model.BuildDate)
+            {
+                return Notional;
+            }
+            else if(EndDate==model.BuildDate)
+            {
+                var dcf = StartDate.CalculateYearFraction(EndDate, Basis);
+                return -Notional - Notional * dcf * InterestRate;
+            }
+            return 0.0;
+        }
+
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model)
         {
             Pv(model, true);

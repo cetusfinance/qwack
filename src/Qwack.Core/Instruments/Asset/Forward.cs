@@ -24,6 +24,8 @@ namespace Qwack.Core.Instruments.Asset
         public string FxFixingId { get; set; }
         public string DiscountCurve { get; set; }
 
+        public string[] IrCurves => new[] { DiscountCurve };
+
         public AsianSwap AsBulletSwap()
         {
             return new AsianSwap

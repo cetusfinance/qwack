@@ -206,5 +206,42 @@ namespace Qwack.Core.Curves
 
             return newCurve;
         }
+
+        public IrCurve BumpRateFlat(double delta, bool mutate)
+        {
+            if (mutate)
+            {
+                for (var i = 0; i < _rates.Length; i++)
+                {
+                    _rates[i] += delta;
+                    _interpolator.UpdateY(i, _rates[i], true);
+                }
+                return this;
+
+            }
+            else
+            {
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select(r => r + delta).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
+                return returnCurve;
+            }
+        }
+
+        public Dictionary<DateTime, IrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate)
+        {
+            var o = new Dictionary<DateTime, IrCurve>();
+
+            var lastBumpIx = _pillars.Length;
+
+            var ix = Array.BinarySearch(_pillars, lastSensitivityDate);
+            ix = (ix < 0) ? ~ix : ix;
+            ix += 2;
+            lastBumpIx = Min(ix, lastBumpIx); //cap at last pillar
+
+            for (var i = 0; i < lastBumpIx; i++)
+            {
+                o.Add(PillarDates[i], BumpRate(i, delta, false));
+            }
+            return o;
+        }
     }
 }

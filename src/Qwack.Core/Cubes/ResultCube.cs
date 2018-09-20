@@ -66,8 +66,5 @@ namespace Qwack.Core.Cubes
         {
             return _rows.ToArray();
         }
-
-        
-       
     }
 }

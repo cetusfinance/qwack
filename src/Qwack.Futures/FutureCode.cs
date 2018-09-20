@@ -183,6 +183,12 @@ namespace Qwack.Futures
                         var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
+                    case "LASTFRI":
+                        var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
+                            .IfHolidayRollBack(_settings.RollGen.CalendarObject)
+                            .Day;
+                        break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
                 }
@@ -210,6 +216,12 @@ namespace Qwack.Futures
                     case "WED3":
                         var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
+                        break;
+                    case "LASTFRI":
+                        var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
+                            .IfHolidayRollBack(_settings.RollGen.CalendarObject)
+                            .Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.RollGen.DayOfMonthToStartOther}");

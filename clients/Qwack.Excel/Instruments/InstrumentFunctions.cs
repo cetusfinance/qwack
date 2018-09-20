@@ -562,6 +562,49 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns interest rate delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioIrDelta))]
+        public static object AssetPortfolioIrDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                var result = pfolio.Value.AssetIrDelta(model.Value);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns greeks cube of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioGreeks))]
+        public static object AssetPortfolioGreeks(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = ContainerStores.GetObjectCache<Portfolio>()
+                .GetObjectOrThrow(PortfolioName, $"Could not find porfolio with name {PortfolioName}");
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var result = pfolio.Value.AssetGreeks(model.Value, FwdValDate, ccy);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution))]
         public static object AssetPnLAttribution(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,

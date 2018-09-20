@@ -26,12 +26,25 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(IFundingModel Model, bool updateState)
         {
+            if (Model.BuildDate > DeliveryDate)
+                return 0.0;
+
             var discountCurve = Model.Curves[ForeignDiscountCurve];
             var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
             var FV = (fwdRate - Strike) * DomesticQuantity;
             var PV = discountCurve.Pv(FV, DeliveryDate);
 
             return PV;
+        }
+
+        public double FlowsT0(IFundingModel Model)
+        {
+            if (DeliveryDate != Model.BuildDate)
+                return 0.0;
+
+            var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
+            var FV = (fwdRate - Strike) * DomesticQuantity;     
+            return FV;
         }
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
@@ -72,6 +85,15 @@ namespace Qwack.Core.Instruments.Funding
                 };
             }
         }
-        
+
+        public IAssetInstrument Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IAssetInstrument SetStrike(double strike)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

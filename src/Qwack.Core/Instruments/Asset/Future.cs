@@ -46,5 +46,7 @@ namespace Qwack.Core.Instruments.Asset
         }
 
         public DateTime LastSensitivityDate => ExpiryDate;
+
+        public string[] IrCurves => new string[0];
     }
 }

@@ -16,13 +16,16 @@ namespace Qwack.Excel.Cubes
 
         [ExcelFunction(Description = "Displays a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCube))]
         public static object DisplayCube(
-             [ExcelArgument(Description = "Cube name")] string ObjectName)
+             [ExcelArgument(Description = "Cube name")] string ObjectName,
+             [ExcelArgument(Description = "Pad output with whitespace beyond edges of result - defualt false")] object PaddedOutput)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 if (!ContainerStores.GetObjectCache<ICube>().TryGetObject(ObjectName, out var cube))
                     throw new Exception($"Could not find cube {ObjectName}");
 
+                var pad = PaddedOutput.OptionalExcel(false);
+           
                 var rows = cube.Value.GetAllRows();
 
                 var o = new object[rows.Length + 1, cube.Value.DataTypes.Count+1];
@@ -47,7 +50,7 @@ namespace Qwack.Excel.Cubes
                     r++;
                 }
 
-                return o;
+                return pad ? o.ReturnPrettyExcelRangeVector() : o;
             });
         }
 
@@ -160,6 +163,40 @@ namespace Qwack.Excel.Cubes
 
                 cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
                 return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Lists distinct values in a specified field for a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FieldValues))]
+        public static object FieldValues(
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Field name")] string FieldName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                var output = inCube.Value.KeysForField<string>(FieldName);
+
+                return ((object[])output).ReturnExcelRangeVector();
+            });
+        }
+
+        [ExcelFunction(Description = "Produces a matrix for two given fields from a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToMatrix))]
+        public static object CubeToMatrix(
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Field name vertical")] string FieldNameV,
+            [ExcelArgument(Description = "Field name horizontal")] string FieldNameH,
+            [ExcelArgument(Description = "Sort fields - true or false")] bool SortFields)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                var output = inCube.Value.ToMatrix(FieldNameV, FieldNameH, SortFields);
+
+                return output.ReturnPrettyExcelRangeVector();
             });
         }
     }

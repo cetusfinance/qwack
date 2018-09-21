@@ -72,6 +72,29 @@ namespace Qwack.Models
             return vol;
         }
 
+        public double GetVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike)
+        {
+            var fwd = _assetCurves[name].GetPriceForDate(expiry); //needs to account for spot/fwd offset
+            var vol = _assetVols[name].GetVolForDeltaStrike(strike, expiry, fwd);
+            return vol;
+        }
+
+        public double GetFxVolForStrikeAndDate(string name, DateTime expiry, double strike)
+        {
+            var pair = FundingModel.FxMatrix.GetFxPair(name);
+            var fwd = FundingModel.GetFxRate(expiry.SpotDate(pair.SpotLag, pair.SettlementCalendar, pair.SettlementCalendar), pair.Domestic, pair.Foreign); //needs to account for spot/fwd offset
+            var vol = FundingModel.VolSurfaces[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
+            return vol;
+        }
+
+        public double GetFxVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike)
+        {
+            var pair = FundingModel.FxMatrix.GetFxPair(name);
+            var fwd = FundingModel.GetFxRate(expiry.SpotDate(pair.SpotLag, pair.SettlementCalendar, pair.SettlementCalendar), pair.Domestic, pair.Foreign); //needs to account for spot/fwd offset
+            var vol = FundingModel.VolSurfaces[name].GetVolForDeltaStrike(strike, expiry, fwd);
+            return vol;
+        }
+
         public double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike)
         {
             var surface = _assetVols[name];

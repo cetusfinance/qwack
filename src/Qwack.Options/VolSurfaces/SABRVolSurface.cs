@@ -143,5 +143,10 @@ namespace Qwack.Options.VolSurfaces
         {
             throw new NotImplementedException();
         }
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

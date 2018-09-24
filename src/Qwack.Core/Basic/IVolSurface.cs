@@ -18,5 +18,6 @@ namespace Qwack.Core.Basic
 
         Currency Currency { get; set; }
         string AssetId { get; set; }
+        DateTime PillarDatesForLabel(string label);
     }
 }

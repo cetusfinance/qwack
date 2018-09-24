@@ -23,11 +23,11 @@ namespace Qwack.MonteCarlo.Test
     {
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
-        [Fact(Skip = "Broken")]
+        [Fact]
         public void LVMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(17));
+            var engine = new PathEngine(2.IntPow(15));
             //engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             //{
             //    UseNormalInverse = true,

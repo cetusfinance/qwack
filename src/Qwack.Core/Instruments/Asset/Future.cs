@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
@@ -45,8 +46,12 @@ namespace Qwack.Core.Instruments.Asset
             return c;
         }
 
+        public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == Currency ? FxConversionType.None : FxConversionType.ConvertThenAverage;
+        public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == Currency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{Currency}";
         public DateTime LastSensitivityDate => ExpiryDate;
 
         public string[] IrCurves => new string[0];
+
+
     }
 }

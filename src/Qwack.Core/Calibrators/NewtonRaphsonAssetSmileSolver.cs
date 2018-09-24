@@ -33,7 +33,6 @@ namespace Qwack.Core.Calibrators
         private IInterpolator1D _interp;
         private double[] _strikes;
 
-        private int _numberOfPillars;
         private double[] _currentGuess;
         private double[] _currentErrors;
         private double[][] _jacobian;

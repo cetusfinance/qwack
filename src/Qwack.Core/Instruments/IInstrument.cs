@@ -6,5 +6,6 @@ namespace Qwack.Core.Instruments
 {
     public interface IInstrument
     {
+        string TradeId { get; }
     }
 }

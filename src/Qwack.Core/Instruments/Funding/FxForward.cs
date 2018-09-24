@@ -24,6 +24,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime PillarDate { get; set; }
 
+        public string Pair => $"{DomesticCCY.Ccy}/{ForeignCCY.Ccy}";
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             if (Model.BuildDate > DeliveryDate)

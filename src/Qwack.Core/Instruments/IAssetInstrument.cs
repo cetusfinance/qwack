@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Qwack.Core.Basic;
 using Qwack.Core.Models;
 
 namespace Qwack.Core.Instruments
@@ -10,6 +11,9 @@ namespace Qwack.Core.Instruments
         string[] AssetIds { get; }
         string[] IrCurves { get; }
         DateTime LastSensitivityDate { get; }
+        FxConversionType FxType(IAssetFxModel model);
+        string FxPair(IAssetFxModel model);
+
         IAssetInstrument Clone();
         IAssetInstrument SetStrike(double strike);
     }

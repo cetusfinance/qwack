@@ -19,7 +19,6 @@ namespace Qwack.Core.Calibrators
         private const double JacobianBump = 0.0001;
 
         private DateTime _buildDate;
-        private readonly IFundingModel _curveEngine;
         private List<AsianSwapStrip> _curveInstruments;
         private DateTime[] _pillars;
         private IIrCurve _discountCurve;
@@ -30,7 +29,6 @@ namespace Qwack.Core.Calibrators
         private double[] _currentGuess;
         private double[] _currentPVs;
         private double[][] _jacobian;
-        private readonly string[] _curveNames;
 
         public IPriceCurve Solve(List<AsianSwapStrip> instruments, List<DateTime> pillars, IIrCurve discountCurve, DateTime buildDate)
         {

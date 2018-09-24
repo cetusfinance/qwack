@@ -18,7 +18,7 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCBlackVolFacts
     {
-        [Fact(Skip = "Broken")]
+        [Fact]
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;

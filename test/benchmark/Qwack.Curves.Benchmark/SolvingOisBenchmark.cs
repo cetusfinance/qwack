@@ -133,7 +133,7 @@ namespace Qwack.Curves.Benchmark
         [Benchmark(Baseline =true)]
         public void InitialOisAttempt()
         {
-            var model = _fundingModel.DeepClone();
+            var model = _fundingModel.DeepClone(null);
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolver();
             solver.Solve(model,_instruments);
         }
@@ -141,7 +141,7 @@ namespace Qwack.Curves.Benchmark
         [Benchmark]
         public void Staged()
         {
-            var model = _fundingModel.DeepClone();
+            var model = _fundingModel.DeepClone(null);
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(model, _instruments);
         }
@@ -149,7 +149,7 @@ namespace Qwack.Curves.Benchmark
         [Benchmark]
         public void StagedAnalyticJacobian()
         {
-            var model = _fundingModel.DeepClone();
+            var model = _fundingModel.DeepClone(null);
             var solver = new Core.Calibrators.NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
             solver.Solve(model, _instruments);
         }

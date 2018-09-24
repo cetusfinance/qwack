@@ -14,6 +14,11 @@ namespace Qwack.Core.Basic
             SettlementCalendar = settlementCalendar;
         }
 
+        public Currency(string ccy):this(ccy,DayCountBasis.Act365F,null)
+        {
+
+        }
+
         public string Ccy { get; set;}
         public DayCountBasis DayCount { get; set;}
         public Calendar SettlementCalendar { get; }

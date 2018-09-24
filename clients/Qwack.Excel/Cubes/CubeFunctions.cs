@@ -199,5 +199,21 @@ namespace Qwack.Excel.Cubes
                 return output.ReturnPrettyExcelRangeVector();
             });
         }
+
+        [ExcelFunction(Description = "Writes contents of cube object to csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToCSV))]
+        public static object CubeToCSV(
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Output filename")] string FileName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                inCube.Value.ToCSVFile(FileName);
+
+                return $"Saved to {FileName}";
+            });
+        }
     }
 }

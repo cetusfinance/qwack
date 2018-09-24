@@ -691,6 +691,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
+
         public static Portfolio GetPortfolioOrTradeFromCache(string name)
         {
             var pfolioCache = ContainerStores.GetObjectCache<Portfolio>();
@@ -705,6 +706,7 @@ namespace Qwack.Excel.Curves
 
             return pfolio.Value;
         }
+
 
         public static Portfolio GetPortfolio(object[] Instruments)
         {

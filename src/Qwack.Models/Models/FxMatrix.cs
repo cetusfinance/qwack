@@ -36,6 +36,13 @@ namespace Qwack.Models
 
         public void UpdateSpotRates(Dictionary<Currency, double> spotRates) => SpotRates = spotRates;
 
+        public FxPair GetFxPair(string pair)
+        {
+            var leftCCy = new Currency(pair.Substring(0, 3));
+            var rightCcy = new Currency(pair.Substring(pair.Length-3, 3));
+            return GetFxPair(leftCCy, rightCcy);
+        }
+
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);

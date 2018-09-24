@@ -49,5 +49,10 @@ namespace Qwack.Options.VolSurfaces
                 { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency } }
             };
         }
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            return OriginDate;
+        }
     }
 }

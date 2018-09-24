@@ -25,6 +25,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromCCRates))]
         public static object CreateDiscountCurveFromCCRates(
              [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Curve name")] object CurveName,
              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
              [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
              [ExcelArgument(Description = "Array of CC zero rates")] double[] ZeroRates,
@@ -34,6 +35,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var curveName = CurveName.OptionalExcel(ObjectName);
                 var curveTypeStr = InterpolationType.OptionalExcel("Linear");
                 var ccyStr = Currency.OptionalExcel("USD");
                 var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
@@ -47,7 +49,7 @@ namespace Qwack.Excel.Curves
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
                 var ccy = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal);
 
-                var cObj = new IrCurve(pDates, ZeroRates, BuildDate, ObjectName, iType, ccy, colSpecStr);
+                var cObj = new IrCurve(pDates, ZeroRates, BuildDate, curveName, iType, ccy, colSpecStr);
                 var cache = ContainerStores.GetObjectCache<IIrCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
@@ -57,6 +59,7 @@ namespace Qwack.Excel.Curves
         [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromDFs))]
         public static object CreateDiscountCurveFromDFs(
              [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Curve name")] object CurveName,
              [ExcelArgument(Description = "Build date")] DateTime BuildDate,
              [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
              [ExcelArgument(Description = "Array of discount factors")] double[] DiscountFactors,
@@ -66,6 +69,7 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var curveName = CurveName.OptionalExcel(ObjectName);
                 var curveTypeStr = InterpolationType.OptionalExcel("Linear");
                 var ccyStr = Currency.OptionalExcel("USD");
                 var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
@@ -86,7 +90,7 @@ namespace Qwack.Excel.Curves
                 if (DateTime.FromOADate(Pillars[0]) == BuildDate && zeroRates.Length > 1)
                     zeroRates[0] = zeroRates[1];
 
-                var cObj = new IrCurve(pDates, zeroRates, BuildDate, ObjectName, iType, ccy, colSpecStr);
+                var cObj = new IrCurve(pDates, zeroRates, BuildDate, curveName, iType, ccy, colSpecStr);
                 var cache = ContainerStores.GetObjectCache<IIrCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;

@@ -225,7 +225,7 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
-        public static ICube Merge(this ICube baseCube, ICube otherCube)
+        public static ICube MergeQuick(this ICube baseCube, ICube otherCube)
         {
             if (!Enumerable.SequenceEqual(baseCube.DataTypes.Keys, otherCube.DataTypes.Keys) ||
                 !Enumerable.SequenceEqual(baseCube.DataTypes.Values, otherCube.DataTypes.Values))
@@ -250,6 +250,67 @@ namespace Qwack.Core.Cubes
 
             return o;
         }
+
+        private static object GetDefaultValue(Type t)
+        {
+            if (t.IsValueType)
+                return Activator.CreateInstance(t);
+
+            return null;
+        }
+
+        public static ICube Merge(this ICube baseCube, ICube otherCube)
+        {
+            //add check that common fields are of them same type...
+            foreach (var kv in baseCube.DataTypes.Where(x => otherCube.DataTypes.Keys.Contains(x.Key)))
+                if (kv.Value != otherCube.DataTypes[kv.Key])
+                    throw new Exception($"Data types dont match for field {kv.Key}");
+
+
+            var newDataTypes = new Dictionary<string, Type>();
+            foreach (var kv in baseCube.DataTypes)
+                newDataTypes[kv.Key] = kv.Value;
+            foreach (var kv in otherCube.DataTypes)
+                newDataTypes[kv.Key] = kv.Value;
+
+
+            var o = new ResultCube();
+            o.Initialize(newDataTypes);
+            var baseRows = baseCube.GetAllRows().ToArray();
+            var otherRows = otherCube.GetAllRows().ToArray();
+
+            var baseIx = baseCube.DataTypes.Keys.Select(k => o.GetColumnIndex(k)).ToArray();
+            var otherIx = otherCube.DataTypes.Keys.Select(k => o.GetColumnIndex(k)).ToArray();
+
+            var cleanRow = o.DataTypes.Select(kv => GetDefaultValue(kv.Value)).ToArray();
+
+            for (var i = 0; i < baseRows.Length; i++)
+            {
+                var row = new object[cleanRow.Length];
+                Array.Copy(cleanRow, row, row.Length);
+                var br = baseRows[i];
+                for(var j=0;j<baseIx.Length;j++)
+                {
+                    row[baseIx[j]] = br.MetaData[j];
+                }
+                o.AddRow(row, br.Value);
+            }
+
+            for (var i = 0; i < otherRows.Length; i++)
+            {
+                var br = otherRows[i];
+                var row = new object[cleanRow.Length];
+                Array.Copy(cleanRow, row, row.Length);
+                for (var j = 0; j < baseIx.Length; j++)
+                {
+                    row[baseIx[j]] = br.MetaData[j];
+                }
+                o.AddRow(row, br.Value);
+            }
+
+            return o;
+        }
+
 
         public static T[] KeysForField<T>(this ICube cube, string fieldName)
         {
@@ -327,7 +388,7 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd)
+        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null)
         {
             var o = new ResultCube();
             o.Initialize(baseCube.DataTypes);
@@ -353,6 +414,13 @@ namespace Qwack.Core.Cubes
                 {
                     rowDict[fa.Key] = fa.Value;
                 }
+                if(fieldsToOverride!=null)
+                {
+                    foreach (var fa in fieldsToOverride)
+                    {
+                        rowDict[fa.Key] = fa.Value;
+                    }
+                }
                 o.AddRow(rowDict, br.Value);
             }
 
@@ -364,19 +432,19 @@ namespace Qwack.Core.Cubes
             switch (v1)
             {
                 case string vs:
-                    return (string)v1 == (string)v2;
+                    return v2 is string && (string)v1 == (string)v2;
                 case double vd:
-                    return (double)v1 == (double)v2;
+                    return v2 is double && (double)v1 == (double)v2;
                 case bool vb:
-                    return (bool)v1 == (bool)v2;
+                    return v2 is bool && (bool)v1 == (bool)v2;
                 case decimal vq:
-                    return (decimal)v1 == (decimal)v2;
+                    return v2 is decimal && (decimal)v1 == (decimal)v2;
                 case DateTime vt:
-                    return (DateTime)v1 == (DateTime)v2;
+                    return v2 is DateTime && (DateTime)v1 == (DateTime)v2;
                 case char vc:
-                    return (char)v1 == (char)v2;
+                    return v2 is char && (char)v1 == (char)v2;
                 case int vi:
-                    return (int)v1 == (int)v2;
+                    return v2 is int && (int)v1 == (int)v2;
             }
             return false;
         }
@@ -399,6 +467,23 @@ namespace Qwack.Core.Cubes
                 default:
                     throw new Exception("Unknown type");
             }
+        }
+
+        public static void ToCSVFile(this ICube cube, string fileName)
+        {
+            var output = new List<string>
+            {
+                string.Join(",", cube.DataTypes.Keys.Select(x=>x).Concat(new [] {"Value" }))
+            };
+
+            foreach(var row in cube.GetAllRows())
+            {
+                output.Add(string.Join(",", 
+                    row.MetaData.Select(x => Convert.ToString(x))
+                    .Concat(new[] { Convert.ToString(row.Value) })));
+            }
+
+            System.IO.File.WriteAllLines(fileName, output.ToArray());
         }
     }
 }

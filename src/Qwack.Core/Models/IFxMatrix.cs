@@ -13,6 +13,8 @@ namespace Qwack.Core.Models
         Dictionary<Currency, double> SpotRates { get; }
 
         FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy);
+        FxPair GetFxPair(string pair);
+
         void Init(Currency baseCurrency, DateTime buildDate, Dictionary<Currency, double> spotRates, List<FxPair> fXPairDefinitions, Dictionary<Currency, string> discountCurveMap);
         void UpdateSpotRates(Dictionary<Currency, double> spotRates);
 

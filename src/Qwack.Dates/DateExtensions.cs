@@ -229,6 +229,33 @@ namespace Qwack.Dates
         public static double CalculateYearFraction(this DayCountBasis basis, DateTime startDate, DateTime endDate) => startDate.CalculateYearFraction(endDate, basis);
 
         /// <summary>
+        /// Adds a year fraction to a date to return an end date
+        /// </summary>
+        /// <param name="startDate">Start Date</param>
+        /// <param name="yearFraction">Year fraction in format consistent with basis parameter</param>
+        /// <param name="basis">DayCountBasis enum</param>
+        /// <returns></returns>
+        public static DateTime AddYearFraction(this DateTime startDate, double yearFraction, DayCountBasis basis, bool ignoreTimeComponent=true)
+        {
+            var o = new DateTime();
+            switch (basis)
+            {
+                case DayCountBasis.Act_360:
+                    o = new DateTime((long)(startDate.Ticks +  yearFraction * _ticksFraction360));
+                    break;
+                case DayCountBasis.Act_365F:
+                    o = new DateTime((long)(startDate.Ticks + yearFraction * _ticksFraction365));
+                    break;
+            }
+
+            if (ignoreTimeComponent)
+                o = o.Date;
+
+            return o;
+        }
+
+
+        /// <summary>
         /// Returns first business day (according to specified calendar) of month in which the input date falls
         /// </summary>
         /// <param name="input">Input date</param>

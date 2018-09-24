@@ -166,5 +166,11 @@ namespace Qwack.Options.VolSurfaces
 
             return o;
         }
+
+        public DateTime PillarDatesForLabel(string label)
+        {
+            var labelIx = Array.IndexOf(PillarLabels, label);
+            return Expiries[labelIx];
+        }
     }
 }

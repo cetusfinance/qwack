@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Qwack.Core.Basic;
+using Qwack.Options;
 using Qwack.Paths;
 using Qwack.Paths.Output;
 using Qwack.Paths.Payoffs;
@@ -13,33 +15,24 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCConstantVolFacts
     {
-        [Fact(Skip = "Broken")]
+        [Fact]
         public void PathsGenerated()
         {
-            var engine = new PathEngine(2 << 8);
+            var vol = 0.32;
+
+            var engine = new PathEngine(2 << 10);
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true
             });
-            var asset = new ConstantVolSingleAsset
-                (
-                    startDate : DateTime.Now.Date,
-                    expiry: DateTime.Now.Date.AddYears(1),
-                    vol: 0.30,
-                    spot: 1000,
-                    drift: 0.00,
-                    numberOfSteps: 100,
-                    name: "TestAsset"
-                );
-            engine.AddPathProcess(asset);
             var asset2 = new ConstantVolSingleAsset
                 (
                     startDate: DateTime.Now.Date,
                     expiry: DateTime.Now.Date.AddYears(1),
-                    vol: 0.30,
+                    vol: vol,
                     spot: 500,
                     drift: 0.00,
-                    numberOfSteps: 25,
+                    numberOfSteps: 365,
                     name: "TestAsset2"
                 );
 
@@ -49,8 +42,10 @@ namespace Qwack.MonteCarlo.Test
             engine.SetupFeatures();
             engine.RunProcess();
 
-
-            var output = new OutputPathsToImage(engine,2000,1000);
+            var pv = payoff.AverageResult;
+            var blackPv = BlackFunctions.BlackPV(500, 500, 0, 1, vol, OptionType.P);
+            Assert.Equal(blackPv, pv, 0);
+            //var output = new OutputPathsToImage(engine,2000,1000);
 
         }
     }

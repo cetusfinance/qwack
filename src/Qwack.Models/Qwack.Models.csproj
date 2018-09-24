@@ -11,7 +11,9 @@
     <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
     <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
+    <ProjectReference Include="..\Qwack.Paths\Qwack.Paths.csproj" />
     <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
+    <ProjectReference Include="..\Qwack.Random\Qwack.Random.csproj" />
     <ProjectReference Include="..\Qwack.Storage\Qwack.Storage.csproj" />
   </ItemGroup>
 

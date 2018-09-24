@@ -51,6 +51,15 @@ namespace Qwack.Core.Basic
             d = d.IfHolidayRollForward(fxPair.SettlementCalendar);
             return d;
         }
+
+        public static FxPair FxPairFromString(this string pair)
+        {
+            return new FxPair
+            {
+                Domestic = new Currency(pair.Substring(0, 3)),
+                Foreign = new Currency(pair.Substring(pair.Length - 3, 3)),
+            };
+        }
     }
 
 }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Basic;
+using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
@@ -33,5 +35,9 @@ namespace Qwack.Core.Instruments.Asset
             PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray(),
             RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
         };
+
+
+        public FxConversionType FxType(IAssetFxModel model) => PaySwaplets.First().FxType(model);
+        public string FxPair(IAssetFxModel model) => PaySwaplets.First().FxPair(model);
     }
 }

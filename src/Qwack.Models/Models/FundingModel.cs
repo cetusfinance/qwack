@@ -104,6 +104,12 @@ namespace Qwack.Models
             return returnValue;
         }
 
+        public double GetFxRate(DateTime settlementDate, string fxPair)
+        {
+            var pair = fxPair.FxPairFromString();
+            return GetFxRate(settlementDate, pair.Domestic, pair.Foreign);
+        }
+
         public double GetFxRate(DateTime settlementDate, Currency domesticCcy, Currency foreignCcy)
         { //domestic-per-foreign
             if (foreignCcy == domesticCcy) return 1.0;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
@@ -23,6 +24,7 @@ namespace Qwack.Core.Instruments.Asset
         public Currency PaymentCurrency { get; set; }
         public string FxFixingId { get; set; }
         public string DiscountCurve { get; set; }
+        public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
 
         public string[] IrCurves => new[] { DiscountCurve };
 
@@ -79,5 +81,8 @@ namespace Qwack.Core.Instruments.Asset
         public string[] AssetIds => new[] { AssetId };
 
         public DateTime LastSensitivityDate => PaymentDate.Max(ExpiryDate);
+
+        public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
+        public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
     }
 }

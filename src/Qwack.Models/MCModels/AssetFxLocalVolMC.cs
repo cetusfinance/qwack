@@ -47,8 +47,27 @@ namespace Qwack.Models.MCModels
             }
 
             var lastDate = portfolio.LastSensitivityDate();
-
             var assetIds = portfolio.AssetIds();
+            var assetInstruments = portfolio.Instruments
+               .Where(x => x is IAssetInstrument)
+               .Select(x => x as IAssetInstrument);
+
+            var fixingsNeeded = new Dictionary<string, List<DateTime>>();
+            foreach (var ins in assetInstruments)
+            {
+                var fixingsForIns = ins.PastFixingDates(originDate);
+                if (fixingsForIns.Any())
+                {
+                    foreach (var kv in fixingsForIns)
+                    {
+                        if (!fixingsNeeded.ContainsKey(kv.Key))
+                            fixingsNeeded.Add(kv.Key, new List<DateTime>());
+
+                        fixingsNeeded[kv.Key] = fixingsNeeded[kv.Key].Concat(kv.Value).Distinct().ToList();
+                    }
+                }
+            }
+
             foreach (var assetId in assetIds)
             {
                 var surface = model.GetVolSurface(assetId);
@@ -58,6 +77,12 @@ namespace Qwack.Models.MCModels
                     .GetPriceCurve(assetId)
                     .GetPriceForDate(originDate.AddYearFraction(t, DayCountBasis.ACT365F));
                 });
+
+                var fixingDict = fixingsNeeded.ContainsKey(assetId) ? model.GetFixingDictionary(assetId) : null;
+                var fixings = fixingDict!=null ?
+                    fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict[x])
+                    : new Dictionary<DateTime, double>();
+
                 var asset = new LVSingleAsset
                 (
                     startDate: originDate,
@@ -65,7 +90,8 @@ namespace Qwack.Models.MCModels
                     volSurface: surface,
                     forwardCurve: fwdCurve,
                     nTimeSteps: settings.NumberOfTimesteps,
-                    name: assetId
+                    name: assetId,
+                    pastFixings: fixings
                 );
                 Engine.AddPathProcess(asset);
             }
@@ -110,10 +136,9 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(asset);
             }
 
-            _payoffs = portfolio.Instruments
-                .Where(x => x is IAssetInstrument)
-                .Select(x => x as IAssetInstrument)
-                .ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y));
+           
+
+            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y));
             foreach (var product in _payoffs)
             {
                 Engine.AddPathProcess(product.Value);
@@ -144,7 +169,7 @@ namespace Qwack.Models.MCModels
                 var insQuery = Portfolio.Instruments.Where(x => x.TradeId == kv.Key);
                 if (!insQuery.Any())
                     throw new Exception($"Trade with id {kv.Key} not found");
-                if(insQuery.Count()==1)
+                if(insQuery.Count()!=1)
                     throw new Exception($"Trade with id {kv.Key} has multiple results");
 
                 var ins = insQuery.First();

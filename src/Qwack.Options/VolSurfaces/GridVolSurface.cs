@@ -29,6 +29,7 @@ namespace Qwack.Options.VolSurfaces
 
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
+        public IInterpolator2D LocalVolGrid { get; set; }
 
         private IInterpolator1D[] _interpolators;
 
@@ -107,6 +108,9 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
+            if (deltaStrike > 1.0 || deltaStrike < -1.0)
+                throw new ArgumentOutOfRangeException($"Delta strike must be in range -1.0 < x < 1.0 - value was {deltaStrike}");
+
             if (StrikeType == StrikeType.ForwardDelta)
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,

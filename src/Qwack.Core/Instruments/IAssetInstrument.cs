@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments
         string[] AssetIds { get; }
         string[] IrCurves { get; }
         DateTime LastSensitivityDate { get; }
+        Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate);
         FxConversionType FxType(IAssetFxModel model);
         string FxPair(IAssetFxModel model);
 

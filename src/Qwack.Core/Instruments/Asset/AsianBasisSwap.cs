@@ -39,5 +39,11 @@ namespace Qwack.Core.Instruments.Asset
 
         public FxConversionType FxType(IAssetFxModel model) => PaySwaplets.First().FxType(model);
         public string FxPair(IAssetFxModel model) => PaySwaplets.First().FxPair(model);
+
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) =>
+            PaySwaplets.SelectMany(x => x.PastFixingDates(valDate))
+            .Concat(RecSwaplets.SelectMany(x => x.PastFixingDates(valDate)))
+            .Distinct()
+            .ToDictionary(x => x.Key, x => x.Value);
     }
 }

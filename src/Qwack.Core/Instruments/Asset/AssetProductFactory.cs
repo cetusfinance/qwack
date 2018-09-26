@@ -39,7 +39,8 @@ namespace Qwack.Core.Instruments.Asset
                     PaymentDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset),
                     PaymentCurrency = currency,
                     Direction = tradeDirection,
-                    Notional = notional
+                    Notional = notional,
+                    FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
                 });
             }
             else
@@ -64,7 +65,8 @@ namespace Qwack.Core.Instruments.Asset
                         PaymentDate = m.LastDayOfMonth().AddPeriod(RollType.F, fixingCalendar, payOffset),
                         PaymentCurrency = currency,
                         Direction = tradeDirection,
-                        Notional = notional
+                        Notional = notional,
+                        FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
                     });
                     m = m.LastDayOfMonth().AddDays(1);
                 }
@@ -108,7 +110,8 @@ namespace Qwack.Core.Instruments.Asset
                 PaymentDate = payDate,
                 PaymentCurrency = currency,
                 Direction = tradeDirection,
-                Notional = notional
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
 
             return swap;
@@ -168,7 +171,8 @@ namespace Qwack.Core.Instruments.Asset
                 PaymentDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset),
                 PaymentCurrency = currency,
                 Direction = tradeDirection,
-                Notional = notional
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
 
         }
@@ -192,7 +196,8 @@ namespace Qwack.Core.Instruments.Asset
                 PaymentDate = payDate,
                 PaymentCurrency = currency,
                 Direction = tradeDirection,
-                Notional = notional
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
 
         }

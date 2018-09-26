@@ -31,6 +31,7 @@ namespace Qwack.Options.VolSurfaces
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
         public string AssetId { get; set; }
+        public IInterpolator2D LocalVolGrid { get; set; }
 
         private IInterpolator1D _alphaInterp;
         private IInterpolator1D _betaInterp;

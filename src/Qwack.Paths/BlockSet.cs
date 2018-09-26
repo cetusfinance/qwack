@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Utils.Exceptions;
+using static System.Math;
 
 namespace Qwack.Paths
 {
@@ -29,7 +30,7 @@ namespace Qwack.Paths
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
-            var pathsPerBlock = numberOfPaths / (_numberOfThreads * 2);
+            var pathsPerBlock = Max(1, numberOfPaths / (_numberOfThreads * 2));
             var numberOfBlocks = numberOfPaths / pathsPerBlock;
             _blocks = new PathBlock[numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)

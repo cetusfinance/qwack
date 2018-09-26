@@ -18,6 +18,8 @@ namespace Qwack.Options.VolSurfaces
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
 
+        public Math.Interpolation.IInterpolator2D LocalVolGrid { get; set; }
+
         public ConstantVolSurface()         {        }
 
         public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);

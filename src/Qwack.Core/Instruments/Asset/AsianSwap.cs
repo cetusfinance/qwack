@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -37,7 +38,7 @@ namespace Qwack.Core.Instruments.Asset
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves => new[] { DiscountCurve };
 
-        public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType,FixingCalendar,SpotLag));
+        public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 
         public IAssetInstrument Clone()
         {
@@ -77,5 +78,9 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
 
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
+
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
+                new Dictionary<string, List<DateTime>>() :
+                new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
     }
 }

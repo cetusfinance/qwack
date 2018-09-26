@@ -42,7 +42,7 @@ namespace Qwack.Excel.Curves
 
                 if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
                 {
-                    return $"Could not parse price curve type - {curveTypeStr}";
+                    return $"Could not parse interpolator type - {curveTypeStr}";
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
@@ -76,7 +76,7 @@ namespace Qwack.Excel.Curves
 
                 if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
                 {
-                    return $"Could not parse price curve type - {curveTypeStr}";
+                    return $"Could not parse interpolator type - {curveTypeStr}";
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
@@ -124,6 +124,9 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                if (StartDate >= EndDate)
+                    return "End date must be strictly greater that start date";
+
                 var rateType = RateType.OptionalExcel<string>("Linear");
                 var basis = Basis.OptionalExcel<string>("Act365F");
 

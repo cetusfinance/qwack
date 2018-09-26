@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Options.VolSurfaces;
 using Qwack.Core.Basic;
+using static System.Math;
 
 namespace Qwack.Options
 {
@@ -11,7 +12,7 @@ namespace Qwack.Options
         public static double[][] ComputeLocalVarianceOnGrid(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double,double> forwardFunc)
         {
             var numberOfTimesteps = timeSteps.Length;
-            var numberOfStrikes = strikes[0].Length;
+
         
             var deltaK = 0.0001 * forwardFunc(timeSteps[0]);
             var deltaKsqr = deltaK * deltaK;
@@ -28,6 +29,7 @@ namespace Qwack.Options
            
             for (var it = 1; it < numberOfTimesteps ; it++)
             {
+                var numberOfStrikes = strikes[it-1].Length;
                 lvGrid[it - 1] = new double[numberOfStrikes];
 
                 double K, V, S, Td, dwdT, localVariance, TdSq, T, T1;
@@ -37,7 +39,7 @@ namespace Qwack.Options
                 T = timeSteps[it];
                 T1 = timeSteps[it - 1];
                 Td = T - T1;
-                TdSq = System.Math.Sqrt(Td);
+                TdSq = Sqrt(Td);
                 S = Ss[it]; 
                 St = Ss[it - 1];
                 var fwd = forwardFunc(T);
@@ -46,13 +48,13 @@ namespace Qwack.Options
                 {
                     K = strikes[it][ik];
                     K_tm1 = K * St / S;
-                    y = System.Math.Log(K / S);
-                    yPlus = System.Math.Log((K + deltaK) / S);
-                    yPlus2 = System.Math.Log((K + deltaK * 2) / S);
-                    yMinus = System.Math.Log((K - deltaK) / S);
-                    yMinus2 = System.Math.Log((K - deltaK * 2) / S);
-                    Y1 = System.Math.Log(System.Math.Sqrt(K * K + 2 * deltaK * K) / S);
-                    Y2 = System.Math.Log(System.Math.Sqrt(K * K - 2 * deltaK * K) / S);                  
+                    y = Log(K / S);
+                    yPlus = Log((K + deltaK) / S);
+                    yPlus2 = Log((K + deltaK * 2) / S);
+                    yMinus = Log((K - deltaK) / S);
+                    yMinus2 = Log((K - deltaK * 2) / S);
+                    Y1 = Log(Sqrt(K * K + 2 * deltaK * K) / S);
+                    Y2 = Log(Sqrt(K * K - 2 * deltaK * K) / S);                  
                     V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
                     w = V * V * T;
                     V_t1 = VanillaSurface.GetVolForAbsoluteStrike(K_tm1, T1, fwd);

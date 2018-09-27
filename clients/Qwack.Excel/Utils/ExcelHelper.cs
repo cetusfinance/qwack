@@ -110,7 +110,16 @@ namespace Qwack.Excel.Services
 
         public static object ReturnExcelRangeVectorFromDouble(this double[] data)
         {
-            var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            ExcelReference caller;
+            try
+            {
+                caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            }
+            catch
+            {
+                return data;
+            }
+
             // Now you can inspect the size of the caller with 
             var rows = caller.RowLast - caller.RowFirst + 1;
             var cols = caller.ColumnLast - caller.ColumnFirst + 1;

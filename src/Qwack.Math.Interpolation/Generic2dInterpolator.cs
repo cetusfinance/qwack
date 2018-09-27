@@ -27,15 +27,24 @@ namespace Qwack.Math.Interpolation
             _z = z;
             _xType = xType;
             _yType = yType;
-            Initialize();
-        }
 
-        private void Initialize()
-        {
             _yInterps = new IInterpolator1D[_y.Length];
             for (var i = 0; i < _yInterps.Length; i++)
             {
                 _yInterps[i] = InterpolatorFactory.GetInterpolator(_x, _z.GetRow(i), _yType);
+            }
+        }
+
+        public Generic2dInterpolator(double[][] x, double[] y, double[][] z, Interpolator1DType xType, Interpolator1DType yType)
+        {
+            _y = y;
+            _xType = xType;
+            _yType = yType;
+
+            _yInterps = new IInterpolator1D[_y.Length];
+            for (var i = 0; i < _yInterps.Length; i++)
+            {
+                _yInterps[i] = InterpolatorFactory.GetInterpolator(x[i], z[i], _yType);
             }
         }
 

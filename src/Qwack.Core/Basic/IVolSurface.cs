@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Math.Interpolation;
 
 namespace Qwack.Core.Basic
 {
@@ -18,6 +19,8 @@ namespace Qwack.Core.Basic
 
         Currency Currency { get; set; }
         string AssetId { get; set; }
+        IInterpolator2D LocalVolGrid { get; set; }
+
         DateTime PillarDatesForLabel(string label);
     }
 }

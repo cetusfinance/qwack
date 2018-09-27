@@ -66,5 +66,20 @@ namespace Qwack.Math.Interpolation
                     throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
             }
         }
+
+        public static IInterpolator2D GetInterpolator(double[][] x, double[] y, double[][] z, Interpolator2DType kind)
+        {
+            switch (kind)
+            {
+                case Interpolator2DType.Bilinear:
+                    return new Generic2dInterpolator(x, y, z, Interpolator1DType.Linear, Interpolator1DType.Linear);
+                case Interpolator2DType.BiCubic:
+                    return new Generic2dInterpolator(x, y, z, Interpolator1DType.CubicSpline, Interpolator1DType.CubicSpline);
+                case Interpolator2DType.DummyPoint:
+                    return new DummyPointInterpolator(z[0][0]);
+                default:
+                    throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
+            }
+        }
     }
 }

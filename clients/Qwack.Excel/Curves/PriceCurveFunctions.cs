@@ -15,6 +15,7 @@ using Qwack.Core.Basic;
 using Qwack.Models.Models;
 using Qwack.Futures;
 using Qwack.Dates;
+using Qwack.Math;
 
 namespace Qwack.Excel.Curves
 {
@@ -458,7 +459,7 @@ namespace Qwack.Excel.Curves
                 var sparseSpreads = SparseNewSpreads
                     .Select(x => x is ExcelEmpty || !(x is double) ? 
                     null : (double?)x).ToArray();
-                var o = Math.CurveBender.Bend(InputSpreads, sparseSpreads);
+                var o = CurveBender.Bend(InputSpreads, sparseSpreads);
                 return o.ReturnExcelRangeVectorFromDouble();
             });
         }

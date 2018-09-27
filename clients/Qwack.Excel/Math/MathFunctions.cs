@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ExcelDna.Integration;
-using Qwack.Math.Interpolation;
+using Qwack.Math;
 using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Qwack.Excel.Interpolation
+namespace Qwack.Excel.Math
 {
     public class MathFunctions
     {
@@ -24,7 +24,7 @@ namespace Qwack.Excel.Interpolation
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                return Math.Statistics.FisherTransform(Correlation, ConfidenceLevel, SampleSize, IsBid);
+                return Statistics.FisherTransform(Correlation, ConfidenceLevel, SampleSize, IsBid);
             });
         }
     }

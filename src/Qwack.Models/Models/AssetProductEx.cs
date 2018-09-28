@@ -17,7 +17,7 @@ namespace Qwack.Models.Models
 {
     public static class AssetProductEx
     {
-        private static bool _useVarianceAverage = false;
+        private static readonly bool _useVarianceAverage = false;
 
         public static double PV(this AsianOption asianOption, IAssetFxModel model)
         {
@@ -756,11 +756,13 @@ namespace Qwack.Models.Models
                         var vega = ((double)bumpedRows[i].Value- (double)pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
-                            var row = new Dictionary<string, object>();
-                            row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
-                            row.Add("AssetId", surfaceName);
-                            row.Add("PointLabel", bCurve.Key);
-                            row.Add("Metric", "Vega");
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "AssetId", surfaceName },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Vega" }
+                            };
                             cube.AddRow(row,vega);
                         }
                     }
@@ -926,9 +928,11 @@ namespace Qwack.Models.Models
                 var cDelta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value); 
                 if (cDelta != 0.0)
                 {
-                    var row = new Dictionary<string, object>();
-                    row.Add("TradeId", bumpedRows[i].MetaData[tidIx]);
-                    row.Add("Metric", "CorrelDelta");
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                        { "Metric", "CorrelDelta" }
+                    };
                     cube.AddRow(row, cDelta);
                 }
             }

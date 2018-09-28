@@ -140,14 +140,8 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
-        {
-            throw new NotImplementedException();
-        }
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => throw new NotImplementedException();
 
-        public DateTime PillarDatesForLabel(string label)
-        {
-            throw new NotImplementedException();
-        }
+        public DateTime PillarDatesForLabel(string label) => throw new NotImplementedException();
     }
 }

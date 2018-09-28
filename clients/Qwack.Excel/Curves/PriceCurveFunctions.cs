@@ -88,7 +88,7 @@ namespace Qwack.Excel.Curves
             {
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, Qwack.Dates.DayCountBasis.Act360, labels)
+                var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>(), Qwack.Dates.DayCountBasis.Act360, labels)
                 {
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName
@@ -117,7 +117,7 @@ namespace Qwack.Excel.Curves
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType)
+                var cObj = new SparsePriceCurve(BuildDate, pDates, Prices, cType, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>())
                 {
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName
@@ -158,7 +158,7 @@ namespace Qwack.Excel.Curves
 
                 var pDates = Pillars.ToDateTimeArray();
                 var fitter = new Core.Calibrators.NewtonRaphsonAssetCurveSolver();
-                var cObj = (SparsePriceCurve)fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate);
+                var cObj = (SparsePriceCurve)fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>());
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;
 

@@ -22,6 +22,8 @@ namespace Qwack.Core.Tests.CurveSolving
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
         public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
         public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
 
@@ -35,7 +37,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] strikes = { -10, -11, -12, -13};
 
             var cal = CalendarProvider.Collection["LON"];
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var usd = CurrencyProvider["USD"];
 
             var bPillars = futures.Select(x => FutureCode.GetExpiryFromCode(x, futureSettingsProvider)).ToArray();
             var brentCurve = new PriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, futures)
@@ -71,7 +73,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] strikes = { -10 };
 
             var cal = CalendarProvider.Collection["LON"];
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var usd = CurrencyProvider["USD"];
 
             var bPillars = new[] { buildDate, buildDate.AddDays(100) };
             var brentCurve = new PriceCurve(buildDate, bPillars, new[] { 100.0, 100.0 }, PriceCurveType.Linear)

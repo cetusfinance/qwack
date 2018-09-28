@@ -33,9 +33,13 @@ namespace Qwack.Core.Calibrators
         private double[] _currentGuess;
         private double[] _currentPVs;
         private double[][] _jacobian;
+        private ICurrencyProvider _currencyProvider;
 
-        public SparsePriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType)
+        public SparsePriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, 
+            IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType,
+            ICurrencyProvider currencyProvider)
         {
+            _currencyProvider = currencyProvider;
             _curveInstruments = instruments;
             _pillars = pillars.ToArray();
             _numberOfInstruments = _curveInstruments.Count;
@@ -46,7 +50,7 @@ namespace Qwack.Core.Calibrators
             _sparseType = curveType;
 
             _currentGuess = Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
-            _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType);
+            _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
             _currentPVs = ComputePVs();
 
             ComputeJacobianSparse();
@@ -54,7 +58,7 @@ namespace Qwack.Core.Calibrators
             for (var i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
-                _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType);
+                _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
 
                 _currentPVs = ComputePVs();
                 if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
@@ -119,7 +123,7 @@ namespace Qwack.Core.Calibrators
             for (var i = 0; i < _numberOfPillars; i++)
             {
 
-                _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _sparseType);
+                _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _sparseType, _currencyProvider);
                 var bumpedPVs = ComputePVs();
 
                 for (var j = 0; j < bumpedPVs.Length; j++)

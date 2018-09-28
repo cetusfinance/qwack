@@ -18,6 +18,7 @@ namespace Qwack.Core.Curves
         private readonly SparsePriceCurveType _curveType;
         private IInterpolator1D _interpA;
         private IInterpolator1D _interpB;
+        private ICurrencyProvider _currencyProvider;
 
         public bool UnderlyingsAreForwards => _curveType == SparsePriceCurveType.Coal;
 
@@ -28,7 +29,7 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => _pillarDates.Length;
 
-        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+        public Currency Currency { get; set; } 
 
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
             {
@@ -42,8 +43,10 @@ namespace Qwack.Core.Curves
 
         public DateTime[] PillarDates => _pillarDates;
 
-        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, string[] pillarLabels=null)
+        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels=null)
         {
+            _currencyProvider = currencyProvider;
+            Currency = currencyProvider["USD"];
             BuildDate = buildDate;
             _pillarDates = PillarDates;
             _prices = Prices;
@@ -83,7 +86,7 @@ namespace Qwack.Core.Curves
             for (var i = 0; i < _pillarDates.Length; i++)
             {
                 var bumpedCurve = _prices.Select((x, ix) => ix == i ? x + bumpSize : x).ToArray();
-                var c = new SparsePriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType);
+                var c = new SparsePriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType, _currencyProvider, null);
                 var name = _pillarLabels[i];
                 o.Add(name, c);
             }
@@ -98,11 +101,11 @@ namespace Qwack.Core.Curves
                 newPillars.RemoveAt(0);
                 var newPrices = ((double[])_prices.Clone()).ToList();
                 newPrices.RemoveAt(0);
-                return new SparsePriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels);
+                return new SparsePriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels);
             }
             else
             {
-                return new SparsePriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels);
+                return new SparsePriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels);
             }
         }
 

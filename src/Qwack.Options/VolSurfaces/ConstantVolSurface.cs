@@ -52,9 +52,6 @@ namespace Qwack.Options.VolSurfaces
             };
         }
 
-        public DateTime PillarDatesForLabel(string label)
-        {
-            return OriginDate;
-        }
+        public DateTime PillarDatesForLabel(string label) => OriginDate;
     }
 }

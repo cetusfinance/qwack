@@ -95,8 +95,8 @@ namespace Qwack.Excel.Instruments
 
                 var product = new FxForward
                 {
-                    DomesticCCY = new Currency(DomesticCcy, DayCountBasis.Act365F, domesticCal),
-                    ForeignCCY = new Currency(ForeignCcy, DayCountBasis.Act365F, foreignCal),
+                    DomesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCcy],
+                    ForeignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCcy],
                     DomesticQuantity = DomesticNotional,
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
@@ -326,7 +326,7 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Currency, out var cal);
-                var ccy = new Currency(Currency, DayCountBasis.Act365F, cal);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 if (!Enum.TryParse(Basis, out DayCountBasis basis))
                 {
@@ -424,7 +424,7 @@ namespace Qwack.Excel.Instruments
 
                 var rIndex = new FloatRateIndex
                 {
-                    Currency = new Currency(Currency, DayCountBasis.Act365F, null),
+                    Currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency],
                     RollConvention = rConv,
                     FixingOffset = fixOffset,
                     ResetTenor = floatTenor,
@@ -494,8 +494,8 @@ namespace Qwack.Excel.Instruments
 
                 var pair = new FxPair()
                 {
-                    Domestic = new Currency(DomesticCurrency,DayCountBasis.Act365F, domesticCal),
-                    Foreign = new Currency(ForeignCurrency, DayCountBasis.Act365F, foreignCal),
+                    Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCurrency],
+                    Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCurrency],
                     SettlementCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };

@@ -52,7 +52,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, xaf);
 
             var s = new Calibrators.NewtonRaphsonAssetCurveSolver();
-            var curve = s.Solve(instruments, pillars, discountCurve, startDate);
+            var curve = s.Solve(instruments, pillars, discountCurve, startDate, );
 
             for (var i = 0; i < instruments.Count; i++)
             {

@@ -17,9 +17,6 @@ namespace Qwack.Math.Regression
             Betas = weights.SubArray(1, weights.Length - 1);
         }
 
-        public double Regress(double[] values)
-        {
-            return DoubleArrayFunctions.VectorProduct(values, Betas) + Alpha;
-        }
+        public double Regress(double[] values) => DoubleArrayFunctions.VectorProduct(values, Betas) + Alpha;
     }
 }

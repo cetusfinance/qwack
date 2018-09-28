@@ -12,13 +12,18 @@ using Qwack.Dates;
 using static System.Math;
 using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
+using Qwack.Futures;
 
 namespace Qwack.Core.Tests.Instruments
 {
     public class IrBasisSwapFacts
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
 
         [Fact]
         public void IrBasisSwap()
@@ -29,7 +34,7 @@ namespace Qwack.Core.Tests.Instruments
             var flatRate6m = 0.06;
             var rates3m = pillars.Select(p => flatRate3m).ToArray();
             var rates6m = pillars.Select(p => flatRate6m).ToArray();
-            var usd = new Currency("USD", Dates.DayCountBasis.Act365F, null);
+            var usd = CurrencyProvider["USD"];
             var discoCurve3m = new IrCurve(pillars, rates3m, bd, "USD.BLAH.3M", Interpolator1DType.Linear, usd);
             var discoCurve6m = new IrCurve(pillars, rates6m, bd, "USD.BLAH.6M", Interpolator1DType.Linear, usd);
             var fModel = new FundingModel(bd, new[] { discoCurve3m, discoCurve6m });

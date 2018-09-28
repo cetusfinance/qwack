@@ -65,8 +65,8 @@ namespace Qwack.Core.Tests.AssetModel
             aModel.AddPriceCurve("Coconuts", curve);
 
             var periodCode = "SEP-18";
-            var periodDates = periodCode.ParsePeriod();
-            var fixingDates = periodDates.Start.BusinessDaysInPeriod(periodDates.End, cal).ToArray();
+            var (Start, End) = periodCode.ParsePeriod();
+            var fixingDates = Start.BusinessDaysInPeriod(End, cal).ToArray();
             var settleDate = fixingDates.Last().AddPeriod(RollType.F, cal, new Frequency("5b"));
             var fxFwd = aModel.FundingModel.GetFxAverage(fixingDates, usd, zar);
             var assetFwd = curve.GetAveragePriceForDates(fixingDates);
@@ -143,8 +143,8 @@ namespace Qwack.Core.Tests.AssetModel
             aModel.AddPriceCurve("Coconuts", curve);
 
             var periodCode = "SEP-18";
-            var periodDates = periodCode.ParsePeriod();
-            var fixingDates = periodDates.Start.BusinessDaysInPeriod(periodDates.End, cal).ToArray();
+            var (Start, End) = periodCode.ParsePeriod();
+            var fixingDates = Start.BusinessDaysInPeriod(End, cal).ToArray();
             var settleDate = fixingDates.Last().AddPeriod(RollType.F, cal, new Frequency("5b"));
             var fxFwd = aModel.FundingModel.GetFxAverage(fixingDates, usd, zar);
             var assetFwd = curve.GetAveragePriceForDates(fixingDates);

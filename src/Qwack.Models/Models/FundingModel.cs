@@ -157,10 +157,7 @@ namespace Qwack.Models
             return curve.GetDf(startDate, endDate);
         }
 
-        public double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy)
-        {
-            return GetFxRates(fixingDates, domesticCcy, foreignCcy).Average();
-        }
+        public double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy) => GetFxRates(fixingDates, domesticCcy, foreignCcy).Average();
 
         public double[] GetFxRates(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy)
         {

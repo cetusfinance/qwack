@@ -29,7 +29,7 @@ namespace Qwack.Futures
 
         public FutureSettings Settings => _settings;
 
-        private IFutureSettingsProvider _futureSettingsProvider;
+        private readonly IFutureSettingsProvider _futureSettingsProvider;
 
         public FutureCode(string futureCodeRoot, IFutureSettingsProvider futureSettings)
         {

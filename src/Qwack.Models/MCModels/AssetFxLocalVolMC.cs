@@ -21,7 +21,7 @@ namespace Qwack.Models.MCModels
         public PathEngine Engine { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
-        private Dictionary<string, AssetPathPayoff> _payoffs;
+        private readonly Dictionary<string, AssetPathPayoff> _payoffs;
 
         public AssetFxLocalVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings)
         {

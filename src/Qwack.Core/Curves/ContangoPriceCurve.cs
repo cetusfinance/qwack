@@ -18,6 +18,7 @@ namespace Qwack.Core.Curves
         private readonly DateTime _spotDate;
         private readonly DayCountBasis _basis;
         private IInterpolator1D _interp;
+        private ICurrencyProvider _currencyProvider;
 
         public bool UnderlyingsAreForwards => true;
 
@@ -33,7 +34,7 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => _pillarDates.Length;
 
-        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+        public Currency Currency { get; set; }
 
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
             {
@@ -46,8 +47,11 @@ namespace Qwack.Core.Curves
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
 
 
-        public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)
+        public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, ICurrencyProvider currencyProvider,
+            DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)
         {
+            _currencyProvider = currencyProvider;
+            Currency = currencyProvider["USD"];
             BuildDate = buildDate;
             _pillarDates = pillarDates;
             _contangos = contangos;
@@ -82,7 +86,7 @@ namespace Qwack.Core.Curves
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();
-            var cSpot = new ContangoPriceCurve(BuildDate, _spot+bumpSize, _spotDate, _pillarDates, _contangos, _basis);
+            var cSpot = new ContangoPriceCurve(BuildDate, _spot+bumpSize, _spotDate, _pillarDates, _contangos, _currencyProvider, _basis);
             o.Add("Spot", cSpot);
             return o;
         }
@@ -91,7 +95,7 @@ namespace Qwack.Core.Curves
         {
             var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
             var newSpot = GetPriceForDate(newSpotDate);
-            var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, _contangos, _basis, _pillarLabels);
+            var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, _contangos, _currencyProvider, _basis, _pillarLabels);
             return o;
         }
 

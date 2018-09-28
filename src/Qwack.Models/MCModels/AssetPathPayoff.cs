@@ -32,10 +32,10 @@ namespace Qwack.Models.MCModels
         private List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
         private readonly bool _isCompo;
-        private OptionType _optionType;
-        private FxConversionType _fxType;
+        private readonly OptionType _optionType;
+        private readonly FxConversionType _fxType;
 
-        private List<AssetPathPayoff> _subInstruments;
+        private readonly List<AssetPathPayoff> _subInstruments;
 
         private readonly Vector<double> _one = new Vector<double>(1.0);
 

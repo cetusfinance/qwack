@@ -138,7 +138,7 @@ namespace Qwack.Excel.Instruments
                 var sLagPay = new Frequency(spotLagPay);
                 var sLagRec = new Frequency(spotLagRec);
 
-                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 AsianBasisSwap product;
                 if (PeriodCode is double)
@@ -175,7 +175,7 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 var multiplier = PriceMultiplier.OptionalExcel(1.0);
-                var currency = new Currency(Currency, DayCountBasis.Act365F, null);
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 var product = new Future
                 {
@@ -491,7 +491,7 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ReportingCcy];
                 var result = pfolio.FxVega(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });

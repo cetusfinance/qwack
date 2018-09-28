@@ -47,7 +47,7 @@ namespace Qwack.Excel.Curves
 
                 var pDates = Pillars.ToDateTimeArray();
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
-                var ccy = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ccyStr];
 
                 var cObj = new IrCurve(pDates, ZeroRates, BuildDate, curveName, iType, ccy, colSpecStr);
                 var cache = ContainerStores.GetObjectCache<IIrCurve>();
@@ -81,7 +81,7 @@ namespace Qwack.Excel.Curves
 
                 var pDates = Pillars.ToDateTimeArray();
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
-                var ccy = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ccyStr];
 
                 var zeroRates = DiscountFactors
                 .Select((df, ix) => DateTime.FromOADate(Pillars[ix])==BuildDate ? 0.0 : -System.Math.Log(df) / BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F))

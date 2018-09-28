@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;
+using Qwack.Core.Models;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 using static System.Math;
@@ -30,7 +31,7 @@ namespace Qwack.Random.Sobol
 
         public bool IsComplete => true;
         
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths + 1;
             _factors = collection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
@@ -152,7 +153,7 @@ namespace Qwack.Random.Sobol
             }
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             var index = 0;
             for(var path = 0; path < block.NumberOfPaths;path+=Vector<double>.Count)
@@ -181,7 +182,7 @@ namespace Qwack.Random.Sobol
             Debug.Assert(block.RawData.Length == index);
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
         }
     }

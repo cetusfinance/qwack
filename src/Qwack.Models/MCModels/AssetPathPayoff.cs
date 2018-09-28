@@ -6,13 +6,15 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Models;
 using Qwack.Math;
+using Qwack.Math.Extensions;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 
 namespace Qwack.Models.MCModels
 {
-    public class AssetPathPayoff : IPathProcess, IRequiresFinish
+    public class AssetPathPayoff : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
         private List<DateTime> _asianDates;
         private List<DateTime> _asianFxDates;
@@ -20,6 +22,9 @@ namespace Qwack.Models.MCModels
         private readonly double _notional;
         private readonly string _assetName;
         private readonly string _fxName;
+        private readonly string _discountCurve;
+        private readonly DateTime _payDate;
+        private readonly Currency _ccy;
         private int _assetIndex;
         private int _fxIndex;
         private int[] _dateIndexes;
@@ -28,6 +33,9 @@ namespace Qwack.Models.MCModels
         private bool _isComplete;
         private readonly bool _isCompo;
         private OptionType _optionType;
+        private FxConversionType _fxType;
+
+        private List<AssetPathPayoff> _subInstruments;
 
         private readonly Vector<double> _one = new Vector<double>(1.0);
 
@@ -43,6 +51,10 @@ namespace Qwack.Models.MCModels
                     _optionType = ao.CallPut;
                     _fxName = ao.FxConversionType == FxConversionType.None ? null : $"USD/{ao.PaymentCurrency.Ccy}";
                     _asianFxDates = ao.FxFixingDates?.ToList()??_asianDates;
+                    _discountCurve = ao.DiscountCurve;
+                    _payDate = ao.PaymentDate;
+                    _ccy = ao.PaymentCurrency;
+                    _fxType = ao.FxConversionType;
                     break;
                 case AsianSwap asw:
                     _asianDates = asw.FixingDates.ToList();
@@ -51,14 +63,13 @@ namespace Qwack.Models.MCModels
                     _optionType = OptionType.Swap;
                     _fxName = asw.FxConversionType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
                     _asianFxDates = asw.FxFixingDates?.ToList() ?? _asianDates;
+                    _discountCurve = asw.DiscountCurve;
+                    _payDate = asw.PaymentDate;
+                    _ccy = asw.PaymentCurrency;
+                    _fxType = asw.FxConversionType;
                     break;
                 case AsianSwapStrip asws:
-                    _asianDates = asws.Swaplets.SelectMany(s => s.FixingDates).Distinct().OrderBy(d => d).ToList();
-                    _strike = asws.Swaplets.First().Strike;
-                    _notional = asws.Swaplets.First().Notional * (asws.Swaplets.First().Direction == TradeDirection.Long ? 1.0 : -1.0);
-                    _optionType = OptionType.Swap;
-                    _fxName = asws.Swaplets.First().FxConversionType == FxConversionType.None ? null : $"USD/{asws.Swaplets.First().PaymentCurrency.Ccy}";
-                    _asianFxDates = asws.Swaplets.First().FxFixingDates?.ToList() ?? _asianDates;
+                    _subInstruments = asws.Swaplets.Select(x => new AssetPathPayoff(x)).ToList();
                     break;
                 case EuropeanOption eo:
                     _asianDates = new List<DateTime> { eo.ExpiryDate };
@@ -67,6 +78,10 @@ namespace Qwack.Models.MCModels
                     _optionType = eo.CallPut;
                     _fxName = eo.FxConversionType == FxConversionType.None ? null : $"USD/{eo.PaymentCurrency.Ccy}";
                     _asianFxDates = _asianDates;
+                    _discountCurve = eo.DiscountCurve;
+                    _payDate = eo.PaymentDate;
+                    _ccy = eo.PaymentCurrency;
+                    _fxType = eo.FxConversionType;
                     break;
                 case Forward f:
                     _asianDates = new List<DateTime> { f.ExpiryDate };
@@ -75,9 +90,16 @@ namespace Qwack.Models.MCModels
                     _optionType = OptionType.Swap;
                     _fxName = f.FxConversionType == FxConversionType.None ? null : $"USD/{f.PaymentCurrency.Ccy}";
                     _asianFxDates = _asianDates;
+                    _discountCurve = f.DiscountCurve;
+                    _payDate = f.PaymentDate;
+                    _ccy = f.PaymentCurrency;
+                    _fxType = f.FxConversionType;
                     break;
                 case AsianBasisSwap abs:
-                    throw new NotSupportedException("Multi-asset payoffs not yet supported");
+                    _subInstruments = abs.PaySwaplets.Select(x => new AssetPathPayoff(x))
+                        .Concat(abs.RecSwaplets.Select(x => new AssetPathPayoff(x)))
+                        .ToList();
+                    break;
             }
             _isCompo = _fxName != null;
             _assetName = AssetInstrument.AssetIds.First();
@@ -87,8 +109,17 @@ namespace Qwack.Models.MCModels
 
         public IAssetInstrument AssetInstrument { get; }
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
+            if (_subInstruments != null)
+            {
+                foreach (var ins in _subInstruments)
+                {
+                    ins.Finish(collection);
+                }
+                return;
+            }
+
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
             if (_isCompo)
@@ -111,8 +142,17 @@ namespace Qwack.Models.MCModels
             _isComplete = true;
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
+            if(_subInstruments!=null)
+            {
+                foreach(var ins in _subInstruments)
+                {
+                    ins.Process(block);
+                }
+                return;
+            }
+
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             { 
                 var steps = block.GetStepsForFactor(path, _assetIndex);
@@ -121,24 +161,42 @@ namespace Qwack.Models.MCModels
                 var finalValues = new Vector<double>(0.0);
                 var finalValuesFx = new Vector<double>(0.0);
 
-                //need to add logic for ATC rather than just assuming compo
-                for (var i = 0; i < _dateIndexes.Length; i++)
+                if (_fxType == FxConversionType.ConvertThenAverage)
                 {
-                    finalValues += steps[_dateIndexes[i]] * (_isCompo ? stepsfx[_dateIndexes[i]] : _one);
+                    for (var i = 0; i < _dateIndexes.Length; i++)
+                        finalValues += steps[_dateIndexes[i]] * (_isCompo ? stepsfx[_dateIndexes[i]] : _one);
+
+                    finalValues = finalValues / new Vector<double>(_dateIndexes.Length);
+                }
+                else
+                {
+                    for (var i = 0; i < _dateIndexes.Length; i++)
+                        finalValues += steps[_dateIndexes[i]];
+
+                    finalValues = finalValues / new Vector<double>(_dateIndexes.Length);
+
+                    if (_isCompo) //Average-then-convert
+                    {
+                        for (var i = 0; i < _fxDateIndexes.Length; i++)
+                            finalValuesFx += stepsfx[_fxDateIndexes[i]];
+                        
+                        finalValuesFx = finalValuesFx / new Vector<double>(_fxDateIndexes.Length);
+                        finalValues = finalValues * finalValuesFx;
+                    }
                 }
 
                 switch (_optionType)
                 {
                     case OptionType.Call:
-                        finalValues = ((finalValues / new Vector<double>(_dateIndexes.Length)- new Vector<double>(_strike)));
+                        finalValues = finalValues - new Vector<double>(_strike);
                         finalValues = Vector.Max(new Vector<double>(0), finalValues) * new Vector<double>(_notional);
                         break;
                     case OptionType.Put:
-                        finalValues = (new Vector<double>(_strike)) - (finalValues / new Vector<double>(_dateIndexes.Length));
+                        finalValues = new Vector<double>(_strike) - finalValues;
                         finalValues = Vector.Max(new Vector<double>(0), finalValues) * new Vector<double>(_notional);
                         break;
                     case OptionType.Swap:
-                        finalValues = ((finalValues / new Vector<double>(_dateIndexes.Length) - new Vector<double>(_strike)));
+                        finalValues = finalValues  - new Vector<double>(_strike);
                         finalValues = finalValues * new Vector<double>(_notional);
                         break;
                 }
@@ -147,8 +205,17 @@ namespace Qwack.Models.MCModels
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
+            if (_subInstruments != null)
+            {
+                foreach (var ins in _subInstruments)
+                {
+                    ins.SetupFeatures(pathProcessFeaturesCollection);
+                }
+                return;
+            }
+
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDates(_asianDates);
             if (_isCompo)
@@ -162,11 +229,87 @@ namespace Qwack.Models.MCModels
             return vec.Average();
         }).Average();
 
+        private double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
+
         public double ResultStdError => _results.SelectMany(x =>
         {
             var vec = new double[Vector<double>.Count];
             x.CopyTo(vec);
             return vec;
         }).StdDev();
+
+        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
+        {
+            if (_subInstruments != null)
+            {
+                var o = new CashFlowSchedule
+                {
+                    Flows = new List<CashFlow>(),
+                };
+
+                foreach (var ins in _subInstruments)
+                {
+                    o.Flows.AddRange(ins.ExpectedFlows(model).Flows);
+                }
+                return o;
+            }
+
+            var ar = AverageResult;
+            return new CashFlowSchedule
+            {
+                Flows = new List<CashFlow>
+                {
+                    new CashFlow
+                    {
+                        Fv = ar,
+                        Pv = ar * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Currency = _ccy,
+                        FlowType =  FlowType.FixedAmount,
+                        SettleDate = _payDate,
+                        NotionalByYearFraction = 1.0
+                    }
+                }
+            };
+        }
+
+        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
+        {
+            if (_subInstruments != null)
+            {
+                CashFlowSchedule[] o = null;
+
+                foreach (var ins in _subInstruments)
+                {
+                    var byPathForIns = ins.ExpectedFlowsByPath(model);
+                    if (o == null)
+                        o = byPathForIns;
+                    else
+                    {
+                        for (var i = 0; i < o.Length; i++)
+                        {
+                            o[i].Flows.AddRange(byPathForIns[i].Flows);
+                        }
+                    }
+                }
+                return o;
+            }
+
+            return ResultsByPath.Select(x => new CashFlowSchedule
+            {
+                Flows = new List<CashFlow>
+                {
+                    new CashFlow
+                    {
+                        Fv = x,
+                        Pv = x * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Currency = _ccy,
+                        FlowType =  FlowType.FixedAmount,
+                        SettleDate = _payDate,
+                        NotionalByYearFraction = 1.0
+                    }
+                }
+            }).ToArray();
+                
+        }
     }
 }

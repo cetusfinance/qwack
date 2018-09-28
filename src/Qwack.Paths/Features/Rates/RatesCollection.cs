@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Features.Rates
 {
@@ -13,7 +14,7 @@ namespace Qwack.Paths.Features.Rates
 
         public void AddRate(IRateFeature feature) => _ratesList.Add(feature);
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             var isComplete = true;
             foreach (var r in _ratesList)

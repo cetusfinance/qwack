@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;
+using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Paths;
 using Qwack.Paths.Features;
@@ -31,7 +32,7 @@ namespace Qwack.Random.Sobol
         public int Seed => _seed;
         public int Dimensions => _numberOfDimensions;
 
-        public virtual void Finish(FeatureCollection collection)
+        public virtual void Finish(IFeatureCollection collection)
         {
             _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths + 1;
             _numberOfDimensions = collection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
@@ -39,7 +40,7 @@ namespace Qwack.Random.Sobol
             InitDimensions();
         }
                 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             var temp = new double[Vector<double>.Count];
             for (var s = 0; s < block.NumberOfSteps; s++)
@@ -119,7 +120,7 @@ namespace Qwack.Random.Sobol
         //    }
         //}
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
         }
 

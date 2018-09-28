@@ -6,12 +6,13 @@ using Qwack.Paths.Features;
 using Xunit;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Qwack.Core.Models;
 
 namespace Qwack.MonteCarlo.Test
 {
     public class PopulateBlockWithRandomsFacts
     {
-        [Fact(Skip = "Broken")]
+        [Fact]
         public void TestBlockGeneration()
         {
             var engine = new PathEngine(4 << 2);
@@ -34,7 +35,7 @@ namespace Qwack.MonteCarlo.Test
                 _numberOfDimensions = numberOfDimensions;
             }
 
-            public unsafe void Process(PathBlock block)
+            public unsafe void Process(IPathBlock block)
             {
                 var currentIndex = 0 * block.NumberOfPaths * block.NumberOfSteps;
                 for(var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
@@ -53,7 +54,7 @@ namespace Qwack.MonteCarlo.Test
                 }
             }
 
-            public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+            public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
             {
                 var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
                 for (var i = 0; i < _numberOfDimensions; i++)

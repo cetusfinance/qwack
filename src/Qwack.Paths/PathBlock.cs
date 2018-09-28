@@ -5,10 +5,11 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths
 {
-    public class PathBlock : IDisposable
+    public class PathBlock : IDisposable, IPathBlock
     {
         private readonly int _numberOfPaths;
         private readonly int _numberOfFactors;

@@ -26,6 +26,7 @@ namespace Qwack.Core.Instruments.Asset
         public string DiscountCurve { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
 
+        public Currency Currency => PaymentCurrency;
         public string[] IrCurves => new[] { DiscountCurve };
 
         public AsianSwap AsBulletSwap()

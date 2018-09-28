@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Qwack.Core.Models;
 using Qwack.Paths.Features;
 using static System.Math;
 
@@ -30,7 +31,7 @@ namespace Qwack.Paths.Processes
             _scaledVol = _vol / Sqrt(365.0);
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
@@ -49,7 +50,7 @@ namespace Qwack.Paths.Processes
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.AddDimension(_name);

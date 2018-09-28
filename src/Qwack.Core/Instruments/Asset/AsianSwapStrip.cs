@@ -14,8 +14,8 @@ namespace Qwack.Core.Instruments.Asset
         public AsianSwap[] Swaplets { get; set; }
 
         public string[] IrCurves => Swaplets.SelectMany(x => x.IrCurves).Distinct().ToArray();
-
         public string[] AssetIds => Swaplets.Select(x => x.AssetId).ToArray();
+        public Currency Currency => Swaplets.First().PaymentCurrency;
 
         public DateTime LastSensitivityDate => Swaplets.Max(x => x.LastSensitivityDate);
 

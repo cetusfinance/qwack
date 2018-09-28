@@ -155,6 +155,7 @@ namespace Qwack.Math.Matrix
             }
             return Tuple.Create(a, pi);
         }
+
         public static double[] MatrixProduct(double[] vectorA, double[][] matrixB)
         {
             var aCols = vectorA.Length;
@@ -170,6 +171,22 @@ namespace Qwack.Math.Matrix
                     result[j] += vectorA[k] * matrixB[k][j];
                 }
             }
+            return result;
+        }
+
+        public static double VectorProduct(double[] vectorA, double[] vectorB)
+        {
+            var aCols = vectorA.Length;
+            var bRows = vectorB.Length;
+            if (aCols != bRows) throw new InvalidOperationException("Non-conformable vectors");
+
+            var result = 0.0;
+
+            for (var k = 0; k < bRows; ++k)
+            {
+                result += vectorA[k] * vectorB[k];
+            }
+
             return result;
         }
 

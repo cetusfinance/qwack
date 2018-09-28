@@ -13,7 +13,7 @@ namespace Qwack.Options.VolSurfaces
     /// Strikes can be either absolute or delta type
     /// Interpolation method for strike and time dimensions can be specified seperately
     /// </summary>
-    public class GridVolSurface : IVolSurface
+    public class GridVolSurface : IVolSurface, IATMVolSurface
     {
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
@@ -175,6 +175,34 @@ namespace Qwack.Options.VolSurfaces
         {
             var labelIx = Array.IndexOf(PillarLabels, label);
             return Expiries[labelIx];
+        }
+
+        public double GetForwardATMVol(DateTime startDate, DateTime endDate) => GetForwardATMVol(TimeBasis.CalculateYearFraction(OriginDate, startDate), TimeBasis.CalculateYearFraction(OriginDate, endDate));
+
+        public double GetForwardATMVol(double start, double end)
+        {
+            if (start > end)
+                throw new Exception("Start must be strictly less than end");
+
+            if (StrikeType==StrikeType.ForwardDelta)
+            {
+                if (start == end)
+                    return GetVolForDeltaStrike(0.5,start,1.0);
+
+                var vStart = GetVolForDeltaStrike(0.5, start, 1.0);
+                vStart *= vStart * start;
+
+                var vEnd = GetVolForDeltaStrike(0.5, end, 1.0);
+                vEnd *= vEnd * end;
+
+                var vDiff = vEnd - vStart;
+                if (vDiff < 0)
+                    throw new Exception("Negative forward variance detected");
+
+                return System.Math.Sqrt(vDiff / (end - start));
+            }
+
+            throw new Exception("Only Forward-Delta type supported for fwd vol calcs");
         }
     }
 }

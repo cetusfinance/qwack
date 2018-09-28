@@ -51,6 +51,17 @@ namespace Qwack.Dates.Tests
             Assert.Equal(246, startDate.CalculateYearFraction(endDate, DayCountBasis.Act360) * 360, 15);
         }
 
+
+        [Fact]
+        public void YearFractionAndBack()
+        {
+            var startDate = new DateTime(2016, 02, 10);
+            var endDate = new DateTime(2016, 10, 13);
+            var yf = startDate.CalculateYearFraction(endDate, DayCountBasis.Act365F);
+            var date = startDate.AddYearFraction(yf, DayCountBasis.Act365F);
+            Assert.Equal(endDate, date);
+        }
+
         [Fact]
         public void FirstBusinessDayOfTheMonthIgnoresTime()
         {

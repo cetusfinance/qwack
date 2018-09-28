@@ -241,10 +241,10 @@ namespace Qwack.Dates
             switch (basis)
             {
                 case DayCountBasis.Act_360:
-                    o = new DateTime((long)(startDate.Ticks +  yearFraction * _ticksFraction360));
+                    o = new DateTime((long)(startDate.Ticks +  yearFraction / _ticksFraction360));
                     break;
                 case DayCountBasis.Act_365F:
-                    o = new DateTime((long)(startDate.Ticks + yearFraction * _ticksFraction365));
+                    o = new DateTime((long)(startDate.Ticks + yearFraction / _ticksFraction365));
                     break;
             }
 

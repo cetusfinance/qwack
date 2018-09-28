@@ -14,7 +14,7 @@ using Qwack.Futures;
 using Qwack.Core.Models;
 using Qwack.Models;
 
-namespace Qwack.Excel.Curves
+namespace Qwack.Excel.Instruments
 {
     public class FundingInstrumentFunctions
     {

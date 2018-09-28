@@ -7,6 +7,7 @@ using Qwack.Core.Underlyings;
 using System.Numerics;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Processes
 {
@@ -26,14 +27,14 @@ namespace Qwack.Paths.Processes
             _logReturns = logReturns;
         }
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
             _outputIndex = dims.GetDimension(_name);
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
@@ -59,7 +60,7 @@ namespace Qwack.Paths.Processes
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using Qwack.Core.Models;
 using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
@@ -25,7 +26,7 @@ namespace Qwack.Paths.Payoffs
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
@@ -39,7 +40,7 @@ namespace Qwack.Paths.Payoffs
             _isComplete = true;
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
@@ -55,7 +56,7 @@ namespace Qwack.Paths.Payoffs
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDates(_asianDates);

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Models;
 using Qwack.Paths.Features;
 using Qwack.Paths.Features.Rates;
 

@@ -1,11 +1,12 @@
-﻿using Qwack.Paths.Features;
+using Qwack.Core.Models;
+using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Qwack.Paths
 {
-    public class FeatureCollection
+    public class FeatureCollection : IFeatureCollection
     {
         private Dictionary<Type, object> _features = new Dictionary<Type, object>();
 
@@ -13,7 +14,7 @@ namespace Qwack.Paths
 
         public T GetFeature<T>() where T : class
         {
-            if (!_features.TryGetValue(typeof(T), out object returnValue))
+            if (!_features.TryGetValue(typeof(T), out var returnValue))
             {
                 return default(T);
             }

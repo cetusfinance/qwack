@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Features
 {
@@ -33,7 +34,7 @@ namespace Qwack.Paths.Features
             }
         }
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             _timeSteps = new double[_requiredDates.Count];
             _timeStepsSqrt = new double[_requiredDates.Count];

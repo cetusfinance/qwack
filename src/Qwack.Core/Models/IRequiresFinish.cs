@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Qwack.Paths
+namespace Qwack.Core.Models
 {
     public interface IRequiresFinish
     {
-        void Finish(FeatureCollection collection);
+        void Finish(IFeatureCollection collection);
         bool IsComplete { get; }
     }
 }

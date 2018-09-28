@@ -17,6 +17,7 @@ using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 using Qwack.Models.MCModels;
+using Qwack.Excel.Instruments;
 
 namespace Qwack.Excel.Curves
 {
@@ -30,7 +31,8 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Settings object name")] string ObjectName,
            [ExcelArgument(Description = "Number of paths")] int NumberOfPaths,
            [ExcelArgument(Description = "Number of timesteps")] int NumberOfTimesteps,
-           [ExcelArgument(Description = "Random number generator, e.g. Sobol or MersenneTwister")] object RandomGenerator)
+           [ExcelArgument(Description = "Random number generator, e.g. Sobol or MersenneTwister")] object RandomGenerator,
+           [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -45,7 +47,8 @@ namespace Qwack.Excel.Curves
                 {
                     Generator = randomGenerator,
                     NumberOfPaths = NumberOfPaths,
-                    NumberOfTimesteps = NumberOfTimesteps
+                    NumberOfTimesteps = NumberOfTimesteps,
+                    PfeExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null
                 };
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();
                 settingsCache.PutObject(ObjectName, new SessionItem<McSettings> { Name = ObjectName, Value = settings });
@@ -59,7 +62,44 @@ namespace Qwack.Excel.Curves
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
           [ExcelArgument(Description = "MC settings name")] string SettingsName,
-          [ExcelArgument(Description = "Reporting currency (optional)")] object ReportingCcy)
+          [ExcelArgument(Description = "Reporting currency (optional)")] object ReportingCcy,
+          [ExcelArgument(Description = "Use local vol (default false)")] object UseLocalVol)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                var useLocalVol = UseLocalVol.OptionalExcel(false);
+
+                Currency ccy = null;
+                if (!(ReportingCcy is ExcelMissing))
+                {
+                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
+                }
+                IMcModel mc;
+
+                if (useLocalVol)
+                    mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
+                else
+                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
+
+                var result = mc.PV(ccy);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPFE))]
+        public static object McPortfolioPFE(
+          [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+          [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+          [ExcelArgument(Description = "MC settings name")] string SettingsName,
+          [ExcelArgument(Description = "Confidence level, e.g. 0.95")] double ConfidenceLevel)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -69,15 +109,9 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                Currency ccy = null;
-                if (!(ReportingCcy is ExcelMissing))
-                {
-                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
-                }
+                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
 
-                var mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
-
-                var result = mc.PV(ccy);
+                var result = mc.PFE(ConfidenceLevel);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

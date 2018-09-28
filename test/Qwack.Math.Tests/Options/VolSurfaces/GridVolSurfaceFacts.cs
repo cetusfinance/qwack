@@ -60,6 +60,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var deltaK = BlackFunctions.BlackDelta(1.5, 1.75, 0, surface.ExpiriesDouble[0] + 15.0 / 365.0, vol, OptionType.C);
             var volForDeltaK = surface.GetVolForDeltaStrike(deltaK, maturities[0].AddDays(15), fwd);
             Assert.Equal(vol, volForDeltaK, 8);
+
+            Assert.Throws<Exception>(() => surface.GetForwardATMVol(DateTime.Today, DateTime.Today.AddDays(1)));
         }
 
         [Fact]
@@ -89,6 +91,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(0.5, 0.777, fwd), 12);
             Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(0.9, 0.123, fwd), 12);
 
+            Assert.Throws<Exception>(() => surface.GetForwardATMVol(DateTime.Today.AddDays(1), DateTime.Today));
+            Assert.Equal(vols[0][0], surface.GetForwardATMVol(DateTime.Today, DateTime.Today.AddDays(10)),12);
         }
 
     }

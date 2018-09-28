@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -46,6 +46,14 @@ namespace Qwack.Math.Extensions
             }
 
             return (exponent > 0) ? result : (new Vector<double>(1.0)) / result;
+        }
+
+        public static double[] Values(this Vector<double> val)
+        {
+            var o = new double[Vector<double>.Count];
+            for (var i = 0; i < o.Length; i++)
+                o[i] = val[i];
+            return o;
         }
     }
 }

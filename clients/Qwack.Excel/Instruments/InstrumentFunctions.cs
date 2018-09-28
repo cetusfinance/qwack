@@ -17,7 +17,7 @@ using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 
-namespace Qwack.Excel.Curves
+namespace Qwack.Excel.Instruments
 {
     public class InstrumentFunctions
     {
@@ -691,7 +691,6 @@ namespace Qwack.Excel.Curves
             });
         }
 
-
         public static Portfolio GetPortfolioOrTradeFromCache(string name)
         {
             var pfolioCache = ContainerStores.GetObjectCache<Portfolio>();
@@ -706,7 +705,6 @@ namespace Qwack.Excel.Curves
 
             return pfolio.Value;
         }
-
 
         public static Portfolio GetPortfolio(object[] Instruments)
         {

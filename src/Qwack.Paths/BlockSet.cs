@@ -24,13 +24,16 @@ namespace Qwack.Paths
         {
             if (numberOfPaths % PathBlock.MinNumberOfPaths != 0)
             {
-                ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"paths need to be a multiple of {PathBlock.MinNumberOfPaths}");
+                ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"Paths need to be a multiple of {PathBlock.MinNumberOfPaths}");
             }
             _steps = steps;
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
-            var pathsPerBlock = Max(1, numberOfPaths / (_numberOfThreads * 2));
+            var pathsPerBlock = numberOfPaths / (_numberOfThreads * 2);
+            if(pathsPerBlock==0)
+                ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");
+
             var numberOfBlocks = numberOfPaths / pathsPerBlock;
             _blocks = new PathBlock[numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)
@@ -64,7 +67,7 @@ namespace Qwack.Paths
             public bool MoveNext()
             {
                 _currentIndex++;
-                System.Math.Min(_currentIndex, _blocks.Length);
+                Min(_currentIndex, _blocks.Length);
                 return _currentIndex < _blocks.Length;
             }
 

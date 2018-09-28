@@ -6,6 +6,8 @@ using System.Text;
 using Qwack.Core.Underlyings;
 using System.Numerics;
 using Qwack.Math.Extensions;
+using System.Linq;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Processes
 {
@@ -16,6 +18,7 @@ namespace Qwack.Paths.Processes
         private DateTime _startDate;
         private readonly int _numberOfSteps;
         private readonly string _name;
+        private readonly Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
         private readonly Func<double, double> _forwardCurve;
@@ -24,7 +27,7 @@ namespace Qwack.Paths.Processes
         private double[] _vols;
 
 
-        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name)
+        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -32,11 +35,12 @@ namespace Qwack.Paths.Processes
             _numberOfSteps = nTimeSteps;
             _name = name;
             _forwardCurve = forwardCurve;
+            _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>()); 
         }
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             if (!_timesteps.IsComplete)
             {
@@ -62,14 +66,22 @@ namespace Qwack.Paths.Processes
             _isComplete = true;
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
+                //detect left over paths which dont dfit into the vector stride
+
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
-                steps[0] = previousStep;
-                for (var step = 1; step < block.NumberOfSteps; step++)
+                var c = 0;
+                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
+                {
+                    steps[c] = new Vector<double>(kv.Value);
+                    c++;
+                }
+                steps[c] = previousStep;
+                for (var step = c + 1; step < block.NumberOfSteps; step++)
                 {
                     var W = steps[step];
                     var dt = new Vector<double>(_timesteps.TimeSteps[step]);
@@ -80,18 +92,22 @@ namespace Qwack.Paths.Processes
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.AddDimension(_name);
 
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
+            _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
+
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
+            var simDates = new List<DateTime>();
             for (var i = 0; i < _numberOfSteps - 1; i++)
             {
-                _timesteps.AddDate(_startDate.AddDays(i * stepSize));
+                simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }
-            _timesteps.AddDate(_expiryDate);
+
+            _timesteps.AddDates(simDates.Distinct());
 
         }
     }

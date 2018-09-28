@@ -166,7 +166,7 @@ namespace Qwack.Models.Models
 
                             fixedFxAvg = alreadyFixedFx.Select(d => fxFixingDict[d]).Average();
                         }
-                        var floatFxAvg = model.FundingModel.GetFxAverage(stillToFixFx, priceCurve.Currency, swap.PaymentCurrency);
+                        var floatFxAvg = stillToFixFx.Any() ? model.FundingModel.GetFxAverage(stillToFixFx, priceCurve.Currency, swap.PaymentCurrency) : 0.0;
 
                         floatAvg *= floatFxAvg;
                         fixedAvg *= fixedFxAvg;

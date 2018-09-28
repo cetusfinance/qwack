@@ -8,6 +8,7 @@ using System.Numerics;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Matrix;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Processes
 {
@@ -28,9 +29,9 @@ namespace Qwack.Paths.Processes
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(FeatureCollection collection) => _isComplete = true;
+        public void Finish(IFeatureCollection collection) => _isComplete = true;
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             var nFactors = block.Factors;
 
@@ -90,7 +91,7 @@ namespace Qwack.Paths.Processes
             return returnValues;
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
         }

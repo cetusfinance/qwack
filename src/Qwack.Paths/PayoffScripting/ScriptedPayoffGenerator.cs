@@ -1,4 +1,5 @@
-﻿using Qwack.Paths.Features;
+using Qwack.Core.Models;
+using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,9 +16,9 @@ namespace Qwack.Paths.PayoffScripting
         public string[] Aliases { get; set; }
         public string[][] Expresssions { get; set; }
 
-        public void Process(PathBlock block) => throw new NotImplementedException();
+        public void Process(IPathBlock block) => throw new NotImplementedException();
 
-        public void SetupFeatures(FeatureCollection features)
+        public void SetupFeatures(IFeatureCollection features)
         {
             var dates = features.GetFeature<ITimeStepsFeature>();
             dates.AddDates(EventDates);

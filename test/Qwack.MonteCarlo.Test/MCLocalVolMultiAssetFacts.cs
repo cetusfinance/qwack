@@ -19,16 +19,16 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCLocalVolMultiAssetFacts
     {
-        [Theory(Skip = "Broken")]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(-1)]
+        [Theory]
+        [InlineData(0.0)]
+        [InlineData(1.0)]
+        [InlineData(-1.0)]
         [InlineData(0.5)]
         [InlineData(-0.5)]
-        public void LVMC_DualPathsGenerated(double correlation)
+        public void LVMCDualPathsGenerated(double correlation)
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(15));
+            var engine = new PathEngine(2.IntPow(12));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,
@@ -89,86 +89,86 @@ namespace Qwack.MonteCarlo.Test
             Assert.Equal(correlation, corr, 2);
         }
 
-        [Theory(Skip = "Broken")]
-        [InlineData(0.3, 0.4, 0.5)]
-        public void LVMC_TriplePathsGenerated(double correlationAB, double correlationAC, double correlationBC)
-        {
-            var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(15));
-            engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-            {
-                UseNormalInverse = true,
-                UseAnthithetic = false
-            });
+        //[Theory(Skip = "Broken")]
+        //[InlineData(0.3, 0.4, 0.5)]
+        //public void LVMC_TriplePathsGenerated(double correlationAB, double correlationAC, double correlationBC)
+        //{
+        //    var origin = DateTime.Now.Date;
+        //    var engine = new PathEngine(2.IntPow(15));
+        //    engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+        //    {
+        //        UseNormalInverse = true,
+        //        UseAnthithetic = false
+        //    });
 
-            var correlMatrix = new double[][]
-            {
-                new double[] { 1.0, correlationAB, correlationAC },
-                new double[] { correlationAB, 1.0,correlationBC },
-                new double[] { correlationAC, correlationBC, 1.0 },
-            };
-            engine.AddPathProcess(new Cholesky(correlMatrix));
+        //    var correlMatrix = new double[][]
+        //    {
+        //        new double[] { 1.0, correlationAB, correlationAC },
+        //        new double[] { correlationAB, 1.0,correlationBC },
+        //        new double[] { correlationAC, correlationBC, 1.0 },
+        //    };
+        //    engine.AddPathProcess(new Cholesky(correlMatrix));
 
-            var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
-            var tenors = tenorsStr.Select(x => new Frequency(x));
-            var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
-            var deltaKs = new[] { -0.1, -0.25, -0.5, -0.75, -0.9 };
-            var smileVols = new[] { 0.32, 0.3, 0.29, 0.3, 0.32 };
-            var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
+        //    var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
+        //    var tenors = tenorsStr.Select(x => new Frequency(x));
+        //    var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
+        //    var deltaKs = new[] { -0.1, -0.25, -0.5, -0.75, -0.9 };
+        //    var smileVols = new[] { 0.32, 0.3, 0.29, 0.3, 0.32 };
+        //    var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
 
-            var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols,
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap,
-                Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
+        //    var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols,
+        //        Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap,
+        //        Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
-            var fwdCurve1 = new Func<double, double>(t => { return 1000; });
-            var fwdCurve2 = new Func<double, double>(t => { return 1000; });
-            var fwdCurve3 = new Func<double, double>(t => { return 1000; });
+        //    var fwdCurve1 = new Func<double, double>(t => { return 1000; });
+        //    var fwdCurve2 = new Func<double, double>(t => { return 1000; });
+        //    var fwdCurve3 = new Func<double, double>(t => { return 1000; });
 
-            var assetA = new LVSingleAsset
-                (
-                    startDate: origin,
-                    expiryDate: origin.AddYears(1),
-                    volSurface: volSurface,
-                    forwardCurve: fwdCurve1,
-                    nTimeSteps: 365,
-                    name: "TestAssetA"
-                );
-            var assetB = new LVSingleAsset
-                (
-                    startDate: origin,
-                    expiryDate: origin.AddYears(1),
-                    volSurface: volSurface,
-                    forwardCurve: fwdCurve2,
-                    nTimeSteps: 365,
-                    name: "TestAssetB"
-                );
-            var assetC = new LVSingleAsset
-                (
-                    startDate: origin,
-                    expiryDate: origin.AddYears(1),
-                    volSurface: volSurface,
-                    forwardCurve: fwdCurve3,
-                    nTimeSteps: 365,
-                    name: "TestAssetC"
-                );
+        //    var assetA = new LVSingleAsset
+        //        (
+        //            startDate: origin,
+        //            expiryDate: origin.AddYears(1),
+        //            volSurface: volSurface,
+        //            forwardCurve: fwdCurve1,
+        //            nTimeSteps: 365,
+        //            name: "TestAssetA"
+        //        );
+        //    var assetB = new LVSingleAsset
+        //        (
+        //            startDate: origin,
+        //            expiryDate: origin.AddYears(1),
+        //            volSurface: volSurface,
+        //            forwardCurve: fwdCurve2,
+        //            nTimeSteps: 365,
+        //            name: "TestAssetB"
+        //        );
+        //    var assetC = new LVSingleAsset
+        //        (
+        //            startDate: origin,
+        //            expiryDate: origin.AddYears(1),
+        //            volSurface: volSurface,
+        //            forwardCurve: fwdCurve3,
+        //            nTimeSteps: 365,
+        //            name: "TestAssetC"
+        //        );
 
-            engine.AddPathProcess(assetA);
-            engine.AddPathProcess(assetB);
-            engine.AddPathProcess(assetC);
+        //    engine.AddPathProcess(assetA);
+        //    engine.AddPathProcess(assetB);
+        //    engine.AddPathProcess(assetC);
 
-            var correlAB = new Correlation("TestAssetA", "TestAssetB");
-            var correlAC = new Correlation("TestAssetA", "TestAssetC");
-            var correlBC = new Correlation("TestAssetB", "TestAssetC");
-            engine.AddPathProcess(correlAB);
-            engine.AddPathProcess(correlAC);
-            engine.AddPathProcess(correlBC);
+        //    var correlAB = new Correlation("TestAssetA", "TestAssetB");
+        //    var correlAC = new Correlation("TestAssetA", "TestAssetC");
+        //    var correlBC = new Correlation("TestAssetB", "TestAssetC");
+        //    engine.AddPathProcess(correlAB);
+        //    engine.AddPathProcess(correlAC);
+        //    engine.AddPathProcess(correlBC);
 
-            engine.SetupFeatures();
-            engine.RunProcess();
+        //    engine.SetupFeatures();
+        //    engine.RunProcess();
 
-            Assert.Equal(correlationAB, correlAB.AverageResult, 2);
-            Assert.Equal(correlationAC, correlAC.AverageResult, 2);
-            Assert.Equal(correlationBC, correlBC.AverageResult, 2);
-        }
+        //    Assert.Equal(correlationAB, correlAB.AverageResult, 2);
+        //    Assert.Equal(correlationAC, correlAC.AverageResult, 2);
+        //    Assert.Equal(correlationBC, correlBC.AverageResult, 2);
+        //}
     }
 }

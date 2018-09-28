@@ -9,6 +9,7 @@ using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Core.Basic;
 using System.Linq;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths.Processes
 {
@@ -42,7 +43,7 @@ namespace Qwack.Paths.Processes
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(FeatureCollection collection)
+        public void Finish(IFeatureCollection collection)
         {
             if (!_timesteps.IsComplete)
             {
@@ -111,7 +112,7 @@ namespace Qwack.Paths.Processes
             _isComplete = true;
         }
 
-        public void Process(PathBlock block)
+        public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
@@ -145,7 +146,7 @@ namespace Qwack.Paths.Processes
             }
         }
 
-        public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
+        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.AddDimension(_name);

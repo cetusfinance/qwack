@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Microsoft.Extensions.PlatformAbstractions;
+using Qwack.Core.Models;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 using Qwack.Random.Sobol;
@@ -100,7 +101,7 @@ namespace Qwack.Math.Tests.Random
 
             public int AddDimension(string dimensionName) => throw new NotImplementedException();
 
-            public void Finish(FeatureCollection collection) => throw new NotImplementedException();
+            public void Finish(IFeatureCollection collection) => throw new NotImplementedException();
 
             public int GetDateIndex(DateTime date) => throw new NotImplementedException();
 

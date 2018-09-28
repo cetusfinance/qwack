@@ -37,6 +37,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves => new[] { DiscountCurve };
+        public Currency Currency => PaymentCurrency;
 
         public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 

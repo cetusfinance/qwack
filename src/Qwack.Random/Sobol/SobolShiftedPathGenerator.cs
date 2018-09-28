@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Qwack.Core.Models;
 using Qwack.Paths;
 
 namespace Qwack.Random.Sobol
@@ -15,7 +16,7 @@ namespace Qwack.Random.Sobol
 
         }
 
-        public override void Finish(FeatureCollection collection)
+        public override void Finish(IFeatureCollection collection)
         {
             base.Finish(collection);
             SetupShifts();

@@ -10,5 +10,6 @@ namespace Qwack.Models.MCModels
         public int NumberOfPaths { get; set; }
         public int NumberOfTimesteps { get; set; }
         public RandomGeneratorType Generator { get; set; }
+        public DateTime[] PfeExposureDates { get; set; }
     }
 }

@@ -67,6 +67,9 @@ namespace Qwack.Excel.Cubes
                 if(rows.Length<RowIndex)
                     throw new Exception($"Only {rows.Length} rows in cube");
 
+                if (rows.Length == RowIndex && RowIndex == 0)
+                    return 0.0;
+
                 return rows[RowIndex].Value;
             });
         }

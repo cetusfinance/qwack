@@ -13,23 +13,41 @@ using Qwack.Dates;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
+using Qwack.Options.VolSurfaces;
+using System.IO;
+using System.Reflection;
+using Qwack.Paths.Regressors;
 
 namespace Qwack.Models.MCModels
 {
-    public class AssetFxLocalVolMC : IMcModel
+    public class AssetFxBlackVolMC : IMcModel
     {
+        private static string GetSobolFilename() => Path.Combine(GetRunningDirectory(), "SobolDirectionNumbers.txt");
+
+        private static string GetRunningDirectory()
+        {
+            var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+            var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
+            var dirPath = Path.GetDirectoryName(codeBasePath);
+            return dirPath;
+        }
+
         public PathEngine Engine { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
-        private Dictionary<string, AssetPathPayoff> _payoffs;
+        public McSettings Settings { get; }
 
-        public AssetFxLocalVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings)
+        private Dictionary<string, AssetPathPayoff> _payoffs;
+        private LinearPortfolioValueRegressor _regressor;
+
+        public AssetFxBlackVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings)
         {
             Engine = new PathEngine(settings.NumberOfPaths);
             Portfolio = portfolio;
             Model = model;
+            Settings = settings;
 
-            switch(settings.Generator)
+            switch (settings.Generator)
             {
                 case RandomGeneratorType.MersenneTwister:
                     Engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
@@ -39,7 +57,7 @@ namespace Qwack.Models.MCModels
                     });
                     break;
                 case RandomGeneratorType.Sobol:
-                    var directionNumers = new Random.Sobol.SobolDirectionNumbers("SobolDirectionNumbers.txt");
+                    var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
                     Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1000)
                     {
                         UseNormalInverse = true
@@ -71,7 +89,9 @@ namespace Qwack.Models.MCModels
 
             foreach (var assetId in assetIds)
             {
-                var surface = model.GetVolSurface(assetId);
+                if (!(model.GetVolSurface(assetId) is IATMVolSurface surface))
+                    throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
+
                 var fwdCurve = new Func<double, double>(t => 
                 {
                     return model
@@ -84,7 +104,7 @@ namespace Qwack.Models.MCModels
                     fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict[x])
                     : new Dictionary<DateTime, double>();
 
-                var asset = new LVSingleAsset
+                var asset = new BlackSingleAsset
                 (
                     startDate: originDate,
                     expiryDate: lastDate,
@@ -118,14 +138,15 @@ namespace Qwack.Models.MCModels
                     fxPairName = fxPair;
                 }
 
-                var surface = model.FundingModel.VolSurfaces[fxPairName];
+                if (!(model.FundingModel.VolSurfaces[fxPairName] is IATMVolSurface surface))
+                    throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
 
                 var fwdCurve = new Func<double, double>(t =>
                 {
                     var date = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
                     return model.FundingModel.GetFxRate(date, fxPairName);
                 });
-                var asset = new LVSingleAsset
+                var asset = new BlackSingleAsset
                 (
                     startDate: originDate,
                     expiryDate: lastDate,
@@ -137,20 +158,47 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(asset);
             }
 
-           
-
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y));
             foreach (var product in _payoffs)
             {
                 Engine.AddPathProcess(product.Value);
             }
 
-            Engine.SetupFeatures();
+            if (settings.PfeExposureDates != null)//setup for PFE
+            {
+                _regressor = new LinearPortfolioValueRegressor(settings.PfeExposureDates,
+                    _payoffs.Values.ToArray(), settings.NumberOfPaths);
 
+                Engine.AddPathProcess(_regressor);
+            }
+
+            Engine.SetupFeatures();
+        }
+
+        public ICube PFE(double confidenceLevel)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "ExposureDate", typeof(DateTime) }
+            };
+            cube.Initialize(dataTypes);
+
+            Engine.RunProcess();
+
+            var pfe = _regressor.PFE(Model, confidenceLevel);
+
+            for(var i=0;i<pfe.Length;i++)
+            {
+                cube.AddRow(new object[] { Settings.PfeExposureDates[i] }, pfe[i]);
+            }
+
+            return cube;
         }
 
         public ICube PV(Currency reportingCurrency)
         {
+            var ccy = reportingCurrency?.ToString();
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -163,10 +211,6 @@ namespace Qwack.Models.MCModels
 
             foreach (var kv in _payoffs)
             {
-                var pv = 0.0;
-                var fxRate = 1.0;
-                string tradeId = null;
-                var ccy = reportingCurrency?.ToString();
                 var insQuery = Portfolio.Instruments.Where(x => x.TradeId == kv.Key);
                 if (!insQuery.Any())
                     throw new Exception($"Trade with id {kv.Key} not found");
@@ -174,59 +218,26 @@ namespace Qwack.Models.MCModels
                     throw new Exception($"Trade with id {kv.Key} has multiple results");
 
                 var ins = insQuery.First();
+                var flows = kv.Value.ExpectedFlows(Model);
+                var pv = flows.Flows.Sum(x => x.Pv);
+                var fxRate = 1.0;
+                var tradeId = ins.TradeId;
+
                 switch (ins)
                 {
-                    case AsianSwap swap:
-                        pv = kv.Value.AverageResult;
-                        tradeId = swap.TradeId;
+                    case IAssetInstrument aIns:
                         if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, swap.PaymentCurrency);
+                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, aIns.Currency);
                         else
-                            ccy = swap.PaymentCurrency.ToString();
-                        break;
-                    case AsianSwapStrip swapStrip:
-                        pv = kv.Value.AverageResult;
-                        tradeId = swapStrip.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
-                        else
-                            ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case AsianBasisSwap basisSwap:
-                        pv = kv.Value.AverageResult;
-                        tradeId = basisSwap.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
-                        else
-                            ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case Forward fwd:
-                        pv = kv.Value.AverageResult;
-                        tradeId = fwd.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
-                        else
-                            ccy = fwd.PaymentCurrency.ToString();
-                        break;
-                    case Future fut:
-                        pv = kv.Value.AverageResult;
-                        tradeId = fut.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, fut.Currency);
-                        else
-                            ccy = fut.Currency.ToString();
+                            ccy = aIns.Currency.ToString();
                         break;
                     case FxForward fxFwd:
-                        pv = kv.Value.AverageResult;
-                        tradeId = fxFwd.TradeId;
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
                         else
                             ccy = fxFwd.ForeignCCY.ToString();
                         break;
                     case FixedRateLoanDeposit loanDepo:
-                        pv = kv.Value.AverageResult;
-                        tradeId = loanDepo.TradeId;
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Ccy);
                         else

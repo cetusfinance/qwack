@@ -10,10 +10,10 @@ namespace Qwack.Providers.Json
 {
     public class CurrenciesFromJson : ICurrencyProvider
     {
-        private JsonSerializerSettings _jsonSettings;
-        private ICalendarProvider _calendarProvider;
+        private readonly JsonSerializerSettings _jsonSettings;
+        private readonly ICalendarProvider _calendarProvider;
         private List<Currency> _allCurrencies;
-        private Dictionary<string, Currency> _currenciesByName;
+        private readonly Dictionary<string, Currency> _currenciesByName;
 
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName)
         {
@@ -28,5 +28,7 @@ namespace Qwack.Providers.Json
             _allCurrencies = JsonConvert.DeserializeObject<List<Currency>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
             _currenciesByName = _allCurrencies.ToDictionary(c => c.Ccy, c => c, StringComparer.OrdinalIgnoreCase);
         }
+
+        public Currency this[string ccy] => _currenciesByName[ccy];
     }
 }

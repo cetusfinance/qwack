@@ -20,7 +20,15 @@ namespace Qwack.Core.Tests.CurveSolving
     public class EuroDollarFuturesFact
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
+
+        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
+        {
+            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
+            return currencyProvider;
+        }
 
         [Fact]
         public void FuturesStripNoConvexity()
@@ -34,7 +42,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var nyc = CalendarProvider.Collection["NYC"];
             var lon = CalendarProvider.Collection["LON"];
-            var ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
+            var ccyUsd = CurrencyProvider["USD"];
 
             var usd3m = new FloatRateIndex()
             {
@@ -98,7 +106,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var nyc = CalendarProvider.Collection["NYC"];
             var lon = CalendarProvider.Collection["LON"];
-            var ccyUsd = new Currency("USD", DayCountBasis.Act_360, nyc);
+            var ccyUsd = CurrencyProvider["USD"];
 
             var usd3m = new FloatRateIndex()
             {

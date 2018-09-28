@@ -19,12 +19,20 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class OisFact
     {
-        private static readonly string _jsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        private static readonly ICalendarProvider _calendarProvider = CalendarsFromJson.Load(_jsonCalendarPath);
-        private static readonly Calendar _jhb = _calendarProvider.Collection["jhb"];
-        private static readonly Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, _jhb);
-        private static readonly Calendar _usd = _calendarProvider.Collection["nyc"];
-        private static readonly Currency ccyUsd = new Currency("USD", DayCountBasis.Act_360, _usd);
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
+
+        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
+        {
+            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
+            return currencyProvider;
+        }
+        private static readonly Currency ccyZar = CurrencyProvider["JHB"];
+        private static readonly Calendar _usd = CalendarProvider.Collection["nyc"];
+        private static readonly Calendar JHB = CalendarProvider.Collection["JHB"];
+        private static readonly Currency ccyUsd = CurrencyProvider["USD"];
         private static readonly FloatRateIndex _zar3m = new FloatRateIndex()
         {
             Currency = ccyZar,
@@ -33,7 +41,7 @@ namespace Qwack.Core.Tests.CurveSolving
             ResetTenor = 3.Months(),
             ResetTenorFixed = 3.Months(),
             FixingOffset = 0.Bd(),
-            HolidayCalendars = _jhb,
+            HolidayCalendars = JHB,
             RollConvention = RollType.MF
         };
         private static readonly FloatRateIndex zaron = new FloatRateIndex()
@@ -43,7 +51,7 @@ namespace Qwack.Core.Tests.CurveSolving
             DayCountBasisFixed = DayCountBasis.Act_365F,
             ResetTenor = 3.Months(),
             FixingOffset = 0.Bd(),
-            HolidayCalendars = _jhb,
+            HolidayCalendars = JHB,
             RollConvention = RollType.F
         };
         private static readonly FloatRateIndex usdon = new FloatRateIndex()
@@ -82,11 +90,11 @@ namespace Qwack.Core.Tests.CurveSolving
             var oisTenors = new Frequency[] { 3.Months(), 6.Months(), 1.Years(), 2.Years(), 3.Years(), 4.Years(), 5.Years(), 7.Years(), 10.Years(), 15.Years(), 20.Years() };
             var oisPrices = new double[] { 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004 };
 
-            var pillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var pillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
-            var pillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var pillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var pillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var pillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
             var pillarDates3m = pillarDatesDepo.Union(pillarDatesSwap).Union(pillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
-            var pillarDatesOIS = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var pillarDatesOIS = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
 
             var swaps = new IrSwap[swapTenors.Length];
             var depos = new IrSwap[depoTenors.Length];
@@ -154,12 +162,12 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] oisPricesZAR = { 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004, 0.004 };
             double[] oisPricesUSD = { 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002 };
 
-            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
-            var ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
             var ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesSwap).Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
-            var ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
             var ZARpillarDatesOIS = ZARpillarDatesDepoOIS.Union(ZARpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
 
 
@@ -295,12 +303,12 @@ namespace Qwack.Core.Tests.CurveSolving
             Frequency[] xcySwapTenors = { 4.Years(), 5.Years(), 6.Years(), 7.Years(), 8.Years(), 9.Years(), 10.Years(), 12.Years(), 15.Years(), 20.Years(), 25.Years(), 30.Years() };
             double[] xcySwapPrices = { 0.0055, 0.0050, 0.0045, 0.0040, 0.0035, 0.0030, 0.0025, 0.0020, 0.0015, 0.0010, 0.0005, 0.0000 };
 
-            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
-            var ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var ZARpillarDatesSwap = swapTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
             var ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesSwap).Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
-            var ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
+            var ZARpillarDatesDepoOIS = OISdepoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var ZARpillarDatesOISSwap = oisTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
             var ZARpillarDatesOIS = ZARpillarDatesDepoOIS.Union(ZARpillarDatesOISSwap).Distinct().OrderBy(x => x).ToArray();
 
 
@@ -445,8 +453,8 @@ namespace Qwack.Core.Tests.CurveSolving
             string[] FRATenors = { "3x6", "6x9", "9x12", "12x15", "15x18", "18x21", "21x24" };
             double[] FRAPricesZAR = { 0.065, 0.07, 0.075, 0.077, 0.08, 0.081, 0.082 };
 
-            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, x)).ToArray();
-            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, _jhb, new Frequency(x.Split('x')[1] + "M"))).ToArray();
+            var ZARpillarDatesDepo = depoTenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, x)).ToArray();
+            var ZARpillarDatesFRA = FRATenors.Select(x => startDate.AddPeriod(RollType.MF, JHB, new Frequency(x.Split('x')[1] + "M"))).ToArray();
             var ZARpillarDates3m = ZARpillarDatesDepo.Union(ZARpillarDatesFRA).Distinct().OrderBy(x => x).ToArray();
 
 

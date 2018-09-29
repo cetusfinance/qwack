@@ -11,7 +11,7 @@ namespace Qwack.Dates
         public CalendarCollection(IEnumerable<Calendar> startingCalendars)
         {
             var calendarsToCheck = new Queue<Calendar>(startingCalendars);
-
+            var numberOfCalendersInLastCheck = calendarsToCheck;
             while (calendarsToCheck.Count > 0)
             {
                 var currentCalendar = calendarsToCheck.Dequeue();
@@ -48,10 +48,7 @@ namespace Qwack.Dates
             }
         }
 
-        public string[] ListCalendarNames()
-        {
-            return _mergedCalendars.Keys.ToArray();
-        }
+        public string[] ListCalendarNames() => _mergedCalendars.Keys.ToArray();
 
 
         public bool TryGetCalendar(string calendarName, out Calendar calendar)

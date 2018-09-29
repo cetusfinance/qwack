@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ExcelDna.Integration;
-using Qwack.Options;
 using Qwack.Excel.Services;
 using Qwack.Core.Basic;
 using Microsoft.Extensions.Logging;

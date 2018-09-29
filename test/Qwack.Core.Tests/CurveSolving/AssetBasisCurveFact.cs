@@ -20,11 +20,6 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class AssetBasisCurveFact
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
-
         [Fact]
         public void StripCrackedCurve()
         {
@@ -34,11 +29,11 @@ namespace Qwack.Core.Tests.CurveSolving
             string[] periods = { "AUG18", "SEP18", "OCT18", "NOV18" };
             double[] strikes = { -10, -11, -12, -13};
 
-            var cal = CalendarProvider.Collection["LON"];
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
 
-            var bPillars = futures.Select(x => FutureCode.GetExpiryFromCode(x, futureSettingsProvider)).ToArray();
-            var brentCurve = new PriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, futures)
+            var bPillars = futures.Select(x => FutureCode.GetExpiryFromCode(x, TestProviderHelper.FutureSettingsProvider)).ToArray();
+            var brentCurve = new PriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider, futures)
             {
                 AssetId = "Brent"
             };
@@ -53,7 +48,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver();
+            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.ICE);
 
             for (var i = 0; i < instruments.Count; i++)
@@ -70,11 +65,11 @@ namespace Qwack.Core.Tests.CurveSolving
             string[] periods = { "AUG18" };
             double[] strikes = { -10 };
 
-            var cal = CalendarProvider.Collection["LON"];
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var bPillars = new[] { buildDate, buildDate.AddDays(100) };
-            var brentCurve = new PriceCurve(buildDate, bPillars, new[] { 100.0, 100.0 }, PriceCurveType.Linear)
+            var brentCurve = new PriceCurve(buildDate, bPillars, new[] { 100.0, 100.0 }, PriceCurveType.Linear, TestProviderHelper.CurrencyProvider)
             {
                 AssetId = "Brent"
             };
@@ -88,7 +83,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver();
+            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.Linear);
 
             Assert.Equal((100.0 - 10.0) * 6.35, curve.GetPriceForDate(buildDate));

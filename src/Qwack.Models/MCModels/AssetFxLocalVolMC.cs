@@ -21,10 +21,12 @@ namespace Qwack.Models.MCModels
         public PathEngine Engine { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
-        private Dictionary<string, AssetPathPayoff> _payoffs;
+        private readonly Dictionary<string, AssetPathPayoff> _payoffs;
+        private ICurrencyProvider _currencyProvider;
 
-        public AssetFxLocalVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings)
+        public AssetFxLocalVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider)
         {
+            _currencyProvider = currencyProvider;
             Engine = new PathEngine(settings.NumberOfPaths);
             Portfolio = portfolio;
             Model = model;
@@ -100,7 +102,7 @@ namespace Qwack.Models.MCModels
             var fxPairs = portfolio.FxPairs(model);
             foreach (var fxPair in fxPairs)
             {
-                var pair = fxPair.FxPairFromString();
+                var pair = fxPair.FxPairFromString(_currencyProvider);
                 string fxPairName;
                 if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
                 {
@@ -110,7 +112,7 @@ namespace Qwack.Models.MCModels
                         throw new Exception($"Could not find Fx vol surface for {fxPair} or {flippedPair}");
                     }
 
-                    pair = flippedPair.FxPairFromString();
+                    pair = flippedPair.FxPairFromString(_currencyProvider);
                     fxPairName = flippedPair;
                 }
                 else

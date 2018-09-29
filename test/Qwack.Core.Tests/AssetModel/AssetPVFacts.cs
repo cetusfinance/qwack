@@ -13,26 +13,31 @@ using Qwack.Models;
 using Qwack.Models.Models;
 using Qwack.Providers.Json;
 using Xunit;
+using Qwack.Futures;
 
 namespace Qwack.Core.Tests.AssetModel
 {
     public class AssetPVFacts
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
 
         [Fact]
         public void AsianCompoSwap()
         {
             var startDate = new DateTime(2018, 07, 28);
             var cal = CalendarProvider.Collection["LON"];
-            var xaf = new Currency("XAF", DayCountBasis.Act365F, cal);
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var xaf = CurrencyProvider["XAF"];
+            var usd = CurrencyProvider["USD"];
 
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars)
+            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, TestProviderHelper.CurrencyProvider, curvePillars)
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",
@@ -40,7 +45,7 @@ namespace Qwack.Core.Tests.AssetModel
                 AssetId = "Coconuts"
             };
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             var fxSpot = 7;
             var rates = new Dictionary<Currency, double> { { xaf, fxSpot } };
             var discoMap = new Dictionary<Currency, string> { { xaf, "XAF.CURVE" }, { usd, "USD.CURVE" } };
@@ -59,15 +64,15 @@ namespace Qwack.Core.Tests.AssetModel
             var xafCurve = new IrCurve(irPillars, xafRates, startDate, "XAF.CURVE", Interpolator1DType.Linear, xaf, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { xafCurve, usdCurve });
+            var fModel = new FundingModel(startDate, new[] { xafCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);
             aModel.AddPriceCurve("Coconuts", curve);
 
             var periodCode = "SEP-18";
-            var periodDates = periodCode.ParsePeriod();
-            var fixingDates = periodDates.Start.BusinessDaysInPeriod(periodDates.End, cal).ToArray();
+            var (Start, End) = periodCode.ParsePeriod();
+            var fixingDates = Start.BusinessDaysInPeriod(End, cal).ToArray();
             var settleDate = fixingDates.Last().AddPeriod(RollType.F, cal, new Frequency("5b"));
             var fxFwd = aModel.FundingModel.GetFxAverage(fixingDates, usd, xaf);
             var assetFwd = curve.GetAveragePriceForDates(fixingDates);

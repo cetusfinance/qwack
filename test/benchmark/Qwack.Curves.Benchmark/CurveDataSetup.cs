@@ -13,12 +13,20 @@ namespace Qwack.Curves.Benchmark
 {
     public static class CurveDataSetup
     {
-        public static readonly string _jsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "data", "Calendars.json");
-        public static readonly ICalendarProvider _calendarProvider = CalendarsFromJson.Load(_jsonCalendarPath);
-        public static readonly Calendar _jhb = _calendarProvider.Collection["jhb"];
-        public static readonly Currency ccyZar = new Currency("JHB", DayCountBasis.Act_365F, _jhb);
-        public static readonly Calendar _usd = _calendarProvider.Collection["nyc"];
-        public static readonly Currency ccyUsd = new Currency("USD", DayCountBasis.Act_360, _usd);
+        public static readonly string JsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
+
+        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
+        {
+            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
+            return currencyProvider;
+        }
+        public static readonly Calendar _jhb = CalendarProvider.Collection["jhb"];
+        public static readonly Currency ccyZar = CurrencyProvider["JHB"];
+        public static readonly Calendar _usd = CalendarProvider.Collection["nyc"];
+        public static readonly Currency ccyUsd = CurrencyProvider["USD"];
         public static readonly FloatRateIndex _zar3m = new FloatRateIndex()
         {
             Currency = ccyZar,

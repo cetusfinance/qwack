@@ -9,8 +9,8 @@ namespace Qwack.Math.Interpolation
 {
     public class ParametricLinearInterpolator : IInterpolator1D
     {
-        private double _alpha;
-        private double _beta;
+        private readonly double _alpha;
+        private readonly double _beta;
 
         public ParametricLinearInterpolator() {}
 

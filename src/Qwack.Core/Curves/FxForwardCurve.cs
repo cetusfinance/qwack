@@ -19,7 +19,7 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => 0;
 
-        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+        public Currency Currency { get; set; }
 
         public bool UnderlyingsAreForwards => true;
 
@@ -75,14 +75,8 @@ namespace Qwack.Core.Curves
             return o;
         }
 
-        public IPriceCurve RebaseDate(DateTime newAnchorDate)
-        {
-            throw new NotImplementedException();
-        }
+        public IPriceCurve RebaseDate(DateTime newAnchorDate) => throw new NotImplementedException();
 
-        public DateTime PillarDatesForLabel(string label)
-        {
-            throw new NotImplementedException();
-        }
+        public DateTime PillarDatesForLabel(string label) => throw new NotImplementedException();
     }
 }

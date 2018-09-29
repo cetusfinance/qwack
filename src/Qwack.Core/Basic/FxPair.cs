@@ -52,12 +52,12 @@ namespace Qwack.Core.Basic
             return d;
         }
 
-        public static FxPair FxPairFromString(this string pair)
+        public static FxPair FxPairFromString(this string pair, ICurrencyProvider currencyProvider)
         {
             return new FxPair
             {
-                Domestic = new Currency(pair.Substring(0, 3)),
-                Foreign = new Currency(pair.Substring(pair.Length - 3, 3)),
+                Domestic = currencyProvider[pair.Substring(0, 3)],
+                Foreign = currencyProvider[pair.Substring(pair.Length - 3, 3)],
             };
         }
     }

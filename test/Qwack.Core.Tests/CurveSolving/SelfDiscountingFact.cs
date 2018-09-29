@@ -19,7 +19,15 @@ namespace Qwack.Core.Tests.CurveSolving
     public class SelfDiscountingFact
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
+
+        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
+        {
+            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
+            return currencyProvider;
+        }
 
         [Fact]
         public void BasicSelfDiscounting()
@@ -32,7 +40,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var pillarDate2 = startDate.AddPeriod(RollType.MF, jhb, swapTenor2);
             var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, 3.Months());
 
-            var ccyZar = new Currency("JHB", DayCountBasis.Act_365F, jhb);
+            var ccyZar = CurrencyProvider["JHB"];
 
             var zar3m = new FloatRateIndex()
             {
@@ -49,14 +57,14 @@ namespace Qwack.Core.Tests.CurveSolving
             var swap2 = new IrSwap(startDate, swapTenor2, zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
             var depo = new IrSwap(startDate, 3.Months(), zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
 
-            var fic = new FundingInstrumentCollection()
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
             {
                 swap,
                 swap2,
                 depo
             };
             var curve = new IrCurve(new [] { pillarDateDepo, pillarDate, pillarDate2 }, new double[3], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, ccyZar);
-            var model = new FundingModel(startDate, new[] { curve });
+            var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider);
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
             s.Solve(model, fic);

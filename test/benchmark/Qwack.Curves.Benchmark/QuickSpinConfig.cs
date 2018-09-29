@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ namespace Qwack.Curves.Benchmark
                 WithLaunchCount(2).
                 WithIterationTime(new BenchmarkDotNet.Horology.TimeInterval(2000, BenchmarkDotNet.Horology.TimeUnit.Millisecond)).
                 WithWarmupCount(1).
-                WithTargetCount(3));
+                WithIterationCount(3));
             Add(new BenchmarkDotNet.Diagnosers.MemoryDiagnoser());
         }
     }

@@ -77,7 +77,7 @@ namespace Qwack.Curves.Benchmark
 
             var ccySwaps = new XccyBasisSwap[oisTenors.Length];
 
-            _instruments = new FundingInstrumentCollection();
+            _instruments = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
             
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -127,7 +127,7 @@ namespace Qwack.Curves.Benchmark
             var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyUsd) { SolveStage = 1 };
            // var ZARccyBasisCurve = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 2 };
 
-            _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
+            _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS }, TestProviderHelper.CurrencyProvider);
         }
 
         [Benchmark(Baseline =true)]

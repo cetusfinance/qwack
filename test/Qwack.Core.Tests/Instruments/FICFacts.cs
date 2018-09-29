@@ -23,11 +23,12 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void FundingInstrumentCollection()
         {
-            var f = new FundingInstrumentCollection();
-
-            f.Add(new FxForward { SolveCurve = "1.blah" });
-            f.Add(new FxForward { SolveCurve = "1.blah" });
-            f.Add(new FxForward { SolveCurve = "2.blah" });
+            var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
+            {
+                new FxForward { SolveCurve = "1.blah" },
+                new FxForward { SolveCurve = "1.blah" },
+                new FxForward { SolveCurve = "2.blah" }
+            };
 
             Assert.True(Enumerable.SequenceEqual(f.SolveCurves, new[] { "1.blah", "2.blah" }));
         }
@@ -35,16 +36,17 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void PillarDatesTest()
         {
-            var f = new FundingInstrumentCollection();
-
-            f.Add(new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today });
-            f.Add(new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today.AddDays(1) });
-            f.Add(new FxForward { SolveCurve = "2.blah", PillarDate = DateTime.Today });
+            var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
+            {
+                new FxForward { SolveCurve = "usd.1blah", PillarDate = DateTime.Today },
+                new FxForward { SolveCurve = "usd.2blah", PillarDate = DateTime.Today.AddDays(1) },
+                new FxForward { SolveCurve = "usd.3blah", PillarDate = DateTime.Today }
+            };
 
             var x = f.ImplyContainedCurves(DateTime.Today, Interpolator1DType.Linear);
 
             //double up on one pillar on the same curve
-            f.Add(new FxForward { SolveCurve = "2.blah", PillarDate = DateTime.Today });
+            f.Add(new FxForward { SolveCurve = "usd.2blah", PillarDate = DateTime.Today });
 
             Assert.Throws<Exception>(()=>f.ImplyContainedCurves(DateTime.Today, Interpolator1DType.Linear));
         }

@@ -10,11 +10,21 @@ using Qwack.Core.Basic;
 using Qwack.Models;
 using Qwack.Dates;
 using static System.Math;
+using Microsoft.Extensions.PlatformAbstractions;
+using Qwack.Providers.Json;
+using Qwack.Futures;
 
 namespace Qwack.Core.Tests.Instruments
 {
     public class LoanDepoFacts
     {
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
+        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
+
         [Fact]
         public void FixedRateLoanDepo()
         {
@@ -22,9 +32,9 @@ namespace Qwack.Core.Tests.Instruments
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRate = 0.05;
             var rates = pillars.Select(p => flatRate).ToArray();
-            var usd = new Currency("USD", Dates.DayCountBasis.Act365F, null);
+            var usd = CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve });
+            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
 
             var maturity = bd.AddDays(365);
             var notional = 100e6;
@@ -58,9 +68,9 @@ namespace Qwack.Core.Tests.Instruments
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRate = 0.05;
             var rates = pillars.Select(p => flatRate).ToArray();
-            var usd = new Currency("USD", Dates.DayCountBasis.Act365F, null);
+            var usd = CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve });
+            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
 
             var start = bd.AddDays(-10);
             var maturity = bd.AddDays(365);

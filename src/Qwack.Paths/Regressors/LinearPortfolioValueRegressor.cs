@@ -18,7 +18,7 @@ namespace Qwack.Paths.Regressors
         private double[][][] _pathwiseValues;
         private readonly string _assetName;
         private DateTime[] _regressionDates;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
 
         public LinearPortfolioValueRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, int nPaths)

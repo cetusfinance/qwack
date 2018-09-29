@@ -7,21 +7,13 @@ namespace Qwack.Core.Basic
     /// </summary>
     public class Currency
     {
-        public Currency(string ccy, DayCountBasis dayCount, Calendar settlementCalendar)
-        {
-            Ccy = ccy;
-            DayCount = dayCount;
-            SettlementCalendar = settlementCalendar;
-        }
+        private ICalendarProvider _calendarProvider;
 
-        public Currency(string ccy):this(ccy,DayCountBasis.Act365F,null)
-        {
-
-        }
-
+        public Currency(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
+                
         public string Ccy { get; set;}
         public DayCountBasis DayCount { get; set;}
-        public Calendar SettlementCalendar { get; }
+        public Calendar SettlementCalendar => _calendarProvider.Collection[SettlementCalendarName];
         public string SettlementCalendarName { get;set;}
 
         public override bool Equals(object x)

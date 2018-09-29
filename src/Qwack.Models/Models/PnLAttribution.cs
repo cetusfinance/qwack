@@ -10,7 +10,7 @@ namespace Qwack.Models.Models
 {
     public static class PnLAttribution
     {
-        public static ICube BasicAttribution(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy)
+        public static ICube BasicAttribution(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -30,7 +30,7 @@ namespace Qwack.Models.Models
 
 
             //first step roll time fwd
-            var model = startModel.RollModel(endModel.BuildDate);
+            var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
             var newPVCube = portfolio.PV(model, reportingCcy);
 
             var step = newPVCube.QuickDifference(pvCubeBase);
@@ -217,7 +217,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttribution(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICube startingGreeks)
+        public static ICube ExplainAttribution(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -241,7 +241,7 @@ namespace Qwack.Models.Models
             var r_plIx = startingGreeks.GetColumnIndex("PointLabel");
 
             //first step roll time fwd
-            var model = startModel.RollModel(endModel.BuildDate);
+            var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
             var newPVCube = portfolio.PV(model, reportingCcy);
 
             var step = newPVCube.QuickDifference(pvCubeBase);

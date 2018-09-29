@@ -20,7 +20,15 @@ namespace Qwack.Core.Tests.CurveSolving
     public class AssetCoalCurveFact
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
+
+        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
+        {
+            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
+            return currencyProvider;
+        }
 
         [Fact]
         public void StripCoalSparse()
@@ -30,7 +38,9 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] strikes = { 100, 99, 98, 97, 96, 95, 94, 93 };
 
             var cal = CalendarProvider.Collection["LON"];
-            var xaf = new Currency("XAF", DayCountBasis.Act365F, cal);
+            
+            var xaf = CurrencyProvider["XAF"];
+            
 
             var instruments = periods.Select((p, ix) =>
             AssetProductFactory.CreateMonthlyAsianSwap(p, strikes[ix], "coalXXX", cal, cal, 0.Bd(), xaf, TradeDirection.Long, 0.Bd(), 1, DateGenerationType.Fridays)
@@ -42,7 +52,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, xaf);
 
             var s = new Calibrators.NewtonRaphsonAssetCurveSolver();
-            var curve = s.Solve(instruments, pillars, discountCurve, startDate);
+            var curve = s.Solve(instruments, pillars, discountCurve, startDate, TestProviderHelper.CurrencyProvider);
 
             for (var i = 0; i < instruments.Count; i++)
             {

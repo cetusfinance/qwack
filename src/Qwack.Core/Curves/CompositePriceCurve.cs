@@ -24,7 +24,7 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => 0;
 
-        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+        public Currency Currency { get; set; }
 
         private Func<IFundingModel> fModelFunc;
         private Func<IPriceCurve> pCurveFunc;

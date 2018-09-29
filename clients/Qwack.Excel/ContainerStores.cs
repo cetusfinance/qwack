@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
 using Qwack.Futures;
@@ -30,6 +31,7 @@ namespace Qwack.Excel
         
         public static IServiceProvider GlobalContainer { get; internal set; }
         public static IServiceProvider SessionContainer { get;set;}
+        public static ICurrencyProvider CurrencyProvider => GlobalContainer.GetRequiredService<ICurrencyProvider>();
 
         private static string GetFutureSettingsFile() => Path.Combine(GetRunningDirectory(), _futureSettingsFile);
 

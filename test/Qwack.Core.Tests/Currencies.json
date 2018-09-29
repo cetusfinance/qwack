@@ -1,0 +1,37 @@
+[
+  {
+    "Ccy": "USD",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "NYC"
+  },
+  {
+    "Ccy": "EUR",
+    "DayCount": "Act_360",
+    "HolidayCalendars": "TARGET"
+  },
+  {
+    "Ccy": "GBP",
+    "DayCount": "Act_360",
+    "HolidayCalendars": "LON"
+  },
+  {
+    "Ccy": "XAF",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "LON"
+  },
+  {
+    "Ccy": "XAU",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "LON"
+  },
+  {
+    "Ccy": "JHB",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "JHB"
+  },
+  {
+    "Ccy": "ZAR",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "JHB"
+  }
+]

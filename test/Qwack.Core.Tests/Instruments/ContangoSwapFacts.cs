@@ -31,17 +31,17 @@ namespace Qwack.Core.Tests.Instruments
             var ratesUsd = pillars.Select(p => flatRateUsd).ToArray();
             var ratesXau = pillars.Select(p => flatRateXau).ToArray();
 
-            var usd = new Currency("USD", DayCountBasis.Act365F, null);
-            var xau = new Currency("XAU", DayCountBasis.Act365F, null);
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
+            var xau = TestProviderHelper.CurrencyProvider["XAU"];
             CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
             var pair = new FxPair() { Domestic = xau, Foreign = usd, SettlementCalendar = cal, SpotLag = 2.Bd() };
 
             var discoCurveUsd = new IrCurve(pillars, ratesUsd, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
             var discoCurveXau = new IrCurve(pillars, ratesXau, bd, "XAU.BLAH", Interpolator1DType.Linear, xau);
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxMatrix.Init(usd, bd, new Dictionary<Currency, double> { { xau, 1.0/spotRate } }, new List<FxPair> { pair }, new Dictionary<Currency, string> { { usd, "USD.BLAH" }, { xau, "XAU.BLAH" } });
-            var fModel = new FundingModel(bd, new[] { discoCurveUsd, discoCurveXau });
+            var fModel = new FundingModel(bd, new[] { discoCurveUsd, discoCurveXau }, TestProviderHelper.CurrencyProvider);
             fModel.SetupFx(fxMatrix);
 
 

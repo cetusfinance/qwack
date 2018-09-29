@@ -95,8 +95,8 @@ namespace Qwack.Excel.Instruments
 
                 var product = new FxForward
                 {
-                    DomesticCCY = new Currency(DomesticCcy, DayCountBasis.Act365F, domesticCal),
-                    ForeignCCY = new Currency(ForeignCcy, DayCountBasis.Act365F, foreignCal),
+                    DomesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCcy],
+                    ForeignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCcy],
                     DomesticQuantity = DomesticNotional,
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
@@ -326,7 +326,7 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Currency, out var cal);
-                var ccy = new Currency(Currency, DayCountBasis.Act365F, cal);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 if (!Enum.TryParse(Basis, out DayCountBasis basis))
                 {
@@ -365,7 +365,7 @@ namespace Qwack.Excel.Instruments
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
                     .SelectMany(s => s);
 
-                var fic = new FundingInstrumentCollection();
+                var fic = new FundingInstrumentCollection(ContainerStores.CurrencyProvider);
                 fic.AddRange(swaps);
                 fic.AddRange(fras);
                 fic.AddRange(futures);
@@ -424,7 +424,7 @@ namespace Qwack.Excel.Instruments
 
                 var rIndex = new FloatRateIndex
                 {
-                    Currency = new Currency(Currency, DayCountBasis.Act365F, null),
+                    Currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency],
                     RollConvention = rConv,
                     FixingOffset = fixOffset,
                     ResetTenor = floatTenor,
@@ -456,17 +456,18 @@ namespace Qwack.Excel.Instruments
                     .Where(s => fxPairsCache.Exists(s as string))
                     .Select(s => fxPairsCache.GetObject(s as string).Value)
                     .ToList();
+                var currencies = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>();
 
                 var spotRatesRaw = SpotRateMap.RangeToDictionary<string, double>();
 
-                var spotRates = spotRatesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
+                var spotRates = spotRatesRaw.ToDictionary(y => currencies[y.Key], y => y.Value);
 
                 var discountCurvesRaw = DiscountCurves.RangeToDictionary<string, string>();
-                var discountCurves = discountCurvesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
+                var discountCurves = discountCurvesRaw.ToDictionary(y => currencies[y.Key], y => y.Value);
 
 
-                var matrix = new FxMatrix();
-                matrix.Init(new Currency(BaseCurrency, DayCountBasis.Act365F, null), BuildDate, spotRates, fxPairs, discountCurves);
+                var matrix = new FxMatrix(currencies);
+                matrix.Init(currencies[BaseCurrency], BuildDate, spotRates, fxPairs, discountCurves);
 
                 var cache = ContainerStores.GetObjectCache<FxMatrix>();
                 cache.PutObject(ObjectName, new SessionItem<FxMatrix> { Name = ObjectName, Value = matrix });
@@ -494,8 +495,8 @@ namespace Qwack.Excel.Instruments
 
                 var pair = new FxPair()
                 {
-                    Domestic = new Currency(DomesticCurrency,DayCountBasis.Act365F, domesticCal),
-                    Foreign = new Currency(ForeignCurrency, DayCountBasis.Act365F, foreignCal),
+                    Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCurrency],
+                    Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCurrency],
                     SettlementCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };

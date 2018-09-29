@@ -16,8 +16,8 @@ namespace Qwack.Math.Interpolation
 
         private double[] _tangents;
 
-        private double _minX;
-        private double _maxX;
+        private readonly double _minX;
+        private readonly double _maxX;
 
         public CubicHermiteSplineInterpolator()
         {
@@ -79,10 +79,7 @@ namespace Qwack.Math.Interpolation
             return UpdateY(pillar, newY, updateInPlace);
         }
 
-        public double FirstDerivative(double t)
-        {
-            return 0;
-        }
+        public double FirstDerivative(double t) => 0;
 
         public double Interpolate(double x)
         {
@@ -113,10 +110,7 @@ namespace Qwack.Math.Interpolation
         }
 
 
-        public double SecondDerivative(double x)
-        {
-            return 0;
-        }
+        public double SecondDerivative(double x) => 0;
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
         {

@@ -21,7 +21,7 @@ namespace Qwack.Core.Cubes
 
     public class ResultCube : ICube
     {
-        private Type[] _numericalTypes = { typeof(double) };
+        private readonly Type[] _numericalTypes = { typeof(double) };
         private List<ResultCubeRow> _rows;
         private Dictionary<string, Type> _types;
         private List<string> _fieldNames;
@@ -33,7 +33,7 @@ namespace Qwack.Core.Cubes
             _rows = new List<ResultCubeRow>();
         }
 
-        public Dictionary<string, Type> DataTypes { get { return _types; } }
+        public Dictionary<string, Type> DataTypes => _types;
 
         public int GetColumnIndex(string columnName) => _fieldNames.IndexOf(columnName);
 
@@ -56,15 +56,9 @@ namespace Qwack.Core.Cubes
             _rows.Add(new ResultCubeRow(row,value));
         }
 
-        public void AddRow(object[] data, double value)
-        {
-            _rows.Add(new ResultCubeRow(data, value));
-        }
+        public void AddRow(object[] data, double value) => _rows.Add(new ResultCubeRow(data, value));
 
 
-        public ResultCubeRow[] GetAllRows()
-        {
-            return _rows.ToArray();
-        }
+        public ResultCubeRow[] GetAllRows() => _rows.ToArray();
     }
 }

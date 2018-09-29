@@ -11,12 +11,12 @@ namespace Qwack.Options.VolSurfaces
     public class RiskyFlySurface : GridVolSurface
     {
         private double[] _atmVols;
-        private double[][] _riskies;
-        private double[][] _flies;
-        private double[] _wingDeltas;
-        private double[] _fwds;
-        private WingQuoteType _wingQuoteType;
-        private AtmVolType _atmVolType;
+        private readonly double[][] _riskies;
+        private readonly double[][] _flies;
+        private readonly double[] _wingDeltas;
+        private readonly double[] _fwds;
+        private readonly WingQuoteType _wingQuoteType;
+        private readonly AtmVolType _atmVolType;
 
         public RiskyFlySurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas, 
             double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType, 

@@ -456,17 +456,18 @@ namespace Qwack.Excel.Instruments
                     .Where(s => fxPairsCache.Exists(s as string))
                     .Select(s => fxPairsCache.GetObject(s as string).Value)
                     .ToList();
+                var currencies = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>();
 
                 var spotRatesRaw = SpotRateMap.RangeToDictionary<string, double>();
 
-                var spotRates = spotRatesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
+                var spotRates = spotRatesRaw.ToDictionary(y => currencies[y.Key], y => y.Value);
 
                 var discountCurvesRaw = DiscountCurves.RangeToDictionary<string, string>();
-                var discountCurves = discountCurvesRaw.ToDictionary(y => new Currency(y.Key, DayCountBasis.Act365F, null), y => y.Value);
+                var discountCurves = discountCurvesRaw.ToDictionary(y => currencies[y.Key], y => y.Value);
 
 
-                var matrix = new FxMatrix();
-                matrix.Init(new Currency(BaseCurrency, DayCountBasis.Act365F, null), BuildDate, spotRates, fxPairs, discountCurves);
+                var matrix = new FxMatrix(currencies);
+                matrix.Init(currencies[BaseCurrency], BuildDate, spotRates, fxPairs, discountCurves);
 
                 var cache = ContainerStores.GetObjectCache<FxMatrix>();
                 cache.PutObject(ObjectName, new SessionItem<FxMatrix> { Name = ObjectName, Value = matrix });

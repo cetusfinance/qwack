@@ -52,12 +52,12 @@ namespace Qwack.Excel.Curves
 
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccy, out var ccyCal);
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(spotCalStr, out var spotCal);
-                var ccyObj = new Currency(ccy, DayCountBasis.Act365F, ccyCal);
+                var ccyObj = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ccy];
 
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType, labels)
+                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>(), labels)
                 {
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,

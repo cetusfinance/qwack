@@ -222,7 +222,7 @@ namespace Qwack.Excel.Curves
                     .Select(s => curveCache.GetObject(s as string).Value as IrCurve)
                     .ToArray();
 
-                var fModel = new FundingModel(BuildDate, curves);
+                var fModel = new FundingModel(BuildDate, curves, ContainerStores.CurrencyProvider);
 
                 if (!(FxMatrix is ExcelMissing))
                 {
@@ -269,7 +269,8 @@ namespace Qwack.Excel.Curves
                     return $"Not all curves have unique names";
                 }
 
-                var outModel = new FundingModel(modelA.Value.BuildDate, combinedCurves);
+                var currencies = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>();
+                var outModel = new FundingModel(modelA.Value.BuildDate, combinedCurves, currencies);
 
                 foreach (var vs in modelA.Value.VolSurfaces)
                     outModel.VolSurfaces.Add(vs.Key, vs.Value);
@@ -293,7 +294,7 @@ namespace Qwack.Excel.Curves
 
                 var pairs = fxA.FxPairDefinitions.Concat(fxB.FxPairDefinitions).Distinct().ToList();
 
-                var fxMatrix = new FxMatrix();
+                var fxMatrix = new FxMatrix(currencies);
                 fxMatrix.Init(fxA.BaseCurrency, modelA.Value.BuildDate, spotRates, pairs, discoMap);
 
                 outModel.SetupFx(fxMatrix);

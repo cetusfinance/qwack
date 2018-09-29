@@ -10,12 +10,7 @@ namespace Qwack.Core.Basic
         private ICalendarProvider _calendarProvider;
 
         public Currency(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
-
-        public Currency(string ccy):this(ccy,DayCountBasis.Act365F,null)
-        {
-
-        }
-
+                
         public string Ccy { get; set;}
         public DayCountBasis DayCount { get; set;}
         public Calendar SettlementCalendar => _calendarProvider.Collection[SettlementCalendarName];

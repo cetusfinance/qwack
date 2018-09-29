@@ -9,8 +9,11 @@ namespace Qwack.Models
 {
     public class FxMatrix : IFxMatrix
     {
-        public FxMatrix()
+        private ICurrencyProvider _currencyProvider;
+
+        public FxMatrix(ICurrencyProvider currencyProvider)
         {
+            _currencyProvider = currencyProvider;
             SpotRates = new Dictionary<Currency, double>();
             DiscountCurveMap = new Dictionary<Currency, string>();
             FxPairDefinitions = new List<FxPair>();
@@ -38,8 +41,8 @@ namespace Qwack.Models
 
         public FxPair GetFxPair(string pair)
         {
-            var leftCCy = new Currency(pair.Substring(0, 3));
-            var rightCcy = new Currency(pair.Substring(pair.Length-3, 3));
+            var leftCCy = _currencyProvider[pair.Substring(0, 3)];
+            var rightCcy = _currencyProvider[pair.Substring(pair.Length-3, 3)];
             return GetFxPair(leftCCy, rightCcy);
         }
 
@@ -51,14 +54,14 @@ namespace Qwack.Models
 
         public IFxMatrix Clone()
         {
-            var o = new FxMatrix();
+            var o = new FxMatrix(_currencyProvider);
             o.Init(BaseCurrency, BuildDate, new Dictionary<Currency, double>(SpotRates), new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
             return o;
         }
 
         public IFxMatrix Rebase(DateTime newBuildDate, Dictionary<Currency,double> newSpotRates)
         {
-            var o = new FxMatrix();
+            var o = new FxMatrix(_currencyProvider);
             o.Init(BaseCurrency, newBuildDate, newSpotRates, new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
             return o;
         }

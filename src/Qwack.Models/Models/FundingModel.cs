@@ -10,24 +10,28 @@ namespace Qwack.Models
 {
     public class FundingModel : IFundingModel
     {
+        private ICurrencyProvider _currencyProvider;
+
         private FundingModel()
         {
         }
 
-        public FundingModel(DateTime buildDate, IrCurve[] curves)
+        public FundingModel(DateTime buildDate, IrCurve[] curves, ICurrencyProvider currencyProvider)
         {
+            _currencyProvider = currencyProvider;
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
-            FxMatrix = new FxMatrix();
+            FxMatrix = new FxMatrix(_currencyProvider);
             VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
 
-        public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves)
+        public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves, ICurrencyProvider currencyProvider)
         {
+            _currencyProvider = currencyProvider;
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves);
-            FxMatrix = new FxMatrix();
+            FxMatrix = new FxMatrix(_currencyProvider);
             VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
@@ -75,7 +79,7 @@ namespace Qwack.Models
                 {
                     return kv.Value;
                 }
-            }).ToArray())
+            }).ToArray(), _currencyProvider)
             {
                 FxMatrix = FxMatrix
             };
@@ -84,7 +88,7 @@ namespace Qwack.Models
 
         public IFundingModel Clone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray())
+            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray(), _currencyProvider)
             {
                 FxMatrix = FxMatrix,
                 VolSurfaces = VolSurfaces
@@ -94,7 +98,7 @@ namespace Qwack.Models
 
         public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), newBuildDate ?? c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray())
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), newBuildDate ?? c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray(), _currencyProvider)
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };
@@ -106,7 +110,7 @@ namespace Qwack.Models
 
         public double GetFxRate(DateTime settlementDate, string fxPair)
         {
-            var pair = fxPair.FxPairFromString();
+            var pair = fxPair.FxPairFromString(_currencyProvider);
             return GetFxRate(settlementDate, pair.Domestic, pair.Foreign);
         }
 

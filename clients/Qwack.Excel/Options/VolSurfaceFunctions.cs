@@ -35,7 +35,7 @@ namespace Qwack.Excel.Options
 
                 var surface = new ConstantVolSurface(OriginDate, Volatility)
                 {
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    Currency = ContainerStores.CurrencyProvider[ccyStr],
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
@@ -89,7 +89,7 @@ namespace Qwack.Excel.Options
 
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), sType, siType, tiType, basis, labels)
                 {
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    Currency = ContainerStores.CurrencyProvider[ccyStr],
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
@@ -164,7 +164,7 @@ namespace Qwack.Excel.Options
 
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
                 { 
-                    Currency = new Currency(ccyStr, DayCountBasis.Act365F, ccyCal),
+                    Currency = ContainerStores.CurrencyProvider[ccyStr],
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };

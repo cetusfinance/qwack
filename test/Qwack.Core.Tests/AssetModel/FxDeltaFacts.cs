@@ -20,26 +20,26 @@ namespace Qwack.Core.Tests.AssetModel
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-
+        
         [Fact]
         public void FxDeltaOnUSDTrade()
         {
             var startDate = new DateTime(2018, 07, 28);
             var cal = CalendarProvider.Collection["LON"];
-            var zar = new Currency("ZAR", DayCountBasis.Act365F, cal);
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var zar = TestProviderHelper.CurrencyProvider["ZAR"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars)
+            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME,TestProviderHelper.CurrencyProvider, curvePillars)
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",
                 Name = "Coconuts"
             };
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             var fxSpot = 15;
             var rates = new Dictionary<Currency, double> { { zar, fxSpot } };
             var discoMap = new Dictionary<Currency, string> { { zar, "ZAR.CURVE" }, { usd, "USD.CURVE" } };
@@ -104,13 +104,13 @@ namespace Qwack.Core.Tests.AssetModel
         {
             var startDate = new DateTime(2018, 07, 28);
             var cal = CalendarProvider.Collection["LON"];
-            var zar = new Currency("ZAR", DayCountBasis.Act365F, cal);
-            var usd = new Currency("USD", DayCountBasis.Act365F, cal);
+            var zar = TestProviderHelper.CurrencyProvider["ZAR"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars)
+            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME,TestProviderHelper.CurrencyProvider, curvePillars)
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",

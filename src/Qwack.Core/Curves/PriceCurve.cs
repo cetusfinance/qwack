@@ -15,6 +15,7 @@ namespace Qwack.Core.Curves
         private readonly double[] _prices;
         private readonly PriceCurveType _curveType;
         private IInterpolator1D _interp;
+        private ICurrencyProvider _currencyProvider;
 
         public bool UnderlyingsAreForwards => _curveType == PriceCurveType.LME;
 
@@ -31,7 +32,7 @@ namespace Qwack.Core.Curves
         public int NumberOfPillars => _pillarDates.Length;
         public DateTime[] PillarDates => _pillarDates;
 
-        public Currency Currency { get; set; } = new Currency("USD", DayCountBasis.ACT360, null);
+        public Currency Currency { get; set; }
         public string CollateralSpec { get; set; }
 
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
@@ -44,8 +45,10 @@ namespace Qwack.Core.Curves
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
 
-        public PriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, PriceCurveType curveType, string[] pillarLabels = null)
+        public PriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, PriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels = null)
         {
+            _currencyProvider = currencyProvider;
+            Currency = currencyProvider["USD"];
             BuildDate = buildDate;
             _pillarDates = PillarDates;
             _prices = Prices;
@@ -100,7 +103,7 @@ namespace Qwack.Core.Curves
             for (var i = 0; i < lastBumpIx; i++)
             {
                 var bumpedCurve = _prices.Select((x, ix) => ix == i ? x + bumpSize : x).ToArray();
-                var c = new PriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType, _pillarLabels)
+                var c = new PriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType, _currencyProvider, _pillarLabels)
                 {
                     CollateralSpec = CollateralSpec,
                     Currency = Currency,
@@ -131,10 +134,10 @@ namespace Qwack.Core.Curves
                             newPillars.RemoveAt(0);
                             newPrices.RemoveAt(0);
                         }
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                     }
                     else
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                 case PriceCurveType.NYMEX:
                     if (_pillarDates.First() < newAnchorDate) //remove first point as it has expired tomorrow
                     {
@@ -142,11 +145,11 @@ namespace Qwack.Core.Curves
                         newPillars.RemoveAt(0);
                         var newPrices = ((double[])_prices.Clone()).ToList();
                         newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                     }
                     else
                     {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                     }
                 case PriceCurveType.ICE:
                     if (_pillarDates.First() <= newAnchorDate) //difference to NYMEX case is "<=" vs "<"
@@ -155,11 +158,11 @@ namespace Qwack.Core.Curves
                         newPillars.RemoveAt(0);
                         var newPrices = ((double[])_prices.Clone()).ToList();
                         newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                     }
                     else
                     {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
                     }
                 default:
                     throw new Exception("Unknown curve type");

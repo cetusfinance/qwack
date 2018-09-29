@@ -37,7 +37,7 @@ namespace Qwack.Core.Tests.AssetModel
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, curvePillars)
+            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, TestProviderHelper.CurrencyProvider, curvePillars)
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",
@@ -45,7 +45,7 @@ namespace Qwack.Core.Tests.AssetModel
                 AssetId = "Coconuts"
             };
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             var fxSpot = 7;
             var rates = new Dictionary<Currency, double> { { xaf, fxSpot } };
             var discoMap = new Dictionary<Currency, string> { { xaf, "XAF.CURVE" }, { usd, "USD.CURVE" } };
@@ -64,7 +64,7 @@ namespace Qwack.Core.Tests.AssetModel
             var xafCurve = new IrCurve(irPillars, xafRates, startDate, "XAF.CURVE", Interpolator1DType.Linear, xaf, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { xafCurve, usdCurve });
+            var fModel = new FundingModel(startDate, new[] { xafCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);

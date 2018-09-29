@@ -62,7 +62,7 @@ namespace Qwack.Excel.Instruments
                 {
                     return $"Could not parse date generation type - {dGenType}";
                 }
-                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 AsianSwap product;
                 if (PeriodCodeOrDates is object[,])
@@ -235,7 +235,7 @@ namespace Qwack.Excel.Instruments
                 {
                     return $"Could not parse date generation type - {dGenType}";
                 }
-                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 AsianSwapStrip product;
                 if (PeriodCodeOrDates is object[,])
@@ -308,7 +308,7 @@ namespace Qwack.Excel.Instruments
                 {
                     return $"Could not parse date generation type - {dGenType}";
                 }
-                var currency = new Currency(Currency, DayCountBasis.Act365F, pCal);
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
                 AsianOption product;
                 if (PeriodCodeOrDates is object[,])
@@ -384,7 +384,7 @@ namespace Qwack.Excel.Instruments
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
                 {
-                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
+                    ccy = ContainerStores.CurrencyProvider[ReportingCcy as string];
                 }
 
                 var result = pf.PV(model.Value, ccy);
@@ -409,7 +409,7 @@ namespace Qwack.Excel.Instruments
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
                 {
-                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
+                    ccy = ContainerStores.CurrencyProvider[ReportingCcy as string];
                 }
 
                 var result = pfolio.PV(model.Value, ccy);
@@ -470,7 +470,7 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
                 var result = pfolio.AssetVega(model.Value, ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
@@ -513,7 +513,7 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
                 var result = pfolio.CorrelationDelta(model.Value, ccy, Epsilon);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
@@ -667,7 +667,7 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
                 var greeksStart = ContainerStores.GetObjectCache<ICube>()
                 .GetObjectOrThrow(GreeksStart, $"Could not find greeks cube with name {GreeksStart}");
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
                 var result = pfolio.ExplainAttribution(modelStart.Value, modelEnd.Value, ccy, greeksStart.Value);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();

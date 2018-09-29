@@ -28,5 +28,10 @@
     "Ccy": "JHB",
     "DayCount": "Act365F",
     "HolidayCalendars": "JHB"
+  },
+  {
+    "Ccy": "ZAR",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "JHB"
   }
 ]

@@ -35,11 +35,11 @@ namespace Qwack.Core.Calibrators
         private double[][] _jacobian;
         private ICurrencyProvider _currencyProvider;
 
+        public NewtonRaphsonAssetBasisCurveSolver(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
+
         public SparsePriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, 
-            IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType,
-            ICurrencyProvider currencyProvider)
+            IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType)
         {
-            _currencyProvider = currencyProvider;
             _curveInstruments = instruments;
             _pillars = pillars.ToArray();
             _numberOfInstruments = _curveInstruments.Count;

@@ -38,15 +38,15 @@ namespace Qwack.Core.Tests.Instruments
         {
             var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
             {
-                new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today },
-                new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today.AddDays(1) },
-                new FxForward { SolveCurve = "2.blah", PillarDate = DateTime.Today }
+                new FxForward { SolveCurve = "usd.1blah", PillarDate = DateTime.Today },
+                new FxForward { SolveCurve = "usd.2blah", PillarDate = DateTime.Today.AddDays(1) },
+                new FxForward { SolveCurve = "usd.3blah", PillarDate = DateTime.Today }
             };
 
             var x = f.ImplyContainedCurves(DateTime.Today, Interpolator1DType.Linear);
 
             //double up on one pillar on the same curve
-            f.Add(new FxForward { SolveCurve = "2.blah", PillarDate = DateTime.Today });
+            f.Add(new FxForward { SolveCurve = "usd.2blah", PillarDate = DateTime.Today });
 
             Assert.Throws<Exception>(()=>f.ImplyContainedCurves(DateTime.Today, Interpolator1DType.Linear));
         }

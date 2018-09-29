@@ -205,7 +205,7 @@ namespace Qwack.Excel.Curves
                 var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value);
 
                 var pDates = Pillars.ToDateTimeArray();
-                var fitter = new Core.Calibrators.NewtonRaphsonAssetBasisCurveSolver();
+                var fitter = new Core.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider);
                 var cObj = (PriceCurve)fitter.SolveCurve(swaps.ToList(), pDates.ToList(), irCurve, baseCurve, BuildDate, cType);
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;

@@ -48,7 +48,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver();
+            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.ICE);
 
             for (var i = 0; i < instruments.Count; i++)
@@ -83,7 +83,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver();
+            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.Linear);
 
             Assert.Equal((100.0 - 10.0) * 6.35, curve.GetPriceForDate(buildDate));

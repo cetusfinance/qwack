@@ -27,9 +27,9 @@ namespace Qwack.Core.Tests.Instruments
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRate = 0.05;
             var rates = pillars.Select(p => flatRate).ToArray();
-            var usd = new Currency("USD", Dates.DayCountBasis.Act365F, null);
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve });
+            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
             CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
 
             var ix = new FloatRateIndex

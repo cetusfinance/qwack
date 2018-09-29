@@ -365,7 +365,7 @@ namespace Qwack.Excel.Instruments
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
                     .SelectMany(s => s);
 
-                var fic = new FundingInstrumentCollection();
+                var fic = new FundingInstrumentCollection(ContainerStores.CurrencyProvider);
                 fic.AddRange(swaps);
                 fic.AddRange(fras);
                 fic.AddRange(futures);

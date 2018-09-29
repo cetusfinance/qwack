@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using Qwack.Core.Models;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 
@@ -126,6 +127,11 @@ namespace Qwack.Curves.Benchmark
                 //NoOp
             }
 
+            public void Process(IPathBlock block)
+            {
+                throw new NotImplementedException();
+            }
+
             public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
             {
                 var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
@@ -138,6 +144,11 @@ namespace Qwack.Curves.Benchmark
                 {
                     dates.AddDate(DateTime.Now.Date.AddDays(i));
                 }
+            }
+
+            public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
+            {
+                throw new NotImplementedException();
             }
         }
     }

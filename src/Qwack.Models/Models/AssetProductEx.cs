@@ -940,7 +940,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
+        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -956,7 +956,7 @@ namespace Qwack.Models.Models
             var cashRows = cashCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex("TradeId");
 
-            var rolledModel = model.RollModel(fwdValDate);
+            var rolledModel = model.RollModel(fwdValDate,currencyProvider);
 
             var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
@@ -992,7 +992,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube AssetThetaCharm(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
+        public static ICube AssetThetaCharm(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1012,7 +1012,7 @@ namespace Qwack.Models.Models
 
             var tidIx = pvCube.GetColumnIndex("TradeId");
 
-            var rolledModel = model.RollModel(fwdValDate);
+            var rolledModel = model.RollModel(fwdValDate, currencyProvider);
 
             var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
@@ -1089,7 +1089,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy)
+        public static ICube AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1110,7 +1110,7 @@ namespace Qwack.Models.Models
 
             var tidIx = pvCube.GetColumnIndex("TradeId");
 
-            var rolledModel = model.RollModel(fwdValDate);
+            var rolledModel = model.RollModel(fwdValDate, currencyProvider);
 
             var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
@@ -1239,7 +1239,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate)
+        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider)
         {
             //setup the "tomorrow" scenario
             var rolledIrCurves = new Dictionary<string, IrCurve>();
@@ -1303,8 +1303,8 @@ namespace Qwack.Models.Models
                         else //its FX
                         {
                             var id = newDict.AssetId;
-                            var ccyLeft = new Currency(id.Substring(0, 3), DayCountBasis.Act365F, null);
-                            var ccyRight = new Currency(id.Substring(id.Length - 3, 3), DayCountBasis.Act365F, null);
+                            var ccyLeft = currencyProvider[id.Substring(0, 3)];
+                            var ccyRight = currencyProvider[id.Substring(id.Length - 3, 3)];
                             var pair = model.FundingModel.FxMatrix.GetFxPair(ccyLeft, ccyRight);
                             var spotDate = pair.SpotDate(date);
                             var estFixing = model.FundingModel.GetFxRate(spotDate, ccyLeft, ccyRight);

@@ -77,14 +77,14 @@ namespace Qwack.Excel.Curves
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
                 {
-                    ccy = new Currency(ReportingCcy as string, DayCountBasis.Act365F, null);
+                    ccy = ContainerStores.CurrencyProvider[ReportingCcy as string];
                 }
                 IMcModel mc;
 
                 if (useLocalVol)
-                    mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
+                    mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
                 else
-                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
+                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
 
                 var result = mc.PV(ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -109,7 +109,7 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value);
+                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();

@@ -554,8 +554,8 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
-                var result = pfolio.AssetTheta(model.Value, FwdValDate, ccy);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var result = pfolio.AssetTheta(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -576,8 +576,8 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
-                var result = pfolio.AssetThetaCharm(model.Value, FwdValDate, ccy);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var result = pfolio.AssetThetaCharm(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -617,8 +617,8 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
-                var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -640,9 +640,9 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameStart, $"Could not find model with name {ModelNameStart}");
                 var modelEnd = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
-                var ccy = new Currency(ReportingCcy, DayCountBasis.ACT365F, null);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolio.BasicAttribution(modelStart.Value, modelEnd.Value, ccy);
+                var result = pfolio.BasicAttribution(modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -669,7 +669,7 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(GreeksStart, $"Could not find greeks cube with name {GreeksStart}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolio.ExplainAttribution(modelStart.Value, modelEnd.Value, ccy, greeksStart.Value);
+                var result = pfolio.ExplainAttribution(modelStart.Value, modelEnd.Value, ccy, greeksStart.Value, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

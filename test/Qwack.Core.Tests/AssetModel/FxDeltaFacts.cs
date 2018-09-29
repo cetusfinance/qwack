@@ -58,7 +58,7 @@ namespace Qwack.Core.Tests.AssetModel
             var zarCurve = new IrCurve(irPillars, zarRates, startDate, "ZAR.CURVE", Interpolator1DType.Linear, zar, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve });
+            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);
@@ -117,7 +117,7 @@ namespace Qwack.Core.Tests.AssetModel
                 Name = "Coconuts"
             };
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             var fxSpot = 15;
             var rates = new Dictionary<Currency, double> { { zar, fxSpot } };
             var discoMap = new Dictionary<Currency, string> { { zar, "ZAR.CURVE" }, { usd, "USD.CURVE" } };
@@ -136,7 +136,7 @@ namespace Qwack.Core.Tests.AssetModel
             var zarCurve = new IrCurve(irPillars, zarRates, startDate, "ZAR.CURVE", Interpolator1DType.Linear, zar, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve });
+            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);

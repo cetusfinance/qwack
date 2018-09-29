@@ -23,7 +23,7 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void FundingInstrumentCollection()
         {
-            var f = new FundingInstrumentCollection
+            var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
             {
                 new FxForward { SolveCurve = "1.blah" },
                 new FxForward { SolveCurve = "1.blah" },
@@ -36,7 +36,7 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void PillarDatesTest()
         {
-            var f = new FundingInstrumentCollection
+            var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
             {
                 new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today },
                 new FxForward { SolveCurve = "1.blah", PillarDate = DateTime.Today.AddDays(1) },

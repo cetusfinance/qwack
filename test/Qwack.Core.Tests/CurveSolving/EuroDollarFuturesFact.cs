@@ -76,11 +76,11 @@ namespace Qwack.Core.Tests.CurveSolving
                 currentDate = currentDate.AddMonths(3);
             }
 
-            var fic = new FundingInstrumentCollection();
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
             fic.AddRange(instruments);
 
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
-            var model = new FundingModel(startDate, new[] { curve });
+            var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider);
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
             s.Solve(model, fic);
@@ -141,11 +141,11 @@ namespace Qwack.Core.Tests.CurveSolving
                 currentDate = currentDate.AddMonths(3);
             }
 
-            var fic = new FundingInstrumentCollection();
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
             fic.AddRange(instruments);
 
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
-            var model = new FundingModel(startDate, new[] { curve });
+            var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider);
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
             s.Solve(model, fic);

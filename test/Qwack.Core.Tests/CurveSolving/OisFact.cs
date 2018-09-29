@@ -101,7 +101,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var oisSwaps = new IrBasisSwap[oisTenors.Length];
             var FRAs = new ForwardRateAgreement[FRATenors.Length];
 
-            var fic = new FundingInstrumentCollection();
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
 
             for (var i = 0; i < FRAs.Length; i++)
             {
@@ -128,7 +128,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var curve3m = new IrCurve(pillarDates3m, new double[pillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, ccyZar);
             var curveOIS = new IrCurve(pillarDatesOIS, new double[pillarDatesOIS.Length], startDate, "ZAR.OIS.1B", Interpolator1DType.LinearFlatExtrap, ccyZar);
-            var model = new FundingModel(startDate, new IrCurve[] { curve3m, curveOIS });
+            var model = new FundingModel(startDate, new IrCurve[] { curve3m, curveOIS }, TestProviderHelper.CurrencyProvider);
 
             var S = new NewtonRaphsonMultiCurveSolver();
             S.Solve(model, fic);
@@ -193,7 +193,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var USDFRAs = new ForwardRateAgreement[FRATenors.Length];
 
 
-            var FIC = new FundingInstrumentCollection();
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -241,14 +241,14 @@ namespace Qwack.Core.Tests.CurveSolving
             var USDcurve3m = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
             var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
 
-            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS });
+            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS }, TestProviderHelper.CurrencyProvider);
 
             var ZARcurve3m0 = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 0 };
             var ZARcurveOIS0 = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 0 };
             var USDcurve3m0 = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
             var USDcurveOIS0 = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
 
-            var engine0 = new FundingModel(startDate, new IrCurve[] { ZARcurve3m0, ZARcurveOIS0, USDcurve3m0, USDcurveOIS0 });
+            var engine0 = new FundingModel(startDate, new IrCurve[] { ZARcurve3m0, ZARcurveOIS0, USDcurve3m0, USDcurveOIS0 }, TestProviderHelper.CurrencyProvider);
 
 
             var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
@@ -340,7 +340,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var fxForwards = new FxForward[fxForwardTenors.Length];
             var xcySwaps = new XccyBasisSwap[xcySwapTenors.Length];
 
-            var FIC = new FundingInstrumentCollection();
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -411,9 +411,9 @@ namespace Qwack.Core.Tests.CurveSolving
             var fxCurve = new IrCurve(fxPillarDates, new double[fxPillarDates.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 2 };
 
 
-            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS, fxCurve });
+            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS, fxCurve }, TestProviderHelper.CurrencyProvider);
 
-            var fxMatrix = new FxMatrix();
+            var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             var spotRates = new Dictionary<Currency, double>
             {
                 {ccyZar,fxSpot}
@@ -462,7 +462,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var ZARdepos = new IrSwap[depoTenors.Length];
             var ZARFRAs = new ForwardRateAgreement[FRATenors.Length];
 
-            var FIC = new FundingInstrumentCollection();
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -480,7 +480,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var ZARcurve3m = new IrCurve(ZARpillarDates3m, new double[ZARpillarDates3m.Length], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 0 };
         
-            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m });
+            var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m }, TestProviderHelper.CurrencyProvider);
 
             var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
             //var S = new NewtonRaphsonMultiCurveSolverStaged();

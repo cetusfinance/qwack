@@ -180,7 +180,7 @@ namespace Qwack.Excel.Curves
                     }
                 }
 
-                var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray());
+                var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider);
 
                 if(!(FxMatrix is ExcelMissing))
                 {

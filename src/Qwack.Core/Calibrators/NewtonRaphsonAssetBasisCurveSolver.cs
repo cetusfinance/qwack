@@ -84,7 +84,7 @@ namespace Qwack.Core.Calibrators
             _curveType = curveType;
 
             _currentGuess = Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
-            _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType);
+            _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
             _currentPVs = ComputePVs();
 
             ComputeJacobian();
@@ -92,7 +92,7 @@ namespace Qwack.Core.Calibrators
             for (var i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
-                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType);
+                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
 
                 _currentPVs = ComputePVs();
                 if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
@@ -140,7 +140,7 @@ namespace Qwack.Core.Calibrators
             for (var i = 0; i < _numberOfPillars; i++)
             {
 
-                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType);
+                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType, _currencyProvider);
                 var bumpedPVs = ComputePVs();
 
                 for (var j = 0; j < bumpedPVs.Length; j++)

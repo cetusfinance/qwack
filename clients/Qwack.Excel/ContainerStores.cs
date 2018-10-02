@@ -14,6 +14,7 @@ namespace Qwack.Excel
     {
         private const string _calendarJSONFile = "Calendars.json";
         private const string _futureSettingsFile = "futuresettings.json";
+        private const string _currenciesFile = "currencies.json";
 
         static ContainerStores()
         {
@@ -21,6 +22,7 @@ namespace Qwack.Excel
              .AddLogging()
              .AddCalendarsFromJson(GetCalendarFilename())
              .AddFutureSettingsFromJson(GetFutureSettingsFile())
+             .AddCurrenciesFromJson(GetCurrenciesFilename())
              .AddSingleton(typeof(IObjectStore<>), typeof(ExcelObjectStore<>))
              .BuildServiceProvider();
 
@@ -44,6 +46,7 @@ namespace Qwack.Excel
         }
 
         private static string GetCalendarFilename() => Path.Combine(GetRunningDirectory(), _calendarJSONFile);
+        private static string GetCurrenciesFilename() => Path.Combine(GetRunningDirectory(), _currenciesFile);
 
         public static IObjectStore<T> GetObjectCache<T>() => SessionContainer.GetService<IObjectStore<T>>();
     }

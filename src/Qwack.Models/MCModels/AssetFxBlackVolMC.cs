@@ -166,10 +166,10 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(product.Value);
             }
 
-            if (settings.PfeExposureDates != null)//setup for PFE
+            if (settings.PfeExposureDates != null && settings.ReportingCurrency!=null)//setup for PFE
             {
                 _regressor = new LinearPortfolioValueRegressor(settings.PfeExposureDates,
-                    _payoffs.Values.ToArray(), settings.NumberOfPaths);
+                    _payoffs.Values.ToArray(), settings);
 
                 Engine.AddPathProcess(_regressor);
             }

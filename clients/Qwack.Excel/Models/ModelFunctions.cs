@@ -32,23 +32,27 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Number of paths")] int NumberOfPaths,
            [ExcelArgument(Description = "Number of timesteps")] int NumberOfTimesteps,
            [ExcelArgument(Description = "Random number generator, e.g. Sobol or MersenneTwister")] object RandomGenerator,
-           [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates)
+           [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates,
+           [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var rGen = RandomGenerator.OptionalExcel("MersenneTwister");
+                var reportingCurrency = ReportingCurrency.OptionalExcel("USD");
+
+                if(!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(reportingCurrency, out var repCcy))
+                    return $"Could not find currency {reportingCurrency} in cache";
 
                 if (!Enum.TryParse(rGen, out RandomGeneratorType randomGenerator))
-                {
                     return $"Could not parse random generator name - {rGen}";
-                }
 
                 var settings = new McSettings
                 {
                     Generator = randomGenerator,
                     NumberOfPaths = NumberOfPaths,
                     NumberOfTimesteps = NumberOfTimesteps,
-                    PfeExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null
+                    PfeExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null,
+                    ReportingCurrency = repCcy
                 };
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();
                 settingsCache.PutObject(ObjectName, new SessionItem<McSettings> { Name = ObjectName, Value = settings });

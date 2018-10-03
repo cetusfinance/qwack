@@ -37,7 +37,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1000" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,6 +57,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Currencies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="SobolDirectionNumbers.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

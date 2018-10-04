@@ -156,7 +156,7 @@ namespace Qwack.Excel.Services
                 var o = new T[input.GetLength(0)];
                 for(var i=0;i<input.GetLength(0);i++)
                 {
-                    o[i] = (T)Convert.ChangeType(input[i, 0],typeof(T));
+                    o[i] = input[i, 0] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i, 0],typeof(T));
                 }
                 return o;
             }
@@ -165,10 +165,23 @@ namespace Qwack.Excel.Services
                 var o = new T[input.GetLength(1)];
                 for (var i = 0; i < input.GetLength(1); i++)
                 {
-                    o[i] = (T)Convert.ChangeType(input[0, i], typeof(T));
+                    o[i] = input[0, i] is ExcelEmpty ? default : (T)Convert.ChangeType(input[0, i], typeof(T));
                 }
                 return o;
             }
+        }
+
+        public static T[,] ObjectRangeToMatrix<T>(this object[,] input)
+        {
+            var o = new T[input.GetLength(0), input.GetLength(1)];
+            for (var i = 0; i < input.GetLength(0); i++)
+            {
+                for (var j = 0; j < input.GetLength(1); j++)
+                {
+                    o[i,j] = input[i, j] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i, j], typeof(T));
+                }
+            }
+            return o;
         }
 
         public static T[] ObjectRangeToVector<T>(this object[] input)
@@ -176,7 +189,7 @@ namespace Qwack.Excel.Services
             var o = new T[input.Length];
             for (var i = 0; i < input.Length; i++)
             {
-                o[i] = (T)Convert.ChangeType(input[i], typeof(T));
+                o[i] = input[i] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i], typeof(T));
             }
             return o;
         }

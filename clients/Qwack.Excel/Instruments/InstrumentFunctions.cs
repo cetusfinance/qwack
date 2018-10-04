@@ -263,6 +263,86 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates an asian swap with custom pricing periods", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateCustomAsianSwap))]
+        public static object CreateCustomAsianSwap(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Period dates")] object PeriodDates,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Strike")] double Strike,
+             [ExcelArgument(Description = "Notionals")] double[] Notionals,
+             [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+             [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
+             [ExcelArgument(Description = "Spot lag")] object SpotLag,
+             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+                var paymentOffset = PaymentOffset.OptionalExcel("0b");
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCal);
+                    return $"Calendar {fixingCal} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+                var pOffset = new Frequency(paymentOffset);
+                var sLag = new Frequency(spotLag);
+                if (!Enum.TryParse(dGenType, out DateGenerationType dType))
+                {
+                    return $"Could not parse date generation type - {dGenType}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+
+                AsianSwapStrip product;
+                if (PeriodDates is object[,] pd && pd.GetLength(1) == 2)
+                {
+                    if(Notionals.Length!=pd.GetLength(0))
+                        throw new Exception("Number of notionals must match number of periods");
+
+                    var doubles = pd.ObjectRangeToMatrix<double>();
+                    var swaplets = new List<AsianSwap>();
+
+                    for (var i = 0; i < doubles.GetLength(0); i++)
+                    {
+                        if (doubles[i, 0] == 0 || doubles[i, 1] == 0)
+                            break;
+
+                        var start = DateTime.FromOADate(doubles[i, 0]);
+                        var end = DateTime.FromOADate(doubles[i, 1]);
+                        swaplets.Add(AssetProductFactory.CreateTermAsianSwap(start, end, Strike, AssetId, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notionals[i], dType));
+                    }
+
+                    product = new AsianSwapStrip
+                    {
+                        Swaplets = swaplets.ToArray()
+                    };
+                }
+                else
+                    throw new Exception("Expecting a Nx2 array of period dates");
+
+                product.TradeId = ObjectName;
+                foreach (var s in product.Swaplets)
+                {
+                    s.DiscountCurve = DiscountCurve;
+                }
+
+                var cache = ContainerStores.GetObjectCache<AsianSwapStrip>();
+                cache.PutObject(ObjectName, new SessionItem<AsianSwapStrip> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates an asian option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianOption))]
         public static object CreateAsianOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,

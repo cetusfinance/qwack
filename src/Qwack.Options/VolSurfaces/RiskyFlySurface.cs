@@ -27,10 +27,10 @@ namespace Qwack.Options.VolSurfaces
             else
                 PillarLabels = pillarLabels;
 
-            if (ATMVols.Length != expiries.Length || expiries.Length != riskies[0].Length || riskies[0].Length != flies[0].Length)
+            if (ATMVols.Length != expiries.Length || expiries.Length != riskies.Length || riskies.Length != flies.Length)
                 throw new Exception("Inputs do not have consistent time dimensions");
 
-            if (wingDeltas.Length != riskies.Length || riskies.Length != flies.Length)
+            if (wingDeltas.Length != riskies[0].Length || riskies[0].Length != flies[0].Length)
                 throw new Exception("Inputs do not have consistent strike dimensions");
 
             var atmConstraints = ATMVols.Select(a => new ATMStraddleConstraint
@@ -76,8 +76,8 @@ namespace Qwack.Options.VolSurfaces
                         wingConstraints[i][j] = new RRBFConstraint
                         {
                             Delta = wingDeltas[offset-j],
-                            FlyVol = flies[offset-j][i],
-                            RisykVol = riskies[offset-j][i],
+                            FlyVol = flies[i][offset-j],
+                            RisykVol = riskies[i][offset-j],
                             WingQuoteType = wingQuoteType,
                         };
                     }

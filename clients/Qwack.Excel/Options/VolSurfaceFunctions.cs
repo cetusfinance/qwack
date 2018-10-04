@@ -156,6 +156,7 @@ namespace Qwack.Excel.Options
                     {
                         return $"Could not find fwd curve with name - {FwdsOrCurve as string}";
                     }
+                    fwds = expiries.Select(e => curve.Value.GetPriceForDate(e)).ToArray();
                 }
                 else
                 {

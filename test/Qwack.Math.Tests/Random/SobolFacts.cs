@@ -95,6 +95,8 @@ namespace Qwack.Math.Tests.Random
 
             public int NumberOfDimensions => 1;
 
+            public DateTime[] Dates => throw new NotImplementedException();
+
             public void AddDate(DateTime date) => throw new NotImplementedException();
 
             public void AddDates(IEnumerable<DateTime> dates) => throw new NotImplementedException();

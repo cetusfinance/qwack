@@ -20,6 +20,7 @@ namespace Qwack.Paths.Features
         public double[] TimeSteps => _timeSteps;
         public double[] TimeStepsSqrt => _timeStepsSqrt;
         public double[] Times => _times;
+        public DateTime[] Dates => _requiredDates.ToArray();
 
         public bool IsComplete => _isComplete;
 

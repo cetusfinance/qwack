@@ -2,8 +2,6 @@ using Qwack.Options.VolSurfaces;
 using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Qwack.Core.Underlyings;
 using System.Numerics;
 using Qwack.Math.Extensions;
 using System.Linq;
@@ -35,7 +33,7 @@ namespace Qwack.Paths.Processes
             _numberOfSteps = nTimeSteps;
             _name = name;
             _forwardCurve = forwardCurve;
-            _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>()); 
+            _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>());
         }
 
         public bool IsComplete => _isComplete;
@@ -60,7 +58,7 @@ namespace Qwack.Paths.Processes
                 var fwdVariance = (varEnd - varStart);
                 _vols[t] = System.Math.Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
-    
+
                 prevSpot = spot;
             }
             _isComplete = true;
@@ -112,3 +110,4 @@ namespace Qwack.Paths.Processes
         }
     }
 }
+

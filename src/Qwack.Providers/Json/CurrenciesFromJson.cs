@@ -30,5 +30,7 @@ namespace Qwack.Providers.Json
         }
 
         public Currency this[string ccy] => _currenciesByName[ccy];
+
+        public bool TryGetCurrency(string ccy, out Currency output) => _currenciesByName.TryGetValue(ccy, out output);
     }
 }

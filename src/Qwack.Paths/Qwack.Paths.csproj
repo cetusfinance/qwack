@@ -8,10 +8,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.1" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
   </ItemGroup>
  
   <ItemGroup>
+    <ProjectReference Include="..\Qwack.Futures\Qwack.Futures.csproj" />
     <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
   </ItemGroup>

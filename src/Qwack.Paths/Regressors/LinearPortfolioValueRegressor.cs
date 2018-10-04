@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
+using Qwack.Core.Basic;
 using Qwack.Core.Models;
-using Qwack.Math.Interpolation;
 using Qwack.Math.Regression;
 using Qwack.Paths.Features;
+using static System.Math;
+
 namespace Qwack.Paths.Regressors
 {
     public class LinearPortfolioValueRegressor : IPathProcess, IRequiresFinish
@@ -16,20 +17,20 @@ namespace Qwack.Paths.Regressors
         private int _nDims;
         private int[] _dateIndexes;
         private double[][][] _pathwiseValues;
-        private readonly string _assetName;
         private DateTime[] _regressionDates;
+        private Currency _repCcy;
         private readonly List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
 
-        public LinearPortfolioValueRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, int nPaths)
+        public LinearPortfolioValueRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, McSettings settings)
         {
             _regressionDates = regressionDates;
             _portfolio = portfolio;
-            
+            _repCcy = settings.ReportingCurrency;
             _pathwiseValues = new double[_regressionDates.Length][][];
             for (var i = 0; i < _pathwiseValues.Length; i++)
             {
-                _pathwiseValues[i] = new double[nPaths][];
+                _pathwiseValues[i] = new double[settings.NumberOfPaths][];
             }
         }
 
@@ -101,7 +102,7 @@ namespace Qwack.Paths.Regressors
                         foreach (var flow in schedule[p].Flows)
                         {
                             if (flow.SettleDate > exposureDate)
-                                finalValues[d][p] += flow.Fv;
+                                finalValues[d][p] += flow.Pv;
                         }
                     }
                 }
@@ -110,8 +111,15 @@ namespace Qwack.Paths.Regressors
             var o = new MultipleLinearRegressor[_dateIndexes.Length];
             for (var d = 0; d < _dateIndexes.Length; d++)
             {
-                var mlr = Math.Regression.MultipleLinearRegression.RegressHistorical(_pathwiseValues[d], finalValues[d]);
-                o[d] = new MultipleLinearRegressor(mlr);
+                if (_regressionDates[d] <= model.BuildDate)
+                {
+                    o[d] = new MultipleLinearRegressor(new double[_pathwiseValues[d][0].Length + 1]);
+                }
+                else
+                {
+                    var mlr = MultipleLinearRegression.RegressHistorical(_pathwiseValues[d], finalValues[d]);
+                    o[d] = new MultipleLinearRegressor(mlr);
+                }
             }
 
             return o;
@@ -126,7 +134,8 @@ namespace Qwack.Paths.Regressors
             for (var d = 0; d < _dateIndexes.Length; d++)
             {
                 var exposures = _pathwiseValues[d].Select(p => regressors[d].Regress(p)).OrderBy(x => x).ToList();
-                o[d] = exposures[targetIx];
+                o[d] = Max(0.0,exposures[targetIx]);
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }
             return o;
         }

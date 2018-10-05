@@ -72,14 +72,46 @@ namespace Qwack.Math.Interpolation
         private double H01(double t) => -2 * t * t * t + 3 * t * t;
         private double H11(double t) => t * t * t - t * t;
 
-    
+        private double H00d(double t) => 6 * t * t - 6 * t;
+        private double H10d(double t) => 3 * t * t - 4 * t + 1.0;
+        private double H01d(double t) => -6 * t * t + 6 * t;
+        private double H11d(double t) => 3 * t * t - 2 * t;
+
         public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false)
         {
             var newY = _y[pillar] + delta;
             return UpdateY(pillar, newY, updateInPlace);
         }
 
-        public double FirstDerivative(double t) => 0;
+        public double FirstDerivative(double x)
+        {
+            if (_x.Length == 1)
+            {
+                return 0;
+            }
+            else if (x <= _minX) //linear extrapolation
+            {
+                return (_y[1] - _y[0]) / (_x[1] - _x[0]);
+            }
+            else if (x >= _maxX) //linear extrapolation
+            {
+                var k = _y.Length - 1;
+                return (_y[k] - _y[k - 1]) / (_x[k] - _x[k - 1]);
+            }
+            else
+            {
+                var k = FindFloorPoint(x);
+
+                var interval = (_x[k + 1] - _x[k]);
+                var t = (x - _x[k]) / interval;
+                var dVdt = H00d(t) * _y[k]
+                    + H10d(t) * interval * _tangents[k]
+                    + H01d(t) * _y[k + 1]
+                    + H11d(t) * interval * _tangents[k + 1];
+                var dVdx = 1 / interval;
+                return dVdt * dVdx;
+            }
+        }
 
         public double Interpolate(double x)
         {

@@ -43,20 +43,20 @@ namespace Qwack.Excel.Services
             return o;
         }
 
-        public static Dictionary<T1,T2> RangeToDictionary<T1,T2>(this object[,] input)
+        public static Dictionary<T1, T2> RangeToDictionary<T1, T2>(this object[,] input)
         {
             if (input.GetLength(1) != 2)
                 throw new Exception("Expected Nx2 range for dictionary");
 
             var o = new Dictionary<T1, T2>();
-            for(var r=0;r<input.GetLength(0);r++)
+            for (var r = 0; r < input.GetLength(0); r++)
             {
                 T1 val1;
                 T2 val2;
 
                 if (typeof(T1).IsEnum)
                     val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
-                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double )
+                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double)
                 {
                     val1 = (T1)((object)DateTime.FromOADate((double)input[r, 0]));
                 }
@@ -73,6 +73,40 @@ namespace Qwack.Excel.Services
                     val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
 
                 o.Add(val1, val2);
+            }
+            return o;
+        }
+
+        public static List<KeyValuePair<T1, T2>> RangeToKvList<T1, T2>(this object[,] input)
+        {
+            if (input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 range for input data");
+
+            var o = new List<KeyValuePair<T1, T2>>();
+            for (var r = 0; r < input.GetLength(0); r++)
+            {
+                T1 val1;
+                T2 val2;
+
+                if (typeof(T1).IsEnum)
+                    val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
+                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double)
+                {
+                    val1 = (T1)((object)DateTime.FromOADate((double)input[r, 0]));
+                }
+                else
+                    val1 = (T1)Convert.ChangeType(input[r, 0], typeof(T1));
+
+                if (typeof(T2).IsEnum)
+                    val2 = (T2)Enum.Parse(typeof(T2), (string)input[r, 1]);
+                else if (typeof(T2) == typeof(DateTime) && input[r, 1] is double)
+                {
+                    val2 = (T2)((object)DateTime.FromOADate((double)input[r, 1]));
+                }
+                else
+                    val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
+
+                o.Add(new KeyValuePair<T1, T2>(val1, val2));
             }
             return o;
         }

@@ -94,14 +94,14 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(0.0, pfPv, 8); 
 
             var deltaCube = portfolio.AssetDelta(aModel);
-            var dAgg = deltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);
             var df = xafCurve.GetDf(startDate, settleDate);
             Assert.Equal(994.673992862018, delta,7);
 
             var fxDeltaCube = portfolio.FxDelta(aModel);
-            var dfxAgg = fxDeltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var dfxAgg = fxDeltaCube.Pivot("TradeId", AggregationAction.Sum);
             var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
             Assert.Equal(1000 * df * fxFwd / fxSpot * 100, fxDelta, 7);
         }

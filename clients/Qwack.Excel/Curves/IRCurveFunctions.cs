@@ -148,6 +148,24 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Gets a forward fx rate from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetForwardFxRate))]
+        public static object GetForwardFxRate(
+            [ExcelArgument(Description = "Funding model object name")] string ObjectName,
+            [ExcelArgument(Description = "Settlement date")] DateTime SettleDate,
+            [ExcelArgument(Description = "Currency pair")] string CcyPair)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<IFundingModel>().TryGetObject(ObjectName, out var model))
+                {
+                    return $"Funding model with name {ObjectName} not found";
+                }
+
+                var fwd = model.Value.GetFxRate(SettleDate, CcyPair);
+                return fwd;
+            });
+        }
+
         [ExcelFunction(Description = "Creates and calibrates a funding model to a funding instrument collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModel))]
         public static object CreateFundingModel(
             [ExcelArgument(Description = "Funding model name")] string ObjectName,

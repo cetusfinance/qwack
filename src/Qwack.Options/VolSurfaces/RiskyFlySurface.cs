@@ -94,8 +94,8 @@ namespace Qwack.Options.VolSurfaces
                         wingConstraints[i][j] = new RRBFConstraint
                         {
                             Delta = wingDeltas[j],
-                            FlyVol = flies[j][i],
-                            RisykVol = riskies[j][i],
+                            FlyVol = flies[i][j],
+                            RisykVol = riskies[i][j],
                             WingQuoteType = wingQuoteType,
                         };
                     }

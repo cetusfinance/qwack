@@ -19,8 +19,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var fwds = new double[] { 100, 102, 110 };
             var maturities = new DateTime[] { new DateTime(2017, 04, 06), new DateTime(2017, 06, 07), new DateTime(2017, 08, 07) };
             var wingDeltas = new[] { 0.1, 0.25 };
-            var riskies = new[] {  new[] { 0.02, 0.025, 0.03 }, new[] { 0.01, 0.015, 0.02 } };
-            var flies = new[] {  new[] { 0.009, 0.012, 0.015 }, new[] { 0.005, 0.006, 0.007 } };
+            var riskies = new[] { new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 } };
+            var flies = new[] { new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 } };
             var surface = new Qwack.Options.VolSurfaces.RiskyFlySurface(
                 origin, atms, maturities, wingDeltas, riskies, flies, fwds, WingQuoteType.Simple,
                 AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear,
@@ -38,16 +38,17 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var fwds = new double[] { 100, 102, 110 };
             var maturities = new DateTime[] { new DateTime(2017, 04, 06), new DateTime(2017, 06, 07), new DateTime(2017, 08, 07) };
             var wingDeltas = new[] { 0.1, 0.25 };
-            var riskies = new[] { new[] { 0.02, 0.025, 0.03 }, new[] { 0.01, 0.015, 0.02 } };
-            var flies = new[] { new[] { 0.009, 0.012, 0.015 }, new[] { 0.005, 0.006, 0.007 } };
+            var riskies = new[] { new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 } };
+            var flies = new[] { new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 } };
             var surface = new Qwack.Options.VolSurfaces.RiskyFlySurface(
                 origin, atms, maturities, wingDeltas, riskies, flies, fwds, WingQuoteType.Simple,
                 AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.LinearInVariance);
 
             var wingDeltas2 = new[] { 0.25, 0.1 };
-            var riskies2 = new[] { new[]  { 0.01, 0.015, 0.02 }, new[] { 0.02, 0.025, 0.03 } };
-            var flies2 = new[] { new[] { 0.005, 0.006, 0.007 } , new[] { 0.009, 0.012, 0.015 }  };
+            var riskies2 = new[] { new[] { 0.015, 0.025 }, new[] { 0.015, 0.025 }, new[] { 0.015, 0.025 } };
+            var flies2 = new[] { new[] { 0.0015, 0.0025 }, new[] { 0.0015, 0.0025 }, new[] { 0.0015, 0.0025 } };
+
             var surface2 = new Qwack.Options.VolSurfaces.RiskyFlySurface(
                 origin, atms, maturities, wingDeltas2, riskies2, flies2, fwds, WingQuoteType.Simple,
                 AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear,

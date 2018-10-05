@@ -82,6 +82,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Storage", "src\Qwack.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Models", "src\Qwack.Models\Qwack.Models.csproj", "{75A9145A-9B09-48DC-A28E-4C8C6ECFD7E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.Models.Tests", "test\Qwack.Models.Tests\Qwack.Models.Tests.csproj", "{82E5059A-1A2D-4815-A9C1-933D39A6D499}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -332,6 +334,18 @@ Global
 		{75A9145A-9B09-48DC-A28E-4C8C6ECFD7E4}.Release|x64.Build.0 = Release|Any CPU
 		{75A9145A-9B09-48DC-A28E-4C8C6ECFD7E4}.Release|x86.ActiveCfg = Release|Any CPU
 		{75A9145A-9B09-48DC-A28E-4C8C6ECFD7E4}.Release|x86.Build.0 = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|x64.Build.0 = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Debug|x86.Build.0 = Debug|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|x64.ActiveCfg = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|x64.Build.0 = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|x86.ActiveCfg = Release|Any CPU
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -358,6 +372,7 @@ Global
 		{312D53A0-2428-4203-A13B-3A161E50F114} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{4CA04336-E415-4EBA-81F3-ABFDCD0D0A03} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
 		{75A9145A-9B09-48DC-A28E-4C8C6ECFD7E4} = {C1D2A111-5CFD-45DF-8CE2-A56050F3BF0A}
+		{82E5059A-1A2D-4815-A9C1-933D39A6D499} = {9550BFAC-7055-4B8B-B391-BC93D2588A16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {54AAD5D1-3F1A-43DC-80BB-2C61D8945F25}

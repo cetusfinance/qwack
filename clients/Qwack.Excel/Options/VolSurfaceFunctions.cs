@@ -152,7 +152,7 @@ namespace Qwack.Excel.Options
                 }
                 else if (FwdsOrCurve is string)
                 {
-                    if(!ContainerStores.GetObjectCache<IPriceCurve>().TryGetObject(FwdsOrCurve as string, out var curve))
+                    if (!ContainerStores.GetObjectCache<IPriceCurve>().TryGetObject(FwdsOrCurve as string, out var curve))
                     {
                         return $"Could not find fwd curve with name - {FwdsOrCurve as string}";
                     }
@@ -164,7 +164,7 @@ namespace Qwack.Excel.Options
                 }
 
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
-                { 
+                {
                     Currency = ContainerStores.CurrencyProvider[ccyStr],
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
@@ -212,6 +212,83 @@ namespace Qwack.Excel.Options
                 }
 
                 return $"Vol surface {ObjectName} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a CDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDF))]
+        public static object GenerateCDF(
+             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
+             [ExcelArgument(Description = "Volsurface name")] string VolSurface,
+             [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+             [ExcelArgument(Description = "Forward")] double Forward,
+             [ExcelArgument(Description = "Number of samples")] int NumberOfSamples)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var volSurface))
+                {
+                    var interpolator = volSurface.Value.GenerateCDF(NumberOfSamples, ExpiryDate, Forward);
+                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
+                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
+                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                }
+
+                return $"Vol surface {VolSurface} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a PDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDF))]
+        public static object GeneratePDF(
+             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
+             [ExcelArgument(Description = "Volsurface name")] string VolSurface,
+             [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+             [ExcelArgument(Description = "Forward")] double Forward,
+             [ExcelArgument(Description = "Number of samples")] int NumberOfSamples)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var volSurface))
+                {
+                    var interpolator = volSurface.Value.GeneratePDF(NumberOfSamples, ExpiryDate, Forward);
+                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
+                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
+                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                }
+
+                return $"Vol surface {VolSurface} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a composite smile from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSmile))]
+        public static object GenerateCompoSmile(
+             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
+             [ExcelArgument(Description = "Volsurface name")] string VolSurface,
+             [ExcelArgument(Description = "Fx Volsurface name")] string FxVolSurface,
+             [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+             [ExcelArgument(Description = "Forward")] double Forward,
+             [ExcelArgument(Description = "Fx Forward")] double FxForward,
+             [ExcelArgument(Description = "Correlation")] double Correlation,
+             [ExcelArgument(Description = "Number of samples")] int NumberOfSamples)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var volSurface))
+                {
+                    if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(FxVolSurface, out var volSurfaceFx))
+                    {
+                        var interpolator = volSurface.Value.GenerateCompositeSmile(volSurfaceFx.Value, NumberOfSamples, ExpiryDate, Forward, FxForward, Correlation);
+                        var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
+                        cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
+                        return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    }
+                    else
+                        return $"Fx vol surface {FxVolSurface} not found in cache";
+                }
+                else
+                    return $"Vol surface {VolSurface} not found in cache";
             });
         }
     }

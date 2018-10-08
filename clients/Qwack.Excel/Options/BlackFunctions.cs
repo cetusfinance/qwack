@@ -95,5 +95,19 @@ namespace Qwack.Excel.Options
                 return Qwack.Options.BlackFunctions.BlackImpliedVol(F, K, R, T, PV, optType);
             });
         }
+
+        [ExcelFunction(Description = "Returns an absolute strike for a given delta and vol according to the Black'76 formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(AbsoluteStrikeFromDelta))]
+        public static object AbsoluteStrikeFromDelta(
+            [ExcelArgument(Description = "Time-to-expiry")] double T,
+            [ExcelArgument(Description = "Delta strike")] double DeltaK,
+            [ExcelArgument(Description = "Forward")] double F,
+            [ExcelArgument(Description = "Volatility")] double Sigma,
+            [ExcelArgument(Description = "Discounting rate")] double R)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return Qwack.Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(F, DeltaK, R, T, Sigma);
+            });
+        }
     }
 }

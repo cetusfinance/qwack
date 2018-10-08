@@ -140,7 +140,7 @@ namespace Qwack.Excel.Cubes
                 var cubeCache = ContainerStores.GetObjectCache<ICube>();
                 var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
 
-                var filterDeets = FilterDetails.RangeToDictionary<string, object>();
+                var filterDeets = FilterDetails.RangeToKvList<string, object>();
 
                 var outCube = inCube.Value.Filter(filterDeets);
 

@@ -9,6 +9,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Options.VolSurfaces;
 using System.Linq;
+using Qwack.Serialization;
 
 namespace Qwack.Models.Tests.MCModels
 {
@@ -47,6 +48,9 @@ namespace Qwack.Models.Tests.MCModels
                 ReportingCurrency = usd
             };
             var sut = new AssetFxBlackVolMC(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider);
+
+            var serilizer = new BinarySerilizer();
+            serilizer.PrepareObjectGraph(sut);
 
             var pvCube = sut.PV(usd);
 

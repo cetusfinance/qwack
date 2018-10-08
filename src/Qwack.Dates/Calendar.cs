@@ -50,5 +50,7 @@ namespace Qwack.Dates
             };
             return newCalender;
         }
+
+        public override string ToString() => Name;
     }
 }

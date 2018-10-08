@@ -42,6 +42,7 @@
     <ProjectReference Include="..\..\src\Qwack.Models\Qwack.Models.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Options\Qwack.Options.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Paths\Qwack.Paths.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Serialization\Qwack.Serialization.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipelines;
 using System.Reflection;
 
 namespace Qwack.Serialization
@@ -31,9 +33,37 @@ namespace Qwack.Serialization
             _objectsCrawled.Add(objectGraph);
         }
 
-        public void SerializeObjectGraph()
+        public void SerializeObjectGraph(PipeWriter pipeWriter)
         {
-
+            var span = pipeWriter.GetSpan();
+            // Serialize all objects
+            foreach (var o in _objectsCrawled)
+            {
+                var type = o.GetType();
+                var number = _typeNumbers[type];
+                span.Write((ushort)number);
+                //Now save all of the fields
+                var privateFields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach(var pField in privateFields)
+                {
+                    if (pField.FieldType.IsEnum)
+                    {
+                        //Need to write the enum straight to the stream
+                        throw new NotImplementedException();
+                    }
+                    else if (pField.FieldType.Namespace.StartsWith("Qwack"))
+                    {
+                        //One of our objects so we need to look up the object number in the list and replace with that
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        //Look up our common types
+                        //If we don't find it there then throw
+                        throw new NotImplementedException();
+                    }
+                }
+            }
         }
 
         private void AddField(object value)

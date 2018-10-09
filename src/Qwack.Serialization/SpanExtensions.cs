@@ -14,5 +14,12 @@ namespace Qwack.Serialization
             Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(span), value);
             span = span.Slice(sizeof(ushort));
         }
+
+        public static void Write(ref this Span<byte> span, int value)
+        {
+            if (span.Length < sizeof(int)) throw new IndexOutOfRangeException();
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(span), value);
+            span = span.Slice(sizeof(int));
+        }
     }
 }

@@ -51,6 +51,8 @@ namespace Qwack.Models.Tests.MCModels
 
             var serilizer = new BinarySerilizer();
             serilizer.PrepareObjectGraph(sut);
+            var pipe = new System.IO.Pipelines.Pipe();
+            serilizer.SerializeObjectGraph(pipe.Writer);
 
             var pvCube = sut.PV(usd);
 

@@ -49,7 +49,15 @@ namespace Qwack.Serialization
                     if (pField.FieldType.IsEnum)
                     {
                         //Need to write the enum straight to the stream
-                        throw new NotImplementedException();
+                        var enumType = pField.FieldType.GetEnumUnderlyingType();
+                        if(enumType == typeof(int))
+                        {
+                            span.Write((int)pField.GetValue(o));
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
                     }
                     else if (pField.FieldType.Namespace.StartsWith("Qwack"))
                     {

@@ -177,5 +177,8 @@ namespace Qwack.Models
         }
 
         public void SetupFx(IFxMatrix fxMatrix) => FxMatrix = fxMatrix;
+
+        public IrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
+        public IVolSurface GetVolSurface(string name) => VolSurfaces.TryGetValue(name, out var curve) ? curve : throw new Exception($"Surface named {name} not found");
     }
 }

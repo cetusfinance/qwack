@@ -72,12 +72,12 @@ namespace Qwack.Models.Models
             {
                 var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(volDate, curve.Currency, asianOption.PaymentCurrency);
-                var fxVol = model.FundingModel.VolSurfaces[fxId].GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
+                var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
                 var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
                 sigma = System.Math.Sqrt(sigma * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
             }
 
-            var discountCurve = model.FundingModel.Curves[asianOption.DiscountCurve];
+            var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
 
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 

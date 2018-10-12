@@ -49,7 +49,7 @@ namespace Qwack.Models.Tests.MCModels
             };
             var sut = new AssetFxBlackVolMC(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider);
 
-            var serilizer = new BinarySerilizer();
+            var serilizer = new BinarySerializer();
             serilizer.PrepareObjectGraph(sut);
             var pipe = new System.IO.Pipelines.Pipe();
             serilizer.SerializeObjectGraph(pipe.Writer);

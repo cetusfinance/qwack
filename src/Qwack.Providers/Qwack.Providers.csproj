@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
     <ProjectReference Include="..\Qwack.Futures\Qwack.Futures.csproj" />
+    <ProjectReference Include="..\Qwack.Serialization\Qwack.Serialization.csproj" />
   </ItemGroup>
 
   <ItemGroup>

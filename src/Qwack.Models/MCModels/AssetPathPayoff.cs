@@ -37,7 +37,7 @@ namespace Qwack.Models.MCModels
 
         private readonly List<AssetPathPayoff> _subInstruments;
 
-        private readonly Vector<double> _one = new Vector<double>(1.0);
+        private static readonly Vector<double> _one = new Vector<double>(1.0);
 
         public AssetPathPayoff(IAssetInstrument assetInstrument)
         {

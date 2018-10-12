@@ -25,6 +25,8 @@ namespace Qwack.Core.Models
         void UpdateCurves(Dictionary<string, IrCurve> updateCurves);
 
         IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
+        IrCurve GetCurve(string name);
+        IVolSurface GetVolSurface(string name);
 
         double GetDf(string curveName, DateTime startDate, DateTime endDate);
         double GetDf(Currency ccy, DateTime startDate, DateTime endDate);

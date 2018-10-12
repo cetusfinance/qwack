@@ -20,6 +20,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public double ConvexityAdjustment { get; set; }
         public string TradeId { get; set; }
+        public string Counterparty { get; set; }
         public string ForecastCurve { get; set; }
         public string SolveCurve { get; set; }
         public DateTime PillarDate { get; set; }

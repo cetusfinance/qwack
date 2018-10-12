@@ -143,14 +143,14 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
-        public static AsianOption CreatAsianOption(string period, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianOption CreateAsianOption(string period, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();
-            return CreatAsianOption(Start, End, strike, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
+            return CreateAsianOption(Start, End, strike, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
 
 
-        public static AsianOption CreatAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianOption CreateAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
 
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
@@ -177,7 +177,7 @@ namespace Qwack.Core.Instruments.Asset
 
         }
 
-        public static AsianOption CreatAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianOption CreateAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
 
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?

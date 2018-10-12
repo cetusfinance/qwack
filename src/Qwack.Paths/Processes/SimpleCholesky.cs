@@ -12,19 +12,18 @@ using Qwack.Core.Models;
 
 namespace Qwack.Paths.Processes
 {
-    public class Cholesky : IPathProcess, IRequiresFinish
+    public class SimpleCholesky : IPathProcess, IRequiresFinish
     {
         private bool _isComplete;
         //private readonly string _name = "Cholesky";
-        private readonly double[][] _decompMatrix;
+        private readonly double _fac2;
+        private readonly double _correl;
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
-        public Cholesky(double[][] correlationMatrix)
+        public SimpleCholesky(double correl)
         {
-            if (correlationMatrix.MaxAbsElement() > 1.0)
-                throw new Exception("Invalid correlation, must be in the range -1.0 to +1.0");
-
-            _decompMatrix = correlationMatrix.Cholesky2();
+            _correl = correl;
+            _fac2 = System.Math.Sqrt(1.0 - correl * correl);
         }
 
         public bool IsComplete => _isComplete;
@@ -66,28 +65,16 @@ namespace Qwack.Paths.Processes
         private double[] Correlate(double[] rands)
         {
             var returnValues = new double[rands.Length];
-
-            for (var y = 0; y < returnValues.Length; y++)
-            {
-                for (var x = 0; x <= y; x++)
-                {
-                    returnValues[y] += rands[x] * _decompMatrix[y][x];
-                }
-            }
+            returnValues[0] = rands[0];
+            returnValues[1] = rands[0] * _correl + rands[1] * _fac2;
             return returnValues;
         }
 
         private Vector<double>[] Correlate(Vector<double>[] rands)
         {
             var returnValues = new Vector<double>[rands.Length];
-
-            for (var y = 0; y < returnValues.Length; y++)
-            {
-                for (var x = 0; x <= y; x++)
-                {
-                    returnValues[y] += rands[x] * _decompMatrix[y][x];
-                }
-            }
+            returnValues[0] = rands[0];
+            returnValues[1] = rands[0] * _correl + rands[1] * _fac2;
             return returnValues;
         }
 

@@ -55,5 +55,24 @@ namespace Qwack.Math.Tests.Interpolation
 
             Assert.Equal(slope, interp.FirstDerivative(point),2);
         }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(3)]
+        [InlineData(10)]
+        [InlineData(15)]
+        [InlineData(17)]
+        [InlineData(20)]
+        public void SecondDerivative(double point)
+        {
+            var interp = new CubicHermiteSplineInterpolator(new double[] { 0, 10, 20 }, new double[] { 10, 15, 40 });
+
+            var bump = 0.00000001;
+            var v1 = interp.FirstDerivative(point - bump / 2);
+            var v2 = interp.FirstDerivative(point + bump / 2);
+            var slope = (v2 - v1) / bump;
+
+            Assert.Equal(slope, interp.SecondDerivative(point), 2);
+        }
     }
 }

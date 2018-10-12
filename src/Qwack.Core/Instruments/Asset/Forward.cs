@@ -11,6 +11,8 @@ namespace Qwack.Core.Instruments.Asset
     public class Forward : IAssetInstrument
     {
         public string TradeId { get; set; }
+        public string Counterparty { get; set; }
+
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
         public DateTime ExpiryDate { get; set; }

@@ -100,10 +100,10 @@ namespace Qwack.Core.Tests.AssetModel
             var df = xafCurve.GetDf(startDate, settleDate);
             Assert.Equal(994.673992862018, delta,7);
 
-            var fxDeltaCube = portfolio.FxDelta(aModel);
+            var fxDeltaCube = portfolio.FxDelta(aModel,usd, CurrencyProvider);
             var dfxAgg = fxDeltaCube.Pivot("TradeId", AggregationAction.Sum);
             var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
-            Assert.Equal(1000 * df * fxFwd / fxSpot * 100, fxDelta, 7);
+            Assert.Equal(-1000 * df * fxFwd * 100 / (t0Spot / fxSpot), fxDelta, 4);
         }
 
     }

@@ -23,6 +23,8 @@ namespace Qwack.Core.Instruments.Funding
         public string SolveCurve { get; set; }
         public DateTime PillarDate { get; set; }
         public string TradeId { get; set; }
+        public string Counterparty { get; set; }
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             var forecastCurve = Model.Curves[ForecastCurve];

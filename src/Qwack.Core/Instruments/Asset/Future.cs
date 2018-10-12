@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Asset
     public class Future : IAssetInstrument
     {
         public string TradeId { get; set; }
+        public string Counterparty { get; set; }
 
         public double ContractQuantity { get; set; }
         public double LotSize { get; set; }

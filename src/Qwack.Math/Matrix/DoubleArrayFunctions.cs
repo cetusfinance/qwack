@@ -358,5 +358,37 @@ namespace Qwack.Math.Matrix
             }
             return result;
         }
+
+        public static double[][] Cholesky2(this double[][] a)
+        {
+            var n = a[0].Length;
+
+            var ret = new double[n][];
+            for (var r = 0; r < n; r++)
+            {
+                ret[r] = new double[n];
+                for (var c = 0; c <= r; c++)
+                {
+                    if (c == r)
+                    {
+                        double sum = 0;
+                        for (var j = 0; j < c; j++)
+                        {
+                            sum += ret[c][j] * ret[c][j];
+                        }
+                        ret[c][c] = Sqrt(a[c][c] - sum);
+                    }
+                    else
+                    {
+                        double sum = 0;
+                        for (var j = 0; j < c; j++)
+                            sum += ret[r][j] * ret[c][j];
+                        ret[r][c] = 1.0 / ret[c][c] * (a[r][c] - sum);
+                    }
+                }
+            }
+
+            return ret;
+        }
     }
 }

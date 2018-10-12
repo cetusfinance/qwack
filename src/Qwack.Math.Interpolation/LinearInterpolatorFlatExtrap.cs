@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,7 +7,7 @@ using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
-    public class LinearInterpolatorFlatExtrap : IInterpolator1D
+    public class LinearInterpolatorFlatExtrap : IInterpolator1D, IIntegrableInterpolator
     {
         const double xBump = 1e-10;
 
@@ -104,6 +104,45 @@ namespace Qwack.Math.Interpolation
                 return 0.5 * _slope[_slope.Length];
             
             return (_slope[k] + _slope[k - 1]) / 2.0;
+        }
+
+        public double DefiniteIntegral(double a, double b)
+        {
+            if (b < a) throw new Exception("b must be strictly greater than a");
+            if (b == a) return 0;
+
+            var iSum = 0.0;
+
+            if(a<_minX) //flat extrap on the left
+            {
+                iSum += (_minX - a) * _minX;
+                a = _minX;
+            }
+            if (b > _maxX) //flat extrap on the right
+            {
+                iSum += (b - _maxX) * _maxX;
+                b = _maxX;
+            }
+
+            var ka = FindFloorPoint(a);
+            var kb = FindFloorPoint(b);
+
+            double vA, vU;
+            while(kb>ka)
+            {
+                var u = _x[ka + 1]; //upper bound of segment
+                vA = Interpolate(a);
+                vU = Interpolate(u);
+                iSum += 0.5 * (vU + vA) * (u - a);
+
+                a = u;
+                ka++;
+            }
+
+            vA = Interpolate(a);
+            vU = Interpolate(b);
+            iSum += 0.5 * (vU + vA) * (b - a);
+            return iSum;
         }
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)

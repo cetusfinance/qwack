@@ -50,5 +50,17 @@ namespace Qwack.Dates
             };
             return newCalender;
         }
+        public Calendar Merge(Calendar otherCalendar)
+        {
+            var newCalender = new Calendar()
+            {
+                DaysToAlwaysExclude = DaysToAlwaysExclude.Concat(otherCalendar.DaysToAlwaysExclude).Distinct().ToList(),
+                InheritedCalendar = InheritedCalendar.Concat(otherCalendar.InheritedCalendar).Distinct().ToList(),
+                DaysToExclude = new HashSet<DateTime>(DaysToExclude.Concat(otherCalendar.DaysToExclude).Distinct()),
+                MonthsToExclude = MonthsToExclude.Concat(otherCalendar.MonthsToExclude).Distinct().ToList(),
+                Name = Name
+            };
+            return newCalender;
+        }
     }
 }

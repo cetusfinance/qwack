@@ -229,7 +229,7 @@ namespace Qwack.Models.MCModels
             return vec.Average();
         }).Average();
 
-        private double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
+        public double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
 
         public double ResultStdError => _results.SelectMany(x =>
         {

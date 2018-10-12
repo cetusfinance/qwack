@@ -137,6 +137,24 @@ namespace Qwack.Models
             return c;
         }
 
+        public IAssetFxModel Clone(IFundingModel fundingModel)
+        {
+            var c = new AssetFxModel(BuildDate, fundingModel);
+
+            foreach (var kv in _assetCurves)
+                c.AddPriceCurve(kv.Key, kv.Value);
+
+            foreach (var kv in _assetVols)
+                c.AddVolSurface(kv.Key, kv.Value);
+
+            foreach (var kv in _fixings)
+                c.AddFixingDictionary(kv.Key, kv.Value);
+
+            c.CorrelationMatrix = CorrelationMatrix;
+
+            return c;
+        }
+
         public void AddPriceCurves(Dictionary<string, IPriceCurve> curves)
         {
             foreach (var kv in curves)

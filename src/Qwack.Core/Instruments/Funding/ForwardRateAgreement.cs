@@ -52,7 +52,7 @@ namespace Qwack.Core.Instruments.Funding
         public FraDiscountingType FraType { get; set; }
         public string SolveCurve { get; set; }
         public string TradeId { get; set; }
-
+        public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
         public double Pv(IFundingModel model, bool updateState)

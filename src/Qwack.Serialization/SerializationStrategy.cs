@@ -9,6 +9,7 @@ namespace Qwack.Serialization
     public class SerializationStrategy
     {
         private Type _objectType;
+
         public SerializationStrategy(Type objectType)
         {
             _objectType = objectType;
@@ -40,6 +41,7 @@ namespace Qwack.Serialization
             {
                 ser(obj, ref buffer);
             }
+            Console.WriteLine($"Total Bytes Written {origanlSpan.Length - buffer.Length}");
         }
         
         private Expression GetExpressionForType(FieldInfo field, ParameterExpression objForWork, ParameterExpression buffer)
@@ -56,6 +58,7 @@ namespace Qwack.Serialization
             else if (field.FieldType == typeof(float)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteFloat"), field, objForWork, buffer);
             else if (field.FieldType == typeof(bool)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteBool"), field, objForWork, buffer);
             else if (field.FieldType == typeof(DateTime)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteDateTime"), field, objForWork, buffer);
+            //else if (field.FieldType == typeof(string)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteString"), field, objForWork, buffer);
             else if (field.FieldType.Namespace.StartsWith("Qwack"))
             {
                 expression = null;
@@ -81,7 +84,6 @@ namespace Qwack.Serialization
                 }
                 else if (genType == typeof(Func<,>))
                 {
-                    return null;
                     throw new NotImplementedException("Func<,>");
                 }
                 else
@@ -102,19 +104,14 @@ namespace Qwack.Serialization
                     throw new NotImplementedException($"Array of {elementType.Name} is not supported");
                 }
             }
-            else if (field.FieldType == typeof(string))
-            {
-                return null;
-                throw new NotImplementedException();
-            }
             else
             {
-                expression = null;
+                return null;
                 throw new NotSupportedException(field.FieldType.Name);
             }
             return expression;
         }
-
+        
         private Expression WriteSimpleArray(FieldInfo field, ParameterExpression objForWork, ParameterExpression buffer, string writeMethod)
         {
             var convert = Expression.Convert(objForWork, _objectType);
@@ -126,7 +123,7 @@ namespace Qwack.Serialization
             var label = Expression.Label();
             var arrayValue = Expression.ArrayAccess(fieldExp, index);
             var writeArrayValue = Expression.Call(null, typeof(SpanExtensions).GetMethod(writeMethod), buffer, arrayValue);
-            var increment = Expression.Increment(index);
+            var increment = Expression.AddAssign(index, Expression.Constant(1));
             var ifThenExit = Expression.IfThen(Expression.Equal(index, size), Expression.Break(label));
             var expressionLoop = Expression.Loop(Expression.Block(
               writeArrayValue,

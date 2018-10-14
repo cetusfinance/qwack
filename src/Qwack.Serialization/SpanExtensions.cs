@@ -22,6 +22,21 @@ namespace Qwack.Serialization
             span = span.Slice(sizeof(byte));
         }
 
+        public static void WriteString(ref this Span<byte> span, string value)
+        {
+            if(value == null)
+            {
+                span.WriteInt(-1);
+            }
+            else
+            {
+                span.WriteInt(value.Length);
+                var chars = MemoryMarshal.AsBytes(value.AsSpan());
+                chars.CopyTo(span);
+                span = span.Slice(chars.Length);
+            }
+        }
+
         public static void WriteByte(ref this Span<byte> span, byte value)
         {
             if (span.Length < sizeof(byte)) throw new IndexOutOfRangeException();

@@ -60,6 +60,11 @@ namespace Qwack.Serialization
 
         public void SerializeObjectGraph(PipeWriter pipeWriter)
         {
+            var buffer =(Span<byte>) new byte[1024 * 1024 * 50];
+            foreach(var o in _objectsCrawled)
+            {
+                _serializationStrategies[o.GetType()].Serialize(o, ref buffer);
+            }
             //var span = pipeWriter.GetSpan();
             //var spanLength = span.Length;
             //// Serialize all objects

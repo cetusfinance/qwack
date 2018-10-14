@@ -6,6 +6,7 @@ using System.Numerics;
 using Qwack.Math.Extensions;
 using System.Linq;
 using Qwack.Core.Models;
+using Qwack.Serialization;
 
 namespace Qwack.Paths.Processes
 {
@@ -19,6 +20,7 @@ namespace Qwack.Paths.Processes
         private readonly Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
+        [SkipSerialization]
         private readonly Func<double, double> _forwardCurve;
         private bool _isComplete;
         private double[] _drifts;

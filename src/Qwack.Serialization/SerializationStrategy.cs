@@ -18,50 +18,69 @@ namespace Qwack.Serialization
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
                 var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
+                var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
                 var objectForWork = Expression.Parameter(typeof(object), "obj");
-
-                var block = GetExpressionForType(field, objectForWork, buffer);
+                var convert = Expression.Convert(objectForWork, _objectType);
+                
+                var block = GetExpressionForType(field, convert, buffer, deserContext);
                 if (block != null)
                 {
-                    Expression ex = Expression.Lambda<Deserializer>(block, objectForWork, buffer);
-                    var deser = Expression.Lambda<Deserializer>(block, objectForWork, buffer).Compile();
+                    var deser = Expression.Lambda<Deserializer>(block, objectForWork, buffer, deserContext).Compile();
                     _serializers.Add(deser);
                 }
             }
         }
-                
-        delegate void Deserializer(object objForWork, ref Span<byte> buffer);
+
+        delegate void Deserializer(object objForWork, ref Span<byte> buffer, DeserializationContext context);
 
         private List<Deserializer> _serializers = new List<Deserializer>();
 
-        public void Serialize(object obj, ref Span<byte> buffer)
+        public void Serialize(object obj, ref Span<byte> buffer, DeserializationContext context)
         {
             var origanlSpan = buffer;
             foreach (var ser in _serializers)
             {
-                ser(obj, ref buffer);
+                ser(obj, ref buffer, context);
             }
             Console.WriteLine($"Total Bytes Written {origanlSpan.Length - buffer.Length}");
         }
-        
-        private Expression GetExpressionForType(FieldInfo field, ParameterExpression objForWork, ParameterExpression buffer)
+
+        private MethodInfo GetWriteMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
+
+        private Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context)
         {
+            var fieldExp = Expression.Field(objForWork, field);
             Expression expression;
-            if (field.FieldType == typeof(int)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteInt"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(uint)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteUInt"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(long)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteLong"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(ulong)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteULong"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(byte)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteByte"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(ushort)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteUShort"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(short)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteShort"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(double)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteDouble"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(float)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteFloat"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(bool)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteBool"), field, objForWork, buffer);
-            else if (field.FieldType == typeof(DateTime)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteDateTime"), field, objForWork, buffer);
-            //else if (field.FieldType == typeof(string)) expression = BuildExpression(typeof(SpanExtensions).GetMethod("WriteString"), field, objForWork, buffer);
-            else if (field.FieldType.Namespace.StartsWith("Qwack"))
+            if (field.FieldType == typeof(int)) expression = BuildExpression(GetWriteMethod("WriteInt"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(uint)) expression = BuildExpression(GetWriteMethod("WriteUInt"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(long)) expression = BuildExpression(GetWriteMethod("WriteLong"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(ulong)) expression = BuildExpression(GetWriteMethod("WriteULong"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(byte)) expression = BuildExpression(GetWriteMethod("WriteByte"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(ushort)) expression = BuildExpression(GetWriteMethod("WriteUShort"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(short)) expression = BuildExpression(GetWriteMethod("WriteShort"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(double)) expression = BuildExpression(GetWriteMethod("WriteDouble"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(float)) expression = BuildExpression(GetWriteMethod("WriteFloat"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(bool)) expression = BuildExpression(GetWriteMethod("WriteBool"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(DateTime)) expression = BuildExpression(GetWriteMethod("WriteDateTime"), fieldExp, objForWork, buffer);
+            else if (field.FieldType == typeof(string)) expression = BuildExpression(GetWriteMethod("WriteString"), fieldExp, objForWork, buffer);
+            else if (field.FieldType.IsEnum)
             {
                 expression = null;
+                //throw new NotImplementedException();
+            }
+            else if (field.FieldType.Namespace.StartsWith("Qwack"))
+            {
+                if (field.FieldType.IsValueType)
+                {
+                    expression = null;
+                    //throw new NotImplementedException();
+                }
+                else
+                {
+                    var lookupId = Expression.Call(context, typeof(DeserializationContext).GetMethod("GetObjectId"), fieldExp);
+                    var writeInt = Expression.Call(null, GetWriteMethod("WriteInt"), buffer, lookupId);
+                    return writeInt;
+                }
                 //throw new NotSupportedException(field.FieldType.Name);
             }
             else if (field.FieldType.IsGenericType)
@@ -88,7 +107,6 @@ namespace Qwack.Serialization
                 }
                 else
                 {
-                    expression = null;
                     throw new NotSupportedException(field.FieldType.Name);
                 }
             }
@@ -106,43 +124,39 @@ namespace Qwack.Serialization
             }
             else
             {
-                return null;
                 throw new NotSupportedException(field.FieldType.Name);
             }
             return expression;
         }
-        
-        private Expression WriteSimpleArray(FieldInfo field, ParameterExpression objForWork, ParameterExpression buffer, string writeMethod)
+
+        private Expression WriteSimpleArray(FieldInfo field, Expression objForWork, ParameterExpression buffer, string writeMethod)
         {
-            var convert = Expression.Convert(objForWork, _objectType);
-            var fieldExp = Expression.Field(convert, field);
+            var fieldExp = Expression.Field(objForWork, field);
             var size = Expression.ArrayLength(fieldExp);
-            var writeSize = Expression.Call(null, typeof(SpanExtensions).GetMethod("WriteInt"), buffer, size);
+            var compareToNull = Expression.Equal(fieldExp, Expression.Default(field.FieldType));
+            var writeNull = Expression.Call(null,GetWriteMethod("WriteInt"), buffer, Expression.Constant(-1));
+
+            var writeSize = Expression.Call(null, GetWriteMethod("WriteInt"), buffer, size);
             var index = Expression.Parameter(typeof(int), "index");
             var assignZero = Expression.Assign(index, Expression.Constant(0));
             var label = Expression.Label();
             var arrayValue = Expression.ArrayAccess(fieldExp, index);
-            var writeArrayValue = Expression.Call(null, typeof(SpanExtensions).GetMethod(writeMethod), buffer, arrayValue);
+            var writeArrayValue = Expression.Call(null, GetWriteMethod(writeMethod), buffer, arrayValue);
             var increment = Expression.AddAssign(index, Expression.Constant(1));
             var ifThenExit = Expression.IfThen(Expression.Equal(index, size), Expression.Break(label));
-            var expressionLoop = Expression.Loop(Expression.Block(
-              writeArrayValue,
-              increment,
-              ifThenExit
-                ), label);
+            var expressionLoop = Expression.Loop(
+                Expression.Block(writeArrayValue, increment,
+              ifThenExit), label);
 
             var block = Expression.Block(new[] { index }, writeSize, assignZero, expressionLoop);
-            return block;
+            var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
+            return compareIf;
         }
 
-        private Expression BuildExpression(MethodInfo writeMethod, FieldInfo field, ParameterExpression objectForWork, ParameterExpression buffer)
+        private Expression BuildExpression(MethodInfo writeMethod, MemberExpression field, Expression objectForWork, ParameterExpression buffer)
         {
-            var convert = Expression.Convert(objectForWork, _objectType);
-            var f = Expression.Field(convert, field);
-            var call = Expression.Call(null, writeMethod, buffer, f);
-            var exp = Expression.Block(call);
-            
-            return exp;
+            var call = Expression.Call(null, writeMethod, buffer, field);
+            return call;
         }
     }
 }

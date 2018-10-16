@@ -18,24 +18,24 @@ namespace Qwack.Models.MCModels
     {
         private List<DateTime> _asianDates;
         private List<DateTime> _asianFxDates;
-        private readonly double _strike;
-        private readonly double _notional;
-        private readonly string _assetName;
-        private readonly string _fxName;
-        private readonly string _discountCurve;
-        private readonly DateTime _payDate;
-        private readonly Currency _ccy;
+        private double _strike;
+        private double _notional;
+        private string _assetName;
+        private string _fxName;
+        private string _discountCurve;
+        private DateTime _payDate;
+        private Currency _ccy;
         private int _assetIndex;
         private int _fxIndex;
         private int[] _dateIndexes;
         private int[] _fxDateIndexes;
         private List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
-        private readonly bool _isCompo;
-        private readonly OptionType _optionType;
-        private readonly FxConversionType _fxType;
+        private bool _isCompo;
+        private OptionType _optionType;
+        private FxConversionType _fxType;
 
-        private readonly List<AssetPathPayoff> _subInstruments;
+        private List<AssetPathPayoff> _subInstruments;
 
         private static readonly Vector<double> _one = new Vector<double>(1.0);
 
@@ -107,7 +107,7 @@ namespace Qwack.Models.MCModels
 
         public bool IsComplete => _isComplete;
 
-        public IAssetInstrument AssetInstrument { get; }
+        public IAssetInstrument AssetInstrument { get; private set; }
 
         public void Finish(IFeatureCollection collection)
         {

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths;
+using Qwack.Serialization;
 
 namespace Qwack.Random.MersenneTwister
 {
@@ -15,11 +16,11 @@ namespace Qwack.Random.MersenneTwister
     public class MersenneTwister64 : IPathProcess
     {
         private static uint _nN = 312;
-        private readonly uint _mm = 156;
-        private readonly ulong _matrix_A = 0xB5026F5AA96619E9UL;
-        private readonly ulong _upperM = 0xFFFFFFFF80000000UL;
-        private readonly ulong _lowerM = 0x7FFFFFFFUL;
-        private readonly ulong[] _mt = new ulong[_nN];
+        private const uint _mm = 156;
+        private const ulong _matrix_A = 0xB5026F5AA96619E9UL;
+        private const ulong _upperM = 0xFFFFFFFF80000000UL;
+        private const ulong _lowerM = 0x7FFFFFFFUL;
+        private ulong[] _mt = new ulong[_nN];
         private uint _mti;
 
         public MersenneTwister64()

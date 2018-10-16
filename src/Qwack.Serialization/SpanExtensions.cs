@@ -8,6 +8,62 @@ namespace Qwack.Serialization
 {
     internal static class SpanExtensions
     {
+        public static int ReadInt(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(int));
+            return value;
+        }
+
+        public static byte ReadByte(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<byte>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(byte));
+            return value;
+        }
+
+        public static bool ReadBool(ref this Span<byte> span) => span.ReadByte() == 1;
+
+        public static uint ReadUInt(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(uint));
+            return value;
+        }
+
+        public static double ReadDouble(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<double>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(double));
+            return value;
+        }
+
+        public static ulong ReadULong(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(ulong));
+            return value;
+        }
+
+        public static DateTime ReadDateTime(ref this Span<byte> span) => new DateTime(span.ReadLong());
+
+        public static long ReadLong(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(long));
+            return value;
+        }
+
+        public static string ReadString(ref this Span<byte> span)
+        {
+            var length = span.ReadInt();
+            if (length == -1) return null;
+            var newSpan = MemoryMarshal.Cast<byte, char>(span);
+            var returnValue = newSpan.Slice(0, length).ToString();
+            span = MemoryMarshal.Cast<char, byte>(newSpan.Slice(length));
+            return returnValue;
+        }
+
         public static void WriteDateTime(ref this Span<byte> span, DateTime value)
         {
             if (span.Length < sizeof(long)) throw new IndexOutOfRangeException();

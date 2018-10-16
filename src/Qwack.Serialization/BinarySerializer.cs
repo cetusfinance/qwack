@@ -11,8 +11,8 @@ namespace Qwack.Serialization
     public class BinarySerializer
     {
         private List<object> _objectsCrawled = new List<object>();
-        private Dictionary<Type, SerializationStrategy> _serializationStrategies = new Dictionary<Type, SerializationStrategy>();
-
+        private Dictionary<Type, (int number, SerializationStrategy strategy)> _serializationStrategies = new Dictionary<Type, (int number, SerializationStrategy strategy)>();
+        int typeNumber = 0;
         private const byte ArrayType_ULong = 1;
 
         public void PrepareObjectGraph(object objectGraph)
@@ -23,7 +23,7 @@ namespace Qwack.Serialization
 
             if (!_serializationStrategies.TryGetValue(objType, out var strat))
             {
-                _serializationStrategies.Add(objType, new SerializationStrategy(objType));
+                _serializationStrategies.Add(objType, (typeNumber++ ,new SerializationStrategy(objType)));
             }
 
             var privateFields = objectGraph.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -58,14 +58,27 @@ namespace Qwack.Serialization
             }
         }
 
-        public void SerializeObjectGraph(PipeWriter pipeWriter)
+        public Span<byte> SerializeObjectGraph(PipeWriter pipeWriter)
         {
             var context = new DeserializationContext();
             var buffer =(Span<byte>) new byte[1024 * 1024 * 50];
+            var originalSpan = buffer;
+
+            buffer.WriteInt(_serializationStrategies.Count);
+            foreach(var s in _serializationStrategies)
+            {
+                buffer.WriteInt(s.Value.number);
+                buffer.WriteString(s.Value.strategy.FullName);
+            }
+
             foreach(var o in _objectsCrawled)
             {
-                _serializationStrategies[o.GetType()].Serialize(o, ref buffer, context);
+                var info = _serializationStrategies[o.GetType()];
+                buffer.WriteInt(info.number);
+                info.strategy.Serialize(o, ref buffer, context);
             }
+
+            return originalSpan.Slice(0, originalSpan.Length - buffer.Length);
         }
     }
 }

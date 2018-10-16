@@ -13,15 +13,15 @@ namespace Qwack.Paths.Processes
     public class BlackSingleAsset : IPathProcess, IRequiresFinish
     {
         private IATMVolSurface _surface;
-        private readonly DateTime _expiryDate;
+        private DateTime _expiryDate;
         private DateTime _startDate;
-        private readonly int _numberOfSteps;
-        private readonly string _name;
-        private readonly Dictionary<DateTime, double> _pastFixings;
+        private int _numberOfSteps;
+        private string _name;
+        private Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
         [SkipSerialization]
-        private readonly Func<double, double> _forwardCurve;
+        private Func<double, double> _forwardCurve;
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;

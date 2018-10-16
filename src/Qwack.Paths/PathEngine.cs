@@ -12,8 +12,8 @@ namespace Qwack.Paths
     public class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
         private List<IPathProcess> _pathProcesses = new List<IPathProcess>();
-        private readonly List<object> _pathProcessFeatures = new List<object>();
-        private readonly int _numberOfPaths;
+        private List<object> _pathProcessFeatures = new List<object>();
+        private int _numberOfPaths;
         private FeatureCollection _featureCollection = new FeatureCollection();
         private int _dimensions;
         private int _steps;

@@ -32,10 +32,10 @@ namespace Qwack.Models.MCModels
             return dirPath;
         }
 
-        public PathEngine Engine { get; }
-        public Portfolio Portfolio { get; }
-        public IAssetFxModel Model { get; }
-        public McSettings Settings { get; }
+        public PathEngine Engine { get; private set; }
+        public Portfolio Portfolio { get; private set; }
+        public IAssetFxModel Model { get; private set; }
+        public McSettings Settings { get; private set; }
 
         private Dictionary<string, AssetPathPayoff> _payoffs;
         private LinearPortfolioValueRegressor _regressor;

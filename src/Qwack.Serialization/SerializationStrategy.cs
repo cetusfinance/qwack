@@ -9,6 +9,7 @@ namespace Qwack.Serialization
     public class SerializationStrategy
     {
         private Type _objectType;
+        private List<SerializerDelegate> _serializers = new List<SerializerDelegate>();
 
         public SerializationStrategy(Type objectType)
         {
@@ -25,15 +26,15 @@ namespace Qwack.Serialization
                 var block = GetExpressionForType(field, convert, buffer, deserContext);
                 if (block != null)
                 {
-                    var deser = Expression.Lambda<Deserializer>(block, objectForWork, buffer, deserContext).Compile();
+                    var deser = Expression.Lambda<SerializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
                     _serializers.Add(deser);
                 }
             }
         }
 
-        delegate void Deserializer(object objForWork, ref Span<byte> buffer, DeserializationContext context);
+        public string FullName => _objectType.AssemblyQualifiedName;
 
-        private List<Deserializer> _serializers = new List<Deserializer>();
+        delegate void SerializerDelegate(object objForWork, ref Span<byte> buffer, DeserializationContext context);
 
         public void Serialize(object obj, ref Span<byte> buffer, DeserializationContext context)
         {
@@ -81,7 +82,6 @@ namespace Qwack.Serialization
                     var writeInt = Expression.Call(null, GetWriteMethod("WriteInt"), buffer, lookupId);
                     return writeInt;
                 }
-                //throw new NotSupportedException(field.FieldType.Name);
             }
             else if (field.FieldType.IsGenericType)
             {

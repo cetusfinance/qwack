@@ -13,9 +13,9 @@ namespace Qwack.Providers.Json
     {
         [SkipSerialization]
         private readonly JsonSerializerSettings _jsonSettings;
-        private readonly ICalendarProvider _calendarProvider;
+        private ICalendarProvider _calendarProvider;
         private List<Currency> _allCurrencies;
-        private readonly Dictionary<string, Currency> _currenciesByName;
+        private Dictionary<string, Currency> _currenciesByName;
 
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName)
         {

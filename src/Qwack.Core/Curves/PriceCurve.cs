@@ -19,6 +19,8 @@ namespace Qwack.Core.Curves
 
         public bool UnderlyingsAreForwards => _curveType == PriceCurveType.LME;
 
+        public PriceCurveType CurveType => _curveType;
+
         private readonly string[] _pillarLabels;
 
         public DateTime BuildDate { get; private set; }

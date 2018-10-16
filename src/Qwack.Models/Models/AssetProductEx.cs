@@ -636,7 +636,6 @@ namespace Qwack.Models.Models
                         cube.AddRow(row, delta);
                     }
                 }
-
             }
             return cube;
         }

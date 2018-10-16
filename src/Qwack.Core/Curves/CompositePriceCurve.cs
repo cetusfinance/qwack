@@ -29,6 +29,8 @@ namespace Qwack.Core.Curves
         private Func<IFundingModel> fModelFunc;
         private Func<IPriceCurve> pCurveFunc;
 
+        public PriceCurveType CurveType => PriceCurveType.Linear;
+
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
             {
                     new AssetCurveDescriptor {

@@ -314,9 +314,9 @@ namespace Qwack.Models.Models
                     if (r.Value == 0.0) continue;
                     var point = (DateTime)r.MetaData[r_plIx];
                     var startRate = model.FundingModel.Curves[irCurve.Key].GetRate(point);
-                    var endRate = endModel.FundingModel.Curves[irCurve.Key].GetRate(point);
+                    var endRate = irCurve.Value.GetRate(point);
                     var explained = r.Value * (endRate - startRate) / 0.0001;
-                        
+
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
@@ -338,7 +338,12 @@ namespace Qwack.Models.Models
 
                 foreach (var r in step.GetAllRows())
                 {
-                    if (r.Value == 0.0) continue;
+                    if (explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained))
+                    {
+                        explainedByTrade.Remove((string)r.MetaData[tidIx]);
+                    }
+
+                    if (r.Value - explained == 0.0) continue;
 
                     var row = new Dictionary<string, object>
                     {
@@ -347,8 +352,20 @@ namespace Qwack.Models.Models
                         { "SubStep", irCurve.Key },
                         { "PointLabel", "Unexplained" }
                     };
-                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
+                }
+
+                //overspill
+                foreach (var kv in explainedByTrade)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", kv.Key },
+                        { "Step", "IrCurves" },
+                        { "SubStep", irCurve.Key },
+                        { "PointLabel", "Unexplained" }
+                    };
+                    cube.AddRow(row, -kv.Value);
                 }
 
                 lastPVCuve = newPVCube;

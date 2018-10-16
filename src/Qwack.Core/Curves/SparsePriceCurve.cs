@@ -43,6 +43,8 @@ namespace Qwack.Core.Curves
 
         public DateTime[] PillarDates => _pillarDates;
 
+        public PriceCurveType CurveType => throw new NotImplementedException();
+
         public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels=null)
         {
             _currencyProvider = currencyProvider;

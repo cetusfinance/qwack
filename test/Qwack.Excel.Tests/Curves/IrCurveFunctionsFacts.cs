@@ -26,15 +26,16 @@ namespace Qwack.Excel.Tests.Curves
         [Fact]
         public void CreateDiscountCurveFromDFs_Facts()
         {
-            Assert.Equal("Could not parse interpolator type - zah", IRCurveFunctions.CreateDiscountCurveFromDFs("pwah", "pwah", DateTime.Today, new double[] { 1.0 }, new double[] { 1.0 }, "zah", "xaf", "blah"));
-            Assert.Equal("zwah¬0", IRCurveFunctions.CreateDiscountCurveFromDFs("zwah", "zwah", DateTime.Today, new double[] { DateTime.Today.ToOADate() }, new double[] { 1.0 }, "Linear", "USD", "blah"));
+            Assert.Equal("Could not parse interpolator type - zah", IRCurveFunctions.CreateDiscountCurveFromDFs("pwah", "pwah", DateTime.Today, new double[] { 1.0 }, new double[] { 1.0 }, "zah", "xaf", "blah","CC"));
+            Assert.Equal("Could not parse rate type - hoop", IRCurveFunctions.CreateDiscountCurveFromDFs("pwah", "pwah", DateTime.Today, new double[] { 1.0 }, new double[] { 1.0 }, "Linear", "USD", "blah","hoop"));
+            Assert.Equal("zwah¬0", IRCurveFunctions.CreateDiscountCurveFromDFs("zwah", "zwah", DateTime.Today, new double[] { DateTime.Today.ToOADate() }, new double[] { 1.0 }, "Linear", "USD", "blah", "CC"));
         }
 
         [Fact]
         public void GetDF_Facts()
         {
             Assert.Equal("IR curve mwmwah not found in cache", IRCurveFunctions.GetDF("mwmwah", DateTime.Today, DateTime.Today));
-            IRCurveFunctions.CreateDiscountCurveFromDFs("mwmwah", "mwmwah", DateTime.Today, new double[] { DateTime.Today.ToOADate() }, new double[] { 1.0 }, "Linear", "USD", "blah");
+            IRCurveFunctions.CreateDiscountCurveFromDFs("mwmwah", "mwmwah", DateTime.Today, new double[] { DateTime.Today.ToOADate() }, new double[] { 1.0 }, "Linear", "USD", "blah", "CC");
             Assert.Equal(1.0, IRCurveFunctions.GetDF("mwmwah", DateTime.Today, DateTime.Today));
         }
 
@@ -46,7 +47,7 @@ namespace Qwack.Excel.Tests.Curves
             Assert.Equal("Could not parse rate type - blah", IRCurveFunctions.GetForwardRate("mwmwahh", DateTime.Today, DateTime.Today.AddDays(1), "blah", "Act365F"));
             Assert.Equal("Could not daycount basis - waaah", IRCurveFunctions.GetForwardRate("mwmwahh", DateTime.Today, DateTime.Today.AddDays(1), "Linear", "waaah"));
 
-            IRCurveFunctions.CreateDiscountCurveFromDFs("mwmwahh", "mwmwahh", DateTime.Today, new double[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() }, new double[] { 1.0, 1.0 }, "Linear", "USD", "blah");
+            IRCurveFunctions.CreateDiscountCurveFromDFs("mwmwahh", "mwmwahh", DateTime.Today, new double[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() }, new double[] { 1.0, 1.0 }, "Linear", "USD", "blah", "CC");
             
             Assert.Equal(0.0, IRCurveFunctions.GetForwardRate("mwmwahh", DateTime.Today, DateTime.Today.AddDays(1), "Linear", "Act365F"));
         }

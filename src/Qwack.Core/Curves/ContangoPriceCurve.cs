@@ -20,6 +20,8 @@ namespace Qwack.Core.Curves
         private IInterpolator1D _interp;
         private ICurrencyProvider _currencyProvider;
 
+        public PriceCurveType CurveType => PriceCurveType.Linear;
+
         public bool UnderlyingsAreForwards => false; //false as we only show spot delta
 
         public DateTime BuildDate { get; private set; }

@@ -17,12 +17,14 @@ namespace Qwack.Core.Curves
         private readonly double[] _rates;
         private readonly DayCountBasis _basis = DayCountBasis.Act_365F;
         private readonly IInterpolator1D _interpolator;
+        private readonly RateType _rateStorageType;
         private readonly Interpolator1DType _interpKind;
         private readonly string _name;
 
-        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null)
+        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null, RateType rateStorageType = RateType.Exponential)
         {
             _interpKind = interpKind;
+            _rateStorageType = rateStorageType;
             _pillars = new DateTime[pillars.Length];
             pillars.CopyTo(_pillars, 0);
             _rates = new double[_pillars.Length];
@@ -48,6 +50,8 @@ namespace Qwack.Core.Curves
         public int NumberOfPillars => _pillars.Length;
         public DateTime[] PillarDates => _pillars;
         public Interpolator1DType InterpolatorType => _interpKind;
+
+        public RateType RateStorageType => _rateStorageType;
 
         public int SolveStage { get; set; }
         public DayCountBasis Basis => _basis;
@@ -87,14 +91,61 @@ namespace Qwack.Core.Curves
             var te = _buildDate.CalculateYearFraction(endDate, _basis);
             var rateS = GetRate(ts);
             var rateE = GetRate(te);
-            var dfS = Exp(-rateS * ts);
-            var dfE = Exp(-rateE * te);
+            var dfS = DFFromRate(ts, rateS, RateStorageType);
+            var dfE = DFFromRate(te, rateE, RateStorageType);
             return dfE / dfS;
         }
+
         public double GetRate(DateTime valueDate)
         {
             var T = _buildDate.CalculateYearFraction(valueDate, _basis);
             return GetRate(T);
+        }
+
+        public static double DFFromRate(double t, double r, RateType rateType)
+        {
+            switch (rateType)
+            {
+                case RateType.Exponential:
+                    return Exp(-r * t);
+                case RateType.Linear:
+                    return 1.0 / (1.0 + r * t);
+                case RateType.SemiAnnualCompounded:
+                    return Pow(1.0 + r / 2.0, -2.0 * t);
+                case RateType.QuarterlyCompounded:
+                    return Pow(1.0 + r / 4.0, -4.0 * t);
+                case RateType.MonthlyCompounded:
+                    return Pow(1.0 + r / 12.0, -12.0 * t);
+                case RateType.YearlyCompounded:
+                    return Pow(1.0 + r, t);
+                case RateType.DiscountFactor:
+                    return r;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public static double RateFromDF(double t, double df, RateType rateType)
+        {
+            switch (rateType)
+            {
+                case RateType.Exponential:
+                    return Log(df)/-t;
+                case RateType.Linear:
+                    return (1.0 / df - 1.0) / t;
+                case RateType.SemiAnnualCompounded:
+                    return (Pow(df, -1.0 / (2.0 * t)) - 1.0) * 2.0;
+                case RateType.QuarterlyCompounded:
+                    return (Pow(df, -1.0 / (4.0 * t)) - 1.0) * 4.0;
+                case RateType.MonthlyCompounded:
+                    return (Pow(df, -12.0 * t) - 1.0) * 12.0;
+                case RateType.YearlyCompounded:
+                    return (Pow(df, - 1.0 * t) - 1.0);
+                case RateType.DiscountFactor:
+                    return df;
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public double GetRate(double T) => _interpolator.Interpolate(T);
@@ -103,26 +154,8 @@ namespace Qwack.Core.Curves
 
         public double GetForwardRate(DateTime startDate, DateTime endDate, RateType rateType, double tbasis)
         {
-            var ccRate = GetForwardRate(startDate, endDate);
-            var output = -1.0;
-
-            var t365 = startDate.CalculateYearFraction(endDate, _basis);
-            var cf = Exp(ccRate * t365);
-
-            switch (rateType)
-            {
-                case RateType.Exponential:
-                    output = Log(cf) / tbasis;
-                    break;
-                case RateType.Linear:
-                    output = (cf - 1.0) / tbasis;
-                    break;
-                case RateType.DailyCompounded:
-                case RateType.MonthlyCompounded:
-                case RateType.YearlyCompounded:
-                    throw new NotImplementedException();
-            }
-            return output;
+            var df = GetDf(startDate, endDate);
+            return RateFromDF(tbasis, df, rateType);
         }
         public double GetForwardRate(DateTime startDate, DateTime endDate, RateType rateType, DayCountBasis basis)
         {
@@ -130,17 +163,11 @@ namespace Qwack.Core.Curves
             return GetForwardRate(startDate, endDate, rateType, tbas);
         }
 
-        public double GetForwardRate(DateTime startDate, DateTime endDate)
+        public double GetForwardCCRate(DateTime startDate, DateTime endDate)
         {
             var te = _buildDate.CalculateYearFraction(endDate, _basis);
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
-            var re = _interpolator.Interpolate(te);
-            var rs = _interpolator.Interpolate(ts);
-            var dFe = Exp(-te * re);
-            var dFs = Exp(-ts * rs);
-
-            var q = (1 / dFe) / (1 / dFs);
-
+            var q = GetDf(startDate, endDate);
             return Log(q) / (te - ts);
         }
 
@@ -164,7 +191,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec, RateStorageType);
                 return returnCurve;
             }
         }
@@ -179,7 +206,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? rate : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec, RateStorageType);
                 return returnCurve;
             }
 
@@ -193,16 +220,25 @@ namespace Qwack.Core.Curves
 
         public IrCurve RebaseDate(DateTime newAnchorDate)
         {
+            //var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
+            //var newPillars = new DateTime[newLength];
+            //var isShorter = newLength < _pillars.Length;
+            //Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
+            //var newDfs = newPillars.Select(x => GetDf(BuildDate, x)).ToArray();
+            //var newRates = newDfs.Select((x, ix) => RateFromDF(newAnchorDate.CalculateYearFraction(newPillars[ix], _basis),x,RateStorageType)).ToArray();
+            //if (newPillars.First() == newAnchorDate && newRates.Length > 1)
+            //    newRates[0] = newRates[1];
+
+            //var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
+
             var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
             var newPillars = new DateTime[newLength];
+            var newRates = new double[newLength];
             var isShorter = newLength < _pillars.Length;
             Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
-            var newDfs = newPillars.Select(x => GetDf(BuildDate, x)).ToArray();
-            var newRates = newDfs.Select((x, ix) => Log(x) / -newAnchorDate.CalculateYearFraction(newPillars[ix], _basis)).ToArray();
-            if (newPillars.First() == newAnchorDate && newRates.Length > 1)
-                newRates[0] = newRates[1];
-
-            var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec);
+            Array.Copy(_rates, isShorter ? 1 : 0, newRates, 0, newLength);
+         
+            var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
 
             return newCurve;
         }
@@ -221,7 +257,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select(r => r + delta).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select(r => r + delta).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec, RateStorageType);
                 return returnCurve;
             }
         }

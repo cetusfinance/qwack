@@ -65,7 +65,8 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Array of discount factors")] double[] DiscountFactors,
              [ExcelArgument(Description = "Type of interpolation")] object InterpolationType,
              [ExcelArgument(Description = "Currency - default USD")] object Currency,
-             [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec)
+             [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec,
+             [ExcelArgument(Description = "Rate storage format - default Exponential")] object RateStorageType)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -73,10 +74,16 @@ namespace Qwack.Excel.Curves
                 var curveTypeStr = InterpolationType.OptionalExcel("Linear");
                 var ccyStr = Currency.OptionalExcel("USD");
                 var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
+                var rateTypeStr = RateStorageType.OptionalExcel("CC");
 
                 if (!Enum.TryParse(curveTypeStr, out Interpolator1DType iType))
                 {
                     return $"Could not parse interpolator type - {curveTypeStr}";
+                }
+
+                if (!Enum.TryParse(rateTypeStr, out RateType rType))
+                {
+                    return $"Could not parse rate type - {rateTypeStr}";
                 }
 
                 var pDates = Pillars.ToDateTimeArray();
@@ -84,13 +91,15 @@ namespace Qwack.Excel.Curves
                 var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ccyStr];
 
                 var zeroRates = DiscountFactors
-                .Select((df, ix) => DateTime.FromOADate(Pillars[ix])==BuildDate ? 0.0 : -System.Math.Log(df) / BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F))
+                .Select((df, ix) => 
+                    DateTime.FromOADate(Pillars[ix])==BuildDate ? 0.0 
+                    : IrCurve.RateFromDF(BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F),df, rType))
                 .ToArray();
 
                 if (DateTime.FromOADate(Pillars[0]) == BuildDate && zeroRates.Length > 1)
                     zeroRates[0] = zeroRates[1];
 
-                var cObj = new IrCurve(pDates, zeroRates, BuildDate, curveName, iType, ccy, colSpecStr);
+                var cObj = new IrCurve(pDates, zeroRates, BuildDate, curveName, iType, ccy, colSpecStr, rType);
                 var cache = ContainerStores.GetObjectCache<IIrCurve>();
                 cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;

@@ -98,7 +98,7 @@ namespace Qwack.Models
 
         public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), newBuildDate ?? c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec)).ToArray(), _currencyProvider)
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => new IrCurve(c.PillarDates, c.GetRates(), newBuildDate ?? c.BuildDate, c.Name, c.InterpolatorType, c.Currency, c.CollateralSpec, c.RateStorageType)).ToArray(), _currencyProvider)
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };
@@ -122,11 +122,11 @@ namespace Qwack.Models
 
             if (domesticCcy == FxMatrix.BaseCurrency)
             {
-                spot = FxMatrix.SpotRates[foreignCcy];
+                spot = FxMatrix.GetSpotRate(foreignCcy);
             }
             else if (foreignCcy == FxMatrix.BaseCurrency)
             {
-                spot = 1.0 / FxMatrix.SpotRates[domesticCcy];
+                spot = 1.0 / FxMatrix.GetSpotRate(domesticCcy);
             }
             else
             {

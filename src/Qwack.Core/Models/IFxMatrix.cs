@@ -11,6 +11,7 @@ namespace Qwack.Core.Models
         Dictionary<Currency, string> DiscountCurveMap { get; }
         List<FxPair> FxPairDefinitions { get; }
         Dictionary<Currency, double> SpotRates { get; }
+        double GetSpotRate(Currency ccy);
 
         FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy);
         FxPair GetFxPair(string pair);

@@ -47,6 +47,8 @@ namespace Qwack.Models
             return GetFxPair(leftCCy, rightCcy);
         }
 
+        public double GetSpotRate(Currency ccy) => SpotRates.TryGetValue(ccy, out var spotRate) ? spotRate : throw new Exception($"Spot rate for currency {ccy.Ccy} not found");
+
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);

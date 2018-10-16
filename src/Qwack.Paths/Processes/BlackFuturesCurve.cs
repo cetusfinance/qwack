@@ -50,6 +50,7 @@ namespace Qwack.Paths.Processes
             var fCode = new FutureCode(name, _futureSettingsProvider);
             var currentCode = fCode.GetFrontMonth(startDate);
             _codes.Add(currentCode);
+            fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
             _futuresExpiries.Add(fCode.GetRollDate());
 
             fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
@@ -74,7 +75,7 @@ namespace Qwack.Paths.Processes
             //vols...
             _vols = new double[_timesteps.TimeStepCount][];
 
-            for (var t = 1; t < _vols.Length; t++)
+            for (var t = 0; t < _vols.Length; t++)
             {
                 _vols[t] = new double[_codes.Count];
                 for (var c = 0; c < _vols[t].Length; c++)
@@ -107,7 +108,7 @@ namespace Qwack.Paths.Processes
                     {
                         var W = steps[step];
                         var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                        var bm = (_vols[f][step] * _vols[f][step] / 2.0) * dt + (_vols[f][step] * _timesteps.TimeStepsSqrt[step] * W);
+                        var bm = (_vols[step][f] * _vols[step][f] / 2.0) * dt + (_vols[step][f] * _timesteps.TimeStepsSqrt[step] * W);
                         previousStep *= bm.Exp();
                         steps[step] = previousStep;
                     }

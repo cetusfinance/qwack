@@ -19,6 +19,8 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => 0;
 
+        public PriceCurveType CurveType => PriceCurveType.Linear;
+
         public Currency Currency { get; set; }
 
         public bool UnderlyingsAreForwards => true;

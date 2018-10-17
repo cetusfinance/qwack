@@ -113,17 +113,23 @@ namespace Qwack.Serialization
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildReadExpression("ReadInt", length, buffer);
-
+            var array = Expression.Parameter(elementType.MakeArrayType());
             var createAnArray = Expression.NewArrayBounds(elementType, length);
+            var assignArray = Expression.Assign(array, createAnArray);
+            var index = Expression.Parameter(typeof(int), "index");
+            var assignZero = Expression.Assign(index, Expression.Constant(0));
+            var increment = Expression.AddAssign(index, Expression.Constant(1));
+            var arrayValue = Expression.ArrayAccess(array, index);
+            var label = Expression.Label();
+            var ifThenExit = Expression.IfThen(Expression.Equal(index, length), Expression.Break(label));
+            var readArrayValue = BuildReadExpression(readMethod, arrayValue, buffer);
+            var expressionLoop = Expression.Loop(Expression.Block(readArrayValue, increment, ifThenExit), label);
+
             var ifNull = Expression.IfThen(Expression.NotEqual(length, Expression.Constant(-1)),
-                createAnArray
-                );
+                Expression.Block(assignArray, assignZero, expressionLoop));
 
-
-            var returnBlock = Expression.Block(new[] { length },
-                getlength,
-                ifNull
-                );
+            var returnBlock = Expression.Block(new[] { length, array, index },
+                getlength, ifNull);
 
             return returnBlock;
         }

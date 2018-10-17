@@ -116,8 +116,13 @@ namespace Qwack.Serialization
                 if (elementType == typeof(ulong)) return WriteSimpleArray(field, objForWork, buffer, "WriteULong");
                 else if (elementType == typeof(double)) return WriteSimpleArray(field, objForWork, buffer, "WriteDouble");
                 else if (elementType == typeof(int)) return WriteSimpleArray(field, objForWork, buffer, "WriteInt");
+                else if (elementType == typeof(uint)) return WriteSimpleArray(field, objForWork, buffer, "WriteUInt");
                 else if (elementType == typeof(DateTime)) return WriteSimpleArray(field, objForWork, buffer, "WriteDateTime");
                 else if (elementType == typeof(bool)) return WriteSimpleArray(field, objForWork, buffer, "WriteBool");
+                else if (elementType == typeof(byte)) return WriteSimpleArray(field, objForWork, buffer, "WriteByte");
+                else if (elementType == typeof(short)) return WriteSimpleArray(field, objForWork, buffer, "WriteShort");
+                else if (elementType == typeof(ushort)) return WriteSimpleArray(field, objForWork, buffer, "WriteUShort");
+                else if (elementType == typeof(float)) return WriteSimpleArray(field, objForWork, buffer, "WriteFloat");
                 else
                 {
                     throw new NotImplementedException($"Array of {elementType.Name} is not supported");

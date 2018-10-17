@@ -22,6 +22,27 @@ namespace Qwack.Serialization
             return value;
         }
 
+        public static short ReadShort(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(short));
+            return value;
+        }
+
+        public static float ReadFloat(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<float>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(float));
+            return value;
+        }
+
+        public static ushort ReadUShort(ref this Span<byte> span)
+        {
+            var value = Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetReference(span));
+            span = span.Slice(sizeof(ushort));
+            return value;
+        }
+
         public static bool ReadBool(ref this Span<byte> span) => span.ReadByte() == 1;
 
         public static uint ReadUInt(ref this Span<byte> span)

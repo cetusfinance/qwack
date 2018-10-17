@@ -54,9 +54,13 @@ namespace Qwack.Serialization
                 else if (elementType == typeof(double)) return ReadSimpleArray("ReadDouble", fieldExp, buffer, elementType);
                 else if (elementType == typeof(DateTime)) return ReadSimpleArray("ReadDateTime", fieldExp, buffer, elementType);
                 else if (elementType == typeof(bool)) return ReadSimpleArray("ReadBool", fieldExp, buffer, elementType);
+                else if (elementType == typeof(byte)) return ReadSimpleArray("ReadByte", fieldExp, buffer, elementType);
+                else if (elementType == typeof(ushort)) return ReadSimpleArray("ReadUShort", fieldExp, buffer, elementType);
+                else if (elementType == typeof(short)) return ReadSimpleArray("ReadShort", fieldExp, buffer, elementType);
+                else if (elementType == typeof(float)) return ReadSimpleArray("ReadFloat", fieldExp, buffer, elementType);
                 else
                 {
-                    throw new Exception();
+                    throw new Exception(elementType.Name);
                 }
             }
             else if (field.FieldType.Namespace.StartsWith("Qwack"))
@@ -147,7 +151,7 @@ namespace Qwack.Serialization
         public object Deserialize(ref Span<byte> buffer, DeserializationContext context)
         {
             var instance = Activator.CreateInstance(_objectType);
-            foreach(var exp in _deserializers)
+            foreach (var exp in _deserializers)
             {
                 exp(instance, ref buffer, context);
             }

@@ -11,7 +11,7 @@ namespace Qwack.Serialization
         public object GetObjectById(int objectId)
         {
             if (objectId == -1) return null;
-            return _currentObjects[objectId - 1];
+            return _currentObjects[objectId];
         }
 
         public int GetObjectId(object value)

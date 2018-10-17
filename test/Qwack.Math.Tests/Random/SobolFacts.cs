@@ -108,6 +108,8 @@ namespace Qwack.Math.Tests.Random
             public int GetDateIndex(DateTime date) => throw new NotImplementedException();
 
             public int GetDimension(string dimensionName) => throw new NotImplementedException();
+
+            public List<string> GetDimensionNames() => throw new NotImplementedException();
         }
 
         private static void OutputHelperFunction()

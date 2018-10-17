@@ -196,6 +196,55 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a commodity futures option position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureOption))]
+        public static object CreateFutureOption(
+           [ExcelArgument(Description = "Object name")] string ObjectName,
+           [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+           [ExcelArgument(Description = "Asset Id")] string AssetId,
+           [ExcelArgument(Description = "Currency")] string Currency,
+           [ExcelArgument(Description = "Strike")] double Strike,
+           [ExcelArgument(Description = "Quantity of contracts")] double Quantity,
+           [ExcelArgument(Description = "Contract lot size")] double LotSize,
+           [ExcelArgument(Description = "Call or Put flag")] string CallPut,
+           [ExcelArgument(Description = "Exercise style - default European")] object ExerciseStyle,
+           [ExcelArgument(Description = "Margining type, FuturesStyle or Regular - default FuturesStyle")] object MarginType)
+
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+                var exStyle = ExerciseStyle.OptionalExcel("European");
+                var mStyle = MarginType.OptionalExcel("FuturesStyle");
+
+                if (!Enum.TryParse(CallPut, true, out OptionType cp))
+                    throw new Exception($"Could not parse call/put flag {cp}");
+                if (!Enum.TryParse(exStyle, true, out OptionExerciseType exType))
+                    throw new Exception($"Could not parse option style flag {exStyle}");
+                if (!Enum.TryParse(mStyle, true, out OptionMarginingType mType))
+                    throw new Exception($"Could not parse margining type flag {mType}");
+
+                var product = new FuturesOption
+                {
+                    AssetId = AssetId,
+                    ContractQuantity = Quantity,
+                    LotSize = LotSize,
+                    PriceMultiplier = 1.0,
+                    Currency = currency,
+                    Strike = Strike,
+                    Direction = TradeDirection.Long,
+                    ExpiryDate = ExpiryDate,
+                    TradeId = ObjectName,
+                    CallPut = cp,
+                    ExerciseType = exType,
+                    MarginingType = mType
+                };
+
+                var cache = ContainerStores.GetObjectCache<FuturesOption>();
+                cache.PutObject(ObjectName, new SessionItem<FuturesOption> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap))]
         public static object CreateMonthlyAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -841,6 +890,7 @@ namespace Qwack.Excel.Instruments
             var forwards = Instruments.GetAnyFromCache<Forward>();
             var assetFutures = Instruments.GetAnyFromCache<Future>();
             var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
+            var futuresOptions = Instruments.GetAnyFromCache<FuturesOption>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -871,6 +921,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(forwards);
             pf.Instruments.AddRange(assetFutures);
             pf.Instruments.AddRange(europeanOptions);
+            pf.Instruments.AddRange(futuresOptions);
 
             return pf;
         }

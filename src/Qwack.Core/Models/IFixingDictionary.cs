@@ -9,6 +9,8 @@ namespace Qwack.Core.Models
     {
         string Name { get; set; }
         string AssetId { get; set; }
+        string FxPair { get; set; }
+
         FixingDictionaryType FixingDictionaryType { get; set; }
 
         IFixingDictionary Clone();

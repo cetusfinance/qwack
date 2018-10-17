@@ -11,6 +11,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Options;
 using Qwack.Options.Asians;
 
 namespace Qwack.Models.Models
@@ -244,6 +245,27 @@ namespace Qwack.Models.Models
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
 
+        public static double PV(this FuturesOption option, IAssetFxModel model)
+        {
+            if (option.ExpiryDate < model.BuildDate)
+                return 0.0;
+
+            if (!(option.ExerciseType == OptionExerciseType.European || 
+                (option.ExerciseType == OptionExerciseType.American && option.MarginingType == OptionMarginingType.FuturesStyle)
+                ))
+                throw new Exception("Only European style options currently supported");
+
+            var price = model.GetPriceCurve(option.AssetId).GetPriceForDate(option.ExpiryDate);
+            var df = option.MarginingType == OptionMarginingType.FuturesStyle ? 1.0 
+                : model.FundingModel.GetDf(option.DiscountCurve, model.BuildDate, option.ExpiryDate);
+            var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate, DayCountBasis.Act365F);
+            var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
+
+
+            var fv = BlackFunctions.BlackPV(price, option.Strike, 0.0, t, vol, option.CallPut);
+            return fv * df * option.ContractQuantity * option.LotSize;
+        }
+
         public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
 
         public static double FlowsT0(this AsianOption asianOption, IAssetFxModel model)
@@ -354,6 +376,14 @@ namespace Qwack.Models.Models
                         else
                             ccy = fwd.PaymentCurrency.ToString();
                         break;
+                    case FuturesOption futOpt:
+                        pv = futOpt.PV(model);
+                        tradeId = futOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, futOpt.Currency);
+                        else
+                            ccy = futOpt.Currency.ToString();
+                        break;
                     case Future fut:
                         pv = fut.PV(model);
                         tradeId = fut.TradeId;
@@ -451,6 +481,14 @@ namespace Qwack.Models.Models
                             fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
                         else
                             ccy = fwd.PaymentCurrency.ToString();
+                        break;
+                    case FuturesOption futOpt:
+                        pv = futOpt.FlowsT0(model);
+                        tradeId = futOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, futOpt.Currency);
+                        else
+                            ccy = futOpt.Currency.ToString();
                         break;
                     case Future fut:
                         pv = fut.FlowsT0(model);
@@ -1325,7 +1363,7 @@ namespace Qwack.Models.Models
                         }
                         else //its FX
                         {
-                            var id = newDict.AssetId;
+                            var id = newDict.FxPair ?? newDict.AssetId;
                             var ccyLeft = currencyProvider[id.Substring(0, 3)];
                             var ccyRight = currencyProvider[id.Substring(id.Length - 3, 3)];
                             var pair = model.FundingModel.FxMatrix.GetFxPair(ccyLeft, ccyRight);

@@ -16,20 +16,44 @@ namespace Qwack.Paths.Processes
     {
         private bool _isComplete;
         //private readonly string _name = "Cholesky";
-        private readonly double[][] _decompMatrix;
+        private double[][] _correlationMatrix;
+        private ICorrelationMatrix _matrix;
+        private double[][] _decompMatrix;
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
         public Cholesky(double[][] correlationMatrix)
         {
             if (correlationMatrix.MaxAbsElement() > 1.0)
                 throw new Exception("Invalid correlation, must be in the range -1.0 to +1.0");
+            _correlationMatrix = correlationMatrix;
+        }
 
-            _decompMatrix = correlationMatrix.Cholesky2();
+        public Cholesky(ICorrelationMatrix correlationMatrix)
+        {
+            _matrix = correlationMatrix;
         }
 
         public bool IsComplete => _isComplete;
 
-        public void Finish(IFeatureCollection collection) => _isComplete = true;
+        public void Finish(IFeatureCollection collection)
+        {
+            if (_matrix != null)
+            {
+                var pathFeatures = collection.GetFeature<IPathMappingFeature>();
+                _correlationMatrix = new double[pathFeatures.NumberOfDimensions][];
+                var dimNames = pathFeatures.GetDimensionNames();
+                for (var i = 0; i < _correlationMatrix.Length; i++)
+                {
+                    _correlationMatrix[i] = new double[pathFeatures.NumberOfDimensions];
+                    for (var j = 0; j < _correlationMatrix[i].Length; j++)
+                    {
+                        _correlationMatrix[i][j] = _matrix.TryGetCorrelation(dimNames[i], dimNames[j], out var correl) ? correl : 0.0;
+                    }
+                }
+            }
+            _decompMatrix = _correlationMatrix.Cholesky2();
+            _isComplete = true;
+        }
 
         public void Process(IPathBlock block)
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,5 +18,7 @@ namespace Qwack.Paths.Features
         }
 
         public int GetDimension(string dimensionName) => _dimensionNames.IndexOf(dimensionName);
+
+        public List<string> GetDimensionNames() => _dimensionNames;
     }
 }

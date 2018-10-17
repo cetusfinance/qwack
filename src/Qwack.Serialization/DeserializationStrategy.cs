@@ -53,6 +53,7 @@ namespace Qwack.Serialization
                 else if (elementType == typeof(ulong)) return ReadSimpleArray("ReadULong", fieldExp, buffer, elementType);
                 else if (elementType == typeof(double)) return ReadSimpleArray("ReadDouble", fieldExp, buffer, elementType);
                 else if (elementType == typeof(DateTime)) return ReadSimpleArray("ReadDateTime", fieldExp, buffer, elementType);
+                else if (elementType == typeof(bool)) return ReadSimpleArray("ReadBool", fieldExp, buffer, elementType);
                 else
                 {
                     throw new Exception();
@@ -123,10 +124,11 @@ namespace Qwack.Serialization
             var label = Expression.Label();
             var ifThenExit = Expression.IfThen(Expression.Equal(index, length), Expression.Break(label));
             var readArrayValue = BuildReadExpression(readMethod, arrayValue, buffer);
-            var expressionLoop = Expression.Loop(Expression.Block(readArrayValue, increment, ifThenExit), label);
+            var expressionLoop = Expression.Loop(Expression.Block(ifThenExit, readArrayValue, increment), label);
+            var finalAssignArray = Expression.Assign(field, array);
 
             var ifNull = Expression.IfThen(Expression.NotEqual(length, Expression.Constant(-1)),
-                Expression.Block(assignArray, assignZero, expressionLoop));
+                Expression.Block(assignArray, assignZero, expressionLoop, finalAssignArray));
 
             var returnBlock = Expression.Block(new[] { length, array, index },
                 getlength, ifNull);

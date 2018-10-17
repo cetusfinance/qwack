@@ -20,13 +20,14 @@ namespace Qwack.Serialization
             }
 
             var context = new DeserializationContext();
-
+            object lastObject = null;
             while(buffer.Length > 0)
             {
                 var strategy = strategies[buffer.ReadInt()];
-                context.AddObjectToContext(strategy.Deserialize(ref buffer, context));
+                lastObject = strategy.Deserialize(ref buffer, context);
+                context.AddObjectToContext(lastObject);
             }
-            throw new NotImplementedException();
+            return lastObject;
         }
     }
 }

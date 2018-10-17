@@ -145,7 +145,11 @@ namespace Qwack.Serialization
         public object Deserialize(ref Span<byte> buffer, DeserializationContext context)
         {
             var instance = Activator.CreateInstance(_objectType);
-            throw new NotImplementedException();
+            foreach(var exp in _deserializers)
+            {
+                exp(instance, ref buffer, context);
+            }
+            return instance;
         }
     }
 }

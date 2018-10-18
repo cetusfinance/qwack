@@ -66,8 +66,12 @@ namespace Qwack.Serialization
             else if (field.FieldType == typeof(string)) expression = BuildExpression(GetWriteMethod("WriteString"), fieldExp, objForWork, buffer);
             else if (field.FieldType.IsEnum)
             {
-                expression = null;
-                //throw new NotImplementedException();
+                var enumType = field.FieldType.GetEnumUnderlyingType();
+                var fieldExpConverted = Expression.Convert(fieldExp, enumType);
+                if (enumType == typeof(short)) return BuildExpression(GetWriteMethod("WriteShort"), fieldExpConverted , objForWork, buffer);
+                else if (enumType == typeof(long)) return BuildExpression(GetWriteMethod("WriteLong"), fieldExpConverted, objForWork, buffer);
+                else if (enumType == typeof(int)) return BuildExpression(GetWriteMethod("WriteInt"), fieldExpConverted, objForWork, buffer);
+                throw new NotImplementedException($"Enum type of {enumType.Name} not supported");
             }
             else if (field.FieldType.Namespace.StartsWith("Qwack"))
             {
@@ -159,7 +163,7 @@ namespace Qwack.Serialization
             return compareIf;
         }
 
-        private Expression BuildExpression(MethodInfo writeMethod, MemberExpression field, Expression objectForWork, ParameterExpression buffer)
+        private Expression BuildExpression(MethodInfo writeMethod, Expression field, Expression objectForWork, ParameterExpression buffer)
         {
             var call = Expression.Call(null, writeMethod, buffer, field);
             return call;

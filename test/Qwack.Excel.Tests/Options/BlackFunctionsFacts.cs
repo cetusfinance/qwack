@@ -41,5 +41,16 @@ namespace Qwack.Excel.Tests.Options
             Assert.Equal("Could not parse call or put flag - blah", BlackFunctions.BlackImpliedVol(1.0, 1.0, 1, 1, 1, "blah"));
             Assert.Equal(1e-9, BlackFunctions.BlackImpliedVol(0.1, 1.0, 0.5, 0.0, 0.0, "C"));
         }
+
+        [Fact]
+        public void AbsKFromDelta_Facts()
+        {
+            var vol = 0.32;
+            var fwd = 100.0;
+            var k = 115.0;
+            var t = 1.5;
+            var deltaK = Qwack.Options.BlackFunctions.BlackDelta(fwd, k, 0, t, vol, Core.Basic.OptionType.C);
+            Assert.Equal(k,(double)BlackFunctions.AbsoluteStrikeFromDelta(t,deltaK,fwd,vol,0), 12);
+        }
     }
 }

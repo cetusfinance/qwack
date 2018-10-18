@@ -155,11 +155,13 @@ namespace Qwack.Paths.Processes
             _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
 
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
+            var simDates = new List<DateTime>();
             for (var i = 0; i < _numberOfSteps - 1; i++)
             {
-                _timesteps.AddDate(_startDate.AddDays(i * stepSize));
+                simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }
-            _timesteps.AddDate(_expiryDate);
+
+            _timesteps.AddDates(simDates.Distinct());
 
         }
     }

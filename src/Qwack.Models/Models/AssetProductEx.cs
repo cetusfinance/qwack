@@ -72,12 +72,12 @@ namespace Qwack.Models.Models
             {
                 var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(volDate, curve.Currency, asianOption.PaymentCurrency);
-                var fxVol = model.FundingModel.VolSurfaces[fxId].GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
+                var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
                 var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
                 sigma = System.Math.Sqrt(sigma * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
             }
 
-            var discountCurve = model.FundingModel.Curves[asianOption.DiscountCurve];
+            var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
 
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
@@ -566,9 +566,9 @@ namespace Qwack.Models.Models
             return disccurve.GetDf(model.BuildDate, fwdDate);
         }
 
-        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model)
+        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider)
         {
-            var bumpSize = 0.01;
+            var bumpSize = 0.0001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -577,27 +577,53 @@ namespace Qwack.Models.Models
                 { "Metric", typeof(string) }
             };
             cube.Initialize(dataTypes);
-
+            var mf = model.FundingModel.DeepClone(null);
+            
             var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
-
-            foreach (var currency in model.FundingModel.FxMatrix.SpotRates.Keys)
+            
+            if(homeCcy!=null && homeCcy!=domCcy)//remap onto new base currency
             {
-                var pvCube = portfolio.PV(model, currency);
+                domCcy = homeCcy;
+                var homeToBase = mf.FxMatrix.SpotRates[homeCcy];
+                var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
+                    .Concat(new[] { mf.FxMatrix.BaseCurrency })
+                    .Where(x=>x!=homeCcy);
+                var newRateDict = new Dictionary<Currency, double>();
+                foreach(var ccy in ccys)
+                {
+                    var spotDate = mf.FxMatrix.GetFxPair(homeCcy, ccy).SpotDate(mf.BuildDate);
+                    var newRate = mf.GetFxRate(spotDate, homeCcy, ccy);
+                    newRateDict.Add(ccy, newRate);
+                }
+
+                var newFx = new FxMatrix(currencyProvider);
+                newFx.Init(homeCcy, mf.FxMatrix.BuildDate, newRateDict, mf.FxMatrix.FxPairDefinitions, mf.FxMatrix.DiscountCurveMap);
+                mf.SetupFx(newFx);
+            }
+
+            var m = model.Clone(mf);
+
+            foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
+            {
+                var pvCube = portfolio.PV(m, m.FundingModel.FxMatrix.BaseCurrency);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex("TradeId");
 
-                var fxPair = $"{domCcy}/{currency}";
-                var spot = model.FundingModel.FxMatrix.SpotRates[currency];
-                var bumpedSpot = spot + bumpSize;
-                var newModel = model.Clone();
+                var fxPair = $"{currency}/{domCcy}";
+
+                var newModel = m.Clone();
+                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var bumpedPVCube = portfolio.PV(newModel, currency);
+                var inverseSpotBump = 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+
+                var bumpedPVCube = portfolio.PV(newModel, m.FundingModel.FxMatrix.BaseCurrency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
                     throw new Exception("Dimensions do not match");
+
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
-                    var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize;
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump;
 
                     if (delta != 0.0)
                     {
@@ -610,7 +636,6 @@ namespace Qwack.Models.Models
                         cube.AddRow(row, delta);
                     }
                 }
-
             }
             return cube;
         }
@@ -627,8 +652,6 @@ namespace Qwack.Models.Models
                 { "Metric", typeof(string) }
             };
             cube.Initialize(dataTypes);
-
-
 
             foreach (var curveName in model.CurveNames)
             {
@@ -1070,8 +1093,8 @@ namespace Qwack.Models.Models
             }
 
             //charm-fx
-            baseDeltaCube = FxDelta(portfolio, model);
-            rolledDeltaCube = FxDelta(portfolio, rolledModel);
+            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider);
+            rolledDeltaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider);
             charmCube = rolledDeltaCube.Difference(baseDeltaCube);
             var fId = charmCube.GetColumnIndex("AssetId");
             foreach (var charmRow in charmCube.GetAllRows())
@@ -1169,13 +1192,13 @@ namespace Qwack.Models.Models
             });
 
             //charm-fx
-            baseDeltaCube = FxDelta(portfolio, model);
+            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider);
             cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
                  { "Currency", string.Empty },
             });
-            rolledDeltaCube = FxDelta(portfolio, rolledModel);
+            rolledDeltaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider);
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
+using Qwack.Dates;
 
 namespace Qwack.Models
 {
@@ -46,10 +47,14 @@ namespace Qwack.Models
             return GetFxPair(leftCCy, rightCcy);
         }
 
+        public double GetSpotRate(Currency ccy) => SpotRates.TryGetValue(ccy, out var spotRate) ? spotRate : throw new Exception($"Spot rate for currency {ccy.Ccy} not found");
+
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
-            return pair ?? FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy);
+            return pair ?? 
+                FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy) ?? 
+                new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, SettlementCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
         }
 
         public IFxMatrix Clone()

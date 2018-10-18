@@ -194,6 +194,47 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
+        public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn)
+        {
+            foreach (var fieldToFilterOn in fieldsToFilterOn.Select(x=>x.Key))
+                if (!cube.DataTypes.ContainsKey(fieldToFilterOn))
+                    throw new Exception($"Cannot filter on field {fieldToFilterOn} as it is not present");
+
+            var outCube = new ResultCube();
+            outCube.Initialize(cube.DataTypes);
+
+            var fieldNames = cube.DataTypes.Keys.ToList();
+            var indexes = fieldsToFilterOn
+                .Select(x => x.Key)
+                .Distinct()
+                .ToDictionary(x => x, x => fieldNames.IndexOf(x));
+            var values = new Dictionary<string, List<object>>();
+            foreach(var kv in fieldsToFilterOn)
+            {
+                if (!values.ContainsKey(kv.Key))
+                    values[kv.Key] = new List<object> { kv.Value };
+                else
+                    values[kv.Key].Add(kv.Value);
+            }
+
+            foreach (var row in cube.GetAllRows())
+            {
+                var rowIsRelevant = true;
+                foreach (var kv in values)
+                {
+                    if (!kv.Value.Any(v=>IsEqual(row.MetaData[indexes[kv.Key]], v)))
+                    {
+                        rowIsRelevant = false;
+                        break;
+                    }
+                }
+                if (rowIsRelevant)
+                    outCube.AddRow(row.MetaData, row.Value);
+            }
+
+            return outCube;
+        }
+
         public static ICube Sort(this ICube cube, List<string> fieldsToSortOn)
         {
             foreach (var fieldToSortOn in fieldsToSortOn)

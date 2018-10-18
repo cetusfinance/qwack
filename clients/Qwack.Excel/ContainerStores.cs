@@ -34,6 +34,7 @@ namespace Qwack.Excel
         public static IServiceProvider GlobalContainer { get; internal set; }
         public static IServiceProvider SessionContainer { get;set;}
         public static ICurrencyProvider CurrencyProvider => GlobalContainer.GetRequiredService<ICurrencyProvider>();
+        public static IFutureSettingsProvider FuturesProvider => GlobalContainer.GetRequiredService<IFutureSettingsProvider>();
 
         private static string GetFutureSettingsFile() => Path.Combine(GetRunningDirectory(), _futureSettingsFile);
 

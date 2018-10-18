@@ -33,6 +33,7 @@ namespace Qwack.Core.Models
         bool TryGetFixingDictionary(string name, out IFixingDictionary fixings);
 
         IAssetFxModel Clone();
+        IAssetFxModel Clone(IFundingModel fundingModel);
 
         string[] CurveNames { get; }
         string[] VolSurfaceNames { get; }

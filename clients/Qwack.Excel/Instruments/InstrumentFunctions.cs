@@ -395,19 +395,19 @@ namespace Qwack.Excel.Instruments
                 {
                     var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
                     if (PaymentOffsetOrDate is double)
-                        product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                        product = AssetProductFactory.CreateAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
                     else
                     {
-                        product = AssetProductFactory.CreatAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                        product = AssetProductFactory.CreateAsianOption(dates[0], dates[1], Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                     }
                 }
                 else if (PeriodCodeOrDates is double)
                 {
                     PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
-                    product = AssetProductFactory.CreatAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    product = AssetProductFactory.CreateAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                 }
                 else
-                    product = AssetProductFactory.CreatAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    product = AssetProductFactory.CreateAsianOption(PeriodCodeOrDates as string, Strike, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
 
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
@@ -605,15 +605,17 @@ namespace Qwack.Excel.Instruments
         public static object AssetPortfolioFxDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Home currency, e.g. ZAR")] string HomeCcy)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var ccy = ContainerStores.CurrencyProvider[HomeCcy];
 
-                var result = pfolio.FxDelta(model.Value);
+                var result = pfolio.FxDelta(model.Value, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -768,6 +770,43 @@ namespace Qwack.Excel.Instruments
 
                 pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });
                 return ObjectName + '¬' + pFolioCache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolio))]
+        public static object FilterPortfolio(
+            [ExcelArgument(Description = "Output object name")] string ObjectName,
+            [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Trade Ids")] object[] TradeIds)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
+                var pfIn = pFolioCache.GetObjectOrThrow(PortfolioName, $"Portfolio {PortfolioName} not found");
+                var ids = TradeIds.ObjectRangeToVector<string>();
+                var pf = new Portfolio
+                {
+                    Instruments = new List<IInstrument>
+                    (
+                        pfIn.Value.Instruments.Where(x => ids.Contains(x.TradeId))
+                    )
+                };
+                pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });
+                return ObjectName + '¬' + pFolioCache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Displays a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(DisplayPortfolio))]
+        public static object DisplayPortfolio(
+            [ExcelArgument(Description = "Object name")] string ObjectName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pf = ContainerStores.GetObjectCache<Portfolio>().GetObjectOrThrow(ObjectName, $"Portfolio {ObjectName} not found");
+
+                return pf.Value.Details();
+                
             });
         }
 

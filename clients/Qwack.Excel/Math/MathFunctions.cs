@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ExcelDna.Integration;
 using Qwack.Math;
+using Qwack.Math.Distributions;
 using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,53 @@ namespace Qwack.Excel.Math
             return ExcelHelper.Execute(_logger, () =>
             {
                 return Statistics.FisherTransform(Correlation, ConfidenceLevel, SampleSize, IsBid);
+            });
+        }
+
+        [ExcelFunction(Description = "Performs linear regression on a set of samples", Category = CategoryNames.Math, Name = CategoryNames.Math + "_" + nameof(LinearRegression))]
+        public static object LinearRegression(
+             [ExcelArgument(Description = "X values")] double[] Xs,
+             [ExcelArgument(Description = "Y values")] double[] Ys)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var result = Xs.LinearRegression(Ys, true);
+                var o = new object[,]
+                {
+                    {result.Alpha,"Alpha"},
+                    {result.Beta,"Beta"},
+                    {result.R2,"R2"},
+                    {result.SSE,"SSE"}
+                };
+                return o;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns value from standard (zero-mean, unit std dev) bivariate normal distribution", Category = CategoryNames.Math, Name = CategoryNames.Math + "_" + nameof(BivariateNormalStdPDF))]
+        public static object BivariateNormalStdPDF(
+             [ExcelArgument(Description = "X value")] double X,
+             [ExcelArgument(Description = "Y value")] double Y,
+             [ExcelArgument(Description = "Correlation")] double Correlation)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return BivariateNormal.PDF(X, Y, Correlation);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns value from bivariate normal distribution", Category = CategoryNames.Math, Name = CategoryNames.Math + "_" + nameof(BivariateNormalPDF))]
+        public static object BivariateNormalPDF(
+             [ExcelArgument(Description = "X value")] double X,
+             [ExcelArgument(Description = "X mean")] double Xbar,
+             [ExcelArgument(Description = "X std deviation")] double XStdDev,
+             [ExcelArgument(Description = "Y values")] double Y,
+             [ExcelArgument(Description = "Y mean")] double Ybar,
+             [ExcelArgument(Description = "Y std deviation")] double YStdDev,
+             [ExcelArgument(Description = "Correlation")] double Correlation)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return BivariateNormal.PDF(X, Xbar, XStdDev, Y, Ybar, YStdDev, Correlation);
             });
         }
     }

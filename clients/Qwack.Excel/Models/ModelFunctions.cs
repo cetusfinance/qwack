@@ -88,7 +88,7 @@ namespace Qwack.Excel.Curves
                 if (useLocalVol)
                     mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
                 else
-                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
+                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PV(ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -113,7 +113,7 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
+                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();

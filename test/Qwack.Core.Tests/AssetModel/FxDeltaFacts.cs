@@ -19,8 +19,10 @@ namespace Qwack.Core.Tests.AssetModel
     public class FxDeltaFacts
     {
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
+
         [Fact]
         public void FxDeltaOnUSDTrade()
         {
@@ -91,10 +93,10 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(expectedPV, pfPv, 8);
 
             //expected fx delta is just PV in USD
-            var deltaCube = portfolio.FxDelta(aModel);
-            var dAgg = deltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var deltaCube = portfolio.FxDelta(aModel, zar,CurrencyProvider);
+            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(expectedPV, delta, 8);
+            Assert.Equal(expectedPV, delta, 4);
 
 
         }
@@ -169,10 +171,10 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(expectedPV, pfPv, 8);
 
             //expected fx delta is just asset delta in ZAR
-            var deltaCube = portfolio.FxDelta(aModel);
-            var dAgg = deltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            var deltaCube = portfolio.FxDelta(aModel, zar, CurrencyProvider);
+            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(nominal * assetFwd, delta, 8);
+            Assert.Equal(nominal * assetFwd, delta, 4);
 
             //change intrinsic value, fx delta does not change as intrinsic is in ZAR
             strike = fairStrike - 20;
@@ -188,10 +190,10 @@ namespace Qwack.Core.Tests.AssetModel
             expectedPV = (fairStrike - strike) * nominal;
             Assert.Equal(expectedPV, pv, 8);
 
-            deltaCube = portfolio.FxDelta(aModel);
-            dAgg = deltaCube.Pivot("TradeId", Cubes.AggregationAction.Sum);
+            deltaCube = portfolio.FxDelta(aModel, zar, CurrencyProvider);
+            dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(nominal * assetFwd, delta, 8);
+            Assert.Equal(nominal * assetFwd, delta, 4);
         }
     }
 }

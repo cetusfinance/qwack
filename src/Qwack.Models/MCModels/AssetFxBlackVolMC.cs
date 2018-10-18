@@ -17,6 +17,7 @@ using Qwack.Options.VolSurfaces;
 using System.IO;
 using System.Reflection;
 using Qwack.Paths.Regressors;
+using Qwack.Futures;
 
 namespace Qwack.Models.MCModels
 {
@@ -39,11 +40,13 @@ namespace Qwack.Models.MCModels
 
         private Dictionary<string, AssetPathPayoff> _payoffs;
         private LinearPortfolioValueRegressor _regressor;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
+        private readonly IFutureSettingsProvider _futureSettingsProvider;
 
-        public AssetFxBlackVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider)
+        public AssetFxBlackVolMC(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider)
         {
             _currencyProvider = currencyProvider;
+            _futureSettingsProvider = futureSettingsProvider;
             Engine = new PathEngine(settings.NumberOfPaths);
             Portfolio = portfolio;
             Model = model;
@@ -94,29 +97,58 @@ namespace Qwack.Models.MCModels
                 if (!(model.GetVolSurface(assetId) is IATMVolSurface surface))
                     throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
 
-                var fwdCurve = new Func<double, double>(t => 
-                {
-                    return model
-                    .GetPriceCurve(assetId)
-                    .GetPriceForDate(originDate.AddYearFraction(t, DayCountBasis.ACT365F));
-                });
 
                 var fixingDict = fixingsNeeded.ContainsKey(assetId) ? model.GetFixingDictionary(assetId) : null;
                 var fixings = fixingDict!=null ?
                     fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict[x])
                     : new Dictionary<DateTime, double>();
 
-                var asset = new BlackSingleAsset
-                (
-                    startDate: originDate,
-                    expiryDate: lastDate,
-                    volSurface: surface,
-                    forwardCurve: fwdCurve,
-                    nTimeSteps: settings.NumberOfTimesteps,
-                    name: assetId,
-                    pastFixings: fixings
-                );
-                Engine.AddPathProcess(asset);
+                var futuresSim = settings.ExpensiveFuturesSimulation && 
+                    (model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.NYMEX);
+
+                if (futuresSim)
+                {
+
+                    var fwdCurve = new Func<DateTime, double>(t =>
+                    {
+                        return model.GetPriceCurve(assetId).GetPriceForDate(t);
+                    });
+
+                    var asset = new BlackFuturesCurve
+                    (
+                        startDate: originDate,
+                        expiryDate: lastDate,
+                        volSurface: surface,
+                        forwardCurve: fwdCurve,
+                        nTimeSteps: settings.NumberOfTimesteps,
+                        name: assetId,
+                        pastFixings: fixings,
+                        futureSettingsProvider: _futureSettingsProvider
+                    );
+                    Engine.AddPathProcess(asset);
+                }
+                else
+                {
+
+                    var fwdCurve = new Func<double, double>(t =>
+                    {
+                        return model
+                        .GetPriceCurve(assetId)
+                        .GetPriceForDate(originDate.AddYearFraction(t, DayCountBasis.ACT365F));
+                    });
+
+                    var asset = new BlackSingleAsset
+                    (
+                        startDate: originDate,
+                        expiryDate: lastDate,
+                        volSurface: surface,
+                        forwardCurve: fwdCurve,
+                        nTimeSteps: settings.NumberOfTimesteps,
+                        name: assetId,
+                        pastFixings: fixings
+                    );
+                    Engine.AddPathProcess(asset);
+                }
             }
 
             var fxPairs = portfolio.FxPairs(model);

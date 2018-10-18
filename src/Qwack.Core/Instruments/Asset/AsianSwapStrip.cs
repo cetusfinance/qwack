@@ -10,6 +10,7 @@ namespace Qwack.Core.Instruments.Asset
     public class AsianSwapStrip : IAssetInstrument
     {
         public string TradeId { get; set; }
+        public string Counterparty { get; set; }
 
         public AsianSwap[] Swaplets { get; set; }
 

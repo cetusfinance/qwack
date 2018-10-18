@@ -12,5 +12,6 @@ namespace Qwack.Core.Models
         public RandomGeneratorType Generator { get; set; }
         public DateTime[] PfeExposureDates { get; set; }
         public Currency ReportingCurrency { get; set; }
+        public bool ExpensiveFuturesSimulation { get; set; }
     }
 }

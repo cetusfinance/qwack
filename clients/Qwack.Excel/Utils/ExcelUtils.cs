@@ -151,5 +151,22 @@ namespace Qwack.Excel.Utils
                 return asNumbers.ReturnExcelRangeVector();
             });
         }
+
+        [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils")]
+        public static object QUtils_FileExists(
+            [ExcelArgument(Description = "Filename")] string Filename)
+        {
+            return ExcelHelper.Execute(_logger, () => System.IO.File.Exists(Filename));
+        }
+
+        [ExcelFunction(Description = "Returns timestamp for a given file", Category = "QUtils")]
+        public static object QUtils_FileTimeStamp(
+            [ExcelArgument(Description = "Filename")] string Filename)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+               System.IO.File.Exists(Filename) ?
+                (object)System.IO.File.GetLastWriteTime(Filename) :
+                (object)"File does not exist");
+        }
     }
 }

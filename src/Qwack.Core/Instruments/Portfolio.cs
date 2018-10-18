@@ -12,12 +12,13 @@ namespace Qwack.Core.Instruments
 {
     public class Portfolio : IInstrument
     {
-
         public List<IInstrument> Instruments { get; set; }
 
         public string TradeId => throw new NotImplementedException();
 
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public DateTime LastSensitivityDate => throw new NotImplementedException();
     }
 
     public static class PortfolioEx
@@ -162,6 +163,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = eo.CallPut.CpStr(); 
                         o[i + 1, 10] = eo.Counterparty ?? string.Empty;
                         break;
+                    case FuturesOption fo:
+                        o[i + 1, 1] = "FuturesOption";
+                        o[i + 1, 2] = fo.AssetId;
+                        o[i + 1, 3] = fo.Currency.Ccy;
+                        o[i + 1, 4] = fo.ExpiryDate;
+                        o[i + 1, 5] = fo.ExpiryDate;
+                        o[i + 1, 6] = fo.ExpiryDate;
+                        o[i + 1, 7] = fo.Strike;
+                        o[i + 1, 8] = fo.ContractQuantity * fo.LotSize;
+                        o[i + 1, 9] = fo.CallPut.CpStr();
+                        o[i + 1, 10] = fo.Counterparty ?? string.Empty;
+                        break;
                     case Forward f:
                         o[i + 1, 1] = "Forward";
                         o[i + 1, 2] = f.AssetId;
@@ -198,10 +211,82 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = l.Counterparty ?? string.Empty;
                         break;
+                    case CashBalance c:
+                        o[i + 1, 1] = "Cash";
+                        o[i + 1, 2] = c.Ccy.Ccy;
+                        o[i + 1, 3] = c.Ccy.Ccy;
+                        o[i + 1, 4] = string.Empty;
+                        o[i + 1, 5] = string.Empty;
+                        o[i + 1, 6] = string.Empty;
+                        o[i + 1, 7] = string.Empty;
+                        o[i + 1, 8] = c.Notional;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = c.Counterparty ?? string.Empty;
+                        break;
                 }
             }
 
             return o;
+        }
+
+        public static (Portfolio newTrades, Portfolio removedTrades, Portfolio ammendedTradesStart, Portfolio ammendedTradesEnd) ActivityBooks(this Portfolio start, Portfolio end, DateTime endDate)
+        {
+            var startIds = start.Instruments.Select(x => x.TradeId).ToList();
+            var newTradesIns = end.Instruments.Where(i => !startIds.Contains(i.TradeId));
+            var newTrades = new Portfolio { Instruments = newTradesIns.ToList() };
+
+            var endIds = end.Instruments.Select(x => x.TradeId).ToList();
+            var removedTradesIns = start.Instruments.Where(i => !endIds.Contains(i.TradeId) && i.LastSensitivityDate > endDate);
+            var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
+
+            var commonIds = startIds.Intersect(endIds).ToList();
+
+            var ammendedTradesStart = new Portfolio { Instruments = new List<IInstrument>() };
+            var ammendedTradesEnd = new Portfolio { Instruments = new List<IInstrument>() };
+
+            foreach(var id in commonIds)
+            {
+                var startIns = start.Instruments.Where(x => x.TradeId == id).First();
+                var endIns = end.Instruments.Where(x => x.TradeId == id).First();
+                if (!startIns.Equals(endIns) && !(startIns is CashBalance))
+                {
+                    ammendedTradesStart.Instruments.Add(startIns);
+                    ammendedTradesEnd.Instruments.Add(endIns);
+                }
+            }
+
+            return (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd);
+        }
+
+        public static bool Equals(this IInstrument A, IInstrument B)
+        {
+            switch(A)
+            {
+                case AsianOption asianOption:
+                    return asianOption.Equals((AsianOption)B);
+                case AsianSwap asianSwap:
+                    return asianSwap.Equals((AsianSwap)B);
+                case AsianSwapStrip asianSwapStrip:
+                    return asianSwapStrip.Equals((AsianSwapStrip)B);
+                case AsianBasisSwap asianBasisSwap:
+                    return asianBasisSwap.Equals((AsianBasisSwap)B);
+                case FxForward fxForward:
+                    return fxForward.Equals((FxForward)B);
+                case EuropeanOption europeanOption:
+                    return europeanOption.Equals((EuropeanOption)B);
+                case Forward forward:
+                    return forward.Equals((Forward)B);
+                case FuturesOption option:
+                    return option.Equals((FuturesOption)B);
+                case Future future:
+                    return future.Equals((Future)B);
+                case CashBalance cash:
+                    return cash.Equals((CashBalance)B);
+                case FixedRateLoanDeposit loanDeposit:
+                    return loanDeposit.Equals((FixedRateLoanDeposit)B);
+                default:
+                    return false;
+            }
         }
     }
 }

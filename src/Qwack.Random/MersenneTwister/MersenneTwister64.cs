@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths;
-using Qwack.Serialization;
 
 namespace Qwack.Random.MersenneTwister
 {

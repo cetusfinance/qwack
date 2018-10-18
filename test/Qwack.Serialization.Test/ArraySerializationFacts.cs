@@ -32,6 +32,7 @@ namespace Qwack.Serialization.Test
             Assert.Equal(expected.ShortArray, actual.ShortArray);
             Assert.Equal(expected.UShortArray, actual.UShortArray);
             Assert.Equal(expected.FloatArray, actual.FloatArray);
+            Assert.Equal(expected.StringArray, actual.StringArray);
         }
 
         public static BasicArraysObject Create()
@@ -47,6 +48,7 @@ namespace Qwack.Serialization.Test
                 ShortArray = new short[1024],
                 UShortArray = new ushort[1024],
                 FloatArray = new float[1024],
+                StringArray = new [] {string.Empty, null, "Test1", "Test 2 Test", string.Empty, "Test 3 Test", null},
             };
             _random.NextBytes(obj.ByteArray);
             for(var i = 0; i < obj.UIntArray.Length;i++)
@@ -75,5 +77,6 @@ namespace Qwack.Serialization.Test
         public short[] ShortArray { get; set; }
         public ushort[] UShortArray { get; set; }
         public float[] FloatArray { get; set; }
+        public string[] StringArray { get; set; }
     }
 }

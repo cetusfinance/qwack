@@ -58,6 +58,7 @@ namespace Qwack.Serialization
                 else if (elementType == typeof(ushort)) return ReadSimpleArray("ReadUShort", fieldExp, buffer, elementType);
                 else if (elementType == typeof(short)) return ReadSimpleArray("ReadShort", fieldExp, buffer, elementType);
                 else if (elementType == typeof(float)) return ReadSimpleArray("ReadFloat", fieldExp, buffer, elementType);
+                else if (elementType == typeof(string)) return ReadSimpleArray("ReadString", fieldExp, buffer, elementType);
                 else
                 {
                     throw new Exception(elementType.Name);

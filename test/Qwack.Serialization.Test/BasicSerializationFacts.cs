@@ -29,6 +29,9 @@ namespace Qwack.Serialization.Test
             Assert.Equal(obj.TestBoolTrue, deserObj.TestBoolTrue);
             Assert.Equal(obj.TestLongMin, deserObj.TestLongMin);
             Assert.Equal(obj.TestLongMax, deserObj.TestLongMax);
+            Assert.Equal(obj.TestULongMax, deserObj.TestULongMax);
+            Assert.Equal(obj.TestUShortMin, deserObj.TestUShortMin);
+            Assert.Equal(obj.TestShortMin, deserObj.TestShortMin);
         }
 
         private BasicObject Create() => new BasicObject()
@@ -46,6 +49,9 @@ namespace Qwack.Serialization.Test
             TestDoubleZero = 0.0,
             TestLongMax = long.MaxValue,
             TestLongMin = long.MinValue,
+            TestShortMin = short.MinValue,
+            TestULongMax = ulong.MaxValue,
+            TestUShortMin = ushort.MinValue,
         };
     }
 
@@ -58,6 +64,9 @@ namespace Qwack.Serialization.Test
         public int TestIntMin { get; set; }
         public long TestLongMin { get; set; }
         public long TestLongMax { get; set; }
+        public ulong TestULongMax { get; set; }
+        public short TestShortMin { get; set; }
+        public ushort TestUShortMin { get; set; }
         public double TestDoubleNan { get; set; }
         public double TestDoubleZero { get; set; }
         public double TestDoubleMax { get; set; }

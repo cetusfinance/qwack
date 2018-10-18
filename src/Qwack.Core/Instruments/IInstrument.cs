@@ -8,5 +8,6 @@ namespace Qwack.Core.Instruments
     {
         string TradeId { get; }
         string Counterparty { get; set; }
+        DateTime LastSensitivityDate { get; }
     }
 }

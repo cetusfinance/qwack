@@ -25,6 +25,8 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
 
+        public DateTime LastSensitivityDate => AverageEndDate;
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             var forecastCurve = Model.Curves[ForecastCurve];

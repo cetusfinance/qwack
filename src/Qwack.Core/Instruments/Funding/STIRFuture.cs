@@ -25,6 +25,8 @@ namespace Qwack.Core.Instruments.Funding
         public string SolveCurve { get; set; }
         public DateTime PillarDate { get; set; }
 
+        public DateTime LastSensitivityDate => Expiry;
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);

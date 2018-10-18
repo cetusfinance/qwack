@@ -26,6 +26,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public string Pair => $"{DomesticCCY.Ccy}/{ForeignCCY.Ccy}";
 
+        public DateTime LastSensitivityDate => DeliveryDate;
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             if (Model.BuildDate > DeliveryDate)
@@ -88,14 +90,17 @@ namespace Qwack.Core.Instruments.Funding
             }
         }
 
-        public IAssetInstrument Clone()
-        {
-            throw new NotImplementedException();
-        }
+        public IAssetInstrument Clone() => throw new NotImplementedException();
 
-        public IAssetInstrument SetStrike(double strike)
-        {
-            throw new NotImplementedException();
-        }
+        public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
+
+        public override bool Equals(object obj) => obj is FxForward forward &&
+                   Strike == forward.Strike &&
+                   DomesticQuantity == forward.DomesticQuantity &&
+                   DeliveryDate == forward.DeliveryDate &&
+                   EqualityComparer<Currency>.Default.Equals(DomesticCCY, forward.DomesticCCY) &&
+                   EqualityComparer<Currency>.Default.Equals(ForeignCCY, forward.ForeignCCY) &&
+                   ForeignDiscountCurve == forward.ForeignDiscountCurve &&
+                   TradeId == forward.TradeId;
     }
 }

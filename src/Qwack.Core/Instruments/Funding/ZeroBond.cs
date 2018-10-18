@@ -31,10 +31,9 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
-        public double Pv(IFundingModel model, bool updateState)
-        {
-            return Notional * (model.Curves[DiscountCurve].GetDf(model.BuildDate, MaturityDate) - Price);
-        }
+        public DateTime LastSensitivityDate => MaturityDate;
+
+        public double Pv(IFundingModel model, bool updateState) => Notional * (model.Curves[DiscountCurve].GetDf(model.BuildDate, MaturityDate) - Price);
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
@@ -51,7 +50,6 @@ namespace Qwack.Core.Instruments.Funding
             {
                 {DiscountCurve,discountDict },
             };
-
         }
     }
 }

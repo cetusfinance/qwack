@@ -66,6 +66,8 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
+        public DateTime LastSensitivityDate => EndDate;
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var discountCurve = model.Curves[DiscountCurve];
@@ -94,5 +96,15 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
+
+        public override bool Equals(object obj) => obj is FixedRateLoanDeposit deposit &&
+                   Notional == deposit.Notional &&
+                   InterestRate == deposit.InterestRate &&
+                   StartDate == deposit.StartDate &&
+                   EndDate == deposit.EndDate &&
+                   EqualityComparer<Currency>.Default.Equals(Ccy, deposit.Ccy) &&
+                   Basis == deposit.Basis &&
+                   DiscountCurve == deposit.DiscountCurve &&
+                   TradeId == deposit.TradeId;
     }
 }

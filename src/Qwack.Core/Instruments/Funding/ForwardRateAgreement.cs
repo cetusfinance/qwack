@@ -55,6 +55,8 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
+        public DateTime LastSensitivityDate => FlowScheduleFra.Flows.Last().SettleDate;
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var updateDF = updateState || model.CurrentSolveCurve == DiscountCurve;

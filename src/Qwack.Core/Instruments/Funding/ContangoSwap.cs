@@ -28,6 +28,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public DayCountBasis Basis { get; set; } = DayCountBasis.ACT360;
 
+        public DateTime LastSensitivityDate => DeliveryDate;
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var discountCurve = model.Curves[CashDiscountCurve];

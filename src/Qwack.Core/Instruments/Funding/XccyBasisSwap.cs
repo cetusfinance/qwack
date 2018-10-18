@@ -92,6 +92,8 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
 
+        public DateTime LastSensitivityDate => EndDate;
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var updateDfPay = updateState || model.CurrentSolveCurve == DiscountCurvePay;

@@ -42,6 +42,9 @@ namespace Qwack.Serialization
             if (field.FieldType == typeof(int)) return BuildReadExpression("ReadInt", fieldExp, buffer);
             else if (field.FieldType == typeof(uint)) return BuildReadExpression("ReadUInt", fieldExp, buffer);
             else if (field.FieldType == typeof(long)) return BuildReadExpression("ReadLong", fieldExp, buffer);
+            else if (field.FieldType == typeof(ulong)) return BuildReadExpression("ReadULong", fieldExp, buffer);
+            else if (field.FieldType == typeof(ushort)) return BuildReadExpression("ReadUShort", fieldExp, buffer);
+            else if (field.FieldType == typeof(short)) return BuildReadExpression("ReadShort", fieldExp, buffer);
             else if (field.FieldType == typeof(bool)) return BuildReadExpression("ReadBool", fieldExp, buffer);
             else if (field.FieldType == typeof(DateTime)) return BuildReadExpression("ReadDateTime", fieldExp, buffer);
             else if (field.FieldType == typeof(string)) return BuildReadExpression("ReadString", fieldExp, buffer);

@@ -12,11 +12,11 @@ namespace Qwack.Models
 {
     public class AssetFxModel : IAssetFxModel
     {
-        private readonly Dictionary<string, IVolSurface> _assetVols;
-        private readonly Dictionary<string, IPriceCurve> _assetCurves;
-        private readonly Dictionary<string, IFixingDictionary> _fixings;
-        private readonly DateTime _buildDate;
-        private readonly IFundingModel _fundingModel;
+        private Dictionary<string, IVolSurface> _assetVols;
+        private Dictionary<string, IPriceCurve> _assetCurves;
+        private Dictionary<string, IFixingDictionary> _fixings;
+        private DateTime _buildDate;
+        private IFundingModel _fundingModel;
 
         public IFundingModel FundingModel => _fundingModel;
         public DateTime BuildDate => _buildDate;

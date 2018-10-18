@@ -5,15 +5,17 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Serialization;
 
 namespace Qwack.Providers.Json
 {
     public class CurrenciesFromJson : ICurrencyProvider
     {
+        [SkipSerialization]
         private readonly JsonSerializerSettings _jsonSettings;
-        private readonly ICalendarProvider _calendarProvider;
+        private ICalendarProvider _calendarProvider;
         private List<Currency> _allCurrencies;
-        private readonly Dictionary<string, Currency> _currenciesByName;
+        private Dictionary<string, Currency> _currenciesByName;
 
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName)
         {

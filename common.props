@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <Import Project="version.props" />
   <PropertyGroup>
     <Copyright>Cetus Finance</Copyright>
@@ -12,5 +12,6 @@
     <PackageIconUrl>https://qwack.io/assets/img/logo.png</PackageIconUrl>
     <DebugType>full</DebugType>
     <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+  <LangVersion>latest</LangVersion>
   </PropertyGroup>
 </Project>

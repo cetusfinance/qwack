@@ -290,7 +290,8 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
             [ExcelArgument(Description = "Fixings array, 1st column dates / 2nd column fixings")] object[,] Fixings,
-            [ExcelArgument(Description = "Type, Asset or FX - default Asset")] object FixingType)
+            [ExcelArgument(Description = "Type, Asset or FX - default Asset")] object FixingType,
+            [ExcelArgument(Description = "Fx pair (optional)")] string FxPair)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -303,7 +304,8 @@ namespace Qwack.Excel.Curves
                 {
                     Name = AssetId,
                     AssetId = AssetId,
-                    FixingDictionaryType = fixType
+                    FixingDictionaryType = fixType,
+                    FxPair = FxPair
                 };
 
                 var dictData = Fixings.RangeToDictionary<DateTime, double>();

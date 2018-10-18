@@ -20,6 +20,7 @@ namespace Qwack.Paths.Processes
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
         private readonly List<string> _codes;
+        private List<int> _frontMonthFactors;
         private readonly List<DateTime> _futuresExpiries;
         private int[] _factorIndices;
         private int _mainFactorIndex;
@@ -83,6 +84,13 @@ namespace Qwack.Paths.Processes
                     _vols[t][c] = _surface.GetVolForDeltaStrike(0.5, _futuresExpiries[c], 1.0);
                 }
             }
+
+            //work out which futures are front-month
+            var fCode = new FutureCode(_name, _futureSettingsProvider);
+            var codesForDate = _timesteps.Dates.Select(d => fCode.GetFrontMonth(d));
+            var mappingFeature = collection.GetFeature<IPathMappingFeature>();
+            _frontMonthFactors = codesForDate.Select(c => mappingFeature.GetDimension(c)).ToList();
+
             _isComplete = true;
         }
 
@@ -114,16 +122,10 @@ namespace Qwack.Paths.Processes
                     }
                 }
 
-                var t = 0;
-                for (var f = 0; f < _factorIndices.Length; f++)
+                for (var step = 0; step < block.NumberOfSteps; step++)
                 {
-                    if (_futuresExpiries[f] <= _timesteps.Dates[t])
-                        continue;
-                    var steps = block.GetStepsForFactor(path, _factorIndices[f]);
-                    stepsMain[t] = steps[t];
-                    t++;
-                    if (t >= stepsMain.Length)
-                        break;
+                    var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
+                    stepsMain[step] = frontMonth[step];
                 }
             }
         }
@@ -139,17 +141,16 @@ namespace Qwack.Paths.Processes
             _mainFactorIndex = mappingFeature.AddDimension(_name);
 
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
 
+            var simDates = new List<DateTime>(_pastFixings.Keys.Where(x => x < _startDate));
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
-            var simDates = new List<DateTime>();
+            
             for (var i = 0; i < _numberOfSteps - 1; i++)
             {
                 simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }
-
-            _timesteps.AddDates(simDates.Distinct());
-
+            simDates = simDates.Distinct().ToList();
+            _timesteps.AddDates(simDates);
         }
     }
 }

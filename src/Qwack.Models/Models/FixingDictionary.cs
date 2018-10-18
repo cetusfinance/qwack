@@ -11,11 +11,12 @@ namespace Qwack.Models.Models
     {
         public string Name { get; set; }
         public string AssetId { get; set; }
+        public string FxPair { get; set; }
         public FixingDictionaryType FixingDictionaryType { get; set; }
 
         public IFixingDictionary Clone()
         {
-            var o = new FixingDictionary() { AssetId = AssetId, Name = Name, FixingDictionaryType = FixingDictionaryType };
+            var o = new FixingDictionary() { AssetId = AssetId, Name = Name, FixingDictionaryType = FixingDictionaryType, FxPair = FxPair };
             foreach (var kv in this)
             {
                 o.Add(kv.Key, kv.Value);

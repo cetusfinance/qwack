@@ -7,6 +7,7 @@ namespace Qwack.Core.Models
         string[] LabelsY { get; set; }
 
         double GetCorrelation(string label1, string label2);
+        bool TryGetCorrelation(string label1, string label2, out double correl);
 
         ICorrelationMatrix Clone();
         ICorrelationMatrix Bump(double epsilon);

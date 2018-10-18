@@ -70,6 +70,9 @@ namespace Qwack.Models.MCModels
                     break;
             }
 
+            if (model.CorrelationMatrix != null)
+                Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
+
             var lastDate = portfolio.LastSensitivityDate();
             var assetIds = portfolio.AssetIds();
             var assetInstruments = portfolio.Instruments

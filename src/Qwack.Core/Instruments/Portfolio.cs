@@ -162,6 +162,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = eo.CallPut.CpStr(); 
                         o[i + 1, 10] = eo.Counterparty ?? string.Empty;
                         break;
+                    case FuturesOption fo:
+                        o[i + 1, 1] = "ListedOption";
+                        o[i + 1, 2] = fo.AssetId;
+                        o[i + 1, 3] = fo.Currency.Ccy;
+                        o[i + 1, 4] = fo.ExpiryDate;
+                        o[i + 1, 5] = fo.ExpiryDate;
+                        o[i + 1, 6] = fo.ExpiryDate;
+                        o[i + 1, 7] = fo.Strike;
+                        o[i + 1, 8] = fo.ContractQuantity * fo.LotSize;
+                        o[i + 1, 9] = fo.CallPut.CpStr();
+                        o[i + 1, 10] = fo.Counterparty ?? string.Empty;
+                        break;
                     case Forward f:
                         o[i + 1, 1] = "Forward";
                         o[i + 1, 2] = f.AssetId;

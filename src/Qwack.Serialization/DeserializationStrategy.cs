@@ -41,10 +41,19 @@ namespace Qwack.Serialization
 
             if (field.FieldType == typeof(int)) return BuildReadExpression("ReadInt", fieldExp, buffer);
             else if (field.FieldType == typeof(uint)) return BuildReadExpression("ReadUInt", fieldExp, buffer);
+            else if (field.FieldType == typeof(long)) return BuildReadExpression("ReadLong", fieldExp, buffer);
             else if (field.FieldType == typeof(bool)) return BuildReadExpression("ReadBool", fieldExp, buffer);
             else if (field.FieldType == typeof(DateTime)) return BuildReadExpression("ReadDateTime", fieldExp, buffer);
             else if (field.FieldType == typeof(string)) return BuildReadExpression("ReadString", fieldExp, buffer);
             else if (field.FieldType == typeof(double)) return BuildReadExpression("ReadDouble", fieldExp, buffer);
+            else if (field.FieldType.IsEnum)
+            {
+                var enumType = field.FieldType.GetEnumUnderlyingType();
+                if (enumType == typeof(int)) return BuildReadExpression("ReadInt", fieldExp, buffer, field.FieldType);
+                if (enumType == typeof(short)) return BuildReadExpression("ReadShort", fieldExp, buffer, field.FieldType);
+                if (enumType == typeof(long)) return BuildReadExpression("ReadLong", fieldExp, buffer, field.FieldType);
+                throw new NotImplementedException();
+            }
             else if (field.FieldType.IsArray)
             {
                 var elementType = field.FieldType.GetElementType();
@@ -141,12 +150,18 @@ namespace Qwack.Serialization
             return returnBlock;
         }
 
-        private Expression BuildReadExpression(string methodName, Expression field, ParameterExpression buffer)
+        private Expression BuildReadExpression(string methodName, Expression field, ParameterExpression buffer, Type convertType = null)
         {
             var method = GetReadMethod(methodName);
             var readValue = Expression.Call(null, method, buffer);
-            var assignObject = Expression.Assign(field, readValue);
-            return assignObject;
+            if (convertType == null)
+            {
+                return Expression.Assign(field, readValue);
+            }
+            else
+            {
+                return Expression.Assign(field, Expression.Convert(readValue, convertType));
+            }
         }
 
         public object Deserialize(ref Span<byte> buffer, DeserializationContext context)

@@ -57,7 +57,7 @@ namespace Qwack.Math
 
             var vSumX = new Vector<double>(0);
             var vSumY = new Vector<double>(0);
-            for (var i = 0; i < X.Length-simdLength; i += simdLength)
+            for (var i = 0; i < X.Length - simdLength + 1; i += simdLength)
             {
                 var vaX = new Vector<double>(X, i);
                 vSumX = Vector.Add(vaX, vSumX);
@@ -87,7 +87,7 @@ namespace Qwack.Math
             vSumY = new Vector<double>(0);
             var vSumC = new Vector<double>(0);
 
-            for (var i = 0; i < X.Length - simdLength; i += simdLength)
+            for (var i = 0; i < X.Length - simdLength + 1; i += simdLength)
             {
                 var vaX = new Vector<double>(X, i);
                 var vaMX = Vector.Subtract(vaX, vMeanX);

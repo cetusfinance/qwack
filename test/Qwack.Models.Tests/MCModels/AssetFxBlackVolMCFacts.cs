@@ -45,7 +45,7 @@ namespace Qwack.Models.Tests.MCModels
             var settings = new McSettings
             {
                 Generator = Core.Basic.RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = 8192,
+                NumberOfPaths = 16384,
                 NumberOfTimesteps = 10,
                 ReportingCurrency = usd,
                 PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
@@ -65,7 +65,7 @@ namespace Qwack.Models.Tests.MCModels
             Assert.Equal(1.0, pvCube.GetAllRows().First().Value, 0);
         }
 
-        [Fact(Skip = "Not yet working")]
+        [Fact]
         public void CanRunPV2()
         {
             var sut = GetSut(true);

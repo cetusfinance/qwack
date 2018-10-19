@@ -36,7 +36,7 @@ namespace Qwack.Excel.Math
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var result = Xs.LinearRegression(Ys, true);
+                var result = Xs.LinearRegressionNoVector(Ys, true);
                 var o = new object[,]
                 {
                     {result.Alpha,"Alpha"},

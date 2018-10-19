@@ -120,8 +120,6 @@ namespace Qwack.Math
 
             return mu + sigma * val;
         }
-        public static double BivariateNormalDistribution(double x, double y, double rho) => Exp(-1 / (2 * (1 - rho * rho)) * (x * x + y * y - 2 * x * y * rho)) /
-                (2 * PI * Sqrt(1 - rho * rho));
 
         /// <summary>
         /// Returns sample variance of an array of values
@@ -468,13 +466,13 @@ namespace Qwack.Math
             var n = X.Count();
             if (n % 2 == 0)
             {
-                var IXlo = n / 2;
+                var IXlo = n / 2 - 1;
                 var IXhi = IXlo + 1;
                 return 0.5 * (X.OrderBy(x => x).ElementAt(IXlo) + X.OrderBy(x => x).ElementAt(IXhi));
             }
             else
             {
-                var IX = (n + 1) / 2;
+                var IX = (n + 1) / 2 - 1;
                 return X.OrderBy(x => x).ElementAt(IX);
             }
         }
@@ -582,40 +580,6 @@ namespace Qwack.Math
             }
 
             return output;
-        }
-
-        public static (double Alpha, double Beta, double R2, double SSE) LinearRegression(this double[] X, double[] Y, bool computeError = true)
-        {
-
-            if (X.Length != Y.Length) throw new NotImplementedException("X and Y not of same length");
-            var beta = Covariance(X, Y) / Variance(X);
-
-            var Ybar = Y.Average();
-            var Xbar = X.Average();
-            var alpha = Ybar - beta * Xbar;
-
-            double sX = 0, sY = 0;
-            for (var i = 0; i < Y.Length; i++)
-            {
-                sY += Pow(Y[i] - Ybar, 2.0);
-                sX += Pow(X[i] - Xbar, 2.0);
-            }
-            var R2 = beta * Sqrt(sX / sY);
-
-            if (computeError)
-            {
-                double SSE = 0;
-                for (var i = 0; i < Y.Length; i++)
-                {
-                    var e2 = Y[i] - (alpha + beta * X[i]);
-                    e2 *= e2;
-                    SSE += e2;
-                }
-
-                return (alpha, beta, R2, SSE);
-            }
-
-            return (alpha, beta, R2, 0);
         }
 
         public static double FisherTransform(double correl, double conf, double sampleSize, bool isBid)

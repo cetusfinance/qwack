@@ -55,5 +55,16 @@ namespace Qwack.Core.Instruments.Asset
         public DateTime LastSensitivityDate => ExpiryDate;
 
         public string[] IrCurves => new string[0];
+
+        public override bool Equals(object obj) => obj is Future future &&
+                   TradeId == future.TradeId &&
+                   ContractQuantity == future.ContractQuantity &&
+                   LotSize == future.LotSize &&
+                   PriceMultiplier == future.PriceMultiplier &&
+                   Direction == future.Direction &&
+                   ExpiryDate == future.ExpiryDate &&
+                   Strike == future.Strike &&
+                   AssetId == future.AssetId &&
+                   EqualityComparer<Currency>.Default.Equals(Currency, future.Currency);
     }
 }

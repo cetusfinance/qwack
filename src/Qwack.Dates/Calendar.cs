@@ -62,5 +62,7 @@ namespace Qwack.Dates
             };
             return newCalender;
         }
+
+        public override bool Equals(object obj) => obj is Calendar calendar && Name == calendar.Name;
     }
 }

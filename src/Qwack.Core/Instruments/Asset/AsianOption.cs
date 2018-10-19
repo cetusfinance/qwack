@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -25,5 +26,29 @@ namespace Qwack.Core.Instruments.Asset
             o.CallPut = CallPut;
             return o;
         }
+
+        public override bool Equals(object obj) => obj is AsianOption option &&
+                   CallPut == option.CallPut &&
+                   AverageStartDate == option.AverageStartDate &&
+                   AverageEndDate == option.AverageEndDate &&
+                   AssetId == option.AssetId &&
+                   AssetFixingId == option.AssetFixingId &&
+                   Currency == option.Currency &&
+                   Direction == option.Direction &&
+                   DiscountCurve == option.DiscountCurve &&
+                   FixingCalendar == option.FixingCalendar &&
+                   Enumerable.SequenceEqual(FixingDates, option.FixingDates) &&
+                   FxConversionType == option.FxConversionType &&
+                   FxFixingId == option.FxFixingId &&
+                   Notional == option.Notional &&
+                   PaymentCalendar == option.PaymentCalendar &&
+                   PaymentCurrency == option.PaymentCurrency &&
+                   PaymentDate == option.PaymentDate &&
+                   PaymentLag == option.PaymentLag &&
+                   PaymentLagRollType == option.PaymentLagRollType &&
+                   SpotLag == option.SpotLag &&
+                   SpotLagRollType == option.SpotLagRollType &&
+                   Strike == option.Strike &&
+                   TradeId == option.TradeId;
     }
 }

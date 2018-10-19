@@ -196,6 +196,55 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a commodity futures option position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureOption))]
+        public static object CreateFutureOption(
+          [ExcelArgument(Description = "Object name")] string ObjectName,
+          [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+          [ExcelArgument(Description = "Asset Id")] string AssetId,
+          [ExcelArgument(Description = "Currency")] string Currency,
+          [ExcelArgument(Description = "Strike")] double Strike,
+          [ExcelArgument(Description = "Quantity of contracts")] double Quantity,
+          [ExcelArgument(Description = "Contract lot size")] double LotSize,
+          [ExcelArgument(Description = "Call or Put flag")] string CallPut,
+          [ExcelArgument(Description = "Exercise style - default European")] object ExerciseStyle,
+          [ExcelArgument(Description = "Margining type, FuturesStyle or Regular - default FuturesStyle")] object MarginType)
+
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+                var exStyle = ExerciseStyle.OptionalExcel("European");
+                var mStyle = MarginType.OptionalExcel("FuturesStyle");
+
+                if (!Enum.TryParse(CallPut, true, out OptionType cp))
+                    throw new Exception($"Could not parse call/put flag {cp}");
+                if (!Enum.TryParse(exStyle, true, out OptionExerciseType exType))
+                    throw new Exception($"Could not parse option style flag {exStyle}");
+                if (!Enum.TryParse(mStyle, true, out OptionMarginingType mType))
+                    throw new Exception($"Could not parse margining type flag {mType}");
+
+                var product = new FuturesOption
+                {
+                    AssetId = AssetId,
+                    ContractQuantity = Quantity,
+                    LotSize = LotSize,
+                    PriceMultiplier = 1.0,
+                    Currency = currency,
+                    Strike = Strike,
+                    Direction = TradeDirection.Long,
+                    ExpiryDate = ExpiryDate,
+                    TradeId = ObjectName,
+                    CallPut = cp,
+                    ExerciseType = exType,
+                    MarginingType = mType
+                };
+
+                var cache = ContainerStores.GetObjectCache<FuturesOption>();
+                cache.PutObject(ObjectName, new SessionItem<FuturesOption> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap))]
         public static object CreateMonthlyAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -758,6 +807,35 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Performs PnL attribution/explain between two AssetFx models, computing activity PnL", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttributionExplainWithActivity))]
+        public static object AssetPnLAttributionExplainWithActivity(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Starting portolio object name")] string PortfolioStartName,
+            [ExcelArgument(Description = "Ending portolio object name")] string PortfolioEndName,
+            [ExcelArgument(Description = "Starting Asset-FX model name")] string ModelNameStart,
+            [ExcelArgument(Description = "Ending Asset-FX model name")] string ModelNameEnd,
+            [ExcelArgument(Description = "Starting greeks cube")] string GreeksStart,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolioStart = GetPortfolioOrTradeFromCache(PortfolioStartName);
+                var pfolioEnd = GetPortfolioOrTradeFromCache(PortfolioEndName);
+                var modelStart = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelNameStart, $"Could not find model with name {ModelNameStart}");
+                var modelEnd = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
+                var greeksStart = ContainerStores.GetObjectCache<ICube>()
+                .GetObjectOrThrow(GreeksStart, $"Could not find greeks cube with name {GreeksStart}");
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+
+                var result = pfolioStart.ExplainAttribution(pfolioEnd, modelStart.Value, modelEnd.Value, ccy, greeksStart.Value, ContainerStores.CurrencyProvider);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio))]
         public static object CreatePortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -841,6 +919,7 @@ namespace Qwack.Excel.Instruments
             var forwards = Instruments.GetAnyFromCache<Forward>();
             var assetFutures = Instruments.GetAnyFromCache<Future>();
             var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
+            var futuresOptions = Instruments.GetAnyFromCache<FuturesOption>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -871,6 +950,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(forwards);
             pf.Instruments.AddRange(assetFutures);
             pf.Instruments.AddRange(europeanOptions);
+            pf.Instruments.AddRange(futuresOptions);
 
             return pf;
         }

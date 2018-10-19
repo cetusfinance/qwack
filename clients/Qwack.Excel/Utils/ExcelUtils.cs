@@ -9,7 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-
+using System.Reflection;
+using Qwack.Serialization;
 
 namespace Qwack.Excel.Utils
 {
@@ -167,6 +168,48 @@ namespace Qwack.Excel.Utils
                System.IO.File.Exists(Filename) ?
                 (object)System.IO.File.GetLastWriteTime(Filename) :
                 (object)"File does not exist");
+        }
+
+        [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils")]
+        public static object QUtils_SerializeObject(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Object type, e.g. Qwack.Core.Models.IAssetFxModel, Qwack.Core")] string ObjectType,
+            [ExcelArgument(Description = "Filename")] string FileName)
+        {
+            return ExcelHelper.Execute(_logger, () => 
+            {
+                var t = Type.GetType(ObjectType);
+                var method = typeof(ContainerStores).GetMethod("GetObjectFromCache");
+                var generic = method.MakeGenericMethod(t);
+                var obj = generic.Invoke(null, new object[] { ObjectName });
+
+                var s = new BinarySerializer();
+                s.PrepareObjectGraph(obj);
+                var bytes = s.SerializeObjectGraph(null);
+                System.IO.File.WriteAllBytes(FileName, bytes.ToArray());
+                return $"Saved to {FileName}";
+            });
+        }
+
+        [ExcelFunction(Description = "De-Serializes an object to file", Category = "QUtils")]
+        public static object QUtils_DeSerializeObject(
+            [ExcelArgument(Description = "Output object name")] string ObjectName,
+            [ExcelArgument(Description = "Object type, e.g. Qwack.Core.Models.IAssetFxModel, Qwack.Core")] string ObjectType,
+            [ExcelArgument(Description = "Filename")] string FileName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var t = Type.GetType(ObjectType);
+                var s = new BinaryDeserializer();
+                var bytes = System.IO.File.ReadAllBytes(FileName);
+                var obj = s.DeserializeObjectGraph(bytes);
+
+                var method = typeof(ContainerStores).GetMethod("PutObjectToCache");
+                var generic = method.MakeGenericMethod(t);
+                generic.Invoke(null, new object[] { ObjectName, obj });
+
+                return $"{ObjectName}¬1";
+            });
         }
     }
 }

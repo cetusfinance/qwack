@@ -59,16 +59,16 @@ namespace Qwack.Excel.Tests.Curves
         [Fact]
         public void CreateFixingDictionary_Facts()
         {
-            Assert.Equal("Unknown fixing dictionary type creugh", PriceCurveFunctions.CreateFixingDictionary("bleugh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "creugh"));
-            Assert.Equal("bleugh¬0", PriceCurveFunctions.CreateFixingDictionary("bleugh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "FX"));
+            Assert.Equal("Unknown fixing dictionary type creugh", PriceCurveFunctions.CreateFixingDictionary("bleugh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "creugh", null));
+            Assert.Equal("bleugh¬0", PriceCurveFunctions.CreateFixingDictionary("bleugh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "FX", "USD/ZAR"));
         }
 
         [Fact]
         public void CreateFixingDictionaryFromVectors_Facts()
         {
-            Assert.Equal("Unknown fixing dictionary type creugh", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0 }, "creugh"));
-            Assert.Equal("Fixings and FixingDates must be of same length", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0, 1001.0 }, ExcelDna.Integration.ExcelMissing.Value));
-            Assert.Equal("bleugh2¬0", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0 }, "Asset"));
+            Assert.Equal("Unknown fixing dictionary type creugh", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0 }, "creugh", null));
+            Assert.Equal("Fixings and FixingDates must be of same length", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0, 1001.0 }, ExcelDna.Integration.ExcelMissing.Value, null));
+            Assert.Equal("bleugh2¬0", PriceCurveFunctions.CreateFixingDictionaryFromVectors("bleugh2", "bleugh", new double[] { DateTime.Today.ToOADate() }, new double[] { 1000.0 }, "Asset", null));
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace Qwack.Excel.Tests.Curves
         {
             Assert.Equal("Fixing dictionary not found with name creughh", PriceCurveFunctions.DisplayFixingDictionary("creughh", "bleugh", true));
 
-            PriceCurveFunctions.CreateFixingDictionary("creughh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "FX");
+            PriceCurveFunctions.CreateFixingDictionary("creughh", "bleugh", new object[,] { { DateTime.Today, 1000.0 } }, "FX", null);
 
             Assert.Equal($"Fixing not found for date {DateTime.Today.AddDays(1).ToOADate()}", PriceCurveFunctions.DisplayFixingDictionary("creughh", DateTime.Today.AddDays(1).ToOADate(), true));
             Assert.Equal(1000.0, PriceCurveFunctions.DisplayFixingDictionary("creughh", DateTime.Today.ToOADate(), true));

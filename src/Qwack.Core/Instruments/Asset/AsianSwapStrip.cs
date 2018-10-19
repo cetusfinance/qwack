@@ -38,5 +38,9 @@ namespace Qwack.Core.Instruments.Asset
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) =>
             Swaplets.SelectMany(x => x.PastFixingDates(valDate))
             .ToDictionary(x => x.Key, x => x.Value);
+
+        public override bool Equals(object obj) => obj is AsianSwapStrip swapStrip &&
+            TradeId == swapStrip.TradeId &&
+            Enumerable.SequenceEqual(Swaplets, swapStrip.Swaplets);
     }
 }

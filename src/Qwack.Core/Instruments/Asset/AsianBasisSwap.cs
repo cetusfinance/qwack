@@ -46,5 +46,10 @@ namespace Qwack.Core.Instruments.Asset
             .Concat(RecSwaplets.SelectMany(x => x.PastFixingDates(valDate)))
             .Distinct()
             .ToDictionary(x => x.Key, x => x.Value);
+
+        public override bool Equals(object obj) => obj is AsianBasisSwap basisSwap &&
+            TradeId == basisSwap.TradeId &&
+            Enumerable.SequenceEqual(PaySwaplets, basisSwap.PaySwaplets) &&
+            Enumerable.SequenceEqual(RecSwaplets, basisSwap.RecSwaplets);
     }
 }

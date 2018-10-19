@@ -42,6 +42,26 @@ namespace Qwack.Models.Models
             throw new Exception($"Correlation not found for {label1}/{label2}");
         }
 
+        public bool TryGetCorrelation(string label1, string label2, out double correl)
+        {
+            if (LabelsX.Contains(label1) && LabelsY.Contains(label2))
+            {
+                var ix1 = Array.IndexOf(LabelsX, label1);
+                var ix2 = Array.IndexOf(LabelsY, label2);
+                correl = Correlations[ix1, ix2];
+                return true;
+            }
+            else if (LabelsY.Contains(label1) && LabelsX.Contains(label2))
+            {
+                var ix1 = Array.IndexOf(LabelsX, label2);
+                var ix2 = Array.IndexOf(LabelsY, label1);
+                correl = Correlations[ix1, ix2];
+                return true;
+            }
+            correl = double.NaN;
+            return false;
+        }
+
         public ICorrelationMatrix Clone() => new CorrelationMatrix((string[])LabelsX.Clone(), (string[])LabelsY.Clone(), (double[,])Correlations.Clone());
 
         public ICorrelationMatrix Bump(double epsilon)

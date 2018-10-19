@@ -50,5 +50,7 @@ namespace Qwack.Excel
         private static string GetCurrenciesFilename() => Path.Combine(GetRunningDirectory(), _currenciesFile);
 
         public static IObjectStore<T> GetObjectCache<T>() => SessionContainer.GetService<IObjectStore<T>>();
+        public static T GetObjectFromCache<T>(string name) => SessionContainer.GetService<IObjectStore<T>>().GetObject(name).Value;
+        public static void PutObjectToCache<T>(string name, T obj) => SessionContainer.GetService<IObjectStore<T>>().PutObject(name, new SessionItem<T> { Name = name, Value = obj, Version = 1 });
     }
 }

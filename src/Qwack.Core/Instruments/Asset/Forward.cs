@@ -91,5 +91,23 @@ namespace Qwack.Core.Instruments.Asset
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= ExpiryDate ?
             new Dictionary<string, List<DateTime>>() :
             new Dictionary<string, List<DateTime>> { { AssetId, new List<DateTime> { ExpiryDate } } };
+
+        public override bool Equals(object obj) => obj is Forward forward &&
+                   TradeId == forward.TradeId &&
+                   Notional == forward.Notional &&
+                   Direction == forward.Direction &&
+                   ExpiryDate == forward.ExpiryDate &&
+                   EqualityComparer<Calendar>.Default.Equals(FixingCalendar, forward.FixingCalendar) &&
+                   EqualityComparer<Calendar>.Default.Equals(PaymentCalendar, forward.PaymentCalendar) &&
+                   EqualityComparer<Frequency>.Default.Equals(SpotLag, forward.SpotLag) &&
+                   EqualityComparer<Frequency>.Default.Equals(PaymentLag, forward.PaymentLag) &&
+                   PaymentDate == forward.PaymentDate &&
+                   Strike == forward.Strike &&
+                   AssetId == forward.AssetId &&
+                   EqualityComparer<Currency>.Default.Equals(PaymentCurrency, forward.PaymentCurrency) &&
+                   FxFixingId == forward.FxFixingId &&
+                   DiscountCurve == forward.DiscountCurve &&
+                   FxConversionType == forward.FxConversionType &&
+                   EqualityComparer<Currency>.Default.Equals(Currency, forward.Currency);
     }
 }

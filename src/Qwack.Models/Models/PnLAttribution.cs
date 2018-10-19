@@ -443,7 +443,7 @@ namespace Qwack.Models.Models
                 {
                     if (r.Value == 0.0) continue;
                     var point = (string)r.MetaData[r_plIx];
-                    
+
                     var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
                     var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
                     var explained = r.Value * (endRate - startRate) * fxRate;
@@ -613,6 +613,59 @@ namespace Qwack.Models.Models
                 cube.AddRow(row, r.Value);
             }
             lastPVCuve = newPVCube;
+
+            return cube;
+        }
+
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider)
+        {
+            //first do normal attribution
+            var cube = startPortfolio.ExplainAttribution(startModel, endModel, reportingCcy, startingGreeks, currencyProvider);
+
+            //then do activity PnL
+            var (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd) = startPortfolio.ActivityBooks(endPortfolio, endModel.BuildDate);
+
+            var newTradesPnL = newTrades.PV(endModel, reportingCcy);
+            var tidIx = newTradesPnL.GetColumnIndex("TradeId");
+            foreach (var t in newTradesPnL.GetAllRows())
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", t.MetaData[tidIx] },
+                    { "Step", "Activity" },
+                    { "SubStep", "New" },
+                    { "PointLabel", string.Empty }
+                };
+                cube.AddRow(row, t.Value);
+            }
+
+            var removedTradesPnL = removedTrades.PV(endModel, reportingCcy);
+            foreach (var t in removedTradesPnL.GetAllRows())
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", t.MetaData[tidIx] },
+                    { "Step", "Activity" },
+                    { "SubStep", "Removed" },
+                    { "PointLabel", string.Empty }
+                };
+                cube.AddRow(row, -t.Value);
+            }
+
+            var ammendedTradesPnLStart = ammendedTradesStart.PV(endModel, reportingCcy);
+            var ammendedTradesPnLEnd = ammendedTradesEnd.PV(endModel, reportingCcy);
+            var ammendedPnL = ammendedTradesPnLEnd.QuickDifference(ammendedTradesPnLStart);
+            foreach (var t in ammendedPnL.GetAllRows())
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", t.MetaData[tidIx] },
+                    { "Step", "Activity" },
+                    { "SubStep", "Ammended" },
+                    { "PointLabel", string.Empty }
+                };
+                cube.AddRow(row, t.Value);
+            }
 
             return cube;
         }

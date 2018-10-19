@@ -84,5 +84,28 @@ namespace Qwack.Core.Instruments.Asset
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
                 new Dictionary<string, List<DateTime>>() :
                 new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
+
+        public override bool Equals(object obj) => obj is AsianSwap swap &&
+                 AverageStartDate == swap.AverageStartDate &&
+                 AverageEndDate == swap.AverageEndDate &&
+                 AssetId == swap.AssetId &&
+                 AssetFixingId == swap.AssetFixingId &&
+                 Currency == swap.Currency &&
+                 Direction == swap.Direction &&
+                 DiscountCurve == swap.DiscountCurve &&
+                 FixingCalendar == swap.FixingCalendar &&
+                 Enumerable.SequenceEqual(FixingDates, swap.FixingDates) &&
+                 FxConversionType == swap.FxConversionType &&
+                 FxFixingId == swap.FxFixingId &&
+                 Notional == swap.Notional &&
+                 PaymentCalendar == swap.PaymentCalendar &&
+                 PaymentCurrency == swap.PaymentCurrency &&
+                 PaymentDate == swap.PaymentDate &&
+                 PaymentLag == swap.PaymentLag &&
+                 PaymentLagRollType == swap.PaymentLagRollType &&
+                 SpotLag == swap.SpotLag &&
+                 SpotLagRollType == swap.SpotLagRollType &&
+                 Strike == swap.Strike &&
+                 TradeId == swap.TradeId;
     }
 }

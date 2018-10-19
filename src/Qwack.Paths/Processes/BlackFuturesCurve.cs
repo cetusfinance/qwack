@@ -7,7 +7,6 @@ using Qwack.Math.Extensions;
 using System.Linq;
 using Qwack.Core.Models;
 using Qwack.Futures;
-
 namespace Qwack.Paths.Processes
 {
     public class BlackFuturesCurve : IPathProcess, IRequiresFinish
@@ -20,6 +19,7 @@ namespace Qwack.Paths.Processes
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
         private readonly List<string> _codes;
+        private List<int> _frontMonthFactors;
         private readonly List<DateTime> _futuresExpiries;
         private int[] _factorIndices;
         private int _mainFactorIndex;
@@ -28,8 +28,6 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         //drifts are zero for individual futures
         private double[][] _vols;
-
-
         public BlackFuturesCurve(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<DateTime, double> forwardCurve, string name, IFutureSettingsProvider futureSettingsProvider, Dictionary<DateTime, double> pastFixings = null)
         {
             _surface = volSurface;
@@ -40,19 +38,15 @@ namespace Qwack.Paths.Processes
             _forwardCurve = forwardCurve;
             _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>());
             _futureSettingsProvider = futureSettingsProvider;
-
             if (startDate > expiryDate)
                 throw new Exception("Start date must be before expiry date");
-
             _codes = new List<string>();
             _futuresExpiries = new List<DateTime>();
-
             var fCode = new FutureCode(name, _futureSettingsProvider);
             var currentCode = fCode.GetFrontMonth(startDate);
             _codes.Add(currentCode);
             fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
             _futuresExpiries.Add(fCode.GetRollDate());
-
             fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
             var targetCode = fCode.GetFrontMonth(expiryDate);
             while (currentCode != targetCode)
@@ -62,19 +56,15 @@ namespace Qwack.Paths.Processes
                 _codes.Add(currentCode);
             }
         }
-
         public bool IsComplete => _isComplete;
-
         public void Finish(IFeatureCollection collection)
         {
             if (!_timesteps.IsComplete)
             {
                 return;
             }
-
             //vols...
             _vols = new double[_timesteps.TimeStepCount][];
-
             for (var t = 0; t < _vols.Length; t++)
             {
                 _vols[t] = new double[_codes.Count];
@@ -83,20 +73,22 @@ namespace Qwack.Paths.Processes
                     _vols[t][c] = _surface.GetVolForDeltaStrike(0.5, _futuresExpiries[c], 1.0);
                 }
             }
+            //work out which futures are front-month
+            var fCode = new FutureCode(_name, _futureSettingsProvider);
+            var codesForDate = _timesteps.Dates.Select(d => fCode.GetFrontMonth(d));
+            var mappingFeature = collection.GetFeature<IPathMappingFeature>();
+            _frontMonthFactors = codesForDate.Select(c => mappingFeature.GetDimension(c)).ToList();
             _isComplete = true;
         }
-
         public void Process(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 var stepsMain = block.GetStepsForFactor(path, _mainFactorIndex);
-
                 for (var f = 0; f < _factorIndices.Length; f++)
                 {
                     var previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
                     var steps = block.GetStepsForFactor(path, _factorIndices[f]);
-
                     var c = 0;
                     foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
                     {
@@ -113,21 +105,13 @@ namespace Qwack.Paths.Processes
                         steps[step] = previousStep;
                     }
                 }
-
-                var t = 0;
-                for (var f = 0; f < _factorIndices.Length; f++)
+                for (var step = 0; step < block.NumberOfSteps; step++)
                 {
-                    if (_futuresExpiries[f] <= _timesteps.Dates[t])
-                        continue;
-                    var steps = block.GetStepsForFactor(path, _factorIndices[f]);
-                    stepsMain[t] = steps[t];
-                    t++;
-                    if (t >= stepsMain.Length)
-                        break;
+                    var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
+                    stepsMain[step] = frontMonth[step];
                 }
             }
         }
-
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             _factorIndices = new int[_codes.Count];
@@ -137,19 +121,16 @@ namespace Qwack.Paths.Processes
                 _factorIndices[c] = mappingFeature.AddDimension(_codes[c]);
             }
             _mainFactorIndex = mappingFeature.AddDimension(_name);
-
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
-
+            var simDates = new List<DateTime>(_pastFixings.Keys.Where(x => x < _startDate));
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
-            var simDates = new List<DateTime>();
+
             for (var i = 0; i < _numberOfSteps - 1; i++)
             {
                 simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }
-
-            _timesteps.AddDates(simDates.Distinct());
-
+            simDates = simDates.Distinct().ToList();
+            _timesteps.AddDates(simDates);
         }
     }
 }

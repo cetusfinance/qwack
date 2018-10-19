@@ -9,7 +9,7 @@ namespace Qwack.Math
 {
     public static class LinearRegression
     {
-        public static LinearRegressionResult LinearRegressionNoVector(double[] X0, double[] Y0, bool computeError)
+        public static LinearRegressionResult LinearRegressionNoVector(this double[] X0, double[] Y0, bool computeError)
         {
             if (X0.Length != Y0.Length) throw new ArgumentOutOfRangeException(nameof(X0), "X and Y must be the same length");
 

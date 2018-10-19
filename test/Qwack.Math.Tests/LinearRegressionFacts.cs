@@ -7,7 +7,7 @@ namespace Qwack.Math.Tests
 {
     public class LinearRegressionFacts
     {
-        [Fact(Skip = "Failure")]
+        [Fact]
         public void VectorAndNoneVectorLinearRegressionMatches()
         {
             var rand = new System.Random();
@@ -27,6 +27,7 @@ namespace Qwack.Math.Tests
             Assert.Equal(reg1.Alpha, reg2.Alpha);
             Assert.Equal(reg1.Beta, reg2.Beta);
             Assert.Equal(reg1.R2, reg2.R2);
+            Assert.Equal(reg1.SSE, reg2.SSE);
         }
     }
 }

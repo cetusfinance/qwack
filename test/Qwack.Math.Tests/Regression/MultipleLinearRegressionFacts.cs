@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Math.Regression;
 using Xunit;
 
 namespace Qwack.Math.Tests.Regression
@@ -15,7 +16,7 @@ namespace Qwack.Math.Tests.Regression
             double w1 = 5;
             double w2 = -2;
 
-            Func<double[], double> testFunc = new Func<double[], double>(xs =>
+            var testFunc = new Func<double[], double>(xs =>
             {
                 return intercept + xs[0] * w1 + xs[1] * w2;
             });
@@ -32,11 +33,20 @@ namespace Qwack.Math.Tests.Regression
                 predictions[e] = testFunc(predictors[e]);
             }
 
-            var weights = Math.Regression.MultipleLinearRegression.Regress(predictors, predictions);
+            var weights = MultipleLinearRegression.Regress(predictors, predictions);
             Assert.Equal(intercept, weights[0], 8);
             Assert.Equal(w1, weights[1], 8);
             Assert.Equal(w2, weights[2], 8);
 
+            var weights2 = MultipleLinearRegression.RegressHistorical(predictors, predictions);
+            Assert.True(Enumerable.SequenceEqual(weights, weights2));
+
+            var badPredictions = new double[nExamples - 1];
+            Assert.Throws<InvalidOperationException>(() => MultipleLinearRegression.RegressHistorical(predictors, badPredictions));
+            Assert.Throws<InvalidOperationException>(() => MultipleLinearRegression.Regress(predictors, badPredictions));
+
+            var z = new MultipleLinearRegressor(weights);
+            var q = z.Regress(new[] { 0.0, 0.0 });
         }
 
         [Fact]
@@ -54,7 +64,7 @@ namespace Qwack.Math.Tests.Regression
                 predictors[e] = new double[2] { R.NextDouble(), R.NextDouble() };
             }
 
-            Func<double[], double[], double> testFunc = new Func<double[], double[], double>((xs, ws) =>
+            var testFunc = new Func<double[], double[], double>((xs, ws) =>
             {
                 var intercept = ws[0];
                 var w1 = ws[1];
@@ -62,7 +72,7 @@ namespace Qwack.Math.Tests.Regression
                 return intercept + xs[0] * w1 + xs[1] * w2;
             });
 
-            Func<double[], double[]> solveFunc = new Func<double[], double[]>(ws =>
+            var solveFunc = new Func<double[], double[]>(ws =>
             {
                 return predictors.Select(x => testFunc(x, ws) - testFunc(x, ws0)).ToArray();
             });

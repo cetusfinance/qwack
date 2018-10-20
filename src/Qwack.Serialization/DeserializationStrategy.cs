@@ -14,27 +14,32 @@ namespace Qwack.Serialization
         public DeserializationStrategy(Type objectType)
         {
             _objectType = objectType;
-            var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            SetupObject(objectType, _deserializers);
+        }
+
+        private static void SetupObject(Type objectType, List<DeserializerDelegate> deserializers)
+        {
+            var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
                 var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
                 var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
                 var objectForWork = Expression.Parameter(typeof(object), "obj");
-                var convert = Expression.Convert(objectForWork, _objectType);
+                var convert = Expression.Convert(objectForWork, objectType);
                 var fieldSource = Expression.Field(convert, field);
-                var block = GetExpressionForType(field.FieldType, fieldSource, buffer, deserContext);
+                var block = GetExpressionForType(field.FieldType, fieldSource, buffer, deserContext, deserializers);
                 if (block != null)
                 {
                     var deser = Expression.Lambda<DeserializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
-                    _deserializers.Add(deser);
+                    deserializers.Add(deser);
                 }
             }
         }
 
         delegate void DeserializerDelegate(object objectForWork, ref Span<byte> buffer, DeserializationContext context);
 
-        private Expression GetExpressionForType(Type type, Expression source, ParameterExpression buffer, ParameterExpression context)
+        private static Expression GetExpressionForType(Type type, Expression source, ParameterExpression buffer, ParameterExpression context, List<DeserializerDelegate> deserializers)
         {
             Expression expression;
 
@@ -80,8 +85,8 @@ namespace Qwack.Serialization
             {
                 if (type.IsValueType)
                 {
+                    SetupObject(type, deserializers);
                     expression = null;
-                    //throw new NotImplementedException();
                 }
                 else
                 {
@@ -125,9 +130,9 @@ namespace Qwack.Serialization
             return expression;
         }
 
-        private MethodInfo GetReadMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
+        private static MethodInfo GetReadMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
 
-        private Expression ReadSimpleArray(string readMethod, Expression field, ParameterExpression buffer, Type elementType)
+        private static Expression ReadSimpleArray(string readMethod, Expression field, ParameterExpression buffer, Type elementType)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildReadExpression("ReadInt", length, buffer);
@@ -153,7 +158,7 @@ namespace Qwack.Serialization
             return returnBlock;
         }
 
-        private Expression BuildReadExpression(string methodName, Expression field, ParameterExpression buffer, Type convertType = null)
+        private static Expression BuildReadExpression(string methodName, Expression field, ParameterExpression buffer, Type convertType = null)
         {
             var method = GetReadMethod(methodName);
             var readValue = Expression.Call(null, method, buffer);

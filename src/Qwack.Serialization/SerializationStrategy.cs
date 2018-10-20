@@ -14,27 +14,32 @@ namespace Qwack.Serialization
         public SerializationStrategy(Type objectType)
         {
             _objectType = objectType;
-            var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+            SetupObject(objectType, _serializers);
+        }
+
+        public string FullName => _objectType.AssemblyQualifiedName;
+
+        delegate void SerializerDelegate(object objForWork, ref Span<byte> buffer, DeserializationContext context);
+
+        private static void SetupObject(Type objectType, List<SerializerDelegate> serializers)
+        {
+            var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
                 var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
                 var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
                 var objectForWork = Expression.Parameter(typeof(object), "obj");
-                var convert = Expression.Convert(objectForWork, _objectType);
-                
-                var block = GetExpressionForType(field, convert, buffer, deserContext);
+                var convert = Expression.Convert(objectForWork, objectType);
+
+                var block = GetExpressionForType(field, convert, buffer, deserContext, serializers);
                 if (block != null)
                 {
                     var deser = Expression.Lambda<SerializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
-                    _serializers.Add(deser);
+                    serializers.Add(deser);
                 }
             }
         }
-
-        public string FullName => _objectType.AssemblyQualifiedName;
-
-        delegate void SerializerDelegate(object objForWork, ref Span<byte> buffer, DeserializationContext context);
 
         public void Serialize(object obj, ref Span<byte> buffer, DeserializationContext context)
         {
@@ -46,9 +51,9 @@ namespace Qwack.Serialization
             Console.WriteLine($"Total Bytes Written {origanlSpan.Length - buffer.Length}");
         }
 
-        private MethodInfo GetWriteMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
+        private static MethodInfo GetWriteMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
 
-        private Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context)
+        private static Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context, List<SerializerDelegate> serializers)
         {
             var fieldExp = Expression.Field(objForWork, field);
             Expression expression;
@@ -77,8 +82,8 @@ namespace Qwack.Serialization
             {
                 if (field.FieldType.IsValueType)
                 {
+                    SetupObject(field.FieldType, serializers);
                     expression = null;
-                    //throw new NotImplementedException();
                 }
                 else
                 {
@@ -140,7 +145,7 @@ namespace Qwack.Serialization
             return expression;
         }
 
-        private Expression WriteSimpleArray(FieldInfo field, Expression objForWork, ParameterExpression buffer, string writeMethod)
+        private static Expression WriteSimpleArray(FieldInfo field, Expression objForWork, ParameterExpression buffer, string writeMethod)
         {
             var fieldExp = Expression.Field(objForWork, field);
             var size = Expression.ArrayLength(fieldExp);
@@ -163,7 +168,7 @@ namespace Qwack.Serialization
             return compareIf;
         }
 
-        private Expression BuildExpression(MethodInfo writeMethod, Expression field, Expression objectForWork, ParameterExpression buffer)
+        private static Expression BuildExpression(MethodInfo writeMethod, Expression field, Expression objectForWork, ParameterExpression buffer)
         {
             var call = Expression.Call(null, writeMethod, buffer, field);
             return call;

@@ -73,9 +73,9 @@ namespace Qwack.Serialization
 
             foreach(var o in _objectsCrawled)
             {
-                var info = _serializationStrategies[o.GetType()];
-                buffer.WriteInt(info.number);
-                info.strategy.Serialize(o, ref buffer, context);
+                var (number, strategy) = _serializationStrategies[o.GetType()];
+                buffer.WriteInt(number);
+                strategy.Serialize(o, ref buffer, context);
             }
 
             return originalSpan.Slice(0, originalSpan.Length - buffer.Length);

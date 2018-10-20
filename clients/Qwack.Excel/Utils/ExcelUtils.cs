@@ -17,12 +17,10 @@ namespace Qwack.Excel.Utils
     public class ExcelUtils
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
+        private static readonly MethodInfo _putObjectToCacheMethod = typeof(ContainerStores).GetMethod("PutObjectToCache");
 
         [ExcelFunction(Description = "Returns current date and time", Category = "QUtils")]
-        public static object QUtils_Now()
-        {
-            return DateTime.Now.ToString("s");
-        }
+        public static object QUtils_Now() => DateTime.Now.ToString("s");
 
         [ExcelFunction(Description = "Returns unique entries from a range", Category = "QUtils")]
         public static object QUtils_Unique(
@@ -204,8 +202,7 @@ namespace Qwack.Excel.Utils
                 var bytes = System.IO.File.ReadAllBytes(FileName);
                 var obj = s.DeserializeObjectGraph(bytes);
 
-                var method = typeof(ContainerStores).GetMethod("PutObjectToCache");
-                var generic = method.MakeGenericMethod(t);
+                var generic = _putObjectToCacheMethod.MakeGenericMethod(t);
                 generic.Invoke(null, new object[] { ObjectName, obj });
 
                 return $"{ObjectName}¬1";

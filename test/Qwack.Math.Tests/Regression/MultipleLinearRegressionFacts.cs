@@ -25,7 +25,7 @@ namespace Qwack.Math.Tests.Regression
             var predictors = new double[nExamples][];
             var predictions = new double[nExamples];
 
-            var R = new System.Random();
+            var R = new System.Random(777);
 
             for (var e = 0; e < nExamples; e++)
             {
@@ -39,7 +39,7 @@ namespace Qwack.Math.Tests.Regression
             Assert.Equal(w2, weights[2], 8);
 
             var weights2 = MultipleLinearRegression.RegressHistorical(predictors, predictions);
-            Assert.True(Enumerable.SequenceEqual(weights, weights2));
+            Assert.Equal(weights, weights2);
 
             var badPredictions = new double[nExamples - 1];
             Assert.Throws<InvalidOperationException>(() => MultipleLinearRegression.RegressHistorical(predictors, badPredictions));

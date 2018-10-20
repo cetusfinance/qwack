@@ -22,8 +22,8 @@ namespace Qwack.Serialization
                 var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
                 var objectForWork = Expression.Parameter(typeof(object), "obj");
                 var convert = Expression.Convert(objectForWork, _objectType);
-
-                var block = GetExpressionForType(field, convert, buffer, deserContext);
+                var fieldSource = Expression.Field(convert, field);
+                var block = GetExpressionForType(field.FieldType, fieldSource, buffer, deserContext);
                 if (block != null)
                 {
                     var deser = Expression.Lambda<DeserializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
@@ -34,51 +34,51 @@ namespace Qwack.Serialization
 
         delegate void DeserializerDelegate(object objectForWork, ref Span<byte> buffer, DeserializationContext context);
 
-        private Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context)
+        private Expression GetExpressionForType(Type type, Expression source, ParameterExpression buffer, ParameterExpression context)
         {
-            var fieldExp = Expression.Field(objForWork, field);
             Expression expression;
 
-            if (field.FieldType == typeof(int)) return BuildReadExpression("ReadInt", fieldExp, buffer);
-            else if (field.FieldType == typeof(uint)) return BuildReadExpression("ReadUInt", fieldExp, buffer);
-            else if (field.FieldType == typeof(long)) return BuildReadExpression("ReadLong", fieldExp, buffer);
-            else if (field.FieldType == typeof(ulong)) return BuildReadExpression("ReadULong", fieldExp, buffer);
-            else if (field.FieldType == typeof(ushort)) return BuildReadExpression("ReadUShort", fieldExp, buffer);
-            else if (field.FieldType == typeof(short)) return BuildReadExpression("ReadShort", fieldExp, buffer);
-            else if (field.FieldType == typeof(bool)) return BuildReadExpression("ReadBool", fieldExp, buffer);
-            else if (field.FieldType == typeof(DateTime)) return BuildReadExpression("ReadDateTime", fieldExp, buffer);
-            else if (field.FieldType == typeof(string)) return BuildReadExpression("ReadString", fieldExp, buffer);
-            else if (field.FieldType == typeof(double)) return BuildReadExpression("ReadDouble", fieldExp, buffer);
-            else if (field.FieldType.IsEnum)
+            if (type == typeof(int)) return BuildReadExpression("ReadInt", source, buffer);
+            else if (type == typeof(uint)) return BuildReadExpression("ReadUInt", source, buffer);
+            else if (type == typeof(long)) return BuildReadExpression("ReadLong", source, buffer);
+            else if (type == typeof(ulong)) return BuildReadExpression("ReadULong", source, buffer);
+            else if (type == typeof(ushort)) return BuildReadExpression("ReadUShort", source, buffer);
+            else if (type == typeof(short)) return BuildReadExpression("ReadShort", source, buffer);
+            else if (type == typeof(bool)) return BuildReadExpression("ReadBool", source, buffer);
+            else if (type == typeof(DateTime)) return BuildReadExpression("ReadDateTime", source, buffer);
+            else if (type == typeof(string)) return BuildReadExpression("ReadString", source, buffer);
+            else if (type == typeof(double)) return BuildReadExpression("ReadDouble", source, buffer);
+            else if (type == typeof(float)) return BuildReadExpression("ReadFloat", source, buffer);
+            else if (type.IsEnum)
             {
-                var enumType = field.FieldType.GetEnumUnderlyingType();
-                if (enumType == typeof(int)) return BuildReadExpression("ReadInt", fieldExp, buffer, field.FieldType);
-                if (enumType == typeof(short)) return BuildReadExpression("ReadShort", fieldExp, buffer, field.FieldType);
-                if (enumType == typeof(long)) return BuildReadExpression("ReadLong", fieldExp, buffer, field.FieldType);
+                var enumType = type.GetEnumUnderlyingType();
+                if (enumType == typeof(int)) return BuildReadExpression("ReadInt", source, buffer, type);
+                if (enumType == typeof(short)) return BuildReadExpression("ReadShort", source, buffer, type);
+                if (enumType == typeof(long)) return BuildReadExpression("ReadLong", source, buffer, type);
                 throw new NotImplementedException();
             }
-            else if (field.FieldType.IsArray)
+            else if (type.IsArray)
             {
-                var elementType = field.FieldType.GetElementType();
-                if (elementType == typeof(uint)) return ReadSimpleArray("ReadUInt", fieldExp, buffer, elementType);
-                else if (elementType == typeof(int)) return ReadSimpleArray("ReadInt", fieldExp, buffer, elementType);
-                else if (elementType == typeof(ulong)) return ReadSimpleArray("ReadULong", fieldExp, buffer, elementType);
-                else if (elementType == typeof(double)) return ReadSimpleArray("ReadDouble", fieldExp, buffer, elementType);
-                else if (elementType == typeof(DateTime)) return ReadSimpleArray("ReadDateTime", fieldExp, buffer, elementType);
-                else if (elementType == typeof(bool)) return ReadSimpleArray("ReadBool", fieldExp, buffer, elementType);
-                else if (elementType == typeof(byte)) return ReadSimpleArray("ReadByte", fieldExp, buffer, elementType);
-                else if (elementType == typeof(ushort)) return ReadSimpleArray("ReadUShort", fieldExp, buffer, elementType);
-                else if (elementType == typeof(short)) return ReadSimpleArray("ReadShort", fieldExp, buffer, elementType);
-                else if (elementType == typeof(float)) return ReadSimpleArray("ReadFloat", fieldExp, buffer, elementType);
-                else if (elementType == typeof(string)) return ReadSimpleArray("ReadString", fieldExp, buffer, elementType);
+                var elementType = type.GetElementType();
+                if (elementType == typeof(uint)) return ReadSimpleArray("ReadUInt", source, buffer, elementType);
+                else if (elementType == typeof(int)) return ReadSimpleArray("ReadInt", source, buffer, elementType);
+                else if (elementType == typeof(ulong)) return ReadSimpleArray("ReadULong", source, buffer, elementType);
+                else if (elementType == typeof(double)) return ReadSimpleArray("ReadDouble", source, buffer, elementType);
+                else if (elementType == typeof(DateTime)) return ReadSimpleArray("ReadDateTime", source, buffer, elementType);
+                else if (elementType == typeof(bool)) return ReadSimpleArray("ReadBool", source, buffer, elementType);
+                else if (elementType == typeof(byte)) return ReadSimpleArray("ReadByte", source, buffer, elementType);
+                else if (elementType == typeof(ushort)) return ReadSimpleArray("ReadUShort", source, buffer, elementType);
+                else if (elementType == typeof(short)) return ReadSimpleArray("ReadShort", source, buffer, elementType);
+                else if (elementType == typeof(float)) return ReadSimpleArray("ReadFloat", source, buffer, elementType);
+                else if (elementType == typeof(string)) return ReadSimpleArray("ReadString", source, buffer, elementType);
                 else
                 {
                     throw new Exception(elementType.Name);
                 }
             }
-            else if (field.FieldType.Namespace.StartsWith("Qwack"))
+            else if (type.Namespace.StartsWith("Qwack"))
             {
-                if (field.FieldType.IsValueType)
+                if (type.IsValueType)
                 {
                     expression = null;
                     //throw new NotImplementedException();
@@ -87,13 +87,13 @@ namespace Qwack.Serialization
                 {
                     var idValue = Expression.Call(null, GetReadMethod("ReadInt"), buffer);
                     var lookupId = Expression.Call(context, typeof(DeserializationContext).GetMethod("GetObjectById"), idValue);
-                    var assignObject = Expression.Assign(fieldExp, Expression.Convert(lookupId, field.FieldType));
+                    var assignObject = Expression.Assign(source, Expression.Convert(lookupId, type));
                     return assignObject;
                 }
             }
-            else if (field.FieldType.IsGenericType)
+            else if (type.IsGenericType)
             {
-                var genType = field.FieldType.GetGenericTypeDefinition();
+                var genType = type.GetGenericTypeDefinition();
                 if (genType == typeof(Dictionary<,>))
                 {
                     expression = null;
@@ -115,12 +115,12 @@ namespace Qwack.Serialization
                 }
                 else
                 {
-                    throw new NotSupportedException(field.FieldType.Name);
+                    throw new NotSupportedException(type.Name);
                 }
             }
             else
             {
-                throw new NotImplementedException(field.FieldType.Name);
+                throw new NotImplementedException(type.Name);
             }
             return expression;
         }

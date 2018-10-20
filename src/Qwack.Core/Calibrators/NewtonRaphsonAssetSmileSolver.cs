@@ -197,10 +197,7 @@ namespace Qwack.Core.Calibrators
             return o;
         }
 
-        private void UpdateInterpolator()
-        {
-            _interp = InterpolatorFactory.GetInterpolator(_strikes, _currentGuess, _interpType);
-        }
+        private void UpdateInterpolator() => _interp = InterpolatorFactory.GetInterpolator(_strikes, _currentGuess, _interpType);
 
         private static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {

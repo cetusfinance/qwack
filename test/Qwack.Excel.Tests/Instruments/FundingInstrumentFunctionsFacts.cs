@@ -25,10 +25,7 @@ namespace Qwack.Excel.Tests.Instruments
         }
 
         [Fact]
-        public void CreateFxForward_Facts()
-        {
-            Assert.Equal("meh¬0", FundingInstrumentFunctions.CreateFxForward("meh", DateTime.Today, "USD", "ZAR", 123, 17, "Z.1", "Z.1", Value));
-        }
+        public void CreateFxForward_Facts() => Assert.Equal("meh¬0", FundingInstrumentFunctions.CreateFxForward("meh", DateTime.Today, "USD", "ZAR", 123, 17, "Z.1", "Z.1", Value));
 
         [Fact]
         public void CreateIRS_Facts()

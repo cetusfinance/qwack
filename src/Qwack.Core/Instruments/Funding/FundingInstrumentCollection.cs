@@ -18,10 +18,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public List<string> SolveCurves => this.Select(x => x.SolveCurve).Distinct().ToList();
 
-        public FundingInstrumentCollection(ICurrencyProvider currencyProvider)
-        {
-            _currencyProvider = currencyProvider;
-        }
+        public FundingInstrumentCollection(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
 
         public Dictionary<string, IrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
         {

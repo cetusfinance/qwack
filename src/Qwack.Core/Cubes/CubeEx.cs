@@ -77,10 +77,7 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction)
-        {
-            return cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
-        }
+        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction) => cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
 
 
         public static ICube Pivot(this ICube cube, string[] fieldsToAggregateBy, AggregationAction aggregationAction)

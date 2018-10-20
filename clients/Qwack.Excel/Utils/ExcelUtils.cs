@@ -153,10 +153,7 @@ namespace Qwack.Excel.Utils
 
         [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils")]
         public static object QUtils_FileExists(
-            [ExcelArgument(Description = "Filename")] string Filename)
-        {
-            return ExcelHelper.Execute(_logger, () => System.IO.File.Exists(Filename));
-        }
+            [ExcelArgument(Description = "Filename")] string Filename) => ExcelHelper.Execute(_logger, () => System.IO.File.Exists(Filename));
 
         [ExcelFunction(Description = "Returns timestamp for a given file", Category = "QUtils")]
         public static object QUtils_FileTimeStamp(
@@ -164,7 +161,7 @@ namespace Qwack.Excel.Utils
         {
             return ExcelHelper.Execute(_logger, () =>
                System.IO.File.Exists(Filename) ?
-                (object)System.IO.File.GetLastWriteTime(Filename) :
+                System.IO.File.GetLastWriteTime(Filename) :
                 (object)"File does not exist");
         }
 

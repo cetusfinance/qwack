@@ -90,9 +90,6 @@ namespace Qwack.Core.Curves
 
         public IPriceCurve RebaseDate(DateTime newAnchorDate) => new CompositePriceCurve(newAnchorDate, pCurveFunc.Invoke().RebaseDate(newAnchorDate), fModelFunc.Invoke(), DomesticCurrency, ForeignCurrency);
 
-        public DateTime PillarDatesForLabel(string label)
-        {
-            throw new NotImplementedException();
-        }
+        public DateTime PillarDatesForLabel(string label) => throw new NotImplementedException();
     }
 }

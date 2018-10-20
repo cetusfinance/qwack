@@ -31,30 +31,27 @@ namespace Qwack.Core.Instruments.Asset
         public Currency Currency => PaymentCurrency;
         public string[] IrCurves => new[] { DiscountCurve };
 
-        public AsianSwap AsBulletSwap()
+        public AsianSwap AsBulletSwap() => new AsianSwap
         {
-            return new AsianSwap
-            {
-                TradeId = TradeId,
-                Notional = Notional,
-                Direction = Direction,
-                AverageStartDate = ExpiryDate,
-                AverageEndDate = ExpiryDate,
-                FixingCalendar = FixingCalendar,
-                PaymentCalendar = PaymentCalendar,
-                SpotLag = SpotLag,
-                PaymentLag = PaymentLag,
-                Strike = Strike,
-                AssetId = AssetId,
-                PaymentCurrency = PaymentCurrency,
-                FxFixingId = FxFixingId,
-                DiscountCurve = DiscountCurve,
-                FixingDates = new[] { ExpiryDate },
-                FxFixingDates = new[] { ExpiryDate },
-                FxConversionType = FxConversionType.AverageThenConvert,
-                PaymentDate = PaymentDate
-            };
-        }
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            AverageStartDate = ExpiryDate,
+            AverageEndDate = ExpiryDate,
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            PaymentLag = PaymentLag,
+            Strike = Strike,
+            AssetId = AssetId,
+            PaymentCurrency = PaymentCurrency,
+            FxFixingId = FxFixingId,
+            DiscountCurve = DiscountCurve,
+            FixingDates = new[] { ExpiryDate },
+            FxFixingDates = new[] { ExpiryDate },
+            FxConversionType = FxConversionType.AverageThenConvert,
+            PaymentDate = PaymentDate
+        };
 
         public IAssetInstrument Clone() => new Forward
         {

@@ -13,9 +13,6 @@ namespace Qwack.Core.Descriptors
         public override bool Equals(object obj) => obj is ForecastCurveDescriptor descriptor &&
                    EqualityComparer<FloatRateIndex>.Default.Equals(Index, descriptor.Index);
 
-        public override int GetHashCode()
-        {
-            return -2134847229 + EqualityComparer<FloatRateIndex>.Default.GetHashCode(Index);
-        }
+        public override int GetHashCode() => -2134847229 + EqualityComparer<FloatRateIndex>.Default.GetHashCode(Index);
     }
 }

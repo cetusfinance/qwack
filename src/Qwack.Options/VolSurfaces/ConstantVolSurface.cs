@@ -44,13 +44,10 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => Volatility;
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
-        {
-            return new Dictionary<string, IVolSurface>
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => new Dictionary<string, IVolSurface>
             {
                 { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency } }
             };
-        }
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
     }

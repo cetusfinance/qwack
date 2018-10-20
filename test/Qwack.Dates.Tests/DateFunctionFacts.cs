@@ -342,10 +342,7 @@ namespace Qwack.Dates.Tests
 
         [Theory]
         [MemberData(nameof(GetYFExamples))]
-        public void YearFraction(DateTime startDate, DateTime endDate, DayCountBasis basis, double yf)
-        {
-            Assert.Equal(yf, startDate.CalculateYearFraction(endDate, basis));
-        }
+        public void YearFraction(DateTime startDate, DateTime endDate, DayCountBasis basis, double yf) => Assert.Equal(yf, startDate.CalculateYearFraction(endDate, basis));
 
         public static IEnumerable<object[]> GetYFExamples()
         {

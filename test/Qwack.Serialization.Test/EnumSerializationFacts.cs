@@ -27,18 +27,15 @@ namespace Qwack.Serialization.Test
             Assert.Equal(obj.LongEnum2, newObj.LongEnum2);
         }
 
-        public static EnumObject Create()
+        public static EnumObject Create() => new EnumObject()
         {
-            return new EnumObject()
-            {
-                IntEnum1 = IntEnum.Test1,
-                IntEnum2 = IntEnum.Test2,
-                LongEnum1 = LongEnum.Test1,
-                LongEnum2 = LongEnum.Test2,
-                ShortEnum1 = ShortEnum.Test1,
-                ShortEnum2 = ShortEnum.Test2,
-            };
-        }
+            IntEnum1 = IntEnum.Test1,
+            IntEnum2 = IntEnum.Test2,
+            LongEnum1 = LongEnum.Test1,
+            LongEnum2 = LongEnum.Test2,
+            ShortEnum1 = ShortEnum.Test1,
+            ShortEnum2 = ShortEnum.Test2,
+        };
 
         public class EnumObject
         {

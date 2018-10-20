@@ -127,10 +127,7 @@ namespace Qwack.Curves.Benchmark
                 //NoOp
             }
 
-            public void Process(IPathBlock block)
-            {
-                throw new NotImplementedException();
-            }
+            public void Process(IPathBlock block) => throw new NotImplementedException();
 
             public void SetupFeatures(FeatureCollection pathProcessFeaturesCollection)
             {
@@ -146,10 +143,7 @@ namespace Qwack.Curves.Benchmark
                 }
             }
 
-            public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
-            {
-                throw new NotImplementedException();
-            }
+            public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection) => throw new NotImplementedException();
         }
     }
 }

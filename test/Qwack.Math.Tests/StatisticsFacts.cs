@@ -75,9 +75,6 @@ namespace Qwack.Math.Tests
         }
 
         [Fact]
-        public void ReturnsFacts()
-        {
-            Assert.True(Enumerable.SequenceEqual(new[] { 1.0, -0.5 }, (new[] { 1.0, 2.0, 1.0 }).Returns(false)));
-        }
+        public void ReturnsFacts() => Assert.True(Enumerable.SequenceEqual(new[] { 1.0, -0.5 }, (new[] { 1.0, 2.0, 1.0 }).Returns(false)));
     }
 }

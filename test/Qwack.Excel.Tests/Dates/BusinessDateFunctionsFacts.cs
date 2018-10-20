@@ -74,10 +74,7 @@ namespace Qwack.Excel.Tests.Dates
         }
 
         [Fact]
-        public void QDates_ThirdWednesday_Facts()
-        {
-            Assert.Equal(DateTime.Parse("2018-09-19"), BusinessDateFunctions.QDates_ThirdWednesday(DateTime.Parse("2018-09-01")));
-        }
+        public void QDates_ThirdWednesday_Facts() => Assert.Equal(DateTime.Parse("2018-09-19"), BusinessDateFunctions.QDates_ThirdWednesday(DateTime.Parse("2018-09-01")));
 
         [Fact]
         public void QDates_YearFraction_Facts()
@@ -158,16 +155,10 @@ namespace Qwack.Excel.Tests.Dates
         }
 
         [Fact]
-        public void QDates_LastDay_Facts()
-        {
-            Assert.Equal(DateTime.Parse("2018-09-30"), BusinessDateFunctions.QDates_LastDay(DateTime.Parse("2018-09-30")));
-        }
+        public void QDates_LastDay_Facts() => Assert.Equal(DateTime.Parse("2018-09-30"), BusinessDateFunctions.QDates_LastDay(DateTime.Parse("2018-09-30")));
 
         [Fact]
-        public void QDates_FirstDay_Facts()
-        {
-            Assert.Equal(DateTime.Parse("2018-09-01"), BusinessDateFunctions.QDates_FirstDay(DateTime.Parse("2018-09-30")));
-        }
+        public void QDates_FirstDay_Facts() => Assert.Equal(DateTime.Parse("2018-09-01"), BusinessDateFunctions.QDates_FirstDay(DateTime.Parse("2018-09-30")));
 
         [Fact]
         public void QDates_NextWeekday_Facts()

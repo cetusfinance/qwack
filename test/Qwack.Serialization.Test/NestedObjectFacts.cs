@@ -22,14 +22,11 @@ namespace Qwack.Serialization.Test
             ArraySerializationFacts.Comparer(obj.BasicArrays, deser.BasicArrays);
         }
 
-        public LinearObject Create()
+        public LinearObject Create() => new LinearObject()
         {
-            return new LinearObject()
-            {
-                BasicArrays = ArraySerializationFacts.Create(),
-                BasicArraysNull = null,
-            };
-        }
+            BasicArrays = ArraySerializationFacts.Create(),
+            BasicArraysNull = null,
+        };
     }
 
     public class LinearObject

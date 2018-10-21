@@ -9,51 +9,51 @@ namespace Qwack.Serialization
     public class SerializationStrategy
     {
         private Type _objectType;
-        private List<SerializerDelegate> _serializers = new List<SerializerDelegate>();
+        private SerializerDelegate _serializer;
 
         public SerializationStrategy(Type objectType)
         {
             _objectType = objectType;
-            SetupObject(objectType, _serializers);
+            SetupObject(objectType);
         }
 
         public string FullName => _objectType.AssemblyQualifiedName;
 
         delegate void SerializerDelegate(object objForWork, ref Span<byte> buffer, DeserializationContext context);
 
-        private static void SetupObject(Type objectType, List<SerializerDelegate> serializers)
+        private void SetupObject(Type objectType)
         {
             var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var expressionsForBlock = new List<Expression>();
+            var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
+            var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
+            var objectForWork = Expression.Parameter(typeof(object), "obj");
+            var convert = Expression.Convert(objectForWork, objectType);
+
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
-                var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
-                var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
-                var objectForWork = Expression.Parameter(typeof(object), "obj");
-                var convert = Expression.Convert(objectForWork, objectType);
 
-                var block = GetExpressionForType(field, convert, buffer, deserContext, serializers);
+                var block = GetExpressionForType(field, convert, buffer, deserContext);
                 if (block != null)
                 {
-                    var deser = Expression.Lambda<SerializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
-                    serializers.Add(deser);
+                    expressionsForBlock.Add(block);
                 }
             }
+            var finalBlock = Expression.Block(expressionsForBlock);
+            var deser = Expression.Lambda<SerializerDelegate>(finalBlock, objectForWork, buffer, deserContext).Compile();
+            _serializer = deser;
         }
 
         public void Serialize(object obj, ref Span<byte> buffer, DeserializationContext context)
         {
             var origanlSpan = buffer;
-            foreach (var ser in _serializers)
-            {
-                ser(obj, ref buffer, context);
-            }
-            Console.WriteLine($"Total Bytes Written {origanlSpan.Length - buffer.Length}");
+            _serializer(obj, ref buffer, context);
         }
 
         private static MethodInfo GetWriteMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
 
-        private static Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context, List<SerializerDelegate> serializers)
+        private Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context)
         {
             var fieldExp = Expression.Field(objForWork, field);
             Expression expression;
@@ -73,7 +73,7 @@ namespace Qwack.Serialization
             {
                 var enumType = field.FieldType.GetEnumUnderlyingType();
                 var fieldExpConverted = Expression.Convert(fieldExp, enumType);
-                if (enumType == typeof(short)) return BuildExpression(GetWriteMethod("WriteShort"), fieldExpConverted , objForWork, buffer);
+                if (enumType == typeof(short)) return BuildExpression(GetWriteMethod("WriteShort"), fieldExpConverted, objForWork, buffer);
                 else if (enumType == typeof(long)) return BuildExpression(GetWriteMethod("WriteLong"), fieldExpConverted, objForWork, buffer);
                 else if (enumType == typeof(int)) return BuildExpression(GetWriteMethod("WriteInt"), fieldExpConverted, objForWork, buffer);
                 throw new NotImplementedException($"Enum type of {enumType.Name} not supported");
@@ -82,7 +82,7 @@ namespace Qwack.Serialization
             {
                 if (field.FieldType.IsValueType)
                 {
-                    SetupObject(field.FieldType, serializers);
+                    //SetupObject(field.FieldType);
                     expression = null;
                 }
                 else
@@ -150,7 +150,7 @@ namespace Qwack.Serialization
             var fieldExp = Expression.Field(objForWork, field);
             var size = Expression.ArrayLength(fieldExp);
             var compareToNull = Expression.Equal(fieldExp, Expression.Default(field.FieldType));
-            var writeNull = Expression.Call(null,GetWriteMethod("WriteInt"), buffer, Expression.Constant(-1));
+            var writeNull = Expression.Call(null, GetWriteMethod("WriteInt"), buffer, Expression.Constant(-1));
 
             var writeSize = Expression.Call(null, GetWriteMethod("WriteInt"), buffer, size);
             var index = Expression.Parameter(typeof(int), "index");

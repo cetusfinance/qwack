@@ -11,7 +11,7 @@ namespace Qwack.Serialization.Test
             var serializer = new BinarySerializer();
             var obj = Create();
             serializer.PrepareObjectGraph(obj);
-            var result = serializer.SerializeObjectGraph(null);
+            var result = serializer.SerializeObjectGraph();
 
             var deserializer = new BinaryDeserializer();
             var deserObj = (BasicObject)deserializer.DeserializeObjectGraph(result);

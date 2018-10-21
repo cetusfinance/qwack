@@ -9,40 +9,42 @@ namespace Qwack.Serialization
     public class DeserializationStrategy
     {
         private Type _objectType;
-        private List<DeserializerDelegate> _deserializers = new List<DeserializerDelegate>();
+        private DeserializerDelegate _deserializer;
 
         public DeserializationStrategy(Type objectType)
         {
             _objectType = objectType;
-            SetupObject(objectType, _deserializers);
+            SetupObject(objectType);
         }
 
-        private static void SetupObject(Type objectType, List<DeserializerDelegate> deserializers)
+        private void SetupObject(Type objectType)
         {
             var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var blockList = new List<Expression>();
+            var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
+            var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
+            var objectForWork = Expression.Parameter(typeof(object), "obj");
+            var convert = Expression.Convert(objectForWork, objectType);
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
-                var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
-                var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
-                var objectForWork = Expression.Parameter(typeof(object), "obj");
-                var convert = Expression.Convert(objectForWork, objectType);
+                
                 var fieldSource = Expression.Field(convert, field);
-                var block = GetExpressionForType(field.FieldType, fieldSource, buffer, deserContext, deserializers);
+                var block = GetExpressionForType(field.FieldType, fieldSource, buffer, deserContext);
                 if (block != null)
                 {
-                    var deser = Expression.Lambda<DeserializerDelegate>(block, objectForWork, buffer, deserContext).Compile();
-                    deserializers.Add(deser);
+                    blockList.Add(block);
                 }
             }
+            var finalBlock = Expression.Block(blockList);
+            var deser = Expression.Lambda<DeserializerDelegate>(finalBlock, objectForWork, buffer, deserContext).Compile();
+            _deserializer = deser;
         }
 
         delegate void DeserializerDelegate(object objectForWork, ref Span<byte> buffer, DeserializationContext context);
 
-        private static Expression GetExpressionForType(Type type, Expression source, ParameterExpression buffer, ParameterExpression context, List<DeserializerDelegate> deserializers)
+        private Expression GetExpressionForType(Type type, Expression source, ParameterExpression buffer, ParameterExpression context)
         {
-            Expression expression;
-
             if (type == typeof(int)) return BuildReadExpression("ReadInt", source, buffer);
             else if (type == typeof(uint)) return BuildReadExpression("ReadUInt", source, buffer);
             else if (type == typeof(long)) return BuildReadExpression("ReadLong", source, buffer);
@@ -85,8 +87,8 @@ namespace Qwack.Serialization
             {
                 if (type.IsValueType)
                 {
-                    SetupObject(type, deserializers);
-                    expression = null;
+                    //SetupObject(type, deserializers);
+                    return null;
                 }
                 else
                 {
@@ -101,17 +103,17 @@ namespace Qwack.Serialization
                 var genType = type.GetGenericTypeDefinition();
                 if (genType == typeof(Dictionary<,>))
                 {
-                    expression = null;
+                    return null;
                     //throw new NotImplementedException("Dictionary");
                 }
                 else if (genType == typeof(HashSet<>))
                 {
-                    expression = null;
+                    return null;
                     //throw new NotImplementedException("HashSet");
                 }
                 else if (genType == typeof(List<>))
                 {
-                    expression = null;
+                    return null;
                     //throw new NotImplementedException("List");
                 }
                 else if (genType == typeof(Func<,>))
@@ -127,7 +129,6 @@ namespace Qwack.Serialization
             {
                 throw new NotImplementedException(type.Name);
             }
-            return expression;
         }
 
         private static MethodInfo GetReadMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
@@ -175,10 +176,7 @@ namespace Qwack.Serialization
         public object Deserialize(ref Span<byte> buffer, DeserializationContext context)
         {
             var instance = Activator.CreateInstance(_objectType);
-            foreach (var exp in _deserializers)
-            {
-                exp(instance, ref buffer, context);
-            }
+            _deserializer(instance, ref buffer, context);
             return instance;
         }
     }

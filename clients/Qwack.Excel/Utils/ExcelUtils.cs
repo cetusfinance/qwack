@@ -180,7 +180,7 @@ namespace Qwack.Excel.Utils
 
                 var s = new BinarySerializer();
                 s.PrepareObjectGraph(obj);
-                var bytes = s.SerializeObjectGraph(null);
+                var bytes = s.SerializeObjectGraph();
                 System.IO.File.WriteAllBytes(FileName, bytes.ToArray());
                 return $"Saved to {FileName}";
             });

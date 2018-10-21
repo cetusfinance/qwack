@@ -58,7 +58,7 @@ namespace Qwack.Serialization
             }
         }
 
-        public Span<byte> SerializeObjectGraph(PipeWriter pipeWriter)
+        public Span<byte> SerializeObjectGraph()
         {
             var context = new DeserializationContext();
             var buffer =(Span<byte>) new byte[1024 * 1024 * 50];

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -11,38 +12,44 @@ namespace Qwack.Serialization
         private Type _objectType;
         private SerializerDelegate _serializer;
 
+        private List<ParameterExpression> _parameters = new List<ParameterExpression>();
+        private List<Expression> _expressions = new List<Expression>();
+
         public SerializationStrategy(Type objectType)
         {
             _objectType = objectType;
-            SetupObject(objectType);
+
+            var objectForWork = Expression.Parameter(typeof(object), "obj");
+            var convert = Expression.Convert(objectForWork, objectType);
+            var objWorkConverted = Expression.Parameter(objectType);
+            _parameters.Add(objWorkConverted);
+            _expressions.Add(Expression.Assign(objWorkConverted, convert));
+            var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
+            var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
+
+            SetupObject(objectType, objWorkConverted, buffer, deserContext);
+            var finalBlock = Expression.Block(_parameters,_expressions);
+            _serializer = Expression.Lambda<SerializerDelegate>(finalBlock, objectForWork, buffer, deserContext).Compile();
         }
 
         public string FullName => _objectType.AssemblyQualifiedName;
 
         delegate void SerializerDelegate(object objForWork, ref Span<byte> buffer, DeserializationContext context);
 
-        private void SetupObject(Type objectType)
+        private void SetupObject(Type objectType, ParameterExpression source, ParameterExpression buffer, ParameterExpression deserializationContext)
         {
             var privateFields = objectType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            var expressionsForBlock = new List<Expression>();
-            var buffer = Expression.Parameter(typeof(Span<byte>).MakeByRefType(), "buffer");
-            var deserContext = Expression.Parameter(typeof(DeserializationContext), "deserializationContext");
-            var objectForWork = Expression.Parameter(typeof(object), "obj");
-            var convert = Expression.Convert(objectForWork, objectType);
-
+                       
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
 
-                var block = GetExpressionForType(field, convert, buffer, deserContext);
+                var block = GetExpressionForType(field, source, buffer, deserializationContext);
                 if (block != null)
                 {
-                    expressionsForBlock.Add(block);
+                    _expressions.Add(block);
                 }
             }
-            var finalBlock = Expression.Block(expressionsForBlock);
-            var deser = Expression.Lambda<SerializerDelegate>(finalBlock, objectForWork, buffer, deserContext).Compile();
-            _serializer = deser;
         }
 
         public void Serialize(object obj, ref Span<byte> buffer, DeserializationContext context)
@@ -82,8 +89,12 @@ namespace Qwack.Serialization
             {
                 if (field.FieldType.IsValueType)
                 {
-                    //SetupObject(field.FieldType);
-                    expression = null;
+                    var fieldParam = Expression.Parameter(field.FieldType);
+                    var fieldParamAssign = Expression.Assign(fieldParam, fieldExp);
+                    _parameters.Add(fieldParam);
+                    _expressions.Add(fieldParamAssign);
+                    SetupObject(field.FieldType, fieldParam, buffer, context);
+                    return null;
                 }
                 else
                 {

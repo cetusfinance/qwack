@@ -7,7 +7,7 @@ namespace Qwack.Serialization.Test
 {
     public class StructSerializationFacts
     {
-        [Fact(Skip = "Boken")]
+        [Fact]
         public void SimpleNestedStructsWork()
         {
             var bin = new BinarySerializer();

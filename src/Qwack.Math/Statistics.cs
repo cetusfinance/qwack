@@ -425,6 +425,53 @@ namespace Qwack.Math
             return z;
         }
 
+        /// <summary>
+        /// Double-precision normal CDF a'la West's paper
+        /// http://www.codeplanet.eu/files/download/accuratecumnorm.pdf
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        public static double CumnormWest(double x)
+        {
+            var cumNorm = 0.0;
+
+            var XAbs = Abs(x);
+            if (XAbs > 37)
+                cumNorm = 0.0;
+            else
+            {
+                var Exponential = Exp(-XAbs * XAbs / 2.0);
+                if (XAbs < 7.07106781186547)
+                {
+                    var build = 3.52624965998911E-02 * XAbs + 0.700383064443688;
+                    build = build * XAbs + 6.37396220353165;
+                    build = build * XAbs + 33.912866078383;
+                    build = build * XAbs + 112.079291497871;
+                    build = build * XAbs + 221.213596169931;
+                    build = build * XAbs + 220.206867912376;
+                    cumNorm = Exponential * build;
+                    build = 8.83883476483184E-02 * XAbs + 1.75566716318264;
+                    build = build * XAbs + 16.064177579207;
+                    build = build * XAbs + 86.7807322029461;
+                    build = build * XAbs + 296.564248779674;
+                    build = build * XAbs + 637.333633378831;
+                    build = build * XAbs + 793.826512519948;
+                    build = build * XAbs + 440.413735824752;
+                    cumNorm = cumNorm / build;
+                }
+                else
+                {
+                    var build = XAbs + 0.65;
+                    build = XAbs + 4 / build;
+                    build = XAbs + 3 / build;
+                    build = XAbs + 2 / build;
+                    build = XAbs + 1 / build;
+                    cumNorm = Exponential / build / 2.506628274631;
+                }
+            }
+            return x > 0 ? 1 - cumNorm : cumNorm;
+        }
+
         public static double HistogramMean(double[] Xs, double[] Ys)
         {
             var n = Xs.Length;

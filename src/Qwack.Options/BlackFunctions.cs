@@ -25,6 +25,16 @@ namespace Qwack.Options
             return (Exp(-riskFreeRate * expTime) * (((cpf * forward) * Statistics.NormSDist(num2 * cpf)) - ((cpf * strike) * Statistics.NormSDist(num3 * cpf))));
         }
 
+        public static double BlackDigitalPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
+        {
+            var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
+
+            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
+            var d2 = d1 - volatility * Sqrt(expTime);
+   
+            return Exp(-riskFreeRate * expTime) * Statistics.NormSDist(d2 * cpf);
+        }
+
         public static double BlackVega(double forward, double strike, double riskFreeRate, double expTime, double volatility)
         {
             var d = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
@@ -97,6 +107,17 @@ namespace Qwack.Options
             Func<double, double> testBlack = (vol =>
             {
                 return BlackPV(forward, strike, riskFreeRate, expTime, vol, CP) - premium;
+            });
+
+            var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBlack, 0.000000001, 5.0000000, 1e-10);
+            return impliedVol;
+        }
+
+        public static double BlackDigitalImpliedVol(double forward, double strike, double riskFreeRate, double expTime, double premium, OptionType CP)
+        {
+            Func<double, double> testBlack = (vol =>
+            {
+                return BlackDigitalPV(forward, strike, riskFreeRate, expTime, vol, CP) - premium;
             });
 
             var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBlack, 0.000000001, 5.0000000, 1e-10);

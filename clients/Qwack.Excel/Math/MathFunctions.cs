@@ -75,5 +75,17 @@ namespace Qwack.Excel.Math
                 return BivariateNormal.PDF(X, Xbar, XStdDev, Y, Ybar, YStdDev, Correlation);
             });
         }
+
+        [ExcelFunction(Description = "Returns CDF value from standard (zero-mean, unit std dev) bivariate normal distribution", Category = CategoryNames.Math, Name = CategoryNames.Math + "_" + nameof(BivariateNormalStdCDF))]
+        public static object BivariateNormalStdCDF(
+            [ExcelArgument(Description = "X value")] double X,
+            [ExcelArgument(Description = "Y value")] double Y,
+            [ExcelArgument(Description = "Correlation")] double Correlation)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return BivariateNormal.CDF(X, Y, Correlation);
+            });
+        }
     }
 }

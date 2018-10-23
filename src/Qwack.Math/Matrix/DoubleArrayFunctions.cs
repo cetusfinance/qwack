@@ -190,6 +190,40 @@ namespace Qwack.Math.Matrix
             return result;
         }
 
+        public static double[][] MatrixSubtract(this double[][] a, double[][] b)
+        {
+            if (a.Length != b.Length || a[0].Length != b[0].Length) throw new InvalidOperationException("Non-conformable matrices");
+
+            var o = new double[a.Length][];
+            for (var i = 0; i < o.Length; i++)
+            {
+                o[i] = new double[a[i].Length];
+
+                for (var j = 0; j < o[i].Length; j++)
+                {
+                    o[i][j] = a[i][j] - b[i][j];
+                }
+            }
+            return o;
+        }
+
+        public static double[][] MatrixAdd(this double[][] a, double[][] b)
+        {
+            if (a.Length != b.Length || a[0].Length != b[0].Length) throw new InvalidOperationException("Non-conformable matrices");
+
+            var o = new double[a.Length][];
+            for (var i = 0; i < o.Length; i++)
+            {
+                o[i] = new double[a[i].Length];
+
+                for (var j = 0; j < o[i].Length; j++)
+                {
+                    o[i][j] = a[i][j] + b[i][j];
+                }
+            }
+            return o;
+        }
+
 
         public static double[][] Transpose(double[][] matrix)
         {
@@ -389,6 +423,86 @@ namespace Qwack.Math.Matrix
             }
 
             return ret;
+        }
+
+        public static double Norm(this double[] vectorA) => vectorA.Select(x => Abs(x)).Sum();
+        public static double[] Normalize(this double[] vectorA) => vectorA.Select(x => x / Norm(vectorA)).ToArray();
+        public static double Norm(this double[][] matrixA) => matrixA.Select(x => x.Select(y=>Abs(y)).Sum()).Sum();
+
+        public static double[][] DiagonalMatrix(double element, int size)
+        {
+            var o = new double[size][];
+            for (var i = 0; i < size; i++)
+            {
+                o[i] = new double[size];
+                o[i][i] = element;
+            }
+            return o;
+        }
+
+        public static double Determinant(this double[][] a)
+        {
+            if (!a.IsSquare())
+                throw new Exception("Cannot calculate determinant of a non-square matrix");
+            var size = a.Length;
+            if (size == 1)
+                return a[0][0];
+            if (size == 2)
+                return a[0][0] * a[1][1] - a[1][0] * a[0][1];
+
+            var total = 0.0;
+            for (var i = 0; i < size; i++)
+            {
+                var subMatrix = new double[size - 1][];
+                for (var j = 0; j < subMatrix.Length; j++)
+                {
+                    subMatrix[j] = new double[subMatrix.Length];
+                }
+                var sign = i % 2 == 1 ? -1.0 : 1.0;
+                for (var j = 0; j < subMatrix.Length; j++)
+                {
+                    var colShift = j >= i ? 1 : 0;
+                    for (var k = 0; k < subMatrix.Length; k++)
+                    {
+                        subMatrix[k][j] = a[k + 1][j + colShift];
+                    }
+                }
+                total += a[0][i] * Determinant(subMatrix) * sign;
+            }
+            return total;
+        }
+
+        public static (double eigenValue, double[] eigenVector) RayleighQuotient(this double[][] a, double epsilon, double[] initialEigenVector, double initialEigenValue)
+        {
+            var size = a.Length;
+            var norm = initialEigenVector.Norm();
+            var eigenVector = initialEigenVector.Normalize();
+            var eigenValue = initialEigenValue;
+            
+
+            var err = double.MaxValue;
+            var breakkout = 0;
+            while(Abs(err)>epsilon)
+            {
+                var muI = DiagonalMatrix(eigenValue, size);
+                var r = a.MatrixSubtract(muI);
+                r = InvertMatrix(r);
+                eigenVector = MatrixProduct(r, eigenVector);
+                eigenVector = eigenVector.Normalize();
+
+                var q = VectorProduct(MatrixProduct(eigenVector, a), eigenVector);
+                q /= VectorProduct(eigenVector, eigenVector);
+                eigenValue = q;
+                var y = MatrixSubtract(a, DiagonalMatrix(eigenValue, size));
+                err = y.Determinant();
+
+                if (breakkout > 10000)
+                    throw new Exception("Failed to find eigen values / vectors");
+
+                breakkout++;
+            }
+
+            return (eigenValue, eigenVector);
         }
     }
 }

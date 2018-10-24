@@ -19,13 +19,14 @@ namespace Qwack.Serialization.Test
             var newObj = (ClassWithStruct) deBin.DeserializeObjectGraph(data);
 
             Assert.Equal(obj.Struct.TestInt, newObj.Struct.TestInt);
+            Assert.Equal(obj.Struct.TestDouble, newObj.Struct.TestDouble);
         }
 
         public static ClassWithStruct Create()
         {
             var str = new ClassWithStruct()
             {
-                Struct = new BasicStruct() { TestInt = 100 },
+                Struct = new BasicStruct() { TestInt = 100, TestDouble = 4.0 },
             };
             return str;
         }
@@ -39,5 +40,8 @@ namespace Qwack.Serialization.Test
     public struct BasicStruct
     {
         public int TestInt;
+        private double _testDoulble;
+
+        public double TestDouble { get => _testDoulble; set => _testDoulble = value; }
     }
 }

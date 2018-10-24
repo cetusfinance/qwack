@@ -109,13 +109,15 @@ namespace Qwack.Serialization
                 }
                 else if (genType == typeof(HashSet<>))
                 {
+                    var getEnumerator = field.FieldType.GetMethods();
                     return null;
                     //throw new NotImplementedException("HashSet");
                 }
                 else if (genType == typeof(List<>))
                 {
-                    return null;
-                    //throw new NotImplementedException("List");
+                    var genArgument = field.FieldType.GenericTypeArguments[0];
+                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleListExpression(fieldExp, buffer, genArgument);
+                    throw new NotImplementedException($"List of type {genArgument}");
                 }
                 else if (genType == typeof(Func<,>))
                 {
@@ -136,6 +138,7 @@ namespace Qwack.Serialization
 
         protected abstract Expression BuildQwackExpression(FieldInfo field, ParameterExpression buffer, ParameterExpression context, MemberExpression fieldExp);
         protected abstract Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType);
+        protected abstract Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType);
         protected abstract Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null);
     }
 }

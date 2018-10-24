@@ -16,7 +16,7 @@ namespace Qwack.Paths
         {
             if (!_features.TryGetValue(typeof(T), out var returnValue))
             {
-                return default(T);
+                return default;
             }
             return returnValue as T;
         }

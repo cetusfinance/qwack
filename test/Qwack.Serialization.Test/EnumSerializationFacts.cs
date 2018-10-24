@@ -15,7 +15,7 @@ namespace Qwack.Serialization.Test
 
             var obj = Create();
             ser.PrepareObjectGraph(obj);
-            var span = ser.SerializeObjectGraph(null);
+            var span = ser.SerializeObjectGraph();
 
             var newObj = (EnumObject)deser.DeserializeObjectGraph(span);
 

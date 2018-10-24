@@ -374,8 +374,10 @@ namespace Qwack.Excel.Curves
                 var futuresProvider = ContainerStores.SessionContainer.GetRequiredService<IFutureSettingsProvider>();
                 var dictData1m = Fixings1m.RangeToDictionary<DateTime, double>();
                 var dictData2m = Fixings2m.RangeToDictionary<DateTime, double>();
-                var fc = new FutureCode(FuturesCode, futuresProvider);
-                fc.YearBeforeWhich2DigitDatesAreUsed = DateTime.Today.Year - 2;
+                var fc = new FutureCode(FuturesCode, futuresProvider)
+                {
+                    YearBeforeWhich2DigitDatesAreUsed = DateTime.Today.Year - 2
+                };
 
                 foreach (var kv in dictData1m)
                 {

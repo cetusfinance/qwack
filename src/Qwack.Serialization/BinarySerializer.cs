@@ -19,11 +19,12 @@ namespace Qwack.Serialization
         {
             if (objectGraph == null) return;
             if (!objectGraph.GetType().Namespace.StartsWith("Qwack")) return;
+            if (objectGraph.GetType().IsValueType) return;
             var objType = objectGraph.GetType();
 
             if (!_serializationStrategies.TryGetValue(objType, out var strat))
             {
-                _serializationStrategies.Add(objType, (typeNumber++ ,new SerializationStrategy(objType)));
+                _serializationStrategies.Add(objType, (typeNumber++, new SerializationStrategy(objType)));
             }
 
             var privateFields = objectGraph.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -58,24 +59,24 @@ namespace Qwack.Serialization
             }
         }
 
-        public Span<byte> SerializeObjectGraph(PipeWriter pipeWriter)
+        public Span<byte> SerializeObjectGraph()
         {
             var context = new DeserializationContext();
-            var buffer =(Span<byte>) new byte[1024 * 1024 * 50];
+            var buffer = (Span<byte>)new byte[1024 * 1024 * 50];
             var originalSpan = buffer;
 
             buffer.WriteInt(_serializationStrategies.Count);
-            foreach(var s in _serializationStrategies)
+            foreach (var s in _serializationStrategies)
             {
                 buffer.WriteInt(s.Value.number);
                 buffer.WriteString(s.Value.strategy.FullName);
             }
 
-            foreach(var o in _objectsCrawled)
+            foreach (var o in _objectsCrawled)
             {
-                var info = _serializationStrategies[o.GetType()];
-                buffer.WriteInt(info.number);
-                info.strategy.Serialize(o, ref buffer, context);
+                var (number, strategy) = _serializationStrategies[o.GetType()];
+                buffer.WriteInt(number);
+                strategy.Serialize(o, ref buffer, context);
             }
 
             return originalSpan.Slice(0, originalSpan.Length - buffer.Length);

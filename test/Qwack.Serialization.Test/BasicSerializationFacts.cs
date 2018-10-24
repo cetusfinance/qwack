@@ -33,6 +33,8 @@ namespace Qwack.Serialization.Test
             Assert.Equal(obj.TestUShortMin, deserObj.TestUShortMin);
             Assert.Equal(obj.TestShortMin, deserObj.TestShortMin);
             Assert.Equal(obj.TestFloatMax, deserObj.TestFloatMax);
+            Assert.Equal(obj.TestDateTime, deserObj.TestDateTime);
+            Assert.Equal(0, deserObj.TestSkipInt);
         }
 
         private BasicObject Create() => new BasicObject()
@@ -54,6 +56,8 @@ namespace Qwack.Serialization.Test
             TestULongMax = ulong.MaxValue,
             TestUShortMin = ushort.MinValue,
             TestFloatMax = float.MaxValue,
+            TestDateTime = DateTime.UtcNow,
+            TestSkipInt = 100,
         };
     }
 
@@ -76,5 +80,9 @@ namespace Qwack.Serialization.Test
         public double TestDoubleMin { get; set; }
         public bool TestBoolTrue { get; set; }
         public bool TestBoolFalse { get; set; }
+        public DateTime TestDateTime { get; set; }
+        [SkipSerialization]
+        private int _testSkipInt;
+        public int TestSkipInt { get => _testSkipInt; set => _testSkipInt = value; }
     }
 }

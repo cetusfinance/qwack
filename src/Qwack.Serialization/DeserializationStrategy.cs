@@ -91,5 +91,31 @@ namespace Qwack.Serialization
 
             return returnBlock;
         }
+
+        protected override Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType)
+        {
+            var length = Expression.Parameter(typeof(int));
+            var getlength = BuildExpression(typeof(int), length, buffer);
+            var array = Expression.Parameter(field.Type);
+            var createAnArray = Expression.New(field.Type);
+            var assignArray = Expression.Assign(array, createAnArray);
+            var index = Expression.Parameter(typeof(int), "index");
+            var assignZero = Expression.Assign(index, Expression.Constant(0));
+            var increment = Expression.AddAssign(index, Expression.Constant(1));
+            var value = Expression.Parameter(elementType);
+            var addMethod = Expression.Call(array, array.Type.GetMethod("Add"), value);
+            var label = Expression.Label();
+            var ifThenExit = Expression.IfThen(Expression.Equal(index, length), Expression.Break(label));
+            var readArrayValue = BuildExpression(elementType, value, buffer);
+            var expressionLoop = Expression.Loop(Expression.Block(ifThenExit, readArrayValue, addMethod, increment), label);
+            var finalAssignArray = Expression.Assign(field, array);
+
+            var ifNull = Expression.IfThen(Expression.NotEqual(length, Expression.Constant(-1)),
+                Expression.Block(assignArray, assignZero, expressionLoop, finalAssignArray));
+
+            var returnBlock = Expression.Block(new[] { value, length, array, index }, getlength, ifNull);
+
+            return returnBlock;
+        }
     }
 }

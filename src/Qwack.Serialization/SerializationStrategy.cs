@@ -78,5 +78,30 @@ namespace Qwack.Serialization
             var writeInt = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, lookupId);
             return writeInt;
         }
+
+        protected override Expression BuildSimpleHashsetExpression(Expression fieldExp, ParameterExpression buffer, Type elementType)
+        {
+            var iEnumerableType = typeof(IEnumerable<>).MakeGenericType(elementType);
+            var iEnumeratorType = typeof(IEnumerator<>).MakeGenericType(elementType);
+            var size = Expression.Call(fieldExp, fieldExp.Type.GetMethod("get_Count"));
+            var compareToNull = Expression.Equal(fieldExp, Expression.Default(fieldExp.Type));
+            var writeNull = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, Expression.Constant(-1));
+
+            var writeSize = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, size);
+            var genEnumerable = Expression.Convert(fieldExp, iEnumerableType);
+            var getEnumerator = Expression.Call(genEnumerable, iEnumerableType.GetMethod("GetEnumerator"));
+            var enumParam = Expression.Parameter(iEnumeratorType);
+            var assignEnumParm = Expression.Assign(enumParam, getEnumerator);
+
+            var label = Expression.Label();
+            var ifThenExit = Expression.IfThen(Expression.IsFalse(Expression.Call(enumParam, iEnumeratorType.GetInterface("IEnumerator").GetMethod("MoveNext"))), Expression.Break(label));
+            var writeValue = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[elementType]}"), buffer, Expression.Call(enumParam, iEnumeratorType.GetMethod("get_Current")));
+            var loop = Expression.Loop(Expression.Block(ifThenExit, writeValue), label);
+
+            var block = Expression.Block(new[] { enumParam }, writeSize, assignEnumParm, loop);
+
+            var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
+            return compareIf;
+        }
     }
 }

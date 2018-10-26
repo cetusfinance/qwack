@@ -55,8 +55,9 @@ namespace Qwack.Serialization
             foreach (var field in privateFields)
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
-
-                var block = GetExpressionForType(field, source, buffer, deserializationContext);
+                var fieldExp = Expression.Field(source, field);
+                            
+                var block = GetExpressionForType(fieldExp, buffer, deserializationContext);
                 if (block != null)
                 {
                     expressions.Add(block);
@@ -65,80 +66,79 @@ namespace Qwack.Serialization
             return expressions;
         }
 
-        protected Expression GetExpressionForType(FieldInfo field, Expression objForWork, ParameterExpression buffer, ParameterExpression context)
+        protected Expression GetExpressionForType(Expression fieldExp, ParameterExpression buffer, ParameterExpression context)
         {
-            var fieldExp = Expression.Field(objForWork, field);
-            if (_methodMapping.ContainsKey(field.FieldType)) return BuildExpression(field.FieldType, fieldExp, buffer);
-            else if (field.FieldType.IsEnum)
+            if (_methodMapping.ContainsKey(fieldExp.Type)) return BuildExpression(fieldExp.Type, fieldExp, buffer);
+            else if (fieldExp.Type.IsEnum)
             {
-                var enumType = field.FieldType.GetEnumUnderlyingType();
-                if (_methodMapping.ContainsKey(enumType)) return BuildExpression(enumType, fieldExp, buffer, field.FieldType);
-                throw new NotSupportedException($"Unsupported enum of type{field.FieldType}");
+                var enumType = fieldExp.Type.GetEnumUnderlyingType();
+                if (_methodMapping.ContainsKey(enumType)) return BuildExpression(enumType, fieldExp, buffer, fieldExp.Type);
+                throw new NotSupportedException($"Unsupported enum of type{fieldExp.Type}");
             }
-            else if (field.FieldType.IsArray)
+            else if (fieldExp.Type.IsArray)
             {
-                var elementType = field.FieldType.GetElementType();
-                if (_methodMapping.ContainsKey(elementType)) return BuildSimpleArrayExpression(fieldExp, buffer, elementType);
+                var elementType = fieldExp.Type.GetElementType();
+                if (_methodMapping.ContainsKey(elementType)) return BuildSimpleArrayExpression(fieldExp, buffer, elementType, context);
                 throw new NotSupportedException(elementType.Name);
             }
-            else if (field.FieldType.Namespace.StartsWith("Qwack"))
+            else if (fieldExp.Type.Namespace.StartsWith("Qwack"))
             {
-                if (field.FieldType.IsValueType)
+                if (fieldExp.Type.IsValueType)
                 {
-                    var fieldParam = Expression.Parameter(field.FieldType);
+                    var fieldParam = Expression.Parameter(fieldExp.Type);
                     var fieldParamAssign = Expression.Assign(fieldParam, fieldExp);
                     _parameters.Add(fieldParam);
                     var exps = new List<Expression> { fieldParamAssign };
-                    exps.AddRange(SetupObject(field.FieldType, fieldParam, buffer, context));
+                    exps.AddRange(SetupObject(fieldExp.Type, fieldParam, buffer, context));
                     exps.Add(Expression.Assign(fieldExp, fieldParam));
                     var block = Expression.Block(exps);
                     return block;
                 }
                 else
                 {
-                    return BuildQwackExpression(field, buffer, context, fieldExp);
+                    return BuildQwackExpression(buffer, context, fieldExp);
                 }
             }
-            else if (field.FieldType.IsGenericType)
+            else if (fieldExp.Type.IsGenericType)
             {
-                var genType = field.FieldType.GetGenericTypeDefinition();
+                var genType = fieldExp.Type.GetGenericTypeDefinition();
                 if (genType == typeof(Dictionary<,>))
                 {
-                    var genKey = field.FieldType.GenericTypeArguments[0];
-                    var genValue = field.FieldType.GenericTypeArguments[1];
-                    if (_methodMapping.ContainsKey(genKey) && _methodMapping.ContainsKey(genValue)) return BuildSimpleDictionaryExpression(fieldExp, buffer, genKey, genValue);
+                    var genKey = fieldExp.Type.GenericTypeArguments[0];
+                    var genValue = fieldExp.Type.GenericTypeArguments[1];
+                    if (_methodMapping.ContainsKey(genKey) && _methodMapping.ContainsKey(genValue)) return BuildSimpleDictionaryExpression(fieldExp, buffer, genKey, genValue, context);
                     throw new NotImplementedException("Dictionary");
                 }
                 else if (genType == typeof(HashSet<>))
                 {
-                    var genArgument = field.FieldType.GenericTypeArguments[0];
-                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleHashsetExpression(fieldExp, buffer, genArgument);
+                    var genArgument = fieldExp.Type.GenericTypeArguments[0];
+                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleHashsetExpression(fieldExp, buffer, genArgument, context);
                     throw new NotImplementedException("HashSet");
                 }
                 else if (genType == typeof(List<>))
                 {
-                    var genArgument = field.FieldType.GenericTypeArguments[0];
-                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleListExpression(fieldExp, buffer, genArgument);
+                    var genArgument = fieldExp.Type.GenericTypeArguments[0];
+                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleListExpression(fieldExp, buffer, genArgument, context);
                     throw new NotImplementedException($"List of type {genArgument}");
                 }
                 else
                 {
-                    throw new NotSupportedException(field.FieldType.Name);
+                    throw new NotSupportedException(fieldExp.Type.Name);
                 }
             }
             else
             {
-                throw new NotImplementedException(field.FieldType.Name);
+                throw new NotImplementedException(fieldExp.Type.Name);
             }
         }
 
         protected static MethodInfo GetSimpleMethod(string methodName) => typeof(SpanExtensions).GetMethod(methodName);
 
-        protected abstract Expression BuildQwackExpression(FieldInfo field, ParameterExpression buffer, ParameterExpression context, MemberExpression fieldExp);
-        protected abstract Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType);
-        protected abstract Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType);
-        protected abstract Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType);
-        protected abstract Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType);
+        protected abstract Expression BuildQwackExpression(ParameterExpression buffer, ParameterExpression context, Expression fieldExp);
+        protected abstract Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
+        protected abstract Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType, ParameterExpression context);
+        protected abstract Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
+        protected abstract Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
         protected abstract Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null);
     }
 }

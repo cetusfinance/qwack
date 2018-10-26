@@ -17,7 +17,7 @@ namespace Qwack.Serialization
             _serializer(obj, ref buffer, context);
         }
 
-        protected override Expression BuildSimpleArrayExpression(Expression fieldExp, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleArrayExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var size = Expression.ArrayLength(fieldExp);
             var compareToNull = Expression.Equal(fieldExp, Expression.Default(elementType.MakeArrayType()));
@@ -39,7 +39,7 @@ namespace Qwack.Serialization
             return compareIf;
         }
 
-        protected override Expression BuildSimpleListExpression(Expression fieldExp, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleListExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var size = Expression.Call(fieldExp, fieldExp.Type.GetMethod("get_Count"));
             var compareToNull = Expression.Equal(fieldExp, Expression.Default(fieldExp.Type));
@@ -72,14 +72,14 @@ namespace Qwack.Serialization
             return call;
         }
 
-        protected override Expression BuildQwackExpression(FieldInfo field, ParameterExpression buffer, ParameterExpression context, MemberExpression fieldExp)
+        protected override Expression BuildQwackExpression(ParameterExpression buffer, ParameterExpression context, Expression fieldExp)
         {
             var lookupId = Expression.Call(context, typeof(DeserializationContext).GetMethod("GetObjectId"), fieldExp);
             var writeInt = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, lookupId);
             return writeInt;
         }
 
-        protected override Expression BuildSimpleHashsetExpression(Expression fieldExp, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleHashsetExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var iEnumerableType = typeof(IEnumerable<>).MakeGenericType(elementType);
             var iEnumeratorType = typeof(IEnumerator<>).MakeGenericType(elementType);
@@ -104,7 +104,7 @@ namespace Qwack.Serialization
             return compareIf;
         }
 
-        protected override Expression BuildSimpleDictionaryExpression(Expression fieldExp, ParameterExpression buffer, Type keyType, Type valueType)
+        protected override Expression BuildSimpleDictionaryExpression(Expression fieldExp, ParameterExpression buffer, Type keyType, Type valueType, ParameterExpression context)
         {
             var kvType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
             var iEnumerableType = typeof(IEnumerable<>).MakeGenericType(kvType);

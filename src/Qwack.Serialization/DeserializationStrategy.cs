@@ -12,7 +12,7 @@ namespace Qwack.Serialization
         {
         }
 
-        protected override Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);
@@ -58,15 +58,15 @@ namespace Qwack.Serialization
             return instance;
         }
 
-        protected override Expression BuildQwackExpression(FieldInfo field, ParameterExpression buffer, ParameterExpression context, MemberExpression fieldExp)
+        protected override Expression BuildQwackExpression(ParameterExpression buffer, ParameterExpression context, Expression fieldExp)
         {
             var idValue = Expression.Call(null, GetSimpleMethod("ReadInt"), buffer);
             var lookupId = Expression.Call(context, typeof(DeserializationContext).GetMethod("GetObjectById"), idValue);
-            var assignObject = Expression.Assign(fieldExp, Expression.Convert(lookupId, field.FieldType));
+            var assignObject = Expression.Assign(fieldExp, Expression.Convert(lookupId, fieldExp.Type));
             return assignObject;
         }
 
-        protected override Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);
@@ -92,7 +92,7 @@ namespace Qwack.Serialization
             return returnBlock;
         }
 
-        protected override Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType)
+        protected override Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);
@@ -118,7 +118,7 @@ namespace Qwack.Serialization
             return returnBlock;
         }
 
-        protected override Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType)
+        protected override Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);

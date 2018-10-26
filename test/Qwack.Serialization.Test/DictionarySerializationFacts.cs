@@ -35,7 +35,7 @@ namespace Qwack.Serialization.Test
             return obj;
         }
     }
-       
+
     public class ObjectWithDictionaries
     {
         public Dictionary<string, int> StringDictionary { get; set; }

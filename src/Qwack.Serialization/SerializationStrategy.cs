@@ -103,5 +103,35 @@ namespace Qwack.Serialization
             var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
             return compareIf;
         }
+
+        protected override Expression BuildSimpleDictionaryExpression(Expression fieldExp, ParameterExpression buffer, Type keyType, Type valueType)
+        {
+            var kvType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
+            var iEnumerableType = typeof(IEnumerable<>).MakeGenericType(kvType);
+            var iEnumeratorType = typeof(IEnumerator<>).MakeGenericType(kvType);
+            var size = Expression.Call(fieldExp, fieldExp.Type.GetMethod("get_Count"));
+            var compareToNull = Expression.Equal(fieldExp, Expression.Default(fieldExp.Type));
+            var writeNull = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, Expression.Constant(-1));
+
+            var writeSize = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, size);
+            var genEnumerable = Expression.Convert(fieldExp, iEnumerableType);
+            var getEnumerator = Expression.Call(genEnumerable, iEnumerableType.GetMethod("GetEnumerator"));
+            var enumParam = Expression.Parameter(iEnumeratorType);
+            var assignEnumParm = Expression.Assign(enumParam, getEnumerator);
+
+            var label = Expression.Label();
+            var ifThenExit = Expression.IfThen(Expression.IsFalse(Expression.Call(enumParam, iEnumeratorType.GetInterface("IEnumerator").GetMethod("MoveNext"))), Expression.Break(label));
+            var getCurrent = Expression.Call(enumParam, iEnumeratorType.GetMethod("get_Current"));
+            var getKey = Expression.Call(getCurrent, kvType.GetMethod("get_Key"));
+            var getValue = Expression.Call(getCurrent, kvType.GetMethod("get_Value"));
+            var writeKey = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[keyType]}"), buffer, getKey);
+            var writeValue = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[valueType]}"), buffer, getValue);
+            var loop = Expression.Loop(Expression.Block(ifThenExit, writeKey, writeValue), label);
+
+            var block = Expression.Block(new[] { enumParam }, writeSize, assignEnumParm, loop);
+
+            var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
+            return compareIf;
+        }
     }
 }

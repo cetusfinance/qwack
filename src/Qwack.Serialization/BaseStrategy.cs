@@ -104,8 +104,10 @@ namespace Qwack.Serialization
                 var genType = field.FieldType.GetGenericTypeDefinition();
                 if (genType == typeof(Dictionary<,>))
                 {
-                    return null;
-                    //throw new NotImplementedException("Dictionary");
+                    var genKey = field.FieldType.GenericTypeArguments[0];
+                    var genValue = field.FieldType.GenericTypeArguments[1];
+                    if (_methodMapping.ContainsKey(genKey) && _methodMapping.ContainsKey(genValue)) return BuildSimpleDictionaryExpression(fieldExp, buffer, genKey, genValue);
+                    throw new NotImplementedException("Dictionary");
                 }
                 else if (genType == typeof(HashSet<>))
                 {
@@ -118,10 +120,6 @@ namespace Qwack.Serialization
                     var genArgument = field.FieldType.GenericTypeArguments[0];
                     if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleListExpression(fieldExp, buffer, genArgument);
                     throw new NotImplementedException($"List of type {genArgument}");
-                }
-                else if (genType == typeof(Func<,>))
-                {
-                    throw new NotImplementedException("Func<,>");
                 }
                 else
                 {
@@ -138,6 +136,7 @@ namespace Qwack.Serialization
 
         protected abstract Expression BuildQwackExpression(FieldInfo field, ParameterExpression buffer, ParameterExpression context, MemberExpression fieldExp);
         protected abstract Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType);
+        protected abstract Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType);
         protected abstract Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType);
         protected abstract Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType);
         protected abstract Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null);

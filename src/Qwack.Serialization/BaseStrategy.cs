@@ -112,8 +112,7 @@ namespace Qwack.Serialization
                 else if (genType == typeof(HashSet<>) || genType == typeof(List<>))
                 {
                     var genArgument = fieldExp.Type.GenericTypeArguments[0];
-                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleHashsetOrListExpression(fieldExp, buffer, genArgument, context);
-                    throw new NotImplementedException("HashSet");
+                    return BuildSimpleHashsetOrListExpression(fieldExp, buffer, genArgument, context);
                 }
                 else
                 {

@@ -23,6 +23,20 @@ namespace Qwack.Serialization.Test
             Assert.Null(newObj.NullHashset);
         }
 
+        [Fact]
+        public void CanSerializeFullHashSet()
+        {
+            var obj = CreateFull();
+            var binSer = new BinarySerializer();
+            binSer.PrepareObjectGraph(obj);
+            var span = binSer.SerializeObjectGraph();
+
+            var binDeser = new BinaryDeserializer();
+            var newObj = (ObjectWithFullHashSets)binDeser.DeserializeObjectGraph(span);
+
+            Assert.Equal(3, newObj.NestedHashSet.Count);
+        }
+
         public static ObjectWithHashsets Create()
         {
             var obj = new ObjectWithHashsets()
@@ -32,8 +46,22 @@ namespace Qwack.Serialization.Test
             };
             return obj;
         }
+
+        public static ObjectWithFullHashSets CreateFull()
+        {
+            var obj = new ObjectWithFullHashSets()
+            {
+                NestedHashSet = new HashSet<ObjectWithLists>() { ListSerializationFacts.Create(), ListSerializationFacts.Create() }
+            };
+            return obj;
+        }
     }
        
+    public class ObjectWithFullHashSets
+    {
+        public HashSet<ObjectWithLists> NestedHashSet { get; set; }
+    }
+
     public class ObjectWithHashsets
     {
         public HashSet<string> StringHashset { get; set; }

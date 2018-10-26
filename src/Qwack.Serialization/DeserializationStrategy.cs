@@ -66,7 +66,7 @@ namespace Qwack.Serialization
             return assignObject;
         }
 
-        protected override Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
+                protected override Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);
@@ -80,7 +80,7 @@ namespace Qwack.Serialization
             var addMethod = Expression.Call(array, array.Type.GetMethod("Add"), value);
             var label = Expression.Label();
             var ifThenExit = Expression.IfThen(Expression.Equal(index, length), Expression.Break(label));
-            var readArrayValue = BuildExpression(elementType, value, buffer);
+            var readArrayValue = GetExpressionForType(value, buffer, context);
             var expressionLoop = Expression.Loop(Expression.Block(ifThenExit, readArrayValue, addMethod, increment), label);
             var finalAssignArray = Expression.Assign(field, array);
 

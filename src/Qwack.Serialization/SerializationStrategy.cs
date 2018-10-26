@@ -73,8 +73,9 @@ namespace Qwack.Serialization
 
             var label = Expression.Label();
             var ifThenExit = Expression.IfThen(Expression.IsFalse(Expression.Call(enumParam, iEnumeratorType.GetInterface("IEnumerator").GetMethod("MoveNext"))), Expression.Break(label));
-            var writeValue = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[elementType]}"), buffer, Expression.Call(enumParam, iEnumeratorType.GetMethod("get_Current")));
-            var loop = Expression.Loop(Expression.Block(ifThenExit, writeValue), label);
+            var current = Expression.Call(enumParam, iEnumeratorType.GetMethod("get_Current"));
+            var writeExpression = GetExpressionForType(current, buffer, context);
+            var loop = Expression.Loop(Expression.Block(ifThenExit, writeExpression), label);
 
             var block = Expression.Block(new[] { enumParam }, writeSize, assignEnumParm, loop);
 

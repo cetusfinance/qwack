@@ -39,28 +39,6 @@ namespace Qwack.Serialization
             return compareIf;
         }
 
-        protected override Expression BuildSimpleListExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
-        {
-            var size = Expression.Call(fieldExp, fieldExp.Type.GetMethod("get_Count"));
-            var compareToNull = Expression.Equal(fieldExp, Expression.Default(fieldExp.Type));
-            var writeNull = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, Expression.Constant(-1));
-
-            var writeSize = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, size);
-            var index = Expression.Parameter(typeof(int), "index");
-            var assignZero = Expression.Assign(index, Expression.Constant(0));
-            var label = Expression.Label();
-            var arrayValue = Expression.Call(fieldExp, fieldExp.Type.GetMethod("get_Item"), index);
-            var writeArrayValue = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[elementType]}"), buffer, arrayValue);
-            var increment = Expression.AddAssign(index, Expression.Constant(1));
-            var ifThenExit = Expression.IfThen(Expression.Equal(index, size), Expression.Break(label));
-            var expressionLoop = Expression.Loop(
-                Expression.Block(ifThenExit, writeArrayValue, increment), label);
-
-            var block = Expression.Block(new[] { index }, writeSize, assignZero, expressionLoop);
-            var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
-            return compareIf;
-        }
-
         protected override Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null)
         {
             var writeMethod = $"Write{_methodMapping[fieldType]}";
@@ -79,7 +57,7 @@ namespace Qwack.Serialization
             return writeInt;
         }
 
-        protected override Expression BuildSimpleHashsetExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
+        protected override Expression BuildSimpleHashsetOrListExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var iEnumerableType = typeof(IEnumerable<>).MakeGenericType(elementType);
             var iEnumeratorType = typeof(IEnumerator<>).MakeGenericType(elementType);

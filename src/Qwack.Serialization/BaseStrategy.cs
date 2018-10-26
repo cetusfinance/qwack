@@ -109,17 +109,11 @@ namespace Qwack.Serialization
                     if (_methodMapping.ContainsKey(genKey) && _methodMapping.ContainsKey(genValue)) return BuildSimpleDictionaryExpression(fieldExp, buffer, genKey, genValue, context);
                     throw new NotImplementedException("Dictionary");
                 }
-                else if (genType == typeof(HashSet<>))
+                else if (genType == typeof(HashSet<>) || genType == typeof(List<>))
                 {
                     var genArgument = fieldExp.Type.GenericTypeArguments[0];
-                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleHashsetExpression(fieldExp, buffer, genArgument, context);
+                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleHashsetOrListExpression(fieldExp, buffer, genArgument, context);
                     throw new NotImplementedException("HashSet");
-                }
-                else if (genType == typeof(List<>))
-                {
-                    var genArgument = fieldExp.Type.GenericTypeArguments[0];
-                    if (_methodMapping.ContainsKey(genArgument)) return BuildSimpleListExpression(fieldExp, buffer, genArgument, context);
-                    throw new NotImplementedException($"List of type {genArgument}");
                 }
                 else
                 {
@@ -137,8 +131,7 @@ namespace Qwack.Serialization
         protected abstract Expression BuildQwackExpression(ParameterExpression buffer, ParameterExpression context, Expression fieldExp);
         protected abstract Expression BuildSimpleArrayExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
         protected abstract Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType, ParameterExpression context);
-        protected abstract Expression BuildSimpleListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
-        protected abstract Expression BuildSimpleHashsetExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
+        protected abstract Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
         protected abstract Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null);
     }
 }

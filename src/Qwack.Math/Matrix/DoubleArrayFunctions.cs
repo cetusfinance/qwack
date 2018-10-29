@@ -225,7 +225,7 @@ namespace Qwack.Math.Matrix
         }
 
 
-        public static double[][] Transpose(double[][] matrix)
+        public static double[][] Transpose(this double[][] matrix)
         {
             var o = new double[matrix[0].Length][];
             for (var r = 0; r < matrix[0].Length; r++)
@@ -252,6 +252,26 @@ namespace Qwack.Math.Matrix
         public static double MaxAbsElement(this double[][] matrix) => matrix.Max(x => x.Max(y => Abs(y)));
 
         public static double MinElement(this double[][] matrix) => matrix.Min(x => x.Min());
+
+        public static double[][] GetColumn(this double[][] matrix, int col)
+        {
+            var o = new double[matrix[0].Length][];
+            for (var i = 0; i < o.Length; i++)
+            {
+                o[i] = new[] { matrix[i][col] };
+            }
+            return o;
+        }
+
+        public static double[] GetColumnVector(this double[][] matrix, int col)
+        {
+            var o = new double[matrix[0].Length];
+            for (var i = 0; i < o.Length; i++)
+            {
+                o[i] = matrix[i][col];
+            }
+            return o;
+        }
 
         public static double[][] MatrixProductBounds(double[][] matrixA, double[][] matrixB)
         {
@@ -426,8 +446,11 @@ namespace Qwack.Math.Matrix
         }
 
         public static double Norm(this double[] vectorA) => vectorA.Select(x => Abs(x)).Sum();
+        public static double EuclidNorm(this double[] vectorA) => Sqrt(vectorA.Select(x => x * x).Sum());
         public static double[] Normalize(this double[] vectorA) => vectorA.Select(x => x / Norm(vectorA)).ToArray();
-        public static double Norm(this double[][] matrixA) => matrixA.Select(x => x.Select(y=>Abs(y)).Sum()).Sum();
+        public static double[] EuclidNormalize(this double[] vectorA) => vectorA.Select(x => x / EuclidNorm(vectorA)).ToArray();
+        public static double Norm(this double[][] matrixA) => matrixA.Select(x => x.Select(y => Abs(y)).Sum()).Sum();
+        public static double EuclidNorm(this double[][] matrixA) => Sqrt(matrixA.Select(x => x.Select(y => y * y).Sum()).Sum());
 
         public static double[][] DiagonalMatrix(double element, int size)
         {
@@ -436,6 +459,16 @@ namespace Qwack.Math.Matrix
             {
                 o[i] = new double[size];
                 o[i][i] = element;
+            }
+            return o;
+        }
+
+        public static double[][] EmptyMatrix(int rows, int cols)
+        {
+            var o = new double[rows][];
+            for (var i = 0; i < rows; i++)
+            {
+                o[i] = new double[cols];
             }
             return o;
         }
@@ -478,11 +511,11 @@ namespace Qwack.Math.Matrix
             var norm = initialEigenVector.Norm();
             var eigenVector = initialEigenVector.Normalize();
             var eigenValue = initialEigenValue;
-            
+
 
             var err = double.MaxValue;
             var breakkout = 0;
-            while(Abs(err)>epsilon)
+            while (Abs(err) > epsilon)
             {
                 var muI = DiagonalMatrix(eigenValue, size);
                 var r = a.MatrixSubtract(muI);
@@ -504,5 +537,131 @@ namespace Qwack.Math.Matrix
 
             return (eigenValue, eigenVector);
         }
+
+        public static double[] ScalarDivide(this double[] vector, double divisor) => vector.Select(x => x / divisor).ToArray();
+        public static double[][] ScalarDivide(this double[][] matrixA, double divisor) => matrixA.Select(x => x.Select(y => y / divisor).ToArray()).ToArray();
+        public static double[] ScalarSubtract(this double[] vector, double subtractor) => vector.Select(x => x - subtractor).ToArray();
+        public static double[][] ScalarSubtract(this double[][] matrixA, double subtractor) => matrixA.Select(x => x.Select(y => y - subtractor).ToArray()).ToArray();
+        public static double VTV(this double[] v) => v.Select(x => x * x).Sum();
+
+        public static double[][] Clone(double[][] matrix)
+        {
+            var o = new double[matrix.Length][];
+            for (var i = 0; i < o.Length; i++)
+            {
+                o[i] = new double[matrix[i].Length];
+                Array.Copy(matrix[i], o[i], o[i].Length);
+            }
+            return o;
+        }
+
+        private static double[][] ComputeMinor(this double[][] mat, int d)
+        {
+            var o = EmptyMatrix(mat.Length, mat[0].Length);
+            for (var i = 0; i < d; i++)
+                o[i][i] = 1.0;
+            for (var i = d; i < o.Length; i++)
+                for (var j = d; j < o[0].Length; j++)
+                    o[i][j] = mat[i][j];
+            return o;
+        }
+
+        private static double[] Vmadd(double[] a, double[] b, double s) => a.Select((x, ix) => x + s * b[ix]).ToArray();
+
+        private static double[][] ComputeHouseholderFactor(double[] v)
+        {
+            var n = v.Length;
+            var mat = EmptyMatrix(n, n);
+            for (var i = 0; i < n; i++)
+                for (var j = 0; j < n; j++)
+                    mat[i][j] = -2 * v[i] * v[j];
+            for (var i = 0; i < n; i++)
+                mat[i][i] += 1;
+
+            return mat;
+        }
+
+        public static (double[][] Q, double[][] R) QRHouseholder(this double[][] mat)
+        {
+            var m = mat.Length;
+            var n = mat[0].Length;
+
+            // array of factor Q1, Q2, ... Qm
+            var qv = new double[m][][];
+
+            // temp array
+            var z = Clone(mat);
+            double[][] z1;
+
+            for (var k = 0; k < n && k < m - 1; k++)
+            {
+                var e = new double[m];
+                // compute minor
+                z1 = z.ComputeMinor(k);
+
+                // extract k-th column into x
+                var x = GetColumnVector(z1, k);
+
+                var a = x.EuclidNorm();
+                if (mat[k][k] > 0) a = -a;
+
+                for (var i = 0; i < e.Length; i++)
+                    e[i] = (i == k) ? 1 : 0;
+
+                // e = x + a*e
+                e = Vmadd(x, e, a);
+
+                // e = e / ||e||
+                e = e.EuclidNormalize();
+
+                // qv[k] = I - 2 *e*e^T
+                qv[k] = ComputeHouseholderFactor(e);
+
+                // z = qv[k] * z1
+                z = MatrixProduct(qv[k], z1);
+            }
+
+            var Q = qv[0];
+
+            // after this loop, we will obtain Q (up to a transpose operation)
+            for (var i = 1; i < n && i < m - 1; i++)
+            {
+                Q = MatrixProduct(qv[1], Q);
+            }
+
+            var R = MatrixProduct(Q, mat);
+            Q = Transpose(Q);
+            return (Q, R);
+        }
+
+        public static double[] QREigenValues(this double[][] a, double epsilon)
+        {
+            var A = a;
+
+            var err = double.MaxValue;
+            var breakkout = 0;
+            while (Abs(err) > epsilon)
+            {
+                var (Q, R) = A.QRHouseholder();
+                A = MatrixProduct(Q.Transpose(), MatrixProduct(A, Q));
+
+                err = 0;
+                for (var i = 1; i < A.Length; i++)
+                    for (var j = 0; j < i; j++)
+                    {
+                        err += Abs(A[i][j]);
+                    }
+
+                if (breakkout > 100000)
+                    throw new Exception("Failed to find eigen values / vectors");
+
+                breakkout++;
+            }
+            var eigenValues = new double[A.Length];
+            for (var i = 0; i < A.Length; i++)
+                eigenValues[i] = A[i][i];
+            return eigenValues;
+        }
+
     }
 }

@@ -54,6 +54,12 @@ namespace Qwack.Models.Models
                 var tExpiry = model.BuildDate.CalculateYearFraction(asianOption.AverageEndDate, DayCountBasis.Act365F);
                 var t2 = tExpiry - tAvgStart;
                 adjustedStrike = asianOption.Strike * t2 / tExpiry - FixedAverage * (t2 - tExpiry) / tExpiry;
+
+                if(adjustedStrike<0) //its delta-1
+                {
+                    var avg = (FixedAverage * FixedCount + FloatAverage * FloatCount) / (FixedCount + FloatCount);
+                    return asianOption.CallPut == OptionType.Put ? 0.0 : (avg - asianOption.Strike) * asianOption.Notional;
+                }
             }
 
             if (_useVarianceAverage)

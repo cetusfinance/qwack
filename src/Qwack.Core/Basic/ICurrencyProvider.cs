@@ -9,5 +9,6 @@ namespace Qwack.Core.Basic
     {
         Currency this[string ccy] { get; }
         bool TryGetCurrency(string ccy, out Currency output);
+        Currency GetCurrency(string ccy);
     }
 }

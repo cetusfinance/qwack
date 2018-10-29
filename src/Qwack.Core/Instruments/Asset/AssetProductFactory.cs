@@ -154,8 +154,8 @@ namespace Qwack.Core.Instruments.Asset
         {
 
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
-                    start.BusinessDaysInPeriod(end.LastDayOfMonth(), fixingCalendar) :
-                    start.FridaysInPeriod(end.LastDayOfMonth(), fixingCalendar);
+                    start.BusinessDaysInPeriod(end, fixingCalendar) :
+                    start.FridaysInPeriod(end, fixingCalendar);
             return new AsianOption
             {
                 AssetId = assetId,
@@ -174,15 +174,14 @@ namespace Qwack.Core.Instruments.Asset
                 Notional = notional,
                 FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
-
         }
 
         public static AsianOption CreateAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
 
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
-                    start.BusinessDaysInPeriod(end.LastDayOfMonth(), fixingCalendar) :
-                    start.FridaysInPeriod(end.LastDayOfMonth(), fixingCalendar);
+                    start.BusinessDaysInPeriod(end, fixingCalendar) :
+                    start.FridaysInPeriod(end, fixingCalendar);
             return new AsianOption
             {
                 AssetId = assetId,
@@ -200,6 +199,54 @@ namespace Qwack.Core.Instruments.Asset
                 FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
 
+        }
+
+        public static AsianLookbackOption CreateAsianLookbackOption(DateTime start, DateTime end, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
+                    start.BusinessDaysInPeriod(end, fixingCalendar) :
+                    start.FridaysInPeriod(end, fixingCalendar);
+            return new AsianLookbackOption
+            {
+                AssetId = assetId,
+                ObsStartDate = start,
+                ObsEndDate = end,
+                FixingCalendar = fixingCalendar,
+                FixingDates = fixingDates.ToArray(),
+                SpotLag = spotLag,
+                CallPut = putCall,
+                PaymentDate = payDate,
+                PaymentCurrency = currency,
+                Direction = tradeDirection,
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
+            };
+        }
+        public static AsianLookbackOption CreateAsianLookbackOption(DateTime start, DateTime end, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
+                    start.BusinessDaysInPeriod(end, fixingCalendar) :
+                    start.FridaysInPeriod(end, fixingCalendar);
+            return new AsianLookbackOption
+            {
+                AssetId = assetId,
+                ObsStartDate = start,
+                ObsEndDate = end,
+                FixingCalendar = fixingCalendar,
+                FixingDates = fixingDates.ToArray(),
+                SpotLag = spotLag,
+                CallPut = putCall,
+                PaymentDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset),
+                PaymentCurrency = currency,
+                Direction = tradeDirection,
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
+            };
+        }
+        public static AsianLookbackOption CreateAsianLookbackOption(string period, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var (Start, End) = period.ParsePeriod();
+            return CreateAsianLookbackOption(Start, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
     }
 }

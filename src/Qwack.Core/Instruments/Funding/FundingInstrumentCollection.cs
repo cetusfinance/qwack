@@ -18,7 +18,10 @@ namespace Qwack.Core.Instruments.Funding
 
         public List<string> SolveCurves => this.Select(x => x.SolveCurve).Distinct().ToList();
 
-        public FundingInstrumentCollection(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
+        public FundingInstrumentCollection(ICurrencyProvider currencyProvider)
+        {
+            _currencyProvider = currencyProvider;
+        }
 
         public Dictionary<string, IrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
         {
@@ -34,7 +37,7 @@ namespace Qwack.Core.Instruments.Funding
                     throw new Exception($"More than one instrument has the same solve pillar on curve {curveName}");
 
                 var dummyRates = pillars.Select(x => 0.05).ToArray();
-                var ccy = _currencyProvider[curveName.Split('.')[0]];
+                var ccy = _currencyProvider.GetCurrency(curveName.Split('.')[0]);
                 var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Split('.').Last();
                 var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType, ccy, colSpec);
                 o.Add(curveName, irCurve);

@@ -14,7 +14,7 @@ namespace Qwack.Models.Tests.MCModels
 {
     public class AssetFxBlackVolMCFacts
     {
-        private AssetFxBlackVolMC GetSut(bool expensiveFutures)
+        private AssetFxMCModel GetSut(bool expensiveFutures)
         {
             var buildDate = DateTime.Parse("2018-10-04");
             var usd = TestProviderHelper.CurrencyProvider["USD"];
@@ -51,7 +51,7 @@ namespace Qwack.Models.Tests.MCModels
                 PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
                 ExpensiveFuturesSimulation = expensiveFutures
             };
-            var sut = new AssetFxBlackVolMC(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
+            var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
             return sut;
         }
 

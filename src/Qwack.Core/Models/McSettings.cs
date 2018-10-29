@@ -13,5 +13,7 @@ namespace Qwack.Core.Models
         public DateTime[] PfeExposureDates { get; set; }
         public Currency ReportingCurrency { get; set; }
         public bool ExpensiveFuturesSimulation { get; set; }
+        public bool LocalVol { get; set; }
+        public PFERegressorType PfeRegressorType { get; set; }
     }
 }

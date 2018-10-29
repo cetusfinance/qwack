@@ -77,8 +77,8 @@ namespace Qwack.Options.Asians
                         return 0;
 
                     var expAvg = knownAverage * (t2 - tExpiry) / t2 + forward * tExpiry / t2;
-                    var df = System.Math.Exp(-riskFree * tExpiry);
-                    return df * expAvg;
+                    var df = Exp(-riskFree * tExpiry);
+                    return df * (expAvg - K);
                 }
             }
 

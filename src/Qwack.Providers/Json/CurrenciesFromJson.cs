@@ -33,6 +33,8 @@ namespace Qwack.Providers.Json
 
         public Currency this[string ccy] => _currenciesByName[ccy];
 
+        public Currency GetCurrency(string ccy) => TryGetCurrency(ccy, out var C) ? C : throw new Exception($"Currency {ccy} not found in cache");
+
         public bool TryGetCurrency(string ccy, out Currency output) => _currenciesByName.TryGetValue(ccy, out output);
     }
 }

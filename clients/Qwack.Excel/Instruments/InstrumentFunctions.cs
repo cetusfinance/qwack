@@ -467,6 +467,80 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates an asian lookback option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianLookbackOption))]
+        public static object CreateAsianLookbackOption(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Put/Call")] string PutOrCall,
+             [ExcelArgument(Description = "Notional")] double Notional,
+             [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+             [ExcelArgument(Description = "Payment offset")] object PaymentOffsetOrDate,
+             [ExcelArgument(Description = "Spot lag")] object SpotLag,
+             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+                var paymentOffset = PaymentOffsetOrDate is double ? "0b" : PaymentOffsetOrDate.OptionalExcel("0b");
+
+                if (!Enum.TryParse(PutOrCall, out OptionType oType))
+                {
+                    return $"Could not parse put/call flag - {PutOrCall}";
+                }
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCal);
+                    return $"Calendar {fixingCal} not found in cache";
+                }
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+                var pOffset = new Frequency(paymentOffset);
+                var sLag = new Frequency(spotLag);
+                if (!Enum.TryParse(dGenType, out DateGenerationType dType))
+                {
+                    return $"Could not parse date generation type - {dGenType}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+
+                AsianLookbackOption product;
+                if (PeriodCodeOrDates is object[,])
+                {
+                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    if (PaymentOffsetOrDate is double)
+                        product = AssetProductFactory.CreateAsianLookbackOption(dates[0], dates[1], AssetId, oType, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                    else
+                    {
+                        product = AssetProductFactory.CreateAsianLookbackOption(dates[0], dates[1], AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                    }
+                }
+                else if (PeriodCodeOrDates is double)
+                {
+                    PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
+                    product = AssetProductFactory.CreateAsianLookbackOption(PeriodCodeOrDates as string, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+                }
+                else
+                    product = AssetProductFactory.CreateAsianLookbackOption(PeriodCodeOrDates as string, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
+
+                product.TradeId = ObjectName;
+                product.DiscountCurve = DiscountCurve;
+
+                var cache = ContainerStores.GetObjectCache<AsianLookbackOption>();
+                cache.PutObject(ObjectName, new SessionItem<AsianLookbackOption> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Returns par rate of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductParRate))]
         public static object ProductParRate(
            [ExcelArgument(Description = "Trade object name")] string TradeName,
@@ -512,9 +586,7 @@ namespace Qwack.Excel.Instruments
 
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
-                {
-                    ccy = ContainerStores.CurrencyProvider[ReportingCcy as string];
-                }
+                    ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy as string);
 
                 var result = pf.PV(model.Value, ccy);
 
@@ -920,6 +992,7 @@ namespace Qwack.Excel.Instruments
             var assetFutures = Instruments.GetAnyFromCache<Future>();
             var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
             var futuresOptions = Instruments.GetAnyFromCache<FuturesOption>();
+            var lookbacks = Instruments.GetAnyFromCache<AsianLookbackOption>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -951,6 +1024,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(assetFutures);
             pf.Instruments.AddRange(europeanOptions);
             pf.Instruments.AddRange(futuresOptions);
+            pf.Instruments.AddRange(lookbacks);
 
             return pf;
         }

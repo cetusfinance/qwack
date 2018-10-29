@@ -33,18 +33,25 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Number of timesteps")] int NumberOfTimesteps,
            [ExcelArgument(Description = "Random number generator, e.g. Sobol or MersenneTwister")] object RandomGenerator,
            [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates,
-           [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency)
+           [ExcelArgument(Description = "Portfolio regression method for PFE etc")] object PortfolioRegressor,
+           [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency,
+           [ExcelArgument(Description = "Use Local vol? (True/False)")] bool LocalVol,
+           [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var rGen = RandomGenerator.OptionalExcel("MersenneTwister");
                 var reportingCurrency = ReportingCurrency.OptionalExcel("USD");
+                var regressor = PortfolioRegressor.OptionalExcel("MultiLinear");
 
-                if(!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(reportingCurrency, out var repCcy))
+                if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(reportingCurrency, out var repCcy))
                     return $"Could not find currency {reportingCurrency} in cache";
 
                 if (!Enum.TryParse(rGen, out RandomGeneratorType randomGenerator))
                     return $"Could not parse random generator name - {rGen}";
+
+                if (!Enum.TryParse(regressor, out PFERegressorType regType))
+                    return $"Could not parse portfolio regressor type - {regressor}";
 
                 var settings = new McSettings
                 {
@@ -52,8 +59,12 @@ namespace Qwack.Excel.Curves
                     NumberOfPaths = NumberOfPaths,
                     NumberOfTimesteps = NumberOfTimesteps,
                     PfeExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null,
-                    ReportingCurrency = repCcy
+                    ReportingCurrency = repCcy,
+                    LocalVol = LocalVol,
+                    ExpensiveFuturesSimulation = FuturesSim,
+                    PfeRegressorType = regType
                 };
+
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();
                 settingsCache.PutObject(ObjectName, new SessionItem<McSettings> { Name = ObjectName, Value = settings });
                 return ObjectName + '¬' + settingsCache.GetObject(ObjectName).Version;
@@ -66,8 +77,7 @@ namespace Qwack.Excel.Curves
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
           [ExcelArgument(Description = "MC settings name")] string SettingsName,
-          [ExcelArgument(Description = "Reporting currency (optional)")] object ReportingCcy,
-          [ExcelArgument(Description = "Use local vol (default false)")] object UseLocalVol)
+          [ExcelArgument(Description = "Reporting currency (optional)")] object ReportingCcy)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -76,19 +86,12 @@ namespace Qwack.Excel.Curves
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
-                var useLocalVol = UseLocalVol.OptionalExcel(false);
 
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
-                {
-                    ccy = ContainerStores.CurrencyProvider[ReportingCcy as string];
-                }
-                IMcModel mc;
+                    ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy as string);
 
-                if (useLocalVol)
-                    mc = new AssetFxLocalVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider);
-                else
-                    mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PV(ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
@@ -113,7 +116,7 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                var mc = new AssetFxBlackVolMC(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();

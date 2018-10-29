@@ -35,7 +35,7 @@ namespace Qwack.Models.MCModels
         private OptionType _optionType;
         private FxConversionType _fxType;
 
-        private List<AssetPathPayoff> _subInstruments;
+        private List<IAssetPathPayoff> _subInstruments;
 
         private static readonly Vector<double> _one = new Vector<double>(1.0);
 
@@ -69,7 +69,7 @@ namespace Qwack.Models.MCModels
                     _fxType = asw.FxConversionType;
                     break;
                 case AsianSwapStrip asws:
-                    _subInstruments = asws.Swaplets.Select(x => new AssetPathPayoff(x)).ToList();
+                    _subInstruments = asws.Swaplets.Select(x =>(IAssetPathPayoff) new AssetPathPayoff(x)).ToList();
                     break;
                 case EuropeanOption eo:
                     _asianDates = new List<DateTime> { eo.ExpiryDate };
@@ -96,10 +96,17 @@ namespace Qwack.Models.MCModels
                     _fxType = f.FxConversionType;
                     break;
                 case AsianBasisSwap abs:
-                    _subInstruments = abs.PaySwaplets.Select(x => new AssetPathPayoff(x))
-                        .Concat(abs.RecSwaplets.Select(x => new AssetPathPayoff(x)))
+                    _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x))
+                        .Concat(abs.RecSwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x)))
                         .ToList();
                     break;
+                case AsianLookbackOption alb:
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        new Qwack.Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional)
+                    };
+                    break;
+
             }
             _isCompo = _fxName != null;
             _assetName = AssetInstrument.AssetIds.First();
@@ -117,6 +124,7 @@ namespace Qwack.Models.MCModels
                 {
                     ins.Finish(collection);
                 }
+                _isComplete = true;
                 return;
             }
 

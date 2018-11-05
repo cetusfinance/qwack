@@ -15,5 +15,6 @@ namespace Qwack.Core.Models
         public bool ExpensiveFuturesSimulation { get; set; }
         public bool LocalVol { get; set; }
         public PFERegressorType PfeRegressorType { get; set; }
+        public bool Parallelize { get; set; }
     }
 }

@@ -18,6 +18,8 @@ using System.IO;
 using System.Reflection;
 using Qwack.Paths.Regressors;
 using Qwack.Futures;
+using Qwack.Utils.Parallel;
+
 namespace Qwack.Models.MCModels
 {
     public class AssetFxMCModel : IMcModel
@@ -42,7 +44,11 @@ namespace Qwack.Models.MCModels
         {
             _currencyProvider = currencyProvider;
             _futureSettingsProvider = futureSettingsProvider;
-            Engine = new PathEngine(settings.NumberOfPaths);
+            Engine = new PathEngine(settings.NumberOfPaths)
+            {
+                Parallelize = settings.Parallelize
+            };
+
             Portfolio = portfolio;
             Model = model;
             Settings = settings;
@@ -63,9 +69,14 @@ namespace Qwack.Models.MCModels
                     });
                     break;
             }
+            Engine.IncrementDepth();
 
             if (model.CorrelationMatrix != null)
+            {
                 Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
+                Engine.IncrementDepth();
+            }
+                
             var lastDate = portfolio.LastSensitivityDate();
             var assetIds = portfolio.AssetIds();
             var assetInstruments = portfolio.Instruments
@@ -190,6 +201,8 @@ namespace Qwack.Models.MCModels
                 );
                 Engine.AddPathProcess(asset);
             }
+
+            Engine.IncrementDepth();
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y));
             foreach (var product in _payoffs)
             {
@@ -199,6 +212,8 @@ namespace Qwack.Models.MCModels
             //Need to calculate PFE
             if (settings.PfeExposureDates != null && settings.ReportingCurrency != null)//setup for PFE
             {
+                Engine.IncrementDepth();
+
                 switch (settings.PfeRegressorType)
                 {
                     case PFERegressorType.MultiLinear:
@@ -223,7 +238,12 @@ namespace Qwack.Models.MCModels
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
+
+            //var howItWasBefore = ParallelUtils.Instance.MultiThreaded;
+            //ParallelUtils.Instance.MultiThreaded = false;
             var pfe = _regressor.PFE(Model, confidenceLevel);
+            //ParallelUtils.Instance.MultiThreaded = howItWasBefore;
+
             for (var i = 0; i < pfe.Length; i++)
             {
                 cube.AddRow(new object[] { Settings.PfeExposureDates[i] }, pfe[i]);

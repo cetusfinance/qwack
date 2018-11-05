@@ -11,5 +11,7 @@ namespace Qwack.Core.Models
         string FxPair { get; set; }
         FixingDictionaryType FixingDictionaryType { get; set; }
         IFixingDictionary Clone();
+        double GetFixing(DateTime d);
+        bool TryGetFixing(DateTime d, out double fixing);
     }
 }

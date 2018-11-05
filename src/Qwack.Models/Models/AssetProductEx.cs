@@ -13,6 +13,8 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Options;
 using Qwack.Options.Asians;
+using Qwack.Utils.Parallel;
+using static System.Math;
 
 namespace Qwack.Models.Models
 {
@@ -151,7 +153,7 @@ namespace Qwack.Models.Models
                         if (fixingDict == null)
                             throw new Exception($"Fixing dictionary not found for asset fixing id {assetFixingId}");
 
-                        fixedAvg = alreadyFixed.Select(d => fixingDict[d]).Average();
+                        fixedAvg = alreadyFixed.Select(d => fixingDict.GetFixing(d)).Average();
                     }
                     var floatAvg = stillToFix.Any() ? priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag)) : 0.0;
 
@@ -171,12 +173,12 @@ namespace Qwack.Models.Models
                             if (fxFixingDict == null)
                                 throw new Exception($"Fx Fixing dictionary not found for asset fixing id {fxFixingId}");
 
-                            fixedFxAvg = alreadyFixedFx.Select(d => fxFixingDict[d]).Average();
+                            fixedFxAvg = alreadyFixedFx.Select(d => fxFixingDict.GetFixing(d)).Average();
                         }
                         var floatFxAvg = stillToFixFx.Any() ? model.FundingModel.GetFxAverage(stillToFixFx, priceCurve.Currency, swap.PaymentCurrency) : 0.0;
-
-                        floatAvg *= floatFxAvg;
-                        fixedAvg *= fixedFxAvg;
+                        var fxAvg = (fixedFxAvg * alreadyFixedFx.Count() + floatFxAvg * stillToFixFx.Count()) / (alreadyFixedFx.Count() + stillToFixFx.Count());
+                        floatAvg *= fxAvg;
+                        fixedAvg *= fxAvg;
                     }
 
                     return (FixedAverage: fixedAvg, FloatAverage: floatAvg, FixedCount: alreadyFixed.Count(), FloatCount: stillToFix.Count());
@@ -211,14 +213,8 @@ namespace Qwack.Models.Models
                     var fxFixingsA = new List<double>();
                     foreach (var d in alreadyFixed)
                     {
-                        if (!fixingDict.TryGetValue(d, out var f))
-                            throw new Exception($"Fixing for date {d:yyyy-MM-dd} not found in dictionary for asset fixing id {assetFixingId}");
-                        assetFixings.Add(f);
-
-                        if (!fxFixingDict.TryGetValue(d, out var ffx))
-                            throw new Exception($"Fixing for date {d:yyyy-MM-dd} not found in dictionary for fx fixing id {fxFixingId}");
-                        fxFixingsA.Add(ffx);
-
+                        assetFixings.Add(fixingDict.GetFixing(d));
+                        fxFixingsA.Add(fxFixingDict.GetFixing(d));
                     }
 
                     fixedAvg = assetFixings.Select((x, ix) => x * fxFixingsA[ix]).Average();
@@ -334,8 +330,12 @@ namespace Qwack.Models.Models
             };
             cube.Initialize(dataTypes);
 
-            foreach (var ins in portfolio.Instruments)
+            var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
+
+            //ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
+            for(var i=0;i< portfolio.Instruments.Count;i++)
             {
+                var ins = portfolio.Instruments[i];
                 var pv = 0.0;
                 var fxRate = 1.0;
                 string tradeId = null;
@@ -426,13 +426,19 @@ namespace Qwack.Models.Models
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
                 }
 
-
                 var row = new Dictionary<string, object>
-                {
-                    { "TradeId", tradeId },
-                    { "Currency", ccy }
-                };
-                cube.AddRow(row, pv / fxRate);
+                  {
+                        { "TradeId", tradeId },
+                        { "Currency", ccy }
+                  };
+
+                pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv / fxRate);
+            }
+            //, true).Wait();
+
+            for (var i = 0; i < pvs.Length; i++)
+            {
+                cube.AddRow(pvs[i].Item1, pvs[i].Item2);
             }
 
             return cube;
@@ -626,7 +632,7 @@ namespace Qwack.Models.Models
             return disccurve.GetDf(model.BuildDate, fwdDate);
         }
 
-        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider)
+        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
         {
             var bumpSize = 0.0001;
             var cube = new ResultCube();
@@ -681,6 +687,21 @@ namespace Qwack.Models.Models
                 if (bumpedRows.Length != pvRows.Length)
                     throw new Exception("Dimensions do not match");
 
+                ResultCubeRow[] bumpedRowsDown = null;
+                var inverseSpotBumpDown = 0.0;
+
+                if (computeGamma)
+                {
+                    var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
+                    newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
+                    inverseSpotBumpDown = 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+
+                    var bumpedPVCubeDown = portfolio.PV(newModel, m.FundingModel.FxMatrix.BaseCurrency);
+                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                    if (bumpedRowsDown.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                }
+
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
                     var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump;
@@ -694,6 +715,22 @@ namespace Qwack.Models.Models
                             { "Metric", "FxSpotDelta" }
                         };
                         cube.AddRow(row, delta);
+                    }
+
+                    if (computeGamma)
+                    {
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown;
+                        var gamma = (delta - deltaDown) / (inverseSpotBump + inverseSpotBumpDown) * 2.0;
+                        if (gamma != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "AssetId", fxPair },
+                                { "Metric", "FxSpotGamma" }
+                            };
+                            cube.AddRow(row, delta);
+                        }
                     }
                 }
             }
@@ -764,7 +801,7 @@ namespace Qwack.Models.Models
                             var gamma = (deltaUp - deltaDown) / bumpSize;
                             var delta = 0.5 * (deltaUp + deltaDown);
 
-                            if (delta != 0.0 || gamma != 0.0)
+                            if (delta != 0.0)
                             {
                                 var row = new Dictionary<string, object>
                                 {
@@ -774,7 +811,9 @@ namespace Qwack.Models.Models
                                     { "Metric", "Delta" }
                                 };
                                 cube.AddRow(row, delta);
-
+                            }
+                            if (Abs(gamma) > 1e-12)
+                            {
                                 var rowG = new Dictionary<string, object>
                                 {
                                     { "TradeId", bumpedUpRows[i].MetaData[tidIx] },
@@ -1217,8 +1256,8 @@ namespace Qwack.Models.Models
             });
 
             //delta
-            var baseDeltaCube = AssetDelta(portfolio, model);
-            cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
+            var baseDeltaGammaCube = AssetDeltaGamma(portfolio, model);
+            cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             });
@@ -1236,7 +1275,10 @@ namespace Qwack.Models.Models
             });
 
             //charm-asset
-            var rolledDeltaCube = AssetDelta(portfolio, rolledModel);
+            var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
+            var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
+            var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
+            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Gamma" } });
             var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
             cube = cube.Merge(charmCube, new Dictionary<string, object>
             {
@@ -1250,15 +1292,25 @@ namespace Qwack.Models.Models
             {
                  { "Metric", "AssetDeltaT1" },
             });
+            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "AssetGammaT1" },
+            });
 
             //charm-fx
-            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider);
+            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider, true);
             cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
                  { "Currency", string.Empty },
             });
-            rolledDeltaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider);
+            rolledDeltaGammaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider,true);
+            rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
+            rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotGamma" } });
+
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
@@ -1267,6 +1319,16 @@ namespace Qwack.Models.Models
             {
                  { "Metric", "FxSpotDeltaT1" },
             });
+
+            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
+            {
+                 { "PointLabel", string.Empty },
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "FxSpotGammaT1" },
+            });
+
             charmCube = rolledDeltaCube.Difference(baseDeltaCube);
             var fId = charmCube.GetColumnIndex("AssetId");
             foreach (var charmRow in charmCube.GetAllRows())

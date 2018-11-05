@@ -77,7 +77,10 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction) => cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
+        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction)
+        {
+            return cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
+        }
 
 
         public static ICube Pivot(this ICube cube, string[] fieldsToAggregateBy, AggregationAction aggregationAction)
@@ -189,6 +192,27 @@ namespace Qwack.Core.Cubes
             }
 
             return outCube;
+        }
+
+        public static Dictionary<object,List<ResultCubeRow>> ToDictionary(this ICube cube, string keyField)
+        {
+                if (!cube.DataTypes.ContainsKey(keyField))
+                    throw new Exception($"Cannot filter on field {keyField} as it is not present");
+
+            var output = new Dictionary<object, List<ResultCubeRow>>();
+
+            var fieldNames = cube.DataTypes.Keys.ToList();
+            var ix = fieldNames.IndexOf(keyField);
+
+            foreach (var row in cube.GetAllRows())
+            {
+                if (!output.ContainsKey(row.MetaData[ix]))
+                    output.Add(row.MetaData[ix], new List<ResultCubeRow>());
+
+                output[row.MetaData[ix]].Add(row);
+            }
+
+            return output;
         }
 
         public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn)

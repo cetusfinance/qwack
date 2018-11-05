@@ -28,12 +28,18 @@ namespace Qwack.MonteCarlo.Test
         public void LVMCDualPathsGenerated(double correlation)
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(12));
+            var engine = new PathEngine(2.IntPow(12))
+            {
+                Parallelize = true
+            };
+
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,
-                 UseAnthithetic = false
+                 UseAnthithetic = false,
             });
+
+            engine.IncrementDepth();
 
             var correlMatrix = new double[][]
             {
@@ -42,6 +48,8 @@ namespace Qwack.MonteCarlo.Test
 
             };
             engine.AddPathProcess(new Cholesky(correlMatrix));
+
+            engine.IncrementDepth();
 
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
@@ -77,8 +85,11 @@ namespace Qwack.MonteCarlo.Test
             engine.AddPathProcess(asset1);
             engine.AddPathProcess(asset2);
 
+            engine.IncrementDepth();
+
             var correl = new Correlation("TestAsset1", "TestAsset2");  
             engine.AddPathProcess(correl);
+
 
             engine.SetupFeatures();
             engine.RunProcess();

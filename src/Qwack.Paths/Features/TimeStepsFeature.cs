@@ -9,6 +9,8 @@ namespace Qwack.Paths.Features
 {
     public class TimeStepsFeature : ITimeStepsFeature, IRequiresFinish
     {
+        private object _locker = new object();
+
         private HashSet<DateTime> _requiredDates = new HashSet<DateTime>();
         private double[] _timeSteps;
         private double[] _timeStepsSqrt;
@@ -31,34 +33,40 @@ namespace Qwack.Paths.Features
         {
             foreach (var d in dates)
             {
-                _requiredDates.Add(d);
+                lock (_locker)
+                {
+                    _requiredDates.Add(d);
+                }
             }
         }
 
         public void Finish(IFeatureCollection collection)
         {
-            _timeSteps = new double[_requiredDates.Count];
-            _timeStepsSqrt = new double[_requiredDates.Count];
-            _times = new double[_requiredDates.Count];
-            _dateIndexes = new Dictionary<DateTime, int>();
-            var index = 0;
-            var firstDate = default(DateTime);
-            foreach (var d in _requiredDates.OrderBy(v => v))
+            lock (_locker)
             {
-                _dateIndexes.Add(d, index);
-                if (index == 0)
+                _timeSteps = new double[_requiredDates.Count];
+                _timeStepsSqrt = new double[_requiredDates.Count];
+                _times = new double[_requiredDates.Count];
+                _dateIndexes = new Dictionary<DateTime, int>();
+                var index = 0;
+                var firstDate = default(DateTime);
+                foreach (var d in _requiredDates.OrderBy(v => v))
                 {
-                    firstDate = d;
-                    _timeSteps[0] = 0.0;
-                    _times[0] = 0.0;
-                    _timeStepsSqrt[0] = 0;
+                    _dateIndexes.Add(d, index);
+                    if (index == 0)
+                    {
+                        firstDate = d;
+                        _timeSteps[0] = 0.0;
+                        _times[0] = 0.0;
+                        _timeStepsSqrt[0] = 0;
+                        index++;
+                        continue;
+                    }
+                    _times[index] = ((d - firstDate).TotalDays / 365.0);
+                    _timeSteps[index] = _times[index] - _times[index - 1];
+                    _timeStepsSqrt[index] = System.Math.Sqrt(_timeSteps[index]);
                     index++;
-                    continue;
                 }
-                _times[index] = ((d - firstDate).TotalDays / 365.0);
-                _timeSteps[index] = _times[index] - _times[index - 1];
-                _timeStepsSqrt[index] = System.Math.Sqrt(_timeSteps[index]);
-                index++;
             }
             _isComplete = true;
         }

@@ -6,18 +6,20 @@ using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths.Features;
 using Qwack.Paths.Features.Rates;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Paths
 {
     public class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
-        private List<IPathProcess> _pathProcesses = new List<IPathProcess>();
-        private List<object> _pathProcessFeatures = new List<object>();
+        private List<List<IPathProcess>> _pathProcesses = new List<List<IPathProcess>>();
+        //private List<object> _pathProcessFeatures = new List<object>();
         private int _numberOfPaths;
         private FeatureCollection _featureCollection = new FeatureCollection();
         private int _dimensions;
         private int _steps;
         private BlockSet _blockset;
+        private int _currentProcessDepth = 0;
 
         public PathEngine(int numberOfPaths)
         {
@@ -26,51 +28,96 @@ namespace Qwack.Paths
             _featureCollection.AddFeature<ITimeStepsFeature>(new TimeStepsFeature());
             _featureCollection.AddFeature<IRatesFeature>(new RatesCollection());
             _featureCollection.AddFeature<IEngineFeature>(this);
+
+            _pathProcesses.Add(new List<IPathProcess>());
         }
 
         public BlockSet BlockSet => _blockset;
         public int NumberOfPaths => _numberOfPaths;
+        public bool Parallelize { get; set; } = false;
 
-        public void RunProcess()
+        public async void RunProcess()
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
 
             foreach (var block in _blockset)
             {
-                foreach (var process in _pathProcesses)
+                foreach (var ppLevel in _pathProcesses)
                 {
-                    process.Process(block);
+                    //if (Parallelize)
+                    //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.Process(block), true);
+                    //else
+                    foreach (var process in ppLevel)
+                    {
+                        process.Process(block);
+                    }
                 }
             }
         }
 
         public FeatureCollection Features => _featureCollection;
 
-        public void AddPathProcess(IPathProcess process) => _pathProcesses.Add(process);
-
-        public void SetupFeatures()
+        public void AddPathProcess(IPathProcess process) => _pathProcesses[_currentProcessDepth].Add(process);
+        public void IncrementDepth()
         {
-            foreach (var pp in _pathProcesses)
+            _pathProcesses.Add(new List<IPathProcess>());
+            _currentProcessDepth++;
+        }
+
+        public async void SetupFeatures()
+        {
+            foreach (var ppLevel in _pathProcesses)
             {
-                pp.SetupFeatures(_featureCollection);
+                //if (Parallelize)
+                //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true);
+                //else
+                foreach (var pp in ppLevel)
+                {
+                    pp.SetupFeatures(_featureCollection);
+                }
             }
+
             _dimensions = _featureCollection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
             _steps = _featureCollection.GetFeature<ITimeStepsFeature>().TimeStepCount;
 
             var unfinished = new List<IRequiresFinish>();
             _featureCollection.FinishSetup(unfinished);
-            foreach(var process in _pathProcesses)
+            var locker = new object();
+
+            foreach (var ppLevel in _pathProcesses)
             {
-                if (process is IRequiresFinish finishProcess)
+                //if (Parallelize)
+                //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => 
+                //    {
+                //        if (process is IRequiresFinish finishProcess)
+                //        {
+                //            finishProcess.Finish(_featureCollection);
+                //            if (!finishProcess.IsComplete)
+                //            {
+                //                lock (locker)
+                //                {
+                //                    unfinished.Add(finishProcess);
+                //                }
+                //            }
+                //        }
+                //    }, true);
+                //else
+                foreach (var process in ppLevel)
                 {
-                    finishProcess.Finish(_featureCollection);
-                    if(!finishProcess.IsComplete)
+                    if (process is IRequiresFinish finishProcess)
                     {
-                        unfinished.Add(finishProcess);
+                        finishProcess.Finish(_featureCollection);
+                        if (!finishProcess.IsComplete)
+                        {
+                            unfinished.Add(finishProcess);
+                        }
                     }
                 }
+
+
             }
-            if(unfinished.Count > 0)
+
+            if (unfinished.Count > 0)
             {
                 IterateFinishing(unfinished);
             }

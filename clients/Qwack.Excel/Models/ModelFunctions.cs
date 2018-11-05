@@ -36,7 +36,8 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Portfolio regression method for PFE etc")] object PortfolioRegressor,
            [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency,
            [ExcelArgument(Description = "Use Local vol? (True/False)")] bool LocalVol,
-           [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim)
+           [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim,
+           [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -62,7 +63,8 @@ namespace Qwack.Excel.Curves
                     ReportingCurrency = repCcy,
                     LocalVol = LocalVol,
                     ExpensiveFuturesSimulation = FuturesSim,
-                    PfeRegressorType = regType
+                    PfeRegressorType = regType,
+                    Parallelize = Parallel
                 };
 
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();

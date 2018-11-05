@@ -49,7 +49,8 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfTimesteps = 10,
                 ReportingCurrency = usd,
                 PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
-                ExpensiveFuturesSimulation = expensiveFutures
+                ExpensiveFuturesSimulation = expensiveFutures,
+                Parallelize = expensiveFutures
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
             return sut;

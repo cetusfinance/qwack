@@ -94,6 +94,12 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => EndDate;
 
+        public List<string> Dependencies(IFxMatrix matrix)
+        {
+            var curves = new[] { ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec};
+            return curves.Distinct().Where(x => x != SolveCurve).ToList();
+        }
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var updateDfPay = updateState || model.CurrentSolveCurve == DiscountCurvePay;

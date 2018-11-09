@@ -6,7 +6,7 @@ using Qwack.Core.Cubes;
 
 namespace Qwack.Core.Models
 {
-    public interface IMcModel
+    public interface IPvModel
     {
         ICube PV(Currency reportingCurrency);
     }

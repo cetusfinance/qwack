@@ -51,5 +51,7 @@ namespace Qwack.Core.Instruments.Funding
                 {DiscountCurve,discountDict },
             };
         }
+
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
     }
 }

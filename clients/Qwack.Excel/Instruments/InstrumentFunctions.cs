@@ -16,6 +16,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Core.Cubes;
+using Qwack.Models.Risk;
 
 namespace Qwack.Excel.Instruments
 {
@@ -511,7 +512,7 @@ namespace Qwack.Excel.Instruments
                 {
                     return $"Could not parse date generation type - {dGenType}";
                 }
-                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
 
                 AsianLookbackOption product;
                 if (PeriodCodeOrDates is object[,])
@@ -537,6 +538,80 @@ namespace Qwack.Excel.Instruments
 
                 var cache = ContainerStores.GetObjectCache<AsianLookbackOption>();
                 cache.PutObject(ObjectName, new SessionItem<AsianLookbackOption> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a european option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAmericanBarrierOption))]
+        public static object CreateAmericanBarrierOption(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Barrier observation start date")] DateTime ObservationStart,
+             [ExcelArgument(Description = "Barrier observation end date")] DateTime ObservationEnd,
+             [ExcelArgument(Description = "Option expiry date")] DateTime Expiry,
+             [ExcelArgument(Description = "Payment date")] DateTime PayDate,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Put/Call")] string PutOrCall,
+             [ExcelArgument(Description = "Notional")] double Notional,
+             [ExcelArgument(Description = "Strike")] double Strike,
+             [ExcelArgument(Description = "Barrier level")] double Barrier,
+             [ExcelArgument(Description = "Barrier side, Up or Down")] object BarrierSide,
+             [ExcelArgument(Description = "Barrier type, KI or KO")] object BarrierType,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+             [ExcelArgument(Description = "Spot lag: 0b (Energy), 2b (PM) or 2w (BM) typically")] object SpotLag,
+             [ExcelArgument(Description = "Fixing calendar for spot lag")] object FixingCalendar)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var bSideStr = BarrierSide.OptionalExcel("Up");
+                var bTypeStr = BarrierType.OptionalExcel("KI");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var fCal = FixingCalendar.OptionalExcel(Currency);
+
+                if (!Enum.TryParse(bSideStr, out BarrierSide bSide))
+                {
+                    return $"Could not parse barrier side {bSideStr}";
+                }
+                if (!Enum.TryParse(bTypeStr, out BarrierType bType))
+                {
+                    return $"Could not parse barrier type {bTypeStr}";
+                }
+                if (!Enum.TryParse(PutOrCall, out OptionType oType))
+                {
+                    return $"Could not parse put/call flag - {PutOrCall}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
+                var sLag = new Frequency(spotLag);
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fCal, out var cal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fCal);
+                    return $"Calendar {fCal} not found in cache";
+                }
+
+                var product = new EuropeanBarrierOption
+                {
+                    AssetId = AssetId,
+                    Barrier = Barrier,
+                    BarrierObservationEndDate = ObservationEnd,
+                    BarrierObservationStartDate = ObservationStart,
+                    BarrierType = bType,
+                    BarrierObservationType = BarrierObservationType.Continuous,
+                    BarrierSide = bSide,
+                    CallPut = oType,
+                    Direction = TradeDirection.Long,
+                    DiscountCurve = DiscountCurve,
+                    ExpiryDate = Expiry,
+                    Notional = Notional,
+                    PaymentCurrency = currency,
+                    PaymentDate = PayDate,
+                    Strike = Strike,
+                    TradeId = ObjectName,
+                    SpotLag = sLag,
+                    FixingCalendar = cal
+                };
+
+                var cache = ContainerStores.GetObjectCache<EuropeanBarrierOption>();
+                cache.PutObject(ObjectName, new SessionItem<EuropeanBarrierOption> { Name = ObjectName, Value = product });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
@@ -820,8 +895,42 @@ namespace Qwack.Excel.Instruments
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
                 var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns risk ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioRiskLadder))]
+        public static object AssetPortfolioRiskLadder(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Asset Id to bump")] string AssetId,
+            [ExcelArgument(Description = "Bump type, defualt FlatShift")] object BumpType,
+            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
+            [ExcelArgument(Description = "Bump step size")] double BumpStep,
+            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
+            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                if (!Enum.TryParse(BumpType.OptionalExcel("FlatShift"), out MutationType bType))
+                    throw new Exception($"Unknown bump/mutation type {BumpType}");
+                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
+                    throw new Exception($"Unknown risk metric {RiskMetric}");
+
+                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
+                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+
+                var riskLadder = new RiskLadder(AssetId, bType, metric, BumpStep, NScenarios, retDiff);
+                var result = riskLadder.Generate(model.Value, pfolio);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

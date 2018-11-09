@@ -33,6 +33,9 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => _pillarDates.Length;
         public DateTime[] PillarDates => _pillarDates;
+        public double[] Prices => _prices;
+        public ICurrencyProvider CurrencyProvider => _currencyProvider;
+        public string[] PillarLabels => _pillarLabels;
 
         public Currency Currency { get; set; }
         public string CollateralSpec { get; set; }

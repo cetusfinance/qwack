@@ -40,5 +40,7 @@ namespace Qwack.Core.Instruments.Funding
                    Notional == balance.Notional &&
                    EqualityComparer<Currency>.Default.Equals(Ccy, balance.Ccy) &&
                    TradeId == balance.TradeId;
+
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
     }
 }

@@ -123,5 +123,22 @@ namespace Qwack.Options
             var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBlack, 0.000000001, 5.0000000, 1e-10);
             return impliedVol;
         }
+
+        public static double BarrierProbability(double startFwd, double endFwd, double barrier, double sigma, double t, BarrierSide barrierSide) => barrierSide == BarrierSide.Down
+                ? (Min(startFwd, endFwd) < barrier ? 1.0 : Exp(-2.0 * Log(startFwd / barrier) * Log(endFwd / barrier) / (sigma * sigma * t)))
+                : (Max(startFwd, endFwd) > barrier ? 1.0 : Exp(-2.0 * Log(startFwd / barrier) * Log(endFwd / barrier) / (sigma * sigma * t)));
+
+        public static double BarrierOptionPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP, double barrier, BarrierType barrierType, BarrierSide barrierSide)
+        {
+            var blackPV = BlackPV(forward, strike, riskFreeRate, expTime, volatility, CP);
+            var barrierHitProb = BarrierProbability(forward, forward, barrier, volatility, expTime, barrierSide);
+
+            return barrierType == BarrierType.KI ? barrierHitProb * blackPV : (1.0 - barrierHitProb) * blackPV;
+        }
+
+        public static double BarrierAdjust(double barrier, double vol, double deltaT, BarrierSide side) => 
+            side==BarrierSide.Down 
+            ? barrier * Exp(0.5826 * vol * deltaT) 
+            : barrier / Exp(0.5826 * vol * deltaT);
     }
 }

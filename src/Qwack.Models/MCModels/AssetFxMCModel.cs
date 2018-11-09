@@ -22,7 +22,7 @@ using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.MCModels
 {
-    public class AssetFxMCModel : IMcModel
+    public class AssetFxMCModel : IPvModel
     {
         private static string GetSobolFilename() => Path.Combine(GetRunningDirectory(), "SobolDirectionNumbers.txt");
         private static string GetRunningDirectory()

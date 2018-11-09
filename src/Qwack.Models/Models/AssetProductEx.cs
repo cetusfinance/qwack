@@ -270,6 +270,34 @@ namespace Qwack.Models.Models
 
         public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
 
+        public static double PV(this EuropeanOption euOpt, IAssetFxModel model)
+        {
+            if (euOpt.ExpiryDate < model.BuildDate)
+                return 0.0;
+
+            var fwdDate = euOpt.ExpiryDate.AddPeriod(RollType.F, euOpt.FixingCalendar, euOpt.SpotLag);
+            var fwd = model.GetPriceCurve(euOpt.AssetId).GetPriceForDate(fwdDate);
+            var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike);
+            var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
+            var t = model.BuildDate.CalculateYearFraction(euOpt.PaymentDate, DayCountBasis.Act365F);
+            var rf = Log(1 / df) / t;
+            return BlackFunctions.BlackPV(fwd, euOpt.Strike, rf, t, vol, euOpt.CallPut);
+        }
+
+        public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model)
+        {
+            if (euBOpt.ExpiryDate < model.BuildDate)
+                return 0.0;
+
+            var fwdDate = euBOpt.ExpiryDate.AddPeriod(RollType.F, euBOpt.FixingCalendar, euBOpt.SpotLag);
+            var fwd = model.GetPriceCurve(euBOpt.AssetId).GetPriceForDate(fwdDate);
+            var vol = model.GetVolForStrikeAndDate(euBOpt.AssetId, euBOpt.ExpiryDate, euBOpt.Strike);
+            var df = model.FundingModel.GetDf(euBOpt.DiscountCurve, model.BuildDate, euBOpt.PaymentDate);
+            var t = model.BuildDate.CalculateYearFraction(euBOpt.PaymentDate, DayCountBasis.Act365F);
+            var rf = Log(1 / df) / t;
+            return BlackFunctions.BarrierOptionPV(fwd, euBOpt.Strike, rf, t, vol, euBOpt.CallPut, euBOpt.Barrier, euBOpt.BarrierType, euBOpt.BarrierSide);
+        }
+
         public static double FlowsT0(this AsianOption asianOption, IAssetFxModel model)
         {
             var curve = model.GetPriceCurve(asianOption.AssetId);
@@ -308,6 +336,34 @@ namespace Qwack.Models.Models
             var price = model.GetPriceCurve(future.AssetId).GetPriceForDate(future.ExpiryDate);
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
+
+        public static double FlowsT0(this EuropeanOption euOpt, IAssetFxModel model)
+        {
+            if (euOpt.PaymentDate != model.BuildDate)
+                return 0.0;
+
+            var fixing = model.GetFixingDictionary(euOpt.AssetId).GetFixing(euOpt.ExpiryDate);
+            return euOpt.Notional * (euOpt.CallPut == OptionType.Call ? Max(0, fixing - euOpt.Strike) : Max(0, euOpt.Strike - fixing));
+        }
+
+        public static double FlowsT0(this EuropeanBarrierOption euBOpt, IAssetFxModel model)
+        {
+            if (euBOpt.PaymentDate != model.BuildDate)
+                return 0.0;
+
+            var fixings = model.GetFixingDictionary(euBOpt.AssetId)
+                .Where(x => x.Key >= euBOpt.BarrierObservationStartDate && x.Key <= euBOpt.BarrierObservationEndDate)
+                .Select(x => x.Value);
+
+            var barrierHit = (euBOpt.BarrierSide == BarrierSide.Up && fixings.Max() > euBOpt.Barrier) ||
+                (euBOpt.BarrierSide == BarrierSide.Down && fixings.Min() < euBOpt.Barrier);
+
+            var optionAlive = (barrierHit && euBOpt.BarrierType == BarrierType.KI) ||
+                (!barrierHit && euBOpt.BarrierType == BarrierType.KO);
+
+            return optionAlive ? ((EuropeanOption)euBOpt).FlowsT0(model) : 0.0;
+        }
+
 
         public static double FlowsT0(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().FlowsT0(model);
 
@@ -373,6 +429,22 @@ namespace Qwack.Models.Models
                             fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
                         else
                             ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
+                        break;
+                    case EuropeanBarrierOption euBOpt:
+                        pv = euBOpt.PV(model);
+                        tradeId = euBOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
+                        else
+                            ccy = euBOpt.PaymentCurrency.ToString();
+                        break;
+                    case EuropeanOption euOpt:
+                        pv = euOpt.PV(model);
+                        tradeId = euOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euOpt.PaymentCurrency);
+                        else
+                            ccy = euOpt.PaymentCurrency.ToString();
                         break;
                     case Forward fwd:
                         pv = fwd.PV(model);
@@ -493,6 +565,22 @@ namespace Qwack.Models.Models
                             fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
                         else
                             ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
+                        break;
+                    case EuropeanBarrierOption euBOpt:
+                        flow = euBOpt.FlowsT0(model);
+                        tradeId = euBOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
+                        else
+                            ccy = euBOpt.PaymentCurrency.ToString();
+                        break;
+                    case EuropeanOption euOpt:
+                        flow = euOpt.FlowsT0(model);
+                        tradeId = euOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euOpt.PaymentCurrency);
+                        else
+                            ccy = euOpt.PaymentCurrency.ToString();
                         break;
                     case Forward fwd:
                         flow = fwd.FlowsT0(model);

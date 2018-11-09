@@ -77,6 +77,20 @@ namespace Qwack.Excel.Services
             return o;
         }
 
+        public static object[,] DictionaryToRange<T1, T2>(this Dictionary<T1, T2> input)
+        {
+            var o = new object[input.Count(), 2];
+
+            var r = 0;
+            foreach (var kv in input)
+            {
+                o[r, 0] = kv.Key;
+                o[r, 1] = kv.Value;
+                r++;
+            }
+            return o;
+        }
+
         public static List<KeyValuePair<T1, T2>> RangeToKvList<T1, T2>(this object[,] input)
         {
             if (input.GetLength(1) != 2)

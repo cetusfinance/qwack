@@ -28,6 +28,12 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => DeliveryDate;
 
+        public List<string> Dependencies(IFxMatrix matrix)
+        {
+            var curves = new[] { ForeignDiscountCurve, matrix.DiscountCurveMap[DomesticCCY], matrix.DiscountCurveMap[ForeignCCY] };
+            return curves.Distinct().Where(x => x != SolveCurve).ToList();
+        }
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             if (Model.BuildDate > DeliveryDate)

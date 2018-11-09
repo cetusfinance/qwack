@@ -24,6 +24,7 @@ namespace Qwack.Core.Instruments.Asset
         public string AssetId { get; set; }
 
         public Currency Currency { get; set; }
+        public Currency PaymentCurrency => Currency;
 
         public string[] AssetIds => new[] { AssetId };
 

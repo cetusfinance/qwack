@@ -680,8 +680,14 @@ namespace Qwack.Models.Models
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
 
-                foreach (var bCurve in bumpedCurves)
+                var results = new List<Tuple<Dictionary<string, object>, double>>[bumpedCurves.Count];
+                var bcList = bumpedCurves.ToList();
+                ParallelUtils.Instance.For(0, results.Length, 1, ii =>
+                //foreach (var bCurve in bumpedCurves)
                 {
+                    results[ii] = new List<Tuple<Dictionary<string, object>, double>>();
+                    var bCurve = bcList[ii];
+
                     var newModel = model.Clone();
                     newModel.AddPriceCurve(curveName, bCurve.Value);
                     var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
@@ -704,10 +710,18 @@ namespace Qwack.Models.Models
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "Delta" }
                             };
-                            cube.AddRow(row, delta);
+                            //cube.AddRow(row, delta);
+                            results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
                         }
                     }
-                }
+                }).Wait();
+
+                for (var i = 0; i < results.Length; i++)
+                    for (var j = 0; j < results[i].Count(); j++)
+                    {
+                        if (results[i][j].Item1 != null)
+                            cube.AddRow(results[i][j].Item1, results[i][j].Item2);
+                    }
             }
             return cube;
         }

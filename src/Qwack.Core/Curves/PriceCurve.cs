@@ -139,10 +139,10 @@ namespace Qwack.Core.Curves
                             newPillars.RemoveAt(0);
                             newPrices.RemoveAt(0);
                         }
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                     else
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                 case PriceCurveType.NYMEX:
                     if (_pillarDates.First() < newAnchorDate) //remove first point as it has expired tomorrow
                     {
@@ -150,11 +150,11 @@ namespace Qwack.Core.Curves
                         newPillars.RemoveAt(0);
                         var newPrices = ((double[])_prices.Clone()).ToList();
                         newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                     else
                     {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                 case PriceCurveType.ICE:
                     if (_pillarDates.First() <= newAnchorDate) //difference to NYMEX case is "<=" vs "<"
@@ -163,11 +163,11 @@ namespace Qwack.Core.Curves
                         newPillars.RemoveAt(0);
                         var newPrices = ((double[])_prices.Clone()).ToList();
                         newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                     else
                     {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId };
+                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                 default:
                     throw new Exception("Unknown curve type");

@@ -937,6 +937,43 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Returns time ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioTimeLadder))]
+        public static object AssetPortfolioTimeLadder(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
+            [ExcelArgument(Description = "Calendar, default ZAR")] object Calendar,
+            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
+            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                var fCal = Calendar.OptionalExcel("ZAR");
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fCal, out var cal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fCal);
+                    return $"Calendar {fCal} not found in cache";
+                }
+
+                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
+                    throw new Exception($"Unknown risk metric {RiskMetric}");
+
+                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
+                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+
+                var riskLadder = new TimeLadder(metric, NScenarios, cal, ContainerStores.CurrencyProvider, retDiff);
+                var result = riskLadder.Generate(model.Value, pfolio);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Performs PnL attribution between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution))]
         public static object AssetPnLAttribution(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,

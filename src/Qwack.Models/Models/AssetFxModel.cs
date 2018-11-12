@@ -113,10 +113,10 @@ namespace Qwack.Models
             var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
             var fwds = expiries.Select(expiry => _assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
             var vols = fwds.Select((fwd, ix) => surface.GetVolForAbsoluteStrike(fwd * moneyness, expiries[ix], fwd));
-            var varianceAvg = vols.Select((v, ix) => v * v * ts[ix]).Sum();
-            varianceAvg /= ts.Sum();
-            var sigma = System.Math.Sqrt(varianceAvg / ts.Average());
-            return sigma;
+            var variances = vols.Select((v, ix) => v * v * ts[ix]).ToArray();
+            var varianceWeightedVol = vols.Select((v, ix) => v * variances[ix]).Sum()/variances.Sum();
+            
+            return varianceWeightedVol;
         }
 
         public IAssetFxModel Clone()

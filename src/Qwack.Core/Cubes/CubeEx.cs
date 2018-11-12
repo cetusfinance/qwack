@@ -450,18 +450,35 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null)
+        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null, bool mergeTypes = false)
         {
             var o = new ResultCube();
-            o.Initialize(baseCube.DataTypes);
+
+            if (mergeTypes)
+            {
+                var mergedTypes = otherCube.DataTypes.Select(kv => kv).Concat(baseCube.DataTypes.Select(kvv => kvv)).Distinct().ToDictionary(x => x.Key, x => x.Value);
+                o.Initialize(mergedTypes);
+            }
+            else
+                o.Initialize(baseCube.DataTypes);
+
             var baseRows = baseCube.GetAllRows().ToArray();
             var otherRows = otherCube.GetAllRows().ToArray();
+            var baseFieldNames = baseCube.DataTypes.Keys.ToArray();
             var otherFieldNames = otherCube.DataTypes.Keys.ToArray();
 
             for (var i = 0; i < baseRows.Length; i++)
             {
                 var br = baseRows[i];
-                o.AddRow(br.MetaData, br.Value);
+                if (mergeTypes)
+                {
+                    var rowDict = br.ToDictionary(baseFieldNames);
+                    o.AddRow(rowDict, br.Value);
+                }
+                else
+                {
+                    o.AddRow(br.MetaData, br.Value);
+                }
             }
 
             for (var i = 0; i < otherRows.Length; i++)

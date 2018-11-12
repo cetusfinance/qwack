@@ -17,6 +17,16 @@ namespace Qwack.Core.Cubes
             MetaData = metaData;
             Value = value;
         }
+
+        public Dictionary<string,object> ToDictionary(string[] fieldNames)
+        {
+            if (fieldNames.Length != MetaData.Length)
+                throw new DataMisalignedException();
+
+            return fieldNames
+                .Select((x, ix) => new KeyValuePair<string, object>(x, MetaData[ix]))
+                .ToDictionary(x => x.Key, x => x.Value);
+        }
     }
 
     public class ResultCube : ICube
@@ -60,5 +70,6 @@ namespace Qwack.Core.Cubes
 
 
         public ResultCubeRow[] GetAllRows() => _rows.ToArray();
+
     }
 }

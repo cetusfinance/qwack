@@ -383,6 +383,21 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Implies solve stages from a Funding Instrument Collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ImplySolveStages))]
+        public static object ImplySolveStages(
+            [ExcelArgument(Description = "Funding Instrument Collection Name")] string FICName,
+            [ExcelArgument(Description = "Fx Matrix Name")] string FxMatrixName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fic = ContainerStores.GetObjectCache<FundingInstrumentCollection>().GetObjectOrThrow(FICName, $"Could not find FIC {FICName}");
+                var fx = ContainerStores.GetObjectCache<FxMatrix>().GetObjectOrThrow(FxMatrixName, $"Could not find FxMatrix {FxMatrixName}");
+
+                var stages = fic.Value.ImplySolveStages(fx.Value);
+
+                return stages.DictionaryToRange();
+            });
+        }
 
         [ExcelFunction(Description = "Creates a new rate index object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateRateIndex))]
         public static object CreateRateIndex(

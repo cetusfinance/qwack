@@ -11,5 +11,6 @@ namespace Qwack.Core.Instruments
         string SolveCurve { get; set; }
         CashFlowSchedule ExpectedCashFlows(IFundingModel model);
         Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model);
+        List<string> Dependencies(IFxMatrix matrix);
     }
 }

@@ -57,6 +57,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => FlowScheduleFra.Flows.Last().SettleDate;
 
+        public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurve }).Distinct().Where(x => x != SolveCurve).ToList();
+
         public double Pv(IFundingModel model, bool updateState)
         {
             var updateDF = updateState || model.CurrentSolveCurve == DiscountCurve;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;

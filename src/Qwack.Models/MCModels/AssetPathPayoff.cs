@@ -16,6 +16,8 @@ namespace Qwack.Models.MCModels
 {
     public class AssetPathPayoff : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
+        private object _locker = new object();
+
         private List<DateTime> _asianDates;
         private List<DateTime> _asianFxDates;
         private double _strike;
@@ -29,7 +31,7 @@ namespace Qwack.Models.MCModels
         private int _fxIndex;
         private int[] _dateIndexes;
         private int[] _fxDateIndexes;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private Vector<double>[] _results;
         private bool _isComplete;
         private bool _isCompo;
         private OptionType _optionType;
@@ -148,6 +150,9 @@ namespace Qwack.Models.MCModels
                 }
 
             _isComplete = true;
+
+            var engine = collection.GetFeature<IEngineFeature>();
+            _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
         }
 
         public void Process(IPathBlock block)
@@ -160,6 +165,8 @@ namespace Qwack.Models.MCModels
                 }
                 return;
             }
+
+            var blockBaseIx = block.GlobalPathIndex;
 
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             { 
@@ -209,7 +216,8 @@ namespace Qwack.Models.MCModels
                         break;
                 }
 
-                _results.Add(finalValues);
+                var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                _results[resultIx] = finalValues;
             }
         }
 
@@ -237,7 +245,22 @@ namespace Qwack.Models.MCModels
             return vec.Average();
         }).Average();
 
-        public double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
+
+        public double[] ResultsByPath
+        {
+            get {
+                var vecLen = Vector<double>.Count;
+                var results = new double[_results.Length * vecLen];
+                for (var i = 0; i < _results.Length; i++)
+                {
+                    for (var j = 0; j < vecLen; j++)
+                    {
+                        results[i * vecLen + j] = _results[i][j];
+                    }
+                }
+                return results;
+            }
+        }
 
         public double ResultStdError => _results.SelectMany(x =>
         {
@@ -302,6 +325,8 @@ namespace Qwack.Models.MCModels
                 return o;
             }
 
+            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
+
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -309,15 +334,16 @@ namespace Qwack.Models.MCModels
                     new CashFlow
                     {
                         Fv = x,
-                        Pv = x * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Pv = x * df,
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
                         NotionalByYearFraction = 1.0
                     }
                 }
-            }).ToArray();
-                
+            }).ToArray(); 
         }
+
+        
     }
 }

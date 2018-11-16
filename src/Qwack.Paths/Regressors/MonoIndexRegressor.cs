@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Regression;
 using Qwack.Paths.Features;
@@ -17,6 +18,7 @@ namespace Qwack.Paths.Regressors
         private const int NSegments = 5;
 
         private readonly IAssetPathPayoff[] _portfolio;
+        private readonly bool _requireContinuity;
         private int _nDims;
         private int[] _dateIndexes;
         private double[][] _pathwiseValues;
@@ -25,10 +27,11 @@ namespace Qwack.Paths.Regressors
         private readonly List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
 
-        public MonoIndexRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, McSettings settings)
+        public MonoIndexRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, McSettings settings, bool requireContinuity)
         {
             _regressionDates = regressionDates;
             _portfolio = portfolio;
+            _requireContinuity = requireContinuity;
             _repCcy = settings.ReportingCurrency;
             _pathwiseValues = new double[_regressionDates.Length][];
             for (var i = 0; i < _pathwiseValues.Length; i++)
@@ -91,74 +94,37 @@ namespace Qwack.Paths.Regressors
             var o = new IInterpolator1D[_dateIndexes.Length];
 
             var nPaths = _pathwiseValues.First().Length;
-            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model));
+            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model)).ToArray();
 
-            //ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
-            for (var d = 0; d < _dateIndexes.Length; d++)
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {
                 var exposureDate = _regressionDates[d];
                 var sortedFinalValues = new KeyValuePair<double, double>[nPaths];
-                foreach (var schedule in finalSchedules)
+
+                for (var p = 0; p < nPaths; p++)
                 {
                     var finalValue = 0.0;
-                    for (var p = 0; p < nPaths; p++)
+                    foreach (var schedule in finalSchedules)
                     {
                         foreach (var flow in schedule[p].Flows)
                         {
                             if (flow.SettleDate > exposureDate)
                                 finalValue += flow.Pv;
                         }
-
-                        sortedFinalValues[p] = new KeyValuePair<double, double>(_pathwiseValues[d][p], finalValue);
                     }
+                    sortedFinalValues[p] = new KeyValuePair<double, double>(_pathwiseValues[d][p], finalValue);
                 }
+
+                //DumpDataToDisk(sortedFinalValues,$@"C:\temp\regData{d}.csv");
 
                 sortedFinalValues = sortedFinalValues.OrderBy(q => q.Key).ToArray();
+                
+                if (_requireContinuity)
+                    o[d] = SegmentedLinearRegression.Regress(sortedFinalValues.Select(x => x.Key).ToArray(), sortedFinalValues.Select(y => y.Value).ToArray(), 5);
+                else
+                    o[d] = SegmentedLinearRegression.RegressNotContinuous(sortedFinalValues.Select(x => x.Key).ToArray(), sortedFinalValues.Select(y => y.Value).ToArray(), 5);
 
-                var x = new double[NSegments + 1];
-                var y = new double[NSegments + 1];
-                var samplesPerSegment = nPaths / NSegments;
-                for (var i = 0; i < NSegments; i++)
-                {
-                    var samples = sortedFinalValues.Skip(i * samplesPerSegment).Take(samplesPerSegment);
-                    var sampleXs = samples.Select(q => q.Key).ToArray();
-                    var sampleYs = samples.Select(q => q.Value).ToArray();
-                    var lr = Math.LinearRegression.LinearRegressionVector(sampleXs, sampleYs);
-                    var xLo = sampleXs.First();
-                    var xHi = sampleXs.Last();
-                    var yLo = lr.Alpha + lr.Beta * xLo;
-                    var yHi = lr.Alpha + lr.Beta * xHi;
-
-                    if (i == 0)
-                    {
-                        x[0] = xLo;
-                        y[0] = yLo;
-                        x[1] = xHi;
-                        y[1] = yHi;
-                    }
-                    else
-                    {
-                        var targetFunc = new Func<double, double>(q =>
-                         {
-                             var slope = (q - y[i]) / (xHi - xLo);
-                             var err = 0.0;
-                             for (var j = 0; j < samplesPerSegment; j++)
-                             {
-                                 var dx = sampleXs[j] - xLo;
-                                 var yEst = yLo + slope * dx;
-                                 err += (yEst - sampleYs[j]) * (yEst - sampleYs[j]);
-                             }
-                             return err;
-                         });
-
-                        var yHiBetter = Math.Solvers.Newton1D.MethodSolve(targetFunc, yHi, 1e-4);
-                        x[i + 1] = xHi;
-                        y[i + 1] = yHiBetter;
-                    }
-                }
-
-                o[d] = InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.Linear);
-            }//);
+            }).Wait();
 
             return o;
         }
@@ -170,21 +136,20 @@ namespace Qwack.Paths.Regressors
             var nPaths = _pathwiseValues.First().Length;
             var targetIx = (int)(nPaths * confidenceInterval);
 
-            //ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
-            for (var d = 0; d < _dateIndexes.Length; d++)
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {
                 var exposures = _pathwiseValues[d].Select(p => regressors[d].Interpolate(p)).OrderBy(x => x).ToList();
                 o[d] = Max(0.0, exposures[targetIx]);
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
-            }//);
+            }).Wait();
 
-            //for (var d = 0; d < _dateIndexes.Length; d++)
-            //{
-            //    var exposures = _pathwiseValues[d].Select(p => regressors[d].Interpolate(p)).OrderBy(x => x).ToList();
-            //    o[d] = Max(0.0,exposures[targetIx]);
-            //    o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
-            //}
             return o;
+        }
+
+        private void DumpDataToDisk(KeyValuePair<double, double>[] data, string fileName)
+        {
+            var linesToWrite = data.Select(x => string.Join(",", x.Key, x.Value)).ToArray();
+            System.IO.File.WriteAllLines(fileName, linesToWrite);
         }
     }
 }

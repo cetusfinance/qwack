@@ -14,6 +14,8 @@ namespace Qwack.Paths.Payoffs
 {
     public class EuropeanBarrierOption : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
+        private object _locker = new object();
+
         private readonly DateTime _obsStart;
         private readonly DateTime _obsEnd;
         private readonly DateTime _expiry;
@@ -29,7 +31,7 @@ namespace Qwack.Paths.Payoffs
         private int _assetIndex;
         private int[] _dateIndexes;
         private int _expiryIx;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private Vector<double>[] _results;
         private Vector<double> _notional;
         private Vector<double> _barrierVec;
         private Vector<double> _strikeVec;
@@ -73,14 +75,19 @@ namespace Qwack.Paths.Payoffs
             var obsEnd = dates.GetDateIndex(_obsEnd);
             _expiryIx = dates.GetDateIndex(_expiry);
             _dateIndexes = Enumerable.Range(obsStart, (obsEnd - obsStart) + 1).ToArray();
+
+            var engine = collection.GetFeature<IEngineFeature>();
+            _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
             _isComplete = true;
         }
 
         public void Process(IPathBlock block)
         {
+            var blockBaseIx = block.GlobalPathIndex;
+
             var barrierHit = new Vector<double>(0);
             var expiryValue = new Vector<double>(0);
-            if(_barrierSide==BarrierSide.Down)
+            if (_barrierSide == BarrierSide.Down)
             {
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {
@@ -90,8 +97,26 @@ namespace Qwack.Paths.Payoffs
                     {
                         minValue = Vector.Min(steps[_dateIndexes[i]], minValue);
                     }
-                    barrierHit = Vector.LessThan<double>(minValue,_barrierVec);
+                    barrierHit = Vector.LessThan<double>(minValue, _barrierVec);
                     expiryValue = steps[_expiryIx];
+
+                    var vanillaValue = _callPut == OptionType.C
+                        ? Vector.Max(expiryValue - _strikeVec, _zero)
+                        : Vector.Max(_strikeVec - expiryValue, _zero);
+
+                    if (_barrierType == BarrierType.KI)
+                    {
+                        var payoff = vanillaValue * barrierHit * _notional;
+                        var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                        _results[resultIx] = payoff;
+                    }
+                    else //KO
+                    {
+                        var didntHit = (new Vector<double>(1.0)) - barrierHit;
+                        var payoff = vanillaValue * didntHit * _notional;
+                        var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                        _results[resultIx] = payoff;
+                    }
                 }
             }
             else
@@ -106,26 +131,26 @@ namespace Qwack.Paths.Payoffs
                     }
                     barrierHit = Vector.GreaterThan<double>(maxValue, _barrierVec);
                     expiryValue = steps[_expiryIx];
+
+                    var vanillaValue = _callPut == OptionType.C
+                        ? Vector.Max(expiryValue - _strikeVec, _zero)
+                        : Vector.Max(_strikeVec - expiryValue, _zero);
+
+                    if (_barrierType == BarrierType.KI)
+                    {
+                        var payoff = vanillaValue * barrierHit * _notional;
+                        var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                        _results[resultIx] = payoff;
+                    }
+                    else //KO
+                    {
+                        var didntHit = (new Vector<double>(1.0)) - barrierHit;
+                        var payoff = vanillaValue * didntHit * _notional;
+                        var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                        _results[resultIx] = payoff;
+                    }
                 }
             }
-
-            var vanillaValue = _callPut == OptionType.C
-                ? Vector.Max(expiryValue - _strikeVec, _zero)
-                : Vector.Max(_strikeVec - expiryValue, _zero);
-
-            if (_barrierType==BarrierType.KI)
-            {
-                var payoff = vanillaValue * barrierHit * _notional;
-                _results.Add(payoff);
-            }
-            else //KO
-            {
-                var didntHit = (new Vector<double>(1.0)) - barrierHit;
-                var payoff = vanillaValue * didntHit * _notional;
-                _results.Add(payoff);
-            }
-
-            
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
@@ -176,6 +201,7 @@ namespace Qwack.Paths.Payoffs
 
         public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
         {
+            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -183,7 +209,7 @@ namespace Qwack.Paths.Payoffs
                     new CashFlow
                     {
                         Fv = x,
-                        Pv = x * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Pv = x * df,
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,

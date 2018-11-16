@@ -222,7 +222,7 @@ namespace Qwack.Models.MCModels
                         break;
                     case PFERegressorType.MonoLinear:
                         _regressor = new MonoIndexRegressor(settings.PfeExposureDates,
-                            _payoffs.Values.ToArray(), settings);
+                            _payoffs.Values.ToArray(), settings, true);
                         break;
                 }
                 Engine.AddPathProcess(_regressor);
@@ -239,10 +239,7 @@ namespace Qwack.Models.MCModels
             cube.Initialize(dataTypes);
             Engine.RunProcess();
 
-            //var howItWasBefore = ParallelUtils.Instance.MultiThreaded;
-            //ParallelUtils.Instance.MultiThreaded = false;
             var pfe = _regressor.PFE(Model, confidenceLevel);
-            //ParallelUtils.Instance.MultiThreaded = howItWasBefore;
 
             for (var i = 0; i < pfe.Length; i++)
             {

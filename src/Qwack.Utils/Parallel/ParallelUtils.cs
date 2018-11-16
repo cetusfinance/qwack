@@ -71,6 +71,24 @@ namespace Qwack.Utils.Parallel
             Task.WaitAll(taskList.ToArray());
         }
 
+        public void QueueAndRunTasks(IEnumerable<Task> tasks)
+        {
+            var taskList = new List<Task>();
+            foreach (var t in tasks)
+            {
+                if (_slimLock2.Wait(0))
+                {
+                    taskList.Add(t);
+                    t.ContinueWith((t1) => _slimLock2.Release());
+                    t.Start();
+                }
+                else
+                    t.RunSynchronously();
+            }
+
+            Task.WaitAll(taskList.ToArray());
+        }
+
         private Task RunOnThread<T>(T value, Action<T> code)
         {
             var task = new Task(() => code.Invoke(value));

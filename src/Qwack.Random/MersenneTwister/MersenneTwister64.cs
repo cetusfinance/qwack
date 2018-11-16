@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths;
+using Qwack.Paths.Features;
 
 namespace Qwack.Random.MersenneTwister
 {
@@ -12,7 +13,7 @@ namespace Qwack.Random.MersenneTwister
     /// by Takuji Nishimura and Makoto Matsumoto.
     /// MT19937-64 (2004/9/29 version)
     /// </summary>
-    public class MersenneTwister64 : IPathProcess
+    public class MersenneTwister64 : IPathProcess, IRunSingleThreaded
     {
         private static uint _nN = 312;
         private const uint _mm = 156;

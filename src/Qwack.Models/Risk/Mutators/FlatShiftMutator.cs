@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 
@@ -30,6 +31,13 @@ namespace Qwack.Models.Risk.Mutators
             }
             return o;
         }
-      
+
+        public static IAssetFxModel FxSpotShift(Currency ccy, double shiftSize, IAssetFxModel model)
+        {
+            var o = model.Clone();
+            var spot = model.FundingModel.FxMatrix.GetSpotRate(ccy);
+            o.FundingModel.FxMatrix.SpotRates[ccy] = spot + shiftSize;
+            return o;
+        }
     }
 }

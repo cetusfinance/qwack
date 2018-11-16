@@ -974,6 +974,44 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Returns an asset/currency risk matrix for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioRiskMatrix))]
+        public static object AssetPortfolioRiskMatrix(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Asset Id to bump")] string AssetId,
+            [ExcelArgument(Description = "Currency to bump")] string Currency,
+            [ExcelArgument(Description = "Bump type, defualt FlatShift")] object BumpType,
+            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
+            [ExcelArgument(Description = "Bump step size asset")] double BumpStepAsset,
+            [ExcelArgument(Description = "Bump step size fx")] double BumpStepFx,
+            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
+            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                if (!Enum.TryParse(BumpType.OptionalExcel("FlatShift"), out MutationType bType))
+                    throw new Exception($"Unknown bump/mutation type {BumpType}");
+                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
+                    throw new Exception($"Unknown risk metric {RiskMetric}");
+
+                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
+                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+
+                var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+                var result = riskMatrix.Generate(model.Value, pfolio);
+                var resultCache = ContainerStores.GetObjectCache<ICube>();
+                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
+                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Performs PnL attribution between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution))]
         public static object AssetPnLAttribution(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,

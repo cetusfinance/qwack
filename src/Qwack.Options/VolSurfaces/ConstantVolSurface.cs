@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Qwack.Math;
 using Qwack.Core.Basic;
 
 namespace Qwack.Options.VolSurfaces
@@ -18,7 +19,7 @@ namespace Qwack.Options.VolSurfaces
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
 
-        public Math.Interpolation.IInterpolator2D LocalVolGrid { get; set; }
+        public IInterpolator2D LocalVolGrid { get; set; }
 
         public ConstantVolSurface()         {        }
 
@@ -44,10 +45,13 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => Volatility;
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => new Dictionary<string, IVolSurface>
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            return new Dictionary<string, IVolSurface>
             {
                 { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency } }
             };
+        }
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
     }

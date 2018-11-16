@@ -13,7 +13,6 @@ namespace Qwack.Paths
     public class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
         private List<List<IPathProcess>> _pathProcesses = new List<List<IPathProcess>>();
-        //private List<object> _pathProcessFeatures = new List<object>();
         private int _numberOfPaths;
         private FeatureCollection _featureCollection = new FeatureCollection();
         private int _dimensions;
@@ -40,16 +39,44 @@ namespace Qwack.Paths
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
 
-            foreach (var block in _blockset)
+            if (Parallelize)
             {
                 foreach (var ppLevel in _pathProcesses)
                 {
-                    //if (Parallelize)
-                    //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.Process(block), true);
-                    //else
-                    foreach (var process in ppLevel)
+                    if (ppLevel.Any(x => x is IRunSingleThreaded))
                     {
-                        process.Process(block);
+                        foreach (var block in _blockset)
+                        {
+                            foreach (var process in ppLevel)
+                            {
+                                process.Process(block);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await ParallelUtils.Instance.For(0, _blockset.NumberOfBlocks, 1, i =>
+                        {
+                            var block = _blockset.GetBlock(i);
+                            foreach (var process in ppLevel)
+                            {
+                                process.Process(block);
+                            }
+                        }, true);
+                    }
+                }
+
+            }
+            else
+            {
+                foreach (var block in _blockset)
+                {
+                    foreach (var ppLevel in _pathProcesses)
+                    {
+                        foreach (var process in ppLevel)
+                        {
+                            process.Process(block);
+                        }
                     }
                 }
             }
@@ -68,13 +95,13 @@ namespace Qwack.Paths
         {
             foreach (var ppLevel in _pathProcesses)
             {
-                //if (Parallelize)
-                //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true);
-                //else
-                foreach (var pp in ppLevel)
-                {
-                    pp.SetupFeatures(_featureCollection);
-                }
+                if (Parallelize)
+                    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true);
+                else
+                    foreach (var pp in ppLevel)
+                    {
+                        pp.SetupFeatures(_featureCollection);
+                    }
             }
 
             _dimensions = _featureCollection.GetFeature<IPathMappingFeature>().NumberOfDimensions;
@@ -86,35 +113,33 @@ namespace Qwack.Paths
 
             foreach (var ppLevel in _pathProcesses)
             {
-                //if (Parallelize)
-                //    await ParallelUtils.Instance.Foreach(ppLevel, (process) => 
-                //    {
-                //        if (process is IRequiresFinish finishProcess)
-                //        {
-                //            finishProcess.Finish(_featureCollection);
-                //            if (!finishProcess.IsComplete)
-                //            {
-                //                lock (locker)
-                //                {
-                //                    unfinished.Add(finishProcess);
-                //                }
-                //            }
-                //        }
-                //    }, true);
-                //else
-                foreach (var process in ppLevel)
-                {
-                    if (process is IRequiresFinish finishProcess)
+                if (Parallelize)
+                    await ParallelUtils.Instance.Foreach(ppLevel, (process) =>
                     {
-                        finishProcess.Finish(_featureCollection);
-                        if (!finishProcess.IsComplete)
+                        if (process is IRequiresFinish finishProcess)
                         {
-                            unfinished.Add(finishProcess);
+                            finishProcess.Finish(_featureCollection);
+                            if (!finishProcess.IsComplete)
+                            {
+                                lock (locker)
+                                {
+                                    unfinished.Add(finishProcess);
+                                }
+                            }
+                        }
+                    }, true);
+                else
+                    foreach (var process in ppLevel)
+                    {
+                        if (process is IRequiresFinish finishProcess)
+                        {
+                            finishProcess.Finish(_featureCollection);
+                            if (!finishProcess.IsComplete)
+                            {
+                                unfinished.Add(finishProcess);
+                            }
                         }
                     }
-                }
-
-
             }
 
             if (unfinished.Count > 0)

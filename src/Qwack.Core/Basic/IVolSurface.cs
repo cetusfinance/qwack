@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Interpolation;
+using Qwack.Math;
 
 namespace Qwack.Core.Basic
 {

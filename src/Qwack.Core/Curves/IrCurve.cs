@@ -5,6 +5,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using static System.Math;
 

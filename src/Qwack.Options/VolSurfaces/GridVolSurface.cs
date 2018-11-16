@@ -1,5 +1,6 @@
 using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using System;
 using System.Collections.Generic;

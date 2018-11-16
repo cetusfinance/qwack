@@ -15,6 +15,8 @@ namespace Qwack.Paths.Regressors
 {
     public class MonoIndexRegressor : IPortfolioValueRegressor
     {
+        public bool DebugMode { get; set; }
+
         private const int NSegments = 5;
 
         private readonly IAssetPathPayoff[] _portfolio;
@@ -115,14 +117,15 @@ namespace Qwack.Paths.Regressors
                     sortedFinalValues[p] = new KeyValuePair<double, double>(_pathwiseValues[d][p], finalValue);
                 }
 
-                //DumpDataToDisk(sortedFinalValues,$@"C:\temp\regData{d}.csv");
-
                 sortedFinalValues = sortedFinalValues.OrderBy(q => q.Key).ToArray();
                 
                 if (_requireContinuity)
                     o[d] = SegmentedLinearRegression.Regress(sortedFinalValues.Select(x => x.Key).ToArray(), sortedFinalValues.Select(y => y.Value).ToArray(), 5);
                 else
                     o[d] = SegmentedLinearRegression.RegressNotContinuous(sortedFinalValues.Select(x => x.Key).ToArray(), sortedFinalValues.Select(y => y.Value).ToArray(), 5);
+
+                if (DebugMode)
+                    DumpDataToDisk(sortedFinalValues, o[d], $@"C:\temp\regData{d}.csv");
 
             }).Wait();
 
@@ -146,9 +149,10 @@ namespace Qwack.Paths.Regressors
             return o;
         }
 
-        private void DumpDataToDisk(KeyValuePair<double, double>[] data, string fileName)
+        private void DumpDataToDisk(KeyValuePair<double, double>[] data, IInterpolator1D fitted, string fileName)
         {
-            var linesToWrite = data.Select(x => string.Join(",", x.Key, x.Value)).ToArray();
+            var header = new[] { "X,Y,YFited" };
+            var linesToWrite = header.Concat(data.Select(x => string.Join(",", x.Key, x.Value, fitted.Interpolate(x.Key)))).ToArray();
             System.IO.File.WriteAllLines(fileName, linesToWrite);
         }
     }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using static System.Math;
+using static Qwack.Math.Matrix.DoubleArrayFunctions;
 
 namespace Qwack.Math
 {
@@ -126,6 +127,21 @@ namespace Qwack.Math
 
             return new LinearRegressionResult(alpha, beta, R2);
         }
+
+        public static LinearRegressionResult LinearRegressionNoIntercept(this double[] X0, double[] Y0)
+        {
+            if (X0.Length != Y0.Length) throw new ArgumentOutOfRangeException(nameof(X0), "X and Y must be the same length");
+
+            var rowVec = RowVectorToMatrix(X0);
+            var colVec = ColumnVectorToMatrix(X0);
+            var xtx = MatrixProduct(rowVec, colVec);
+            var inv = InvertMatrix(xtx);
+            var a = MatrixProduct(inv, rowVec);
+            var result = MatrixProduct(a, Y0);
+
+            return new LinearRegressionResult(0, result[0], 0);
+        }
+
 
         public struct LinearRegressionResult
         {

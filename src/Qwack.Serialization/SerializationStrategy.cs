@@ -31,8 +31,7 @@ namespace Qwack.Serialization
             var writeArrayValue = Expression.Call(null, GetSimpleMethod($"Write{_methodMapping[elementType]}"), buffer, arrayValue);
             var increment = Expression.AddAssign(index, Expression.Constant(1));
             var ifThenExit = Expression.IfThen(Expression.Equal(index, size), Expression.Break(label));
-            var expressionLoop = Expression.Loop(
-                Expression.Block(ifThenExit, writeArrayValue, increment), label);
+            var expressionLoop = Expression.Loop(Expression.Block(ifThenExit, writeArrayValue, increment), label);
 
             var block = Expression.Block(new[] { index }, writeSize, assignZero, expressionLoop);
             var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);

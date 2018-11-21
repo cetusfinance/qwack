@@ -66,7 +66,7 @@ namespace Qwack.Serialization
             return assignObject;
         }
 
-                protected override Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
+        protected override Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var length = Expression.Parameter(typeof(int));
             var getlength = BuildExpression(typeof(int), length, buffer);

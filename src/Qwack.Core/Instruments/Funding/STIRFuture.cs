@@ -66,5 +66,7 @@ namespace Qwack.Core.Instruments.Funding
                 {ForecastCurve, forecastDict },
             };
         }
+
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
     }
 }

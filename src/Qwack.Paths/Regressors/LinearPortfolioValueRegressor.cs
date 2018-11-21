@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Math.Regression;
 using Qwack.Paths.Features;
+using Qwack.Utils.Parallel;
 using static System.Math;
 
 namespace Qwack.Paths.Regressors
@@ -91,7 +92,9 @@ namespace Qwack.Paths.Regressors
             var nPaths = _pathwiseValues.First().Length;
             var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model));
             var finalValues = new double[_dateIndexes.Length][];
-            for (var d = 0; d < finalValues.GetLength(0); d++)
+
+            //ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            for(var d=0;d<_dateIndexes.Length;d++)
             {
                 var exposureDate = _regressionDates[d];
                 finalValues[d] = new double[nPaths];
@@ -106,9 +109,11 @@ namespace Qwack.Paths.Regressors
                         }
                     }
                 }
-            }
+            }//);
 
             var o = new MultipleLinearRegressor[_dateIndexes.Length];
+
+            //ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             for (var d = 0; d < _dateIndexes.Length; d++)
             {
                 if (_regressionDates[d] <= model.BuildDate)
@@ -120,7 +125,7 @@ namespace Qwack.Paths.Regressors
                     var mlr = MultipleLinearRegression.RegressHistorical(_pathwiseValues[d], finalValues[d]);
                     o[d] = new MultipleLinearRegressor(mlr);
                 }
-            }
+            }//);
 
             return o;
         }
@@ -131,12 +136,21 @@ namespace Qwack.Paths.Regressors
             var regressors = Regress(model);
             var nPaths = _pathwiseValues.First().Length;
             var targetIx = (int)(nPaths * confidenceInterval);
+
+            //ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             for (var d = 0; d < _dateIndexes.Length; d++)
             {
                 var exposures = _pathwiseValues[d].Select(p => regressors[d].Regress(p)).OrderBy(x => x).ToList();
-                o[d] = Max(0.0,exposures[targetIx]);
+                o[d] = Max(0.0, exposures[targetIx]);
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
-            }
+            }//);
+
+            //for (var d = 0; d < _dateIndexes.Length; d++)
+            //{
+            //    var exposures = _pathwiseValues[d].Select(p => regressors[d].Regress(p)).OrderBy(x => x).ToList();
+            //    o[d] = Max(0.0,exposures[targetIx]);
+            //    o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            //}
             return o;
         }
     }

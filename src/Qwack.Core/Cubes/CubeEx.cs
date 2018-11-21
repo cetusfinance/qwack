@@ -77,7 +77,10 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction) => cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
+        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction)
+        {
+            return cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
+        }
 
 
         public static ICube Pivot(this ICube cube, string[] fieldsToAggregateBy, AggregationAction aggregationAction)
@@ -189,6 +192,27 @@ namespace Qwack.Core.Cubes
             }
 
             return outCube;
+        }
+
+        public static Dictionary<object,List<ResultCubeRow>> ToDictionary(this ICube cube, string keyField)
+        {
+                if (!cube.DataTypes.ContainsKey(keyField))
+                    throw new Exception($"Cannot filter on field {keyField} as it is not present");
+
+            var output = new Dictionary<object, List<ResultCubeRow>>();
+
+            var fieldNames = cube.DataTypes.Keys.ToList();
+            var ix = fieldNames.IndexOf(keyField);
+
+            foreach (var row in cube.GetAllRows())
+            {
+                if (!output.ContainsKey(row.MetaData[ix]))
+                    output.Add(row.MetaData[ix], new List<ResultCubeRow>());
+
+                output[row.MetaData[ix]].Add(row);
+            }
+
+            return output;
         }
 
         public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn)
@@ -426,18 +450,35 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null)
+        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null, bool mergeTypes = false)
         {
             var o = new ResultCube();
-            o.Initialize(baseCube.DataTypes);
+
+            if (mergeTypes)
+            {
+                var mergedTypes = otherCube.DataTypes.Select(kv => kv).Concat(baseCube.DataTypes.Select(kvv => kvv)).Distinct().ToDictionary(x => x.Key, x => x.Value);
+                o.Initialize(mergedTypes);
+            }
+            else
+                o.Initialize(baseCube.DataTypes);
+
             var baseRows = baseCube.GetAllRows().ToArray();
             var otherRows = otherCube.GetAllRows().ToArray();
+            var baseFieldNames = baseCube.DataTypes.Keys.ToArray();
             var otherFieldNames = otherCube.DataTypes.Keys.ToArray();
 
             for (var i = 0; i < baseRows.Length; i++)
             {
                 var br = baseRows[i];
-                o.AddRow(br.MetaData, br.Value);
+                if (mergeTypes)
+                {
+                    var rowDict = br.ToDictionary(baseFieldNames);
+                    o.AddRow(rowDict, br.Value);
+                }
+                else
+                {
+                    o.AddRow(br.MetaData, br.Value);
+                }
             }
 
             for (var i = 0; i < otherRows.Length; i++)

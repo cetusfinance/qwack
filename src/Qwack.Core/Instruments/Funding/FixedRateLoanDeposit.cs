@@ -106,5 +106,8 @@ namespace Qwack.Core.Instruments.Funding
                    Basis == deposit.Basis &&
                    DiscountCurve == deposit.DiscountCurve &&
                    TradeId == deposit.TradeId;
+
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        
     }
 }

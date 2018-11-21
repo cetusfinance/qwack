@@ -20,6 +20,8 @@ namespace Qwack.Core.Instruments.Asset
 
         public DateTime LastSensitivityDate => Swaplets.Max(x => x.LastSensitivityDate);
 
+        public Currency PaymentCurrency => Currency;
+
         public IAssetInstrument Clone() => new AsianSwapStrip
         {
             TradeId = TradeId,

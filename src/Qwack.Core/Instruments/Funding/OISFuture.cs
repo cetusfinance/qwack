@@ -27,6 +27,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => AverageEndDate;
 
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             var forecastCurve = Model.Curves[ForecastCurve];

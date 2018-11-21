@@ -9,14 +9,14 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Options.VolSurfaces;
 using System.Linq;
-using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Core.Basic;
 
 namespace Qwack.Models.Tests.MCModels
 {
-    public class AssetFxBlackVolMCFacts
+    public class AsianOptionMCFacts
     {
-        private AssetFxMCModel GetSut(bool expensiveFutures)
+        private AssetFxMCModel GetSut()
         {
             var buildDate = DateTime.Parse("2018-10-04");
             var usd = TestProviderHelper.CurrencyProvider["USD"];
@@ -38,7 +38,7 @@ namespace Qwack.Models.Tests.MCModels
             aModel.AddVolSurface("CL", comSurface);
             aModel.AddPriceCurve("CL", comCurve);
 
-            var product = AssetProductFactory.CreateTermAsianSwap(buildDate.AddDays(10), buildDate.AddDays(20), 99, "CL", usdCal, buildDate.AddDays(21), usd);
+            var product = AssetProductFactory.CreateAsianOption(buildDate.AddDays(10), buildDate.AddDays(20), 101, "CL", OptionType.Call, usdCal, buildDate.AddDays(21), usd);
             product.TradeId = "waaah";
             product.DiscountCurve = "DISCO";
 
@@ -47,12 +47,10 @@ namespace Qwack.Models.Tests.MCModels
             var settings = new McSettings
             {
                 Generator = Core.Basic.RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = 16384,
-                NumberOfTimesteps = 10,
+                NumberOfPaths = (int)System.Math.Pow(2, 16),
+                NumberOfTimesteps = 120,
                 ReportingCurrency = usd,
                 PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
-                ExpensiveFuturesSimulation = expensiveFutures,
-                Parallelize = expensiveFutures
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
             return sut;
@@ -61,31 +59,27 @@ namespace Qwack.Models.Tests.MCModels
         [Fact]
         public void CanRunPV()
         {
-            var sut = GetSut(false);
+            var sut = GetSut();
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var pvCube = sut.PV(usd);
 
-            Assert.Equal(1.0, pvCube.GetAllRows().First().Value, 0);
+            var ins = sut.Portfolio.Instruments.First() as AsianOption;
+            TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
+
+            var clewlowPV = Options.Asians.LME_Clewlow.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C, usdCal);
+            var tbPV = Options.Asians.TurnbullWakeman.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C);
+
+            var times = ins.FixingDates.Select(x => sut.Model.BuildDate.CalculateYearFraction(x, DayCountBasis.Act365F));
+            var nt = times.Count();
+            var variances = times.Select(x => x * 0.32 * 0.32 / nt);
+            var vAvg = System.Math.Sqrt(variances.Sum() / times.Last());
+            var bpv = Options.BlackFunctions.BlackPV(100, 101, 0.0, times.Last(), vAvg, OptionType.C);
+            //Assert.Equal(clewlowPV, pvCube.GetAllRows().First().Value, 2);
         }
 
-        [Fact]
-        public void CanRunPV2()
-        {
-            var sut = GetSut(true);
-            var usd = TestProviderHelper.CurrencyProvider["USD"];
-            var pvCube = sut.PV(usd);
 
-            Assert.Equal(1.0, pvCube.GetAllRows().First().Value, 0);
-        }
-
-        [Fact]
-        public void CanRunPFE()
-        {
-            var sut = GetSut(false);
-            var pvCube = sut.PFE(0.95);
-
-            Assert.Equal(3, pvCube.GetAllRows().Length);
-            Assert.Equal(0.0, pvCube.GetAllRows().Last().Value);
-        }
     }
 }
+
+
+

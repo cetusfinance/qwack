@@ -21,5 +21,12 @@ namespace Qwack.Models.Models
             }
             return o;
         }
+
+        public double GetFixing(DateTime d)
+        {
+            return TryGetFixing(d, out var fixing) ? fixing : throw new Exception($"Fixing for date {d:yyyy-MM-dd} not found in dictionary {Name}");
+        }
+
+        public bool TryGetFixing(DateTime d, out double fixing) => TryGetValue(d, out fixing);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
+using Qwack.Math;
 
 namespace Qwack.Core.Curves
 {

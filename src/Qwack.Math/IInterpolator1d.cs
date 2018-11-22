@@ -1,4 +1,4 @@
-﻿namespace Qwack.Math.Interpolation
+namespace Qwack.Math
 {
     public interface IInterpolator1D
     {

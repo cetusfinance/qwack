@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace Qwack.Core.Cubes
 {
@@ -18,7 +19,7 @@ namespace Qwack.Core.Cubes
             Value = value;
         }
 
-        public Dictionary<string,object> ToDictionary(string[] fieldNames)
+        public Dictionary<string, object> ToDictionary(string[] fieldNames)
         {
             if (fieldNames.Length != MetaData.Length)
                 throw new DataMisalignedException();
@@ -31,6 +32,8 @@ namespace Qwack.Core.Cubes
 
     public class ResultCube : ICube
     {
+        private object _locker = new object();
+
         private readonly Type[] _numericalTypes = { typeof(double) };
         private List<ResultCubeRow> _rows;
         private Dictionary<string, Type> _types;
@@ -47,7 +50,6 @@ namespace Qwack.Core.Cubes
 
         public int GetColumnIndex(string columnName) => _fieldNames.IndexOf(columnName);
 
-
         public void AddRow(Dictionary<string, object> data, double value)
         {
             var row = new object[data.Count];
@@ -63,13 +65,29 @@ namespace Qwack.Core.Cubes
                 var ix = _fieldNames.IndexOf(d.Key);
                 row[ix] = d.Value;
             }
-            _rows.Add(new ResultCubeRow(row,value));
+            lock (_locker)
+            {
+                _rows.Add(new ResultCubeRow(row, value));
+            }
         }
 
-        public void AddRow(object[] data, double value) => _rows.Add(new ResultCubeRow(data, value));
+        public void AddRow(object[] data, double value)
+        {
+            lock (_locker)
+            {
+                _rows.Add(new ResultCubeRow(data, value));
+            }
+        }
 
 
-        public ResultCubeRow[] GetAllRows() => _rows.ToArray();
+        public ResultCubeRow[] GetAllRows()
+        {
+            lock (_locker)
+            {
+                return _rows.ToArray();
+            }
+        }
+        
 
     }
 }

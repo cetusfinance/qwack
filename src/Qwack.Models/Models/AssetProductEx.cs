@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
@@ -680,8 +681,14 @@ namespace Qwack.Models.Models
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
 
-                foreach (var bCurve in bumpedCurves)
+                var results = new List<Tuple<Dictionary<string, object>, double>>[bumpedCurves.Count];
+                var bcList = bumpedCurves.ToList();
+
+                ParallelUtils.Instance.For(0, results.Length, 1, ii =>
                 {
+                    results[ii] = new List<Tuple<Dictionary<string, object>, double>>();
+                    var bCurve = bcList[ii];
+
                     var newModel = model.Clone();
                     newModel.AddPriceCurve(curveName, bCurve.Value);
                     var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
@@ -704,10 +711,17 @@ namespace Qwack.Models.Models
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "Delta" }
                             };
-                            cube.AddRow(row, delta);
+                            results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
                         }
                     }
-                }
+                }).Wait();
+
+                for (var i = 0; i < results.Length; i++)
+                    for (var j = 0; j < results[i].Count(); j++)
+                    {
+                        if (results[i][j].Item1 != null)
+                            cube.AddRow(results[i][j].Item1, results[i][j].Item2);
+                    }
             }
             return cube;
         }
@@ -858,8 +872,19 @@ namespace Qwack.Models.Models
 
                 var bumpedUpCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
                 var bumpedDownCurves = curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook);
-                foreach (var bUpCurve in bumpedUpCurves)
+
+                var resultsD = new List<Tuple<Dictionary<string, object>, double>>[bumpedUpCurves.Count];
+                var resultsG = new List<Tuple<Dictionary<string, object>, double>>[bumpedUpCurves.Count];
+                var bcList = bumpedUpCurves.ToList();
+                ParallelUtils.Instance.For(0, resultsD.Length, 1, ii =>
                 {
+                    resultsD[ii] = new List<Tuple<Dictionary<string, object>, double>>();
+                    resultsG[ii] = new List<Tuple<Dictionary<string, object>, double>>();
+
+                    var bUpCurve = bcList[ii];
+
+                    //    foreach (var bUpCurve in bumpedUpCurves)
+                    //{
                     var newModelUp = model.Clone();
                     var newModelDown = model.Clone();
                     newModelUp.AddPriceCurve(curveName, bUpCurve.Value);
@@ -898,7 +923,8 @@ namespace Qwack.Models.Models
                                     { "PointLabel", bUpCurve.Key },
                                     { "Metric", "Delta" }
                                 };
-                                cube.AddRow(row, delta);
+                                resultsD[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
+                                //cube.AddRow(row, delta);
                             }
                             if (Abs(gamma) > 1e-12)
                             {
@@ -909,11 +935,26 @@ namespace Qwack.Models.Models
                                     { "PointLabel", bUpCurve.Key },
                                     { "Metric", "Gamma" }
                                 };
-                                cube.AddRow(rowG, gamma);
+                                resultsG[ii].Add(new Tuple<Dictionary<string, object>, double>(rowG, gamma));
+                                //cube.AddRow(rowG, gamma);
                             }
                         }
                     }
-                }
+                }).Wait();
+
+
+                for (var i = 0; i < resultsD.Length; i++)
+                    for (var j = 0; j < resultsD[i].Count(); j++)
+                    {
+                        if (resultsD[i][j].Item1 != null)
+                            cube.AddRow(resultsD[i][j].Item1, resultsD[i][j].Item2);
+                    }
+                for (var i = 0; i < resultsG.Length; i++)
+                    for (var j = 0; j < resultsG[i].Count(); j++)
+                    {
+                        if (resultsG[i][j].Item1 != null)
+                            cube.AddRow(resultsG[i][j].Item1, resultsG[i][j].Item2);
+                    }
             }
             return cube;
         }
@@ -1051,7 +1092,7 @@ namespace Qwack.Models.Models
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
-                { "CurveName", typeof(string) },
+                { "AssetId", typeof(string) },
                 { "PointLabel", typeof(DateTime) },
                 { "Metric", typeof(string) }
             };
@@ -1081,8 +1122,13 @@ namespace Qwack.Models.Models
 
                 var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
 
-                foreach (var bCurve in bumpedCurves)
+                var results = new List<Tuple<Dictionary<string, object>, double>>[bumpedCurves.Count];
+                var bcList = bumpedCurves.ToList();
+                ParallelUtils.Instance.For(0, results.Length, 1, ii =>
                 {
+                    results[ii] = new List<Tuple<Dictionary<string, object>, double>>();
+                    var bCurve = bcList[ii];
+
                     var newModel = model.Clone();
                     newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
                     var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
@@ -1098,15 +1144,26 @@ namespace Qwack.Models.Models
                             var row = new Dictionary<string, object>
                             {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "CurveName", curve.Key },
+                                { "AssetId", curve.Key },
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "IrDelta" }
                             };
-                            cube.AddRow(row, delta);
+                            results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
+
                         }
                     }
-                }
+                }).Wait();
+
+
+                for (var i = 0; i < results.Length; i++)
+                    for (var j = 0; j < results[i].Count(); j++)
+                    {
+                        if (results[i][j].Item1 != null)
+                            cube.AddRow(results[i][j].Item1, results[i][j].Item2);
+                    }
             }
+
+
             return cube;
         }
 
@@ -1343,27 +1400,47 @@ namespace Qwack.Models.Models
                  { "Metric", "Theta" }
             });
 
+            //setup to run in parallel
+            var tasks = new Dictionary<string, Task<ICube>>
+            {
+                { "AssetDeltaGamma", new Task<ICube>(() => AssetDeltaGamma(portfolio, model)) },
+                { "AssetVega", new Task<ICube>(() => AssetVega(portfolio, model, reportingCcy)) },
+                { "FxVega", new Task<ICube>(() => FxVega(portfolio, model, reportingCcy)) },
+                { "RolledDeltaGamma", new Task<ICube>(() => AssetDeltaGamma(portfolio, rolledModel)) },
+                { "FxDeltaGamma", new Task<ICube>(() => FxDelta(portfolio, model, reportingCcy, currencyProvider, true)) },
+                { "RolledFxDeltaGamma", new Task<ICube>(() => FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider, true)) },
+                { "IrDelta", new Task<ICube>(() => AssetIrDelta(portfolio,model)) }
+            };
+
+            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
+
+
             //delta
-            var baseDeltaGammaCube = AssetDeltaGamma(portfolio, model);
+            //var baseDeltaGammaCube = AssetDeltaGamma(portfolio, model);
+            var baseDeltaGammaCube = tasks["AssetDeltaGamma"].Result;
             cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             });
 
             //vega
-            var assetVegaCube = AssetVega(portfolio, model, reportingCcy);
+            //var assetVegaCube = AssetVega(portfolio, model, reportingCcy);
+            var assetVegaCube = tasks["AssetVega"].Result;
             cube = cube.Merge(assetVegaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             });
-            var fxVegaCube = FxVega(portfolio, model, reportingCcy);
+            //var fxVegaCube = FxVega(portfolio, model, reportingCcy);
+            var fxVegaCube = tasks["FxVega"].Result;
             cube = cube.Merge(fxVegaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             });
 
             //charm-asset
-            var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
+            //var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
+            var rolledDeltaGammaCube = tasks["RolledDeltaGamma"].Result;
+
             var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
             var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
             var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Gamma" } });
@@ -1389,13 +1466,15 @@ namespace Qwack.Models.Models
             });
 
             //charm-fx
-            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider, true);
+            //baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider, true);
+            baseDeltaCube = tasks["FxDeltaGamma"].Result;
             cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
                  { "Currency", string.Empty },
             });
-            rolledDeltaGammaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider,true);
+            //rolledDeltaGammaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider,true);
+            rolledDeltaGammaCube = tasks["RolledFxDeltaGamma"].Result;
             rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
             rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotGamma" } });
 
@@ -1433,41 +1512,48 @@ namespace Qwack.Models.Models
             }
 
             //ir-delta
-            var irBumpSize = 0.0001;
-            foreach (var curve in model.FundingModel.Curves)
+
+            var baseIrDeltacube = tasks["IrDelta"].Result;
+            cube = cube.Merge(baseIrDeltacube, new Dictionary<string, object>
             {
-                var curveObj = curve.Value;
+                 { "Currency", string.Empty },
+            });
 
-                var lastDateInBook = portfolio.LastSensitivityDate();
-                var bumpedCurves = curveObj.BumpScenarios(irBumpSize, lastDateInBook);
+            //var irBumpSize = 0.0001;
+            //foreach (var curve in model.FundingModel.Curves)
+            //{
+            //    var curveObj = curve.Value;
 
-                foreach (var bCurve in bumpedCurves)
-                {
-                    var newModel = model.Clone();
-                    newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
-                    var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
-                    var bumpedRows = bumpedPVCube.GetAllRows();
-                    if (bumpedRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                    for (var i = 0; i < bumpedRows.Length; i++)
-                    {
-                        var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value);
+            //    var lastDateInBook = portfolio.LastSensitivityDate();
+            //    var bumpedCurves = curveObj.BumpScenarios(irBumpSize, lastDateInBook);
 
-                        if (delta != 0.0)
-                        {
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "AssetId", curve.Key },
-                                { "PointLabel", bCurve.Key },
-                                { "Currency", reportingCcy.Ccy},
-                                { "Metric", "IrDelta" }
-                            };
-                            cube.AddRow(row, delta);
-                        }
-                    }
-                }
-            }
+            //    foreach (var bCurve in bumpedCurves)
+            //    {
+            //        var newModel = model.Clone();
+            //        newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
+            //        var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
+            //        var bumpedRows = bumpedPVCube.GetAllRows();
+            //        if (bumpedRows.Length != pvRows.Length)
+            //            throw new Exception("Dimensions do not match");
+            //        for (var i = 0; i < bumpedRows.Length; i++)
+            //        {
+            //            var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value);
+
+            //            if (delta != 0.0)
+            //            {
+            //                var row = new Dictionary<string, object>
+            //                {
+            //                    { "TradeId", bumpedRows[i].MetaData[tidIx] },
+            //                    { "AssetId", curve.Key },
+            //                    { "PointLabel", bCurve.Key },
+            //                    { "Currency", reportingCcy.Ccy},
+            //                    { "Metric", "IrDelta" }
+            //                };
+            //                cube.AddRow(row, delta);
+            //            }
+            //        }
+            //    }
+            //}
 
             return cube;
         }

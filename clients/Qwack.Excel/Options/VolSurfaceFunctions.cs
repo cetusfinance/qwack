@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Qwack.Options.VolSurfaces;
 using Qwack.Excel.Utils;
 using Qwack.Core.Basic;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Core.Curves;
 using Qwack.Dates;

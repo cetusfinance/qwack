@@ -10,7 +10,7 @@ using Qwack.Paths.Features;
 using static System.Math;
 namespace Qwack.Random.Sobol
 {
-    public class SobolPathGenerator : IPathProcess, IRequiresFinish
+    public class SobolPathGenerator : IPathProcess, IRequiresFinish, IRunSingleThreaded
     {
         protected static double s_convertToDoubleConstant = Pow(2.0, -32.0);
 

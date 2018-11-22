@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ExcelDna.Integration;
+using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Excel.Services;
 using Qwack.Excel.Utils;

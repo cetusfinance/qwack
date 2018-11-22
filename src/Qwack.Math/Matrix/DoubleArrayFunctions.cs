@@ -190,6 +190,21 @@ namespace Qwack.Math.Matrix
             return result;
         }
 
+        public static double[][] RowVectorToMatrix(double[] vectorA)
+        {
+            var result = new double[1][];
+            result[0] = vectorA;
+            return result;
+        }
+
+        public static double[][] ColumnVectorToMatrix(double[] vectorA)
+        {
+            var result = new double[vectorA.Length][];
+            for (var i = 0; i < vectorA.Length; i++)
+                result[i] = new double[] { vectorA[i] };
+            return result;
+        }
+
         public static double[][] MatrixSubtract(this double[][] a, double[][] b)
         {
             if (a.Length != b.Length || a[0].Length != b[0].Length) throw new InvalidOperationException("Non-conformable matrices");

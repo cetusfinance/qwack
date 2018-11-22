@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Dates;
+using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Core.Basic;
 using Qwack.Models.MCModels;

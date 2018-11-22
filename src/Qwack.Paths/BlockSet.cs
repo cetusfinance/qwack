@@ -14,8 +14,11 @@ namespace Qwack.Paths
     /// </summary>
     public class BlockSet : IEnumerable<PathBlock>, IDisposable
     {
+        public int NumberOfBlocks => _numberOfBlocks;
+        
         private static readonly int _numberOfThreads = Environment.ProcessorCount;
         private readonly int _numberOfPaths;
+        private readonly int _numberOfBlocks;
         private readonly int _factors;
         private readonly int _steps;
         private PathBlock[] _blocks;
@@ -34,13 +37,15 @@ namespace Qwack.Paths
             if(pathsPerBlock==0)
                 ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");
 
-            var numberOfBlocks = numberOfPaths / pathsPerBlock;
-            _blocks = new PathBlock[numberOfBlocks];
+            _numberOfBlocks = numberOfPaths / pathsPerBlock;
+            _blocks = new PathBlock[_numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)
             {
                 _blocks[i] = new PathBlock(pathsPerBlock, factors, steps, i * pathsPerBlock);
             }
         }
+
+        public PathBlock GetBlock(int blockIndex) => _blocks[blockIndex];
 
         public IEnumerator<PathBlock> GetEnumerator() => new PathBlockEnumerator(_blocks);
         public int Steps => _steps;

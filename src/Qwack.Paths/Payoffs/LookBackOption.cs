@@ -14,6 +14,8 @@ namespace Qwack.Paths.Payoffs
 {
     public class LookBackOption : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
+        private object _locker = new object();
+
         private List<DateTime> _sampleDates;
         private readonly OptionType _callPut;
         private readonly string _discountCurve;
@@ -22,7 +24,7 @@ namespace Qwack.Paths.Payoffs
         private readonly string _assetName;
         private int _assetIndex;
         private int[] _dateIndexes;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private Vector<double>[] _results;
         private Vector<double> _notional;
         private bool _isComplete;
 
@@ -53,12 +55,17 @@ namespace Qwack.Paths.Payoffs
             {
                 _dateIndexes[i] = dates.GetDateIndex(_sampleDates[i]);
             }
+
+            var engine = collection.GetFeature<IEngineFeature>();
+            _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
             _isComplete = true;
         }
 
         public void Process(IPathBlock block)
         {
-            if(_callPut==OptionType.C)
+            var blockBaseIx = block.GlobalPathIndex;
+
+            if (_callPut==OptionType.C)
             {
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {
@@ -70,7 +77,9 @@ namespace Qwack.Paths.Payoffs
                     }
                     var lastValue = steps[_dateIndexes.Last()];
                     var payoff = (lastValue - minValue) * _notional;
-                    _results.Add(payoff);
+
+                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                    _results[resultIx] = payoff;
                 }
             }
             else
@@ -85,7 +94,9 @@ namespace Qwack.Paths.Payoffs
                     }
                     var lastValue = steps[_dateIndexes.Last()];
                     var payoff = (maxValue - lastValue) * _notional;
-                    _results.Add(payoff);
+
+                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                    _results[resultIx] = payoff;
                 }
             }
         }
@@ -103,7 +114,22 @@ namespace Qwack.Paths.Payoffs
             return vec.Average();
         }).Average();
 
-        public double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
+        public double[] ResultsByPath
+        {
+            get
+            {
+                var vecLen = Vector<double>.Count;
+                var results = new double[_results.Length * vecLen];
+                for (var i = 0; i < _results.Length; i++)
+                {
+                    for (var j = 0; j < vecLen; j++)
+                    {
+                        results[i * vecLen + j] = _results[i][j];
+                    }
+                }
+                return results;
+            }
+        }
 
         public double ResultStdError => _results.SelectMany(x =>
         {
@@ -134,6 +160,7 @@ namespace Qwack.Paths.Payoffs
 
         public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
         {
+            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -141,7 +168,7 @@ namespace Qwack.Paths.Payoffs
                     new CashFlow
                     {
                         Fv = x,
-                        Pv = x * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Pv = x * df,
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,

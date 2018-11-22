@@ -6,60 +6,49 @@ using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Risk
 {
-    public class RiskLadder
+    public class TimeLadder
     {
-        public string AssetId { get; private set; }
-        public MutationType ShiftType { get; private set; }
+        private readonly ICurrencyProvider _currencyProvider;
+
         public RiskMetric Metric { get; private set; }
-        public double ShiftSize { get; private set; }
         public int NScenarios { get; private set; }
         public bool ReturnDifferential { get; private set; }
+        public Calendar Calendar { get; private set; }
 
-        public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential=true)
+        public TimeLadder(RiskMetric metric, int nScenarios, Calendar calendar, ICurrencyProvider currencyProvider, bool returnDifferential=true)
         {
-            AssetId = assetId;
-            ShiftType = shiftType;
             Metric = metric;
-            ShiftSize = shiftStepSize;
             NScenarios = nScenarios;
+            Calendar = calendar;
+            _currencyProvider = currencyProvider;
             ReturnDifferential = returnDifferential;
         }
 
         public Dictionary<string,IAssetFxModel> GenerateScenarios(IAssetFxModel model)
         {
             var o = new Dictionary<string, IAssetFxModel>();
-
-            var results = new KeyValuePair<string, IAssetFxModel>[NScenarios * 2 + 1];
-            ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
-            //for(var i=-NScenarios;i<=NScenarios;i++)
+            var shifts = new double[NScenarios + 1];
+            var m = model.Clone();
+            var d = model.BuildDate;
+            for (var i=0;i<NScenarios;i++)
             {
-                var thisShift = i * ShiftSize;
-                var thisLabel = AssetId + "~" + thisShift;
-                if (thisShift == 0)
-                    results[i+NScenarios] = new KeyValuePair<string, IAssetFxModel>(thisLabel, model);
+                var thisLabel = $"+{i} days";
+                if (i == 0)
+                    o.Add(thisLabel, model);
                 else
                 {
-                    IAssetFxModel shifted;
-                    switch (ShiftType)
-                    {
-                        case MutationType.FlatShift:
-                            shifted = FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model);
-                            break;
-                        default:
-                            throw new Exception($"Unable to process shift type {ShiftType}");
-                    }
-                    results[i + NScenarios] = new KeyValuePair<string, IAssetFxModel>(thisLabel, shifted);
+                    d = d.AddPeriod(RollType.F, Calendar, 1.Bd());
+                    m = m.RollModel(d, _currencyProvider);
+                    o.Add(thisLabel, m);
                 }
-            }).Wait();
-
-            foreach (var kv in results)
-                o.Add(kv.Key, kv.Value);
+            }
 
             return o;
         }
@@ -81,7 +70,7 @@ namespace Qwack.Models.Risk
             var results = new ICube[scenarios.Count];
             var scList = scenarios.ToList();
 
-            ParallelUtils.Instance.For(0, scList.Count,1, i =>
+            ParallelUtils.Instance.For(0, scList.Count, 1, i =>
             //foreach (var scenario in scenarios)
             {
                 var scenario = scList[i];
@@ -97,7 +86,7 @@ namespace Qwack.Models.Risk
 
             for (var i = 0; i < results.Length; i++)
             {
-                o = (ResultCube)o.Merge(results[i], 
+                o = (ResultCube)o.Merge(results[i],
                     new Dictionary<string, object> { { "Scenario", scList[i].Key } }, null, true);
             }
 

@@ -18,29 +18,18 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class SelfDiscountingFact
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
-
-        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
-        {
-            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
-            return currencyProvider;
-        }
-
         [Fact]
         public void BasicSelfDiscounting()
         {
             var startDate = new DateTime(2016, 05, 20);
             var swapTenor2 = new Frequency("2y");
-            var jhb = CalendarProvider.Collection["JHB"];
+            var jhb = TestProviderHelper.CalendarProvider.Collection["JHB"];
 
             var pillarDate = startDate.AddPeriod(RollType.MF, jhb, 1.Years());
             var pillarDate2 = startDate.AddPeriod(RollType.MF, jhb, swapTenor2);
             var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, 3.Months());
 
-            var ccyZar = CurrencyProvider["JHB"];
+            var ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
 
             var zar3m = new FloatRateIndex()
             {

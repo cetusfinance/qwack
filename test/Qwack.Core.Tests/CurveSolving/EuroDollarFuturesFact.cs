@@ -19,17 +19,6 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class EuroDollarFuturesFact
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
-
-        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
-        {
-            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
-            return currencyProvider;
-        }
-
         [Fact]
         public void FuturesStripNoConvexity()
         {
@@ -40,9 +29,9 @@ namespace Qwack.Core.Tests.CurveSolving
             var pillars = new DateTime[nContracts];
             var instruments = new IFundingInstrument[nContracts];
 
-            var nyc = CalendarProvider.Collection["NYC"];
-            var lon = CalendarProvider.Collection["LON"];
-            var ccyUsd = CurrencyProvider["USD"];
+            var nyc = TestProviderHelper.CalendarProvider.Collection["NYC"];
+            var lon = TestProviderHelper.CalendarProvider.Collection["LON"];
+            var ccyUsd = TestProviderHelper.CurrencyProvider["USD"];
 
             var usd3m = new FloatRateIndex()
             {
@@ -104,9 +93,9 @@ namespace Qwack.Core.Tests.CurveSolving
             var pillars = new DateTime[nContracts];
             var instruments = new IFundingInstrument[nContracts];
 
-            var nyc = CalendarProvider.Collection["NYC"];
-            var lon = CalendarProvider.Collection["LON"];
-            var ccyUsd = CurrencyProvider["USD"];
+            var nyc = TestProviderHelper.CalendarProvider.Collection["NYC"];
+            var lon = TestProviderHelper.CalendarProvider.Collection["LON"];
+            var ccyUsd = TestProviderHelper.CurrencyProvider["USD"];
 
             var usd3m = new FloatRateIndex()
             {

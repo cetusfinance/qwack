@@ -13,20 +13,10 @@ namespace Qwack.Curves.Benchmark
 {
     public static class CurveDataSetup
     {
-        public static readonly string JsonCalendarPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
-
-        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
-        {
-            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
-            return currencyProvider;
-        }
-        public static readonly Calendar _jhb = CalendarProvider.Collection["jhb"];
-        public static readonly Currency ccyZar = CurrencyProvider["JHB"];
-        public static readonly Calendar _usd = CalendarProvider.Collection["nyc"];
-        public static readonly Currency ccyUsd = CurrencyProvider["USD"];
+        public static readonly Calendar _jhb = TestProviderHelper.CalendarProvider.Collection["jhb"];
+        public static readonly Currency ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
+        public static readonly Calendar _usd = TestProviderHelper.CalendarProvider.Collection["nyc"];
+        public static readonly Currency ccyUsd = TestProviderHelper.CurrencyProvider["USD"];
         public static readonly FloatRateIndex _zar3m = new FloatRateIndex()
         {
             Currency = ccyZar,

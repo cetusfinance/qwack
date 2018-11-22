@@ -19,20 +19,10 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class OisFact
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
-
-        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
-        {
-            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
-            return currencyProvider;
-        }
-        private static readonly Currency ccyZar = CurrencyProvider["JHB"];
-        private static readonly Calendar _usd = CalendarProvider.Collection["nyc"];
-        private static readonly Calendar JHB = CalendarProvider.Collection["JHB"];
-        private static readonly Currency ccyUsd = CurrencyProvider["USD"];
+        private static readonly Currency ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
+        private static readonly Calendar _usd = TestProviderHelper.CalendarProvider.Collection["nyc"];
+        private static readonly Calendar JHB = TestProviderHelper.CalendarProvider.Collection["JHB"];
+        private static readonly Currency ccyUsd = TestProviderHelper.CurrencyProvider["USD"];
         private static readonly FloatRateIndex _zar3m = new FloatRateIndex()
         {
             Currency = ccyZar,

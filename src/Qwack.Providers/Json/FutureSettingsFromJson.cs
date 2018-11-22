@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Qwack.Dates;
 using Qwack.Futures;
@@ -15,9 +16,11 @@ namespace Qwack.Providers.Json
         private readonly ICalendarProvider _calendarProvider;
         private readonly List<FutureSettings> _allFutureSettings;
         private readonly Dictionary<string, FutureSettings> _allSettingsByName = new Dictionary<string, FutureSettings>(StringComparer.OrdinalIgnoreCase);
+        private ILogger _logger;
 
-        public FutureSettingsFromJson(ICalendarProvider calendarProvider, string fileName)
+        public FutureSettingsFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<FutureSettingsFromJson>();
             _calendarProvider = calendarProvider;
             _jsonSettings = new JsonSerializerSettings()
             {
@@ -28,13 +31,20 @@ namespace Qwack.Providers.Json
                     new FutureDatesGeneratorConverter(_calendarProvider),
                 },
             };
-            _allFutureSettings = JsonConvert.DeserializeObject<List<FutureSettings>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
-            foreach (var fs in _allFutureSettings)
+            try
             {
-                foreach (var n in fs.Names)
+                _allFutureSettings = JsonConvert.DeserializeObject<List<FutureSettings>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
+                foreach (var fs in _allFutureSettings)
                 {
-                    _allSettingsByName.Add(n, fs);
+                    foreach (var n in fs.Names)
+                    {
+                        _allSettingsByName.Add(n, fs);
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error loading future settings from json");
             }
         }
 

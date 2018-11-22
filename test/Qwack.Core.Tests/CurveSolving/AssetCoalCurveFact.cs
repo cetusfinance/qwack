@@ -1,35 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
-using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
-using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
-using Qwack.Math.Utils;
-using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
 {
     public class AssetCoalCurveFact
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = ProvideCurrencies(CalendarProvider);
-
-        private static ICurrencyProvider ProvideCurrencies(ICalendarProvider calendarProvider)
-        {
-            var currencyProvider = new CurrenciesFromJson(calendarProvider, JsonCurrencyPath);
-            return currencyProvider;
-        }
-
         [Fact]
         public void StripCoalSparse()
         {
@@ -37,9 +18,9 @@ namespace Qwack.Core.Tests.CurveSolving
             string[] periods = { "AUG18", "SEP18", "Q4-18", "Q1-19", "Q2-19", "H2-19", "CAL-20", "CAL-21" };
             double[] strikes = { 100, 99, 98, 97, 96, 95, 94, 93 };
 
-            var cal = CalendarProvider.Collection["LON"];
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
             
-            var xaf = CurrencyProvider["XAF"];
+            var xaf = TestProviderHelper.CurrencyProvider["XAF"];
             
 
             var instruments = periods.Select((p, ix) =>

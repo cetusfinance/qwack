@@ -2,11 +2,13 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
 using Qwack.Futures;
 using Qwack.Providers.Json;
+using Qwack.Utils;
 
 namespace Qwack.Excel
 {
@@ -19,7 +21,7 @@ namespace Qwack.Excel
         static ContainerStores()
         {
             GlobalContainer = ((IServiceCollection)new ServiceCollection())
-             .AddLogging()
+             .AddQwackLogging()
              .AddCalendarsFromJson(GetCalendarFilename())
              .AddFutureSettingsFromJson(GetFutureSettingsFile())
              .AddCurrenciesFromJson(GetCurrenciesFilename())
@@ -35,6 +37,7 @@ namespace Qwack.Excel
         public static IServiceProvider SessionContainer { get;set;}
         public static ICurrencyProvider CurrencyProvider => GlobalContainer.GetRequiredService<ICurrencyProvider>();
         public static IFutureSettingsProvider FuturesProvider => GlobalContainer.GetRequiredService<IFutureSettingsProvider>();
+        public static ILogger GetLogger<T>() => GlobalContainer.GetRequiredService<ILoggerFactory>().CreateLogger<T>();
 
         private static string GetFutureSettingsFile() => Path.Combine(GetRunningDirectory(), _futureSettingsFile);
 

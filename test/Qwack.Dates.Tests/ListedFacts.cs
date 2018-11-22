@@ -13,7 +13,6 @@ namespace Qwack.Dates.Tests
         public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
 
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
 
         [Theory]
         [MemberData(nameof(GetFutureCodeExamplesSpecificRefDate))]
@@ -44,7 +43,7 @@ namespace Qwack.Dates.Tests
         [MemberData(nameof(GetNextFutureCodeExamples))]
         public void CheckNextCodeExamples(string futureCode, string nextCode)
         {
-            var code = new FutureCode(futureCode, 2016, futureSettingsProvider);
+            var code = new FutureCode(futureCode, 2016, TestProviderHelper.FutureSettingsProvider);
 
             Assert.Equal(nextCode, code.GetNextCode(false));
         }
@@ -53,7 +52,7 @@ namespace Qwack.Dates.Tests
         [MemberData(nameof(GetNextFutureCodeExamples))]
         public void CheckPreviousCodeExamples(string previousCode, string futureCode)
         {
-            var code = new FutureCode(futureCode, 2016, futureSettingsProvider);
+            var code = new FutureCode(futureCode, 2016, TestProviderHelper.FutureSettingsProvider);
 
             Assert.Equal(previousCode, code.GetPreviousCode());
         }
@@ -62,7 +61,7 @@ namespace Qwack.Dates.Tests
         [MemberData(nameof(ExpiryRollForFutureCodeExamples))]
         public void CheckExpiryRollForCodeExamples(string futureCode, DateTime expiry, DateTime roll)
         {
-            var code = new FutureCode(futureCode, 2016, futureSettingsProvider);
+            var code = new FutureCode(futureCode, 2016, TestProviderHelper.FutureSettingsProvider);
 
             Assert.Equal(expiry, code.GetExpiry());
             Assert.Equal(roll, code.GetRollDate());

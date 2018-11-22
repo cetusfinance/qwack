@@ -18,16 +18,11 @@ namespace Qwack.Core.Tests.AssetModel
 {
     public class FxDeltaFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
-
         [Fact]
         public void FxDeltaOnUSDTrade()
         {
             var startDate = new DateTime(2018, 07, 28);
-            var cal = CalendarProvider.Collection["LON"];
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
             var zar = TestProviderHelper.CurrencyProvider["ZAR"];
             var usd = TestProviderHelper.CurrencyProvider["USD"];
 
@@ -93,7 +88,7 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(expectedPV, pfPv, 8);
 
             //expected fx delta is just PV in USD
-            var deltaCube = portfolio.FxDelta(aModel, zar,CurrencyProvider);
+            var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(expectedPV, delta, 4);
@@ -105,7 +100,7 @@ namespace Qwack.Core.Tests.AssetModel
         public void FxDeltaOnCompoZARTrade()
         {
             var startDate = new DateTime(2018, 07, 28);
-            var cal = CalendarProvider.Collection["LON"];
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
             var zar = TestProviderHelper.CurrencyProvider["ZAR"];
             var usd = TestProviderHelper.CurrencyProvider["USD"];
 
@@ -171,7 +166,7 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(expectedPV, pfPv, 8);
 
             //expected fx delta is just asset delta in ZAR
-            var deltaCube = portfolio.FxDelta(aModel, zar, CurrencyProvider);
+            var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(nominal * assetFwd, delta, 4);
@@ -190,7 +185,7 @@ namespace Qwack.Core.Tests.AssetModel
             expectedPV = (fairStrike - strike) * nominal;
             Assert.Equal(expectedPV, pv, 8);
 
-            deltaCube = portfolio.FxDelta(aModel, zar, CurrencyProvider);
+            deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
             delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(nominal * assetFwd, delta, 4);

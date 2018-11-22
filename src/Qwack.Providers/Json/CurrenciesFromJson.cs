@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Qwack.Core.Basic;
 using Qwack.Dates;
@@ -16,9 +17,11 @@ namespace Qwack.Providers.Json
         private ICalendarProvider _calendarProvider;
         private List<Currency> _allCurrencies;
         private Dictionary<string, Currency> _currenciesByName;
+        private ILogger _logger;
 
-        public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName)
+        public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<CurrenciesFromJson>();
             _calendarProvider = calendarProvider;
             _jsonSettings = new JsonSerializerSettings()
             {
@@ -27,8 +30,15 @@ namespace Qwack.Providers.Json
                     new CurrencyConverter(_calendarProvider),
                 },
             };
-            _allCurrencies = JsonConvert.DeserializeObject<List<Currency>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
-            _currenciesByName = _allCurrencies.ToDictionary(c => c.Ccy, c => c, StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                _allCurrencies = JsonConvert.DeserializeObject<List<Currency>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
+                _currenciesByName = _allCurrencies.ToDictionary(c => c.Ccy, c => c, StringComparer.OrdinalIgnoreCase);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load currencies from Json");
+            }
         }
 
         public Currency this[string ccy] => _currenciesByName[ccy];

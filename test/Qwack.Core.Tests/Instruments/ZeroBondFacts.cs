@@ -1,30 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Curves;
 using System.Linq;
 using Qwack.Math.Interpolation;
-using Qwack.Core.Basic;
 using Qwack.Models;
 using Qwack.Dates;
 using static System.Math;
-using Qwack.Futures;
-using Qwack.Providers.Json;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Qwack.Core.Tests.Instruments
 {
     public class ZeroBondFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
-
         [Fact]
         public void ZeroBond()
         {
@@ -32,7 +19,7 @@ namespace Qwack.Core.Tests.Instruments
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRate = 0.05;
             var rates = pillars.Select(p => flatRate).ToArray();
-            var usd = CurrencyProvider["USD"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
             var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
             var price = 0.93;

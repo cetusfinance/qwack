@@ -19,20 +19,13 @@ namespace Qwack.Core.Tests.AssetModel
 {
     public class AssetPVFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
-        public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
-        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath);
-        public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
-        public static readonly IFutureSettingsProvider futureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath);
-
         [Fact]
         public void AsianCompoSwap()
         {
             var startDate = new DateTime(2018, 07, 28);
-            var cal = CalendarProvider.Collection["LON"];
-            var xaf = CurrencyProvider["XAF"];
-            var usd = CurrencyProvider["USD"];
+            var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
+            var xaf = TestProviderHelper.CurrencyProvider["XAF"];
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
@@ -100,7 +93,7 @@ namespace Qwack.Core.Tests.AssetModel
             var df = xafCurve.GetDf(startDate, settleDate);
             Assert.Equal(994.673992862018, delta,7);
 
-            var fxDeltaCube = portfolio.FxDelta(aModel,usd, CurrencyProvider);
+            var fxDeltaCube = portfolio.FxDelta(aModel,usd, TestProviderHelper.CurrencyProvider);
             var dfxAgg = fxDeltaCube.Pivot("TradeId", AggregationAction.Sum);
             var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
             Assert.Equal(-1000 * df * fxFwd * 100 / (t0Spot / fxSpot), fxDelta, 4);

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Core.Basic;
@@ -5,7 +8,7 @@ using Qwack.Dates;
 using Qwack.Futures;
 using Qwack.Providers.Json;
 
-namespace Qwack.Math.Tests
+namespace Qwack.Dates.Tests
 {
     public static class TestProviderHelper
     {

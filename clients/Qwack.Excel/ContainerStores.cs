@@ -20,17 +20,27 @@ namespace Qwack.Excel
 
         static ContainerStores()
         {
-            GlobalContainer = ((IServiceCollection)new ServiceCollection())
-             .AddQwackLogging()
-             .AddCalendarsFromJson(GetCalendarFilename())
-             .AddFutureSettingsFromJson(GetFutureSettingsFile())
-             .AddCurrenciesFromJson(GetCurrenciesFilename())
-             .AddSingleton(typeof(IObjectStore<>), typeof(ExcelObjectStore<>))
-             .BuildServiceProvider();
+            try
+            {
+                GlobalContainer = ((IServiceCollection)new ServiceCollection())
+                    .AddQwackLogging()
+                    .AddCalendarsFromJson(GetCalendarFilename())
+                    .AddFutureSettingsFromJson(GetFutureSettingsFile())
+                    .AddCurrenciesFromJson(GetCurrenciesFilename())
+                    .AddSingleton(typeof(IObjectStore<>), typeof(ExcelObjectStore<>))
+                    .BuildServiceProvider();
 
-            SessionContainer = GlobalContainer.CreateScope().ServiceProvider;
+                SessionContainer = GlobalContainer.CreateScope().ServiceProvider;
 
-            SessionContainer.GetRequiredService<IFutureSettingsProvider>();
+                SessionContainer.GetRequiredService<IFutureSettingsProvider>();
+            }
+            catch(Exception ex)
+            {
+                if(Directory.Exists(@"C:\Temp"))
+                {
+                    File.WriteAllText($@"C:\Temp\QwackInitializationError_{DateTime.Now:yyyyMMdd_HHmmss}.txt", ex.ToString());
+                }
+            }
         }
         
         public static IServiceProvider GlobalContainer { get; internal set; }

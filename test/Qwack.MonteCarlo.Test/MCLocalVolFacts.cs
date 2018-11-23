@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Qwack.Paths;
-using Qwack.Paths.Output;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Options.VolSurfaces;

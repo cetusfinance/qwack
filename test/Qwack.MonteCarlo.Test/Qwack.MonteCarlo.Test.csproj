@@ -11,13 +11,11 @@
     <ProjectReference Include="..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Math\Qwack.Math.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Options\Qwack.Options.csproj" />
-    <ProjectReference Include="..\..\src\Qwack.Paths.Output\Qwack.Paths.Output.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Paths\Qwack.Paths.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Random\Qwack.Random.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImageSharp" Version="1.0.0-alpha9-00140" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0">

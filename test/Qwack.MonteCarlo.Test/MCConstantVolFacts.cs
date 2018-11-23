@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Options;
 using Qwack.Paths;
-using Qwack.Paths.Output;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Xunit;

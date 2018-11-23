@@ -4,15 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Qwack.Paths;
-using Qwack.Paths.Output;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Options.VolSurfaces;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
-using Qwack.Options;
 using Qwack.Dates;
-using Qwack.Core.Basic;
 using Xunit;
 
 namespace Qwack.MonteCarlo.Test

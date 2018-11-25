@@ -8,5 +8,6 @@ namespace Qwack.Core.Descriptors
     {
         List<MarketDataDescriptor> Descriptors { get; }
         List<MarketDataDescriptor> Dependencies { get; }
+        Dictionary<MarketDataDescriptor, object> DependentReferences { get; }
     }
 }

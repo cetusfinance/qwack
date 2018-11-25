@@ -85,6 +85,8 @@ namespace Qwack.Core.Curves
             }
         }
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
+
 
         public double GetDf(DateTime startDate, DateTime endDate)
         {

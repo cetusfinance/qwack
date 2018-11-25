@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
+using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
+using Qwack.Core.Descriptors;
+using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Models.Models;
 
 namespace Qwack.Models
 {
@@ -64,6 +68,12 @@ namespace Qwack.Models
         public string[] CurveNames => _assetCurves.Keys.Select(x => x).ToArray();
         public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x).ToArray();
         public string[] FixingDictionaryNames => _fixings.Keys.Select(x => x).ToArray();
+
+        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>();
+        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
+
+        public IAssetFxModel VanillaModel => this;
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
@@ -133,7 +143,7 @@ namespace Qwack.Models
                 c.AddFixingDictionary(kv.Key, kv.Value);
 
             c.CorrelationMatrix = CorrelationMatrix;
-
+            c.AttachPortfolio(_portfolio);
             return c;
         }
 
@@ -151,7 +161,7 @@ namespace Qwack.Models
                 c.AddFixingDictionary(kv.Key, kv.Value);
 
             c.CorrelationMatrix = CorrelationMatrix;
-
+            c.AttachPortfolio(_portfolio);
             return c;
         }
 
@@ -171,6 +181,18 @@ namespace Qwack.Models
         {
             foreach (var kv in fixings)
                 _fixings[kv.Key] = kv.Value;
+        }
+
+        private Portfolio _portfolio;
+        public Portfolio Portfolio => _portfolio;
+        public void AttachPortfolio(Portfolio portfolio) => _portfolio = portfolio;
+        public ICube PV(Currency reportingCurrency) => _portfolio.PV(this, reportingCurrency);
+
+        public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio)
+        {
+            var m = newVanillaModel.Clone();
+            m.AttachPortfolio(portfolio);
+            return m;
         }
     }
 }

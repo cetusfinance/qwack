@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Instruments;
 
 namespace Qwack.Core.Models
 {
-    public interface IAssetFxModel
+    public interface IAssetFxModel : IPvModel
     {
         DateTime BuildDate { get; }
         IFundingModel FundingModel { get; }
@@ -38,5 +39,7 @@ namespace Qwack.Core.Models
         string[] CurveNames { get; }
         string[] VolSurfaceNames { get; }
         string[] FixingDictionaryNames { get; }
+
+        void AttachPortfolio(Portfolio portfolio);
     }
 }

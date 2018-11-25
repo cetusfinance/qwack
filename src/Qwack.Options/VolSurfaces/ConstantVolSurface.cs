@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Core.Basic;
+using Qwack.Core.Descriptors;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -20,6 +21,10 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
 
         public IInterpolator2D LocalVolGrid { get; set; }
+
+        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
+        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
 
         public ConstantVolSurface()         {        }
 

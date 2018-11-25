@@ -41,6 +41,7 @@ namespace Qwack.Core.Curves
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
 
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public CompositePriceCurve(DateTime buildDate, Func<IPriceCurve> priceCurve, Func<IFundingModel> fundingModel, Currency domesticCurrency, Currency foreignCurrency)
         {

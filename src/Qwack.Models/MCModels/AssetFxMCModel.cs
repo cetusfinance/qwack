@@ -19,6 +19,7 @@ using System.Reflection;
 using Qwack.Paths.Regressors;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
+using Qwack.Core.Descriptors;
 
 namespace Qwack.Models.MCModels
 {
@@ -33,9 +34,17 @@ namespace Qwack.Models.MCModels
             return dirPath;
         }
         public PathEngine Engine { get; }
+        public DateTime OriginDate { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
         public McSettings Settings { get; }
+
+        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
+        public List<MarketDataDescriptor> Dependencies => Model.Dependencies;
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
+
+        public IAssetFxModel VanillaModel => Model;
+
         private Dictionary<string, AssetPathPayoff> _payoffs;
         private IPortfolioValueRegressor _regressor;
         private readonly ICurrencyProvider _currencyProvider;
@@ -48,7 +57,7 @@ namespace Qwack.Models.MCModels
             {
                 Parallelize = settings.Parallelize
             };
-
+            OriginDate = originDate;
             Portfolio = portfolio;
             Model = model;
             Settings = settings;
@@ -308,5 +317,7 @@ namespace Qwack.Models.MCModels
             }
             return cube;
         }
+
+        public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio) => new AssetFxMCModel(OriginDate, portfolio, newVanillaModel, Settings, _currencyProvider, _futureSettingsProvider);
     }
 }

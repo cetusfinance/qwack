@@ -38,6 +38,7 @@ namespace Qwack.Core.Curves
                         ValDate =BuildDate}
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public string AssetId => ForeignCurrency.Ccy;
 

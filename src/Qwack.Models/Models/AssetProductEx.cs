@@ -959,6 +959,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
+
         public static ICube AssetVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
         {
             var bumpSize = 0.01;

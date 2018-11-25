@@ -14,7 +14,7 @@ namespace Qwack.Models.Risk
     public static class BasicMetrics
     {
 
-        public static Dictionary<string, ICube> ComputeBumpedScenarios(Func<IAssetFxModel,ICube> pvFunc, Dictionary<string, IAssetFxModel> models, Currency ccy)
+        public static Dictionary<string, ICube> ComputeBumpedScenarios(Func<IAssetFxModel, ICube> pvFunc, Dictionary<string, IAssetFxModel> models, Currency ccy)
         {
             var results = new Tuple<string, ICube>[models.Count];
             var bModelList = models.ToList();
@@ -24,7 +24,73 @@ namespace Qwack.Models.Risk
                 var bumpedPVCube = pvFunc.Invoke(bModel.Value);
                 results[ii] = new Tuple<string, ICube>(bModel.Key, bumpedPVCube);
             }).Wait();
-            return results.ToDictionary(k=>k.Item1,v=>v.Item2);
+            return results.ToDictionary(k => k.Item1, v => v.Item2);
+        }
+
+        public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            foreach (var surfaceName in model.VolSurfaceNames)
+            {
+                var volObj = model.GetVolSurface(surfaceName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = model.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+                
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = basePvModel.PV(reportingCcy); 
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
+
+                foreach (var bCurve in bumpedSurfaces)
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = pvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //vega quoted for a 1% shift, irrespective of bump size
+                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "AssetId", surfaceName },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Vega" }
+                            };
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                }
+            }
+            return cube;
         }
     }
 }

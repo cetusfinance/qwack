@@ -48,7 +48,7 @@ namespace Qwack.Core.Curves
                         ValDate =BuildDate}
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
-
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, ICurrencyProvider currencyProvider,
             DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)

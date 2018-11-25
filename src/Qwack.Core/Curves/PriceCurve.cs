@@ -50,6 +50,7 @@ namespace Qwack.Core.Curves
                         ValDate =BuildDate}
             };
         public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
+        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public PriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, PriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels = null)
         {

@@ -17,6 +17,7 @@ using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 using Qwack.Models.Risk;
+using Qwack.Models.MCModels;
 
 namespace Qwack.Excel.Instruments
 {
@@ -1157,6 +1158,21 @@ namespace Qwack.Excel.Instruments
             }
 
             return pfolio.Value;
+        }
+
+        public static IPvModel GetModelFromCache(string name, Portfolio portfolio)
+        {
+            if (ContainerStores.GetObjectCache<IAssetFxModel>().TryGetObject(name, out var modelObj))
+            {
+                var m = modelObj.Value.Clone();
+                m.AttachPortfolio(portfolio);
+                return m;
+            }
+            if (ContainerStores.GetObjectCache<AssetFXMCModelPercursor>().TryGetObject(name, out var precModelObj))
+            {
+                return precModelObj.Value.ToModel(portfolio);
+            }
+            throw new Exception($"Could not find model with name {name} in cahce");
         }
 
         public static Portfolio GetPortfolio(object[] Instruments)

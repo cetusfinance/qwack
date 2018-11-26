@@ -33,6 +33,7 @@ namespace Qwack.Models.MCModels
             return dirPath;
         }
         public PathEngine Engine { get; }
+        public DateTime OriginDate { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
         public McSettings Settings { get; }
@@ -48,7 +49,7 @@ namespace Qwack.Models.MCModels
             {
                 Parallelize = settings.Parallelize
             };
-
+            OriginDate = originDate;
             Portfolio = portfolio;
             Model = model;
             Settings = settings;
@@ -308,5 +309,7 @@ namespace Qwack.Models.MCModels
             }
             return cube;
         }
+
+        public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio) => new AssetFxMCModel(OriginDate, portfolio, newVanillaModel, Settings, _currencyProvider, _futureSettingsProvider);
     }
 }

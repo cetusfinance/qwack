@@ -59,7 +59,7 @@ namespace Qwack.Core.Curves
 
             for (var i = 0; i < insToBump.Count; i++)
             {
-                var insListClone = new List<AsianBasisSwap>()
+                var insListClone = new List<AsianBasisSwap>();
             }
 
             return new Dictionary<string, IPriceCurve>();

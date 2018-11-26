@@ -7,6 +7,8 @@ using Qwack.Math.Extensions;
 using System.Linq;
 using Qwack.Core.Models;
 using Qwack.Futures;
+using Qwack.Utils.Parallel;
+
 namespace Qwack.Paths.Processes
 {
     public class BlackFuturesCurve : IPathProcess, IRequiresFinish
@@ -82,10 +84,12 @@ namespace Qwack.Paths.Processes
         }
         public void Process(IPathBlock block)
         {
-            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+            ParallelUtils.Instance.For(0, block.NumberOfPaths, Vector<double>.Count, path =>
+            //for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 var stepsMain = block.GetStepsForFactor(path, _mainFactorIndex);
                 for (var f = 0; f < _factorIndices.Length; f++)
+                //ParallelUtils.Instance.For(0,_factorIndices.Length,1,f=>
                 {
                     var previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
                     var steps = block.GetStepsForFactor(path, _factorIndices[f]);
@@ -104,13 +108,14 @@ namespace Qwack.Paths.Processes
                         previousStep *= bm.Exp();
                         steps[step] = previousStep;
                     }
-                }
+                }//).Wait();
+
                 for (var step = 0; step < block.NumberOfSteps; step++)
                 {
                     var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
                     stepsMain[step] = frontMonth[step];
                 }
-            }
+            }).Wait();
         }
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {

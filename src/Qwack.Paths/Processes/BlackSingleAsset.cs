@@ -7,6 +7,7 @@ using Qwack.Math.Extensions;
 using System.Linq;
 using Qwack.Core.Models;
 using Qwack.Serialization;
+using static System.Math;
 
 namespace Qwack.Paths.Processes
 {
@@ -55,11 +56,11 @@ namespace Qwack.Paths.Processes
             for (var t = 1; t < _drifts.Length; t++)
             {
                 var spot = _forwardCurve(_timesteps.Times[t]);
-                var varStart = System.Math.Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
-                var varEnd = System.Math.Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t]), 2) * _timesteps.Times[t];
-                var fwdVariance = (varEnd - varStart);
-                _vols[t] = System.Math.Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
-                _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
+                var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
+                var varEnd = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t]), 2) * _timesteps.Times[t];
+                var fwdVariance = Max(0,varEnd - varStart);
+                _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
+                _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
 
                 prevSpot = spot;
             }

@@ -128,7 +128,7 @@ namespace Qwack.Models.MCModels
                        volSurface: surface,
                        forwardCurve: fwdCurve,
                        nTimeSteps: settings.NumberOfTimesteps,
-                       name: assetId,
+                       name: Settings.FuturesMappingTable[assetId],
                        pastFixings: fixings,
                        futureSettingsProvider: _futureSettingsProvider
                     );

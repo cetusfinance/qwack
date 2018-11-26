@@ -13,6 +13,7 @@ namespace Qwack.Core.Models
         public DateTime[] PfeExposureDates { get; set; }
         public Currency ReportingCurrency { get; set; }
         public bool ExpensiveFuturesSimulation { get; set; }
+        public Dictionary<string, string> FuturesMappingTable { get; set; } = new Dictionary<string, string>();
         public bool LocalVol { get; set; }
         public PFERegressorType PfeRegressorType { get; set; }
         public bool Parallelize { get; set; }

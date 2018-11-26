@@ -37,7 +37,8 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency,
            [ExcelArgument(Description = "Use Local vol? (True/False)")] bool LocalVol,
            [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim,
-           [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel)
+           [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel,
+           [ExcelArgument(Description = "Futures mapping dictionary, assetId to futures code")] object FutMappingDict)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -64,39 +65,15 @@ namespace Qwack.Excel.Curves
                     LocalVol = LocalVol,
                     ExpensiveFuturesSimulation = FuturesSim,
                     PfeRegressorType = regType,
-                    Parallelize = Parallel
+                    Parallelize = Parallel,
+                    FuturesMappingTable = (FutMappingDict is ExcelMissing) ? 
+                        new Dictionary<string, string>() : 
+                        ((object[,])FutMappingDict).RangeToDictionary<string,string>()
                 };
 
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();
                 settingsCache.PutObject(ObjectName, new SessionItem<McSettings> { Name = ObjectName, Value = settings });
                 return ObjectName + '¬' + settingsCache.GetObject(ObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Creates a monte-carlo model given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel))]
-        public static object CreateMcModel(
-         [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-         [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-         [ExcelArgument(Description = "MC settings name")] string SettingsName)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-                var settings = ContainerStores.GetObjectCache<McSettings>()
-                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
-
-                var mc = new AssetFXMCModelPercursor
-                {
-                    AssetFxModel = model.Value,
-                    McSettings = settings.Value,
-                    CcyProvider = ContainerStores.CurrencyProvider,
-                    FutProvider = ContainerStores.FuturesProvider
-                };
-
-                var resultCache = ContainerStores.GetObjectCache<AssetFXMCModelPercursor>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<AssetFXMCModelPercursor> { Name = ResultObjectName, Value = mc });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
             });
         }
 

@@ -215,6 +215,60 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a price curve from basis swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateBasisPriceCurve))]
+        public static object CreateBasisPriceCurve(
+          [ExcelArgument(Description = "Object name")] string ObjectName,
+          [ExcelArgument(Description = "Asset Id")] string AssetId,
+          [ExcelArgument(Description = "Base curve object")] string BaseCurve,
+          [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+          [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+          [ExcelArgument(Description = "Array of swap objects")] object[] Swaps,
+          [ExcelArgument(Description = "Discount curve name")] string DiscountCurveName,
+          [ExcelArgument(Description = "Type of curve, e.g. LME, ICE, NYMEX etc")] object CurveType,
+          [ExcelArgument(Description = "Currency")] string Currency,
+          [ExcelArgument(Description = "(Optional) Pillar labels")] object PillarLabels)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveTypeStr = CurveType.OptionalExcel<string>("Coal");
+                if (!Enum.TryParse(curveTypeStr, out PriceCurveType cType))
+                {
+                    return $"Could not parse price curve type - {curveTypeStr}";
+                }
+
+                var irCache = ContainerStores.GetObjectCache<IIrCurve>();
+                if (!irCache.TryGetObject(DiscountCurveName, out var irCurveObj))
+                {
+                    return $"Could not find ir curve with name {DiscountCurveName}";
+                }
+                var irCurve = irCurveObj.Value;
+
+                var curveCache = ContainerStores.GetObjectCache<IPriceCurve>();
+                if (!curveCache.TryGetObject(BaseCurve, out var bCurveObj))
+                {
+                    return $"Could not find ir curve with name {DiscountCurveName}";
+                }
+                var baseCurve = bCurveObj.Value;
+
+                var swapCache = ContainerStores.GetObjectCache<AsianBasisSwap>();
+                var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value).ToList();
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+
+                var labels = PillarLabels is ExcelMissing ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>().ToList();
+
+                var pDates = Pillars.ToDateTimeArray().ToList();
+                var cObj = new BasisPriceCurve(swaps, pDates, irCurve, baseCurve, BuildDate, cType, ContainerStores.CurrencyProvider, labels)
+                {
+                    Name = ObjectName,
+                    AssetId = AssetId,
+                    Currency = ccy
+                };
+
+                curveCache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + curveCache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Queries a price curve for a price for a give date", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetPrice))]
         public static object GetPrice(
             [ExcelArgument(Description = "Object name")] string ObjectName,

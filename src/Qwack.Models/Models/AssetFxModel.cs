@@ -25,6 +25,8 @@ namespace Qwack.Models
         public IFundingModel FundingModel => _fundingModel;
         public DateTime BuildDate => _buildDate;
 
+        public IPriceCurve[] Curves => _assetCurves.Values.ToArray();
+
         public ICorrelationMatrix CorrelationMatrix { get; set; }
 
         public AssetFxModel(DateTime buildDate, IFundingModel fundingModel)

@@ -37,6 +37,7 @@ namespace Qwack.Core.Instruments.Asset
             RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
         };
 
+        public double Strike => PaySwaplets.First().Strike;
 
         public FxConversionType FxType(IAssetFxModel model) => PaySwaplets.First().FxType(model);
         public string FxPair(IAssetFxModel model) => PaySwaplets.First().FxPair(model);

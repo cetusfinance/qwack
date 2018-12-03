@@ -52,7 +52,8 @@ namespace Qwack.Models.Tests.MCModels
                 ReportingCurrency = usd,
                 PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
                 ExpensiveFuturesSimulation = expensiveFutures,
-                Parallelize = expensiveFutures
+                Parallelize = expensiveFutures,
+                FuturesMappingTable = new Dictionary<string, string> { { "CL","CL"} }
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
             return sut;

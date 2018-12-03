@@ -40,6 +40,8 @@ namespace Qwack.Core.Models
         string[] VolSurfaceNames { get; }
         string[] FixingDictionaryNames { get; }
 
+        IPriceCurve[] Curves { get; }
+
         void AttachPortfolio(Portfolio portfolio);
     }
 }

@@ -17,6 +17,7 @@ namespace Qwack.Models.Models
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "Step", typeof(string) },
                 { "SubStep", typeof(string) },
             };
@@ -25,6 +26,7 @@ namespace Qwack.Models.Models
             var pvCubeBase = portfolio.PV(startModel, reportingCcy);
             var pvRows = pvCubeBase.GetAllRows();
             var tidIx = pvCubeBase.GetColumnIndex("TradeId");
+            var tTypeIx = pvCubeBase.GetColumnIndex("TradeType");
 
             var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
             var cashRows = cashCube.GetAllRows();
@@ -40,6 +42,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", r.MetaData[tidIx] },
+                    { "TradeType", r.MetaData[tTypeIx] },
                     { "Step", "Theta" },
                     { "SubStep", string.Empty }
                 };
@@ -56,6 +59,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
                         { "Step", "Theta" },
                         { "SubStep", "CashMove" }
                     };
@@ -77,6 +81,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "Fixings" },
                         { "SubStep", fixingDictName }
                     };
@@ -100,6 +105,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "IrCurves" },
                         { "SubStep", irCurve.Key }
                     };
@@ -123,6 +129,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "FxSpots" },
                         { "SubStep", fxSpot.Key.Ccy }
                     };
@@ -145,6 +152,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "AssetCurves" },
                         { "SubStep", curveName }
                     };
@@ -167,6 +175,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "AssetVols" },
                         { "SubStep", surfaceName }
                     };
@@ -189,6 +198,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "FxVols" },
                         { "SubStep", fxSurface.Key }
                     };
@@ -208,6 +218,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "Unexplained" },
                         { "SubStep", string.Empty }
                     };
@@ -224,6 +235,7 @@ namespace Qwack.Models.Models
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "Step", typeof(string) },
                 { "SubStep", typeof(string) },
                 { "SubSubStep", typeof(string) },
@@ -235,12 +247,14 @@ namespace Qwack.Models.Models
             var pvCubeBase = portfolio.PV(startModel, reportingCcy);
             var pvRows = pvCubeBase.GetAllRows();
             var tidIx = pvCubeBase.GetColumnIndex("TradeId");
+            var tTypeIx = pvCubeBase.GetColumnIndex("TradeType");
 
             var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
             var cashRows = cashCube.GetAllRows();
 
             var r_tidIx = startingGreeks.GetColumnIndex("TradeId");
             var r_plIx = startingGreeks.GetColumnIndex("PointLabel");
+            var r_tTypeIx = startingGreeks.GetColumnIndex("TradeType");
 
             //first step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
@@ -252,6 +266,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", r.MetaData[tidIx] },
+                    { "TradeType", r.MetaData[tTypeIx] },
                     { "Step", "Theta" },
                     { "SubStep", string.Empty },
                     { "SubSubStep", string.Empty },
@@ -270,6 +285,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
                         { "Step", "Theta" },
                         { "SubStep", "CashMove" },
                         { "SubSubStep", string.Empty },
@@ -293,6 +309,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "Fixings" },
                         { "SubStep", fixingDictName },
                         { "SubSubStep", string.Empty },
@@ -325,6 +342,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "IrCurves" },
                         { "SubStep", irCurve.Key },
                         { "SubSubStep", string.Empty },
@@ -354,6 +372,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "IrCurves" },
                         { "SubStep", irCurve.Key },
                         { "SubSubStep", "Unexplained"},
@@ -368,6 +387,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", kv.Key },
+                        { "TradeType", string.Empty },
                         { "Step", "IrCurves" },
                         { "SubStep", irCurve.Key },
                         { "SubSubStep", "Unexplained"},
@@ -401,6 +421,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "FxSpots" },
                         { "SubStep", fxPair },
                         { "SubSubStep", "Delta" },
@@ -430,6 +451,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "FxSpots" },
                         { "SubStep", fxPair },
                         { "SubSubStep", "Gamma" },
@@ -454,6 +476,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "FxSpots" },
                         { "SubStep", fxPair },
                         { "SubSubStep", "Unexplained" },
@@ -498,6 +521,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "AssetCurves" },
                         { "SubStep", curveName },
                         { "SubSubStep", "Delta" },
@@ -525,6 +549,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "AssetCurves" },
                         { "SubStep", curveName },
                         { "SubSubStep", "Gamma" },
@@ -549,6 +574,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "AssetCurves" },
                         { "SubStep", curveName },
                         { "SubSubStep", "Unexplained" },
@@ -583,6 +609,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "AssetVols" },
                         { "SubStep", surfaceName },
                         { "SubSubStep", "Vega" },
@@ -607,6 +634,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "AssetVols" },
                         { "SubStep", surfaceName },
                         { "SubSubStep", "Unexplained" },
@@ -640,6 +668,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
                         { "Step", "FxVols" },
                         { "SubStep", fxSurface.Key },
                         { "SubSubStep", "Vega" },
@@ -664,6 +693,7 @@ namespace Qwack.Models.Models
                     var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "FxVols" },
                         { "SubStep", fxSurface.Key },
                         { "SubSubStep", "Unexplained" },
@@ -686,6 +716,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                     {
                         { "TradeId", r.MetaData[tidIx] },
+                        { "TradeType", r.MetaData[tTypeIx] },
                         { "Step", "Unexplained" },
                         { "SubStep", "Unexplained" },
                         { "SubSubStep", "Unexplained" },
@@ -708,11 +739,13 @@ namespace Qwack.Models.Models
 
             var newTradesPnL = newTrades.PV(endModel, reportingCcy);
             var tidIx = newTradesPnL.GetColumnIndex("TradeId");
+            var tTypeIx = newTradesPnL.GetColumnIndex("TradeType");
             foreach (var t in newTradesPnL.GetAllRows())
             {
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", t.MetaData[tidIx] },
+                    { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "New" },
                     { "SubSubStep", string.Empty },
@@ -727,6 +760,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", t.MetaData[tidIx] },
+                    { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Removed" },
                     { "SubSubStep", string.Empty },
@@ -743,6 +777,7 @@ namespace Qwack.Models.Models
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", t.MetaData[tidIx] },
+                    { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Ammended" },
                     { "SubSubStep", string.Empty },

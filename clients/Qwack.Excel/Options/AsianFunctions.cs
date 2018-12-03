@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Dates;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
+using System.Linq;
+using Qwack.Models.Models;
 
 namespace Qwack.Excel.Options
 {
@@ -52,6 +55,36 @@ namespace Qwack.Excel.Options
                     return $"Could not parse call or put flag - {CP}";
                 }
                 return Qwack.Options.Asians.TurnbullWakeman.PV(F, KnownAverage, V, K, EvalDate, AverageStartDate, AverageEndDate, R, optType);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns asian option PV using the Turnbull-Wakeman formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(TurnbullWakemanFuturesPV))]
+        public static object TurnbullWakemanFuturesPV(
+            [ExcelArgument(Description = "Fixing dates")] double[] FixingDates,
+            [ExcelArgument(Description = "Eval date")] DateTime EvalDate,
+            [ExcelArgument(Description = "Pay date")] DateTime PayDate,
+            [ExcelArgument(Description = "Forward curve")] string Curve,
+            [ExcelArgument(Description = "Fixings")] string FixingDictionary,
+            [ExcelArgument(Description = "Vol surface")] string Surface,
+            [ExcelArgument(Description = "Strike")] double K,
+            [ExcelArgument(Description = "Discounting rate")] double R,
+            [ExcelArgument(Description = "Call or Put")] string CP)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Enum.TryParse(CP, out OptionType optType))
+                {
+                    return $"Could not parse call or put flag - {CP}";
+                }
+                var curve = ContainerStores.GetObjectCache<IPriceCurve>().GetObjectOrThrow(Curve, $"Curve {Curve} not found");
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(Surface, $"Surface {Surface} not found");
+                var fd = new FixingDictionary();
+                var dates = FixingDates.ToDateTimeArray();
+                if (dates.First() < EvalDate)
+                    fd = ContainerStores.GetObjectCache<FixingDictionary>().GetObjectOrThrow(FixingDictionary, $"Fixing dictionary {FixingDictionary} not found").Value;
+                var fwds = dates.Select(d => d>EvalDate?curve.Value.GetPriceForDate(d): fd.GetFixing(d)).ToArray();
+                var vols = dates.Select((d,ix) => surface.Value.GetVolForAbsoluteStrike(K,d,fwds[ix])).ToArray();
+                return Qwack.Options.Asians.TurnbullWakeman.PV(fwds, dates, EvalDate, PayDate, vols, K, R, optType);
             });
         }
 

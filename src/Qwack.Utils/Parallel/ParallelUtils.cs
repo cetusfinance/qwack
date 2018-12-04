@@ -78,7 +78,7 @@ namespace Qwack.Utils.Parallel
             {
                 if (_slimLock2.Wait(0))
                 {
-                    taskList.Add(t.ContinueWith((t1) => _slimLock2.Release()););
+                    taskList.Add(t.ContinueWith((t1) => _slimLock2.Release()));
                     t.Start();
                 }
                 else

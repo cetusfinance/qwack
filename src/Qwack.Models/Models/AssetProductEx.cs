@@ -1604,7 +1604,7 @@ namespace Qwack.Models.Models
                 { "IrDelta", new Task<ICube>(() => AssetIrDelta(portfolio, model, reportingCcy)) }
             };
 
-            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
+            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values).Wait();
 
 
             //delta

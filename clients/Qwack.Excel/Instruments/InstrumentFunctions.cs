@@ -897,7 +897,7 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
 
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
-                var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
+                var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider).Result;
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

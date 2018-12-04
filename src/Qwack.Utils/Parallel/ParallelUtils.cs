@@ -35,7 +35,7 @@ namespace Qwack.Utils.Parallel
                 return;
             }
 
-            RunOptimistically(values, code);
+            await RunOptimistically(values, code);
         }
 
         public async Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
@@ -53,7 +53,7 @@ namespace Qwack.Utils.Parallel
                 code.Invoke(v);
         }
 
-        private void RunOptimistically<T>(IList<T> values, Action<T> code)
+        private async Task RunOptimistically<T>(IList<T> values, Action<T> code)
         {
             var taskList = new List<Task>();
             foreach (var v in values)
@@ -68,32 +68,40 @@ namespace Qwack.Utils.Parallel
                     code.Invoke(v);
             }
 
-            Task.WaitAll(taskList.ToArray());
+            await Task.WhenAll(taskList);
         }
 
-        public void QueueAndRunTasks(IEnumerable<Task> tasks)
+        public async Task QueueAndRunTasks(IEnumerable<Task> tasks)
         {
             var taskList = new List<Task>();
             foreach (var t in tasks)
             {
                 if (_slimLock2.Wait(0))
                 {
-                    taskList.Add(t);
-                    t.ContinueWith((t1) => _slimLock2.Release());
+                    taskList.Add(t.ContinueWith((t1) => _slimLock2.Release()));
                     t.Start();
                 }
                 else
                     t.RunSynchronously();
             }
 
-            Task.WaitAll(taskList.ToArray());
+            await Task.WhenAll(taskList.ToArray());
         }
 
         private Task RunOnThread<T>(T value, Action<T> code)
         {
-            var task = new Task(() => code.Invoke(value));
-            task.ContinueWith((t) => _slimLock2.Release());
-
+            var task = new Task(() =>
+            {
+                try
+                {
+                    code.Invoke(value);
+                }
+                finally
+                {
+                    _slimLock2.Release();
+                }
+            });
+            
             return task;
         }
     }

@@ -1546,7 +1546,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static async Task<ICube> AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1604,9 +1604,8 @@ namespace Qwack.Models.Models
                 { "IrDelta", new Task<ICube>(() => AssetIrDelta(portfolio, model, reportingCcy)) }
             };
 
-            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
-
-
+            await ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
+            
             //delta
             //var baseDeltaGammaCube = AssetDeltaGamma(portfolio, model);
             var baseDeltaGammaCube = tasks["AssetDeltaGamma"].Result;

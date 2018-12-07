@@ -38,6 +38,43 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
+        [ExcelFunction(Description = "Creates a 1-dimensional interpolator, tollerant of errors", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolatorSafe))]
+        public static object Create1dInterpolatorSafe(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Array of X values")] object[] X,
+            [ExcelArgument(Description = "Array of Y values")] object[] Y,
+            [ExcelArgument(Description = "Type of interpolator, e.g. Linear")] string InterpolatorType)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var interpType = InterpolatorType.OptionalExcel<string>("Linear");
+                if (!Enum.TryParse(interpType, out Interpolator1DType iType))
+                {
+                    return $"Could not parse 1d interpolator type - {interpType}";
+                }
+
+                if (X.Length != Y.Length)
+                    throw new Exception("Input vectors must be same length");
+
+                var xList = new List<double>();
+                var yList = new List<double>();
+
+                for(var i=0;i<X.Length;i++)
+                {
+                    if(X[i] is double && Y[i] is double)
+                    {
+                        xList.Add((double)X[i]);
+                        yList.Add((double)Y[i]);
+                    }
+                }
+
+                var iObj = InterpolatorFactory.GetInterpolator(xList.ToArray(), yList.ToArray(), iType);
+                var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
+                cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = iObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a 2-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create2dInterpolator))]
         public static object Create2dInterpolator(
              [ExcelArgument(Description = "Object name")] string ObjectName,

@@ -54,5 +54,27 @@ namespace Qwack.Core.Tests.Cubes
             var rowValue = z.GetAllRows().Where(r => Convert.ToString(r.MetaData.First()) == "bah!").Single().Value;
             Assert.Equal(80.6 + 79.6, rowValue);
         }
+
+        [Fact]
+        public void CanSort()
+        {
+            var x = GetSUT();
+            x.AddRow(new Dictionary<string, object> { { "wwahh", 88 }, { "gwah", "bah!" } }, 80.6);
+
+            var z = x.Sort();
+            var rowValues = z.GetAllRows();
+            Assert.Equal(79.6, rowValues.First().Value);
+        }
+
+        [Fact]
+        public void CanSort2()
+        {
+            var x = GetSUT();
+            x.AddRow(new Dictionary<string, object> { { "wwahh", 88 }, { "gwah", "bah!" } }, 80.6);
+
+            var z = x.Sort(new List<string> { "wwahh" });
+            var rowValues = z.GetAllRows();
+            Assert.Equal(77.6, rowValues.First().Value);
+        }
     }
 }

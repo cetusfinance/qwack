@@ -266,22 +266,38 @@ namespace Qwack.Core.Cubes
             outCube.Initialize(cube.DataTypes);
 
             var fieldNames = cube.DataTypes.Keys.ToList();
-            var indexes = fieldsToSortOn.Select(x => fieldNames.IndexOf(x));
+            var indexes = fieldsToSortOn.Select(x => fieldNames.IndexOf(x)).Reverse();
 
-            var rows = cube.GetAllRows();
-            var rowKeys = new Dictionary<string, int>();
-
-            var c = 0;
-            foreach (var row in rows)
+            var rows = new List<ResultCubeRow>(cube.GetAllRows());
+            foreach (var ix in indexes)
             {
-                var key = string.Join("~", indexes.Select(f => row.MetaData[f]));
-                rowKeys.Add(key, c);
-                c++;
+                rows = rows.OrderBy(x => x.MetaData[ix]).ToList();
             }
 
-            foreach (var kv in rowKeys.OrderBy(x => x.Key))
+            foreach (var row in rows)
             {
-                outCube.AddRow(rows[kv.Value].MetaData, rows[kv.Value].Value);
+                outCube.AddRow(row.MetaData, row.Value);
+            }
+
+            return outCube;
+        }
+
+        public static ICube Sort(this ICube cube)
+        {
+            var outCube = new ResultCube();
+            outCube.Initialize(cube.DataTypes);
+
+            var fieldNames = cube.DataTypes.Keys.ToList();
+            var indexes = Enumerable.Range(0, fieldNames.Count).Reverse().ToArray();
+            var rows = new List<ResultCubeRow>(cube.GetAllRows());
+            foreach(var ix in indexes)
+            {
+                rows = rows.OrderBy(x => x.MetaData[ix]).ToList();
+            }
+
+            foreach (var row in rows)
+            {
+                outCube.AddRow(row.MetaData, row.Value);
             }
 
             return outCube;

@@ -187,6 +187,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = f.Counterparty ?? string.Empty;
                         break;
+                    case Future fut:
+                        o[i + 1, 1] = "Future";
+                        o[i + 1, 2] = fut.AssetId;
+                        o[i + 1, 3] = fut.Currency.Ccy;
+                        o[i + 1, 4] = fut.ExpiryDate;
+                        o[i + 1, 5] = fut.ExpiryDate;
+                        o[i + 1, 6] = fut.ExpiryDate;
+                        o[i + 1, 7] = fut.Strike;
+                        o[i + 1, 8] = fut.ContractQuantity;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = fut.Counterparty ?? string.Empty;
+                        break;
                     case FxForward fx:
                         o[i + 1, 1] = "FxForward";
                         o[i + 1, 2] = fx.Pair;

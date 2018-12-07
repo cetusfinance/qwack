@@ -8,6 +8,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Core.Calibrators
 {
@@ -19,7 +20,7 @@ namespace Qwack.Core.Calibrators
         private const double JacobianBump = 0.0001;
 
         private DateTime _buildDate;
-        private List<AsianBasisSwap> _curveInstruments;
+        private List<IAssetInstrument> _curveInstruments;
         private DateTime[] _pillars;
         private IIrCurve _discountCurve;
         private IPriceCurve _currentCurve;
@@ -37,7 +38,7 @@ namespace Qwack.Core.Calibrators
 
         public NewtonRaphsonAssetBasisCurveSolver(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
 
-        public SparsePriceCurve SolveSparseCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, 
+        public SparsePriceCurve SolveSparseCurve(List<IAssetInstrument> instruments, List<DateTime> pillars, 
             IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType)
         {
             _curveInstruments = instruments;
@@ -51,7 +52,7 @@ namespace Qwack.Core.Calibrators
 
             _currentGuess = Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
             _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
-            _currentPVs = ComputePVs();
+            _currentPVs = ComputePVs(_currentCurve);
 
             ComputeJacobianSparse();
 
@@ -60,7 +61,7 @@ namespace Qwack.Core.Calibrators
                 ComputeNextGuess();
                 _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
 
-                _currentPVs = ComputePVs();
+                _currentPVs = ComputePVs(_currentCurve);
                 if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
                 {
                     UsedItterations = i + 1;
@@ -72,9 +73,9 @@ namespace Qwack.Core.Calibrators
             return (SparsePriceCurve)_currentCurve;
         }
 
-        public PriceCurve SolveCurve(List<AsianBasisSwap> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
+        public PriceCurve SolveCurve(IEnumerable<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
         {
-            _curveInstruments = instruments;
+            _curveInstruments = instruments.OrderBy(x=>x.LastSensitivityDate).ToList();
             _pillars = pillars.ToArray();
             _numberOfInstruments = _curveInstruments.Count;
             _numberOfPillars = pillars.Count;
@@ -83,18 +84,22 @@ namespace Qwack.Core.Calibrators
             _baseCurve = baseCurve;
             _curveType = curveType;
 
-            _currentGuess = Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
+            _currentGuess = _curveInstruments.Select(x => InitialGuess(x)).ToArray();
+                //Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
             _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
-            _currentPVs = ComputePVs();
+            _currentPVs = ComputePVs(_currentCurve);
 
             ComputeJacobian();
 
             for (var i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
+                if (_currentGuess.Any(x => double.IsNaN(x)))
+                    throw new Exception($"NaNs detected in solution at step {i}");
+
                 _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
 
-                _currentPVs = ComputePVs();
+                _currentPVs = ComputePVs(_currentCurve);
                 if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
                 {
                     UsedItterations = i + 1;
@@ -122,9 +127,8 @@ namespace Qwack.Core.Calibrators
 
             for (var i = 0; i < _numberOfPillars; i++)
             {
-
                 _currentCurve = new SparsePriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _sparseType, _currencyProvider);
-                var bumpedPVs = ComputePVs();
+                var bumpedPVs = ComputePVs(_currentCurve);
 
                 for (var j = 0; j < bumpedPVs.Length; j++)
                 {
@@ -137,48 +141,73 @@ namespace Qwack.Core.Calibrators
         {
             _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(_numberOfPillars, _numberOfPillars);
 
-            for (var i = 0; i < _numberOfPillars; i++)
+            ParallelUtils.Instance.For(0, _numberOfPillars, 1, i =>
+            //for (var i = 0; i < _numberOfPillars; i++)
             {
-
-                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType, _currencyProvider);
-                var bumpedPVs = ComputePVs();
+                var currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType, _currencyProvider);
+                var bumpedPVs = ComputePVs(currentCurve);
 
                 for (var j = 0; j < bumpedPVs.Length; j++)
                 {
                     _jacobian[i][j] = (bumpedPVs[j] - _currentPVs[j]) / JacobianBump;
                 }
-            }
+            }, false).Wait();
         }
 
-        private double[] ComputePVs()
+        private double[] ComputePVs(IPriceCurve priceCurve)
         {
             var o = new double[_numberOfInstruments];
             for (var i = 0; i < o.Length; i++)
             {
-                o[i] = BasisSwapPv(_currentCurve, _curveInstruments[i], _discountCurve, _baseCurve);
+                o[i] = BasisSwapPv(priceCurve, _curveInstruments[i], _discountCurve, _baseCurve);
             }
             return o;
         }
 
-        public static double BasisSwapPv(IPriceCurve priceCurve, AsianBasisSwap swap, IIrCurve discountCurve, IPriceCurve baseCurve)
+        public static double BasisSwapPv(IPriceCurve priceCurve, IAssetInstrument instrument, IIrCurve discountCurve, IPriceCurve baseCurve)
         {
-            var baseIsPay = (swap.PaySwaplets.First().AssetId == baseCurve.AssetId);
-            var payCurve = baseIsPay ? baseCurve : priceCurve;
-            var recCurve = baseIsPay ? priceCurve : baseCurve;
+            switch (instrument)
+            {
+                case AsianBasisSwap swap:
+                    var baseIsPay = (swap.PaySwaplets.First().AssetId == baseCurve.AssetId);
+                    var payCurve = baseIsPay ? baseCurve : priceCurve;
+                    var recCurve = baseIsPay ? priceCurve : baseCurve;
 
-            var payPVs = swap.PaySwaplets.Select(s =>
-            (payCurve.GetAveragePriceForDates(s.FixingDates.AddPeriod(RollType.F, s.FixingCalendar, s.SpotLag)) - s.Strike)
-            * (s.Direction == TradeDirection.Long ? 1.0 : -1.0)
-            * s.Notional
-            * discountCurve.GetDf(priceCurve.BuildDate, s.PaymentDate));
+                    var payPVs = swap.PaySwaplets.Select(s =>
+                    (payCurve.GetAveragePriceForDates(s.FixingDates.AddPeriod(RollType.F, s.FixingCalendar, s.SpotLag)) - s.Strike)
+                    * (s.Direction == TradeDirection.Long ? 1.0 : -1.0)
+                    * s.Notional
+                    * discountCurve.GetDf(priceCurve.BuildDate, s.PaymentDate));
 
-            var recPVs = swap.RecSwaplets.Select(s =>
-            (recCurve.GetAveragePriceForDates(s.FixingDates.AddPeriod(RollType.F, s.FixingCalendar, s.SpotLag)) - s.Strike)
-            * (s.Direction == TradeDirection.Long ? 1.0 : -1.0)
-            * s.Notional
-            * discountCurve.GetDf(priceCurve.BuildDate, s.PaymentDate));
+                    var recPVs = swap.RecSwaplets.Select(s =>
+                    (recCurve.GetAveragePriceForDates(s.FixingDates.AddPeriod(RollType.F, s.FixingCalendar, s.SpotLag)) - s.Strike)
+                    * (s.Direction == TradeDirection.Long ? 1.0 : -1.0)
+                    * s.Notional
+                    * discountCurve.GetDf(priceCurve.BuildDate, s.PaymentDate));
 
-            return payPVs.Sum() + recPVs.Sum();
+                    return payPVs.Sum() + recPVs.Sum();
+                case Future fut:
+                    var fwd = priceCurve.GetPriceForDate(fut.ExpiryDate);
+                    return (fwd - fut.Strike) * fut.ContractQuantity * fut.LotSize;
+                default:
+                    throw new Exception("Unable to process instrument type in solver");
+            }
+        }
+
+        private double InitialGuess(IAssetInstrument instrument)
+        {
+            switch (instrument)
+            {
+                case AsianBasisSwap swap:
+                    var baseIsPay = (swap.PaySwaplets.First().AssetId == _baseCurve.AssetId);
+                    return baseIsPay
+                        ? _baseCurve.GetPriceForDate(swap.RecSwaplets.Last().LastSensitivityDate)
+                        : _baseCurve.GetPriceForDate(swap.PaySwaplets.Last().LastSensitivityDate);
+                case Future fut:
+                    return _baseCurve.GetPriceForDate(fut.ExpiryDate);
+                default:
+                    throw new Exception("Unable to process instrument type in solver");
+            }
         }
     }
 }

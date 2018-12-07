@@ -595,13 +595,14 @@ namespace Qwack.Models.Models
                         { "Metric", "Vega" }
                       });
 
+                var startCurve = startModel.GetVolSurface(surfaceName);
                 var endCurve = endModel.GetVolSurface(surfaceName);
                 var explainedByTrade = new Dictionary<string, double>();
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
                     var point = (string)r.MetaData[r_plIx];
-                    var pointDate = endCurve.PillarDatesForLabel(point);
+                    var pointDate = startCurve.PillarDatesForLabel(point);
                     var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
                     var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
                     var explained = r.Value * (endRate - startRate) / 0.01;

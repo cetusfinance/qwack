@@ -43,5 +43,9 @@ namespace Qwack.Core.Models
         IPriceCurve[] Curves { get; }
 
         void AttachPortfolio(Portfolio portfolio);
+
+        void BuildDependencyTree();
+        string[] GetDependentCurves(string curve);
+        string[] GetAllDependentCurves(string curve);
     }
 }

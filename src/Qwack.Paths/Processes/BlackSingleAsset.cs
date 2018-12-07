@@ -71,8 +71,6 @@ namespace Qwack.Paths.Processes
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                //detect left over paths which dont dfit into the vector stride
-
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 var c = 0;
@@ -91,6 +89,27 @@ namespace Qwack.Paths.Processes
                     steps[step] = previousStep;
                 }
             }
+
+            //for (var path = block.NumberOfPaths - block.NumberOfPaths % Vector<double>.Count; path < block.NumberOfPaths; path++)
+            //{
+            //    var previousStep = _forwardCurve(0);
+            //    var steps = block.GetStepsForFactorSingle(path, _factorIndex);
+            //    var c = 0;
+            //    foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
+            //    {
+            //        steps[c] = kv.Value;
+            //        c++;
+            //    }
+            //    steps[c] = previousStep;
+            //    for (var step = c + 1; step < block.NumberOfSteps; step++)
+            //    {
+            //        var W = steps[step];
+            //        var dt = _timesteps.TimeSteps[step];
+            //        var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
+            //        previousStep *= Exp(bm);
+            //        steps[step] = previousStep;
+            //    }
+            //}
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)

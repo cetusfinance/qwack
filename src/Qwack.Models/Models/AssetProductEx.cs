@@ -21,7 +21,7 @@ namespace Qwack.Models.Models
 {
     public static class AssetProductEx
     {
-        private static readonly bool _useFuturesMethod = false;
+        private static readonly bool _useFuturesMethod = true;
 
         public static double PV(this AsianOption asianOption, IAssetFxModel model)
         {
@@ -41,7 +41,7 @@ namespace Qwack.Models.Models
             if (asianOption.FixingDates.Last() <= model.BuildDate)
             {
                 var avg = (FixedAverage * FixedCount + FloatAverage * FloatCount) / (FixedCount + FloatCount);
-                return asianOption.Notional * (asianOption.CallPut == OptionType.Call ? System.Math.Max(0, avg - asianOption.Strike) : System.Math.Max(0, asianOption.Strike - avg));
+                return asianOption.Notional * (asianOption.CallPut == OptionType.Call ? Max(0, avg - asianOption.Strike) : Max(0, asianOption.Strike - avg));
             }
 
             var surface = model.GetVolSurface(asianOption.AssetId);
@@ -275,7 +275,7 @@ namespace Qwack.Models.Models
 
             for (var i = 0; i < swap.FixingDates.Length; i++)
             {
-                if (swap.FixingDates[i] < model.BuildDate || fixingForToday)
+                if (swap.FixingDates[i] < model.BuildDate || (fixingForToday && swap.FixingDates[i] == model.BuildDate))
                     fwds[i] = fixingDict.GetFixing(swap.FixingDates[i]);
                 else
                     fwds[i] = priceCurve.GetPriceForDate(swap.FixingDates[i].AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag));
@@ -302,7 +302,7 @@ namespace Qwack.Models.Models
 
                 for (var i = 0; i < fxDates.Length; i++)
                 {
-                    if (swap.FixingDates[i] < model.BuildDate || fixingForTodayFx)
+                    if (swap.FixingDates[i] < model.BuildDate || (fixingForTodayFx && swap.FixingDates[i] == model.BuildDate))
                         fxRates[i] = fxFixingDict.GetFixing(fxDates[i]);
                     else
 
@@ -469,6 +469,8 @@ namespace Qwack.Models.Models
             return payPV + recPV;
         }
 
+
+
         public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null)
         {
             var cube = new ResultCube();
@@ -482,8 +484,8 @@ namespace Qwack.Models.Models
 
             var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
 
-            //ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
-            for(var i=0;i< portfolio.Instruments.Count;i++)
+            ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
+            //for(var i=0;i< portfolio.Instruments.Count;i++)
             {
                 var ins = portfolio.Instruments[i];
                 var pv = 0.0;
@@ -613,8 +615,7 @@ namespace Qwack.Models.Models
                   };
 
                 pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv / fxRate);
-            }
-            //, true).Wait();
+            }, true).Wait();
 
             for (var i = 0; i < pvs.Length; i++)
             {
@@ -779,38 +780,23 @@ namespace Qwack.Models.Models
                 { "TradeType",  typeof(string) },
                 { "AssetId", typeof(string) },
                 { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { "Metric", typeof(string) },
+                { "CurveType", typeof(string) },
             };
             cube.Initialize(dataTypes);
+            model.BuildDependencyTree();
 
             foreach (var curveName in model.CurveNames)
             {
                 var curveObj = model.GetPriceCurve(curveName);
-                var linkedCurves = model.Curves
-                    .Where(x => x is BasisPriceCurve bp && bp.BaseCurve.Name == curveName)
-                    .Select(x => x.Name);
-                var prevCount = 0;
-                while (linkedCurves.Count() != prevCount)
-                {
-                    prevCount = linkedCurves.Count();
-                    var newBaseCurves = new List<string>();
-                    foreach (var depCurve in linkedCurves)
-                    {
-                        var baseCurve = model.GetPriceCurve(depCurve);
-                        newBaseCurves.Add(depCurve);
-                    }
-
-                    var newlinkedCurves = model.Curves
-                        .Where(x => x is BasisPriceCurve bp && newBaseCurves.Contains(bp.BaseCurve.Name))
-                        .Select(x => x.Name);
-                    linkedCurves = linkedCurves.Concat(newlinkedCurves).Distinct();
-                }
+                var linkedCurves = model.GetDependentCurves(curveName);
+                var allLinkedCurves = model.GetAllDependentCurves(curveName);
 
                 var subPortfolio = new Portfolio()
                 {
                     Instruments = portfolio.Instruments
                     .Where(x => (x is IAssetInstrument ia) && 
-                    (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid=>linkedCurves.Contains(aid))))
+                    (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid=> allLinkedCurves.Contains(aid))))
                     .ToList()
                 };
 
@@ -838,19 +824,19 @@ namespace Qwack.Models.Models
                     var newModel = model.Clone();
                     newModel.AddPriceCurve(curveName, bCurve.Value);
 
-                    var dependentCurves = model.Curves.Where(x => x is BasisPriceCurve bp && bp.BaseCurve.Name == curveName);
+                    var dependentCurves = new List<string>(linkedCurves);
                     while (dependentCurves.Any())
                     {
                         var newBaseCurves = new List<string>();
-                        foreach (BasisPriceCurve depCurve in dependentCurves)
+                        foreach (var depCurveName in dependentCurves)
                         {
-                            var baseCurve = newModel.GetPriceCurve(depCurve.BaseCurve.Name);
-                            var recalCurve = depCurve.ReCalibrate(baseCurve);
-                            newModel.AddPriceCurve(depCurve.Name, recalCurve);
-                            newBaseCurves.Add(depCurve.Name);
+                            var baseCurve = newModel.GetPriceCurve(depCurveName);
+                            var recalCurve = ((BasisPriceCurve)newModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                            newModel.AddPriceCurve(depCurveName, recalCurve);
+                            newBaseCurves.Add(depCurveName);
                         }
 
-                        dependentCurves = model.Curves.Where(x => x is BasisPriceCurve bp && newBaseCurves.Contains(bp.BaseCurve.Name));
+                        dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                     }
 
                     var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
@@ -872,8 +858,8 @@ namespace Qwack.Models.Models
                                 { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                                 { "AssetId", curveName },
                                 { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" }
-
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
                             results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
                         }
@@ -1604,7 +1590,7 @@ namespace Qwack.Models.Models
                 { "IrDelta", new Task<ICube>(() => AssetIrDelta(portfolio, model, reportingCcy)) }
             };
 
-            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values).Wait();
+            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
 
 
             //delta

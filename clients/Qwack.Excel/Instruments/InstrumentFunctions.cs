@@ -163,6 +163,39 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a futures crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureCrackDiffSwap))]
+        public static object CreateFutureCrackDiffSwap(
+         [ExcelArgument(Description = "Object name")] string ObjectName,
+         [ExcelArgument(Description = "Pay future code")] string PayFuture,
+         [ExcelArgument(Description = "Rec future code")] string RecFuture,
+         [ExcelArgument(Description = "Asset Id pay")] string AssetIdPay,
+         [ExcelArgument(Description = "Asset Id receive")] string AssetIdRec,
+         [ExcelArgument(Description = "Currency")] string Currency,
+         [ExcelArgument(Description = "Strike")] double Strike,
+         [ExcelArgument(Description = "Notional pay")] double NotionalPay,
+         [ExcelArgument(Description = "Notional receive")] double NotionalRec,
+         [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+
+                var fPayExpiry = Futures.FutureCode.GetRollFromCode(PayFuture, ContainerStores.FuturesProvider);
+                var fRecExpiry = Futures.FutureCode.GetRollFromCode(RecFuture, ContainerStores.FuturesProvider);
+                var product = AssetProductFactory.CreateBulletBasisSwap(fPayExpiry, fRecExpiry, Strike, AssetIdPay, AssetIdRec, currency, NotionalPay, NotionalRec);
+
+                product.TradeId = ObjectName;
+                foreach (var ps in product.PaySwaplets)
+                    ps.DiscountCurve = DiscountCurve;
+                foreach (var rs in product.RecSwaplets)
+                    rs.DiscountCurve = DiscountCurve;
+
+                var cache = ContainerStores.GetObjectCache<AsianBasisSwap>();
+                cache.PutObject(ObjectName, new SessionItem<AsianBasisSwap> { Name = ObjectName, Value = product });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a commodity future position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFuture))]
         public static object CreateFuture(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -1188,6 +1221,7 @@ namespace Qwack.Excel.Instruments
             var asianOptions = Instruments.GetAnyFromCache<AsianOption>();
             var asianStrips = Instruments.GetAnyFromCache<AsianSwapStrip>();
             var asianSwaps = Instruments.GetAnyFromCache<AsianSwap>();
+            var asianBasisSwaps = Instruments.GetAnyFromCache<AsianBasisSwap>();
             var forwards = Instruments.GetAnyFromCache<Forward>();
             var assetFutures = Instruments.GetAnyFromCache<Future>();
             var europeanOptions = Instruments.GetAnyFromCache<EuropeanOption>();
@@ -1220,6 +1254,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(asianOptions);
             pf.Instruments.AddRange(asianStrips);
             pf.Instruments.AddRange(asianSwaps);
+            pf.Instruments.AddRange(asianBasisSwaps);
             pf.Instruments.AddRange(forwards);
             pf.Instruments.AddRange(assetFutures);
             pf.Instruments.AddRange(europeanOptions);

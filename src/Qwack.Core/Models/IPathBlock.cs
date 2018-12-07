@@ -19,5 +19,6 @@ namespace Qwack.Core.Models
         Span<double> GetEntirePath(int pathId);
         int GetIndexOfPathStart(int pathId, int factorId);
         Span<Vector<double>> GetStepsForFactor(int pathId, int factorId);
+        Span<double> GetStepsForFactorSingle(int pathId, int factorId);
     }
 }

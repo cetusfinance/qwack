@@ -9,7 +9,7 @@ using Qwack.Core.Models;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class Correlation : IPathProcess, IRequiresFinish
+    public class Correlation : IPathProcess, IRequiresFinish, IRunSingleThreaded
     {
         private readonly string _assetName1;
         private readonly string _assetName2;

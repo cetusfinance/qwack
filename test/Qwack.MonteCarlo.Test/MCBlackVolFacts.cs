@@ -21,7 +21,7 @@ namespace Qwack.MonteCarlo.Test
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(17)-1);
+            var engine = new PathEngine(2.IntPow(17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,

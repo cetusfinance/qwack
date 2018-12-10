@@ -46,6 +46,14 @@ namespace Qwack.Paths
             return span;
         }
 
+        public unsafe Span<double> GetStepsForFactorSingle(int pathId, int factorId)
+        {
+            var byteOffset = GetIndexOfPathStart(pathId, factorId) << 3;
+            var pointer = (void*)IntPtr.Add(_handle.AddrOfPinnedObject(), byteOffset);
+            var span = new Span<double>(pointer, _numberOfSteps);
+            return span;
+        }
+
         public Span<double> GetEntirePath(int pathId) => new Span<double>(RawData,GetIndexOfPathStart(pathId,0), _numberOfFactors * NumberOfSteps);
 
         public int GetIndexOfPathStart(int pathId, int factorId)

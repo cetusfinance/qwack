@@ -14,14 +14,14 @@ namespace Qwack.Models.Risk
     public static class BasicMetrics
     {
 
-        public static Dictionary<string, ICube> ComputeBumpedScenarios(Func<IAssetFxModel, ICube> pvFunc, Dictionary<string, IAssetFxModel> models, Currency ccy)
+        public static Dictionary<string, ICube> ComputeBumpedScenarios(Dictionary<string, IPvModel> models, Currency ccy)
         {
             var results = new Tuple<string, ICube>[models.Count];
             var bModelList = models.ToList();
             ParallelUtils.Instance.For(0, results.Length, 1, ii =>
             {
                 var bModel = bModelList[ii];
-                var bumpedPVCube = pvFunc.Invoke(bModel.Value);
+                var bumpedPVCube = bModel.Value.PV(ccy);
                 results[ii] = new Tuple<string, ICube>(bModel.Key, bumpedPVCube);
             }).Wait();
             return results.ToDictionary(k => k.Item1, v => v.Item2);
@@ -35,6 +35,7 @@ namespace Qwack.Models.Risk
             {
                 { "TradeId", typeof(string) },
                 { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
                 { "PointLabel", typeof(string) },
                 { "Metric", typeof(string) }
             };
@@ -63,34 +64,38 @@ namespace Qwack.Models.Risk
 
                 var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
 
-                foreach (var bCurve in bumpedSurfaces)
+                ParallelUtils.Instance.Foreach(bumpedSurfaces.ToList(), bCurve =>
+                //foreach (var bCurve in bumpedSurfaces)
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
                     var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
-                    var bumpedPVCube = pvModel.PV(reportingCcy);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
+                    
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
                         //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
                             var row = new Dictionary<string, object>
                             {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
                                 { "AssetId", surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "Vega" }
                             };
                             cube.AddRow(row, vega);
                         }
                     }
-                }
+                }, false).Wait();
             }
-            return cube;
+
+            return cube.Sort();
         }
     }
 }

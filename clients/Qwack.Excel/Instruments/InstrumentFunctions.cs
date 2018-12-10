@@ -777,11 +777,9 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-                var result = pfolio.AssetVega(model.Value, ccy);
+                var model = GetModelFromCache(ModelName, pfolio);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];       
+                var result = model.AssetVega(ccy);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

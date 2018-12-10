@@ -21,6 +21,14 @@ namespace Qwack.Excel.Tests.Interpolation
         }
 
         [Fact]
+        public void Create1dInterpolatorSafe_Facts()
+        {
+            Assert.Equal("Could not parse 1d interpolator type - blah", InterpolatorFunctions.Create1dInterpolatorSafe("pwahg", new object[] { 1.0 }, new object[] { 1.0 }, "blah"));
+            Assert.Equal("Input vectors must be same length", InterpolatorFunctions.Create1dInterpolatorSafe("pwahg", new object[] { 1.0 }, new object[] { 1.0, 2.0 }, "Linear"));
+            Assert.Equal("pwahg¬0", InterpolatorFunctions.Create1dInterpolatorSafe("pwahg", new object[] { 1.0 }, new object[] { 1.0 }, "Linear"));
+        }
+
+        [Fact]
         public void Create2dInterpolator_Facts()
         {
             Assert.Equal("Could not parse 2d interpolator type - blah", InterpolatorFunctions.Create2dInterpolator("pwah", new[] { 1.0 }, new[] { 1.0 },new[,] { { 1.0 } }, "blah"));

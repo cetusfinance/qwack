@@ -143,6 +143,35 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
+        public static AsianBasisSwap CreateBulletBasisSwap(DateTime payFixing, DateTime recFixing, double strike, string assetIdPay, string assetIdRec, Currency currency, double notionalPay, double notionalRec)
+        {
+            var payDate = payFixing.Max(recFixing);
+            var swapPay = new Forward
+            {
+                AssetId = assetIdPay,
+                ExpiryDate = payFixing,
+                PaymentDate = payDate,
+                Notional = notionalPay,
+                Strike = strike,
+            }.AsBulletSwap();
+            var swapRec = new Forward
+            {
+                AssetId = assetIdRec,
+                ExpiryDate = recFixing,
+                PaymentDate = payDate,
+                Notional = notionalRec,
+                Strike = 0.0,
+            }.AsBulletSwap();
+
+            var swap = new AsianBasisSwap
+            {
+                PaySwaplets = new[] { swapPay },
+                RecSwaplets = new[] { swapRec },
+            };
+
+            return swap;
+        }
+
         public static AsianOption CreateAsianOption(string period, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();

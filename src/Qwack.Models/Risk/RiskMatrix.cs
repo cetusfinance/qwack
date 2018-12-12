@@ -38,11 +38,11 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
-        public Dictionary<Tuple<string,string>,IAssetFxModel> GenerateScenarios(IAssetFxModel model)
+        public Dictionary<Tuple<string,string>, IPvModel> GenerateScenarios(IPvModel model)
         {
-            var o = new Dictionary<Tuple<string, string>, IAssetFxModel>();
+            var o = new Dictionary<Tuple<string, string>, IPvModel>();
             var axisLength = NScenarios * 2 + 1;
-            var results = new KeyValuePair<Tuple<string, string>, IAssetFxModel>[axisLength * axisLength];
+            var results = new KeyValuePair<Tuple<string, string>, IPvModel>[axisLength * axisLength];
             ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
             {
                 var thisShiftAsset = i * ShiftSizeAsset;
@@ -50,7 +50,7 @@ namespace Qwack.Models.Risk
 
                 var assetIx = i + NScenarios;
 
-                IAssetFxModel shifted;
+                IPvModel shifted;
 
                 if (thisShiftAsset == 0)
                     shifted = model;
@@ -70,14 +70,14 @@ namespace Qwack.Models.Risk
                     var thisShiftFx = ifx * ShiftSizeFx;
                     var thisLabelFx = Ccy.Ccy + "~" + thisShiftFx;
 
-                    IAssetFxModel shiftedFx;
+                    IPvModel shiftedFx;
 
                     if (thisShiftAsset == 0)
                         shiftedFx = shifted;
                     else
                         shiftedFx = FlatShiftMutator.FxSpotShift(Ccy, thisShiftFx, shifted);
 
-                    results[assetIx*axisLength+fxIx] = new KeyValuePair<Tuple<string, string>, IAssetFxModel>(
+                    results[assetIx*axisLength+fxIx] = new KeyValuePair<Tuple<string, string>, IPvModel>(
                         new Tuple<string, string>(thisLabelAsset, thisLabelFx), shiftedFx);
                 }
             }).Wait();
@@ -88,7 +88,7 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        public ICube Generate(IAssetFxModel model, Portfolio portfolio)
+        public ICube Generate(IPvModel model, Portfolio portfolio = null)
         {
             var o = new ResultCube();
             o.Initialize(new Dictionary<string, Type>
@@ -100,9 +100,14 @@ namespace Qwack.Models.Risk
             var scenarios = GenerateScenarios(model);
 
             ICube baseRiskCube = null;
-            if(ReturnDifferential)
+            if (ReturnDifferential)
             {
-                baseRiskCube = GetRisk(model, portfolio);
+                var baseModel = model;
+                if (portfolio != null)
+                {
+                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
+                }
+                baseRiskCube = GetRisk(baseModel);
             }
 
             var threadLock = new object();
@@ -112,7 +117,12 @@ namespace Qwack.Models.Risk
             ParallelUtils.Instance.For(0, scList.Count,1, i =>
             {
                 var scenario = scList[i];
-                var result = GetRisk(scenario.Value, portfolio);
+                var pvModel = scenario.Value;
+                if (portfolio != null)
+                {
+                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
+                }
+                var result = GetRisk(pvModel);
 
                 if (ReturnDifferential)
                 {
@@ -135,18 +145,18 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IAssetFxModel model, Portfolio portfolio)
+        private ICube GetRisk(IPvModel model)
         {
             switch (Metric)
             {
                 case RiskMetric.AssetCurveDelta:
-                    return portfolio.AssetDelta(model);
-                case RiskMetric.AssetCurveDeltaGamma:
-                    return portfolio.AssetDeltaGamma(model);
+                    return model.AssetDelta();
+                //case RiskMetric.AssetCurveDeltaGamma:
+                //    return portfolio.AssetDeltaGamma(model);
                 case RiskMetric.FxDelta:
-                    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider);
-                case RiskMetric.FxDeltaGamma:
-                    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
+                    return model.FxDelta(_currencyProvider.GetCurrency("ZAR"), _currencyProvider);
+                //case RiskMetric.FxDeltaGamma:
+                //    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
                 default:
                     throw new Exception($"Unable to process risk metric {Metric}");
 

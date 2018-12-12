@@ -9,7 +9,7 @@ namespace Qwack.Core.Instruments
     public interface IAssetInstrument : IInstrument
     {
         string[] AssetIds { get; }
-        string[] IrCurves { get; }
+        string[] IrCurves(IAssetFxModel model);
         Currency Currency { get; }
         
         Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate);

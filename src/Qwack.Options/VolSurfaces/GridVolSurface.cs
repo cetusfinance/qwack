@@ -4,6 +4,7 @@ using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,10 @@ namespace Qwack.Options.VolSurfaces
     /// </summary>
     public class GridVolSurface : IVolSurface, IATMVolSurface
     {
+        private readonly bool _allowCaching = true;
+        private ConcurrentDictionary<string, double> _absVolCache = new ConcurrentDictionary<string, double>();
+        private ConcurrentDictionary<string, double> _deltaVolCache = new ConcurrentDictionary<string, double>();
+
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
         public double[] Strikes { get; set; }
@@ -81,12 +86,16 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
         {
+            var key = $"{strike:f6}~{maturity:f3}~{forward:f6}";
+            if (_allowCaching && _absVolCache.TryGetValue(key, out var vol))
+                return vol;
+
             if (StrikeType == StrikeType.Absolute)
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble, 
                     _interpolators.Select(x => x.Interpolate(strike)).ToArray(), 
                     TimeInterpolatorType);
-                return interpForStrike.Interpolate(maturity);
+                vol = interpForStrike.Interpolate(maturity);
             }
             else
             {
@@ -97,32 +106,47 @@ namespace Qwack.Options.VolSurfaces
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(-deltaK)).ToArray(),
                    TimeInterpolatorType);
-                    var vol = interpForStrike.Interpolate(maturity);
-                    var absK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, maturity, vol);
+                    var vol2 = interpForStrike.Interpolate(maturity);
+                    var absK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, maturity, vol2);
                     return absK - strike;
                 });
 
-                var solvedStrike = -Qwack.Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
+                var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
                    TimeInterpolatorType);
-                return interpForSolvedStrike.Interpolate(maturity);
+                vol = interpForSolvedStrike.Interpolate(maturity);
             }
+
+            if (_allowCaching) _absVolCache[key] = vol;
+            return vol;
         }
 
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
+
+        public double RiskReversal(double deltaStrike, double maturity, double forward)
+        {
+            var callVol = GetVolForDeltaStrike(deltaStrike, maturity, forward);
+            var putVol = GetVolForDeltaStrike(-deltaStrike, maturity, forward);
+
+            return callVol - putVol;
+        }
 
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
             if (deltaStrike > 1.0 || deltaStrike < -1.0)
                 throw new ArgumentOutOfRangeException($"Delta strike must be in range -1.0 < x < 1.0 - value was {deltaStrike}");
 
+            var key = $"{deltaStrike:f6}~{maturity:f3}~{forward:f6}";
+            if (_allowCaching && _deltaVolCache.TryGetValue(key, out var vol))
+                return vol;
+
             if (StrikeType == StrikeType.ForwardDelta)
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                     _interpolators.Select(x => x.Interpolate(deltaStrike)).ToArray(),
                     TimeInterpolatorType);
-                return interpForStrike.Interpolate(maturity);
+                vol = interpForStrike.Interpolate(maturity);
             }
             else
             {
@@ -133,17 +157,20 @@ namespace Qwack.Options.VolSurfaces
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(absK)).ToArray(),
                    TimeInterpolatorType);
-                    var vol = interpForStrike.Interpolate(maturity);
-                    var deltaK = BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol, cp);
+                    var vol2 = interpForStrike.Interpolate(maturity);
+                    var deltaK = BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol2, cp);
                     return deltaK - System.Math.Abs(deltaStrike);
                 });
 
-                var solvedStrike = Qwack.Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10*fwd, 1e-8);
+                var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
                    TimeInterpolatorType);
-                return interpForSolvedStrike.Interpolate(maturity);
+                vol = interpForSolvedStrike.Interpolate(maturity);
             }
+
+            if (_allowCaching) _deltaVolCache[key] = vol;
+            return vol;
         }
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);

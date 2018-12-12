@@ -31,7 +31,7 @@ namespace Qwack.Models.Tests.MCModels
             var comSurface = new ConstantVolSurface(buildDate, 0.32);
             var fModel = new FundingModel(buildDate, new Dictionary<string, IrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider);
             var fxM = new FxMatrix(TestProviderHelper.CurrencyProvider);
-            fxM.Init(usd, buildDate, new Dictionary<Core.Basic.Currency, double>(), new List<Core.Basic.FxPair>(), new Dictionary<Core.Basic.Currency, string> { { usd, "DISCO" } });
+            fxM.Init(usd, buildDate, new Dictionary<Currency, double>(), new List<FxPair>(), new Dictionary<Currency, string> { { usd, "DISCO" } });
             fModel.SetupFx(fxM);
 
             var aModel = new AssetFxModel(buildDate, fModel);
@@ -46,7 +46,7 @@ namespace Qwack.Models.Tests.MCModels
             var pfolio = new Portfolio { Instruments = new List<IInstrument> { product } };
             var settings = new McSettings
             {
-                Generator = Core.Basic.RandomGeneratorType.MersenneTwister,
+                Generator = RandomGeneratorType.MersenneTwister,
                 NumberOfPaths = (int)System.Math.Pow(2, 16),
                 NumberOfTimesteps = 120,
                 ReportingCurrency = usd,
@@ -68,13 +68,9 @@ namespace Qwack.Models.Tests.MCModels
 
             var clewlowPV = Options.Asians.LME_Clewlow.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C, usdCal);
             var tbPV = Options.Asians.TurnbullWakeman.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C);
+            var tbFutPV = Options.Asians.TurnbullWakeman.PV(ins.FixingDates.Select(x => 100.0).ToArray(), ins.FixingDates, sut.Model.BuildDate, ins.PaymentDate, ins.FixingDates.Select(x => 0.32).ToArray(), ins.Strike, 0.0, OptionType.C);
 
-            var times = ins.FixingDates.Select(x => sut.Model.BuildDate.CalculateYearFraction(x, DayCountBasis.Act365F));
-            var nt = times.Count();
-            var variances = times.Select(x => x * 0.32 * 0.32 / nt);
-            var vAvg = System.Math.Sqrt(variances.Sum() / times.Last());
-            var bpv = Options.BlackFunctions.BlackPV(100, 101, 0.0, times.Last(), vAvg, OptionType.C);
-            //Assert.Equal(clewlowPV, pvCube.GetAllRows().First().Value, 2);
+            Assert.Equal(tbFutPV, pvCube.GetAllRows().First().Value, 1);
         }
 
 

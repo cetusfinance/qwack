@@ -218,5 +218,27 @@ namespace Qwack.Excel.Cubes
                 return $"Saved to {FileName}";
             });
         }
+
+        [ExcelFunction(Description = "Creates a new cube, adding a bucketed time field", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(BucketTimeAxis))]
+        public static object BucketTimeAxis(
+            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Field name to bucket on")] string InputTimeFieldName,
+            [ExcelArgument(Description = "Output field name")] string OutputBucketedFieldName,
+            [ExcelArgument(Description = "Bucket labels and boundaries, date first, label second")] object[,] BucketLabelsAndBoundaries)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                var bucketBoundaries = BucketLabelsAndBoundaries.RangeToDictionary<DateTime, string>();
+
+                var outCube = inCube.Value.BucketTimeAxis(InputTimeFieldName, OutputBucketedFieldName, bucketBoundaries);
+
+                cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
+                return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
     }
 }

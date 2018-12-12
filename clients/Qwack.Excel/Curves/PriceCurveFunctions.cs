@@ -16,6 +16,7 @@ using Qwack.Models.Models;
 using Qwack.Futures;
 using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Core.Instruments;
 
 namespace Qwack.Excel.Curves
 {
@@ -202,7 +203,7 @@ namespace Qwack.Excel.Curves
                 var baseCurve = bCurveObj.Value;
 
                 var swapCache = ContainerStores.GetObjectCache<AsianBasisSwap>();
-                var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value);
+                var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => (IAssetInstrument)x.Value);
 
                 var pDates = Pillars.ToDateTimeArray();
                 var fitter = new Core.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider);
@@ -250,14 +251,13 @@ namespace Qwack.Excel.Curves
                 }
                 var baseCurve = bCurveObj.Value;
 
-                var swapCache = ContainerStores.GetObjectCache<AsianBasisSwap>();
-                var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value).ToList();
+                var pf = Instruments.InstrumentFunctions.GetPortfolio(Swaps);
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
 
                 var labels = PillarLabels is ExcelMissing ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>().ToList();
 
                 var pDates = Pillars.ToDateTimeArray().ToList();
-                var cObj = new BasisPriceCurve(swaps, pDates, irCurve, baseCurve, BuildDate, cType, ContainerStores.CurrencyProvider, labels)
+                var cObj = new BasisPriceCurve(pf.Instruments.Where(x=>x is IAssetInstrument).Select(x=>x as IAssetInstrument).ToList(), pDates, irCurve, baseCurve, BuildDate, cType, ContainerStores.CurrencyProvider, labels)
                 {
                     Name = ObjectName,
                     AssetId = AssetId,

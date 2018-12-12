@@ -31,21 +31,20 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
-        public Dictionary<string,IAssetFxModel> GenerateScenarios(IAssetFxModel model)
+        public Dictionary<string, IPvModel> GenerateScenarios(IPvModel model)
         {
-            var o = new Dictionary<string, IAssetFxModel>();
+            var o = new Dictionary<string, IPvModel>();
 
-            var results = new KeyValuePair<string, IAssetFxModel>[NScenarios * 2 + 1];
+            var results = new KeyValuePair<string, IPvModel>[NScenarios * 2 + 1];
             ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
-            //for(var i=-NScenarios;i<=NScenarios;i++)
             {
                 var thisShift = i * ShiftSize;
                 var thisLabel = AssetId + "~" + thisShift;
                 if (thisShift == 0)
-                    results[i+NScenarios] = new KeyValuePair<string, IAssetFxModel>(thisLabel, model);
+                    results[i+NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
                 else
                 {
-                    IAssetFxModel shifted;
+                    IPvModel shifted;
                     switch (ShiftType)
                     {
                         case MutationType.FlatShift:
@@ -54,7 +53,7 @@ namespace Qwack.Models.Risk
                         default:
                             throw new Exception($"Unable to process shift type {ShiftType}");
                     }
-                    results[i + NScenarios] = new KeyValuePair<string, IAssetFxModel>(thisLabel, shifted);
+                    results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
                 }
             }).Wait();
 
@@ -64,7 +63,7 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        public ICube Generate(IAssetFxModel model, Portfolio portfolio)
+        public ICube Generate(IPvModel model, Portfolio portfolio = null)
         {
             var o = new ResultCube();
             o.Initialize(new Dictionary<string, Type> { { "Scenario", typeof(string) } });
@@ -72,9 +71,15 @@ namespace Qwack.Models.Risk
             var scenarios = GenerateScenarios(model);
 
             ICube baseRiskCube = null;
+            
             if(ReturnDifferential)
             {
-                baseRiskCube = GetRisk(model, portfolio);
+                var baseModel = model;
+                if (portfolio != null)
+                {
+                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
+                }
+                baseRiskCube = GetRisk(baseModel);
             }
 
             var threadLock = new object();
@@ -82,10 +87,14 @@ namespace Qwack.Models.Risk
             var scList = scenarios.ToList();
 
             ParallelUtils.Instance.For(0, scList.Count,1, i =>
-            //foreach (var scenario in scenarios)
             {
                 var scenario = scList[i];
-                var result = GetRisk(scenario.Value, portfolio);
+                var pvModel = scenario.Value;
+                if (portfolio != null)
+                {
+                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
+                }
+                var result = GetRisk(pvModel);
 
                 if (ReturnDifferential)
                 {
@@ -104,12 +113,14 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IAssetFxModel model, Portfolio portfolio)
+        private ICube GetRisk(IPvModel model)
         {
             switch (Metric)
             {
                 case RiskMetric.AssetCurveDelta:
-                    return portfolio.AssetDelta(model);
+                    return model.AssetDeltaSingleCurve(AssetId);
+                case RiskMetric.AssetVega:
+                    return model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency);
                 default:
                     throw new Exception($"Unable to process risk metric {Metric}");
 

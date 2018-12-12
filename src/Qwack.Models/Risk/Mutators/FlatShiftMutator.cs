@@ -32,12 +32,24 @@ namespace Qwack.Models.Risk.Mutators
             return o;
         }
 
+        public static IPvModel AssetCurveShift(string assetId, double shiftSize, IPvModel model)
+        {
+            var newVanillaModel = AssetCurveShift(assetId, shiftSize, model.VanillaModel);
+            return model.Rebuild(newVanillaModel, model.Portfolio);
+        }
+
         public static IAssetFxModel FxSpotShift(Currency ccy, double shiftSize, IAssetFxModel model)
         {
             var o = model.Clone();
             var spot = model.FundingModel.FxMatrix.GetSpotRate(ccy);
             o.FundingModel.FxMatrix.SpotRates[ccy] = spot + shiftSize;
             return o;
+        }
+
+        public static IPvModel FxSpotShift(Currency ccy, double shiftSize, IPvModel model)
+        {
+            var newVanillaModel = FxSpotShift(ccy, shiftSize, model.VanillaModel);
+            return model.Rebuild(newVanillaModel, model.Portfolio);
         }
     }
 }

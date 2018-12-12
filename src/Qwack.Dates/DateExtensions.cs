@@ -515,6 +515,8 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime AddPeriod(this DateTime date, RollType rollType, Calendar calendar, Frequency datePeriod)
         {
+            if (calendar == null && datePeriod.PeriodType==DatePeriodType.B) return date;
+
             date = date.Date;
             if (datePeriod.PeriodCount == 0)
             {

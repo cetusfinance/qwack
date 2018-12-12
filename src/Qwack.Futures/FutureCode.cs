@@ -290,5 +290,11 @@ namespace Qwack.Futures
             var c = new FutureCode(code, DateTime.Today.Year - 2, futureSettingsProvider);
             return c.GetExpiry();
         }
+
+        public static DateTime GetRollFromCode(string code, IFutureSettingsProvider futureSettingsProvider)
+        {
+            var c = new FutureCode(code, DateTime.Today.Year - 2, futureSettingsProvider);
+            return c.GetRollDate();
+        }
     }
 }

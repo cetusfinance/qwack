@@ -164,6 +164,7 @@ namespace Qwack.Models
 
             c.CorrelationMatrix = CorrelationMatrix;
             c.AttachPortfolio(_portfolio);
+
             return c;
         }
 
@@ -196,5 +197,60 @@ namespace Qwack.Models
             m.AttachPortfolio(portfolio);
             return m;
         }
+
+        private Dictionary<string, string[]> _dependencyTree;
+        private Dictionary<string, string[]> _dependencyTreeFull;
+
+        public void BuildDependencyTree()
+        {
+            if (_dependencyTree != null)
+                return;
+
+            _dependencyTree = new Dictionary<string, string[]>();
+            _dependencyTreeFull = new Dictionary<string, string[]>();
+            foreach (var curveName in CurveNames)
+            {
+                var curveObj = GetPriceCurve(curveName);
+                var linkedCurves = Curves
+                    .Where(x => x is BasisPriceCurve bp && bp.BaseCurve.Name == curveName)
+                    .Select(x => x.Name)
+                    .ToArray();
+
+                _dependencyTree.Add(curveName, linkedCurves);
+            }
+
+            foreach(var kv in _dependencyTree)
+            {
+                var fullDeps = kv.Value;
+                var newDeps = new List<string>();
+                foreach(var dep in kv.Value)
+                {
+                    if(_dependencyTree.TryGetValue(dep, out var deps))
+                    {
+                        newDeps.AddRange(deps);
+                    }
+                }
+
+                while(newDeps.Any())
+                {
+                    var actualNewDeps = newDeps.Where(x => !fullDeps.Contains(x));
+                    fullDeps = fullDeps.Concat(actualNewDeps).Distinct().ToArray();
+
+                    newDeps = new List<string>();
+                    foreach (var dep in actualNewDeps)
+                    {
+                        if (_dependencyTree.TryGetValue(dep, out var deps))
+                        {
+                            newDeps.AddRange(deps);
+                        }
+                    }
+                }
+
+                _dependencyTreeFull.Add(kv.Key, fullDeps);
+            }
+        }
+
+        public string[] GetDependentCurves(string curve) => _dependencyTree.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
+        public string[] GetAllDependentCurves(string curve) => _dependencyTreeFull.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
     }
 }

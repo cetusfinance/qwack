@@ -16,7 +16,9 @@ namespace Qwack.Utils.Parallel
 
         public static ParallelUtils Instance => lazy.Value;
 
-        private SemaphoreSlim _slimLock2 = new SemaphoreSlim(Environment.ProcessorCount, Environment.ProcessorCount);
+        private static readonly int numThreads = Environment.ProcessorCount * 2;
+
+        private SemaphoreSlim _slimLock2 = new SemaphoreSlim(numThreads, numThreads);
 
         private ParallelUtils()
         {
@@ -35,7 +37,7 @@ namespace Qwack.Utils.Parallel
                 return;
             }
 
-            await RunOptimistically(values, code);
+            RunOptimistically(values, code);
         }
 
         public async Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
@@ -53,7 +55,7 @@ namespace Qwack.Utils.Parallel
                 code.Invoke(v);
         }
 
-        private async Task RunOptimistically<T>(IList<T> values, Action<T> code)
+        private void RunOptimistically<T>(IList<T> values, Action<T> code)
         {
             var taskList = new List<Task>();
             foreach (var v in values)
@@ -68,24 +70,25 @@ namespace Qwack.Utils.Parallel
                     code.Invoke(v);
             }
 
-            await Task.WhenAll(taskList);
+            Task.WaitAll(taskList.ToArray());
         }
 
-        public async Task QueueAndRunTasks(IEnumerable<Task> tasks)
+        public void QueueAndRunTasks(IEnumerable<Task> tasks)
         {
             var taskList = new List<Task>();
             foreach (var t in tasks)
             {
                 if (_slimLock2.Wait(0))
                 {
-                    taskList.Add(t.ContinueWith((t1) => _slimLock2.Release()));
+                    taskList.Add(t);
+                    t.ContinueWith((t1) => _slimLock2.Release());
                     t.Start();
                 }
                 else
                     t.RunSynchronously();
             }
 
-            await Task.WhenAll(taskList.ToArray());
+            Task.WaitAll(taskList.ToArray());
         }
 
         private Task RunOnThread<T>(T value, Action<T> code)

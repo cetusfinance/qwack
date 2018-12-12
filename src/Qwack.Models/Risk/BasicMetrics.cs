@@ -2,26 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
+using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Utils.Parallel;
+using static System.Math;
 
 namespace Qwack.Models.Risk
 {
     public static class BasicMetrics
     {
 
-        public static Dictionary<string, ICube> ComputeBumpedScenarios(Func<IAssetFxModel, ICube> pvFunc, Dictionary<string, IAssetFxModel> models, Currency ccy)
+        public static Dictionary<string, ICube> ComputeBumpedScenarios(Dictionary<string, IPvModel> models, Currency ccy)
         {
             var results = new Tuple<string, ICube>[models.Count];
             var bModelList = models.ToList();
             ParallelUtils.Instance.For(0, results.Length, 1, ii =>
             {
                 var bModel = bModelList[ii];
-                var bumpedPVCube = pvFunc.Invoke(bModel.Value);
+                var bumpedPVCube = bModel.Value.PV(ccy);
                 results[ii] = new Tuple<string, ICube>(bModel.Key, bumpedPVCube);
             }).Wait();
             return results.ToDictionary(k => k.Item1, v => v.Item2);
@@ -29,12 +33,13 @@ namespace Qwack.Models.Risk
 
         public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy)
         {
-            var bumpSize = 0.01;
+            var bumpSize = 0.001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
                 { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
                 { "PointLabel", typeof(string) },
                 { "Metric", typeof(string) }
             };
@@ -63,34 +68,965 @@ namespace Qwack.Models.Risk
 
                 var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
 
-                foreach (var bCurve in bumpedSurfaces)
+                ParallelUtils.Instance.Foreach(bumpedSurfaces.ToList(), bCurve =>
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
                     var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
-                    var bumpedPVCube = pvModel.PV(reportingCcy);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
+                    
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
                         //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
                             var row = new Dictionary<string, object>
                             {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
                                 { "AssetId", surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "Vega" }
                             };
                             cube.AddRow(row, vega);
                         }
                     }
+                }, false).Wait();
+            }
+
+            return cube.Sort();
+        }
+
+        public static ICube FxVega(this IPvModel pvModel, Currency reportingCcy)
+        {
+            var bumpSize = 0.001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            var subPortfolio = new Portfolio()
+            {
+                Instruments = model.Portfolio.Instruments.Where(x => x is IHasVega).ToList()
+            };
+
+            if (subPortfolio.Instruments.Count == 0)
+                return cube;
+
+            var lastDateInBook = subPortfolio.LastSensitivityDate();
+            var basePvModel = pvModel.Rebuild(model, subPortfolio);
+            var pvCube = basePvModel.PV(reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+
+            foreach (var surface in model.FundingModel.VolSurfaces)
+            {
+                var volObj = surface.Value;
+                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
+
+                ParallelUtils.Instance.Foreach(bumpedSurfaces.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.FundingModel.VolSurfaces[surface.Key] = bCurve.Value;
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //vega quoted for a 1% shift, irrespective of bump size
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "AssetId", surface.Key },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Vega" }
+                            };
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                }, false).Wait();
+            }
+
+            return cube.Sort();
+        }
+
+        public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType",  typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) },
+                { "CurveType", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+            model.BuildDependencyTree();
+
+            var curveName = model.Curves.Where(x => x.AssetId == assetId).First().Name;
+
+            var curveObj = model.GetPriceCurve(curveName);
+            var linkedCurves = model.GetDependentCurves(curveName);
+            var allLinkedCurves = model.GetAllDependentCurves(curveName);
+
+            var subPortfolio = new Portfolio()
+            {
+                Instruments = pvModel.Portfolio.Instruments
+                .Where(x => (x is IAssetInstrument ia) &&
+                (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid => allLinkedCurves.Contains(aid))))
+                .ToList()
+            };
+
+            if (subPortfolio.Instruments.Count == 0)
+                return cube;
+
+            var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+            var pvCube = subPortfolio.PV(model, curveObj.Currency);
+            var pvRows = pvCube.GetAllRows();
+
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+            var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
+            var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
+
+            ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+            {
+                var newVanillaModel = model.Clone();
+                newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
+
+                var dependentCurves = new List<string>(linkedCurves);
+                while (dependentCurves.Any())
+                {
+                    var newBaseCurves = new List<string>();
+                    foreach (var depCurveName in dependentCurves)
+                    {
+                        var baseCurve = newVanillaModel.GetPriceCurve(depCurveName);
+                        var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                        newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
+                        newBaseCurves.Add(depCurveName);
+                    }
+
+                    dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
+                }
+                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+
+                var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                ResultCubeRow[] bumpedRowsDown = null;
+                if (computeGamma)
+                {
+                    var newVanillaModelDown = model.Clone();
+                    newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
+
+                    var dependentCurvesDown = new List<string>(linkedCurves);
+                    while (dependentCurvesDown.Any())
+                    {
+                        var newBaseCurves = new List<string>();
+                        foreach (var depCurveName in dependentCurves)
+                        {
+                            var baseCurve = newVanillaModelDown.GetPriceCurve(depCurveName);
+                            var recalCurve = ((BasisPriceCurve)newVanillaModelDown.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                            newVanillaModelDown.AddPriceCurve(depCurveName, recalCurve);
+                            newBaseCurves.Add(depCurveName);
+                        }
+
+                        dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
+                    }
+                    var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+
+                    var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
+                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                    if (bumpedRowsDown.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                }
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    if (computeGamma)
+                    {
+                        var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+                        var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpSize;
+                        var delta = (deltaUp + deltaDown) / 2.0;
+                        var gamma = (deltaUp - deltaDown) / bumpSize;
+
+                        if (Abs(delta) > 1e-8)
+                        {
+                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                            };
+                            cube.AddRow(row, delta);
+                        }
+
+                        if (Abs(gamma) > 1e-8)
+                        {
+                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
+                                    gamma /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Gamma" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                            };
+                            cube.AddRow(row, gamma);
+                        }
+                    }
+                    else
+                    {
+                        var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+
+                        if (delta != 0.0)
+                        {
+                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                            };
+                            cube.AddRow(row, delta);
+                        }
+                    }
+                }
+            }).Wait();
+
+            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+        }
+
+
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType",  typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) },
+                { "CurveType", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+            model.BuildDependencyTree();
+
+            foreach (var curveName in model.CurveNames)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+                var linkedCurves = model.GetDependentCurves(curveName);
+                var allLinkedCurves = model.GetAllDependentCurves(curveName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid => allLinkedCurves.Contains(aid))))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var pvCube = subPortfolio.PV(model, curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
+                var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
+
+                ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
+
+                    var dependentCurves = new List<string>(linkedCurves);
+                    while (dependentCurves.Any())
+                    {
+                        var newBaseCurves = new List<string>();
+                        foreach (var depCurveName in dependentCurves)
+                        {
+                            var baseCurve = newVanillaModel.GetPriceCurve(depCurveName);
+                            var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                            newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
+                            newBaseCurves.Add(depCurveName);
+                        }
+
+                        dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
+                    }
+                    var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+
+                    var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    ResultCubeRow[] bumpedRowsDown = null;
+                    if(computeGamma)
+                    {
+                        var newVanillaModelDown = model.Clone();
+                        newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
+
+                        var dependentCurvesDown = new List<string>(linkedCurves);
+                        while (dependentCurvesDown.Any())
+                        {
+                            var newBaseCurves = new List<string>();
+                            foreach (var depCurveName in dependentCurves)
+                            {
+                                var baseCurve = newVanillaModelDown.GetPriceCurve(depCurveName);
+                                var recalCurve = ((BasisPriceCurve)newVanillaModelDown.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                                newVanillaModelDown.AddPriceCurve(depCurveName, recalCurve);
+                                newBaseCurves.Add(depCurveName);
+                            }
+
+                            dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
+                        }
+                        var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+
+                        var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
+                        bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                        if (bumpedRowsDown.Length != pvRows.Length)
+                            throw new Exception("Dimensions do not match");
+                    }
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        if (computeGamma)
+                        {
+                            var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+                            var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpSize;
+                            var delta = (deltaUp + deltaDown) / 2.0;
+                            var gamma = (deltaUp - deltaDown) / bumpSize;
+
+                            if (Abs(delta) > 1e-8)
+                            {
+                                if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                                var row = new Dictionary<string, object>
+                                {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                };
+                                cube.AddRow(row, delta);
+                            }
+
+                            if (Abs(gamma) > 1e-8)
+                            {
+                                if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
+                                    gamma /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                                var row = new Dictionary<string, object>
+                                {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Gamma" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                };
+                                cube.AddRow(row, gamma);
+                            }
+                        }
+                        else
+                        {
+                            var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+
+                            if (delta != 0.0)
+                            {
+                                if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                                var row = new Dictionary<string, object>
+                                {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                };
+                                cube.AddRow(row, delta);
+                            }
+                        }
+                    }
+                }).Wait();
+            }
+            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+        }
+
+        public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
+        {
+            var bumpSize = 0.0001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var mf = model.FundingModel.DeepClone(null);
+
+            var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
+
+            if (homeCcy != null && homeCcy != domCcy)//remap onto new base currency
+            {
+                domCcy = homeCcy;
+                var homeToBase = mf.FxMatrix.SpotRates[homeCcy];
+                var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
+                    .Concat(new[] { mf.FxMatrix.BaseCurrency })
+                    .Where(x => x != homeCcy);
+                var newRateDict = new Dictionary<Currency, double>();
+                foreach (var ccy in ccys)
+                {
+                    var spotDate = mf.FxMatrix.GetFxPair(homeCcy, ccy).SpotDate(mf.BuildDate);
+                    var newRate = mf.GetFxRate(spotDate, homeCcy, ccy);
+                    newRateDict.Add(ccy, newRate);
+                }
+
+                var newFx = new FxMatrix(currencyProvider);
+                newFx.Init(homeCcy, mf.FxMatrix.BuildDate, newRateDict, mf.FxMatrix.FxPairDefinitions, mf.FxMatrix.DiscountCurveMap);
+                mf.SetupFx(newFx);
+            }
+
+            var m = model.Clone(mf);
+
+            foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
+            {
+                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                var pvCube = newPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                var fxPair = $"{currency}/{domCcy}";
+
+                var newModel = m.Clone();
+                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
+                newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
+                var inverseSpotBump = 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                var bumpedPVCube = bumpedPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                ResultCubeRow[] bumpedRowsDown = null;
+                var inverseSpotBumpDown = 0.0;
+
+                if (computeGamma)
+                {
+                    var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
+                    newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
+                    inverseSpotBumpDown = 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+
+                    var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
+
+                    var bumpedPVCubeDown = bumpedPvModelDown.PV(m.FundingModel.FxMatrix.BaseCurrency);
+                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                    if (bumpedRowsDown.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                }
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump;
+
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                        {
+                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                            { "AssetId", fxPair },
+                            { "Metric", "FxSpotDelta" }
+                        };
+                        cube.AddRow(row, delta);
+                    }
+
+                    if (computeGamma)
+                    {
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown;
+                        var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
+                        if (gamma != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", fxPair },
+                                { "Metric", "FxSpotGamma" }
+                            };
+                            cube.AddRow(row, gamma);
+                        }
+                    }
                 }
             }
             return cube;
+        }
+
+        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null)
+        {
+            var bumpSize = 0.0001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            foreach (var curve in model.FundingModel.Curves)
+            {
+                var curveObj = curve.Value;
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = model.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves(model).Contains(curve.Key))
+                    .Concat(model.Portfolio.Instruments.Where(x => (x is FxForward fx) && (model.FundingModel.FxMatrix.DiscountCurveMap[fx.DomesticCCY] == curve.Key || model.FundingModel.FxMatrix.DiscountCurveMap[fx.ForeignCCY] == curve.Key || fx.ForeignDiscountCurve == curve.Key)))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var subModel = pvModel.Rebuild(pvModel.VanillaModel, subPortfolio);
+                var pvCube = subModel.PV(reportingCcy ?? curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
+
+                ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                {
+                    var newModel = model.Clone();
+                    newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
+                    var newPvModel = pvModel.Rebuild(newModel, subPortfolio);
+                    var bumpedPVCube = newPvModel.PV(reportingCcy ?? curveObj.Currency);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        var delta = bumpedRows[i].Value - pvRows[i].Value;
+
+                        if (delta != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curve.Key },
+                                { "PointDate", bCurve.Key},
+                                { "PointLabel", bCurve.Key.ToString("yyyy-MM-dd") },
+                                { "Metric", "IrDelta" }
+                            };
+                            cube.AddRow(row, delta);
+                        }
+                    }
+                },false).Wait();
+            }
+
+            return cube.Sort();
+        }
+
+        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            var pvCube = pvModel.PV(reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+
+            var cashCube = pvModel.Portfolio.FlowsT0(model, reportingCcy);
+            var cashRows = cashCube.GetAllRows();
+
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+            var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
+            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
+
+            var pvCubeFwd = rolledPvModel.PV(reportingCcy);
+            var pvRowsFwd = pvCubeFwd.GetAllRows();
+
+            //theta
+            for (var i = 0; i < pvRowsFwd.Length; i++)
+            {
+                var theta = pvRowsFwd[i].Value - pvRows[i].Value;
+                if (theta != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
+                        { "TradeType", pvRowsFwd[i].MetaData[tTypeIx] },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", string.Empty },
+                        { "Metric", "Theta" }
+                    };
+                    cube.AddRow(row, theta);
+                }
+            }
+
+            //cash move
+            for (var i = 0; i < cashRows.Length; i++)
+            {
+                var cash = cashRows[i].Value;
+                if (cash != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", cashRows[i].MetaData[tidIx] },
+                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", "CashMove" },
+                        { "Metric", "Theta" }
+                    };
+                    cube.AddRow(row, cash);
+                }
+            }
+
+            //charm-asset
+            if (computeCharm)
+            {
+                var baseDeltaCube = pvModel.AssetDelta();
+                var rolledDeltaCube = rolledPvModel.AssetDelta();
+                var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+                var plId = charmCube.GetColumnIndex("PointLabel");
+                var aId = charmCube.GetColumnIndex("AssetId");
+                var ttId = charmCube.GetColumnIndex("TradeType");
+                foreach (var charmRow in charmCube.GetAllRows())
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "TradeType", charmRow.MetaData[ttId] },
+                    { "AssetId", charmRow.MetaData[aId] },
+                    { "PointLabel", charmRow.MetaData[plId] },
+                    { "Metric", "Charm" }
+                    };
+                    cube.AddRow(row, charmRow.Value);
+                }
+
+                //charm-fx
+                baseDeltaCube = pvModel.FxDelta(reportingCcy, currencyProvider);
+                rolledDeltaCube = rolledPvModel.FxDelta(reportingCcy, currencyProvider);
+                charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+                var fId = charmCube.GetColumnIndex("AssetId");
+                foreach (var charmRow in charmCube.GetAllRows())
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "AssetId", charmRow.MetaData[fId] },
+                    { "TradeType", charmRow.MetaData[ttId] },
+                    { "PointLabel", string.Empty },
+                    { "Metric", "Charm" }
+                    };
+                    cube.AddRow(row, charmRow.Value);
+                }
+            }
+            return cube;
+        }
+
+        public static ICube CorrelationDelta(this IPvModel pvModel, Currency reportingCcy, double epsilon)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+            
+            var pvCube = pvModel.PV(reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+
+            var bumpedCorrelMatrix = pvModel.VanillaModel.CorrelationMatrix.Bump(epsilon);
+
+            var newVanillaModel = pvModel.VanillaModel.Clone();
+            newVanillaModel.CorrelationMatrix = bumpedCorrelMatrix;
+            var newPvModel = pvModel.Rebuild(newVanillaModel, pvModel.Portfolio);
+
+            var bumpedPVCube = newPvModel.PV(reportingCcy);
+            var bumpedRows = bumpedPVCube.GetAllRows();
+            if (bumpedRows.Length != pvRows.Length)
+                throw new Exception("Dimensions do not match");
+            for (var i = 0; i < bumpedRows.Length; i++)
+            {
+                //flat bump of correlation matrix by single epsilon parameter, reported as PnL
+                var cDelta = bumpedRows[i].Value - pvRows[i].Value;
+                if (cDelta != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                        { "Metric", "CorrelDelta" }
+                    };
+                    cube.AddRow(row, cDelta);
+                }
+            }
+
+            return cube;
+        }
+
+        public static ICube AssetGreeks(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        {
+            ICube cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) },
+                { "Currency", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var pvCube = pvModel.PV(reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+
+            var cashCube = pvModel.Portfolio.FlowsT0(pvModel.VanillaModel, reportingCcy);
+            var cashRows = cashCube.GetAllRows();
+
+            var tidIx = pvCube.GetColumnIndex("TradeId");
+            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+            var rolledVanillaModel = pvModel.VanillaModel.RollModel(fwdValDate, currencyProvider);
+            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
+
+            var pvCubeFwd = rolledPvModel.PV(reportingCcy);
+            var pvRowsFwd = pvCubeFwd.GetAllRows();
+
+            //theta
+            var thetaCube = pvCubeFwd.QuickDifference(pvCube);
+            cube = cube.Merge(thetaCube, new Dictionary<string, object>
+            {
+                 { "AssetId", string.Empty },
+                 { "PointLabel", string.Empty },
+                 { "Metric", "Theta" }
+            });
+
+
+            //cash move
+            cube = cube.Merge(cashCube, new Dictionary<string, object>
+            {
+                 { "AssetId", string.Empty },
+                 { "PointLabel", "CashMove"  },
+                 { "Metric", "Theta" }
+            });
+
+            //setup to run in parallel
+            var tasks = new Dictionary<string, Task<ICube>>
+            {
+                { "AssetDeltaGamma", new Task<ICube>(() => pvModel.AssetDelta(true)) },
+                { "AssetVega", new Task<ICube>(() => rolledPvModel.AssetVega(reportingCcy)) },
+                { "FxVega", new Task<ICube>(() => rolledPvModel.FxVega(reportingCcy)) },
+                { "RolledDeltaGamma", new Task<ICube>(() => rolledPvModel.AssetDelta(true)) },
+                { "FxDeltaGamma", new Task<ICube>(() => pvModel.FxDelta(reportingCcy, currencyProvider, true)) },
+                { "RolledFxDeltaGamma", new Task<ICube>(() => rolledPvModel.FxDelta(reportingCcy, currencyProvider, true)) },
+                { "IrDelta", new Task<ICube>(() => pvModel.AssetIrDelta(reportingCcy)) }
+            };
+
+            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
+
+
+            //delta
+            var baseDeltaGammaCube = tasks["AssetDeltaGamma"].Result;
+            cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            });
+
+            //vega
+            var assetVegaCube = tasks["AssetVega"].Result;
+            cube = cube.Merge(assetVegaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            });
+            //var fxVegaCube = FxVega(portfolio, model, reportingCcy);
+            var fxVegaCube = tasks["FxVega"].Result;
+            cube = cube.Merge(fxVegaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            });
+
+            //charm-asset
+            //var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
+            var rolledDeltaGammaCube = tasks["RolledDeltaGamma"].Result;
+
+            var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
+            var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
+            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Gamma" } });
+            var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+            cube = cube.Merge(charmCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+                 { "Metric", "Charm"},
+            });
+            cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "AssetDeltaT1" },
+            });
+            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
+            {
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "AssetGammaT1" },
+            });
+
+            //charm-fx
+            baseDeltaCube = tasks["FxDeltaGamma"].Result;
+            cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
+            {
+                 { "PointLabel", string.Empty },
+                 { "Currency", string.Empty },
+            });
+            rolledDeltaGammaCube = tasks["RolledFxDeltaGamma"].Result;
+            rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
+            rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotGamma" } });
+
+            cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
+            {
+                 { "PointLabel", string.Empty },
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "FxSpotDeltaT1" },
+            });
+
+            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
+            {
+                 { "PointLabel", string.Empty },
+                 { "Currency", string.Empty },
+            }, new Dictionary<string, object>
+            {
+                 { "Metric", "FxSpotGammaT1" },
+            });
+
+            charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+            var fId = charmCube.GetColumnIndex("AssetId");
+            foreach (var charmRow in charmCube.GetAllRows())
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", charmRow.MetaData[tidIx] },
+                    { "TradeType", charmRow.MetaData[tTypeIx] },
+                    { "AssetId", charmRow.MetaData[fId] },
+                    { "PointLabel", string.Empty },
+                    { "Currency", string.Empty },
+                    { "Metric", "Charm" }
+                };
+                cube.AddRow(row, charmRow.Value);
+            }
+
+            //ir-delta
+            var baseIrDeltacube = tasks["IrDelta"].Result;
+            cube = cube.Merge(baseIrDeltacube, new Dictionary<string, object>
+            {
+                 { "Currency", reportingCcy.Ccy },
+            });
+
+            return cube;
+        }
+
+        private static double GetUsdDF(IAssetFxModel model, PriceCurve priceCurve, DateTime fwdDate)
+        {
+            var colSpec = priceCurve.CollateralSpec;
+            var ccy = priceCurve.Currency;
+            var disccurve = model.FundingModel.GetCurveByCCyAndSpec(ccy, colSpec);
+            return disccurve.GetDf(model.BuildDate, fwdDate);
         }
     }
 }

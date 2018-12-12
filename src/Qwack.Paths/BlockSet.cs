@@ -21,14 +21,19 @@ namespace Qwack.Paths
         private readonly int _numberOfBlocks;
         private readonly int _factors;
         private readonly int _steps;
+        private readonly int _overrun;
         private PathBlock[] _blocks;
 
         public BlockSet(int numberOfPaths, int factors, int steps)
         {
-            if (numberOfPaths % PathBlock.MinNumberOfPaths != 0)
-            {
-                ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"Paths need to be a multiple of {PathBlock.MinNumberOfPaths}");
-            }
+            //if (numberOfPaths % PathBlock.MinNumberOfPaths != 0)
+            //{
+            //    ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"Paths need to be a multiple of {PathBlock.MinNumberOfPaths}");
+            //}
+
+            _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
+            numberOfPaths += _overrun;
+            
             _steps = steps;
             _factors = factors;
             _numberOfPaths = numberOfPaths;
@@ -41,7 +46,8 @@ namespace Qwack.Paths
             _blocks = new PathBlock[_numberOfBlocks];
             for (var i = 0; i < _blocks.Length; i++)
             {
-                _blocks[i] = new PathBlock(pathsPerBlock, factors, steps, i * pathsPerBlock);
+                var pathsThisBlock = (i == _blocks.Length - 1) ? pathsPerBlock - _overrun : pathsPerBlock;
+                _blocks[i] = new PathBlock(pathsThisBlock, factors, steps, i * pathsPerBlock);
             }
         }
 

@@ -170,6 +170,43 @@ namespace Qwack.Excel.Utils
                 (object)"File does not exist");
         }
 
+        [ExcelFunction(Description = "Returns filename for newest file in a folder", Category = "QUtils")]
+        public static object QUtils_LatestFileInFolder(
+        [ExcelArgument(Description = "Filename")] string FolderPath)
+        {
+            return ExcelHelper.Execute(_logger, () => 
+            {
+                var files = System.IO.Directory.GetFiles(FolderPath);
+                var latestFile = string.Empty;
+                var latestStamp = DateTime.MinValue;
+                foreach(var file in files)
+                {
+                    var lastAccess = System.IO.Directory.GetLastWriteTime(file);
+                    if (lastAccess>latestStamp)
+                    {
+                        latestFile = file;
+                        latestStamp = lastAccess;
+                    }
+                }
+                    
+                return latestFile;
+            });
+        }
+
+        [ExcelFunction(Description = "Copies file from one location to another", Category = "QUtils")]
+        public static object QUtils_CopyFile(
+            [ExcelArgument(Description = "Filename Source")] string Source,
+            [ExcelArgument(Description = "Filename Destination")] string Destination,
+            [ExcelArgument(Description = "Allow overwriting, default false")] object AllowOverwrite)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var overwrite = AllowOverwrite.OptionalExcel(false);
+                System.IO.File.Copy(Source, Destination, overwrite);
+                return "Success";
+            });
+        }
+
         [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils")]
         public static object QUtils_SerializeObject(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -209,6 +246,18 @@ namespace Qwack.Excel.Utils
                 generic.Invoke(null, new object[] { ObjectName, obj });
 
                 return $"{ObjectName}¬1";
+            });
+        }
+
+        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils")]
+        public static object QUtils_Replace(
+            [ExcelArgument(Description = "Input text")] string Text,
+            [ExcelArgument(Description = "String to replace")] string ToReplace,
+            [ExcelArgument(Description = "What to replace with")]string ReplaceWith)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                return Text.Replace(ToReplace, ReplaceWith);
             });
         }
     }

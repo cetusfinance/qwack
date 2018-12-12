@@ -46,7 +46,7 @@ namespace Qwack.Models.Tests.MCModels
             var pfolio = new Portfolio { Instruments = new List<IInstrument> { product } };
             var settings = new McSettings
             {
-                Generator = Core.Basic.RandomGeneratorType.MersenneTwister,
+                Generator = RandomGeneratorType.MersenneTwister,
                 NumberOfPaths = 16384,
                 NumberOfTimesteps = 10,
                 ReportingCurrency = usd,

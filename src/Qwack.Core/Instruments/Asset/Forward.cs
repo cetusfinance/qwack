@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -29,7 +30,18 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
 
         public Currency Currency => PaymentCurrency;
-        public string[] IrCurves => new[] { DiscountCurve };
+        public string[] IrCurves(IAssetFxModel model)
+        {
+            if (FxConversionType == FxConversionType.None)
+                return new[] { DiscountCurve };
+            else
+            {
+                var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
+                var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
+                var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
+                return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+            }
+        }
 
         public AsianSwap AsBulletSwap() => new AsianSwap
         {

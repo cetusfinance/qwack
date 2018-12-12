@@ -38,7 +38,18 @@ namespace Qwack.Core.Instruments.Asset
         public string DiscountCurve { get; set; }
 
         public string[] AssetIds => new[] { AssetId };
-        public string[] IrCurves => new[] { DiscountCurve };
+        public string[] IrCurves(IAssetFxModel model)
+        {
+            if (FxConversionType == FxConversionType.None)
+                return new[] { DiscountCurve };
+            else
+            {
+                var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
+                var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
+                var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
+                return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+            }
+        }
         public Currency Currency => PaymentCurrency;
 
         public DateTime LastSensitivityDate => PaymentDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));

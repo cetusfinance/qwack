@@ -124,6 +124,14 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
+        public double RiskReversal(double deltaStrike, double maturity, double forward)
+        {
+            var callVol = GetVolForDeltaStrike(deltaStrike, maturity, forward);
+            var putVol = GetVolForDeltaStrike(-deltaStrike, maturity, forward);
+
+            return callVol - putVol;
+        }
+
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
             if (deltaStrike > 1.0 || deltaStrike < -1.0)
@@ -154,11 +162,11 @@ namespace Qwack.Options.VolSurfaces
                     return deltaK - System.Math.Abs(deltaStrike);
                 });
 
-                var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10*fwd, 1e-8);
+                var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
                    TimeInterpolatorType);
-                vol =  interpForSolvedStrike.Interpolate(maturity);
+                vol = interpForSolvedStrike.Interpolate(maturity);
             }
 
             if (_allowCaching) _deltaVolCache[key] = vol;

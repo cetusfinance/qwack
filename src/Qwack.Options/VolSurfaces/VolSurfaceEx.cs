@@ -137,6 +137,61 @@ namespace Qwack.Options.VolSurfaces
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.CubicSpline);
         }
 
+        public static IInterpolator1D GenerateCompositeSmileBasic(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation)
+        {
+            var deltaKa = fwdAsset * 0.00001;
+            var deltaKfx = fwdFx * 0.00001;
+
+            var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+
+            var atmFx = fxSurface.GetVolForAbsoluteStrike(fwdFx, t, fwdFx);
+            var atmA = surface.GetVolForAbsoluteStrike(fwdAsset, t, fwdAsset);
+
+            var compoFwd = fwdAsset * fwdFx;
+            var atmCompo = Sqrt(atmFx * atmFx + atmA * atmA + 2.0 * correlation * atmA * atmFx);
+            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.0001, 0, t, atmCompo);
+            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.9999, 0, t, atmCompo);
+            var lowKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.0001, 0, t, atmA);
+            var hiKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.9999, 0, t, atmA);
+
+            var x = new double[numSamples];
+            var y = new double[numSamples];
+
+            var k = lowK;
+
+            var kStep = (hiK - lowK) / numSamples;
+            var kStepA = (hiKA - lowKA) / numSamples;
+            var kStepFx = (hiK / hiKA - lowK / lowKA) / numSamples;
+
+            for (var i = 0; i < x.Length; i++)
+            {
+                x[i] = k;
+                var kA = lowKA;
+                var totalP = 0.0;
+                for (var j = 0; j < numSamples; j++)
+                {
+                    var kFx = k / kA;
+                    var volFx = fxSurface.GetVolForAbsoluteStrike(kFx, t, fwdFx);
+                    var volA = surface.GetVolForAbsoluteStrike(kA, t, fwdAsset);
+                    var volC = Sqrt(volFx * volFx + volA * volA + 2.0 * correlation * volA * volFx);
+                    var fxBucketLow = kFx - deltaKfx / 2.0;
+                    var fxBucketHi = kFx + deltaKfx / 2.0;
+                    var assetBucketLow = kA - deltaKa / 2.0;
+                    var assetBucketHi = kA + deltaKa / 2.0;
+                    var weight = 1.0;
+                    y[i] += weight * volC;
+                    totalP += weight;
+                    kA += kStepA;
+                }
+
+                y[i] /= totalP;
+                k += kStep;
+            }
+
+            return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.LinearFlatExtrap);
+        }
+
+
         public static IInterpolator1D GenerateCompositeSmile(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation)
         {
             var deltaKa = fwdAsset * 0.00001;

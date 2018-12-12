@@ -19,7 +19,7 @@ namespace Qwack.Core.Tests.Cubes
 
             return x;
         }
-    
+
         [Fact]
         public void CanCreateCube()
         {
@@ -75,6 +75,38 @@ namespace Qwack.Core.Tests.Cubes
             var z = x.Sort(new List<string> { "wwahh" });
             var rowValues = z.GetAllRows();
             Assert.Equal(77.6, rowValues.First().Value);
+        }
+
+        private ICube GetSUT2()
+        {
+            var x = new ResultCube();
+            x.Initialize(new Dictionary<string, Type> { { "gwah", typeof(string) }, { "wwahh", typeof(DateTime) } });
+            x.AddRow(new object[] { "woooh", DateTime.Today.AddDays(10) }, 77.6);
+            x.AddRow(new Dictionary<string, object> { { "gwah", "gloop" }, { "wwahh", DateTime.Today.AddDays(20) } }, 78.6);
+            x.AddRow(new Dictionary<string, object> { { "wwahh", DateTime.Today.AddDays(30) }, { "gwah", "bah!" } }, 79.6);
+
+            return x;
+        }
+
+        [Fact]
+        public void CanBucket()
+        {
+            var x = GetSUT2();
+
+            var buckets = new Dictionary<DateTime, string>
+            {
+                {DateTime.Today.AddDays(25),"b1" },
+                {DateTime.Today.AddDays(50),"b2" },
+                {DateTime.Today.AddDays(100),"b3" },
+            };
+
+            Assert.Throws<Exception>(()=>x.BucketTimeAxis("glooop", "bucketz", buckets));
+
+            var z = x.BucketTimeAxis("wwahh", "bucketz", buckets);
+            var rowValues = z.GetAllRows();
+            Assert.Equal("b1", rowValues[0].ToDictionary(z.DataTypes.Keys.ToArray())["bucketz"]);
+            Assert.Equal("b1", rowValues[1].ToDictionary(z.DataTypes.Keys.ToArray())["bucketz"]);
+            Assert.Equal("b2", rowValues[2].ToDictionary(z.DataTypes.Keys.ToArray())["bucketz"]);
         }
     }
 }

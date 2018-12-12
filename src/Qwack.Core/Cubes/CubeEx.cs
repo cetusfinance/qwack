@@ -194,6 +194,36 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
+        public static ICube BucketTimeAxis(this ICube cube, string timeFieldName, string bucketedFieldName, Dictionary<DateTime,string> bucketBoundaries)
+        {
+            if (!cube.DataTypes.ContainsKey(timeFieldName))
+                throw new Exception($"Cannot filter on field {timeFieldName} as it is not present");
+
+            var outCube = new ResultCube();
+            var newTypes = new Dictionary<string, Type>(cube.DataTypes);
+            newTypes.Add(bucketedFieldName, typeof(string));
+            outCube.Initialize(newTypes);
+
+            var buckets = bucketBoundaries.Keys.OrderBy(x => x).ToList();
+            var bucketFieldIx = cube.GetColumnIndex(timeFieldName);
+
+            foreach (var row in cube.GetAllRows())
+            {
+                var date = (DateTime)row.MetaData[bucketFieldIx];
+                var bucket = buckets.BinarySearch(date);
+                if(bucket<0) bucket = ~bucket;
+                var bucketLabel = bucketBoundaries[buckets[bucket]];
+
+                var metaList = new List<object>(row.MetaData)
+                {
+                    bucketLabel
+                };
+                outCube.AddRow(metaList.ToArray(), row.Value);
+            }
+
+            return outCube;
+        }
+
         public static Dictionary<object,List<ResultCubeRow>> ToDictionary(this ICube cube, string keyField)
         {
                 if (!cube.DataTypes.ContainsKey(keyField))

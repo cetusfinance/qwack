@@ -10,13 +10,14 @@ namespace Qwack.Options.VolSurfaces
 {
     public class RiskyFlySurface : GridVolSurface
     {
-        private double[] _atmVols;
-        private readonly double[][] _riskies;
-        private readonly double[][] _flies;
-        private readonly double[] _wingDeltas;
-        private readonly double[] _fwds;
-        private readonly WingQuoteType _wingQuoteType;
-        private readonly AtmVolType _atmVolType;
+        public double[][] Riskies { get; }
+        public double[][] Flies { get; }
+        public double[] ATMs { get; }
+        public double[] WingDeltas { get; }
+        public double[] Forwards { get; }
+        public WingQuoteType WingQuoteType { get; }
+        public AtmVolType AtmVolType { get; }
+
 
         public RiskyFlySurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas, 
             double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType, 
@@ -110,13 +111,13 @@ namespace Qwack.Options.VolSurfaces
             Strikes = strikes;
             StrikeType = StrikeType.ForwardDelta;
 
-            _atmVols = ATMVols;
-            _riskies = riskies;
-            _flies = flies;
-            _wingDeltas = wingDeltas;
-            _fwds = fwds;
-            _wingQuoteType = wingQuoteType;
-            _atmVolType = atmVolType;
+            ATMs = ATMVols;
+            Riskies = riskies;
+            Flies = flies;
+            WingDeltas = wingDeltas;
+            Forwards = fwds;
+            WingQuoteType = wingQuoteType;
+            AtmVolType = atmVolType;
 
             base.Build(originDate, strikes, expiries, vols);
         }
@@ -127,9 +128,9 @@ namespace Qwack.Options.VolSurfaces
 
             for (var i = 0; i < Expiries.Length; i++)
             {
-                var volsBumped = (double[])_atmVols.Clone();
+                var volsBumped = (double[])ATMs.Clone();
                 volsBumped[i] += bumpSize;
-                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, volsBumped, Expiries, _wingDeltas, _riskies, _flies, _fwds, _wingQuoteType, _atmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, volsBumped, Expiries, WingDeltas, Riskies, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
             }
 
             return o;

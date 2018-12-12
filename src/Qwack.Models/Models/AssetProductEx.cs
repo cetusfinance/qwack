@@ -975,7 +975,7 @@ namespace Qwack.Models.Models
                     if (computeGamma)
                     {
                         var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown;
-                        var gamma = (delta - deltaDown) / (inverseSpotBump + inverseSpotBumpDown) * 2.0;
+                        var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
                         if (gamma != 0.0)
                         {
                             var row = new Dictionary<string, object>
@@ -985,7 +985,7 @@ namespace Qwack.Models.Models
                                 { "AssetId", fxPair },
                                 { "Metric", "FxSpotGamma" }
                             };
-                            cube.AddRow(row, delta);
+                            cube.AddRow(row, gamma);
                         }
                     }
                 }
@@ -1120,7 +1120,7 @@ namespace Qwack.Models.Models
 
         public static ICube AssetVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
         {
-            var bumpSize = 0.01;
+            var bumpSize = 0.001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -1165,7 +1165,7 @@ namespace Qwack.Models.Models
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
                         //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
                             var row = new Dictionary<string, object>
@@ -1186,7 +1186,7 @@ namespace Qwack.Models.Models
 
         public static ICube FxVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
         {
-            var bumpSize = 0.01;
+            var bumpSize = 0.001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -1229,7 +1229,7 @@ namespace Qwack.Models.Models
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
                         //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize * 0.01;
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
                             var row = new Dictionary<string, object>
@@ -1257,7 +1257,7 @@ namespace Qwack.Models.Models
                 { "TradeId", typeof(string) },
                 { "TradeType", typeof(string) },
                 { "AssetId", typeof(string) },
-                { "PointLabel", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
                 { "Metric", typeof(string) }
             };
             cube.Initialize(dataTypes);
@@ -1269,7 +1269,7 @@ namespace Qwack.Models.Models
                 var subPortfolio = new Portfolio()
                 {
                     Instruments = portfolio.Instruments
-                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves.Contains(curve.Key))
+                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves(model).Contains(curve.Key))
                     .Concat(portfolio.Instruments.Where(x => (x is FxForward fx) && (model.FundingModel.FxMatrix.DiscountCurveMap[fx.DomesticCCY] == curve.Key || model.FundingModel.FxMatrix.DiscountCurveMap[fx.ForeignCCY] == curve.Key || fx.ForeignDiscountCurve == curve.Key)))
                     .ToList()
                 };
@@ -1311,7 +1311,7 @@ namespace Qwack.Models.Models
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
                                 { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                                 { "AssetId", curve.Key },
-                                { "PointLabel", bCurve.Key },
+                                { "PointLabel", bCurve.Key.ToString("yyyy-MM-dd") },
                                 { "Metric", "IrDelta" }
                             };
                             results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
@@ -1424,279 +1424,6 @@ namespace Qwack.Models.Models
                     cube.AddRow(row, cash);
                 }
             }
-
-            return cube;
-        }
-
-        public static ICube AssetThetaCharm(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
-        {
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-
-            var cashCube = portfolio.FlowsT0(model, reportingCcy);
-            var cashRows = cashCube.GetAllRows();
-
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-            var rolledModel = model.RollModel(fwdValDate, currencyProvider);
-
-            var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
-            var pvRowsFwd = pvCubeFwd.GetAllRows();
-
-            //theta
-            for (var i = 0; i < pvRowsFwd.Length; i++)
-            {
-                var theta = pvRowsFwd[i].Value - pvRows[i].Value;
-                if (theta != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
-                        { "TradeType", pvRowsFwd[i].MetaData[tTypeIx] },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", string.Empty },
-                        { "Metric", "Theta" }
-                    };
-                    cube.AddRow(row, theta);
-                }
-            }
-
-            //cash move
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", cashRows[i].MetaData[tidIx] },
-                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", "CashMove" },
-                        { "Metric", "Theta" }
-                    };
-                    cube.AddRow(row, cash);
-                }
-            }
-
-            //charm-asset
-            var baseDeltaCube = AssetDelta(portfolio, model);
-            var rolledDeltaCube = AssetDelta(portfolio, rolledModel);
-            var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-            var plId = charmCube.GetColumnIndex("PointLabel");
-            var aId = charmCube.GetColumnIndex("AssetId");
-            var ttId = charmCube.GetColumnIndex("TradeType");
-            foreach (var charmRow in charmCube.GetAllRows())
-            {
-                var row = new Dictionary<string, object>
-                {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "TradeType", charmRow.MetaData[ttId] },
-                    { "AssetId", charmRow.MetaData[aId] },
-                    { "PointLabel", charmRow.MetaData[plId] },
-                    { "Metric", "Charm" }
-                };
-                cube.AddRow(row, charmRow.Value);
-            }
-
-            //charm-fx
-            baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider);
-            rolledDeltaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider);
-            charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-            var fId = charmCube.GetColumnIndex("AssetId");
-            foreach (var charmRow in charmCube.GetAllRows())
-            {
-                var row = new Dictionary<string, object>
-                {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "AssetId", charmRow.MetaData[fId] },
-                    { "TradeType", charmRow.MetaData[ttId] },
-                    { "PointLabel", string.Empty },
-                    { "Metric", "Charm" }
-                };
-                cube.AddRow(row, charmRow.Value);
-            }
-
-            return cube;
-        }
-
-        public static ICube AssetGreeks(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
-        {
-            ICube cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) },
-                { "Currency", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-
-            var cashCube = portfolio.FlowsT0(model, reportingCcy);
-            var cashRows = cashCube.GetAllRows();
-
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-            var rolledModel = model.RollModel(fwdValDate, currencyProvider);
-
-            var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
-            var pvRowsFwd = pvCubeFwd.GetAllRows();
-
-            //theta
-            var thetaCube = pvCubeFwd.QuickDifference(pvCube);
-            cube = cube.Merge(thetaCube, new Dictionary<string, object>
-            {
-                 { "AssetId", string.Empty },
-                 { "PointLabel", string.Empty },
-                 { "Metric", "Theta" }
-            });
-
-
-            //cash move
-            cube = cube.Merge(cashCube, new Dictionary<string, object>
-            {
-                 { "AssetId", string.Empty },
-                 { "PointLabel", "CashMove"  },
-                 { "Metric", "Theta" }
-            });
-
-            //setup to run in parallel
-            var tasks = new Dictionary<string, Task<ICube>>
-            {
-                { "AssetDeltaGamma", new Task<ICube>(() => AssetDeltaGamma(portfolio, model)) },
-                { "AssetVega", new Task<ICube>(() => AssetVega(portfolio, model, reportingCcy)) },
-                { "FxVega", new Task<ICube>(() => FxVega(portfolio, model, reportingCcy)) },
-                { "RolledDeltaGamma", new Task<ICube>(() => AssetDeltaGamma(portfolio, rolledModel)) },
-                { "FxDeltaGamma", new Task<ICube>(() => FxDelta(portfolio, model, reportingCcy, currencyProvider, true)) },
-                { "RolledFxDeltaGamma", new Task<ICube>(() => FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider, true)) },
-                { "IrDelta", new Task<ICube>(() => AssetIrDelta(portfolio, model, reportingCcy)) }
-            };
-
-            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
-
-
-            //delta
-            //var baseDeltaGammaCube = AssetDeltaGamma(portfolio, model);
-            var baseDeltaGammaCube = tasks["AssetDeltaGamma"].Result;
-            cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            });
-
-            //vega
-            //var assetVegaCube = AssetVega(portfolio, model, reportingCcy);
-            var assetVegaCube = tasks["AssetVega"].Result;
-            cube = cube.Merge(assetVegaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            });
-            //var fxVegaCube = FxVega(portfolio, model, reportingCcy);
-            var fxVegaCube = tasks["FxVega"].Result;
-            cube = cube.Merge(fxVegaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            });
-
-            //charm-asset
-            //var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
-            var rolledDeltaGammaCube = tasks["RolledDeltaGamma"].Result;
-
-            var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
-            var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
-            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Gamma" } });
-            var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-            cube = cube.Merge(charmCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-                 { "Metric", "Charm"},
-            });
-            cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            }, new Dictionary<string, object>
-            {
-                 { "Metric", "AssetDeltaT1" },
-            });
-            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            }, new Dictionary<string, object>
-            {
-                 { "Metric", "AssetGammaT1" },
-            });
-
-            //charm-fx
-            //baseDeltaCube = FxDelta(portfolio, model, reportingCcy, currencyProvider, true);
-            baseDeltaCube = tasks["FxDeltaGamma"].Result;
-            cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
-            {
-                 { "PointLabel", string.Empty },
-                 { "Currency", string.Empty },
-            });
-            //rolledDeltaGammaCube = FxDelta(portfolio, rolledModel, reportingCcy, currencyProvider,true);
-            rolledDeltaGammaCube = tasks["RolledFxDeltaGamma"].Result;
-            rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
-            rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotGamma" } });
-
-            cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
-            {
-                 { "PointLabel", string.Empty },
-                 { "Currency", string.Empty },
-            }, new Dictionary<string, object>
-            {
-                 { "Metric", "FxSpotDeltaT1" },
-            });
-
-            cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
-            {
-                 { "PointLabel", string.Empty },
-                 { "Currency", string.Empty },
-            }, new Dictionary<string, object>
-            {
-                 { "Metric", "FxSpotGammaT1" },
-            });
-
-            charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-            var fId = charmCube.GetColumnIndex("AssetId");
-            foreach (var charmRow in charmCube.GetAllRows())
-            {
-                var row = new Dictionary<string, object>
-                {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "TradeType", charmRow.MetaData[tTypeIx] },
-                    { "AssetId", charmRow.MetaData[fId] },
-                    { "PointLabel", string.Empty },
-                    { "Currency", string.Empty },
-                    { "Metric", "Charm" }
-                };
-                cube.AddRow(row, charmRow.Value);
-            }
-
-            //ir-delta
-
-            var baseIrDeltacube = tasks["IrDelta"].Result;
-            cube = cube.Merge(baseIrDeltacube, new Dictionary<string, object>
-            {
-                 { "Currency", reportingCcy.Ccy },
-            });
 
             return cube;
         }

@@ -729,321 +729,6 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioDelta))]
-        public static object AssetPortfolioDelta(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var result = pfolio.AssetDelta(model.Value);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns asset delta and gamma of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioDeltaGamma))]
-        public static object AssetPortfolioDeltaGamma(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var result = pfolio.AssetDeltaGamma(model.Value);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns asset vega of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioVega))]
-        public static object AssetPortfolioVega(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = GetModelFromCache(ModelName, pfolio);
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];       
-                var result = model.AssetVega(ccy);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns fx vega of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioFxVega))]
-        public static object AssetPortfolioFxVega(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ReportingCcy];
-                var result = pfolio.FxVega(model.Value, ccy);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns correlation delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioCorrelationDelta))]
-        public static object AssetPortfolioCorrelationDelta(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy,
-            [ExcelArgument(Description = "Epsilon bump size, rho' = rho + epsilon * (1-rho)")] double Epsilon)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-                var result = pfolio.CorrelationDelta(model.Value, ccy, Epsilon);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioFxDelta))]
-        public static object AssetPortfolioFxDelta(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Home currency, e.g. ZAR")] string HomeCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-                var ccy = ContainerStores.CurrencyProvider[HomeCcy];
-
-                var result = pfolio.FxDelta(model.Value, ccy, ContainerStores.CurrencyProvider);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns theta of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioTheta))]
-        public static object AssetPortfolioTheta(
-           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-           [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
-           [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-                var result = pfolio.AssetTheta(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns theta and charm of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioThetaCharm))]
-        public static object AssetPortfolioThetaCharm(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-                var result = pfolio.AssetThetaCharm(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns interest rate delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioIrDelta))]
-        public static object AssetPortfolioIrDelta(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var result = pfolio.AssetIrDelta(model.Value);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns greeks cube of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioGreeks))]
-        public static object AssetPortfolioGreeks(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
-                var result = pfolio.AssetGreeks(model.Value, FwdValDate, ccy, ContainerStores.CurrencyProvider);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns risk ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioRiskLadder))]
-        public static object AssetPortfolioRiskLadder(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Asset Id to bump")] string AssetId,
-            [ExcelArgument(Description = "Bump type, defualt FlatShift")] object BumpType,
-            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
-            [ExcelArgument(Description = "Bump step size")] double BumpStep,
-            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
-            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                if (!Enum.TryParse(BumpType.OptionalExcel("FlatShift"), out MutationType bType))
-                    throw new Exception($"Unknown bump/mutation type {BumpType}");
-                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
-                    throw new Exception($"Unknown risk metric {RiskMetric}");
-
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
-
-                var riskLadder = new RiskLadder(AssetId, bType, metric, BumpStep, NScenarios, retDiff);
-                var result = riskLadder.Generate(model.Value, pfolio);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns time ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioTimeLadder))]
-        public static object AssetPortfolioTimeLadder(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
-            [ExcelArgument(Description = "Calendar, default ZAR")] object Calendar,
-            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
-            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                var fCal = Calendar.OptionalExcel("ZAR");
-                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fCal, out var cal))
-                {
-                    _logger?.LogInformation("Calendar {calendar} not found in cache", fCal);
-                    return $"Calendar {fCal} not found in cache";
-                }
-
-                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
-                    throw new Exception($"Unknown risk metric {RiskMetric}");
-
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
-
-                var riskLadder = new TimeLadder(metric, NScenarios, cal, ContainerStores.CurrencyProvider, retDiff);
-                var result = riskLadder.Generate(model.Value, pfolio);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
-        [ExcelFunction(Description = "Returns an asset/currency risk matrix for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioRiskMatrix))]
-        public static object AssetPortfolioRiskMatrix(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
-            [ExcelArgument(Description = "Asset Id to bump")] string AssetId,
-            [ExcelArgument(Description = "Currency to bump")] string Currency,
-            [ExcelArgument(Description = "Bump type, defualt FlatShift")] object BumpType,
-            [ExcelArgument(Description = "Number of bumps (returns 2*N+1 values)")] int NScenarios,
-            [ExcelArgument(Description = "Bump step size asset")] double BumpStepAsset,
-            [ExcelArgument(Description = "Bump step size fx")] double BumpStepFx,
-            [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
-            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
-                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
-                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
-
-                if (!Enum.TryParse(BumpType.OptionalExcel("FlatShift"), out MutationType bType))
-                    throw new Exception($"Unknown bump/mutation type {BumpType}");
-                if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
-                    throw new Exception($"Unknown risk metric {RiskMetric}");
-
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
-
-                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-
-                var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
-                var result = riskMatrix.Generate(model.Value, pfolio);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-            });
-        }
-
         [ExcelFunction(Description = "Performs PnL attribution between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution))]
         public static object AssetPnLAttribution(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
@@ -1102,7 +787,6 @@ namespace Qwack.Excel.Instruments
             [ExcelArgument(Description = "Ending portolio object name")] string PortfolioEndName,
             [ExcelArgument(Description = "Starting Asset-FX model name")] string ModelNameStart,
             [ExcelArgument(Description = "Ending Asset-FX model name")] string ModelNameEnd,
-            [ExcelArgument(Description = "Starting greeks cube")] string GreeksStart,
             [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -1113,11 +797,9 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameStart, $"Could not find model with name {ModelNameStart}");
                 var modelEnd = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
-                var greeksStart = ContainerStores.GetObjectCache<ICube>()
-                .GetObjectOrThrow(GreeksStart, $"Could not find greeks cube with name {GreeksStart}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolioStart.ExplainAttribution(pfolioEnd, modelStart.Value, modelEnd.Value, ccy, greeksStart.Value, ContainerStores.CurrencyProvider);
+                var result = pfolioStart.ExplainAttribution(pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -1189,6 +871,12 @@ namespace Qwack.Excel.Instruments
             }
 
             return pfolio.Value;
+        }
+
+        public static IPvModel GetModelFromCache(string name, string portfolio)
+        {
+            var pf = GetPortfolioOrTradeFromCache(portfolio);
+            return GetModelFromCache(name, pf);
         }
 
         public static IPvModel GetModelFromCache(string name, Portfolio portfolio)

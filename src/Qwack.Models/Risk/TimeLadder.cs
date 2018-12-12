@@ -31,13 +31,13 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
-        public Dictionary<string,IAssetFxModel> GenerateScenarios(IAssetFxModel model)
+        public Dictionary<string, IPvModel> GenerateScenarios(IPvModel model)
         {
-            var o = new Dictionary<string, IAssetFxModel>();
+            var o = new Dictionary<string, IPvModel>();
             var shifts = new double[NScenarios + 1];
-            var m = model.Clone();
-            var d = model.BuildDate;
-            for (var i=0;i<NScenarios;i++)
+            var m = model.VanillaModel.Clone();
+            var d = model.VanillaModel.BuildDate;
+            for (var i = 0; i < NScenarios; i++)
             {
                 var thisLabel = $"+{i} days";
                 if (i == 0)
@@ -46,6 +46,7 @@ namespace Qwack.Models.Risk
                 {
                     d = d.AddPeriod(RollType.F, Calendar, 1.Bd());
                     m = m.RollModel(d, _currencyProvider);
+                    var newPvModel = model.Rebuild(m, model.Portfolio);
                     o.Add(thisLabel, m);
                 }
             }
@@ -53,7 +54,7 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        public ICube Generate(IAssetFxModel model, Portfolio portfolio)
+        public ICube Generate(IPvModel model, Portfolio portfolio = null)
         {
             var o = new ResultCube();
             o.Initialize(new Dictionary<string, Type> { { "Scenario", typeof(string) } });
@@ -61,9 +62,14 @@ namespace Qwack.Models.Risk
             var scenarios = GenerateScenarios(model);
 
             ICube baseRiskCube = null;
-            if(ReturnDifferential)
+            if (ReturnDifferential)
             {
-                baseRiskCube = GetRisk(model, portfolio);
+                var baseModel = model;
+                if (portfolio != null)
+                {
+                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
+                }
+                baseRiskCube = GetRisk(baseModel);
             }
 
             var threadLock = new object();
@@ -71,10 +77,14 @@ namespace Qwack.Models.Risk
             var scList = scenarios.ToList();
 
             ParallelUtils.Instance.For(0, scList.Count, 1, i =>
-            //foreach (var scenario in scenarios)
             {
                 var scenario = scList[i];
-                var result = GetRisk(scenario.Value, portfolio);
+                var pvModel = scenario.Value;
+                if (portfolio != null)
+                {
+                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
+                }
+                var result = GetRisk(pvModel);
 
                 if (ReturnDifferential)
                 {
@@ -93,12 +103,12 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IAssetFxModel model, Portfolio portfolio)
+        private ICube GetRisk(IPvModel model)
         {
             switch (Metric)
             {
                 case RiskMetric.AssetCurveDelta:
-                    return portfolio.AssetDelta(model);
+                    return model.AssetDelta();
                 default:
                     throw new Exception($"Unable to process risk metric {Metric}");
 

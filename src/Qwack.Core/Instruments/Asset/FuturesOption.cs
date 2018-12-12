@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
@@ -42,5 +43,7 @@ namespace Qwack.Core.Instruments.Asset
                    MarginingType == futOpt.MarginingType &&
                    DiscountCurve == futOpt.DiscountCurve &&
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
+
+        public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? new string[0] : new[] { DiscountCurve };
     }
 }

@@ -84,6 +84,7 @@ namespace Qwack.Core.Curves
         }
 
         public double GetPriceForDate(DateTime date) => Curve.GetPriceForDate(date);
+        public double GetPriceForFixingDate(DateTime date) => Curve.GetPriceForFixingDate(date);
         public DateTime PillarDatesForLabel(string label) => Curve.PillarDatesForLabel(label);
         public IPriceCurve RebaseDate(DateTime newAnchorDate) => new BasisPriceCurve(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, Curve.RebaseDate(newAnchorDate), BuildDate, CurveType, _ccyProvider) { Currency = Currency, AssetId = AssetId, Name = Name };
         

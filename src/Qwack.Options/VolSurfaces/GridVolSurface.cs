@@ -112,6 +112,15 @@ namespace Qwack.Options.VolSurfaces
                 });
 
                 var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
+                if (solvedStrike == 0.000000001 || solvedStrike == 0.999999999) //out of bounds
+                {
+                    var upperK = testFunc(-0.000000001);
+                    var lowerK = testFunc(-0.999999999);
+                    if (System.Math.Abs(upperK - fwd) < System.Math.Abs(lowerK - fwd))
+                        solvedStrike = 0.000000001;
+                    else
+                        solvedStrike = 0.999999999;
+                }
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
                    TimeInterpolatorType);

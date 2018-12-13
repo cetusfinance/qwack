@@ -72,6 +72,13 @@ namespace Qwack.Core.Curves
             return model.GetFxRate(date, DomesticCurrency, ForeignCurrency);
         }
 
+        public double GetPriceForFixingDate(DateTime date)
+        {
+            var model = fModelFunc.Invoke();
+            var pair = model.FxMatrix.GetFxPair(DomesticCurrency, ForeignCurrency);
+            return GetPriceForDate(pair.SpotDate(date));
+        }
+
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();

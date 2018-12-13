@@ -79,6 +79,11 @@ namespace Qwack.Core.Curves
         public double GetAveragePriceForDates(DateTime[] dates) => dates.Average(d => GetFwd(d, _interp.Interpolate(d.ToOADate())));
 
         public double GetPriceForDate(DateTime date) => GetFwd(date, _interp.Interpolate(date.ToOADate()));
+        public double GetPriceForFixingDate(DateTime date)
+        {
+            var prompt = date.AddPeriod(RollType.F, SpotCalendar, SpotLag);
+            return GetFwd(prompt, prompt.ToOADate());
+        }
 
         private double GetFwd(DateTime fwdDate, double contango)
         {

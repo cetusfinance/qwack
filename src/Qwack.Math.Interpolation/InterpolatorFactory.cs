@@ -26,7 +26,7 @@ namespace Qwack.Math.Interpolation
             switch (kind)
             {
                 case Interpolator1DType.LinearFlatExtrap:
-                    if(x.Length < 200)
+                    if(x.Length < 50)
                     { 
                         return new LinearInterpolatorFlatExtrapNoBinSearch(x, y);
                     }

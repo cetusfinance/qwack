@@ -47,7 +47,7 @@ namespace Qwack.Math.Interpolation
              {
                  return _x.Select((x, ix) => GKernInterpolate(x, _x, weights, _bandwidth) - _y[ix]).ToArray();
              });
-            var n2Sol = new Math.Solvers.NewtonRaphsonMultiDimensionalSolver
+            var n2Sol = new Solvers.NewtonRaphsonMultiDimensionalSolver
             {
                 InitialGuess = Enumerable.Repeat(1.0 / _x.Length, _x.Length).ToArray(),
                 ObjectiveFunction = errFunc

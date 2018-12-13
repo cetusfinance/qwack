@@ -26,6 +26,8 @@ namespace Qwack.Options.VolSurfaces
         public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
         public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
 
+        public DateTime[] Expiries => new[] { OriginDate };
+
         public ConstantVolSurface()         {        }
 
         public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);

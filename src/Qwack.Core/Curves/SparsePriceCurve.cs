@@ -32,6 +32,10 @@ namespace Qwack.Core.Curves
 
         public Currency Currency { get; set; } 
 
+        public Calendar SpotCalendar { get; set; }
+        public Frequency SpotLag { get; set; }
+
+
         public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
             {
                     new AssetCurveDescriptor {
@@ -83,6 +87,7 @@ namespace Qwack.Core.Curves
         public double GetAveragePriceForDates(DateTime[] dates) => _interpB.Average(dates.Select(x => x.ToOADate()));
 
         public double GetPriceForDate(DateTime date) => _interpB.Interpolate(date.ToOADate());
+        public double GetPriceForFixingDate(DateTime date) => _interpB.Interpolate(date.AddPeriod(RollType.F, SpotCalendar, SpotLag).ToOADate());
 
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {

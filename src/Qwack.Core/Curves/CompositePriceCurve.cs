@@ -83,6 +83,15 @@ namespace Qwack.Core.Curves
             return commofwd * fxfwd;
         }
 
+        public double GetPriceForFixingDate(DateTime date)
+        {
+            var model = fModelFunc.Invoke();
+            var curve = pCurveFunc.Invoke();
+            var fxfwd = model.GetFxRate(date, DomesticCurrency, ForeignCurrency);
+            var commofwd = curve.GetPriceForDate(date);
+            return commofwd * fxfwd;
+        }
+
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();

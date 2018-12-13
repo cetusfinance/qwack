@@ -12,7 +12,8 @@ namespace Qwack.Core.Curves
         DateTime BuildDate { get; }
         
         double GetPriceForDate(DateTime date);
-    
+        double GetPriceForFixingDate(DateTime date);
+
         double GetAveragePriceForDates(DateTime[] dates);
 
         string Name { get; set; }

@@ -144,5 +144,35 @@ namespace Qwack.Paths.Regressors
 
             return o;
         }
+
+        public double[] EPE(IAssetFxModel model)
+        {
+            var o = new double[_dateIndexes.Length];
+            var regressors = Regress(model);
+            var nPaths = _pathwiseValues.First().Length;
+
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                o[d] = _pathwiseValues[d].Select(p => Max(0, regressors[d].Regress(p))).OrderBy(x => x).Average();
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            }).Wait();
+
+            return o;
+        }
+
+        public double[] ENE(IAssetFxModel model)
+        {
+            var o = new double[_dateIndexes.Length];
+            var regressors = Regress(model);
+            var nPaths = _pathwiseValues.First().Length;
+
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                o[d] = _pathwiseValues[d].Select(p => Min(0, regressors[d].Regress(p))).OrderBy(x => x).Average();
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            }).Wait();
+
+            return o;
+        }
     }
 }

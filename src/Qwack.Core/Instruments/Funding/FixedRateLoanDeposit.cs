@@ -11,6 +11,8 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class FixedRateLoanDeposit : IFundingInstrument
     {
+        public FixedRateLoanDeposit() { }
+
         public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve)
         {
             StartDate = startDate;
@@ -56,7 +58,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public Currency Ccy { get; set; }        
+        public Currency Ccy { get; set; }
         public CashFlowSchedule LoanDepoSchedule { get; set; }
         public DayCountBasis Basis { get; set; }
         public string DiscountCurve { get; set; }
@@ -77,11 +79,11 @@ namespace Qwack.Core.Instruments.Funding
 
         public double FlowsT0(IFundingModel model)
         {
-            if(StartDate==model.BuildDate)
+            if (StartDate == model.BuildDate)
             {
                 return Notional;
             }
-            else if(EndDate==model.BuildDate)
+            else if (EndDate == model.BuildDate)
             {
                 var dcf = StartDate.CalculateYearFraction(EndDate, Basis);
                 return -Notional - Notional * dcf * InterestRate;
@@ -108,6 +110,25 @@ namespace Qwack.Core.Instruments.Funding
                    TradeId == deposit.TradeId;
 
         public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
-        
+
+        public double CalculateParRate(IFundingModel model) => 0.0;
+
+        public IFundingInstrument Clone() => new FixedRateLoanDeposit
+        {
+            Basis = Basis,
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            DiscountCurve = DiscountCurve,
+            EndDate = EndDate,
+            InterestRate = InterestRate,
+            LoanDepoSchedule = LoanDepoSchedule.Clone(),
+            Notional = Notional,
+            PillarDate = PillarDate,
+            SolveCurve = SolveCurve,
+            StartDate = StartDate,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => new FixedRateLoanDeposit(StartDate, EndDate, parRate, Ccy, Basis, Notional, DiscountCurve);
     }
 }

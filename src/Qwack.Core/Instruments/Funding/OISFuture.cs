@@ -31,13 +31,18 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(IFundingModel Model, bool updateState)
         {
+            var fairPrice = CalculateParRate(Model);
+            var PV = (Price - fairPrice) * Position * ContractSize * DCF;
+            return PV;
+        }
+
+        public double CalculateParRate(IFundingModel Model)
+        {
             var forecastCurve = Model.Curves[ForecastCurve];
             var fwdRate = forecastCurve.GetForwardRate(AverageStartDate, AverageEndDate, RateType.Linear, Index.DayCountBasis);
 
             var fairPrice = 100.0 - fwdRate * 100.0;
-            var PV = (Price - fairPrice) * Position * ContractSize * DCF;
-
-            return PV;
+            return fairPrice;
         }
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
@@ -61,6 +66,30 @@ namespace Qwack.Core.Instruments.Funding
             {
                 {ForecastCurve, forecastDict },
             };
+        }
+
+        public IFundingInstrument Clone() => new OISFuture
+        {
+            AverageEndDate = AverageEndDate,
+            AverageStartDate = AverageStartDate,
+            CCY = CCY,
+            ContractSize = ContractSize,
+            Counterparty = Counterparty,
+            DCF = DCF,
+            ForecastCurve = ForecastCurve,
+            Index = Index,
+            PillarDate = PillarDate,
+            Position = Position,
+            Price = Price,
+            SolveCurve = SolveCurve,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate)
+        {
+            var newIns = (OISFuture)Clone();
+            newIns.Price = parRate;
+            return newIns;
         }
     }
 }

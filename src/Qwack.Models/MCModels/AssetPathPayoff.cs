@@ -41,6 +41,8 @@ namespace Qwack.Models.MCModels
 
         private static readonly Vector<double> _one = new Vector<double>(1.0);
 
+        public string RegressionKey => _fxType == FxConversionType.None ? _assetName : $"{_assetName}*{_fxName}";
+
         public AssetPathPayoff(IAssetInstrument assetInstrument)
         {
             AssetInstrument = assetInstrument;

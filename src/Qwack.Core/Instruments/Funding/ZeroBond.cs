@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ZeroBond : IFundingInstrument
     {
+        public ZeroBond() { }
         public ZeroBond(double price, DateTime maturityDate, string discountCurve)
         {
             Price = price;
@@ -53,5 +54,31 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+
+        public double CalculateParRate(IFundingModel model)
+        {
+            var parRate = model.Curves[DiscountCurve].GetDf(model.BuildDate, MaturityDate);
+            return parRate;
+        }
+
+        public IFundingInstrument Clone() => new ZeroBond
+        {
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            DiscountCurve = DiscountCurve,
+            MaturityDate = MaturityDate,
+            Notional = Notional,
+            PillarDate = PillarDate,
+            Price = Price,
+            SolveCurve = SolveCurve,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate)
+        {
+            var newIns = (ZeroBond)Clone();
+            newIns.Price = parRate;
+            return newIns;
+        }
     }
 }

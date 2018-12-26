@@ -17,5 +17,6 @@ namespace Qwack.Core.Models
         public bool LocalVol { get; set; }
         public PFERegressorType PfeRegressorType { get; set; }
         public bool Parallelize { get; set; }
+        public bool DebugMode { get; set; }
     }
 }

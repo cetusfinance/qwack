@@ -28,6 +28,8 @@ namespace Qwack.Paths.Payoffs
         private Vector<double> _notional;
         private bool _isComplete;
 
+        public string RegressionKey => _assetName;
+
         public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional)
         {
             _sampleDates = sampleDates;

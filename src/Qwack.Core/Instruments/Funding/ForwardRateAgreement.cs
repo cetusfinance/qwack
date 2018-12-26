@@ -11,10 +11,37 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ForwardRateAgreement : IFundingInstrument
     {
+        public ForwardRateAgreement() { }
+
         public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
         {
             var code = fraCode.ToUpper().Split('X');
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
+            ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
+            EndDate = new TenorDateRelative(rateIndex.ResetTenor);
+
+            ParRate = parRate;
+            Basis = rateIndex.DayCountBasis;
+            PayRec = payRec;
+
+            FraLeg = new GenericSwapLeg(StartDate, EndDate.Date(StartDate, rateIndex.RollConvention, rateIndex.HolidayCalendars), rateIndex.HolidayCalendars, rateIndex.Currency, rateIndex.ResetTenor, Basis)
+            {
+                FixedRateOrMargin = (decimal)ParRate
+            };
+            FlowScheduleFra = FraLeg.GenerateSchedule();
+
+            FraLeg.FixedRateOrMargin = (decimal)ParRate;
+            FraLeg.LegType = SwapLegType.Fra;
+            FlowScheduleFra.Flows[0].SettleDate = StartDate;
+            ForecastCurve = forecastCurve;
+            DiscountCurve = discountCurve;
+
+            FraType = fraType;
+        }
+
+        public ForwardRateAgreement(DateTime startDate, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
+        {
+            StartDate = startDate;
             ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
             EndDate = new TenorDateRelative(rateIndex.ResetTenor);
 
@@ -44,6 +71,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime ResetDate { get; set; }
         public Currency Ccy { get; set; }
         public GenericSwapLeg FraLeg { get; set; }
+        public FloatRateIndex RateIndex { get; set; }
         public CashFlowSchedule FlowScheduleFra { get; set; }
         public DayCountBasis Basis { get; set; }
         public SwapPayReceiveType PayRec { get; set; }
@@ -65,6 +93,8 @@ namespace Qwack.Core.Instruments.Funding
             var updateEst = updateState || model.CurrentSolveCurve == ForecastCurve;
             return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDF, updateEst);
         }
+
+        public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate((ICurve)model.Curves[ForecastCurve], Basis);
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
@@ -162,5 +192,28 @@ namespace Qwack.Core.Instruments.Funding
                 {ForecastCurve,forecastDict },
             };
         }
+
+        public IFundingInstrument Clone() => new ForwardRateAgreement
+        {
+            Basis = Basis,
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            DiscountCurve = DiscountCurve,
+            EndDate = EndDate,
+            FlowScheduleFra = FlowScheduleFra.Clone(),
+            ForecastCurve = ForecastCurve,
+            FraLeg = FraLeg.Clone(),
+            FraType = FraType,
+            Notional = Notional,
+            ParRate = ParRate,
+            PayRec = PayRec,
+            PillarDate = PillarDate,
+            ResetDate = ResetDate,
+            SolveCurve = SolveCurve,
+            StartDate = StartDate,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => new ForwardRateAgreement(StartDate, parRate, RateIndex, PayRec, FraType, ForecastCurve, DiscountCurve);
     }
 }

@@ -29,14 +29,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(IFundingModel Model, bool updateState)
         {
-            var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
-            var rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
-            var forecastCurve = Model.Curves[ForecastCurve];
-            var fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
-
-            var fairPrice = 100.0 - (fwdRate + ConvexityAdjustment) * 100.0;
+            var fairPrice = CalculateParRate(Model);
             var PV = (Price - fairPrice) * Position * ContractSize * DCF;
-
             return PV;
         }
 
@@ -68,5 +62,40 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+
+        public double CalculateParRate(IFundingModel Model)
+        {
+            var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);
+            var rateEnd = rateStart.AddPeriod(Index.RollConvention, Index.HolidayCalendars, Index.ResetTenor);
+            var forecastCurve = Model.Curves[ForecastCurve];
+            var fwdRate = forecastCurve.GetForwardRate(rateStart, rateEnd, RateType.Linear, Index.DayCountBasis);
+
+            var fairPrice = 100.0 - (fwdRate + ConvexityAdjustment) * 100.0;
+            return fairPrice;
+        }
+
+        public IFundingInstrument Clone() => new STIRFuture
+        {
+            ConvexityAdjustment = ConvexityAdjustment,
+            Expiry = Expiry,
+            CCY = CCY,
+            ContractSize = ContractSize,
+            Counterparty = Counterparty,
+            DCF = DCF,
+            ForecastCurve = ForecastCurve,
+            Index = Index,
+            PillarDate = PillarDate,
+            Position = Position,
+            Price = Price,
+            SolveCurve = SolveCurve,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate)
+        {
+            var newIns = (STIRFuture)Clone();
+            newIns.Price = parRate;
+            return newIns;
+        }
     }
 }

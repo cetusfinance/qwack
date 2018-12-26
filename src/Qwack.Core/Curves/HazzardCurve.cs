@@ -11,6 +11,7 @@ namespace Qwack.Core.Curves
     {
         public DateTime OriginDate { get; private set; }
         public DayCountBasis Basis { get; private set; }
+
         public double GetSurvivalProbability(DateTime startDate, DateTime endDate)
         {
             var pStart = GetSurvivalProbability(startDate);

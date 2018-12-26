@@ -10,12 +10,17 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class IrBasisSwap : IFundingInstrument
     {
+        public IrBasisSwap() { }
+
         public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null)
         {
             SwapTenor = swapTenor;
 
             ResetFrequencyRec = recIndex.ResetTenor;
             ResetFrequencyPay = payIndex.ResetTenor;
+
+            PayIndex = payIndex;
+            RecIndex = recIndex;
 
             StartDate = startDate;
             EndDate = StartDate.AddPeriod(payIndex.RollConvention, payIndex.HolidayCalendars, SwapTenor);
@@ -24,6 +29,7 @@ namespace Qwack.Core.Instruments.Funding
             ParSpreadRec = spreadOnPayLeg ? 0.0 : parSpread;
             BasisPay = payIndex.DayCountBasis;
             BasisRec = recIndex.DayCountBasis;
+            Notional = (double)(notional ?? 1e6M);
 
             PayLeg = new GenericSwapLeg(StartDate, swapTenor, payIndex.HolidayCalendars, payIndex.Currency, ResetFrequencyPay, BasisPay)
             {
@@ -80,6 +86,8 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
+        public FloatRateIndex PayIndex { get; set; }
+        public FloatRateIndex RecIndex { get; set; }
 
         public DateTime LastSensitivityDate => EndDate;
 
@@ -103,6 +111,49 @@ namespace Qwack.Core.Instruments.Funding
 
             return payPV + recPV;
         }
+
+        public double CalculateParRate(IFundingModel model)
+        {
+            var discountCurve = model.Curves[DiscountCurve];
+            var forecastCurvePay = model.Curves[ForecastCurvePay];
+            var forecastCurveRec = model.Curves[ForecastCurveRec];
+           
+            if (ParSpreadPay != 0.0)
+            {
+                var newSched = FlowSchedulePay.Clone();
+                var recPV = FlowScheduleRec.PV(discountCurve, forecastCurveRec, true, true, true, BasisRec, null);
+                var targetFunc = new Func<double, double>(spread =>
+                {
+                    foreach (var s in newSched.Flows.Where(x=>x.FlowType==FlowType.FloatRate))
+                    {
+                        s.FixedRateOrMargin = spread;
+                    }
+                    var pv = newSched.PV(discountCurve, forecastCurvePay, true, true, true, BasisPay, null);
+                    return pv - recPV;
+                }
+                );
+                var newSpread = Math.Solvers.Newton1D.MethodSolve(targetFunc, 0, 0.000001);
+                return newSpread;
+            }
+            else
+            {
+                var newSched = FlowScheduleRec.Clone();
+                var payPV = FlowSchedulePay.PV(discountCurve, forecastCurvePay, true, true, true, BasisPay, null);
+                var targetFunc = new Func<double, double>(spread =>
+                {
+                    foreach (var s in newSched.Flows.Where(x => x.FlowType == FlowType.FloatRate))
+                    {
+                        s.FixedRateOrMargin = spread;
+                    }
+                    var pv = newSched.PV(discountCurve, forecastCurveRec, true, true, true, BasisRec, null);
+                    return pv - payPV;
+                }
+                );
+                var newSpread = Math.Solvers.Newton1D.MethodSolve(targetFunc, 0, 0.000001);
+                return newSpread;
+            }
+        }
+
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
@@ -193,5 +244,35 @@ namespace Qwack.Core.Instruments.Funding
                 {ForecastCurveRec,forecastDictRec },
             };
         }
+
+        public IFundingInstrument Clone() => new IrBasisSwap
+        {
+            BasisPay = BasisPay,
+            BasisRec = BasisRec,
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            DiscountCurve = DiscountCurve,
+            EndDate = EndDate,
+            FlowSchedulePay = FlowSchedulePay.Clone(),
+            FlowScheduleRec = FlowScheduleRec.Clone(),
+            ForecastCurvePay = ForecastCurvePay,
+            ForecastCurveRec = ForecastCurveRec,
+            NDates = NDates,
+            Notional = Notional,
+            ParSpreadPay = ParSpreadPay,
+            ParSpreadRec = ParSpreadRec,
+            PayLeg = PayLeg,
+            PillarDate = PillarDate,
+            RecLeg = RecLeg,
+            ResetDates = (DateTime[])ResetDates.Clone(),
+            ResetFrequencyPay = ResetFrequencyPay,
+            ResetFrequencyRec = ResetFrequencyRec,
+            SolveCurve = SolveCurve,
+            StartDate = StartDate,
+            SwapTenor = SwapTenor,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => new IrBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, PayIndex, RecIndex, ForecastCurvePay, ForecastCurveRec, DiscountCurve, (decimal)Notional);
     }
 }

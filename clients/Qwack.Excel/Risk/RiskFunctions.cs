@@ -277,7 +277,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        private static string PushCubeToCache(ICube cube, string ResultObjectName)
+        public static string PushCubeToCache(ICube cube, string ResultObjectName)
         {
             var resultCache = ContainerStores.GetObjectCache<ICube>();
             resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = cube });

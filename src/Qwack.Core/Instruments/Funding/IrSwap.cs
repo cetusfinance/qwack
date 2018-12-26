@@ -10,6 +10,8 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class IrSwap : IFundingInstrument
     {
+        public IrSwap() { }
+
         public IrSwap(DateTime startDate, Frequency swapTenor, FloatRateIndex rateIndex, double parRate,
             SwapPayReceiveType swapType,  string forecastCurve, string discountCurve)
         {
@@ -69,6 +71,8 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime PillarDate { get; set; }
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
+        public FloatRateIndex RateIndex { get; set; }
+
 
         public DateTime LastSensitivityDate => EndDate;
 
@@ -143,5 +147,41 @@ namespace Qwack.Core.Instruments.Funding
                 {ForecastCurve,forecastDict },
             };
         }
+
+        public double CalculateParRate(IFundingModel model)
+        {
+            var dFs = FlowScheduleFloat.Flows.Select(x => x.SettleDate).Select(y => model.Curves[DiscountCurve].GetDf(model.BuildDate, y));
+            var floatRates = FlowScheduleFloat.Flows.Select(x => x.GetFloatRate((ICurve)model.Curves[ForecastCurve], BasisFloat)).ToArray();
+            var parRate = dFs.Select((x, ix) => x * floatRates[ix]).Sum() / dFs.Sum();
+            return parRate;
+        }
+
+        public IFundingInstrument Clone() => new IrSwap
+        {
+            BasisFixed = BasisFixed,
+            BasisFloat = BasisFloat,
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            DiscountCurve = DiscountCurve,
+            EndDate = EndDate,
+            FixedLeg = FixedLeg.Clone(),
+            FloatLeg = FloatLeg.Clone(),
+            FlowScheduleFixed = FlowScheduleFixed.Clone(),
+            FlowScheduleFloat = FlowScheduleFloat.Clone(),
+            ForecastCurve = ForecastCurve,
+            NDates = NDates,
+            Notional = Notional,
+            ParRate = ParRate,
+            PillarDate = PillarDate,
+            ResetDates = ResetDates,
+            ResetFrequency = ResetFrequency,
+            SolveCurve = SolveCurve,
+            StartDate = StartDate,
+            SwapTenor = SwapTenor,
+            SwapType = SwapType,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => new IrSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurve, DiscountCurve);
     }
 }

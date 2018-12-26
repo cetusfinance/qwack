@@ -12,6 +12,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
 using Qwack.Utils.Parallel;
@@ -772,660 +773,62 @@ namespace Qwack.Models.Models
 
         public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model)
         {
-            var bumpSize = 0.01;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) },
-                { "CurveType", typeof(string) },
-            };
-            cube.Initialize(dataTypes);
-            model.BuildDependencyTree();
-
-            foreach (var curveName in model.CurveNames)
-            {
-                var curveObj = model.GetPriceCurve(curveName);
-                var linkedCurves = model.GetDependentCurves(curveName);
-                var allLinkedCurves = model.GetAllDependentCurves(curveName);
-
-                var subPortfolio = new Portfolio()
-                {
-                    Instruments = portfolio.Instruments
-                    .Where(x => (x is IAssetInstrument ia) && 
-                    (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid=> allLinkedCurves.Contains(aid))))
-                    .ToList()
-                };
-
-                if (subPortfolio.Instruments.Count == 0)
-                    continue;
-
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
-
-                var pvCube = subPortfolio.PV(model, curveObj.Currency);
-                var pvRows = pvCube.GetAllRows();
-
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
-
-                var results = new List<Tuple<Dictionary<string, object>, double>>[bumpedCurves.Count];
-                var bcList = bumpedCurves.ToList();
-
-                ParallelUtils.Instance.For(0, results.Length, 1, ii =>
-                {
-                    results[ii] = new List<Tuple<Dictionary<string, object>, double>>();
-
-                    var bCurve = bcList[ii];
-                    var newModel = model.Clone();
-                    newModel.AddPriceCurve(curveName, bCurve.Value);
-
-                    var dependentCurves = new List<string>(linkedCurves);
-                    while (dependentCurves.Any())
-                    {
-                        var newBaseCurves = new List<string>();
-                        foreach (var depCurveName in dependentCurves)
-                        {
-                            var baseCurve = newModel.GetPriceCurve(depCurveName);
-                            var recalCurve = ((BasisPriceCurve)newModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
-                            newModel.AddPriceCurve(depCurveName, recalCurve);
-                            newBaseCurves.Add(depCurveName);
-                        }
-
-                        dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
-                    }
-
-                    var bumpedPVCube = subPortfolio.PV(newModel, curveObj.Currency);
-                    var bumpedRows = bumpedPVCube.GetAllRows();
-                    if (bumpedRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                    for (var i = 0; i < bumpedRows.Length; i++)
-                    {
-                        var delta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value) / bumpSize;
-
-                        if (delta != 0.0)
-                        {
-                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
-
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
-                            };
-                            results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
-                        }
-                    }
-                }).Wait();
-
-                for (var i = 0; i < results.Length; i++)
-                    for (var j = 0; j < results[i].Count(); j++)
-                    {
-                        if (results[i][j].Item1 != null)
-                            cube.AddRow(results[i][j].Item1, results[i][j].Item2);
-                    }
-            }
-            return cube;
-        }
-
-        private static double GetUsdDF(IAssetFxModel model, PriceCurve priceCurve, DateTime fwdDate)
-        {
-            var colSpec = priceCurve.CollateralSpec;
-            var ccy = priceCurve.Currency;
-            var disccurve = model.FundingModel.GetCurveByCCyAndSpec(ccy, colSpec);
-            return disccurve.GetDf(model.BuildDate, fwdDate);
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetDelta(false);
         }
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
         {
-            var bumpSize = 0.0001;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-            var mf = model.FundingModel.DeepClone(null);
-
-            var domCcy = model.FundingModel.FxMatrix.BaseCurrency;
-
-            if (homeCcy != null && homeCcy != domCcy)//remap onto new base currency
-            {
-                domCcy = homeCcy;
-                var homeToBase = mf.FxMatrix.SpotRates[homeCcy];
-                var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
-                    .Concat(new[] { mf.FxMatrix.BaseCurrency })
-                    .Where(x => x != homeCcy);
-                var newRateDict = new Dictionary<Currency, double>();
-                foreach (var ccy in ccys)
-                {
-                    var spotDate = mf.FxMatrix.GetFxPair(homeCcy, ccy).SpotDate(mf.BuildDate);
-                    var newRate = mf.GetFxRate(spotDate, homeCcy, ccy);
-                    newRateDict.Add(ccy, newRate);
-                }
-
-                var newFx = new FxMatrix(currencyProvider);
-                newFx.Init(homeCcy, mf.FxMatrix.BuildDate, newRateDict, mf.FxMatrix.FxPairDefinitions, mf.FxMatrix.DiscountCurveMap);
-                mf.SetupFx(newFx);
-            }
-
-            var m = model.Clone(mf);
-
-            foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
-            {
-                var pvCube = portfolio.PV(m, m.FundingModel.FxMatrix.BaseCurrency);
-                var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var fxPair = $"{currency}/{domCcy}";
-
-                var newModel = m.Clone();
-                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
-                newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var inverseSpotBump = 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
-
-                var bumpedPVCube = portfolio.PV(newModel, m.FundingModel.FxMatrix.BaseCurrency);
-                var bumpedRows = bumpedPVCube.GetAllRows();
-                if (bumpedRows.Length != pvRows.Length)
-                    throw new Exception("Dimensions do not match");
-
-                ResultCubeRow[] bumpedRowsDown = null;
-                var inverseSpotBumpDown = 0.0;
-
-                if (computeGamma)
-                {
-                    var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
-                    newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
-                    inverseSpotBumpDown = 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
-
-                    var bumpedPVCubeDown = portfolio.PV(newModel, m.FundingModel.FxMatrix.BaseCurrency);
-                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
-                    if (bumpedRowsDown.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                }
-
-                for (var i = 0; i < bumpedRows.Length; i++)
-                {
-                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump;
-
-                    if (delta != 0.0)
-                    {
-                        var row = new Dictionary<string, object>
-                        {
-                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                            { "AssetId", fxPair },
-                            { "Metric", "FxSpotDelta" }
-                        };
-                        cube.AddRow(row, delta);
-                    }
-
-                    if (computeGamma)
-                    {
-                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown;
-                        var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
-                        if (gamma != 0.0)
-                        {
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", fxPair },
-                                { "Metric", "FxSpotGamma" }
-                            };
-                            cube.AddRow(row, gamma);
-                        }
-                    }
-                }
-            }
-            return cube;
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.FxDelta(homeCcy, currencyProvider, computeGamma);
         }
 
         public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model)
         {
-            var bumpSize = 0.1;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-
-            foreach (var curveName in model.CurveNames)
-            {
-                var curveObj = model.GetPriceCurve(curveName);
-
-                var subPortfolio = new Portfolio()
-                {
-                    Instruments = portfolio.Instruments.Where(x => (x is IAssetInstrument ia) && ia.AssetIds.Contains(curveObj.AssetId)).ToList()
-                };
-
-                if (subPortfolio.Instruments.Count == 0)
-                    continue;
-
-                var pvCube = subPortfolio.PV(model, curveObj.Currency);
-                var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
-
-                var bumpedUpCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
-                var bumpedDownCurves = curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook);
-
-                var resultsD = new List<Tuple<Dictionary<string, object>, double>>[bumpedUpCurves.Count];
-                var resultsG = new List<Tuple<Dictionary<string, object>, double>>[bumpedUpCurves.Count];
-                var bcList = bumpedUpCurves.ToList();
-                ParallelUtils.Instance.For(0, resultsD.Length, 1, ii =>
-                {
-                    resultsD[ii] = new List<Tuple<Dictionary<string, object>, double>>();
-                    resultsG[ii] = new List<Tuple<Dictionary<string, object>, double>>();
-
-                    var bUpCurve = bcList[ii];
-
-                    //    foreach (var bUpCurve in bumpedUpCurves)
-                    //{
-                    var newModelUp = model.Clone();
-                    var newModelDown = model.Clone();
-                    newModelUp.AddPriceCurve(curveName, bUpCurve.Value);
-                    newModelDown.AddPriceCurve(curveName, bumpedDownCurves[bUpCurve.Key]);
-                    var bumpedUpPVCube = subPortfolio.PV(newModelUp, curveObj.Currency);
-                    var bumpedDownPVCube = subPortfolio.PV(newModelDown, curveObj.Currency);
-                    var bumpedUpRows = bumpedUpPVCube.GetAllRows();
-                    var bumpedDownRows = bumpedDownPVCube.GetAllRows();
-
-                    if (bumpedUpRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-
-                    for (var i = 0; i < bumpedUpRows.Length; i++)
-                    {
-                        var deltaUp = ((double)bumpedUpRows[i].Value - (double)pvRows[i].Value) / bumpSize;
-                        var deltaDown = ((double)pvRows[i].Value - (double)bumpedDownRows[i].Value) / bumpSize;
-
-                        if (deltaUp != 0.0 || deltaDown != 0.0)
-                        {
-                            if (bUpCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                            {
-                                var df = model.FundingModel.Curves["USD.LIBOR.3M"].GetDf(model.BuildDate, bUpCurve.Value.PillarDatesForLabel(bUpCurve.Key));
-                                deltaUp /= df;
-                                deltaDown /= df;
-                            }
-
-                            var gamma = (deltaUp - deltaDown) / bumpSize;
-                            var delta = 0.5 * (deltaUp + deltaDown);
-
-                            if (delta != 0.0)
-                            {
-                                var row = new Dictionary<string, object>
-                                {
-                                    { "TradeId", bumpedUpRows[i].MetaData[tidIx] },
-                                    { "TradeType", bumpedUpRows[i].MetaData[tTypeIx] },
-                                    { "AssetId", curveName },
-                                    { "PointLabel", bUpCurve.Key },
-                                    { "Metric", "Delta" }
-                                };
-                                resultsD[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
-                                //cube.AddRow(row, delta);
-                            }
-                            if (Abs(gamma) > 1e-12)
-                            {
-                                var rowG = new Dictionary<string, object>
-                                {
-                                    { "TradeId", bumpedUpRows[i].MetaData[tidIx] },
-                                    { "TradeType", bumpedUpRows[i].MetaData[tTypeIx] },
-                                    { "AssetId", curveName },
-                                    { "PointLabel", bUpCurve.Key },
-                                    { "Metric", "Gamma" }
-                                };
-                                resultsG[ii].Add(new Tuple<Dictionary<string, object>, double>(rowG, gamma));
-                                //cube.AddRow(rowG, gamma);
-                            }
-                        }
-                    }
-                }).Wait();
-
-
-                for (var i = 0; i < resultsD.Length; i++)
-                    for (var j = 0; j < resultsD[i].Count(); j++)
-                    {
-                        if (resultsD[i][j].Item1 != null)
-                            cube.AddRow(resultsD[i][j].Item1, resultsD[i][j].Item2);
-                    }
-                for (var i = 0; i < resultsG.Length; i++)
-                    for (var j = 0; j < resultsG[i].Count(); j++)
-                    {
-                        if (resultsG[i][j].Item1 != null)
-                            cube.AddRow(resultsG[i][j].Item1, resultsG[i][j].Item2);
-                    }
-            }
-            return cube;
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetDelta(true);
         }
 
 
         public static ICube AssetVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
         {
-            var bumpSize = 0.001;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetVega(reportingCcy);
 
-
-            foreach (var surfaceName in model.VolSurfaceNames)
-            {
-                var volObj = model.GetVolSurface(surfaceName);
-
-                var subPortfolio = new Portfolio()
-                {
-                    Instruments = portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
-                };
-
-                if (subPortfolio.Instruments.Count == 0)
-                    continue;
-
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
-
-                var pvCube = subPortfolio.PV(model, reportingCcy);
-                var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
-
-                foreach (var bCurve in bumpedSurfaces)
-                {
-                    var newModel = model.Clone();
-                    newModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPVCube = subPortfolio.PV(newModel, reportingCcy);
-                    var bumpedRows = bumpedPVCube.GetAllRows();
-                    if (bumpedRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                    for (var i = 0; i < bumpedRows.Length; i++)
-                    {
-                        //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
-                        if (vega != 0.0)
-                        {
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surfaceName },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Vega" }
-                            };
-                            cube.AddRow(row, vega);
-                        }
-                    }
-                }
-            }
-            return cube;
         }
 
         public static ICube FxVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
         {
-            var bumpSize = 0.001;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.FxVega(reportingCcy);
 
-            foreach (var surfaceName in model.FundingModel.VolSurfaces.Keys)
-            {
-                var volObj = model.FundingModel.VolSurfaces[surfaceName];
-
-                var subPortfolio = new Portfolio()
-                {
-                    Instruments = portfolio.Instruments.Where(x => (x is IHasVega)).ToList()
-                };
-
-                if (subPortfolio.Instruments.Count == 0)
-                    continue;
-
-                var pvCube = subPortfolio.PV(model, reportingCcy);
-                var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
-
-                var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
-                foreach (var bCurve in bumpedSurfaces)
-                {
-                    var newModel = model.Clone();
-                    newModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
-                    var bumpedPVCube = subPortfolio.PV(newModel, reportingCcy);
-                    var bumpedRows = bumpedPVCube.GetAllRows();
-                    if (bumpedRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                    for (var i = 0; i < bumpedRows.Length; i++)
-                    {
-                        //vega quoted for a 1% shift, irrespective of bump size
-                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
-                        if (vega != 0.0)
-                        {
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surfaceName },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Vega" }
-                            };
-                            cube.AddRow(row, vega);
-                        }
-                    }
-                }
-            }
-            return cube;
         }
 
         public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy = null)
         {
-            var bumpSize = 0.0001;
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetIrDelta(reportingCcy);
 
-            foreach (var curve in model.FundingModel.Curves)
-            {
-                var curveObj = curve.Value;
-
-                var subPortfolio = new Portfolio()
-                {
-                    Instruments = portfolio.Instruments
-                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves(model).Contains(curve.Key))
-                    .Concat(portfolio.Instruments.Where(x => (x is FxForward fx) && (model.FundingModel.FxMatrix.DiscountCurveMap[fx.DomesticCCY] == curve.Key || model.FundingModel.FxMatrix.DiscountCurveMap[fx.ForeignCCY] == curve.Key || fx.ForeignDiscountCurve == curve.Key)))
-                    .ToList()
-                };
-
-                if (subPortfolio.Instruments.Count == 0)
-                    continue;
-
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
-
-                var pvCube = subPortfolio.PV(model, reportingCcy ?? curveObj.Currency);
-                var pvRows = pvCube.GetAllRows();
-
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-                var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
-
-                var results = new List<Tuple<Dictionary<string, object>, double>>[bumpedCurves.Count];
-                var bcList = bumpedCurves.ToList();
-                ParallelUtils.Instance.For(0, results.Length, 1, ii =>
-                {
-                    results[ii] = new List<Tuple<Dictionary<string, object>, double>>();
-                    var bCurve = bcList[ii];
-
-                    var newModel = model.Clone();
-                    newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
-                    var bumpedPVCube = subPortfolio.PV(newModel, reportingCcy ?? curveObj.Currency);
-                    var bumpedRows = bumpedPVCube.GetAllRows();
-                    if (bumpedRows.Length != pvRows.Length)
-                        throw new Exception("Dimensions do not match");
-                    for (var i = 0; i < bumpedRows.Length; i++)
-                    {
-                        var delta = bumpedRows[i].Value - pvRows[i].Value;
-
-                        if (delta != 0.0)
-                        {
-                            var row = new Dictionary<string, object>
-                            {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curve.Key },
-                                { "PointLabel", bCurve.Key.ToString("yyyy-MM-dd") },
-                                { "Metric", "IrDelta" }
-                            };
-                            results[ii].Add(new Tuple<Dictionary<string, object>, double>(row, delta));
-                        }
-                    }
-                }).Wait();
-
-
-                for (var i = 0; i < results.Length; i++)
-                    for (var j = 0; j < results[i].Count(); j++)
-                    {
-                        if (results[i][j].Item1 != null)
-                            cube.AddRow(results[i][j].Item1, results[i][j].Item2);
-                    }
-            }
-
-
-            return cube;
         }
 
         public static ICube CorrelationDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, double epsilon)
         {
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-
-            var bumpedCorrelMatrix = model.CorrelationMatrix.Bump(epsilon);
-
-            var newModel = model.Clone();
-            newModel.CorrelationMatrix = bumpedCorrelMatrix;
-            var bumpedPVCube = portfolio.PV(newModel, reportingCcy);
-            var bumpedRows = bumpedPVCube.GetAllRows();
-            if (bumpedRows.Length != pvRows.Length)
-                throw new Exception("Dimensions do not match");
-            for (var i = 0; i < bumpedRows.Length; i++)
-            {
-                //flat bump of correlation matrix by single epsilon parameter, reported as PnL
-                var cDelta = ((double)bumpedRows[i].Value - (double)pvRows[i].Value);
-                if (cDelta != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                        { "Metric", "CorrelDelta" }
-                    };
-                    cube.AddRow(row, cDelta);
-                }
-            }
-
-            return cube;
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.CorrelationDelta(reportingCcy, epsilon);
         }
 
         public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
-            var cube = new ResultCube();
-            var dataTypes = new Dictionary<string, Type>
-            {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "Metric", typeof(string) }
-            };
-            cube.Initialize(dataTypes);
-
-            var pvCube = portfolio.PV(model, reportingCcy);
-            var cashCube = portfolio.FlowsT0(model, reportingCcy);
-            var pvRows = pvCube.GetAllRows();
-            var cashRows = cashCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
-
-            var rolledModel = model.RollModel(fwdValDate, currencyProvider);
-
-            var pvCubeFwd = portfolio.PV(rolledModel, reportingCcy);
-            var pvRowsFwd = pvCubeFwd.GetAllRows();
-
-            for (var i = 0; i < pvRowsFwd.Length; i++)
-            {
-                var theta = pvRowsFwd[i].Value - pvRows[i].Value;
-                if (theta != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
-                        { "TradeType", pvRowsFwd[i].MetaData[tTypeIx] },
-                        { "Metric", "Theta" }
-                    };
-                    cube.AddRow(row, theta);
-                }
-            }
-
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", cashRows[i].MetaData[tidIx] },
-                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
-                        { "Metric", "CashMove" }
-                    };
-                    cube.AddRow(row, cash);
-                }
-            }
-
-            return cube;
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
         }
 
         public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider)

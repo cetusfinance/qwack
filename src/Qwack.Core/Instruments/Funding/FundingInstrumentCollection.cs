@@ -24,6 +24,14 @@ namespace Qwack.Core.Instruments.Funding
             _currencyProvider = currencyProvider;
         }
 
+        public FundingInstrumentCollection Clone()
+        {
+            var fic = new FundingInstrumentCollection(_currencyProvider);
+            fic.AddRange(this.Select(x => x.Clone()));
+            return fic;
+        }
+
+
         public Dictionary<string, IrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
         {
             var o = new Dictionary<string, IrCurve>();

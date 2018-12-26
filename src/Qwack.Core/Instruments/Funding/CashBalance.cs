@@ -11,6 +11,8 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class CashBalance : IFundingInstrument
     {
+        public CashBalance() { }
+
         public CashBalance(Currency currency, double notional)
         {
             Notional = notional;
@@ -42,5 +44,19 @@ namespace Qwack.Core.Instruments.Funding
                    TradeId == balance.TradeId;
 
         public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+
+        public double CalculateParRate(IFundingModel model) => 0.0;
+
+        public IFundingInstrument Clone() => new CashBalance
+        {
+            Ccy = Ccy,
+            Counterparty = Counterparty,
+            Notional = Notional,
+            PillarDate = PillarDate,
+            SolveCurve = SolveCurve,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => Clone();
     }
 }

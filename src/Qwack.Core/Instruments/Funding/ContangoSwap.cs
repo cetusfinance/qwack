@@ -49,6 +49,16 @@ namespace Qwack.Core.Instruments.Funding
             return PV;
         }
 
+        public double CalculateParRate(IFundingModel model)
+        {
+            var discountCurve = model.Curves[CashDiscountCurve];
+            var SpotRate = model.GetFxRate(SpotDate, MetalCCY, CashCCY);
+            var t = SpotDate.CalculateYearFraction(DeliveryDate, Basis);
+            var fwd = model.GetFxRate(DeliveryDate, MetalCCY, CashCCY);
+            var ctgo = (fwd / SpotRate - 1.0) / t;
+            return ctgo;
+        }
+
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
@@ -79,7 +89,7 @@ namespace Qwack.Core.Instruments.Funding
             else
             {
                 foreignDict = new Dictionary<DateTime, double>() { { DeliveryDate, fwdRate * MetalQuantity * df * -t } };
-                var foreignDiscDict = new Dictionary<DateTime, double>() { { DeliveryDate, (fwdRate-strike) * MetalQuantity * df * -t } };
+                var foreignDiscDict = new Dictionary<DateTime, double>() { { DeliveryDate, (fwdRate - strike) * MetalQuantity * df * -t } };
 
                 return new Dictionary<string, Dictionary<DateTime, double>>()
                 {
@@ -89,6 +99,30 @@ namespace Qwack.Core.Instruments.Funding
                 };
             }
         }
-        
+
+        public IFundingInstrument Clone() => new ContangoSwap
+        {
+            Basis = Basis,
+            CashCCY = CashCCY,
+            CashDiscountCurve = CashDiscountCurve,
+            ContangoRate = ContangoRate,
+            Counterparty = Counterparty,
+            DeliveryDate = DeliveryDate,
+            MetalCCY = MetalCCY,
+            MetalQuantity = MetalQuantity,
+            PillarDate = PillarDate,
+            SolveCurve = SolveCurve,
+            SpotDate = SpotDate,
+            TradeId = TradeId
+        };
+
+
+        public IFundingInstrument SetParRate(double parRate)
+        {
+            var newIns = (ContangoSwap)Clone();
+            newIns.ContangoRate = parRate;
+            return newIns;
+        }
+
     }
 }

@@ -8,6 +8,8 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class GenericSwapLeg
     {
+        public GenericSwapLeg() { }
+
         public GenericSwapLeg(DateTime startDate, DateTime endDate, Calendar calendars, Currency currency, Frequency resetFrequency, DayCountBasis dayBasis)
         {
             EffectiveDate = startDate;
@@ -61,6 +63,35 @@ namespace Qwack.Core.Instruments.Funding
         public AverageType AveragingType { get; set; }
         public ExchangeType NotionalExchange { get; set; }
         public SwapPayReceiveType Direction { get; set; }
+
+        public GenericSwapLeg Clone() => new GenericSwapLeg
+        {
+            AccrualCalendar = AccrualCalendar,
+            AccrualDCB = AccrualDCB,
+            AveragingType = AveragingType,
+            Currency = Currency,
+            Direction = Direction,
+            EffectiveDate = EffectiveDate,
+            FixedRateOrMargin = FixedRateOrMargin,
+            FixingCalendar = FixingCalendar,
+            FixingOffset = FixingOffset,
+            FixingRollType = FixingRollType,
+            ForecastTenor = ForecastTenor,
+            FraDiscounting = FraDiscounting,
+            LegType = LegType,
+            Nominal = Nominal,
+            NotionalExchange = NotionalExchange,
+            PaymentCalendar = PaymentCalendar,
+            PaymentOffset = PaymentOffset,
+            PaymentOffsetRelativeTo = PaymentOffsetRelativeTo,
+            PaymentRollType = PaymentRollType,
+            ResetCalendar = ResetCalendar,
+            ResetFrequency = ResetFrequency,
+            ResetRollType = ResetRollType,
+            RollDay = RollDay,
+            StubType = StubType,
+            TerminationDate = TerminationDate,
+        };
 
         public CashFlowSchedule GenerateSchedule()
         {

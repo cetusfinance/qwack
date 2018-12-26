@@ -238,7 +238,11 @@ namespace Qwack.Models.MCModels
             }
             Engine.SetupFeatures();
         }
-        public ICube PFE(double confidenceLevel)
+        public ICube PFE(double confidenceLevel) => PackResults(() => _regressor.PFE(Model, confidenceLevel));
+        public ICube EPE() => PackResults(() => _regressor.EPE(Model));
+        public ICube ENE() => PackResults(() => _regressor.ENE(Model));
+
+        private ICube PackResults(Func<double[]> method)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -248,14 +252,15 @@ namespace Qwack.Models.MCModels
             cube.Initialize(dataTypes);
             Engine.RunProcess();
 
-            var pfe = _regressor.PFE(Model, confidenceLevel);
+            var e = method.Invoke();
 
-            for (var i = 0; i < pfe.Length; i++)
+            for (var i = 0; i < e.Length; i++)
             {
-                cube.AddRow(new object[] { Settings.PfeExposureDates[i] }, pfe[i]);
+                cube.AddRow(new object[] { Settings.PfeExposureDates[i] }, e[i]);
             }
             return cube;
         }
+
         public ICube PV(Currency reportingCurrency)
         {
             var ccy = reportingCurrency?.ToString();

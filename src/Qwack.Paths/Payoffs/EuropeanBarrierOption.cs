@@ -38,6 +38,9 @@ namespace Qwack.Paths.Payoffs
         private Vector<double> _zero = new Vector<double>(0.0);
         private bool _isComplete;
 
+        public string RegressionKey => _assetName;
+
+
         public EuropeanBarrierOption(string assetName, DateTime obsStart, DateTime obsEnd, DateTime expiry, OptionType callPut, double strike, double barrier, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierSide barrierSide, BarrierType barrierType)
         {
             _obsStart = obsStart;

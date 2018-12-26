@@ -14,5 +14,7 @@ namespace Qwack.Core.Models
         void Finish(IFeatureCollection collection);
         void Process(IPathBlock block);
         void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection);
+
+        string RegressionKey { get; }
     }
 }

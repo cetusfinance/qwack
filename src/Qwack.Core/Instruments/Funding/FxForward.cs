@@ -47,6 +47,8 @@ namespace Qwack.Core.Instruments.Funding
             return PV;
         }
 
+        public double CalculateParRate(IFundingModel Model) => Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
+
         public double FlowsT0(IFundingModel Model)
         {
             if (DeliveryDate != Model.BuildDate)
@@ -96,7 +98,7 @@ namespace Qwack.Core.Instruments.Funding
             }
         }
 
-        public IAssetInstrument Clone() => throw new NotImplementedException();
+        public IAssetInstrument Clone() => (IAssetInstrument)(FxForward)((IFundingInstrument)this).Clone();
 
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
@@ -108,5 +110,26 @@ namespace Qwack.Core.Instruments.Funding
                    EqualityComparer<Currency>.Default.Equals(ForeignCCY, forward.ForeignCCY) &&
                    ForeignDiscountCurve == forward.ForeignDiscountCurve &&
                    TradeId == forward.TradeId;
+
+        IFundingInstrument IFundingInstrument.Clone() => new FxForward
+        {
+            Counterparty = Counterparty,
+            DeliveryDate = DeliveryDate,
+            DomesticCCY = DomesticCCY,
+            DomesticQuantity = DomesticQuantity,
+            ForeignCCY = ForeignCCY,
+            ForeignDiscountCurve = ForeignDiscountCurve,
+            PillarDate = PillarDate,
+            SolveCurve = SolveCurve,
+            Strike = Strike,
+            TradeId = TradeId,
+        };
+
+        public IFundingInstrument SetParRate(double parRate)
+        {
+            var newIns = (FxForward)((IFundingInstrument)this).Clone();
+            newIns.Strike = parRate;
+            return newIns;
+        }
     }
 }

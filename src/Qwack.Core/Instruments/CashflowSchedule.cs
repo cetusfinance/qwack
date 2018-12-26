@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Dates;
@@ -12,6 +13,14 @@ namespace Qwack.Core.Instruments
         public DayCountBasis DayCountBasis { get; set; }
         public ResetType ResetType { get; set; }
         public AverageType AverageType { get; set; }
+
+        public CashFlowSchedule Clone() => new CashFlowSchedule
+        {
+            Flows = new List<CashFlow>(Flows.Select(x => x.Clone())),
+            DayCountBasis = DayCountBasis,
+            ResetType = ResetType,
+            AverageType = AverageType
+        };
     }
 
     public static class CashFlowScheduleEx

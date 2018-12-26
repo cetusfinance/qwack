@@ -38,7 +38,8 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Use Local vol? (True/False)")] bool LocalVol,
            [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim,
            [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel,
-           [ExcelArgument(Description = "Futures mapping dictionary, assetId to futures code")] object FutMappingDict)
+           [ExcelArgument(Description = "Futures mapping dictionary, assetId to futures code")] object FutMappingDict,
+           [ExcelArgument(Description = "Enable debug mode")] object DebugMode)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -68,7 +69,8 @@ namespace Qwack.Excel.Curves
                     Parallelize = Parallel,
                     FuturesMappingTable = (FutMappingDict is ExcelMissing) ? 
                         new Dictionary<string, string>() : 
-                        ((object[,])FutMappingDict).RangeToDictionary<string,string>()
+                        ((object[,])FutMappingDict).RangeToDictionary<string,string>(),
+                    DebugMode = DebugMode.OptionalExcel(false)
                 };
 
                 var settingsCache = ContainerStores.GetObjectCache<McSettings>();
@@ -100,9 +102,7 @@ namespace Qwack.Excel.Curves
                 var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PV(ccy);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
             });
         }
 
@@ -125,9 +125,29 @@ namespace Qwack.Excel.Curves
                 var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPFE))]
+        public static object McPortfolioEPE(
+         [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+         [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+         [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+         [ExcelArgument(Description = "MC settings name")] string SettingsName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+
+                var result = mc.EPE();
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
             });
         }
     }

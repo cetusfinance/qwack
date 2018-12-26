@@ -9,11 +9,14 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class XccyBasisSwap : IFundingInstrument
     {
+        public XccyBasisSwap() { }
         public XccyBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, ExchangeType notionalExchange, MTMSwapType mtmSwapType, string forecastCurvePay, string forecastCurveRec, string discountCurvePay, string discountCurveRec)
         {
             SwapTenor = swapTenor;
             NotionalExchange = notionalExchange;
             MtmSwapType = mtmSwapType;
+            RateIndexPay = payIndex;
+            RateIndexRec = recIndex;
 
             ResetFrequencyRec = recIndex.ResetTenor;
             ResetFrequencyPay = payIndex.ResetTenor;
@@ -84,6 +87,9 @@ namespace Qwack.Core.Instruments.Funding
         public string ForecastCurveRec { get; set; }
         public string DiscountCurvePay { get; set; }
         public string DiscountCurveRec { get; set; }
+        public FloatRateIndex RateIndexPay { get; set; }
+        public FloatRateIndex RateIndexRec { get; set; }
+
 
         public MTMSwapType MtmSwapType { get; set; }
         public ExchangeType NotionalExchange { get; set; }
@@ -318,5 +324,96 @@ namespace Qwack.Core.Instruments.Funding
                 {ForecastCurveRec,forecastDictRec },
             };
         }
+
+        public double CalculateParRate(IFundingModel model)
+        {
+            var discountCurvePay = model.Curves[DiscountCurvePay];
+            var discountCurveRec = model.Curves[DiscountCurveRec];
+            var forecastCurvePay = model.Curves[ForecastCurvePay];
+            var forecastCurveRec = model.Curves[ForecastCurveRec];
+
+            var payCCY = MtmSwapType == MTMSwapType.ReceiveNotionalFixed ? CcyRec : CcyPay;
+            var recCCY = MtmSwapType == MTMSwapType.PayNotionalFixed ? CcyPay : CcyRec;
+            var baseCCY = Pvccy ?? payCCY;
+
+            var fxPayToBase = model.GetFxRate(model.BuildDate, payCCY, baseCCY);
+            var fxRecToBase = model.GetFxRate(model.BuildDate, recCCY, baseCCY);
+
+            if (ParSpreadPay != 0.0)
+            {
+                var newSched = FlowSchedulePay.Clone();
+                var recPV = FlowScheduleRec.PV(discountCurveRec, forecastCurveRec, true, true, true, BasisRec, null);
+                recPV *= fxRecToBase;
+
+                var targetFunc = new Func<double, double>(spread =>
+                {
+                    foreach (var s in newSched.Flows.Where(x => x.FlowType == FlowType.FloatRate))
+                    {
+                        s.FixedRateOrMargin = spread;
+                    }
+                    var pv = newSched.PV(discountCurvePay, forecastCurvePay, true, true, true, BasisPay, null);
+                    pv *= fxPayToBase;
+                    return pv - recPV;
+                }
+                );
+                var newSpread = Math.Solvers.Newton1D.MethodSolve(targetFunc, 0, 0.000001);
+                return newSpread;
+            }
+            else
+            {
+                var newSched = FlowScheduleRec.Clone();
+                var payPV = FlowSchedulePay.PV(discountCurvePay, forecastCurvePay, true, true, true, BasisPay, null);
+                payPV *= fxPayToBase;
+                var targetFunc = new Func<double, double>(spread =>
+                {
+                    foreach (var s in newSched.Flows.Where(x => x.FlowType == FlowType.FloatRate))
+                    {
+                        s.FixedRateOrMargin = spread;
+                    }
+                    var pv = newSched.PV(discountCurveRec, forecastCurveRec, true, true, true, BasisRec, null);
+                    pv *= fxRecToBase;
+                    return pv - payPV;
+                }
+                );
+                var newSpread = Math.Solvers.Newton1D.MethodSolve(targetFunc, 0, 0.000001);
+                return newSpread;
+            }
+        }
+
+        public IFundingInstrument Clone() => new XccyBasisSwap
+        {
+            BasisPay = BasisPay,
+            BasisRec = BasisRec,
+            CcyPay = CcyPay,
+            CcyRec = CcyRec,
+            Counterparty = Counterparty,
+            DiscountCurvePay = DiscountCurvePay,
+            DiscountCurveRec = DiscountCurveRec,
+            EndDate = EndDate,
+            FlowSchedulePay = FlowSchedulePay.Clone(),
+            FlowScheduleRec = FlowScheduleRec.Clone(),
+            ForecastCurvePay = ForecastCurvePay,
+            ForecastCurveRec = ForecastCurveRec,
+            MtmSwapType = MtmSwapType,
+            NDates = NDates,
+            NotionalExchange = NotionalExchange,
+            NotionalPay = NotionalPay,
+            NotionalRec = NotionalRec,
+            ParSpreadPay = ParSpreadPay,
+            ParSpreadRec = ParSpreadRec,
+            PayLeg = PayLeg.Clone(),
+            PillarDate = PillarDate,
+            Pvccy = Pvccy,
+            RecLeg = RecLeg.Clone(),
+            ResetDates = ResetDates,
+            ResetFrequencyPay = ResetFrequencyPay,
+            ResetFrequencyRec = ResetFrequencyRec,
+            SolveCurve = SolveCurve,
+            StartDate = StartDate,
+            SwapTenor = SwapTenor,
+            TradeId = TradeId
+        };
+
+        public IFundingInstrument SetParRate(double parRate) => new XccyBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, RateIndexPay, RateIndexRec, NotionalExchange, MtmSwapType, ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec);
     }
 }

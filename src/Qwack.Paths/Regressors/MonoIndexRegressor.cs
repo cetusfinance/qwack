@@ -28,6 +28,8 @@ namespace Qwack.Paths.Regressors
         private Currency _repCcy;
         private readonly List<Vector<double>> _results = new List<Vector<double>>();
         private bool _isComplete;
+        private string _regressionKey;
+        private int[] _regressionIndices;
 
         public MonoIndexRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, McSettings settings, bool requireContinuity)
         {
@@ -36,6 +38,8 @@ namespace Qwack.Paths.Regressors
             _requireContinuity = requireContinuity;
             _repCcy = settings.ReportingCurrency;
             _pathwiseValues = new double[_regressionDates.Length][];
+            DebugMode = settings.DebugMode;
+
             for (var i = 0; i < _pathwiseValues.Length; i++)
             {
                 _pathwiseValues[i] = new double[settings.NumberOfPaths];
@@ -47,9 +51,12 @@ namespace Qwack.Paths.Regressors
         public void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
-            _nDims = dims.NumberOfDimensions;
+            _nDims = _portfolio.Select(x => x.RegressionKey).Distinct().Count();
             if (_nDims != 1)
                 throw new Exception("Only works for a single regressor");
+            _regressionKey = _portfolio.Select(x => x.RegressionKey).Distinct().First();
+            var z = _regressionKey.Split('*');
+            _regressionIndices = z.Select(x => dims.GetDimension(x)).ToArray();
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_regressionDates.Length];
@@ -62,26 +69,40 @@ namespace Qwack.Paths.Regressors
 
         public void Process(IPathBlock block)
         {
-            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+            for (var ix = 0; ix < _regressionIndices.Length; ix++)
             {
-                var steps = block.GetStepsForFactor(path, 0);
-
-                var targetIx = 0;
-                var nextTarget = _dateIndexes[targetIx];
-
-                for (var s = 0; s < steps.Length; s++)
+                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {
-                    if (s == nextTarget)
+                    var steps = block.GetStepsForFactor(path, _regressionIndices[ix]);
+
+                    var targetIx = 0;
+                    var nextTarget = _dateIndexes[targetIx];
+
+                    for (var s = 0; s < steps.Length; s++)
                     {
-                        for (var v = 0; v < Vector<double>.Count; v++)
-                            _pathwiseValues[targetIx][block.GlobalPathIndex + path + v] = steps[s][v];
-                        targetIx++;
-                        if (targetIx == _dateIndexes.Length)
-                            break;
-                        nextTarget = _dateIndexes[targetIx];
+                        if (s == nextTarget)
+                        {
+                            if (ix == 0)
+                            {
+                                for (var v = 0; v < Vector<double>.Count; v++)
+                                    _pathwiseValues[targetIx][block.GlobalPathIndex + path + v] = steps[s][v];
+                                targetIx++;
+                                if (targetIx == _dateIndexes.Length)
+                                    break;
+                                nextTarget = _dateIndexes[targetIx];
+                            }
+                            else
+                            {
+                                for (var v = 0; v < Vector<double>.Count; v++)
+                                    _pathwiseValues[targetIx][block.GlobalPathIndex + path + v] *= steps[s][v];
+                                targetIx++;
+                                if (targetIx == _dateIndexes.Length)
+                                    break;
+                                nextTarget = _dateIndexes[targetIx];
+                            }
+                        }
                     }
                 }
-
             }
         }
 
@@ -148,6 +169,34 @@ namespace Qwack.Paths.Regressors
 
             return o;
         }
+
+        public double[] EPE(IAssetFxModel model)
+        {
+            var o = new double[_dateIndexes.Length];
+            var regressors = Regress(model);
+            
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                o[d] = _pathwiseValues[d].Select(p => Max(0,regressors[d].Interpolate(p))).OrderBy(x => x).Average();
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            }).Wait();
+
+            return o;
+        }
+        public double[] ENE(IAssetFxModel model)
+        {
+            var o = new double[_dateIndexes.Length];
+            var regressors = Regress(model);
+
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                o[d] = _pathwiseValues[d].Select(p => Min(0, regressors[d].Interpolate(p))).OrderBy(x => x).Average();
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            }).Wait();
+
+            return o;
+        }
+
 
         private void DumpDataToDisk(KeyValuePair<double, double>[] data, IInterpolator1D fitted, string fileName)
         {

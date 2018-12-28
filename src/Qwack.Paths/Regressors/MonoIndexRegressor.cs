@@ -86,20 +86,16 @@ namespace Qwack.Paths.Regressors
                             {
                                 for (var v = 0; v < Vector<double>.Count; v++)
                                     _pathwiseValues[targetIx][block.GlobalPathIndex + path + v] = steps[s][v];
-                                targetIx++;
-                                if (targetIx == _dateIndexes.Length)
-                                    break;
-                                nextTarget = _dateIndexes[targetIx];
                             }
                             else
                             {
                                 for (var v = 0; v < Vector<double>.Count; v++)
                                     _pathwiseValues[targetIx][block.GlobalPathIndex + path + v] *= steps[s][v];
-                                targetIx++;
-                                if (targetIx == _dateIndexes.Length)
-                                    break;
-                                nextTarget = _dateIndexes[targetIx];
                             }
+                            targetIx++;
+                            if (targetIx == _dateIndexes.Length)
+                                break;
+                            nextTarget = _dateIndexes[targetIx];
                         }
                     }
                 }

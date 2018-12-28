@@ -16,6 +16,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public Currency DomesticCCY { get; set; }
         public Currency ForeignCCY { get; set; }
+        public Currency Currency => DomesticCCY;
 
         public string ForeignDiscountCurve { get; set; }
 

@@ -19,7 +19,7 @@ namespace Qwack.Core.Instruments.Funding
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
             ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
             EndDate = new TenorDateRelative(rateIndex.ResetTenor);
-
+            RateIndex = rateIndex;
             ParRate = parRate;
             Basis = rateIndex.DayCountBasis;
             PayRec = payRec;
@@ -37,6 +37,8 @@ namespace Qwack.Core.Instruments.Funding
             DiscountCurve = discountCurve;
 
             FraType = fraType;
+
+            PillarDate = FlowScheduleFra.Flows[0].AccrualPeriodEnd;
         }
 
         public ForwardRateAgreement(DateTime startDate, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
@@ -44,7 +46,7 @@ namespace Qwack.Core.Instruments.Funding
             StartDate = startDate;
             ResetDate = StartDate.AddPeriod(RollType.P, rateIndex.HolidayCalendars, rateIndex.FixingOffset);
             EndDate = new TenorDateRelative(rateIndex.ResetTenor);
-
+            RateIndex = rateIndex;
             ParRate = parRate;
             Basis = rateIndex.DayCountBasis;
             PayRec = payRec;
@@ -62,6 +64,7 @@ namespace Qwack.Core.Instruments.Funding
             DiscountCurve = discountCurve;
 
             FraType = fraType;
+            PillarDate = FlowScheduleFra.Flows[0].AccrualPeriodEnd;
         }
 
         public double Notional { get; set; }
@@ -69,7 +72,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime StartDate { get; set; }
         public ITenorDate EndDate { get; set; }
         public DateTime ResetDate { get; set; }
-        public Currency Ccy { get; set; }
+        public Currency Currency { get; set; }
         public GenericSwapLeg FraLeg { get; set; }
         public FloatRateIndex RateIndex { get; set; }
         public CashFlowSchedule FlowScheduleFra { get; set; }
@@ -83,7 +86,7 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
-        public DateTime LastSensitivityDate => FlowScheduleFra.Flows.Last().SettleDate;
+        public DateTime LastSensitivityDate => FlowScheduleFra.Flows.Last().AccrualPeriodEnd;
 
         public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurve }).Distinct().Where(x => x != SolveCurve).ToList();
 
@@ -94,7 +97,7 @@ namespace Qwack.Core.Instruments.Funding
             return Pv(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, updateDF, updateEst);
         }
 
-        public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate((ICurve)model.Curves[ForecastCurve], Basis);
+        public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate(model.Curves[ForecastCurve], Basis);
 
         public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
@@ -196,7 +199,7 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument Clone() => new ForwardRateAgreement
         {
             Basis = Basis,
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             EndDate = EndDate,
@@ -214,6 +217,11 @@ namespace Qwack.Core.Instruments.Funding
             TradeId = TradeId
         };
 
-        public IFundingInstrument SetParRate(double parRate) => new ForwardRateAgreement(StartDate, parRate, RateIndex, PayRec, FraType, ForecastCurve, DiscountCurve);
+        public IFundingInstrument SetParRate(double parRate) =>
+            new ForwardRateAgreement(StartDate, parRate, RateIndex, PayRec, FraType, ForecastCurve, DiscountCurve)
+            {
+                Notional = Notional,
+                SolveCurve = SolveCurve
+            };
     }
 }

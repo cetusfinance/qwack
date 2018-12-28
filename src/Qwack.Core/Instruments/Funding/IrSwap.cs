@@ -55,7 +55,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime EndDate { get; set; }
         public int NDates { get; set; }
         public DateTime[] ResetDates { get; set; }
-        public Currency Ccy { get; set; }
+        public Currency Currency { get; set; }
         public GenericSwapLeg FixedLeg { get; set; }
         public GenericSwapLeg FloatLeg { get; set; }
         public CashFlowSchedule FlowScheduleFixed { get; set; }
@@ -151,7 +151,7 @@ namespace Qwack.Core.Instruments.Funding
         public double CalculateParRate(IFundingModel model)
         {
             var dFs = FlowScheduleFloat.Flows.Select(x => x.SettleDate).Select(y => model.Curves[DiscountCurve].GetDf(model.BuildDate, y));
-            var floatRates = FlowScheduleFloat.Flows.Select(x => x.GetFloatRate((ICurve)model.Curves[ForecastCurve], BasisFloat)).ToArray();
+            var floatRates = FlowScheduleFloat.Flows.Select(x => x.GetFloatRate(model.Curves[ForecastCurve], BasisFloat)).ToArray();
             var parRate = dFs.Select((x, ix) => x * floatRates[ix]).Sum() / dFs.Sum();
             return parRate;
         }
@@ -160,7 +160,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             BasisFixed = BasisFixed,
             BasisFloat = BasisFloat,
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             EndDate = EndDate,

@@ -18,6 +18,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public Currency MetalCCY { get; set; }
         public Currency CashCCY { get; set; }
+        public Currency Currency => CashCCY;
 
         public string CashDiscountCurve { get; set; }
         public string TradeId { get; set; }

@@ -69,7 +69,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime EndDate { get; set; }
         public int NDates { get; set; }
         public DateTime[] ResetDates { get; set; }
-        public Currency Ccy { get; set; }
+        public Currency Currency { get; set; }
         public GenericSwapLeg PayLeg { get; set; }
         public GenericSwapLeg RecLeg { get; set; }
         public CashFlowSchedule FlowSchedulePay { get; set; }
@@ -249,7 +249,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             BasisPay = BasisPay,
             BasisRec = BasisRec,
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             EndDate = EndDate,

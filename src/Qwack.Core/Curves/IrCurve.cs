@@ -282,5 +282,10 @@ namespace Qwack.Core.Curves
             }
             return o;
         }
+
+        public IrCurve Clone() => new IrCurve((DateTime[])PillarDates.Clone(), (double[])_rates.Clone(), BuildDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType)
+        {
+            SolveStage = SolveStage
+        };
     }
 }

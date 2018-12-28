@@ -300,15 +300,15 @@ namespace Qwack.Models.MCModels
                         break;
                     case FixedRateLoanDeposit loanDepo:
                         if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Ccy);
+                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Currency);
                         else
-                            ccy = loanDepo.Ccy.ToString();
+                            ccy = loanDepo.Currency.ToString();
                         break;
                     case CashBalance cash:
                         if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, cash.Ccy);
+                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, cash.Currency);
                         else
-                            ccy = cash.Ccy.ToString();
+                            ccy = cash.Currency.ToString();
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");

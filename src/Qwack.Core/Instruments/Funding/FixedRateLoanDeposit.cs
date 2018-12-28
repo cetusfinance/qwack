@@ -21,20 +21,20 @@ namespace Qwack.Core.Instruments.Funding
             Basis = basis;
             Notional = notional;
             DiscountCurve = discountCurve;
-            Ccy = currency;
+            Currency = currency;
 
             LoanDepoSchedule = new CashFlowSchedule { Flows = new List<CashFlow>() };
             LoanDepoSchedule.Flows.Add(new CashFlow
             {
                 Notional = Notional,
-                Currency = Ccy,
+                Currency = Currency,
                 FlowType = FlowType.FixedAmount,
                 SettleDate = StartDate,
             });
             LoanDepoSchedule.Flows.Add(new CashFlow
             {
                 Notional = -Notional,
-                Currency = Ccy,
+                Currency = Currency,
                 FlowType = FlowType.FixedAmount,
                 SettleDate = EndDate,
             });
@@ -42,7 +42,7 @@ namespace Qwack.Core.Instruments.Funding
             LoanDepoSchedule.Flows.Add(new CashFlow
             {
                 Notional = -Notional,
-                Currency = Ccy,
+                Currency = Currency,
                 FlowType = FlowType.FixedRate,
                 SettleDate = EndDate,
                 AccrualPeriodStart = StartDate,
@@ -58,7 +58,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public Currency Ccy { get; set; }
+        public Currency Currency { get; set; }
         public CashFlowSchedule LoanDepoSchedule { get; set; }
         public DayCountBasis Basis { get; set; }
         public string DiscountCurve { get; set; }
@@ -104,7 +104,7 @@ namespace Qwack.Core.Instruments.Funding
                    InterestRate == deposit.InterestRate &&
                    StartDate == deposit.StartDate &&
                    EndDate == deposit.EndDate &&
-                   EqualityComparer<Currency>.Default.Equals(Ccy, deposit.Ccy) &&
+                   EqualityComparer<Currency>.Default.Equals(Currency, deposit.Currency) &&
                    Basis == deposit.Basis &&
                    DiscountCurve == deposit.DiscountCurve &&
                    TradeId == deposit.TradeId;
@@ -116,7 +116,7 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument Clone() => new FixedRateLoanDeposit
         {
             Basis = Basis,
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             EndDate = EndDate,
@@ -129,6 +129,6 @@ namespace Qwack.Core.Instruments.Funding
             TradeId = TradeId
         };
 
-        public IFundingInstrument SetParRate(double parRate) => new FixedRateLoanDeposit(StartDate, EndDate, parRate, Ccy, Basis, Notional, DiscountCurve);
+        public IFundingInstrument SetParRate(double parRate) => new FixedRateLoanDeposit(StartDate, EndDate, parRate, Currency, Basis, Notional, DiscountCurve);
     }
 }

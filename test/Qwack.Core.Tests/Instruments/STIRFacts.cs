@@ -48,7 +48,7 @@ namespace Qwack.Core.Tests.Instruments
             var dcf = maturity.CalculateYearFraction(accrualEnd, DayCountBasis.ACT360);
             var s = new STIRFuture
             {
-                CCY = usd,
+                Currency = usd,
                 ContractSize = 1e6,
                 Position = 1,
                 DCF = dcf,

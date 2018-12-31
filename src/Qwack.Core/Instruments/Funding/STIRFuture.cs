@@ -15,7 +15,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Position { get; set; } = 1.0;
         public FloatRateIndex Index { get; set; }
         public double DCF { get; set; } = 0.25;
-        public Currency CCY { get; set; }
+        public Currency Currency { get; set; }
         public DateTime Expiry { get; set; }
 
         public double ConvexityAdjustment { get; set; }
@@ -26,6 +26,8 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime PillarDate { get; set; }
 
         public DateTime LastSensitivityDate => Expiry;
+
+        public double UnitPV01 => ContractSize * DCF * 0.0001;
 
         public double Pv(IFundingModel Model, bool updateState)
         {
@@ -78,7 +80,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             ConvexityAdjustment = ConvexityAdjustment,
             Expiry = Expiry,
-            CCY = CCY,
+            Currency = Currency,
             ContractSize = ContractSize,
             Counterparty = Counterparty,
             DCF = DCF,

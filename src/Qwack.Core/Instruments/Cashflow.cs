@@ -51,6 +51,6 @@ namespace Qwack.Core.Instruments
 
     public static class CashflowEx
     {
-        public static double GetFloatRate(this CashFlow cashFlow, ICurve curve, DayCountBasis basis) => curve.GetForwardRate(cashFlow.AccrualPeriodStart, cashFlow.AccrualPeriodEnd, RateType.Linear, basis);
+        public static double GetFloatRate(this CashFlow cashFlow, IIrCurve curve, DayCountBasis basis) => curve.GetForwardRate(cashFlow.AccrualPeriodStart, cashFlow.AccrualPeriodEnd, RateType.Linear, basis);
     }
 }

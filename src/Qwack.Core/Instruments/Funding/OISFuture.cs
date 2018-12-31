@@ -15,7 +15,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Position { get; set; } = 1.0;
         public FloatRateIndex Index { get; set; }
         public double DCF { get; set; } = 1.0/12.0;
-        public Currency CCY { get; set; }
+        public Currency Currency { get; set; }
         public DateTime AverageStartDate { get; set; }
         public DateTime AverageEndDate { get; set; }
 
@@ -72,7 +72,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             AverageEndDate = AverageEndDate,
             AverageStartDate = AverageStartDate,
-            CCY = CCY,
+            Currency = Currency,
             ContractSize = ContractSize,
             Counterparty = Counterparty,
             DCF = DCF,

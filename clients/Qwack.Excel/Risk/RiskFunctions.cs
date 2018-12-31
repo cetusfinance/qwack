@@ -10,6 +10,7 @@ using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 using Qwack.Excel.Instruments;
 using Qwack.Models.Risk;
+using Qwack.Core.Instruments.Funding;
 
 namespace Qwack.Excel.Curves
 {
@@ -144,6 +145,24 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns interest rate benchmark delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioIrBenchmarkDelta))]
+        public static object PortfolioIrBenchmarkDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Funding instrument collection name")] string FICName,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
+                var fic = ContainerStores.GetObjectCache<FundingInstrumentCollection>().GetObjectOrThrow(FICName, $"FIC {FICName} not found in cache");
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
+                var result = model.BenchmarkRisk(fic.Value, ContainerStores.CurrencyProvider, ccy);
+                return PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns correlation delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioCorrelationDelta))]
         public static object PortfolioCorrelationDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
@@ -155,7 +174,7 @@ namespace Qwack.Excel.Curves
             return ExcelHelper.Execute(_logger, () =>
             {
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
-                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
                 var result = model.CorrelationDelta(ccy, Epsilon);
                 return PushCubeToCache(result, ResultObjectName);
             });

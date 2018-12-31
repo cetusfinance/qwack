@@ -50,7 +50,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 expiries[i] = wed3rd.SubtractPeriod(RollType.P, lon, 2.Bd());
                 instruments[i] = new STIRFuture()
                 {
-                    CCY = ccyUsd,
+                    Currency = ccyUsd,
                     ContractSize = 1e6,
                     ConvexityAdjustment = 0,
                     DCF = 0.25,
@@ -115,7 +115,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 pillars[i] = wed3rd.AddPeriod(usd3m.RollConvention, usd3m.HolidayCalendars, usd3m.ResetTenor);
                 instruments[i] = new STIRFuture()
                 {
-                    CCY = ccyUsd,
+                    Currency = ccyUsd,
                     ContractSize = 1e6,
                     ConvexityAdjustment = FuturesConvexityUtils.CalculateConvexityAdjustment(startDate, expiries[i], pillars[i], volatility),
                     DCF = 0.25,

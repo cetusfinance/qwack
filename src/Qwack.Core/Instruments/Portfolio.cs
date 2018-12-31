@@ -213,8 +213,8 @@ namespace Qwack.Core.Instruments
                         break;
                     case FixedRateLoanDeposit l:
                         o[i + 1, 1] = "LoanDepo";
-                        o[i + 1, 2] = l.Ccy.Ccy;
-                        o[i + 1, 3] = l.Ccy.Ccy;
+                        o[i + 1, 2] = l.Currency.Ccy;
+                        o[i + 1, 3] = l.Currency.Ccy;
                         o[i + 1, 4] = l.StartDate;
                         o[i + 1, 5] = l.EndDate;
                         o[i + 1, 6] = l.EndDate;
@@ -225,8 +225,8 @@ namespace Qwack.Core.Instruments
                         break;
                     case CashBalance c:
                         o[i + 1, 1] = "Cash";
-                        o[i + 1, 2] = c.Ccy.Ccy;
-                        o[i + 1, 3] = c.Ccy.Ccy;
+                        o[i + 1, 2] = c.Currency.Ccy;
+                        o[i + 1, 3] = c.Currency.Ccy;
                         o[i + 1, 4] = string.Empty;
                         o[i + 1, 5] = string.Empty;
                         o[i + 1, 6] = string.Empty;

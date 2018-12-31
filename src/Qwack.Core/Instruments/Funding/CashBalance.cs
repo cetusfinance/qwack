@@ -16,12 +16,12 @@ namespace Qwack.Core.Instruments.Funding
         public CashBalance(Currency currency, double notional)
         {
             Notional = notional;
-            Ccy = currency;
+            Currency = currency;
         }
         
         public double Notional { get; set; }
     
-        public Currency Ccy { get; set; }        
+        public Currency Currency { get; set; }        
   
         public string SolveCurve { get; set; }
         public string TradeId { get; set; }
@@ -40,7 +40,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public override bool Equals(object obj) => obj is CashBalance balance &&
                    Notional == balance.Notional &&
-                   EqualityComparer<Currency>.Default.Equals(Ccy, balance.Ccy) &&
+                   EqualityComparer<Currency>.Default.Equals(Currency, balance.Currency) &&
                    TradeId == balance.TradeId;
 
         public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
@@ -49,7 +49,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public IFundingInstrument Clone() => new CashBalance
         {
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             Notional = Notional,
             PillarDate = PillarDate,

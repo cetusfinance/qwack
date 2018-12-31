@@ -9280,8 +9280,8 @@
       ],
       "CBOTRules": null
     },
-    "LotSize": 2500.0,
-    "PriceMultiplier": 1.0,
+    "LotSize": 1000000,
+    "PriceMultiplier": 0.0025,
     "TickSize": 2.5E-05
   },
   {

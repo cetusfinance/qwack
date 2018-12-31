@@ -58,7 +58,7 @@ namespace Qwack.Excel.Instruments
                     return $"Could not parse FRA discounting type - {discType}";
                 }
 
-                var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve);
+                var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve) { Notional = Notional };
 
                 var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
                 var solvePillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
@@ -187,7 +187,7 @@ namespace Qwack.Excel.Instruments
                 var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
                 var product = new STIRFuture
                 {
-                    CCY = rIndex.Value.Currency,
+                    Currency = rIndex.Value.Currency,
                     ContractSize = c.Settings.LotSize,
                     DCF = dcf,
                     ConvexityAdjustment= ConvexityAdjustment,
@@ -239,7 +239,7 @@ namespace Qwack.Excel.Instruments
                 var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
                 var product = new OISFuture
                 {
-                    CCY = rIndex.Value.Currency,
+                    Currency = rIndex.Value.Currency,
                     ContractSize = c.Settings.LotSize,
                     DCF = dcf,
                     AverageStartDate = accrualStart,

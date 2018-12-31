@@ -591,18 +591,18 @@ namespace Qwack.Models.Models
                         pv = loanDepo.Pv(model.FundingModel, false);
                         tradeId = loanDepo.TradeId;
                         if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Ccy);
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Currency);
                         else
-                            ccy = loanDepo.Ccy.ToString();
+                            ccy = loanDepo.Currency.ToString();
                         break;
                     case CashBalance cash:
                         tradeType = "Cash";
                         pv = cash.Pv(model.FundingModel, false);
                         tradeId = cash.TradeId;
                         if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Ccy);
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Currency);
                         else
-                            ccy = cash.Ccy.ToString();
+                            ccy = cash.Currency.ToString();
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
@@ -741,18 +741,18 @@ namespace Qwack.Models.Models
                         flow = loanDepo.FlowsT0(model.FundingModel);
                         tradeId = loanDepo.TradeId;
                         if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Ccy);
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Currency);
                         else
-                            ccy = loanDepo.Ccy.ToString();
+                            ccy = loanDepo.Currency.ToString();
                         break;
                     case CashBalance cash:
                         tradeType = "Cash";
                         flow = 0;
                         tradeId = cash.TradeId;
                         if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Ccy);
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Currency);
                         else
-                            ccy = cash.Ccy.ToString();
+                            ccy = cash.Currency.ToString();
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");

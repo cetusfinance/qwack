@@ -74,6 +74,7 @@ namespace Qwack.Core.Instruments.Funding
         public Currency CcyPay { get; set; }
         public Currency CcyRec { get; set; }
         public Currency Pvccy { get; set; }
+        public Currency Currency => Pvccy ?? CcyPay;
         public GenericSwapLeg PayLeg { get; set; }
         public GenericSwapLeg RecLeg { get; set; }
         public CashFlowSchedule FlowSchedulePay { get; set; }

@@ -25,7 +25,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Notional { get; set; } = 1.0;
         public double Price { get; set; }
         public DateTime MaturityDate { get; set; }
-        public Currency Ccy { get; set; }
+        public Currency Currency { get; set; }
         public string DiscountCurve { get; set; }
         public string SolveCurve { get; set; }
         public string TradeId { get; set; }
@@ -63,7 +63,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public IFundingInstrument Clone() => new ZeroBond
         {
-            Ccy = Ccy,
+            Currency = Currency,
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             MaturityDate = MaturityDate,

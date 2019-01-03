@@ -583,6 +583,8 @@ namespace Qwack.Core.Cubes
             {
                 case TypeCode.String:
                     return cube.KeysForField<string>(fieldName);
+                case TypeCode.Double:
+                    return cube.KeysForField<double>(fieldName).Select(x => (object)x).ToArray();
                 case TypeCode.DateTime:
                     return cube.KeysForField<DateTime>(fieldName).Select(x=>(object)x).ToArray();
                 case TypeCode.Int32:
@@ -601,7 +603,9 @@ namespace Qwack.Core.Cubes
                 string.Join(",", cube.DataTypes.Keys.Select(x=>x).Concat(new [] {"Value" }))
             };
 
-            foreach(var row in cube.GetAllRows())
+            output.Add(string.Join(",", cube.DataTypes.Values.Select(x => x.ToString()).Concat(new[] { "System.Double" })));
+
+            foreach (var row in cube.GetAllRows())
             {
                 output.Add(string.Join(",", 
                     row.MetaData.Select(x => Convert.ToString(x))
@@ -609,6 +613,37 @@ namespace Qwack.Core.Cubes
             }
 
             System.IO.File.WriteAllLines(fileName, output.ToArray());
+        }
+
+        public static ICube FromCSVFile(string fileName)
+        {
+            var rawData = System.IO.File.ReadAllLines(fileName);
+
+            var cube = new ResultCube();
+            var fieldNames = rawData[0].Split(',');
+            var fieldTypesStr = rawData[1].Split(',');
+            var fieldTypes = new Type[fieldTypesStr.Length - 1];
+            var types = new Dictionary<string, Type>();
+            for (var i = 0; i < fieldNames.Length - 1; i++)
+            {
+                fieldTypes[i] = Type.GetType(fieldTypesStr[i]);
+                types.Add(fieldNames[i], fieldTypes[i]);
+            }
+
+            cube.Initialize(types);
+            for (var i = 2; i < rawData.Length; i++)
+            {
+                var rawRow = rawData[i].Split(',');
+                var rowMeta = new object[rawRow.Length - 1];
+                for(var j=0;j<rowMeta.Length;j++)
+                {
+                    rowMeta[j] = Convert.ChangeType(rawRow[j], fieldTypes[j]);
+                }
+                var rowValue = Convert.ToDouble(rawRow.Last());
+                cube.AddRow(rowMeta, rowValue);
+            }
+
+            return cube;
         }
     }
 }

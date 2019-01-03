@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Calibrators;
+using Qwack.Core.Cubes;
 using Qwack.Math.Interpolation;
 
 namespace Qwack.Options.VolSurfaces
@@ -19,8 +20,8 @@ namespace Qwack.Options.VolSurfaces
         public AtmVolType AtmVolType { get; }
 
 
-        public RiskyFlySurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas, 
-            double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType, 
+        public RiskyFlySurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas,
+            double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType,
             Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType, string[] pillarLabels = null)
         {
             if (pillarLabels == null)
@@ -60,7 +61,7 @@ namespace Qwack.Options.VolSurfaces
             }
             strikes[wingDeltas.Length] = 0.5;
 
-            
+
 
             var wingConstraints = new RRBFConstraint[expiries.Length][];
             var vols = new double[expiries.Length][];
@@ -76,9 +77,9 @@ namespace Qwack.Options.VolSurfaces
                     {
                         wingConstraints[i][j] = new RRBFConstraint
                         {
-                            Delta = wingDeltas[offset-j],
-                            FlyVol = flies[i][offset-j],
-                            RisykVol = riskies[i][offset-j],
+                            Delta = wingDeltas[offset - j],
+                            FlyVol = flies[i][offset - j],
+                            RisykVol = riskies[i][offset - j],
                             WingQuoteType = wingQuoteType,
                         };
                     }
@@ -136,5 +137,142 @@ namespace Qwack.Options.VolSurfaces
             return o;
         }
 
+        public ICube ToCube()
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "PointDate", typeof(DateTime) },
+                { "PointType", typeof(string) },
+                { "QuoteType", typeof(string) },
+                { "PointDelta", typeof(double) },
+            };
+            cube.Initialize(dataTypes);
+
+            for (var i = 0; i < Expiries.Length; i++)
+            {
+                var rowF = new Dictionary<string, object>
+                            {
+                                    { "PointDate", Expiries[i] },
+                                    { "PointType", "Forward" },
+                                    { "QuoteType", string.Empty },
+                                    { "PointDelta", 0.5 },
+                            };
+                cube.AddRow(rowF, Forwards[i]);
+
+                var rowA = new Dictionary<string, object>
+                            {
+                                    { "PointDate", Expiries[i] },
+                                    { "PointType", "ATM" },
+                                    { "QuoteType", AtmVolType.ToString() },
+                                    { "PointDelta", 0.5 },
+                            };
+                cube.AddRow(rowA, ATMs[i]);
+
+                for (var j = 0; j < WingDeltas.Length; j++)
+                {
+                    var rowRR = new Dictionary<string, object>
+                            {
+                                    { "PointDate", Expiries[i] },
+                                    { "PointType", "RR" },
+                                    { "QuoteType", WingQuoteType.ToString() },
+                                    { "PointDelta", WingDeltas[j] },
+                            };
+                    cube.AddRow(rowRR, Riskies[i][j]);
+
+                    var rowBF = new Dictionary<string, object>
+                            {
+                                    { "PointDate", Expiries[i] },
+                                    { "PointType", "BF" },
+                                    { "QuoteType", WingQuoteType.ToString() },
+                                    { "PointDelta", WingDeltas[j] },
+                            };
+                    cube.AddRow(rowBF, Flies[i][j]);
+                }
+            }
+
+            return cube;
+        }
+
+        public static RiskyFlySurface FromCube(ICube cube, DateTime buildDate, Interpolator1DType strikeInterpType = Interpolator1DType.GaussianKernel, Interpolator1DType timeInterpType = Interpolator1DType.LinearInVariance)
+        {
+            var rows = cube.GetAllRows();
+            var deltas = cube.KeysForField("PointDelta")
+                .Where(x => (double)x != 0.5)
+                .Select(x => (double)x)
+                .OrderBy(x => x)
+                .ToList();
+            var fwds = new Dictionary<DateTime, double>();
+            var atms = new Dictionary<DateTime, double>();
+            var rrs = new Dictionary<DateTime, double[]>();
+            var bfs = new Dictionary<DateTime, double[]>();
+            var quoteType = WingQuoteType.Simple;
+            var atmType = AtmVolType.ZeroDeltaStraddle;
+
+            foreach (var row in rows)
+            {
+                var r = row.ToDictionary(cube.DataTypes.Keys.ToArray());
+                var d = (DateTime)r["PointDate"];
+                switch ((string)r["PointType"])
+                {
+                    case "Forward":
+                        fwds[d] = row.Value;
+                        break;
+                    case "ATM":
+                        atms[d] = row.Value;
+                        atmType = (AtmVolType)Enum.Parse(typeof(AtmVolType), (string)r["QuoteType"]);
+                        break;
+                    case "RR":
+                        var delta = (double)r["PointDelta"];
+                        if (!rrs.ContainsKey(d))
+                            rrs[d] = new double[deltas.Count];
+                        var dIx = deltas.IndexOf(delta);
+                        rrs[d][dIx] = row.Value;
+                        quoteType = (WingQuoteType)Enum.Parse(typeof(WingQuoteType), (string)r["QuoteType"]);
+                        break;
+                    case "BF":
+                        var delta2 = (double)r["PointDelta"];
+                        if (!bfs.ContainsKey(d))
+                            bfs[d] = new double[deltas.Count];
+                        var dIx2 = deltas.IndexOf(delta2);
+                        bfs[d][dIx2] = row.Value;
+                        break;
+                }
+            }
+
+            var expArr = atms.OrderBy(x => x.Key).Select(x => x.Key).ToArray();
+            var atmArr = atms.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            var fwdArr = fwds.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            var rrArr = rrs.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            var bfArr = bfs.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            return new RiskyFlySurface(buildDate, atmArr, expArr, deltas.ToArray(), rrArr, bfArr, fwdArr, quoteType, atmType, strikeInterpType, timeInterpType);
+        }
+
+        public object[,] DisplayQuotes()
+        {
+            var o = new object[Expiries.Length + 1, 2 + 2 * WingDeltas.Length];
+            //headers
+            o[0, 0] = "Expiry";
+            o[0, 1] = "ATM";
+            for(var i=0;i<WingDeltas.Length;i++)
+            {
+                o[0, 2 + i] = "RR~" + WingDeltas[i];
+                o[0, 2 + WingDeltas.Length + i] = "BF~" + WingDeltas[i];
+            }
+            
+            //data
+            for(var i=0;i<Expiries.Length;i++)
+            {
+                o[1 + i, 0] = Expiries[i];
+                o[1 + i, 1] = ATMs[i];
+                for (var j = 0; j < WingDeltas.Length; j++)
+                {
+                    o[1 + i, 2 + j] = Riskies[i][j];
+                    o[1 + i, 2 + WingDeltas.Length + j] = Flies[i][j];
+                }
+            }
+
+            return o;
+        }
     }
 }

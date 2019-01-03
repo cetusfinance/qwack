@@ -7,6 +7,7 @@ using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Core.Cubes;
+using Qwack.Excel.Curves;
 
 namespace Qwack.Excel.Cubes
 {
@@ -216,6 +217,18 @@ namespace Qwack.Excel.Cubes
                 inCube.Value.ToCSVFile(FileName);
 
                 return $"Saved to {FileName}";
+            });
+        }
+
+        [ExcelFunction(Description = "Reads contents of cube object from csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeFromCSV))]
+        public static object CubeFromCSV(
+            [ExcelArgument(Description = "Output cube name")] string ObjectName,
+            [ExcelArgument(Description = "Input filename")] string FileName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cube = CubeEx.FromCSVFile(FileName);
+                return RiskFunctions.PushCubeToCache(cube, ObjectName);
             });
         }
 

@@ -223,7 +223,7 @@ namespace Qwack.Excel.Curves
           [ExcelArgument(Description = "Base curve object")] string BaseCurve,
           [ExcelArgument(Description = "Build date")] DateTime BuildDate,
           [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
-          [ExcelArgument(Description = "Array of swap objects")] object[] Swaps,
+          [ExcelArgument(Description = "Array of swap objects")] object[,] Swaps,
           [ExcelArgument(Description = "Discount curve name")] string DiscountCurveName,
           [ExcelArgument(Description = "Type of curve, e.g. LME, ICE, NYMEX etc")] object CurveType,
           [ExcelArgument(Description = "Currency")] string Currency,

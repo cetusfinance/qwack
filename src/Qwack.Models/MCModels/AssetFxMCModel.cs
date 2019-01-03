@@ -25,6 +25,8 @@ namespace Qwack.Models.MCModels
 {
     public class AssetFxMCModel : IPvModel
     {
+        private readonly string _num = "USD";
+
         private static string GetSobolFilename() => Path.Combine(GetRunningDirectory(), "SobolDirectionNumbers.txt");
         private static string GetRunningDirectory()
         {
@@ -173,25 +175,38 @@ namespace Qwack.Models.MCModels
                     }
                 }
             }
+
+            var pairsAdded = new List<string>();
             var fxPairs = portfolio.FxPairs(model);
             foreach (var fxPair in fxPairs)
             {
-                var pair = fxPair.FxPairFromString(_currencyProvider);
-                string fxPairName;
-                if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
+                var fxPairName = fxPair;
+                 var pair = fxPairName.FxPairFromString(_currencyProvider);
+
+                if (fxPairName.Substring(fxPairName.Length - 3, 3) != _num)
                 {
-                    var flippedPair = $"{pair.Foreign.Ccy}/{pair.Domestic.Ccy}";
-                    if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
-                    {
-                        throw new Exception($"Could not find Fx vol surface for {fxPair} or {flippedPair}");
-                    }
-                    pair = flippedPair.FxPairFromString(_currencyProvider);
-                    fxPairName = flippedPair;
+                    fxPairName = $"{pair.Foreign.Ccy}/{pair.Domestic.Ccy}";
+                    pair = fxPairName.FxPairFromString(_currencyProvider);
                 }
-                else
-                {
-                    fxPairName = fxPair;
-                }
+
+                if (pairsAdded.Contains(pair.ToString()))
+                    continue;
+
+
+                //if (!model.FundingModel.VolSurfaces.ContainsKey(fxPairName))
+                //{
+                //    var flippedPair = $"{pair.Foreign.Ccy}/{pair.Domestic.Ccy}";
+                //    if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
+                //    {
+                //        throw new Exception($"Could not find Fx vol surface for {fxPair} or {flippedPair}");
+                //    }
+                //    pair = flippedPair.FxPairFromString(_currencyProvider);
+                //    fxPairName = flippedPair;
+                //}
+                //else
+                //{
+                //    fxPairName = fxPair;
+                //}
                 if (!(model.FundingModel.VolSurfaces[fxPairName] is IATMVolSurface surface))
                     throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
                 var fwdCurve = new Func<double, double>(t =>
@@ -199,6 +214,9 @@ namespace Qwack.Models.MCModels
                     var date = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
                     return model.FundingModel.GetFxRate(date, fxPairName);
                 });
+
+                pairsAdded.Add(pair.ToString());
+
                 var asset = new BlackSingleAsset
                 (
                     startDate: originDate,

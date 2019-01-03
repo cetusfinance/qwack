@@ -218,7 +218,11 @@ namespace Qwack.Excel.Curves
 
                 if (!(FxVolSurfaces is ExcelMissing))
                 {
-                    var surfaces = (new object[] { FxVolSurfaces }).GetAnyFromCache<IVolSurface>();
+                    IEnumerable<IVolSurface> surfaces = null;
+                    if (FxVolSurfaces is string vsStr)
+                        surfaces = (new object[] { vsStr }).GetAnyFromCache<IVolSurface>();
+                    else
+                        surfaces = ((object[,])FxVolSurfaces).GetAnyFromCache<IVolSurface>();
                     if (surfaces.Any())
                         model.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
                 }

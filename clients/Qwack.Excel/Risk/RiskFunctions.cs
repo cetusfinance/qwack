@@ -296,11 +296,6 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        public static string PushCubeToCache(ICube cube, string ResultObjectName)
-        {
-            var resultCache = ContainerStores.GetObjectCache<ICube>();
-            resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = cube });
-            return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-        }
+        public static string PushCubeToCache(ICube cube, string ResultObjectName) => ExcelHelper.PushToCache(cube, ResultObjectName);
     }
 }

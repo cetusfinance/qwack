@@ -53,7 +53,7 @@ namespace Qwack.Models.MCModels
                     _strike = ao.Strike;
                     _notional = ao.Notional * (ao.Direction == TradeDirection.Long ? 1.0 : -1.0);
                     _optionType = ao.CallPut;
-                    _fxName = ao.FxConversionType == FxConversionType.None ? null : $"USD/{ao.PaymentCurrency.Ccy}";
+                    _fxName = ao.FxConversionType == FxConversionType.None ? null : $"{ao.PaymentCurrency.Ccy}/USD";
                     _asianFxDates = ao.FxFixingDates?.ToList()??_asianDates;
                     _discountCurve = ao.DiscountCurve;
                     _payDate = ao.PaymentDate;
@@ -65,7 +65,7 @@ namespace Qwack.Models.MCModels
                     _strike = asw.Strike;
                     _notional = asw.Notional * (asw.Direction == TradeDirection.Long ? 1.0 : -1.0);
                     _optionType = OptionType.Swap;
-                    _fxName = asw.FxConversionType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
+                    _fxName = asw.FxConversionType == FxConversionType.None ? null : $"{asw.PaymentCurrency.Ccy}/USD";
                     _asianFxDates = asw.FxFixingDates?.ToList() ?? _asianDates;
                     _discountCurve = asw.DiscountCurve;
                     _payDate = asw.PaymentDate;
@@ -80,7 +80,7 @@ namespace Qwack.Models.MCModels
                     _strike = eo.Strike;
                     _notional = eo.Notional * (eo.Direction == TradeDirection.Long ? 1.0 : -1.0);
                     _optionType = eo.CallPut;
-                    _fxName = eo.FxConversionType == FxConversionType.None ? null : $"USD/{eo.PaymentCurrency.Ccy}";
+                    _fxName = eo.FxConversionType == FxConversionType.None ? null : $"{eo.PaymentCurrency.Ccy}/USD";
                     _asianFxDates = _asianDates;
                     _discountCurve = eo.DiscountCurve;
                     _payDate = eo.PaymentDate;
@@ -92,7 +92,7 @@ namespace Qwack.Models.MCModels
                     _strike = f.Strike;
                     _notional = f.Notional * (f.Direction == TradeDirection.Long ? 1.0 : -1.0);
                     _optionType = OptionType.Swap;
-                    _fxName = f.FxConversionType == FxConversionType.None ? null : $"USD/{f.PaymentCurrency.Ccy}";
+                    _fxName = f.FxConversionType == FxConversionType.None ? null : $"{f.PaymentCurrency.Ccy}/USD";
                     _asianFxDates = _asianDates;
                     _discountCurve = f.DiscountCurve;
                     _payDate = f.PaymentDate;
@@ -135,8 +135,11 @@ namespace Qwack.Models.MCModels
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
             if (_isCompo)
+            {
                 _fxIndex = dims.GetDimension(_fxName);
-
+                if (_fxIndex < 0)
+                    throw new Exception($"Fx index {_fxName} not found in MC engine");
+            }
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_asianDates.Count];
             _fxDateIndexes = new int[_asianFxDates.Count];
@@ -181,7 +184,7 @@ namespace Qwack.Models.MCModels
                 if (_fxType == FxConversionType.ConvertThenAverage)
                 {
                     for (var i = 0; i < _dateIndexes.Length; i++)
-                        finalValues += steps[_dateIndexes[i]] * (_isCompo ? stepsfx[_dateIndexes[i]] : _one);
+                        finalValues += steps[_dateIndexes[i]] / (_isCompo ? stepsfx[_dateIndexes[i]] : _one);
 
                     finalValues = finalValues / new Vector<double>(_dateIndexes.Length);
                 }
@@ -198,7 +201,7 @@ namespace Qwack.Models.MCModels
                             finalValuesFx += stepsfx[_fxDateIndexes[i]];
                         
                         finalValuesFx = finalValuesFx / new Vector<double>(_fxDateIndexes.Length);
-                        finalValues = finalValues * finalValuesFx;
+                        finalValues = finalValues / finalValuesFx;
                     }
                 }
 

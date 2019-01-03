@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Dates;
+using Qwack.Excel.Utils;
 
 namespace Qwack.Excel.Services
 {
@@ -197,6 +198,22 @@ namespace Qwack.Excel.Services
             return tS;
         }
 
+        public static IEnumerable<T> GetAnyFromCache<T>(this object[,] Names)
+        {
+            var tCache = ContainerStores.GetObjectCache<T>();
+            var ts = new List<T>();
+            for (var i = 0; i < Names.GetLength(0); i++)
+                for (var j = 0; j < Names.GetLength(1); j++)
+                {
+                    var s = Names[i, j];
+                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) && tCache.Exists(s as string))
+                    {
+                        ts.Add(tCache.GetObject(s as string).Value);
+                    }
+                }
+            return ts;
+        }
+
         public static T[] ObjectRangeToVector<T>(this object[,] input)
         {      
             if(input.GetLength(0)> input.GetLength(1))
@@ -261,6 +278,13 @@ namespace Qwack.Excel.Services
                 }
 
             return o;
+        }
+
+        public static string PushToCache<T>(T objToPush, string ResultObjectName)
+        {
+            var resultCache = ContainerStores.GetObjectCache<T>();
+            resultCache.PutObject(ResultObjectName, new SessionItem<T> { Name = ResultObjectName, Value = objToPush });
+            return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
         }
     }
 }

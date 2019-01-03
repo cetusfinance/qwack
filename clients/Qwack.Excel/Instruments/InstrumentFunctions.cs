@@ -85,10 +85,8 @@ namespace Qwack.Excel.Instruments
 
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
-                
-                var cache = ContainerStores.GetObjectCache<AsianSwap>();
-                cache.PutObject(ObjectName, new SessionItem<AsianSwap> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -157,9 +155,7 @@ namespace Qwack.Excel.Instruments
                 foreach (var rs in product.RecSwaplets)
                     rs.DiscountCurve = DiscountCurve;
 
-                var cache = ContainerStores.GetObjectCache<AsianBasisSwap>();
-                cache.PutObject(ObjectName, new SessionItem<AsianBasisSwap> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -190,9 +186,7 @@ namespace Qwack.Excel.Instruments
                 foreach (var rs in product.RecSwaplets)
                     rs.DiscountCurve = DiscountCurve;
 
-                var cache = ContainerStores.GetObjectCache<AsianBasisSwap>();
-                cache.PutObject(ObjectName, new SessionItem<AsianBasisSwap> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -224,10 +218,8 @@ namespace Qwack.Excel.Instruments
                      ExpiryDate = ExpiryDate,
                      TradeId = ObjectName
                 };
-                
-                var cache = ContainerStores.GetObjectCache<Future>();
-                cache.PutObject(ObjectName, new SessionItem<Future> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -274,9 +266,7 @@ namespace Qwack.Excel.Instruments
                     MarginingType = mType
                 };
 
-                var cache = ContainerStores.GetObjectCache<FuturesOption>();
-                cache.PutObject(ObjectName, new SessionItem<FuturesOption> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -341,9 +331,7 @@ namespace Qwack.Excel.Instruments
                     s.DiscountCurve = DiscountCurve;
                 }
 
-                var cache = ContainerStores.GetObjectCache<AsianSwapStrip>();
-                cache.PutObject(ObjectName, new SessionItem<AsianSwapStrip> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -421,9 +409,7 @@ namespace Qwack.Excel.Instruments
                     s.DiscountCurve = DiscountCurve;
                 }
 
-                var cache = ContainerStores.GetObjectCache<AsianSwapStrip>();
-                cache.PutObject(ObjectName, new SessionItem<AsianSwapStrip> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -495,10 +481,8 @@ namespace Qwack.Excel.Instruments
 
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
-                
-                var cache = ContainerStores.GetObjectCache<AsianOption>();
-                cache.PutObject(ObjectName, new SessionItem<AsianOption> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -570,9 +554,7 @@ namespace Qwack.Excel.Instruments
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
 
-                var cache = ContainerStores.GetObjectCache<AsianLookbackOption>();
-                cache.PutObject(ObjectName, new SessionItem<AsianLookbackOption> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -644,9 +626,63 @@ namespace Qwack.Excel.Instruments
                     FixingCalendar = cal
                 };
 
-                var cache = ContainerStores.GetObjectCache<EuropeanBarrierOption>();
-                cache.PutObject(ObjectName, new SessionItem<EuropeanBarrierOption> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an european option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanOption))]
+        public static object CreateEuropeanOption(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
+             [ExcelArgument(Description = "Asset Id")] string AssetId,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Strike")] double Strike,
+             [ExcelArgument(Description = "Put/Call")] string PutOrCall,
+             [ExcelArgument(Description = "Notional")] double Notional,
+             [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+             [ExcelArgument(Description = "Payment offset")] object PaymentOffsetOrDate,
+             [ExcelArgument(Description = "Spot lag")] object SpotLag,
+             [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var paymentOffset = PaymentOffsetOrDate is double ? "0b" : PaymentOffsetOrDate.OptionalExcel("0b");
+
+                if (!Enum.TryParse(PutOrCall, out OptionType oType))
+                {
+                    return $"Could not parse put/call flag - {PutOrCall}";
+                }
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
+                    return $"Calendar {paymentCal} not found in cache";
+                }
+                var pOffset = new Frequency(paymentOffset);
+                var sLag = new Frequency(spotLag);
+                var currency = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+
+                var product = new EuropeanOption()
+                {
+                    AssetId = AssetId,
+                    CallPut = oType,
+                    Direction = TradeDirection.Long,
+                    ExpiryDate = ExpiryDate,
+                    PaymentCurrency = currency,
+                    FxConversionType = FxConversionType.ConvertThenAverage,
+                    PaymentDate = PaymentOffsetOrDate is double pdd ? DateTime.FromOADate(pdd) : ExpiryDate.AddPeriod(RollType.F, pCal, new Frequency(paymentOffset)),
+                    TradeId = ObjectName,
+                    DiscountCurve = DiscountCurve,
+                    SpotLag = sLag,
+                    Notional = Notional,
+                    PaymentCalendar = pCal,
+                    PaymentLag = new Frequency(paymentOffset),
+                    Strike = Strike
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -660,7 +696,7 @@ namespace Qwack.Excel.Instruments
                 if (!ContainerStores.GetObjectCache<IAssetFxModel>().TryGetObject(ModelName, out var model))
                     throw new Exception($"Could not find model with name {ModelName}");
 
-                var pf = GetPortfolio(new[] { TradeName });
+                var pf = GetPortfolio(new[,] { { TradeName } });
 
                 if(!pf.Instruments.Any())
                     throw new Exception($"Could not find any trade with name {TradeName}");
@@ -685,7 +721,7 @@ namespace Qwack.Excel.Instruments
                 if (!ContainerStores.GetObjectCache<IAssetFxModel>().TryGetObject(ModelName, out var model))
                     throw new Exception($"Could not find model with name {ModelName}");
 
-                var pf = GetPortfolio(new[] { TradeName });
+                var pf = GetPortfolio(new[,] { { TradeName } });
 
                 if (!pf.Instruments.Any())
                     throw new Exception($"Could not find any trade with name {TradeName}");
@@ -809,7 +845,7 @@ namespace Qwack.Excel.Instruments
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio))]
         public static object CreatePortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName,
-            [ExcelArgument(Description = "Instruments")] object[] Instruments)
+            [ExcelArgument(Description = "Instruments")] object[,] Instruments)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -863,7 +899,7 @@ namespace Qwack.Excel.Instruments
             var pfolioCache = ContainerStores.GetObjectCache<Portfolio>();
             if(!pfolioCache.TryGetObject(name, out var pfolio))
             {
-                var newPf = GetPortfolio(new[] { name });
+                var newPf = GetPortfolio(new[,] { { name } });
                 if (newPf.Instruments.Any())
                     return newPf;
 
@@ -894,7 +930,7 @@ namespace Qwack.Excel.Instruments
             throw new Exception($"Could not find model with name {name} in cahce");
         }
 
-        public static Portfolio GetPortfolio(object[] Instruments)
+        public static Portfolio GetPortfolio(object[,] Instruments)
         {
             var swaps = Instruments.GetAnyFromCache<IrSwap>();
             var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();

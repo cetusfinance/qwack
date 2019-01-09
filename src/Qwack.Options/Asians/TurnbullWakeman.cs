@@ -166,5 +166,25 @@ namespace Qwack.Options.Asians
 
             return solvedStrike;
         }
+
+        public static double StrikeForPV(double targetPV, double[] forwards, DateTime[] fixingDates, IVolSurface volSurface, DateTime evalDate, DateTime payDate, double riskFree, OptionType callPut)
+        {
+            var minStrike = forwards.Min() / 100.0;
+            var maxStrike = forwards.Max() * 100.0;
+
+            var ixMin = Array.BinarySearch(fixingDates, evalDate);
+            if (ixMin < 0) ixMin = ~ixMin;
+
+            Func<double, double> testFunc = (absK =>
+            {
+                var vols = fixingDates.Select((d, ix) => ix >= ixMin ? volSurface.GetVolForAbsoluteStrike(absK, d, forwards[ix]) : 0.0).ToArray();
+                var pv = PV(forwards, fixingDates, evalDate, payDate, vols, absK, riskFree, callPut);
+                return targetPV - pv;
+            });
+
+            var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, minStrike, maxStrike, 1e-8);
+
+            return solvedStrike;
+        }
     }
 }

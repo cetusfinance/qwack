@@ -10,6 +10,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
+using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;
 using static System.Math;
 
@@ -38,6 +39,7 @@ namespace Qwack.Models.Risk
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "AssetId", typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { "PointLabel", typeof(string) },
@@ -65,6 +67,7 @@ namespace Qwack.Models.Risk
                 var pvCube = basePvModel.PV(reportingCcy); 
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
 
                 var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
 
@@ -87,6 +90,7 @@ namespace Qwack.Models.Risk
                             var row = new Dictionary<string, object>
                             {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                                 { "AssetId", surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { "PointLabel", bCurve.Key },
@@ -101,6 +105,115 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
+        public static ICube AssetSegaRega(this IPvModel pvModel, Currency reportingCcy)
+        {
+            var bumpSize = 0.001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            foreach (var surfaceName in model.VolSurfaceNames)
+            {
+                if (!(model.GetVolSurface(surfaceName) is RiskyFlySurface volObj))
+                    continue;
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = model.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate();
+
+                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = basePvModel.PV(reportingCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                var bumpedSurfacesSega = volObj.GetSegaScenarios(bumpSize, lastDateInBook);
+                var bumpedSurfacesRega = volObj.GetRegaScenarios(bumpSize, lastDateInBook);
+
+                var t1 = ParallelUtils.Instance.Foreach(bumpedSurfacesSega.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //sega and rega quoted as for a 10bp move
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.001;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Sega" }
+                            };
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                }, false);
+
+                var t2 = ParallelUtils.Instance.Foreach(bumpedSurfacesRega.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //sega and rega quoted as for a 10bp move
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.001;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Rega" }
+                            };
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                }, false);
+
+                var tasks = new[] { t1, t2 };
+                Task.WaitAll(tasks);
+            }
+ 
+            return cube.Sort();
+        }
+
+
         public static ICube FxVega(this IPvModel pvModel, Currency reportingCcy)
         {
             var bumpSize = 0.001;
@@ -108,6 +221,7 @@ namespace Qwack.Models.Risk
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "AssetId", typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { "PointLabel", typeof(string) },
@@ -130,6 +244,7 @@ namespace Qwack.Models.Risk
             var pvCube = basePvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex("TradeId");
+            var tTypeIx = pvCube.GetColumnIndex("TradeType");
 
             foreach (var surface in model.FundingModel.VolSurfaces)
             {
@@ -155,6 +270,7 @@ namespace Qwack.Models.Risk
                             var row = new Dictionary<string, object>
                             {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                                 { "AssetId", surface.Key },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { "PointLabel", bCurve.Key },
@@ -856,7 +972,7 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        public static ICube AssetGreeks(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static async Task<ICube> AssetGreeks(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -915,7 +1031,7 @@ namespace Qwack.Models.Risk
                 { "IrDelta", new Task<ICube>(() => pvModel.AssetIrDelta(reportingCcy)) }
             };
 
-            ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
+            await ParallelUtils.Instance.QueueAndRunTasks(tasks.Values);
 
 
             //delta

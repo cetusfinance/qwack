@@ -378,6 +378,20 @@ namespace Qwack.Models.Models
             return BlackFunctions.BlackPV(fwd, euOpt.Strike, rf, t, vol, euOpt.CallPut);
         }
 
+        public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model)
+        {
+            if (fxEuOpt.ExpiryDate < model.BuildDate)
+                return 0.0;
+
+            var fwdDate = fxEuOpt.Pair.SpotDate(fxEuOpt.ExpiryDate);
+            var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.PairStr);
+            var vol = model.FundingModel.GetVolSurface(fxEuOpt.PairStr).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
+            var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
+            var t = model.BuildDate.CalculateYearFraction(fxEuOpt.DeliveryDate, DayCountBasis.Act365F);
+            var rf = Log(1 / df) / t;
+            return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, rf, t, vol, fxEuOpt.CallPut);
+        }
+
         public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model)
         {
             if (euBOpt.ExpiryDate < model.BuildDate)
@@ -540,6 +554,15 @@ namespace Qwack.Models.Models
                             fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
                         else
                             ccy = euBOpt.PaymentCurrency.ToString();
+                        break;
+                    case FxVanillaOption euFxOpt:
+                        tradeType = "EuropeanOption";
+                        pv = euFxOpt.PV(model);
+                        tradeId = euFxOpt.TradeId;
+                        if (reportingCurrency != null)
+                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euFxOpt.PaymentCurrency);
+                        else
+                            ccy = euFxOpt.PaymentCurrency.ToString();
                         break;
                     case EuropeanOption euOpt:
                         tradeType = "EuropeanOption";
@@ -798,6 +821,14 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.AssetVega(reportingCcy);
+
+        }
+
+        public static ICube AssetSegaRega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
+        {
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.AssetSegaRega(reportingCcy);
 
         }
 

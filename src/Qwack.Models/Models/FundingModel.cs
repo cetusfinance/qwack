@@ -10,15 +10,17 @@ namespace Qwack.Models
 {
     public class FundingModel : IFundingModel
     {
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         private FundingModel()
         {
         }
 
-        public FundingModel(DateTime buildDate, IrCurve[] curves, ICurrencyProvider currencyProvider)
+        public FundingModel(DateTime buildDate, IrCurve[] curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             _currencyProvider = currencyProvider;
+            _calendarProvider = calendarProvider;
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
             FxMatrix = new FxMatrix(_currencyProvider);
@@ -26,9 +28,10 @@ namespace Qwack.Models
             SetupMappings();
         }
 
-        public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves, ICurrencyProvider currencyProvider)
+        public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             _currencyProvider = currencyProvider;
+            _calendarProvider = calendarProvider;
             BuildDate = buildDate;
             Curves = new Dictionary<string, IrCurve>(curves);
             FxMatrix = new FxMatrix(_currencyProvider);
@@ -79,7 +82,7 @@ namespace Qwack.Models
                 {
                     return kv.Value;
                 }
-            }).ToArray(), _currencyProvider)
+            }).ToArray(), _currencyProvider, _calendarProvider)
             {
                 FxMatrix = FxMatrix
             };
@@ -88,7 +91,7 @@ namespace Qwack.Models
 
         public IFundingModel Clone()
         {
-            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray(), _currencyProvider)
+            var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray(), _currencyProvider, _calendarProvider)
             {
                 FxMatrix = FxMatrix,
                 VolSurfaces = VolSurfaces
@@ -98,7 +101,7 @@ namespace Qwack.Models
 
         public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => c.Clone()).ToArray(), _currencyProvider)
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => c.Clone()).ToArray(), _currencyProvider, _calendarProvider)
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };
@@ -110,7 +113,7 @@ namespace Qwack.Models
 
         public double GetFxRate(DateTime settlementDate, string fxPair)
         {
-            var pair = fxPair.FxPairFromString(_currencyProvider);
+            var pair = fxPair.FxPairFromString(_currencyProvider, _calendarProvider);
             return GetFxRate(settlementDate, pair.Domestic, pair.Foreign);
         }
 

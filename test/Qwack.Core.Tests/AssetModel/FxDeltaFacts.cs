@@ -55,7 +55,7 @@ namespace Qwack.Core.Tests.AssetModel
             var zarCurve = new IrCurve(irPillars, zarRates, startDate, "ZAR.CURVE", Interpolator1DType.Linear, zar, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);
@@ -133,7 +133,7 @@ namespace Qwack.Core.Tests.AssetModel
             var zarCurve = new IrCurve(irPillars, zarRates, startDate, "ZAR.CURVE", Interpolator1DType.Linear, zar, "CURVE");
             var usdCurve = new IrCurve(irPillars, usdRates, startDate, "USD.CURVE", Interpolator1DType.Linear, usd, "CURVE");
 
-            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(startDate, new[] { zarCurve, usdCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             fModel.SetupFx(fxMatrix);
 
             var aModel = new AssetFxModel(startDate, fModel);

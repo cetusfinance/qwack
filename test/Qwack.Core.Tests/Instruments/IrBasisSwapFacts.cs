@@ -31,7 +31,7 @@ namespace Qwack.Core.Tests.Instruments
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve3m = new IrCurve(pillars, rates3m, bd, "USD.BLAH.3M", Interpolator1DType.Linear, usd);
             var discoCurve6m = new IrCurve(pillars, rates6m, bd, "USD.BLAH.6M", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve3m, discoCurve6m }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(bd, new[] { discoCurve3m, discoCurve6m }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
 
             var ix = new FloatRateIndex

@@ -123,15 +123,84 @@ namespace Qwack.Options.VolSurfaces
             base.Build(originDate, strikes, expiries, vols);
         }
 
+        private int LastIx(DateTime? LastSensitivityDate)
+        {
+            var lastExpiry = Expiries.Length;
+            if (LastSensitivityDate.HasValue)
+            {
+                var ix = Array.BinarySearch(Expiries, LastSensitivityDate.Value);
+                ix = ix < 0 ? ~ix : ix;
+                ix += 2;
+                lastExpiry = System.Math.Min(ix, Expiries.Length);
+            }
+            return lastExpiry;
+        }
+
         public new Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
 
-            for (var i = 0; i < Expiries.Length; i++)
+            var lastExpiry = LastIx(LastSensitivityDate);
+
+            for (var i = 0; i < lastExpiry; i++)
             {
                 var volsBumped = (double[])ATMs.Clone();
                 volsBumped[i] += bumpSize;
                 o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, volsBumped, Expiries, WingDeltas, Riskies, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+            }
+
+            return o;
+        }
+
+        public Dictionary<string, IVolSurface> GetRegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastExpiry = LastIx(LastSensitivityDate);
+            var highDeltaFirst = WingDeltas.First() > WingDeltas.Last();
+
+            for (var i = 0; i < lastExpiry; i++)
+            {
+                var volsBumped = (double[][])Riskies.Clone();
+                if(highDeltaFirst)
+                {
+                    var ratios = volsBumped[i].Select(x => x / volsBumped[i][0]).ToArray();
+                    volsBumped[i] = ratios.Select(r => (volsBumped[i][0] + bumpSize) * r).ToArray();
+                }
+                else
+                {
+                    var ratios = volsBumped[i].Select(x => x / volsBumped[i].Last()).ToArray();
+                    volsBumped[i] = ratios.Select(r => (volsBumped[i].Last() + bumpSize) * r).ToArray();
+                }
+               
+                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, volsBumped, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+            }
+
+            return o;
+        }
+
+        public Dictionary<string, IVolSurface> GetSegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastExpiry = LastIx(LastSensitivityDate);
+            var highDeltaFirst = WingDeltas.First() > WingDeltas.Last();
+
+            for (var i = 0; i < lastExpiry; i++)
+            {
+                var volsBumped = (double[][])Flies.Clone();
+                if (highDeltaFirst)
+                {
+                    var ratios = volsBumped[i].Select(x => x / volsBumped[i][0]).ToArray();
+                    volsBumped[i] = ratios.Select(r => (volsBumped[i][0] + bumpSize) * r).ToArray();
+                }
+                else
+                {
+                    var ratios = volsBumped[i].Select(x => x / volsBumped[i].Last()).ToArray();
+                    volsBumped[i] = ratios.Select(r => (volsBumped[i].Last() + bumpSize) * r).ToArray();
+                }
+
+                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, Riskies, volsBumped, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
             }
 
             return o;

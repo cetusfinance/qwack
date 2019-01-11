@@ -18,7 +18,7 @@ namespace Qwack.Utils.Parallel
 
         private static readonly int numThreads = Environment.ProcessorCount * 2;
 
-        private SemaphoreSlim _slimLock2 = new SemaphoreSlim(numThreads, numThreads);
+        private SemaphoreSlim _slimLock = new SemaphoreSlim(numThreads, numThreads);
 
         private ParallelUtils()
         {
@@ -37,7 +37,7 @@ namespace Qwack.Utils.Parallel
                 return;
             }
 
-            RunOptimistically(values, code);
+            await RunOptimistically(values, code);
         }
 
         public async Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
@@ -55,12 +55,12 @@ namespace Qwack.Utils.Parallel
                 code.Invoke(v);
         }
 
-        private void RunOptimistically<T>(IList<T> values, Action<T> code)
+        private async Task RunOptimistically<T>(IList<T> values, Action<T> code)
         {
             var taskList = new List<Task>();
             foreach (var v in values)
             {
-                if (_slimLock2.Wait(0))
+                if (_slimLock.Wait(0))
                 {
                     var t = RunOnThread(v, code);
                     taskList.Add(t);
@@ -70,31 +70,39 @@ namespace Qwack.Utils.Parallel
                     code.Invoke(v);
             }
 
-            Task.WaitAll(taskList.ToArray());
+            await Task.WhenAll(taskList.ToArray());
         }
 
-        public void QueueAndRunTasks(IEnumerable<Task> tasks)
+        public async Task QueueAndRunTasks(IEnumerable<Task> tasks)
         {
             var taskList = new List<Task>();
             foreach (var t in tasks)
             {
-                if (_slimLock2.Wait(0))
+                if (_slimLock.Wait(0))
                 {
-                    taskList.Add(t);
-                    t.ContinueWith((t1) => _slimLock2.Release());
+                    taskList.Add(t.ContinueWith((t1) => _slimLock.Release(),TaskContinuationOptions.ExecuteSynchronously));
                     t.Start();
                 }
                 else
                     t.RunSynchronously();
             }
 
-            Task.WaitAll(taskList.ToArray());
+            await Task.WhenAll(taskList.ToArray());
         }
 
         private Task RunOnThread<T>(T value, Action<T> code)
         {
-            var task = new Task(() => code.Invoke(value));
-            task.ContinueWith((t) => _slimLock2.Release());
+            var task = new Task(() =>
+            {
+                try
+                {
+                    code.Invoke(value);
+                }
+                finally
+                {
+                    _slimLock.Release();
+                }
+            });
 
             return task;
         }

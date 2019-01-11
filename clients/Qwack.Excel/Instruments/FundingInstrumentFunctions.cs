@@ -21,7 +21,7 @@ namespace Qwack.Excel.Instruments
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<FundingInstrumentFunctions>();
 
 
-        [ExcelFunction(Description = "Creates a FRA object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFRA))]
+        [ExcelFunction(Description = "Creates a FRA object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFRA), IsThreadSafe = true)]
         public static object CreateFRA(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Value date")] DateTime ValDate,
@@ -73,7 +73,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an fx forward object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxForward))]
+        [ExcelFunction(Description = "Creates an fx forward object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxForward), IsThreadSafe = true)]
         public static object CreateFxForward(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Settle Date")] DateTime SettleDate,
@@ -112,7 +112,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a standard interest rate swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRS))]
+        [ExcelFunction(Description = "Creates a standard interest rate swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRS), IsThreadSafe = true)]
         public static object CreateIRS(
                [ExcelArgument(Description = "Object name")] string ObjectName,
                [ExcelArgument(Description = "Value date")] DateTime ValDate,
@@ -158,7 +158,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a short-term interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode))]
+        [ExcelFunction(Description = "Creates a short-term interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode), IsThreadSafe = true)]
         public static object CreateSTIRFromCode(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Value date")] DateTime ValDate,
@@ -211,7 +211,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a compounded overnight interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOISFutureFromCode))]
+        [ExcelFunction(Description = "Creates a compounded overnight interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOISFutureFromCode), IsThreadSafe = true)]
         public static object CreateOISFutureFromCode(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Value date")] DateTime ValDate,
@@ -263,7 +263,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an interest rate basis swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRBasisSwap))]
+        [ExcelFunction(Description = "Creates an interest rate basis swap object following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateIRBasisSwap), IsThreadSafe = true)]
         public static object CreateIRBasisSwap(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Value date")] DateTime ValDate,
@@ -312,7 +312,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a fixed-rate loan/depo object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFixedRateLoanDepo))]
+        [ExcelFunction(Description = "Creates a fixed-rate loan/depo object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFixedRateLoanDepo), IsThreadSafe = true)]
         public static object CreateFixedRateLoanDepo(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Start date")] DateTime StartDate,
@@ -344,7 +344,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a collection of funding instruments to calibrate a curve engine", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection))]
+        [ExcelFunction(Description = "Creates a collection of funding instruments to calibrate a curve engine", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection), IsThreadSafe = true)]
         public static object CreateFundingInstrumentCollection(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Instruments")] object[] Instruments)
@@ -383,7 +383,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Implies solve stages from a Funding Instrument Collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ImplySolveStages))]
+        [ExcelFunction(Description = "Implies solve stages from a Funding Instrument Collection", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ImplySolveStages), IsThreadSafe = true)]
         public static object ImplySolveStages(
             [ExcelArgument(Description = "Funding Instrument Collection Name")] string FICName,
             [ExcelArgument(Description = "Fx Matrix Name")] string FxMatrixName)
@@ -399,7 +399,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a new rate index object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateRateIndex))]
+        [ExcelFunction(Description = "Creates a new rate index object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateRateIndex), IsThreadSafe = true)]
         public static object CreateRateIndex(
               [ExcelArgument(Description = "Index name")] string IndexName,
               [ExcelArgument(Description = "Currency")] string Currency,
@@ -455,7 +455,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a new fx spot rate matrix", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxMatrix))]
+        [ExcelFunction(Description = "Creates a new fx spot rate matrix", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxMatrix), IsThreadSafe = true)]
         public static object CreateFxMatrix(
               [ExcelArgument(Description = "Fx matrix name")] string ObjectName,
               [ExcelArgument(Description = "Base currency")] string BaseCurrency,
@@ -490,7 +490,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a new fx pair definition", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxPair))]
+        [ExcelFunction(Description = "Creates a new fx pair definition", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxPair), IsThreadSafe = true)]
         public static object CreateFxPair(
               [ExcelArgument(Description = "Fx pair name")] string ObjectName,
               [ExcelArgument(Description = "Domestic currency")] string DomesticCurrency,

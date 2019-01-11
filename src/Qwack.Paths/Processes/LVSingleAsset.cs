@@ -17,6 +17,10 @@ namespace Qwack.Paths.Processes
     public class LVSingleAsset : IPathProcess, IRequiresFinish
     {
         private IVolSurface _surface;
+
+        private IATMVolSurface _adjSurface;
+        private double _correlation;
+
         private readonly DateTime _expiryDate;
         private DateTime _startDate;
         private readonly int _numberOfSteps;
@@ -31,7 +35,7 @@ namespace Qwack.Paths.Processes
 
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
-        public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime,double> pastFixings=null)
+        public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime,double> pastFixings=null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -40,6 +44,9 @@ namespace Qwack.Paths.Processes
             _name = name;
             _pastFixings = pastFixings??(new Dictionary<DateTime,double>());
             _forwardCurve = forwardCurve;
+
+            _adjSurface = fxAdjustSurface;
+            _correlation = fxAssetCorrelation;
         }
 
         public bool IsComplete => _isComplete;
@@ -56,10 +63,11 @@ namespace Qwack.Paths.Processes
             _lvInterps = new IInterpolator1D[_timesteps.TimeStepCount - 1];
 
             var strikes = new double[_timesteps.TimeStepCount][];
+            var atmVols = new double[_timesteps.TimeStepCount];
             for (var t = 0; t < strikes.Length; t++)
             {
                 var fwd = _forwardCurve(_timesteps.Times[t]);
-                var atmVol = _surface.GetVolForDeltaStrike(0.5, _timesteps.Times[t], fwd);
+                atmVols[t] = _surface.GetVolForDeltaStrike(0.5, _timesteps.Times[t], fwd);
 
                 if (_timesteps.Times[t] == 0)
                 {
@@ -72,7 +80,7 @@ namespace Qwack.Paths.Processes
                     for (var k = 0; k < strikes[t].Length; k++)
                     {
                         var deltaK = -(0.01 + 0.01 * k);
-                        strikes[t][k] = Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, _timesteps.Times[t], atmVol);
+                        strikes[t][k] = Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, _timesteps.Times[t], atmVols[t]);
                     }
                 }
             }
@@ -105,7 +113,10 @@ namespace Qwack.Paths.Processes
             var prevSpot = _forwardCurve(0);
             for (var t = 1; t < _drifts.Length; t++)
             {
-                var spot = _forwardCurve(_timesteps.Times[t]);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
+                var driftAdj = _adjSurface == null ? 1.0 : System.Math.Exp(atmVols[t] * fxAtmVol * _timesteps.Times[t] * _correlation);
+                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
+
                 _drifts[t] = System.Math.Log(spot / prevSpot) / _timesteps.TimeSteps[t];
     
                 prevSpot = spot;

@@ -27,7 +27,7 @@ namespace Qwack.Core.Tests.Instruments
             var rates = pillars.Select(p => flatRate).ToArray();
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             var maturity = bd.AddDays(365);
             var notional = 100e6;
@@ -63,7 +63,7 @@ namespace Qwack.Core.Tests.Instruments
             var rates = pillars.Select(p => flatRate).ToArray();
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
-            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             var start = bd.AddDays(-10);
             var maturity = bd.AddDays(365);

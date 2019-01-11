@@ -66,8 +66,10 @@ namespace Qwack.Core.Instruments
                 .Where(x => x is IAssetInstrument);
             var fxTrades = portfolio.Instruments
                 .Where(x => x is FxForward);
+            var fxOptionTrades = portfolio.Instruments
+                .Where(x => x is FxVanillaOption);
 
-            if (!fxTrades.Any() && !assetTrades.Any())
+            if (!fxTrades.Any() && !assetTrades.Any() && !fxOptionTrades.Any())
                 return new string[0];
 
             var o = new List<string>();
@@ -76,7 +78,11 @@ namespace Qwack.Core.Instruments
             {
                 o.AddRange(fxTrades.Select(x => ((FxForward)x).Pair));
             }
-            if(assetTrades.Any())
+            if (fxOptionTrades.Any())
+            {
+                o.AddRange(fxOptionTrades.Select(x => ((FxVanillaOption)x).PairStr));
+            }
+            if (assetTrades.Any())
             {
                 var compoTrades = assetTrades.Select(x=>x as IAssetInstrument)
                     .Where(x => x.FxType(model) != FxConversionType.None);

@@ -14,7 +14,7 @@ namespace Qwack.Excel.Dates
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
-        [ExcelFunction(Description = "Checks if the given date is a holiday according to the specified calendars", Category = "QDates")]
+        [ExcelFunction(Description = "Checks if the given date is a holiday according to the specified calendars", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_IsHoliday(
             [ExcelArgument(Description = "The date to check")] DateTime DateToCheck,
             [ExcelArgument(Description = "The calendar(s) to check against")]string calendar)
@@ -30,7 +30,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Adds a specified period to a date, adjusting for holidays", Category = "QDates")]
+        [ExcelFunction(Description = "Adds a specified period to a date, adjusting for holidays", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_AddPeriod(
             [ExcelArgument(Description = "Starting date")] DateTime StartDate,
             [ExcelArgument(Description = "Period specified as a string e.g. 1w")]string Period,
@@ -52,7 +52,7 @@ namespace Qwack.Excel.Dates
              });
         }
 
-        [ExcelFunction(Description = "Subtracts a specified period from a date, adjusting for holidays", Category = "QDates")]
+        [ExcelFunction(Description = "Subtracts a specified period from a date, adjusting for holidays", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_SubtractPeriod(
            [ExcelArgument(Description = "Starting date")] DateTime StartDate,
            [ExcelArgument(Description = "Period specified as a string e.g. 1w")]string Period,
@@ -94,7 +94,7 @@ namespace Qwack.Excel.Dates
             return true;
         }
 
-        [ExcelFunction(Description = "Returns N-th instance of a specific weekday in a given month", Category = "QDates")]
+        [ExcelFunction(Description = "Returns N-th instance of a specific weekday in a given month", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_SpecificWeekday(
             [ExcelArgument(Description = "Date in month")] DateTime DateInMonth,
             [ExcelArgument(Description = "Day of week")]string DayOfWeek,
@@ -109,7 +109,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns N-th last instance of a specific weekday in a given month", Category = "QDates")]
+        [ExcelFunction(Description = "Returns N-th last instance of a specific weekday in a given month", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_SpecificLastWeekday(
             [ExcelArgument(Description = "Date in month")] DateTime DateInMonth,
             [ExcelArgument(Description = "Day of week")]string DayOfWeek,
@@ -124,7 +124,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns 3rd Wednesday in a given month", Category = "QDates")]
+        [ExcelFunction(Description = "Returns 3rd Wednesday in a given month", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_ThirdWednesday(
             [ExcelArgument(Description = "Date in month")] DateTime DateInMonth)
         {
@@ -134,7 +134,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns year faction for two dates and a given day count method", Category = "QDates")]
+        [ExcelFunction(Description = "Returns year faction for two dates and a given day count method", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_YearFraction(
             [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
             [ExcelArgument(Description = "Period end date (exclusive)")] DateTime EndDate,
@@ -149,7 +149,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns number of business days in a period for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns number of business days in a period for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_NumBusinessDaysInPeriod(
             [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
             [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
@@ -164,7 +164,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns list of business days in a period for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns list of business days in a period for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_ListBusinessDaysInPeriod(
             [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
             [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
@@ -180,7 +180,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns list of Fridays in a period for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns list of Fridays in a period for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_ListFridaysInPeriod(
            [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
            [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
@@ -196,7 +196,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns start and end dates for a period code", Category = "QDates")]
+        [ExcelFunction(Description = "Returns start and end dates for a period code", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_DatesForPeriodCode(
            [ExcelArgument(Description = "Period code")] object Code)
         {
@@ -211,7 +211,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_LastBusinessDay(
             [ExcelArgument(Description = "Date in month")] DateTime Date,
             [ExcelArgument(Description = "Calendar to check")] string Calendar)
@@ -225,7 +225,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the last business day in a month for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_FirstBusinessDay(
             [ExcelArgument(Description = "Date in month")] DateTime Date,
             [ExcelArgument(Description = "Calendar to check")] string Calendar)
@@ -239,7 +239,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_LastDay(
             [ExcelArgument(Description = "Date in month")] DateTime Date)
         {
@@ -249,7 +249,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the last calendar day in a month for a give calendar", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_FirstDay(
             [ExcelArgument(Description = "Date in month")] DateTime Date)
         {
@@ -259,7 +259,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns a list of all calendar names", Category = "QDates")]
+        [ExcelFunction(Description = "Returns a list of all calendar names", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_ListCalendars()
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -268,7 +268,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates")]
+        [ExcelFunction(Description = "Returns next isntance of specific weekday", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_NextWeekday(
             [ExcelArgument(Description = "Date")] DateTime Date,
             [ExcelArgument(Description = "Weekday")] string Weekday)
@@ -282,7 +282,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns the spot date for a lag and calendar pair", Category = "QDates")]
+        [ExcelFunction(Description = "Returns the spot date for a lag and calendar pair", Category = "QDates", IsThreadSafe=true)]
         public static object QDates_SpotDate(
             [ExcelArgument(Description = "Value Date")] DateTime ValDate,
             [ExcelArgument(Description = "Spot Lag")] string SpotLag,

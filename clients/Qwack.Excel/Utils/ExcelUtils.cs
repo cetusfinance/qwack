@@ -1,15 +1,10 @@
 using ExcelDna.Integration;
 using Microsoft.Extensions.Logging;
-using Qwack.Dates;
 using Qwack.Excel.Dates;
 using Qwack.Excel.Services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 using Qwack.Serialization;
 
 namespace Qwack.Excel.Utils
@@ -18,13 +13,13 @@ namespace Qwack.Excel.Utils
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
-        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils", IsThreadSafe=true)]
         public static object QUtils_Now()
         {
             return DateTime.Now.ToString("s");
         }
 
-        [ExcelFunction(Description = "Returns unique entries from a range", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns unique entries from a range", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_Unique(
             [ExcelArgument(Description = "The excel range to find unique values in")] object[,] DataRange,
             [ExcelArgument(Description = "Optional - Sort vector of results - Asc or Desc")] object SortResults)
@@ -57,7 +52,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Returns sorted entries from a range", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns sorted entries from a range", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_Sort(
             [ExcelArgument(Description = "The excel range to find unique values in")] object[,] DataRange,
             [ExcelArgument(Description = "Sort direction - Asc or Desc")] string Direction)
@@ -84,7 +79,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Removes all whitespace from a string", Category = "QUtils")]
+        [ExcelFunction(Description = "Removes all whitespace from a string", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_RemoveWhitespace(
             [ExcelArgument(Description = "Input text")] string Text,
             [ExcelArgument(Description = "Characters to remove")] object Characters)
@@ -96,7 +91,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Returns values from a range, filtered on another range", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns values from a range, filtered on another range", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_Filter(
             [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange,
             [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange)
@@ -109,7 +104,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils")]
+        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_Trim(
             [ExcelArgument(Description = "Input text")] string Text,
             [ExcelArgument(Description = "Characters to trim")] object Characters)
@@ -124,7 +119,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Returns values from a range, removing any errors", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns values from a range, removing any errors", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_GoodValues(
             [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange)
         {
@@ -135,7 +130,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Casts all values in a range to numbers", Category = "QUtils")]
+        [ExcelFunction(Description = "Casts all values in a range to numbers", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_ToNumbers(
             [ExcelArgument(Description = "The excel range to cast as numbers")] object[] DataRange)
         {
@@ -153,14 +148,14 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils")]
+        [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_FileExists(
             [ExcelArgument(Description = "Filename")] string Filename)
         {
             return ExcelHelper.Execute(_logger, () => System.IO.File.Exists(Filename));
         }
 
-        [ExcelFunction(Description = "Returns timestamp for a given file", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns timestamp for a given file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_FileTimeStamp(
             [ExcelArgument(Description = "Filename")] string Filename)
         {
@@ -170,7 +165,7 @@ namespace Qwack.Excel.Utils
                 (object)"File does not exist");
         }
 
-        [ExcelFunction(Description = "Returns filename for newest file in a folder", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns filename for newest file in a folder", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_LatestFileInFolder(
         [ExcelArgument(Description = "Filename")] string FolderPath)
         {
@@ -193,7 +188,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Copies file from one location to another", Category = "QUtils")]
+        [ExcelFunction(Description = "Copies file from one location to another", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_CopyFile(
             [ExcelArgument(Description = "Filename Source")] string Source,
             [ExcelArgument(Description = "Filename Destination")] string Destination,
@@ -207,7 +202,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils")]
+        [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_SerializeObject(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Object type, e.g. Qwack.Core.Models.IAssetFxModel, Qwack.Core")] string ObjectType,
@@ -228,7 +223,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "De-Serializes an object to file", Category = "QUtils")]
+        [ExcelFunction(Description = "De-Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_DeSerializeObject(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
             [ExcelArgument(Description = "Object type, e.g. Qwack.Core.Models.IAssetFxModel, Qwack.Core")] string ObjectType,
@@ -249,7 +244,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils")]
+        [ExcelFunction(Description = "Removes all leading/trailing characters from a string", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_Replace(
             [ExcelArgument(Description = "Input text")] string Text,
             [ExcelArgument(Description = "String to replace")] string ToReplace,

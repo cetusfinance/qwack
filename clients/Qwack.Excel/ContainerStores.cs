@@ -46,6 +46,7 @@ namespace Qwack.Excel
         public static IServiceProvider GlobalContainer { get; internal set; }
         public static IServiceProvider SessionContainer { get;set;}
         public static ICurrencyProvider CurrencyProvider => GlobalContainer.GetRequiredService<ICurrencyProvider>();
+        public static ICalendarProvider CalendarProvider => GlobalContainer.GetRequiredService<ICalendarProvider>();
         public static IFutureSettingsProvider FuturesProvider => GlobalContainer.GetRequiredService<IFutureSettingsProvider>();
         public static ILogger GetLogger<T>() => GlobalContainer.GetRequiredService<ILoggerFactory>().CreateLogger<T>();
 

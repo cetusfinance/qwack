@@ -41,7 +41,7 @@ namespace Qwack.Core.Tests.Instruments
 
             var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxMatrix.Init(usd, bd, new Dictionary<Currency, double> { { xau, 1.0/spotRate } }, new List<FxPair> { pair }, new Dictionary<Currency, string> { { usd, "USD.BLAH" }, { xau, "XAU.BLAH" } });
-            var fModel = new FundingModel(bd, new[] { discoCurveUsd, discoCurveXau }, TestProviderHelper.CurrencyProvider);
+            var fModel = new FundingModel(bd, new[] { discoCurveUsd, discoCurveXau }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             fModel.SetupFx(fxMatrix);
 
 

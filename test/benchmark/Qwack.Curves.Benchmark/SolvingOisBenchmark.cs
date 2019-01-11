@@ -127,7 +127,7 @@ namespace Qwack.Curves.Benchmark
             var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, CurveDataSetup.ccyUsd) { SolveStage = 1 };
            // var ZARccyBasisCurve = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap) { SolveStage = 2 };
 
-            _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS }, TestProviderHelper.CurrencyProvider);
+            _fundingModel = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
         }
 
         [Benchmark(Baseline =true)]

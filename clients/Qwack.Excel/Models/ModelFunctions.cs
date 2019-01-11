@@ -26,7 +26,7 @@ namespace Qwack.Excel.Curves
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<ModelFunctions>();
 
 
-        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings))]
+        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings), IsThreadSafe = true)]
         public static object CreateMcSettings(
            [ExcelArgument(Description = "Settings object name")] string ObjectName,
            [ExcelArgument(Description = "Number of paths")] int NumberOfPaths,
@@ -99,7 +99,7 @@ namespace Qwack.Excel.Curves
                 if (!(ReportingCcy is ExcelMissing))
                     ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy as string);
 
-                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
 
                 var result = mc.PV(ccy);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
@@ -122,7 +122,7 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
@@ -144,7 +144,7 @@ namespace Qwack.Excel.Curves
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
 
-                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
 
                 var result = mc.EPE();
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);

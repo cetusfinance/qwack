@@ -73,11 +73,34 @@ namespace Qwack.Excel.Curves
                     DebugMode = DebugMode.OptionalExcel(false)
                 };
 
-                var settingsCache = ContainerStores.GetObjectCache<McSettings>();
-                settingsCache.PutObject(ObjectName, new SessionItem<McSettings> { Name = ObjectName, Value = settings });
-                return ObjectName + '¬' + settingsCache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(settings, ObjectName);
             });
         }
+
+        [ExcelFunction(Description = "Creates a monte-carlo model precursor object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel), IsThreadSafe = true)]
+        public static object CreateMcModel(
+           [ExcelArgument(Description = "Output object name")] string ObjectName,
+           [ExcelArgument(Description = "Asset-FX vanilla model")]string VanillaModel,
+           [ExcelArgument(Description = "MC settings")] string McSettings)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var vanillaModel = ContainerStores.GetObjectFromCache<IAssetFxModel>(VanillaModel);
+                var mcSettings = ContainerStores.GetObjectFromCache<McSettings>(McSettings);
+
+                var mcModel = new AssetFXMCModelPercursor
+                {
+                    AssetFxModel = vanillaModel,
+                    CalendarProvider = ContainerStores.CalendarProvider,
+                    CcyProvider = ContainerStores.CurrencyProvider,
+                    FutProvider = ContainerStores.FuturesProvider,
+                    McSettings = mcSettings
+                };
+
+                return ExcelHelper.PushToCache(mcModel, ObjectName);
+            });
+        }
+
 
         [ExcelFunction(Description = "Returns PV of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPV))]
         public static object McPortfolioPV(

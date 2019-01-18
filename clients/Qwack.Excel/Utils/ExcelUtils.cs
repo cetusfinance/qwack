@@ -255,5 +255,11 @@ namespace Qwack.Excel.Utils
                 return Text.Replace(ToReplace, ReplaceWith);
             });
         }
+
+        [ExcelFunction(Description = "Replaces error input with alternative", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_ErrorReplace(
+            [ExcelArgument(Description = "Input value")] object Input,
+            [ExcelArgument(Description = "Alternative value")] object Alternative) 
+            => ExcelHelper.Execute(_logger, () => (Input is string str) && str.StartsWith("#") ? Alternative : Input);
     }
 }

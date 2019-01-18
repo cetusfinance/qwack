@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -50,5 +51,27 @@ namespace Qwack.Core.Instruments.Asset
                    SpotLagRollType == option.SpotLagRollType &&
                    Strike == option.Strike &&
                    TradeId == option.TradeId;
+
+        private double SupervisoryVol => HedgingSet == "Electricity" ? 1.5 : 0.7;
+        public new double SupervisoryDelta(IAssetFxModel model) =>
+          BlackDelta(Fwd(model), Strike, 0.0, model.BuildDate.CalculateYearFraction(FixingDates.Last(), DayCountBasis.Act365F), SupervisoryVol, CallPut);
+
+        private static double BlackDelta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
+        {
+            double d1, d2, DF;
+            DF = Exp(-riskFreeRate * expTime);
+            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
+            d2 = d1 - volatility * Sqrt(expTime);
+
+            //Delta
+            if (CP == OptionType.Put)
+            {
+                return DF * (Math.Statistics.NormSDist(d1) - 1);
+            }
+            else
+            {
+                return DF * Math.Statistics.NormSDist(d1);
+            }
+        }
     }
 }

@@ -821,7 +821,8 @@ namespace Qwack.Models.Models
             }
 
             //next move ir curves
-            var irGreeks = portfolio.AssetIrDelta(model, reportingCcy);
+            var irBump = 0.0001;
+            var irGreeks = portfolio.AssetIrDelta(model, reportingCcy, irBump);
             var r_tidIx = irGreeks.GetColumnIndex("TradeId");
             var r_plIx = irGreeks.GetColumnIndex("PointLabel");
             var r_tTypeIx = irGreeks.GetColumnIndex("TradeType");
@@ -840,7 +841,7 @@ namespace Qwack.Models.Models
                     var point = DateTime.Parse((string)r.MetaData[r_plIx]);
                     var startRate = model.FundingModel.Curves[irCurve.Key].GetRate(point);
                     var endRate = irCurve.Value.GetRate(point);
-                    var explained = r.Value * (endRate - startRate) / 0.0001;
+                    var explained = r.Value * (endRate - startRate) / irBump;
 
                     var row = new Dictionary<string, object>
                     {

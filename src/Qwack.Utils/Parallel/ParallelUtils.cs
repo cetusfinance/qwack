@@ -70,7 +70,15 @@ namespace Qwack.Utils.Parallel
                     code.Invoke(v);
             }
 
-            await Task.WhenAll(taskList.ToArray());
+            try
+            {
+                await Task.WhenAll(taskList.ToArray());
+            }
+            catch(AggregateException ex)
+            {
+                throw ex.InnerExceptions.First();
+            }
+            
         }
 
         public async Task QueueAndRunTasks(IEnumerable<Task> tasks)

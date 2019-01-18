@@ -179,6 +179,29 @@ namespace Qwack.Options.VolSurfaces
             return o;
         }
 
+        public Dictionary<string, IVolSurface> GetRegaScenariosOuterWing(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastExpiry = LastIx(LastSensitivityDate);
+            var highDeltaFirst = WingDeltas.First() > WingDeltas.Last();
+            var outerWingIx = WingDeltas.Length - 1;
+
+            for (var i = 0; i < lastExpiry; i++)
+            {
+                var volsBumped = (double[][])Riskies.Clone();
+
+                if (highDeltaFirst)
+                    volsBumped[i][outerWingIx] += bumpSize;
+                else
+                    volsBumped[i][0] += bumpSize;
+
+                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, volsBumped, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+            }
+
+            return o;
+        }
+
         public Dictionary<string, IVolSurface> GetSegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
@@ -198,6 +221,31 @@ namespace Qwack.Options.VolSurfaces
                 {
                     var ratios = volsBumped[i].Select(x => x / volsBumped[i].Last()).ToArray();
                     volsBumped[i] = ratios.Select(r => (volsBumped[i].Last() + bumpSize) * r).ToArray();
+                }
+
+                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, Riskies, volsBumped, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+            }
+
+            return o;
+        }
+
+        public Dictionary<string, IVolSurface> GetSegaScenariosOuterWing(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastExpiry = LastIx(LastSensitivityDate);
+            var highDeltaFirst = WingDeltas.First() > WingDeltas.Last();
+            var outerWingIx = WingDeltas.Length - 1;
+            for (var i = 0; i < lastExpiry; i++)
+            {
+                var volsBumped = (double[][])Flies.Clone();
+                if (highDeltaFirst)
+                {
+                    volsBumped[i][outerWingIx] += bumpSize;
+                }
+                else
+                {
+                    volsBumped[i][0] += bumpSize;
                 }
 
                 o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, Riskies, volsBumped, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));

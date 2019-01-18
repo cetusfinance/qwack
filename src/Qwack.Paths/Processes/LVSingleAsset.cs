@@ -86,23 +86,23 @@ namespace Qwack.Paths.Processes
             }
 
             double[][] lvSurface;
-            if(_surface.LocalVolGrid!=null)
-            {
-                lvSurface = new double[_timesteps.TimeStepCount - 1][];
-                for(var t=0;t<lvSurface.GetLength(0);t++)
-                {
-                    lvSurface[t] = new double[strikes[t].Length];
-                    for(var k=0;k<lvSurface[t].Length;k++)
-                    {
-                        lvSurface[t][k] = _surface.LocalVolGrid.Interpolate(strikes[t][k], _timesteps.Times[t]);
-                    }
-                }
-            }
-            else
-            {
+            //if(_surface.LocalVolGrid!=null)
+            //{
+            //    lvSurface = new double[_timesteps.TimeStepCount - 1][];
+            //    for(var t=0;t<lvSurface.GetLength(0);t++)
+            //    {
+            //        lvSurface[t] = new double[strikes[t].Length];
+            //        for(var k=0;k<lvSurface[t].Length;k++)
+            //        {
+            //            lvSurface[t][k] = _surface.LocalVolGrid.Interpolate(strikes[t][k], _timesteps.Times[t]);
+            //        }
+            //    }
+            //}
+            //else
+            //{
                 lvSurface = Options.LocalVol.ComputeLocalVarianceOnGrid(_surface, strikes, _timesteps.Times, _forwardCurve);
-                _surface.LocalVolGrid = InterpolatorFactory.GetInterpolator(strikes, _timesteps.Times.SubArray(0, _timesteps.Times.Length - 1), lvSurface, Interpolator2DType.Bilinear);
-            }
+                //_surface.LocalVolGrid = InterpolatorFactory.GetInterpolator(strikes, _timesteps.Times.SubArray(0, _timesteps.Times.Length - 1), lvSurface, Interpolator2DType.Bilinear);
+            //}
 
             
             for (var t = 0; t < _lvInterps.Length; t++)

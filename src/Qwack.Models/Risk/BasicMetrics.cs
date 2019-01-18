@@ -213,7 +213,6 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
-
         public static ICube FxVega(this IPvModel pvModel, Currency reportingCcy)
         {
             var bumpSize = 0.001;
@@ -496,7 +495,8 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate();
 
-                var pvCube = subPortfolio.PV(model, curveObj.Currency);
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
                 var tidIx = pvCube.GetColumnIndex("TradeId");
@@ -746,9 +746,8 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null)
+        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize=0.0001)
         {
-            var bumpSize = 0.0001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -769,8 +768,7 @@ namespace Qwack.Models.Risk
                 var subPortfolio = new Portfolio()
                 {
                     Instruments = model.Portfolio.Instruments
-                    .Where(x => (x is IAssetInstrument ia) && ia.IrCurves(model).Contains(curve.Key))
-                    .Concat(model.Portfolio.Instruments.Where(x => (x is FxForward fx) && (model.FundingModel.FxMatrix.DiscountCurveMap[fx.DomesticCCY] == curve.Key || model.FundingModel.FxMatrix.DiscountCurveMap[fx.ForeignCCY] == curve.Key || fx.ForeignDiscountCurve == curve.Key)))
+                    .Where(x => (x is IAssetInstrument ia) && (ia.IrCurves(model).Contains(curve.Key) || (reportingCcy!=null && reportingCcy!=ia.Currency)))
                     .ToList()
                 };
 

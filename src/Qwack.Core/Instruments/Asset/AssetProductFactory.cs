@@ -253,29 +253,47 @@ namespace Qwack.Core.Instruments.Asset
         }
         public static AsianLookbackOption CreateAsianLookbackOption(DateTime start, DateTime end, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
+            var payDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset);
+            return CreateAsianLookbackOption(start, end, assetId, putCall, fixingCalendar, payDate, currency, tradeDirection, spotLag, notional, fixingDateType);
+        }
+        public static AsianLookbackOption CreateAsianLookbackOption(string period, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var (Start, End) = period.ParsePeriod();
+            return CreateAsianLookbackOption(Start, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
+        }
+
+        public static BackPricingOption CreateBackPricingOption(DateTime start, DateTime end, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
                     start.BusinessDaysInPeriod(end, fixingCalendar) :
                     start.FridaysInPeriod(end, fixingCalendar);
-            return new AsianLookbackOption
+            return new BackPricingOption
             {
                 AssetId = assetId,
-                ObsStartDate = start,
-                ObsEndDate = end,
+                StartDate = start,
+                EndDate = end,
+                DecisionDate = decision,
                 FixingCalendar = fixingCalendar,
                 FixingDates = fixingDates.ToArray(),
                 SpotLag = spotLag,
                 CallPut = putCall,
-                PaymentDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset),
+                PaymentDate = payDate,
+                SettlementDate = payDate,
                 PaymentCurrency = currency,
                 Direction = tradeDirection,
                 Notional = notional,
                 FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
             };
         }
-        public static AsianLookbackOption CreateAsianLookbackOption(string period, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static BackPricingOption CreateBackPricingOption(DateTime start, DateTime end, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var payDate = end.AddPeriod(RollType.F, fixingCalendar, payOffset);
+            return CreateBackPricingOption(start, end, decision, assetId, putCall, fixingCalendar, payDate, currency, tradeDirection, spotLag, notional, fixingDateType);
+        }
+        public static BackPricingOption CreateBackPricingOption(string period, string assetId, OptionType putCall, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();
-            return CreateAsianLookbackOption(Start, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
+            return CreateBackPricingOption(Start, End, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
     }
 }

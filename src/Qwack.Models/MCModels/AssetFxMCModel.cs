@@ -20,6 +20,7 @@ using Qwack.Paths.Regressors;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Descriptors;
+using Qwack.Models.Models;
 
 namespace Qwack.Models.MCModels
 {
@@ -110,13 +111,20 @@ namespace Qwack.Models.MCModels
                     }
                 }
             }
+            var fxAssetsToAdd = new List<string>();
             foreach (var assetId in assetIds)
             {
+                if(assetId.Length==7 && assetId[3]=='/')
+                {
+                    fxAssetsToAdd.Add(assetId);
+                    continue;
+                }
+
                 if (!(model.GetVolSurface(assetId) is IATMVolSurface surface))
                     throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
                 var fixingDict = fixingsNeeded.ContainsKey(assetId) ? model.GetFixingDictionary(assetId) : null;
                 var fixings = fixingDict != null ?
-                    fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict[x])
+                    fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict.GetFixing(x))
                     : new Dictionary<DateTime, double>();
                 var futuresSim = settings.ExpensiveFuturesSimulation &&
                    (model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.NYMEX);
@@ -238,7 +246,7 @@ namespace Qwack.Models.MCModels
             }
 
             var pairsAdded = new List<string>();
-            var fxPairs = portfolio.FxPairs(model);
+            var fxPairs = portfolio.FxPairs(model).Concat(fxAssetsToAdd);
             foreach (var fxPair in fxPairs)
             {
                 var fxPairName = fxPair;
@@ -315,8 +323,27 @@ namespace Qwack.Models.MCModels
                 }
             }
 
+            //payoffs
             Engine.IncrementDepth();
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider));
+            if(_payoffs.Any(x=>x.Value.Regressors!=null))
+            {
+                var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
+                    .SelectMany(x=>x.Value.Regressors)
+                    .Distinct();
+
+                foreach(var regressor in regressorsToAdd)
+                {
+                    Engine.AddPathProcess(regressor);
+                    foreach(var payoff in _payoffs.Where(x => x.Value.Regressors != null))
+                    {
+                        if (payoff.Value.Regressors.Any(x => x == regressor))
+                            payoff.Value.SetRegressor(regressor);
+                    }
+                }
+
+                Engine.IncrementDepth();
+            }
             foreach (var product in _payoffs)
             {
                 Engine.AddPathProcess(product.Value);
@@ -372,6 +399,7 @@ namespace Qwack.Models.MCModels
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "Currency", typeof(string) }
             };
             cube.Initialize(dataTypes);
@@ -388,25 +416,22 @@ namespace Qwack.Models.MCModels
                 var pv = flows.Flows.Sum(x => x.Pv);
                 var fxRate = 1.0;
                 var tradeId = ins.TradeId;
+                string tradeType = null;
                 switch (ins)
                 {
                     case IAssetInstrument aIns:
+                        tradeType = aIns.TradeType();
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, aIns.Currency);
                         else
                             ccy = aIns.Currency.ToString();
                         break;
                     case FixedRateLoanDeposit loanDepo:
+                        tradeType = "LoanDepo";
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Currency);
                         else
                             ccy = loanDepo.Currency.ToString();
-                        break;
-                    case CashBalance cash:
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, cash.Currency);
-                        else
-                            ccy = cash.Currency.ToString();
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
@@ -414,6 +439,7 @@ namespace Qwack.Models.MCModels
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", tradeId },
+                    { "TradeType", tradeType },
                     { "Currency", ccy }
                 };
                 cube.AddRow(row, pv / fxRate);

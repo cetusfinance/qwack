@@ -9,7 +9,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class CashBalance : IFundingInstrument
+    public class CashBalance : IFundingInstrument, IAssetInstrument
     {
         public CashBalance() { }
 
@@ -29,6 +29,9 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime PillarDate { get; set; }
 
         public DateTime LastSensitivityDate => DateTime.MinValue;
+
+        public string[] AssetIds => new string[0];
+        public Currency PaymentCurrency => Currency;
 
         public double Pv(IFundingModel model, bool updateState) => Notional;
 
@@ -58,5 +61,12 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public IFundingInstrument SetParRate(double parRate) => Clone();
+
+        public string[] IrCurves(IAssetFxModel model) => new[] { model.FundingModel.FxMatrix.DiscountCurveMap[Currency] };
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
+        public string FxPair(IAssetFxModel model) => string.Empty;
+        IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();
+        public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
     }
 }

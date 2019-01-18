@@ -13,6 +13,7 @@ using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Paths;
 using Qwack.Paths.Features;
+using Qwack.Paths.Regressors;
 
 namespace Qwack.Models.MCModels
 {
@@ -46,6 +47,31 @@ namespace Qwack.Models.MCModels
         private readonly ICalendarProvider _calendarProvider;
 
         public string RegressionKey => _fxType == FxConversionType.None ? _assetName : $"{_assetName}*{_fxName}";
+
+        
+        public LinearAveragePriceRegressor[] Regressors { get; private set; }
+        
+        public void SetRegressor(LinearAveragePriceRegressor regressor)
+        {
+            var match = Regressors.Where(x => x == regressor);
+            if (!match.Any())
+                throw new Exception("Attempted to set a regressor but no match could be found");
+
+            for (var i = 0; i < Regressors.Length; i++)
+            {
+                foreach (var m in match)
+                    if (Regressors[i] == m) Regressors[i] = m;
+            }
+
+            switch(AssetInstrument)
+            {
+                case BackPricingOption bpo:
+                    var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
+                    if (bpob.SettlementRegressor == regressor) bpob.SettlementRegressor = regressor;
+                    if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
+                    break;
+            }
+        }
 
         public AssetPathPayoff(IAssetInstrument assetInstrument, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
@@ -141,7 +167,17 @@ namespace Qwack.Models.MCModels
                         new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional)
                     };
                     break;
-
+                case BackPricingOption bpo:
+                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional);
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        bp
+                    };
+                    if (bp.AverageRegressor != null)
+                        Regressors = new[] { bp.AverageRegressor, bp.SettlementRegressor };
+                    else
+                        Regressors = new[] { bp.SettlementRegressor };
+                    break;
             }
             _isCompo = _fxName != null;
             _assetName = AssetInstrument.AssetIds.Any() ? 

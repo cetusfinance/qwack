@@ -306,5 +306,60 @@ namespace Qwack.Core.Instruments
                     return false;
             }
         }
+
+        private static double SupFacByHedgeSet(string hedgeSet) => hedgeSet == "Electricity" ? 0.4 : 0.18;
+
+        public static double SaCcrAddon(this Portfolio pf, IAssetFxModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        {
+            if (!pf.Instruments.All(x => x is ISaCcrEnabled))
+                throw new Exception("Portfolio contains non-SACCR enabled instruments");
+
+            var assetIds = pf.AssetIds();
+            var missingMappings = assetIds.Where(x => !AssetIdToHedgingSetMap.ContainsKey(x));
+            if (missingMappings.Any())
+                throw new Exception($"AssetId-to-set mapping missing for {missingMappings.First()}");
+
+            var addOnByAsset = new Dictionary<string, double>();
+            var insByAssetId = pf.Instruments.Select(x => x as IAssetInstrument).GroupBy(x => x.AssetIds.First());
+            foreach (var insGroup in insByAssetId)
+            {
+                addOnByAsset.Add(insGroup.Key, 0.0);
+                foreach (ISaCcrEnabled ins in insGroup)
+                {
+                    var aIns = (IAssetInstrument)ins;
+                    ins.HedgingSet = AssetIdToHedgingSetMap[aIns.AssetIds.First()];
+                    var fxRate = aIns.Currency == reportingCcy ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, aIns.Currency, reportingCcy);
+                    addOnByAsset[insGroup.Key] += ins.EffectiveNotional(model) * SupFacByHedgeSet(ins.HedgingSet) * fxRate;
+                }
+            }
+
+
+            var activeHedgeSetNames = addOnByAsset.Select(x => AssetIdToHedgingSetMap[x.Key]).Distinct();
+            var activeHedgeSets = activeHedgeSetNames.ToDictionary(x => x, x => addOnByAsset.Where(y => AssetIdToHedgingSetMap[y.Key] == x));
+            var addOnByHedgeSet = new Dictionary<string, double>();
+            var correl = 0.4;
+            foreach(var hs in activeHedgeSets)
+            {
+                addOnByHedgeSet[hs.Key] = 0.0;
+                var term1 = System.Math.Pow(correl * hs.Value.Sum(x => x.Value), 2.0);
+                var term2 = (1.0-correl*correl) * hs.Value.Sum(x => x.Value* x.Value);
+                addOnByHedgeSet[hs.Key] = System.Math.Sqrt(term1 + term2);
+            }
+
+            var addOn = addOnByHedgeSet.Sum(x=>x.Value);
+            
+            return addOn;
+        }
+
+        public static double SaCcrEAD(this Portfolio pf, IPvModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        {
+            var pfe = SaCcrAddon(pf, model.VanillaModel, reportingCcy, AssetIdToHedgingSetMap);
+            var pvModel = model.Rebuild(model.VanillaModel, pf);
+            var rcCube = pvModel.PV(reportingCcy);
+            var rc = rcCube.GetAllRows().Sum(x => x.Value);
+            var alpha = 1.4;
+
+            return alpha * (rc + pfe);
+        }
     }
 }

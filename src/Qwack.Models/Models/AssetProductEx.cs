@@ -375,7 +375,7 @@ namespace Qwack.Models.Models
             var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
             var t = model.BuildDate.CalculateYearFraction(euOpt.PaymentDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
-            return BlackFunctions.BlackPV(fwd, euOpt.Strike, rf, t, vol, euOpt.CallPut);
+            return BlackFunctions.BlackPV(fwd, euOpt.Strike, rf, t, vol, euOpt.CallPut) * euOpt.Notional;
         }
 
         public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model)
@@ -389,7 +389,7 @@ namespace Qwack.Models.Models
             var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
             var t = model.BuildDate.CalculateYearFraction(fxEuOpt.DeliveryDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
-            return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, rf, t, vol, fxEuOpt.CallPut);
+            return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, rf, t, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity;
         }
 
         public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model)
@@ -649,6 +649,62 @@ namespace Qwack.Models.Models
             return cube;
         }
 
+        public static string TradeType(this IAssetInstrument ins)
+        {
+            string tradeType;
+            switch (ins)
+            {
+                case AsianOption asianOption:
+                    tradeType = "AsianOption";
+                    break;
+                case AsianSwap swap:
+                    tradeType = "AsianSwap";
+                    break;
+                case AsianSwapStrip swapStrip:
+                    tradeType = "AsianSwapStrip";
+                    break;
+                case AsianBasisSwap basisSwap:
+                    tradeType = "AsianBasisSwap";
+                    break;
+                case EuropeanBarrierOption euBOpt:
+                    tradeType = "BarrierOption";
+                    break;
+                case FxVanillaOption euFxOpt:
+                    tradeType = "EuropeanOption";
+                    break;
+                case EuropeanOption euOpt:
+                    tradeType = "EuropeanOption";
+                    break;
+                case Forward fwd:
+                    tradeType = "Forward";
+                    break;
+                case FuturesOption futOpt:
+                    tradeType = "FutureOption";
+                    break;
+                case Future fut:
+                    tradeType = "Future";
+                    break;
+                case FxForward fxFwd:
+                    tradeType = "FxForward";
+                    break;
+                case FixedRateLoanDeposit loanDepo:
+                    tradeType = "LoanDepo";
+                    break;
+                case CashBalance cash:
+                    tradeType = "Cash";
+                    break;
+                case AsianLookbackOption lbo:
+                    tradeType = "LookNack";
+                    break;
+                case BackPricingOption bpo:
+                    tradeType = "BackPricing";
+                    break;
+                default:
+                    throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+            }
+            return tradeType;
+        }
+
         public static ICube FlowsT0(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null)
         {
             var cube = new ResultCube();
@@ -840,11 +896,11 @@ namespace Qwack.Models.Models
 
         }
 
-        public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy = null)
+        public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy = null, double bumpSize = 0.0001)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetIrDelta(reportingCcy);
+            return m.AssetIrDelta(reportingCcy, bumpSize);
 
         }
 

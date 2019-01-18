@@ -20,8 +20,8 @@ namespace Qwack.Math.Interpolation
             _beta = beta;
         }
     
-        public double FirstDerivative(double x) => _alpha;
-        public double Interpolate(double t) => _alpha * t + _beta;
+        public double FirstDerivative(double x) => _beta;
+        public double Interpolate(double t) => _alpha + t * _beta;
         public double SecondDerivative(double x) => 0.0;
 
         public double[] Sensitivity(double x) => throw new NotImplementedException();

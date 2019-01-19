@@ -6,11 +6,14 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Paths;
 using Qwack.Paths.Features;
+using Qwack.Paths.Regressors;
 
 namespace Qwack.Models.MCModels
 {
@@ -40,12 +43,41 @@ namespace Qwack.Models.MCModels
         private List<IAssetPathPayoff> _subInstruments;
 
         private static readonly Vector<double> _one = new Vector<double>(1.0);
+        private readonly ICurrencyProvider _currencyProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public string RegressionKey => _fxType == FxConversionType.None ? _assetName : $"{_assetName}*{_fxName}";
 
-        public AssetPathPayoff(IAssetInstrument assetInstrument)
+        
+        public LinearAveragePriceRegressor[] Regressors { get; private set; }
+        
+        public void SetRegressor(LinearAveragePriceRegressor regressor)
+        {
+            var match = Regressors.Where(x => x == regressor);
+            if (!match.Any())
+                throw new Exception("Attempted to set a regressor but no match could be found");
+
+            for (var i = 0; i < Regressors.Length; i++)
+            {
+                foreach (var m in match)
+                    if (Regressors[i] == m) Regressors[i] = m;
+            }
+
+            switch(AssetInstrument)
+            {
+                case BackPricingOption bpo:
+                    var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
+                    if (bpob.SettlementRegressor == regressor) bpob.SettlementRegressor = regressor;
+                    if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
+                    break;
+            }
+        }
+
+        public AssetPathPayoff(IAssetInstrument assetInstrument, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             AssetInstrument = assetInstrument;
+            _currencyProvider = currencyProvider;
+            _calendarProvider = calendarProvider;
             switch (AssetInstrument)
             {
                 case AsianOption ao:
@@ -73,7 +105,19 @@ namespace Qwack.Models.MCModels
                     _fxType = asw.FxConversionType;
                     break;
                 case AsianSwapStrip asws:
-                    _subInstruments = asws.Swaplets.Select(x =>(IAssetPathPayoff) new AssetPathPayoff(x)).ToList();
+                    _subInstruments = asws.Swaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider)).ToList();
+                    break;
+                case FxVanillaOption fxeo:
+                    _asianDates = new List<DateTime> { fxeo.ExpiryDate };
+                    _strike = fxeo.Strike;
+                    _notional = fxeo.DomesticQuantity;
+                    _optionType = fxeo.CallPut;
+                    _fxName = null;
+                    _asianFxDates = _asianDates;
+                    _discountCurve = fxeo.ForeignDiscountCurve;
+                    _payDate = fxeo.DeliveryDate;
+                    _ccy = fxeo.PaymentCurrency;
+                    _fxType = FxConversionType.None;
                     break;
                 case EuropeanOption eo:
                     _asianDates = new List<DateTime> { eo.ExpiryDate };
@@ -99,21 +143,46 @@ namespace Qwack.Models.MCModels
                     _ccy = f.PaymentCurrency;
                     _fxType = f.FxConversionType;
                     break;
+                case FxForward fxf:
+                    var pair = fxf.Pair.FxPairFromString(_currencyProvider, _calendarProvider);
+                    _asianDates = new List<DateTime> { fxf.DeliveryDate.SubtractPeriod(RollType.P, pair.SettlementCalendar, pair.SpotLag) };
+                    _strike = fxf.Strike;
+                    _notional = fxf.DomesticQuantity;
+                    _optionType = OptionType.Swap;
+                    _fxName = null;
+                    _asianFxDates = _asianDates;
+                    _discountCurve = fxf.ForeignDiscountCurve;
+                    _payDate = fxf.DeliveryDate;
+                    _ccy = fxf.PaymentCurrency;
+                    _fxType = FxConversionType.None;
+                    break;
                 case AsianBasisSwap abs:
-                    _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x))
-                        .Concat(abs.RecSwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x)))
+                    _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x,_currencyProvider,_calendarProvider))
+                        .Concat(abs.RecSwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider)))
                         .ToList();
                     break;
                 case AsianLookbackOption alb:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new Qwack.Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional)
+                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional)
                     };
                     break;
-
+                case BackPricingOption bpo:
+                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional);
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        bp
+                    };
+                    if (bp.AverageRegressor != null)
+                        Regressors = new[] { bp.AverageRegressor, bp.SettlementRegressor };
+                    else
+                        Regressors = new[] { bp.SettlementRegressor };
+                    break;
             }
             _isCompo = _fxName != null;
-            _assetName = AssetInstrument.AssetIds.First();
+            _assetName = AssetInstrument.AssetIds.Any() ? 
+                AssetInstrument.AssetIds.First() :
+                (AssetInstrument is FxVanillaOption fxo ? fxo.PairStr : null);
         }
 
         public bool IsComplete => _isComplete;
@@ -134,9 +203,16 @@ namespace Qwack.Models.MCModels
 
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
-            if (_isCompo)
-                _fxIndex = dims.GetDimension(_fxName);
 
+            if (_assetIndex < 0)
+                throw new Exception($"Asset index {_assetName} not found in MC engine");
+
+            if (_isCompo)
+            {
+                _fxIndex = dims.GetDimension(_fxName);
+                if (_fxIndex < 0)
+                    throw new Exception($"Fx index {_fxName} not found in MC engine");
+            }
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_asianDates.Count];
             _fxDateIndexes = new int[_asianFxDates.Count];

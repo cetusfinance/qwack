@@ -37,10 +37,17 @@ namespace Qwack.Math.Solvers
                 }
                 ComputeJacobian();
                 ComputeNextGuess();
+                NaNCheck();
                 _currentOutput = ObjectiveFunction(_currentGuess);
             }
 
             return _currentGuess;
+        }
+
+        private void NaNCheck()
+        {
+            if (_currentGuess.Any(x => double.IsNaN(x)))
+                throw new Exception("NaNs detected in solution");
         }
 
         private void ComputeNextGuess()

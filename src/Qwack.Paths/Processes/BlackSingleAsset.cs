@@ -14,6 +14,10 @@ namespace Qwack.Paths.Processes
     public class BlackSingleAsset : IPathProcess, IRequiresFinish
     {
         private IATMVolSurface _surface;
+
+        private IATMVolSurface _adjSurface;
+        private double _correlation;
+
         private DateTime _expiryDate;
         private DateTime _startDate;
         private int _numberOfSteps;
@@ -28,7 +32,7 @@ namespace Qwack.Paths.Processes
         private double[] _vols;
 
 
-        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null)
+        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -37,6 +41,9 @@ namespace Qwack.Paths.Processes
             _name = name;
             _forwardCurve = forwardCurve;
             _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>());
+
+            _adjSurface = fxAdjustSurface;
+            _correlation = fxAssetCorrelation;
         }
 
         public bool IsComplete => _isComplete;
@@ -55,9 +62,12 @@ namespace Qwack.Paths.Processes
             var prevSpot = _forwardCurve(0);
             for (var t = 1; t < _drifts.Length; t++)
             {
-                var spot = _forwardCurve(_timesteps.Times[t]);
+                var atmVol = _surface.GetForwardATMVol(0, _timesteps.Times[t]);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * _timesteps.Times[t] * _correlation);
+                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
                 var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
-                var varEnd = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t]), 2) * _timesteps.Times[t];
+                var varEnd = Pow(atmVol, 2) * _timesteps.Times[t];
                 var fwdVariance = Max(0,varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
@@ -122,7 +132,7 @@ namespace Qwack.Paths.Processes
 
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
             var simDates = new List<DateTime>();
-            for (var i = 0; i < _numberOfSteps - 1; i++)
+            for (var i = 0; i < _numberOfSteps; i++)
             {
                 simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }

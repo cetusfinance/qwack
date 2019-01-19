@@ -223,25 +223,27 @@ namespace Qwack.Core.Curves
 
         public IrCurve RebaseDate(DateTime newAnchorDate)
         {
-            //var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
-            //var newPillars = new DateTime[newLength];
-            //var isShorter = newLength < _pillars.Length;
-            //Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
-            //var newDfs = newPillars.Select(x => GetDf(BuildDate, x)).ToArray();
-            //var newRates = newDfs.Select((x, ix) => RateFromDF(newAnchorDate.CalculateYearFraction(newPillars[ix], _basis),x,RateStorageType)).ToArray();
-            //if (newPillars.First() == newAnchorDate && newRates.Length > 1)
-            //    newRates[0] = newRates[1];
-
-            //var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
-
             var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
             var newPillars = new DateTime[newLength];
-            var newRates = new double[newLength];
             var isShorter = newLength < _pillars.Length;
             Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
-            Array.Copy(_rates, isShorter ? 1 : 0, newRates, 0, newLength);
-         
+
+            var dfAdjust = GetDf(BuildDate, newAnchorDate);
+            var newDfs = newPillars.Select(x => GetDf(BuildDate, x)/ dfAdjust).ToArray();
+            var newRates = newDfs.Select((x, ix) => RateFromDF(newAnchorDate.CalculateYearFraction(newPillars[ix], _basis), x, RateStorageType)).ToArray();
+            if (newPillars.First() == newAnchorDate && newRates.Length > 1)
+                newRates[0] = newRates[1];
+
             var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
+
+            //var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
+            //var newPillars = new DateTime[newLength];
+            //var newRates = new double[newLength];
+            //var isShorter = newLength < _pillars.Length;
+            //Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
+            //Array.Copy(_rates, isShorter ? 1 : 0, newRates, 0, newLength);
+
+            //var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
 
             return newCurve;
         }
@@ -273,7 +275,7 @@ namespace Qwack.Core.Curves
 
             var ix = Array.BinarySearch(_pillars, lastSensitivityDate);
             ix = (ix < 0) ? ~ix : ix;
-            ix += 2;
+            ix += 3;
             lastBumpIx = Min(ix, lastBumpIx); //cap at last pillar
 
             for (var i = 0; i < lastBumpIx; i++)

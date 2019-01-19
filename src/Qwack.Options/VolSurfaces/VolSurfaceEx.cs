@@ -298,10 +298,10 @@ namespace Qwack.Options.VolSurfaces
 
             var compoFwd = fwdAsset * fwdFx;
             var atmCompo = Sqrt(atmFx * atmFx + atmA * atmA + 2.0 * correlation * atmA * atmFx);
-            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.0001, 0, t, atmCompo);
-            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.9999, 0, t, atmCompo);
-            var lowKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.0001, 0, t, atmA);
-            var hiKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.9999, 0, t, atmA);
+            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.0001, 0, t, atmCompo) / 2.0;
+            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.9999, 0, t, atmCompo) * 2.0;
+            var lowKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.0001, 0, t, atmA) / 2.0;
+            var hiKA = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwdAsset, -0.9999, 0, t, atmA) * 2.0;
 
 
             var x = new double[numSamples];
@@ -320,32 +320,48 @@ namespace Qwack.Options.VolSurfaces
                 for (var j = 0; j < numSamples; j++)
                 {
                     var kFx = k / kA;
-                    var volFx = fxSurface.GetVolForAbsoluteStrike(kFx, t, fwdFx);
-                    var volA = surface.GetVolForAbsoluteStrike(kA, t, fwdAsset);
-                    var volC = Sqrt(volFx * volFx + volA * volA + 2.0 * correlation * volA * volFx);
-                    var fxBucketLow = kFx - deltaKfx / 2.0;
-                    var fxBucketHi = kFx + deltaKfx / 2.0;
-                    var assetBucketLow = kA - deltaKa / 2.0;
-                    var assetBucketHi = kA + deltaKa / 2.0;
-                    var pFx = cdfFx.FirstDerivative(fxBucketHi) - cdfFx.FirstDerivative(fxBucketLow);
-                    var pA = cdfA.FirstDerivative(assetBucketHi) - cdfA.FirstDerivative(assetBucketLow);
-                    var weight = pFx * pA;
-                    y[i] += weight * volC;
-                    totalP += weight;
+                    var pFx = cdfFx.SecondDerivative(kFx);
+                    var pA = cdfA.SecondDerivative(kA);
+                    pFx = Statistics.NormInv(Min(1.0 - 1e-10, Max(pFx, 1e-10)));
+                    pA = Statistics.NormInv(Min(1.0 - 1e-10, Max(pA, 1e-10)));
+                    var p = Math.Distributions.BivariateNormal.PDF(pFx, pA, correlation);
+                    y[i] += p;
+
                     kA += kStepA;
                 }
 
-                y[i] /= totalP;
-
-                x[i] = (strikesInDeltaSpace) ? 
-                    -BlackFunctions.BlackDelta(compoFwd, k, 0.0, t, y[i], OptionType.P) : 
-                    k;
+                y[i] = totalP;
+                x[i] = k;
 
                 k += kStep;
-
             }
 
-            return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.CubicSpline);
+            var pdf = InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.LinearFlatExtrap) as IIntegrableInterpolator;
+            var cdfy = new double[y.Length];
+            for(var i=0;i<cdfy.Length;i++)
+            {
+                cdfy[i] = pdf.DefiniteIntegral(x[0], x[i]);
+            }
+            cdfy = cdfy.Select(c => c / cdfy.Max()).ToArray();
+
+            var cdf = InterpolatorFactory.GetInterpolator(x, cdfy, Interpolator1DType.LinearFlatExtrap) as IIntegrableInterpolator;
+            var premy = new double[y.Length];
+            for (var i = 0; i < cdfy.Length; i++)
+            {
+                premy[i] = cdf.DefiniteIntegral(x[0], x[i]);
+            }
+
+            var prem = InterpolatorFactory.GetInterpolator(x, premy, Interpolator1DType.CubicSpline);
+            var vols = new double[y.Length];
+            for (var i = 0; i < vols.Length; i++)
+            {
+                vols[i] = BlackFunctions.BlackImpliedVol(compoFwd, x[i], 0.0, t, prem.Interpolate(x[i]), OptionType.P);
+            }
+
+            if (strikesInDeltaSpace)
+                x = x.Select((ak, ix) => -BlackFunctions.BlackDelta(compoFwd, ak, 0.0, t, vols[ix], OptionType.P)).ToArray();
+
+            return InterpolatorFactory.GetInterpolator(x, vols, Interpolator1DType.CubicSpline);
         }
 
         public static IInterpolator1D GenerateCompositeSmile2(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation)

@@ -124,16 +124,44 @@ namespace Qwack.Excel.Options
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (!ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var surface))
-                {
-                    return $"Could not parse find vol surface {VolSurface} in the cache";
-                }
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(VolSurface, $"Could not parse find vol surface {VolSurface} in the cache");
 
                 if (!Enum.TryParse(CP, out OptionType optType))
                 {
                     return $"Could not parse call or put flag - {CP}";
                 }
                 return Qwack.Options.Asians.TurnbullWakeman.StrikeForPV(PV, F, KnownAverage, surface.Value, EvalDate, AverageStartDate, AverageEndDate, R, optType);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns strike for asian option with specified PV, using the Turnbull-Wakeman formula", Category = CategoryNames.Options, Name = CategoryNames.Options + "_" + nameof(TurnbullWakemanStrikeForPVFutures))]
+        public static object TurnbullWakemanStrikeForPVFutures(
+            [ExcelArgument(Description = "Evaluation Date")] DateTime EvalDate,
+            [ExcelArgument(Description = "Fixing dates")] double[] FixingDates,
+            [ExcelArgument(Description = "Settlement Date")] DateTime PayDate,
+            [ExcelArgument(Description = "Target PV")] double PV,
+            [ExcelArgument(Description = "Forward curve")] string FwdCurve,
+            [ExcelArgument(Description = "Fixing dictionary")] string FixingDictionary,
+            [ExcelArgument(Description = "Discounting rate")] double R,
+            [ExcelArgument(Description = "Volatility Surface")] string VolSurface,
+            [ExcelArgument(Description = "Call or Put")] string CP)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(VolSurface, $"Could not parse find vol surface {VolSurface} in the cache");
+                var curve = ContainerStores.GetObjectCache<IPriceCurve>().GetObjectOrThrow(FwdCurve, $"Fwd curve {FwdCurve} not found");
+
+                var fd = new FixingDictionary();
+                var dates = FixingDates.ToDateTimeArray();
+                if (dates.First() < EvalDate)
+                    fd = ContainerStores.GetObjectCache<FixingDictionary>().GetObjectOrThrow(FixingDictionary, $"Fixing dictionary {FixingDictionary} not found").Value;
+                var F = dates.Select(d => d > EvalDate ? curve.Value.GetPriceForDate(d) : fd.GetFixing(d)).ToArray();
+
+                if (!Enum.TryParse(CP, out OptionType optType))
+                {
+                    return $"Could not parse call or put flag - {CP}";
+                }
+                return Qwack.Options.Asians.TurnbullWakeman.StrikeForPV(PV, F, FixingDates.ToDateTimeArray(), surface.Value, EvalDate, PayDate, R, optType);
             });
         }
 

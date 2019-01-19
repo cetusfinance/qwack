@@ -31,7 +31,7 @@ namespace Qwack.Core.Basic
             }
         }
 
-        public new string ToString => $"{Domestic}/{Foreign}";
+        public override string ToString() => $"{Domestic}/{Foreign}";
     }
 
     public static class FxPairEx
@@ -52,14 +52,13 @@ namespace Qwack.Core.Basic
             return d;
         }
 
-        public static FxPair FxPairFromString(this string pair, ICurrencyProvider currencyProvider)
+        public static FxPair FxPairFromString(this string pair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new FxPair
         {
-            return new FxPair
-            {
-                Domestic = currencyProvider.GetCurrency(pair.Substring(0, 3)),
-                Foreign = currencyProvider.GetCurrency(pair.Substring(pair.Length - 3, 3)),
-            };
-        }
+            Domestic = currencyProvider.GetCurrency(pair.Substring(0, 3)),
+            Foreign = currencyProvider.GetCurrency(pair.Substring(pair.Length - 3, 3)),
+            SettlementCalendar = calendarProvider.Collection[pair.Substring(0, 3) + "+" + pair.Substring(pair.Length - 3, 3)],
+            SpotLag = 2.Bd()
+        };
     }
 
 }

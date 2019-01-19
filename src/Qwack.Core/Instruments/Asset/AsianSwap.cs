@@ -9,7 +9,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianSwap : IAssetInstrument
+    public class AsianSwap : IAssetInstrument, ISaCcrEnabled
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
@@ -52,6 +52,8 @@ namespace Qwack.Core.Instruments.Asset
         public Currency Currency => PaymentCurrency;
 
         public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
+
+
 
         public IAssetInstrument Clone() => new AsianSwap
         {
@@ -115,5 +117,20 @@ namespace Qwack.Core.Instruments.Asset
                  SpotLagRollType == swap.SpotLagRollType &&
                  Strike == swap.Strike &&
                  TradeId == swap.TradeId;
+
+
+        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
+        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        private double M(DateTime today) => today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F);
+        internal double Fwd(IAssetFxModel model)
+        {
+            var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?
+                1.0 :
+                model.FundingModel.GetFxAverage(FixingDates, model.GetPriceCurve(AssetId).Currency, Currency);
+            return model.GetPriceCurve(AssetId).GetAveragePriceForDates(FixingDates) * fxRate;
+        }
+        public double MaturityFactor(DateTime today) => System.Math.Sqrt(System.Math.Min(M(today), 1.0));
+        public string HedgingSet { get; set; }
     }
 }

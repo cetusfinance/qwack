@@ -15,6 +15,8 @@ using Qwack.Math.Interpolation;
 using Qwack.Core.Curves;
 using Qwack.Dates;
 using Qwack.Core.Models;
+using Qwack.Excel.Curves;
+using Qwack.Core.Cubes;
 
 namespace Qwack.Excel.Options
 {
@@ -22,7 +24,7 @@ namespace Qwack.Excel.Options
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<AmericanFunctions>();
 
-        [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface))]
+        [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface), IsThreadSafe = true)]
         public static object CreateConstantVolSurface(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -41,13 +43,11 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
-                var cache = ContainerStores.GetObjectCache<IVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }
 
-        [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface))]
+        [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface), IsThreadSafe = true)]
         public static object CreateGridVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -86,7 +86,7 @@ namespace Qwack.Excel.Options
                 if (!Enum.TryParse(timeInterpType, out Interpolator1DType tiType))
                     return $"Could not parse time interpolator type - {timeInterpType}";
 
-                if (!Enum.TryParse(timeBasis, out Qwack.Dates.DayCountBasis basis))
+                if (!Enum.TryParse(timeBasis, out DayCountBasis basis))
                     return $"Could not parse time basis type - {timeBasis}";
 
                 var surface = new GridVolSurface(OriginDate, Strikes, expiries, Volatilities.SquareToJagged(), sType, siType, tiType, basis, labels)
@@ -95,14 +95,12 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
-                var cache = ContainerStores.GetObjectCache<IVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }
 
 
-        [ExcelFunction(Description = "Creates a grid vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateRiskyFlyVolSurface))]
+        [ExcelFunction(Description = "Creates a grid vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateRiskyFlyVolSurface), IsThreadSafe = true)]
         public static object CreateRiskyFlyVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -115,7 +113,7 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Forwards or price curve object")] object FwdsOrCurve,
               [ExcelArgument(Description = "ATM vol type - default zero-delta straddle")] object ATMType,
               [ExcelArgument(Description = "Wing quote type - Simple or Market")] object WingType,
-              [ExcelArgument(Description = "Stike Interpolation - default Linear")] object StrikeInterpolation,
+              [ExcelArgument(Description = "Stike Interpolation - default GaussianKernel")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
               [ExcelArgument(Description = "Currency - default USD")] object Currency)
@@ -127,10 +125,10 @@ namespace Qwack.Excel.Options
                 var ccyStr = Currency.OptionalExcel("USD");
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
 
-                var atmType = ATMType.OptionalExcel<string>("ZeroDeltaStraddle");
-                var wingType = WingType.OptionalExcel<string>("Simple");
-                var strikeInterpType = StrikeInterpolation.OptionalExcel<string>("Linear");
-                var timeInterpType = TimeInterpolation.OptionalExcel<string>("LinearInVariance");
+                var atmType = ATMType.OptionalExcel("ZeroDeltaStraddle");
+                var wingType = WingType.OptionalExcel("Simple");
+                var strikeInterpType = StrikeInterpolation.OptionalExcel("GaussianKernel");
+                var timeInterpType = TimeInterpolation.OptionalExcel("LinearInVariance");
                 var expiries = ExcelHelper.ToDateTimeArray(Expiries);
                 var rr = Riskies.SquareToJagged<double>();
                 var bf = Flies.SquareToJagged<double>();
@@ -171,13 +169,29 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
-                var cache = ContainerStores.GetObjectCache<IVolSurface>();
-                cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }
 
-        [ExcelFunction(Description = "Gets a volatility for a delta strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForDeltaStrike))]
+        [ExcelFunction(Description = "Creates an inverse pair fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateInvertedFxSurface), IsThreadSafe = true)]
+        public static object CreateInvertedFxSurface(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Input surface name")] string InputSurface)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(InputSurface, out var volSurface) && volSurface.Value is IATMVolSurface atmSurface)
+                {
+
+                    return ExcelHelper.PushToCache<IVolSurface>(new InverseFxSurface(ObjectName, atmSurface, ContainerStores.CurrencyProvider), ObjectName);
+                }
+
+                return $"Vol surface {InputSurface} not found in cache or could not be case to ATM Surface";
+            });
+        }
+
+        [ExcelFunction(Description = "Gets a volatility for a delta strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForDeltaStrike), IsThreadSafe = true)]
         public static object GetVolForDeltaStrike(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Delta Strike")] double DeltaStrike,
@@ -197,7 +211,7 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Gets a volatility for an absolute strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForAbsoluteStrike))]
+        [ExcelFunction(Description = "Gets a volatility for an absolute strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForAbsoluteStrike), IsThreadSafe = true)]
         public static object GetVolForAbsoluteStrike(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Absolute Strike")] double Strike,
@@ -217,7 +231,7 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a CDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDF))]
+        [ExcelFunction(Description = "Creates a CDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDF), IsThreadSafe = true)]
         public static object GenerateCDF(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -231,16 +245,14 @@ namespace Qwack.Excel.Options
                 if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var volSurface))
                 {
                     var interpolator = volSurface.Value.GenerateCDF(NumberOfSamples, ExpiryDate, Forward);
-                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
-                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
-                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    return ExcelHelper.PushToCache(interpolator, ObjectName);
                 }
 
                 return $"Vol surface {VolSurface} not found in cache";
             });
         }
 
-        [ExcelFunction(Description = "Creates a PDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDF))]
+        [ExcelFunction(Description = "Creates a PDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDF), IsThreadSafe = true)]
         public static object GeneratePDF(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -254,16 +266,14 @@ namespace Qwack.Excel.Options
                 if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(VolSurface, out var volSurface))
                 {
                     var interpolator = volSurface.Value.GeneratePDF(NumberOfSamples, ExpiryDate, Forward);
-                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
-                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
-                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    return ExcelHelper.PushToCache(interpolator, ObjectName);
                 }
 
                 return $"Vol surface {VolSurface} not found in cache";
             });
         }
 
-        [ExcelFunction(Description = "Creates a PDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDFFromInterpolator))]
+        [ExcelFunction(Description = "Creates a PDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDFFromInterpolator), IsThreadSafe = true)]
         public static object GeneratePDFFromInterpolator(
             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
             [ExcelArgument(Description = "Input interpolator name")] string VolInterpolator,
@@ -277,16 +287,14 @@ namespace Qwack.Excel.Options
                 if (ContainerStores.GetObjectCache<IInterpolator1D>().TryGetObject(VolInterpolator, out var smile))
                 {
                     var interpolator = smile.Value.GeneratePDF(NumberOfSamples, ExpiryYearFraction, Forward);
-                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
-                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
-                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    return ExcelHelper.PushToCache(interpolator, ObjectName);
                 }
 
                 return $"Interpolator {VolInterpolator} not found in cache";
             });
         }
 
-        [ExcelFunction(Description = "Creates a CDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDFFromInterpolator))]
+        [ExcelFunction(Description = "Creates a CDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDFFromInterpolator), IsThreadSafe = true)]
         public static object GenerateCDFFromInterpolator(
             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
             [ExcelArgument(Description = "Input interpolator name")] string VolInterpolator,
@@ -300,16 +308,14 @@ namespace Qwack.Excel.Options
                 if (ContainerStores.GetObjectCache<IInterpolator1D>().TryGetObject(VolInterpolator, out var smile))
                 {
                     var interpolator = smile.Value.GenerateCDF(NumberOfSamples, ExpiryYearFraction, Forward);
-                    var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
-                    cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
-                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    return ExcelHelper.PushToCache(interpolator, ObjectName);
                 }
 
                 return $"Interpolator {VolInterpolator} not found in cache";
             });
         }
 
-        [ExcelFunction(Description = "Creates a composite smile from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSmile))]
+        [ExcelFunction(Description = "Creates a composite smile from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSmile), IsThreadSafe = true)]
         public static object GenerateCompoSmile(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -328,9 +334,7 @@ namespace Qwack.Excel.Options
                     if (ContainerStores.GetObjectCache<IVolSurface>().TryGetObject(FxVolSurface, out var volSurfaceFx))
                     {
                         var interpolator = volSurface.Value.GenerateCompositeSmile(volSurfaceFx.Value, NumberOfSamples, ExpiryDate, Forward, FxForward, Correlation);
-                        var cache = ContainerStores.GetObjectCache<IInterpolator1D>();
-                        cache.PutObject(ObjectName, new SessionItem<IInterpolator1D> { Name = ObjectName, Value = interpolator });
-                        return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                        return ExcelHelper.PushToCache(interpolator, ObjectName);
                     }
                     else
                         return $"Fx vol surface {FxVolSurface} not found in cache";
@@ -340,7 +344,7 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a composite surface from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSurface))]
+        [ExcelFunction(Description = "Creates a composite surface from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSurface), IsThreadSafe = true)]
         public static object GenerateCompoSurface(
              [ExcelArgument(Description = "Output surface name")] string ObjectName,
              [ExcelArgument(Description = "Asset-fx model name")] string AssetFxModel,
@@ -359,12 +363,67 @@ namespace Qwack.Excel.Options
                     model.Value.GetVolSurface(AssetId);
 
                     var surface = model.Value.GenerateCompositeSurface(AssetId, FxPair, NumberOfSamples, Correlation);
-                    var cache = ContainerStores.GetObjectCache<IVolSurface>();
-                    cache.PutObject(ObjectName, new SessionItem<IVolSurface> { Name = ObjectName, Value = surface });
-                    return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                    return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
                 }
                 else
                     return $"Model {AssetFxModel} not found in cache";
+            });
+        }
+
+        [ExcelFunction(Description = "Turns a risky/fly surface into a cube of quotes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceToCube), IsThreadSafe = true)]
+        public static object SurfaceToCube(
+            [ExcelArgument(Description = "Surface name")] string SurfaceName,
+            [ExcelArgument(Description = "Output cube name")] string CubeName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(SurfaceName, $"Vol surface {SurfaceName} not found");
+                var rrbf = (RiskyFlySurface)surface.Value;
+                var cube = rrbf.ToCube();
+                return RiskFunctions.PushCubeToCache(cube, CubeName);
+            });
+        }
+
+        [ExcelFunction(Description = "Reconstructs a risky/fly surface from a cube of quotes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceFromCube), IsThreadSafe = true)]
+        public static object SurfaceFromCube(
+            [ExcelArgument(Description = "Output Surface name")] string SurfaceName,
+            [ExcelArgument(Description = "Cube name")] string CubeName,
+            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Stike Interpolation - default GaussianKernel")] object StrikeInterpolation,
+            [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(CubeName, $"Cube {CubeName} not found");
+                var strikeInterpType = StrikeInterpolation.OptionalExcel("GaussianKernel");
+                var timeInterpType = TimeInterpolation.OptionalExcel("LinearInVariance");
+
+                if (!Enum.TryParse(strikeInterpType, out Interpolator1DType siType))
+                    return $"Could not parse strike interpolator type - {strikeInterpType}";
+                if (!Enum.TryParse(timeInterpType, out Interpolator1DType tiType))
+                    return $"Could not parse time interpolator type - {timeInterpType}";
+
+                var rrbf = RiskyFlySurface.FromCube(cube.Value, BuildDate, siType, tiType);
+                rrbf.AssetId = AssetId;
+                rrbf.Name = AssetId;
+                if (!string.IsNullOrWhiteSpace(Currency))
+                    rrbf.Currency = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+
+                return ExcelHelper.PushToCache<IVolSurface>(rrbf, SurfaceName);
+            });
+        }
+
+        [ExcelFunction(Description = "Extracts quotes from a risky/fly surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceToQuotes), IsThreadSafe = true)]
+        public static object SurfaceToQuotes(
+            [ExcelArgument(Description = "Surface name")] string SurfaceName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(SurfaceName, $"Vol surface {SurfaceName} not found");
+                var rrbf = (RiskyFlySurface)surface.Value;
+                return rrbf.DisplayQuotes();
             });
         }
     }

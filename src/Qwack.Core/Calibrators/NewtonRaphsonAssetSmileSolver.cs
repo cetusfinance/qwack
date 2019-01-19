@@ -53,6 +53,10 @@ namespace Qwack.Core.Calibrators
             _tExp = (expiry - buildDate).TotalDays / 365.0;
             _interpType = interpType;
             _strikes = strikesToFit;
+
+            if (TrivialSolution(out var vols))
+                return vols;
+
             _currentGuess = Enumerable.Repeat(atmConstraint.MarketVol, _numberOfConstraints).ToArray();
 
             SetupConstraints();
@@ -64,7 +68,7 @@ namespace Qwack.Core.Calibrators
             for (var i = 0; i < MaxItterations; i++)
             {
                 ComputeNextGuess();
-
+                NaNCheck();
                 _currentErrors = ComputeErrors(_currentGuess);
                 if (_currentErrors.Max(x => Abs(x)) < Tollerance)
                 {
@@ -75,6 +79,34 @@ namespace Qwack.Core.Calibrators
             }
 
             return _currentGuess;
+        }
+
+        private void NaNCheck()
+        {
+            if (_currentGuess.Any(x => double.IsNaN(x)))
+                throw new Exception("NaNs detected in solution");
+        }
+
+        private bool TrivialSolution(out double[] vols)
+        {
+            vols = new double[_strikes.Length];
+            var sc = _smileConstraints.OrderBy(x => x.Delta).ToArray();
+            var atm = _atmConstraint.MarketVol;
+            if (sc.Length * 2 + 1 == _strikes.Length && sc[0].WingQuoteType==WingQuoteType.Simple)
+            {
+                var deltas = sc.Select(x => x.Delta).ToArray();
+                for(var i=0;i<deltas.Length;i++)
+                {
+                    if (_strikes[i] != deltas[i] || _strikes[_strikes.Length-1-i] != 1 - deltas[i])
+                        return false;
+
+                    vols[i] = atm + sc[i].FlyVol - 0.5 * sc[i].RisykVol;
+                    vols[vols.Length-1-i] = atm + sc[i].FlyVol + 0.5 * sc[i].RisykVol;
+                }
+                vols[deltas.Length] = atm;
+                return true;
+            }
+            return false;
         }
 
         private void SetupConstraints()

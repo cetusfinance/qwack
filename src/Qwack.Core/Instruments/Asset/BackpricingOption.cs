@@ -9,7 +9,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianLookbackOption : IHasVega, IAssetInstrument
+    public class BackPricingOption : IHasVega, IAssetInstrument
     {
         public OptionType CallPut { get; set; }
 
@@ -19,8 +19,10 @@ namespace Qwack.Core.Instruments.Asset
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
 
-        public DateTime ObsStartDate { get; set; }
-        public DateTime ObsEndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public DateTime DecisionDate { get; set; }
+        public DateTime SettlementDate { get; set; }
         public DateTime[] FixingDates { get; set; }
         public Calendar FixingCalendar { get; set; }
         public Calendar PaymentCalendar { get; set; }
@@ -37,8 +39,6 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
 
-        private bool _isFx => AssetId.Length == 7 && AssetId[3] == '/';
-
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
         {
@@ -54,10 +54,10 @@ namespace Qwack.Core.Instruments.Asset
         }
         public Currency Currency => PaymentCurrency;
 
-        public DateTime LastSensitivityDate => PaymentDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
+        public DateTime LastSensitivityDate => PaymentDate.Max(EndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 
-        public string FxPair(IAssetFxModel model) => _isFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
-        public FxConversionType FxType(IAssetFxModel model) => _isFx ? FxConversionType.None :( model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
+        public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
+        public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
            new Dictionary<string, List<DateTime>>() :
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
@@ -65,13 +65,14 @@ namespace Qwack.Core.Instruments.Asset
 
         public IAssetInstrument Clone()
         {
-            return new AsianLookbackOption
+            return new BackPricingOption
             {
                 TradeId = TradeId,
                 Notional = Notional,
                 Direction = Direction,
-                ObsStartDate = ObsStartDate,
-                ObsEndDate = ObsStartDate,
+                StartDate = StartDate,
+                EndDate = EndDate,
+                DecisionDate = DecisionDate,
                 FixingDates = (DateTime[])FixingDates.Clone(),
                 FixingCalendar = FixingCalendar,
                 PaymentCalendar = PaymentCalendar,

@@ -9,42 +9,60 @@ using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
+using Qwack.Paths.Regressors;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class LookBackOption : IPathProcess, IRequiresFinish, INeedPriceRegressor
+    public class BackPricingOption : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
         private object _locker = new object();
 
-        private List<DateTime> _sampleDates;
+        private List<DateTime> _avgDates;
+        private readonly DateTime _decisionDate;
         private readonly OptionType _callPut;
         private readonly string _discountCurve;
         private readonly Currency _ccy;
+        private readonly DateTime _settleFixingDate;
         private readonly DateTime _payDate;
         private readonly string _assetName;
         private int _assetIndex;
         private string _fxName;
         private int _fxIndex;
         private int[] _dateIndexes;
+        private int[] _dateIndexesPast;
+        private int[] _dateIndexesFuture;
+        private int _nPast;
+        private int _nFuture;
+        private int _nTotal;
+        private int _decisionDateIx;
         private Vector<double>[] _results;
         private Vector<double> _notional;
         private bool _isComplete;
 
         private readonly Vector<double> _one = new Vector<double>(1.0);
 
-        private bool _isFx => _assetName.Length == 7 && _assetName[3] == '/';
-
         public string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
-        public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional)
+        public LinearAveragePriceRegressor SettlementRegressor { get; set; }
+        public LinearAveragePriceRegressor AverageRegressor { get; set; }
+
+        public BackPricingOption(string assetName, List<DateTime> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional)
         {
-            _sampleDates = sampleDates;
+            _avgDates = avgDates;
+            _decisionDate = decisionDate;
             _callPut = callPut;
             _discountCurve = discountCurve;
             _ccy = ccy;
+            _settleFixingDate = settlementFixingDate;
             _payDate = payDate;
             _assetName = assetName;
             _notional = new Vector<double>(notional);
+
+            if (_ccy.Ccy != "USD")
+                _fxName = $"USD/{_ccy.Ccy}";
+
+            AverageRegressor = avgDates.Last() > decisionDate ? new LinearAveragePriceRegressor(decisionDate, avgDates.Where(x => x > decisionDate).ToArray(), RegressionKey) : null;
+            SettlementRegressor = new LinearAveragePriceRegressor(decisionDate, new[] { _settleFixingDate }, RegressionKey);
         }
 
         public bool IsComplete => _isComplete;
@@ -56,22 +74,29 @@ namespace Qwack.Paths.Payoffs
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
-            
-            if(!_isFx && _ccy.Ccy!="USD")
-            {
-                _fxName = $"USD/{_ccy.Ccy}";
+
+            if (!string.IsNullOrEmpty(_fxName))
                 _fxIndex = dims.GetDimension(_fxName);
-            }
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
-            _dateIndexes = new int[_sampleDates.Count];
-            for(var i = 0; i < _sampleDates.Count; i++)
-            {
-                _dateIndexes[i] = dates.GetDateIndex(_sampleDates[i]);
-            }
+            _dateIndexes = _avgDates
+                .Select(x => dates.GetDateIndex(x))
+                .ToArray();
+            _dateIndexesPast = _avgDates
+                .Where(x=>x<=_decisionDate)
+                .Select(x => dates.GetDateIndex(x))
+                .ToArray();
+            _dateIndexesFuture = _avgDates
+                .Where(x => x > _decisionDate)
+                .Select(x => dates.GetDateIndex(x))
+                .ToArray();
+            _decisionDateIx = dates.GetDateIndex(_decisionDate);
+
+            _nPast = _dateIndexesPast.Length;
+            _nFuture = _dateIndexesFuture.Length;
+            _nTotal = _nPast + _nFuture;
 
             var engine = collection.GetFeature<IEngineFeature>();
-
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
             _isComplete = true;
         }
@@ -79,55 +104,47 @@ namespace Qwack.Paths.Payoffs
         public void Process(IPathBlock block)
         {
             var blockBaseIx = block.GlobalPathIndex;
+            var nTotalVec = new Vector<double>(_nTotal);
 
-            if (_callPut==OptionType.C)
+            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+                var steps = block.GetStepsForFactor(path, _assetIndex);
+                Span<Vector<double>> stepsFx = null;
+                if (_fxName != null)
+                    stepsFx = block.GetStepsForFactor(path, _fxIndex);
+
+                var pastSum = new Vector<double>(0.0);
+                for(var p=0;p<_dateIndexesPast.Length;p++)
                 {
-                    var steps = block.GetStepsForFactor(path, _assetIndex);
-                    Span<Vector<double>> stepsFx = null;
-                    if (_fxName != null)
-                        stepsFx = block.GetStepsForFactor(path, _fxIndex);
-
-                    var minValue = new Vector<double>(double.MaxValue);
-                    for (var i = 0; i < _dateIndexes.Length; i++)
-                    {
-                        minValue = Vector.Min(steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one), minValue);
-                    }
-                    var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
-                    var payoff = (lastValue - minValue) * _notional;
-
-                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
-                    _results[resultIx] = payoff;
+                    pastSum += steps[_dateIndexesPast[p]] * (_fxName != null ? stepsFx[_dateIndexesPast[p]] : _one);
                 }
-            }
-            else
-            {
-                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+
+                var spotAtExpiry = steps[_decisionDateIx] * (_fxName != null ? stepsFx[_decisionDateIx] : _one);
+
+                var futSum = new double[Vector<double>.Count];
+                var setReg = new double[Vector<double>.Count];
+                for (var i = 0; i < Vector<double>.Count; i++)
                 {
-                    var steps = block.GetStepsForFactor(path, _assetIndex);
-                    Span<Vector<double>> stepsFx = null;
-                    if (_fxName != null)
-                        stepsFx = block.GetStepsForFactor(path, _fxIndex);
-
-                    var maxValue = new Vector<double>(double.MinValue);
-                    for (var i = 0; i < _dateIndexes.Length; i++)
-                    {
-                        maxValue = Vector.Max(steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one), maxValue);
-                    }
-                    var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
-                    var payoff = (maxValue - lastValue) * _notional;
-
-                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
-                    _results[resultIx] = payoff;
+                    futSum[i] = AverageRegressor==null?0.0:AverageRegressor.Predict(spotAtExpiry[i]) * _nFuture;
+                    setReg[i] = SettlementRegressor.Predict(spotAtExpiry[i]);
                 }
+                var futVec =  new Vector<double>(futSum);
+                var avgVec = (futVec + pastSum) / nTotalVec;
+                var setVec = new Vector<double>(setReg);
+
+                var payoff = (_callPut == OptionType.C) ?
+                        Vector.Max(new Vector<double>(0), setVec - avgVec) :
+                        Vector.Max(new Vector<double>(0), avgVec - setVec);
+
+                var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                _results[resultIx] = payoff * _notional;
             }
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            dates.AddDates(_sampleDates);
+            dates.AddDates(_avgDates);
         }
 
         public double AverageResult => _results.Select(x =>

@@ -767,7 +767,7 @@ namespace Qwack.Models.Models
                     { "TradeId", r.MetaData[tidIx] },
                     { "TradeType", r.MetaData[tTypeIx] },
                     { "Step", "Theta" },
-                    { "SubStep", string.Empty },
+                    { "SubStep", "TimeMove" },
                     { "SubSubStep", string.Empty },
                     { "PointLabel", string.Empty }
                 };
@@ -821,7 +821,8 @@ namespace Qwack.Models.Models
             }
 
             //next move ir curves
-            var irGreeks = portfolio.AssetIrDelta(model, reportingCcy);
+            var irBump = 0.0001;
+            var irGreeks = portfolio.AssetIrDelta(model, reportingCcy, irBump);
             var r_tidIx = irGreeks.GetColumnIndex("TradeId");
             var r_plIx = irGreeks.GetColumnIndex("PointLabel");
             var r_tTypeIx = irGreeks.GetColumnIndex("TradeType");
@@ -840,7 +841,7 @@ namespace Qwack.Models.Models
                     var point = DateTime.Parse((string)r.MetaData[r_plIx]);
                     var startRate = model.FundingModel.Curves[irCurve.Key].GetRate(point);
                     var endRate = irCurve.Value.GetRate(point);
-                    var explained = r.Value * (endRate - startRate) / 0.0001;
+                    var explained = r.Value * (endRate - startRate) / irBump;
 
                     var row = new Dictionary<string, object>
                     {
@@ -1098,11 +1099,13 @@ namespace Qwack.Models.Models
 
             //next move asset vols
             var assetVega = portfolio.AssetVega(model, reportingCcy);
+            var assetSegaRega = portfolio.AssetSegaRega(model, reportingCcy);
             r_tidIx = assetVega.GetColumnIndex("TradeId");
             r_plIx = assetVega.GetColumnIndex("PointLabel");
             r_tTypeIx = assetVega.GetColumnIndex("TradeType");
             foreach (var surfaceName in endModel.VolSurfaceNames)
             {
+                //ATM vega
                 var riskForCurve = assetVega.Filter(
                       new Dictionary<string, object> {
                         { "AssetId", surfaceName },
@@ -1138,6 +1141,73 @@ namespace Qwack.Models.Models
                         explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
                 }
 
+                //Rega
+                 riskForCurve = assetSegaRega.Filter(
+                      new Dictionary<string, object> {
+                        { "AssetId", surfaceName },
+                        { "Metric", "Rega" }
+                      });
+
+                foreach (var r in riskForCurve.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
+                    var pointDate = startCurve.PillarDatesForLabel(point);
+                    var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75)- model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25);
+                    var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75)- endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25); ;
+                    var explained = r.Value * (endRate - startRate) / 0.001;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
+                        { "Step", "AssetVols" },
+                        { "SubStep", surfaceName },
+                        { "SubSubStep", "Rega" },
+                        { "PointLabel",r.MetaData[r_plIx]}
+                    };
+                    cube.AddRow(row, explained);
+
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
+
+                //Sega
+                riskForCurve = assetSegaRega.Filter(
+                     new Dictionary<string, object> {
+                        { "AssetId", surfaceName },
+                        { "Metric", "Sega" }
+                     });
+
+                foreach (var r in riskForCurve.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
+                    var pointDate = startCurve.PillarDatesForLabel(point);
+                    var startRate = (model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25))/2.0 - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                    var endRate = (endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                    var explained = r.Value * (endRate - startRate) / 0.001;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", r.MetaData[r_tidIx] },
+                        { "TradeType", r.MetaData[r_tTypeIx] },
+                        { "Step", "AssetVols" },
+                        { "SubStep", surfaceName },
+                        { "SubSubStep", "Sega" },
+                        { "PointLabel",r.MetaData[r_plIx]}
+                    };
+                    cube.AddRow(row, explained);
+
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
+
+                //UX
                 var targetSurface = endModel.GetVolSurface(surfaceName);
                 model.AddVolSurface(surfaceName, targetSurface);
                 newPVCube = portfolio.PV(model, reportingCcy);

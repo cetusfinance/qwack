@@ -35,7 +35,7 @@ namespace Qwack.Paths
         public int NumberOfPaths => _numberOfPaths;
         public bool Parallelize { get; set; } = false;
 
-        public async void RunProcess()
+        public void RunProcess()
         {
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
 
@@ -55,14 +55,14 @@ namespace Qwack.Paths
                     }
                     else
                     {
-                        await ParallelUtils.Instance.For(0, _blockset.NumberOfBlocks, 1, i =>
+                        ParallelUtils.Instance.For(0, _blockset.NumberOfBlocks, 1, i =>
                         {
                             var block = _blockset.GetBlock(i);
                             foreach (var process in ppLevel)
                             {
                                 process.Process(block);
                             }
-                        }, true);
+                        }, true).Wait();
                     }
                 }
 
@@ -91,12 +91,12 @@ namespace Qwack.Paths
             _currentProcessDepth++;
         }
 
-        public async void SetupFeatures()
+        public void SetupFeatures()
         {
             foreach (var ppLevel in _pathProcesses)
             {
                 if (Parallelize)
-                    await ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true);
+                    ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true).Wait();
                 else
                     foreach (var pp in ppLevel)
                     {
@@ -114,7 +114,7 @@ namespace Qwack.Paths
             foreach (var ppLevel in _pathProcesses)
             {
                 if (Parallelize)
-                    await ParallelUtils.Instance.Foreach(ppLevel, (process) =>
+                    ParallelUtils.Instance.Foreach(ppLevel, (process) =>
                     {
                         if (process is IRequiresFinish finishProcess)
                         {
@@ -127,7 +127,7 @@ namespace Qwack.Paths
                                 }
                             }
                         }
-                    }, true);
+                    }, true).Wait();
                 else
                     foreach (var process in ppLevel)
                     {

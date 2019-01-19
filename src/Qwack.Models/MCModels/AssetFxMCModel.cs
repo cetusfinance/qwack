@@ -20,11 +20,14 @@ using Qwack.Paths.Regressors;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Descriptors;
+using Qwack.Models.Models;
 
 namespace Qwack.Models.MCModels
 {
     public class AssetFxMCModel : IPvModel
     {
+        private readonly string _num = "USD";
+
         private static string GetSobolFilename() => Path.Combine(GetRunningDirectory(), "SobolDirectionNumbers.txt");
         private static string GetRunningDirectory()
         {
@@ -49,10 +52,13 @@ namespace Qwack.Models.MCModels
         private IPortfolioValueRegressor _regressor;
         private readonly ICurrencyProvider _currencyProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
-        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider)
+        private readonly ICalendarProvider _calendarProvider;
+
+        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider)
         {
             _currencyProvider = currencyProvider;
             _futureSettingsProvider = futureSettingsProvider;
+            _calendarProvider = calendarProvider;
             Engine = new PathEngine(settings.NumberOfPaths)
             {
                 Parallelize = settings.Parallelize
@@ -105,13 +111,20 @@ namespace Qwack.Models.MCModels
                     }
                 }
             }
+            var fxAssetsToAdd = new List<string>();
             foreach (var assetId in assetIds)
             {
+                if(assetId.Length==7 && assetId[3]=='/')
+                {
+                    fxAssetsToAdd.Add(assetId);
+                    continue;
+                }
+
                 if (!(model.GetVolSurface(assetId) is IATMVolSurface surface))
                     throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
                 var fixingDict = fixingsNeeded.ContainsKey(assetId) ? model.GetFixingDictionary(assetId) : null;
                 var fixings = fixingDict != null ?
-                    fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict[x])
+                    fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict.GetFixing(x))
                     : new Dictionary<DateTime, double>();
                 var futuresSim = settings.ExpensiveFuturesSimulation &&
                    (model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.NYMEX);
@@ -145,15 +158,152 @@ namespace Qwack.Models.MCModels
 
                     if (settings.LocalVol)
                     {
-                        var asset = new LVSingleAsset
+                        if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
+                        {
+                            var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                            if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
+                                throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                            var correlation = 0.0;
+                            if (model.CorrelationMatrix != null)
+                            {
+                                if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
+                                    correlation = correl;
+                            }
+
+                            var asset = new LVSingleAsset
+                            (
+                                startDate: originDate,
+                                expiryDate: lastDate,
+                                volSurface: surface,
+                                forwardCurve: fwdCurve,
+                                nTimeSteps: settings.NumberOfTimesteps,
+                                name: assetId,
+                                pastFixings: fixings,
+                                fxAdjustSurface: adjSurface,
+                                fxAssetCorrelation: correlation
+                            );
+                            Engine.AddPathProcess(asset);
+                        }
+                        else
+                        {
+                            var asset = new LVSingleAsset
+                            (
+                                startDate: originDate,
+                                expiryDate: lastDate,
+                                volSurface: surface,
+                                forwardCurve: fwdCurve,
+                                nTimeSteps: settings.NumberOfTimesteps,
+                                name: assetId,
+                                pastFixings: fixings
+                            );
+                            Engine.AddPathProcess(asset);
+                        }
+                    }
+                    else
+                    {
+                        if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
+                        {
+                            var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                            if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
+                                throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                            var correlation = 0.0;
+                            if (model.CorrelationMatrix != null)
+                            {
+                                if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
+                                    correlation = correl;
+                            }
+
+                            var asset = new BlackSingleAsset
+                            (
+                                startDate: originDate,
+                                expiryDate: lastDate,
+                                volSurface: surface,
+                                forwardCurve: fwdCurve,
+                                nTimeSteps: settings.NumberOfTimesteps,
+                                name: assetId,
+                                pastFixings: fixings,
+                                fxAdjustSurface: adjSurface,
+                                fxAssetCorrelation: correlation
+                            );
+                            Engine.AddPathProcess(asset);
+                        }
+                        else
+                        {
+                            var asset = new BlackSingleAsset
+                            (
+                               startDate: originDate,
+                               expiryDate: lastDate,
+                               volSurface: surface,
+                               forwardCurve: fwdCurve,
+                               nTimeSteps: settings.NumberOfTimesteps,
+                               name: assetId,
+                               pastFixings: fixings
+                            );
+                            Engine.AddPathProcess(asset);
+                        }
+                    }
+                }
+            }
+
+            var pairsAdded = new List<string>();
+            var fxPairs = portfolio.FxPairs(model).Concat(fxAssetsToAdd);
+            foreach (var fxPair in fxPairs)
+            {
+                var fxPairName = fxPair;
+                var pair = fxPairName.FxPairFromString(_currencyProvider, _calendarProvider);
+   
+                if (pairsAdded.Contains(pair.ToString()))
+                    continue;
+
+                if (!(model.FundingModel.VolSurfaces[fxPairName] is IATMVolSurface surface))
+                    throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
+
+                var fwdCurve = new Func<double, double>(t =>
+                {
+                    var date = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
+                    var spotDate = pair.SpotDate(date);
+                    return model.FundingModel.GetFxRate(spotDate, fxPairName);
+                });
+
+                pairsAdded.Add(pair.ToString());
+
+                if (settings.LocalVol)
+                {
+                    var asset = new LVSingleAsset
+                    (
+                        startDate: originDate,
+                        expiryDate: lastDate,
+                        volSurface: surface,
+                        forwardCurve: fwdCurve,
+                        nTimeSteps: settings.NumberOfTimesteps,
+                        name: fxPairName
+                    );
+                    Engine.AddPathProcess(asset);
+                }
+                else
+                {
+                    if (fxPairName.Substring(fxPairName.Length - 3, 3)!= settings.ReportingCurrency)
+                    {//needs to be drift-adjusted
+                        var fxAdjPair = settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
+                        if(correlation!=-1.0 && model.CorrelationMatrix!=null)
+                        {
+                            if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
+                                correlation = correl;
+                        }
+
+                        var asset = new BlackSingleAsset
                         (
-                            startDate: originDate,
-                            expiryDate: lastDate,
-                            volSurface: surface,
-                            forwardCurve: fwdCurve,
-                            nTimeSteps: settings.NumberOfTimesteps,
-                            name: assetId,
-                            pastFixings: fixings
+                           startDate: originDate,
+                           expiryDate: lastDate,
+                           volSurface: surface,
+                           forwardCurve: fwdCurve,
+                           nTimeSteps: settings.NumberOfTimesteps,
+                           name: fxPairName,
+                           fxAdjustSurface: adjSurface,
+                           fxAssetCorrelation: correlation
                         );
                         Engine.AddPathProcess(asset);
                     }
@@ -166,53 +316,34 @@ namespace Qwack.Models.MCModels
                            volSurface: surface,
                            forwardCurve: fwdCurve,
                            nTimeSteps: settings.NumberOfTimesteps,
-                           name: assetId,
-                           pastFixings: fixings
+                           name: fxPairName
                         );
                         Engine.AddPathProcess(asset);
                     }
                 }
             }
-            var fxPairs = portfolio.FxPairs(model);
-            foreach (var fxPair in fxPairs)
-            {
-                var pair = fxPair.FxPairFromString(_currencyProvider);
-                string fxPairName;
-                if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
-                {
-                    var flippedPair = $"{pair.Foreign.Ccy}/{pair.Domestic.Ccy}";
-                    if (!model.FundingModel.VolSurfaces.ContainsKey(fxPair))
-                    {
-                        throw new Exception($"Could not find Fx vol surface for {fxPair} or {flippedPair}");
-                    }
-                    pair = flippedPair.FxPairFromString(_currencyProvider);
-                    fxPairName = flippedPair;
-                }
-                else
-                {
-                    fxPairName = fxPair;
-                }
-                if (!(model.FundingModel.VolSurfaces[fxPairName] is IATMVolSurface surface))
-                    throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
-                var fwdCurve = new Func<double, double>(t =>
-                {
-                    var date = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
-                    return model.FundingModel.GetFxRate(date, fxPairName);
-                });
-                var asset = new BlackSingleAsset
-                (
-                    startDate: originDate,
-                    expiryDate: lastDate,
-                    volSurface: surface,
-                    forwardCurve: fwdCurve,
-                    nTimeSteps: settings.NumberOfTimesteps,
-                    name: fxPairName
-                );
-                Engine.AddPathProcess(asset);
-            }
 
+            //payoffs
             Engine.IncrementDepth();
-            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y));
+            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider));
+            if(_payoffs.Any(x=>x.Value.Regressors!=null))
+            {
+                var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
+                    .SelectMany(x=>x.Value.Regressors)
+                    .Distinct();
+
+                foreach(var regressor in regressorsToAdd)
+                {
+                    Engine.AddPathProcess(regressor);
+                    foreach(var payoff in _payoffs.Where(x => x.Value.Regressors != null))
+                    {
+                        if (payoff.Value.Regressors.Any(x => x == regressor))
+                            payoff.Value.SetRegressor(regressor);
+                    }
+                }
+
+                Engine.IncrementDepth();
+            }
             foreach (var product in _payoffs)
             {
                 Engine.AddPathProcess(product.Value);
@@ -268,6 +399,7 @@ namespace Qwack.Models.MCModels
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
                 { "Currency", typeof(string) }
             };
             cube.Initialize(dataTypes);
@@ -284,31 +416,22 @@ namespace Qwack.Models.MCModels
                 var pv = flows.Flows.Sum(x => x.Pv);
                 var fxRate = 1.0;
                 var tradeId = ins.TradeId;
+                string tradeType = null;
                 switch (ins)
                 {
                     case IAssetInstrument aIns:
+                        tradeType = aIns.TradeType();
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, aIns.Currency);
                         else
                             ccy = aIns.Currency.ToString();
                         break;
-                    case FxForward fxFwd:
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
-                        else
-                            ccy = fxFwd.ForeignCCY.ToString();
-                        break;
                     case FixedRateLoanDeposit loanDepo:
+                        tradeType = "LoanDepo";
                         if (reportingCurrency != null)
                             fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Currency);
                         else
                             ccy = loanDepo.Currency.ToString();
-                        break;
-                    case CashBalance cash:
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, cash.Currency);
-                        else
-                            ccy = cash.Currency.ToString();
                         break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
@@ -316,6 +439,7 @@ namespace Qwack.Models.MCModels
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", tradeId },
+                    { "TradeType", tradeType },
                     { "Currency", ccy }
                 };
                 cube.AddRow(row, pv / fxRate);
@@ -323,6 +447,6 @@ namespace Qwack.Models.MCModels
             return cube;
         }
 
-        public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio) => new AssetFxMCModel(OriginDate, portfolio, newVanillaModel, Settings, _currencyProvider, _futureSettingsProvider);
+        public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio) => new AssetFxMCModel(OriginDate, portfolio, newVanillaModel, Settings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
     }
 }

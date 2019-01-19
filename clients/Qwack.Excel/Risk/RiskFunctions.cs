@@ -18,7 +18,7 @@ namespace Qwack.Excel.Curves
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<ModelFunctions>();
 
-        [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioPV))]
+        [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioPV), IsThreadSafe = true)]
         public static object PortfolioPV(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -34,7 +34,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns asset vega of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioVega))]
+        [ExcelFunction(Description = "Returns asset vega of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioVega), IsThreadSafe = true)]
         public static object PortfolioVega(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -50,7 +50,23 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns fx vega of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxVega))]
+        [ExcelFunction(Description = "Returns asset sega/rega of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioSegaRega), IsThreadSafe = true)]
+        public static object PortfolioSegaRega(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
+                var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
+                var result = model.AssetSegaRega(ccy);
+                return PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns fx vega of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxVega), IsThreadSafe = true)]
         public static object PortfolioFxVega(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -66,7 +82,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioDelta))]
+        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioDelta), IsThreadSafe = true)]
         public static object PortfolioDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -82,7 +98,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxDelta))]
+        [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxDelta), IsThreadSafe = true)]
         public static object PortfolioFxDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -100,7 +116,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns theta and charm of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioThetaCharm))]
+        [ExcelFunction(Description = "Returns theta and charm of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioThetaCharm), IsThreadSafe = true)]
         public static object PortfolioThetaCharm(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -111,7 +127,7 @@ namespace Qwack.Excel.Curves
             return ExcelHelper.Execute(_logger, () => ThetaCharm(ResultObjectName, PortfolioName, ModelName, FwdValDate, ReportingCcy, true));
         }
 
-        [ExcelFunction(Description = "Returns theta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioTheta))]
+        [ExcelFunction(Description = "Returns theta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioTheta), IsThreadSafe = true)]
         public static object PortfolioTheta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -131,7 +147,7 @@ namespace Qwack.Excel.Curves
         }
 
 
-        [ExcelFunction(Description = "Returns interest rate delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioIrDelta))]
+        [ExcelFunction(Description = "Returns interest rate delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioIrDelta), IsThreadSafe = true)]
         public static object PortfolioIrDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -145,7 +161,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns interest rate benchmark delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioIrBenchmarkDelta))]
+        [ExcelFunction(Description = "Returns interest rate benchmark delta cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioIrBenchmarkDelta), IsThreadSafe = true)]
         public static object PortfolioIrBenchmarkDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -163,7 +179,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns correlation delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioCorrelationDelta))]
+        [ExcelFunction(Description = "Returns correlation delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioCorrelationDelta), IsThreadSafe = true)]
         public static object PortfolioCorrelationDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -181,7 +197,7 @@ namespace Qwack.Excel.Curves
         }
 
 
-        [ExcelFunction(Description = "Returns greeks cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioGreeks))]
+        [ExcelFunction(Description = "Returns greeks cube of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioGreeks), IsThreadSafe = true)]
         public static object PortfolioGreeks(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -194,13 +210,13 @@ namespace Qwack.Excel.Curves
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
 
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
-                var result = model.AssetGreeks(FwdValDate, ccy, ContainerStores.CurrencyProvider);
+                var result = model.AssetGreeks(FwdValDate, ccy, ContainerStores.CurrencyProvider).Result;
                 return PushCubeToCache(result, ResultObjectName);
             });
         }
 
 
-        [ExcelFunction(Description = "Returns risk ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioRiskLadder))]
+        [ExcelFunction(Description = "Returns risk ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioRiskLadder), IsThreadSafe = true)]
         public static object PortfolioRiskLadder(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -230,7 +246,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns time ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioTimeLadder))]
+        [ExcelFunction(Description = "Returns time ladder for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioTimeLadder), IsThreadSafe = true)]
         public static object PortfolioTimeLadder(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -263,7 +279,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns an asset/currency risk matrix for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioRiskMatrix))]
+        [ExcelFunction(Description = "Returns an asset/currency risk matrix for a portfolio given an AssetFx model and some bump parameters", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioRiskMatrix), IsThreadSafe = true)]
         public static object PortfolioRiskMatrix(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -296,11 +312,6 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        public static string PushCubeToCache(ICube cube, string ResultObjectName)
-        {
-            var resultCache = ContainerStores.GetObjectCache<ICube>();
-            resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = cube });
-            return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
-        }
+        public static string PushCubeToCache(ICube cube, string ResultObjectName) => ExcelHelper.PushToCache(cube, ResultObjectName);
     }
 }

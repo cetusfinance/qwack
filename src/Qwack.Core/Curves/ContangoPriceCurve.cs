@@ -82,7 +82,7 @@ namespace Qwack.Core.Curves
         public double GetPriceForFixingDate(DateTime date)
         {
             var prompt = date.AddPeriod(RollType.F, SpotCalendar, SpotLag);
-            return GetFwd(prompt, prompt.ToOADate());
+            return GetFwd(prompt, _interp.Interpolate(prompt.ToOADate()));
         }
 
         private double GetFwd(DateTime fwdDate, double contango)

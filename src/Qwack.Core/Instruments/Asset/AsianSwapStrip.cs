@@ -7,7 +7,7 @@ using Qwack.Core.Models;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianSwapStrip : IAssetInstrument
+    public class AsianSwapStrip : IAssetInstrument, ISaCcrEnabled
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
@@ -44,5 +44,11 @@ namespace Qwack.Core.Instruments.Asset
         public override bool Equals(object obj) => obj is AsianSwapStrip swapStrip &&
             TradeId == swapStrip.TradeId &&
             Enumerable.SequenceEqual(Swaplets, swapStrip.Swaplets);
+
+        public string HedgingSet { get; set; }
+        public double EffectiveNotional(IAssetFxModel model) => Swaplets.Sum(x=>x.EffectiveNotional(model));
+        public double AdjustedNotional(IAssetFxModel model) => Swaplets.Sum(x => x.AdjustedNotional(model));
+        public double SupervisoryDelta(IAssetFxModel model) => Swaplets.Average(x => x.SupervisoryDelta(model));
+        public double MaturityFactor(DateTime today) => Swaplets.Max(x => x.MaturityFactor(today));
     }
 }

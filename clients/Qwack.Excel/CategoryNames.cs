@@ -17,5 +17,6 @@ namespace Qwack.Excel
         internal const string Math = "QMath";
         internal const string Models = "QModels";
         internal const string Risk = "QRisk";
+        internal const string Capital = "QCap";
     }
 }

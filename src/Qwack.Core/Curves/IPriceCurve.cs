@@ -35,5 +35,8 @@ namespace Qwack.Core.Curves
         DateTime PillarDatesForLabel(string label);
 
         PriceCurveType CurveType { get; }
+
+        Frequency SpotLag { get; set; } 
+        Calendar SpotCalendar { get; set; }
     }
 }

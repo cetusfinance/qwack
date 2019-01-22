@@ -34,38 +34,65 @@ namespace Qwack.Paths
         public BlockSet BlockSet => _blockset;
         public int NumberOfPaths => _numberOfPaths;
         public bool Parallelize { get; set; } = false;
+        public bool CompactMemoryMode { get; set; } = false;
 
         public void RunProcess()
         {
-            _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps);
+            _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps, CompactMemoryMode);
 
             if (Parallelize)
             {
-                foreach (var ppLevel in _pathProcesses)
+                if(CompactMemoryMode)
                 {
-                    if (ppLevel.Any(x => x is IRunSingleThreaded))
+                    foreach (var block in _blockset)
                     {
-                        foreach (var block in _blockset)
+                        foreach (var ppLevel in _pathProcesses)
                         {
-                            foreach (var process in ppLevel)
+                            if (ppLevel.Any(x => x is IRunSingleThreaded))
                             {
-                                process.Process(block);
+                                foreach (var process in ppLevel)
+                                {
+                                    process.Process(block);
+                                }
+                            }
+                            else
+                            {
+                                ParallelUtils.Instance.For(0, ppLevel.Count, 1, i =>
+                                {
+                                    ppLevel[i].Process(block);
+                                }).Wait();
                             }
                         }
-                    }
-                    else
-                    {
-                        ParallelUtils.Instance.For(0, _blockset.NumberOfBlocks, 1, i =>
-                        {
-                            var block = _blockset.GetBlock(i);
-                            foreach (var process in ppLevel)
-                            {
-                                process.Process(block);
-                            }
-                        }, true).Wait();
+                        block.Dispose();
                     }
                 }
-
+                else
+                {
+                    foreach (var ppLevel in _pathProcesses)
+                    {
+                        if (ppLevel.Any(x => x is IRunSingleThreaded))
+                        {
+                            foreach (var block in _blockset)
+                            {
+                                foreach (var process in ppLevel)
+                                {
+                                    process.Process(block);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ParallelUtils.Instance.For(0, _blockset.NumberOfBlocks, 1, i =>
+                            {
+                                var block = _blockset.GetBlock(i);
+                                foreach (var process in ppLevel)
+                                {
+                                    process.Process(block);
+                                }
+                            }).Wait();
+                        }
+                    }
+                }
             }
             else
             {
@@ -77,6 +104,13 @@ namespace Qwack.Paths
                         {
                             process.Process(block);
                         }
+                    }
+
+                    if (CompactMemoryMode)
+                    {
+                        block.Dispose();
+                        GC.ReRegisterForFinalize(block);
+                        GC.Collect();
                     }
                 }
             }
@@ -96,7 +130,7 @@ namespace Qwack.Paths
             foreach (var ppLevel in _pathProcesses)
             {
                 if (Parallelize)
-                    ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection), true).Wait();
+                    ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection)).Wait();
                 else
                     foreach (var pp in ppLevel)
                     {
@@ -127,7 +161,7 @@ namespace Qwack.Paths
                                 }
                             }
                         }
-                    }, true).Wait();
+                    }).Wait();
                 else
                     foreach (var process in ppLevel)
                     {

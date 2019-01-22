@@ -21,6 +21,7 @@ using Qwack.Futures;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Descriptors;
 using Qwack.Models.Models;
+using Qwack.Core.Curves;
 
 namespace Qwack.Models.MCModels
 {
@@ -56,12 +57,16 @@ namespace Qwack.Models.MCModels
 
         public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider)
         {
+            if (settings.CompactMemoryMode && settings.AveragePathCorrection)
+                throw new Exception("Can't use both CompactMemoryMode and PathCorrection");
+
             _currencyProvider = currencyProvider;
             _futureSettingsProvider = futureSettingsProvider;
             _calendarProvider = calendarProvider;
             Engine = new PathEngine(settings.NumberOfPaths)
             {
-                Parallelize = settings.Parallelize
+                Parallelize = settings.Parallelize,
+                CompactMemoryMode = settings.CompactMemoryMode
             };
             OriginDate = originDate;
             Portfolio = portfolio;
@@ -111,7 +116,10 @@ namespace Qwack.Models.MCModels
                     }
                 }
             }
+
+            //asset processes
             var fxAssetsToAdd = new List<string>();
+            var corrections = new Dictionary<string, SimpleAveragePathCorrector>();
             foreach (var assetId in assetIds)
             {
                 if(assetId.Length==7 && assetId[3]=='/')
@@ -151,97 +159,63 @@ namespace Qwack.Models.MCModels
                 {
                     var fwdCurve = new Func<double, double>(t =>
                     {
-                        return model
-                        .GetPriceCurve(assetId)
-                        .GetPriceForDate(originDate.AddYearFraction(t, DayCountBasis.ACT365F));
+                        var c = model.GetPriceCurve(assetId);
+                        var d = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
+                        if (c is PriceCurve pc)
+                            d = d.AddPeriod(RollType.F, pc.SpotCalendar, pc.SpotLag);
+                        return c.GetPriceForDate(d);
                     });
+
+                    IATMVolSurface adjSurface = null;
+                    var correlation = 0.0;
+
+                    if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
+                    {
+                        var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                        if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface2))
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        adjSurface = adjSurface2;
+                        if (model.CorrelationMatrix != null)
+                        {
+                            if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
+                                correlation = correl;
+                        }
+                    }
 
                     if (settings.LocalVol)
                     {
-                        if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
-                        {
-                            var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
-                            if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
-                                throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
-                            var correlation = 0.0;
-                            if (model.CorrelationMatrix != null)
-                            {
-                                if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
-                                    correlation = correl;
-                            }
-
-                            var asset = new LVSingleAsset
-                            (
-                                startDate: originDate,
-                                expiryDate: lastDate,
-                                volSurface: surface,
-                                forwardCurve: fwdCurve,
-                                nTimeSteps: settings.NumberOfTimesteps,
-                                name: assetId,
-                                pastFixings: fixings,
-                                fxAdjustSurface: adjSurface,
-                                fxAssetCorrelation: correlation
-                            );
-                            Engine.AddPathProcess(asset);
-                        }
-                        else
-                        {
-                            var asset = new LVSingleAsset
-                            (
-                                startDate: originDate,
-                                expiryDate: lastDate,
-                                volSurface: surface,
-                                forwardCurve: fwdCurve,
-                                nTimeSteps: settings.NumberOfTimesteps,
-                                name: assetId,
-                                pastFixings: fixings
-                            );
-                            Engine.AddPathProcess(asset);
-                        }
+                        var asset = new LVSingleAsset
+                        (
+                            startDate: originDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
+                            nTimeSteps: settings.NumberOfTimesteps,
+                            name: assetId,
+                            pastFixings: fixings,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);                 
                     }
                     else
                     {
-                        if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
-                        {
-                            var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
-                            if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
-                                throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
-                            var correlation = 0.0;
-                            if (model.CorrelationMatrix != null)
-                            {
-                                if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
-                                    correlation = correl;
-                            }
-
-                            var asset = new BlackSingleAsset
-                            (
-                                startDate: originDate,
-                                expiryDate: lastDate,
-                                volSurface: surface,
-                                forwardCurve: fwdCurve,
-                                nTimeSteps: settings.NumberOfTimesteps,
-                                name: assetId,
-                                pastFixings: fixings,
-                                fxAdjustSurface: adjSurface,
-                                fxAssetCorrelation: correlation
-                            );
-                            Engine.AddPathProcess(asset);
-                        }
-                        else
-                        {
-                            var asset = new BlackSingleAsset
-                            (
-                               startDate: originDate,
-                               expiryDate: lastDate,
-                               volSurface: surface,
-                               forwardCurve: fwdCurve,
-                               nTimeSteps: settings.NumberOfTimesteps,
-                               name: assetId,
-                               pastFixings: fixings
-                            );
-                            Engine.AddPathProcess(asset);
-                        }
+                        var asset = new BlackSingleAsset
+                        (
+                            startDate: originDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
+                            nTimeSteps: settings.NumberOfTimesteps,
+                            name: assetId,
+                            pastFixings: fixings,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
                     }
+                    if (settings.AveragePathCorrection)
+                        corrections.Add(assetId, new SimpleAveragePathCorrector(new SimpleAveragePathCalculator(assetId) { CompactMode = settings.CompactMemoryMode }, surface, fwdCurve, assetId, fixings, adjSurface, correlation));
                 }
             }
 
@@ -279,6 +253,10 @@ namespace Qwack.Models.MCModels
                         name: fxPairName
                     );
                     Engine.AddPathProcess(asset);
+
+                    if (settings.AveragePathCorrection)
+                        corrections.Add(fxPairName, new SimpleAveragePathCorrector(new SimpleAveragePathCalculator(fxPairName) { CompactMode = settings.CompactMemoryMode }, surface, fwdCurve, fxPairName));
+
                 }
                 else
                 {
@@ -306,6 +284,10 @@ namespace Qwack.Models.MCModels
                            fxAssetCorrelation: correlation
                         );
                         Engine.AddPathProcess(asset);
+
+                        if (settings.AveragePathCorrection)
+                            corrections.Add(fxPairName, new SimpleAveragePathCorrector(new SimpleAveragePathCalculator(fxPairName) { CompactMode = settings.CompactMemoryMode }, surface, fwdCurve, fxPairName, null, adjSurface, correlation));
+
                     }
                     else
                     {
@@ -319,23 +301,41 @@ namespace Qwack.Models.MCModels
                            name: fxPairName
                         );
                         Engine.AddPathProcess(asset);
+
+                        if (settings.AveragePathCorrection)
+                            corrections.Add(fxPairName, new SimpleAveragePathCorrector(new SimpleAveragePathCalculator(fxPairName) { CompactMode = settings.CompactMemoryMode }, surface, fwdCurve, fxPairName));
+
                     }
+                }
+            }
+            //apply path correctin
+            if(settings.AveragePathCorrection && corrections.Any())
+            {
+                Engine.IncrementDepth();
+                foreach (var pc in corrections)
+                {
+                    Engine.AddPathProcess(pc.Value.PathCalc);
+                }
+                Engine.IncrementDepth();
+                foreach (var pc in corrections)
+                {
+                    Engine.AddPathProcess(pc.Value);
                 }
             }
 
             //payoffs
             Engine.IncrementDepth();
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider));
-            if(_payoffs.Any(x=>x.Value.Regressors!=null))
+            if (!settings.AvoidRegressionForBackPricing && _payoffs.Any(x => x.Value.Regressors != null))
             {
                 var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
-                    .SelectMany(x=>x.Value.Regressors)
+                    .SelectMany(x => x.Value.Regressors)
                     .Distinct();
 
-                foreach(var regressor in regressorsToAdd)
+                foreach (var regressor in regressorsToAdd)
                 {
                     Engine.AddPathProcess(regressor);
-                    foreach(var payoff in _payoffs.Where(x => x.Value.Regressors != null))
+                    foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
                     {
                         if (payoff.Value.Regressors.Any(x => x == regressor))
                             payoff.Value.SetRegressor(regressor);
@@ -346,6 +346,9 @@ namespace Qwack.Models.MCModels
             }
             foreach (var product in _payoffs)
             {
+                if (settings.AvoidRegressionForBackPricing && product.Value.AssetInstrument is BackPricingOption)
+                    product.Value.VanillaModel = VanillaModel;
+
                 Engine.AddPathProcess(product.Value);
             }
 

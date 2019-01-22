@@ -30,7 +30,7 @@ namespace Qwack.Core.Curves
         public string Name { get; set; }
         public string AssetId { get; set; }
 
-        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Frequency SpotLag { get; set; } = new Frequency("2b");
         public Calendar SpotCalendar { get; set; }
 
         public DateTime[] PillarDates => _pillarDates;
@@ -94,7 +94,11 @@ namespace Qwack.Core.Curves
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
         {
             var o = new Dictionary<string, IPriceCurve>();
-            var cSpot = new ContangoPriceCurve(BuildDate, _spot+bumpSize, _spotDate, _pillarDates, _contangos, _currencyProvider, _basis);
+            var cSpot = new ContangoPriceCurve(BuildDate, _spot + bumpSize, _spotDate, _pillarDates, _contangos, _currencyProvider, _basis)
+            {
+                SpotCalendar = SpotCalendar,
+                SpotLag = SpotLag
+            };
             o.Add("Spot", cSpot);
             return o;
         }

@@ -39,13 +39,14 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
             [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy,
+            [ExcelArgument(Description = "Parallel execution, default true")] object Parallelize)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-                var result = model.AssetVega(ccy);
+                var result = model.AssetVega(ccy, Parallelize.OptionalExcel(true));
                 return PushCubeToCache(result, ResultObjectName);
             });
         }
@@ -87,13 +88,13 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
             [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName,
-            [ExcelArgument(Description = "Compute gamma, default false")] object ComputeGamma)
+            [ExcelArgument(Description = "Compute gamma, default false")] object ComputeGamma,
+            [ExcelArgument(Description = "Parallel execution, default true")] object Parallelize)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var gamma = ComputeGamma.OptionalExcel(false);
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
-                var result = model.AssetDelta(gamma);
+                var result = model.AssetDelta(ComputeGamma.OptionalExcel(false), Parallelize.OptionalExcel(true));
                 return PushCubeToCache(result, ResultObjectName);
             });
         }

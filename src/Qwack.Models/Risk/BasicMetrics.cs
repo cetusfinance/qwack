@@ -32,7 +32,7 @@ namespace Qwack.Models.Risk
             return results.ToDictionary(k => k.Item1, v => v.Item2);
         }
 
-        public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy)
+        public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy, bool parallelize=true)
         {
             var bumpSize = 0.001;
             var cube = new ResultCube();
@@ -55,7 +55,7 @@ namespace Qwack.Models.Risk
 
                 var subPortfolio = new Portfolio()
                 {
-                    Instruments = model.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                    Instruments = pvModel.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
                 };
 
                 if (subPortfolio.Instruments.Count == 0)
@@ -99,7 +99,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, vega);
                         }
                     }
-                }, false).Wait();
+                },!(parallelize)).Wait();
             }
 
             return cube.Sort();
@@ -174,7 +174,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, vega);
                         }
                     }
-                }, false);
+                });
 
                 var t2 = ParallelUtils.Instance.Foreach(bumpedSurfacesRega.ToList(), bCurve =>
                 {
@@ -204,7 +204,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, vega);
                         }
                     }
-                }, false);
+                });
 
                 var tasks = new[] { t1, t2 };
                 Task.WaitAll(tasks);
@@ -278,7 +278,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, vega);
                         }
                     }
-                }, false).Wait();
+                }).Wait();
             }
 
             return cube.Sort();
@@ -458,7 +458,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize=false)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -627,7 +627,7 @@ namespace Qwack.Models.Risk
                             }
                         }
                     }
-                }).Wait();
+                },!(parallelize)).Wait();
             }
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
@@ -813,7 +813,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, delta);
                         }
                     }
-                },false).Wait();
+                }).Wait();
             }
 
             return cube.Sort();

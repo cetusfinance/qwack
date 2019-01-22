@@ -29,8 +29,8 @@ namespace Qwack.Excel.Tests.Curves
         [Fact]
         public void CreateContangoPriceCurve_Facts()
         {
-            Assert.Equal("glah¬0", PriceCurveFunctions.CreateContangoPriceCurve("glah", "pwahAid", DateTime.Today, DateTime.Today.AddDays(2), 100.0, new double[] { DateTime.Today.AddDays(10).ToOADate(), DateTime.Today.AddDays(20).ToOADate() }, new double[] { 0.05, 0.06 }, ExcelDna.Integration.ExcelMissing.Value));
-            Assert.Equal("glah1¬0", PriceCurveFunctions.CreateContangoPriceCurve("glah1", "pwahAid", DateTime.Today, DateTime.Today.AddDays(2), 100.0, new double[] { DateTime.Today.AddDays(10).ToOADate(), DateTime.Today.AddDays(20).ToOADate() }, new double[] { 0.05, 0.06 }, new object[,] { { "l1", "l2" } }));
+            Assert.Equal("glah¬0", PriceCurveFunctions.CreateContangoPriceCurve("glah", "pwahAid", DateTime.Today, DateTime.Today.AddDays(2), 100.0, new double[] { DateTime.Today.AddDays(10).ToOADate(), DateTime.Today.AddDays(20).ToOADate() }, new double[] { 0.05, 0.06 }, ExcelDna.Integration.ExcelMissing.Value, ExcelDna.Integration.ExcelMissing.Value, ExcelDna.Integration.ExcelMissing.Value));
+            Assert.Equal("glah1¬0", PriceCurveFunctions.CreateContangoPriceCurve("glah1", "pwahAid", DateTime.Today, DateTime.Today.AddDays(2), 100.0, new double[] { DateTime.Today.AddDays(10).ToOADate(), DateTime.Today.AddDays(20).ToOADate() }, new double[] { 0.05, 0.06 }, new object[,] { { "l1", "l2" } }, ExcelDna.Integration.ExcelMissing.Value, ExcelDna.Integration.ExcelMissing.Value));
         }
 
         [Fact]

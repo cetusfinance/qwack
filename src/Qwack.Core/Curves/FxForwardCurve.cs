@@ -42,6 +42,9 @@ namespace Qwack.Core.Curves
 
         public string AssetId => ForeignCurrency.Ccy;
 
+        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Calendar SpotCalendar { get; set; }
+
         public FxForwardCurve(DateTime buildDate, Func<IFundingModel> fundingModel, Currency domesticCurrency, Currency foreignCurrency)
         {
             BuildDate = buildDate;

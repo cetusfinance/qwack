@@ -22,6 +22,9 @@ namespace Qwack.Core.Curves
         public bool UnderlyingsAreForwards => pCurveFunc.Invoke().UnderlyingsAreForwards;
         public DateTime[] PillarDates => pCurveFunc.Invoke().PillarDates;
 
+        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Calendar SpotCalendar { get; set; }
+
         public int NumberOfPillars => 0;
 
         public Currency Currency { get; set; }

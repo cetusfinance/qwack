@@ -31,7 +31,7 @@ namespace Qwack.Utils.Parallel
 
         public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
-            if (!MultiThreaded && !overrideMTFlag)
+            if (overrideMTFlag)
             {
                 RunInSeries(values, code);
                 return;

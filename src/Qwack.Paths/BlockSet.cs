@@ -24,13 +24,11 @@ namespace Qwack.Paths
         private readonly int _overrun;
         private PathBlock[] _blocks;
 
-        public BlockSet(int numberOfPaths, int factors, int steps)
-        {
-            //if (numberOfPaths % PathBlock.MinNumberOfPaths != 0)
-            //{
-            //    ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"Paths need to be a multiple of {PathBlock.MinNumberOfPaths}");
-            //}
+        private readonly bool _compactMode;
 
+        public BlockSet(int numberOfPaths, int factors, int steps, bool compactMode = false)
+        {
+            _compactMode = compactMode;
             _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
             numberOfPaths += _overrun;
             
@@ -38,7 +36,8 @@ namespace Qwack.Paths
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
-            var pathsPerBlock = numberOfPaths / (_numberOfThreads * 2);
+            var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads * 2);
+
             if(pathsPerBlock==0)
                 ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");
 
@@ -47,7 +46,7 @@ namespace Qwack.Paths
             for (var i = 0; i < _blocks.Length; i++)
             {
                 var pathsThisBlock = (i == _blocks.Length - 1) ? pathsPerBlock - _overrun : pathsPerBlock;
-                _blocks[i] = new PathBlock(pathsThisBlock, factors, steps, i * pathsPerBlock);
+                _blocks[i] = new PathBlock(pathsThisBlock, factors, steps, i * pathsPerBlock, compactMode);
             }
         }
 

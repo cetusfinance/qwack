@@ -39,7 +39,10 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim,
            [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel,
            [ExcelArgument(Description = "Futures mapping dictionary, assetId to futures code")] object FutMappingDict,
-           [ExcelArgument(Description = "Enable debug mode")] object DebugMode)
+           [ExcelArgument(Description = "Enable debug mode")] object DebugMode,
+           [ExcelArgument(Description = "Enable average path correction")] object PathCorrection,
+           [ExcelArgument(Description = "Enable reduced memory operation")] object CompactMemoryMode,
+           [ExcelArgument(Description = "Avoid regresison if possible for BackPricing options")] object AvoidBPRegression)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -70,7 +73,10 @@ namespace Qwack.Excel.Curves
                     FuturesMappingTable = (FutMappingDict is ExcelMissing) ? 
                         new Dictionary<string, string>() : 
                         ((object[,])FutMappingDict).RangeToDictionary<string,string>(),
-                    DebugMode = DebugMode.OptionalExcel(false)
+                    DebugMode = DebugMode.OptionalExcel(false),
+                    AveragePathCorrection = PathCorrection.OptionalExcel(false),
+                    CompactMemoryMode = CompactMemoryMode.OptionalExcel(false),
+                    AvoidRegressionForBackPricing = AvoidBPRegression.OptionalExcel(false)
                 };
 
                 return ExcelHelper.PushToCache(settings, ObjectName);

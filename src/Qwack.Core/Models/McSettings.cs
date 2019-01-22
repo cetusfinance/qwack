@@ -18,5 +18,8 @@ namespace Qwack.Core.Models
         public PFERegressorType PfeRegressorType { get; set; }
         public bool Parallelize { get; set; }
         public bool DebugMode { get; set; }
+        public bool AveragePathCorrection { get; set; }
+        public bool CompactMemoryMode { get; set; }
+        public bool AvoidRegressionForBackPricing { get; set; }
     }
 }

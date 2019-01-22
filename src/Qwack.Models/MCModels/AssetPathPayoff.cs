@@ -48,7 +48,23 @@ namespace Qwack.Models.MCModels
 
         public string RegressionKey => _fxType == FxConversionType.None ? _assetName : $"{_assetName}*{_fxName}";
 
-        
+        private IAssetFxModel _vanillaModel;
+
+        public IAssetFxModel VanillaModel
+        {
+            get => _vanillaModel;
+            set
+            {
+                _vanillaModel = value;
+                switch (AssetInstrument)
+                {
+                    case BackPricingOption bpo:
+                        var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
+                        bpob.VanillaModel = value;
+                        break;
+                }
+            }
+        }
         public LinearAveragePriceRegressor[] Regressors { get; private set; }
         
         public void SetRegressor(LinearAveragePriceRegressor regressor)
@@ -168,7 +184,8 @@ namespace Qwack.Models.MCModels
                     };
                     break;
                 case BackPricingOption bpo:
-                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional);
+                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional)
+                    { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         bp

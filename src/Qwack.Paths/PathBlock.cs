@@ -15,16 +15,39 @@ namespace Qwack.Paths
         private readonly int _numberOfFactors;
         private readonly int _numberOfSteps;
         private GCHandle _handle;
-        private readonly double[] _backingArray;
+        private double[] _backingArray;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
 
-        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex)
+        private readonly bool _lazyInit;
+
+        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex, bool lazyInit=false)
         {
             GlobalPathIndex = globalPathIndex;
             _numberOfPaths = numberOfPaths;
             _numberOfFactors = factors;
             _numberOfSteps = numberOfSteps;
-            _backingArray = new double[numberOfPaths * factors * numberOfSteps];
+            _lazyInit = lazyInit;
+
+            if (!_lazyInit)
+                Init();
+        }
+
+        private void CheckInit()
+        {
+            if (_backingArray == null)
+            {
+                lock (_threadLock)
+                {
+                    if (_backingArray == null)
+                    {
+                        Init();
+                    }
+                }
+            }
+        }
+        private void Init()
+        {
+            _backingArray = new double[_numberOfPaths * _numberOfFactors * _numberOfSteps];
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
 
@@ -36,10 +59,26 @@ namespace Qwack.Paths
         public int TotalBlockSize => _numberOfPaths * _numberOfFactors * _numberOfSteps;
         public double[] RawData => _backingArray;
 
-        public double this[int index] { get => _backingArray[index]; set => _backingArray[index] = value; }
+        private object _threadLock = new object();
+
+        public double this[int index]
+        {
+            get
+            {
+                CheckInit();
+                return _backingArray[index];
+            }
+            set
+            {
+                CheckInit();
+                _backingArray[index] = value;
+            }
+        }
 
         public unsafe Span<Vector<double>> GetStepsForFactor(int pathId, int factorId)
         {
+            CheckInit();
+
             var byteOffset = GetIndexOfPathStart(pathId, factorId) << 3;
             var pointer = (void*)IntPtr.Add(_handle.AddrOfPinnedObject(), byteOffset);
             var span = new Span<Vector<double>>(pointer, _numberOfSteps);
@@ -48,13 +87,19 @@ namespace Qwack.Paths
 
         public unsafe Span<double> GetStepsForFactorSingle(int pathId, int factorId)
         {
+            CheckInit();
+
             var byteOffset = GetIndexOfPathStart(pathId, factorId) << 3;
             var pointer = (void*)IntPtr.Add(_handle.AddrOfPinnedObject(), byteOffset);
             var span = new Span<double>(pointer, _numberOfSteps);
             return span;
         }
 
-        public Span<double> GetEntirePath(int pathId) => new Span<double>(RawData,GetIndexOfPathStart(pathId,0), _numberOfFactors * NumberOfSteps);
+        public Span<double> GetEntirePath(int pathId)
+        {
+            CheckInit();
+            return new Span<double>(RawData, GetIndexOfPathStart(pathId, 0), _numberOfFactors * NumberOfSteps);
+        }
 
         public int GetIndexOfPathStart(int pathId, int factorId)
         {

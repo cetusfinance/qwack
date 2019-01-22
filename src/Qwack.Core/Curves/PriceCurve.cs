@@ -115,7 +115,9 @@ namespace Qwack.Core.Curves
                 {
                     CollateralSpec = CollateralSpec,
                     Currency = Currency,
-                    AssetId = AssetId
+                    AssetId = AssetId,
+                    SpotCalendar = SpotCalendar,
+                    SpotLag = SpotLag
                 };
                 var name = _pillarLabels[i];
                 o.Add(name, c);

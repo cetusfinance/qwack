@@ -83,20 +83,23 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Spot price")] double SpotPrice,
             [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
             [ExcelArgument(Description = "Array of contango values")] double[] ContangoRates,
-            [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels)
+            [ExcelArgument(Description = "Array of pillar labels (optional)")] object PillarLabels,
+            [ExcelArgument(Description = "Spot lag (default 2b)")] object SpotLag,
+            [ExcelArgument(Description = "Spot calendar (default USD)")] object SpotCalendar)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
                 var pDates = Pillars.ToDateTimeArray();
+                ContainerStores.CalendarProvider.Collection.TryGetCalendar(SpotCalendar.OptionalExcel("Weekends"), out var spotCal);
                 var cObj = new ContangoPriceCurve(BuildDate, SpotPrice, SpotDate, pDates, ContangoRates, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>(), DayCountBasis.Act360, labels)
                 {
                     Name = AssetId ?? ObjectName,
-                    AssetId = AssetId ?? ObjectName
+                    AssetId = AssetId ?? ObjectName,
+                    SpotLag = new Frequency(SpotLag.OptionalExcel("2b")),
+                    SpotCalendar = spotCal
                 };
-                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
-                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IPriceCurve>(cObj, ObjectName);
             });
         }
 
@@ -123,9 +126,7 @@ namespace Qwack.Excel.Curves
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName
                 };
-                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
-                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IPriceCurve>(cObj, ObjectName);
             });
         }
 
@@ -163,9 +164,7 @@ namespace Qwack.Excel.Curves
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;
 
-                var cache = ContainerStores.GetObjectCache<IPriceCurve>();
-                cache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IPriceCurve>(cObj, ObjectName);
             });
         }
 

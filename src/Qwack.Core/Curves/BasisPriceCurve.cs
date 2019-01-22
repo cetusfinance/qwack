@@ -7,6 +7,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Calibrators;
 using System.Linq;
 using Qwack.Core.Instruments;
+using Qwack.Dates;
 
 namespace Qwack.Core.Curves
 {
@@ -51,6 +52,9 @@ namespace Qwack.Core.Curves
         public List<DateTime> Pillars { get; }
         public List<string> PillarLabels { get; }
         public IIrCurve DiscountCurve { get; }
+
+        public Frequency SpotLag { get; set; } = new Frequency("0b");
+        public Calendar SpotCalendar { get; set; }
 
         public double GetAveragePriceForDates(DateTime[] dates) => Curve.GetAveragePriceForDates(dates);
 

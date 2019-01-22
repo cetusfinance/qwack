@@ -27,7 +27,14 @@ namespace Qwack.Paths.Features
         public bool IsComplete => _isComplete;
 
         public int GetDateIndex(DateTime date) => _dateIndexes[date];
-        public void AddDate(DateTime date) => _requiredDates.Add(date);
+        public void AddDate(DateTime date)
+        {
+            lock (_locker)
+            {
+                _requiredDates.Add(date);
+            }
+        }
+
 
         public void AddDates(IEnumerable<DateTime> dates)
         {

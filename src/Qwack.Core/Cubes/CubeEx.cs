@@ -333,6 +333,17 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
+        public static ICube ScalarMultiply(this ICube cube, double scalar)
+        {
+            var outCube = new ResultCube();
+            outCube.Initialize(cube.DataTypes);
+            var rows = new List<ResultCubeRow>(cube.GetAllRows());
+            foreach (var row in rows)
+                outCube.AddRow(row.MetaData, row.Value * scalar);
+
+            return outCube;
+        }
+
         public static ICube MergeQuick(this ICube baseCube, ICube otherCube)
         {
             if (!Enumerable.SequenceEqual(baseCube.DataTypes.Keys, otherCube.DataTypes.Keys) ||

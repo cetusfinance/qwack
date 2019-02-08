@@ -21,7 +21,7 @@ namespace Qwack.Core.Instruments.Funding
             SolveCurve = DiscountCurve;
             PillarDate = MaturityDate;
         }
-
+        public string PortfolioName { get; set; }
         public double Notional { get; set; } = 1.0;
         public double Price { get; set; }
         public DateTime MaturityDate { get; set; }

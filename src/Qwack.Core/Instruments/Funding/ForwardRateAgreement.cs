@@ -85,7 +85,7 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
-
+        public string PortfolioName { get; set; }
         public DateTime LastSensitivityDate => FlowScheduleFra.Flows.Last().AccrualPeriodEnd;
 
         public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurve }).Distinct().Where(x => x != SolveCurve).ToList();

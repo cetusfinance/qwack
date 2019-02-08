@@ -14,6 +14,8 @@ namespace Qwack.Core.Instruments.Asset
         public OptionExerciseType ExerciseType { get; set; }
         public OptionMarginingType MarginingType { get; set; }
         public string DiscountCurve { get; set; }
+        public double Premium { get; set; }
+        public DateTime PremiumDate { get; set; }
 
         public new IAssetInstrument Clone()
         {

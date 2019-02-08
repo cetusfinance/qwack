@@ -84,6 +84,9 @@ namespace Qwack.Core.Curves
                     pillarsAsDoubles.Select(x => x - 1).ToArray();
                     _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.NextValue);
                     break;
+                case PriceCurveType.Constant:
+                    _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.DummyPoint);
+                    break;
                 default:
                     throw new Exception($"Unkown price curve type {_curveType}");
             }
@@ -130,50 +133,34 @@ namespace Qwack.Core.Curves
             switch (_curveType)
             {
                 case PriceCurveType.Linear:
-                    var todaySpotDate = BuildDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar); //this should use currency calendar!
-                    if (_pillarDates.First() <= todaySpotDate)
-                    {
-                        var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
-                        var newSpot = GetPriceForDate(newSpotDate);
-                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
-                        newPillars[0] = newSpotDate;
-                        var newPrices = ((double[])_prices.Clone()).ToList();
-                        newPrices[0] = newSpot;
-                        if(newPillars[0]==newPillars[1])
-                        {
-                            newPillars.RemoveAt(0);
-                            newPrices.RemoveAt(0);
-                        }
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
-                    }
-                    else
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    var oldSpotDate = BuildDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+                    var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+                    var newPillars = _pillarDates
+                        .Where(d => d >= newAnchorDate && d != oldSpotDate)
+                        .Concat(new[] { newSpotDate })
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToArray();
+                    var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
+                    return new PriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                 case PriceCurveType.NYMEX:
-                    if (_pillarDates.First() < newAnchorDate) //remove first point as it has expired tomorrow
-                    {
-                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
-                        newPillars.RemoveAt(0);
-                        var newPrices = ((double[])_prices.Clone()).ToList();
-                        newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
-                    }
-                    else
-                    {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
-                    }
+                    var newPillarsNM = _pillarDates
+                        .Where(d => d >= newAnchorDate)
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToArray();
+                    var newPricesNM = newPillarsNM.Select(x => GetPriceForDate(x)).ToArray();
+                    return new PriceCurve(newAnchorDate, newPillarsNM, newPricesNM, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                 case PriceCurveType.ICE:
-                    if (_pillarDates.First() <= newAnchorDate) //difference to NYMEX case is "<=" vs "<"
-                    {
-                        var newPillars = ((DateTime[])_pillarDates.Clone()).ToList();
-                        newPillars.RemoveAt(0);
-                        var newPrices = ((double[])_prices.Clone()).ToList();
-                        newPrices.RemoveAt(0);
-                        return new PriceCurve(newAnchorDate, newPillars.ToArray(), newPrices.ToArray(), _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
-                    }
-                    else
-                    {
-                        return new PriceCurve(newAnchorDate, _pillarDates, _prices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
-                    }
+                    var newPillarsIC = _pillarDates
+                        .Where(d => d > newAnchorDate)
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToArray();
+                    var newPricesIC = newPillarsIC.Select(x => GetPriceForDate(x.AddDays(-1))).ToArray();
+                    return new PriceCurve(newAnchorDate, newPillarsIC, newPricesIC, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                case PriceCurveType.Constant:
+                    return new ConstantPriceCurve(_prices.First(), BuildDate, _currencyProvider);
                 default:
                     throw new Exception("Unknown curve type");
             }

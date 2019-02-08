@@ -49,27 +49,21 @@ namespace Qwack.Excel.Instruments
                 }      
 
                 if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
-                {
                     return $"Could not parse pay/rec - {payRec}";
-                }
 
                 if (!Enum.TryParse(discType, out FraDiscountingType fType))
-                {
                     return $"Could not parse FRA discounting type - {discType}";
-                }
 
-                var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve) { Notional = Notional };
+                var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve)
+                {
+                    Notional = Notional,
+                    TradeId = ObjectName,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name)
+                };
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
+                
 
-                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
-                var solvePillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
-
-                product.SolveCurve = solveCurve;
-                product.PillarDate = solvePillarDate;
-                product.TradeId = ObjectName;
-
-                var cache = ContainerStores.GetObjectCache<ForwardRateAgreement>();
-                cache.PutObject(ObjectName, new SessionItem<ForwardRateAgreement> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -95,8 +89,8 @@ namespace Qwack.Excel.Instruments
 
                 var product = new FxForward
                 {
-                    DomesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCcy],
-                    ForeignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCcy],
+                    DomesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCcy),
+                    ForeignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCcy),
                     DomesticQuantity = DomesticNotional,
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
@@ -106,9 +100,7 @@ namespace Qwack.Excel.Instruments
                     TradeId = ObjectName
                 };
 
-                var cache = ContainerStores.GetObjectCache<FxForward>();
-                cache.PutObject(ObjectName, new SessionItem<FxForward> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -143,18 +135,14 @@ namespace Qwack.Excel.Instruments
 
                 var tenor = new Frequency(SwapTenor);
 
-                var product = new IrSwap(ValDate, tenor, rIndex.Value, ParRate, pType, ForecastCurve, DiscountCurve);
+                var product = new IrSwap(ValDate, tenor, rIndex.Value, ParRate, pType, ForecastCurve, DiscountCurve)
+                {
+                    TradeId = ObjectName,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name)
+                };
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate); 
 
-                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
-                var solvePillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
-
-                product.SolveCurve = solveCurve;
-                product.PillarDate = solvePillarDate;
-                product.TradeId = ObjectName;
-
-                var cache = ContainerStores.GetObjectCache<IrSwap>();
-                cache.PutObject(ObjectName, new SessionItem<IrSwap> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -196,18 +184,12 @@ namespace Qwack.Excel.Instruments
                     Index =rIndex.Value,
                     Position = Quantity,
                     Price= Price,
+                    SolveCurve = SolveCurve.OptionalExcel(ForecastCurve),
+                    PillarDate = SolvePillarDate.OptionalExcel(accrualEnd),
+                    TradeId = ObjectName
                 };
 
-                var solveCurve = SolveCurve.OptionalExcel(ForecastCurve);
-                var solvePillarDate = SolvePillarDate.OptionalExcel(accrualEnd);
-
-                product.SolveCurve = solveCurve;
-                product.PillarDate = solvePillarDate;
-                product.TradeId = ObjectName;
-
-                var cache = ContainerStores.GetObjectCache<STIRFuture>();
-                cache.PutObject(ObjectName, new SessionItem<STIRFuture> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -248,18 +230,12 @@ namespace Qwack.Excel.Instruments
                     Index = rIndex.Value,
                     Position = Quantity,
                     Price = Price,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    PillarDate = SolvePillarDate.OptionalExcel(accrualEnd),
+                    TradeId = ObjectName
                 };
 
-                var solveCurve = SolveCurve.OptionalExcel(rIndex.Name);
-                var solvePillarDate = SolvePillarDate.OptionalExcel(accrualEnd);
-
-                product.SolveCurve = solveCurve;
-                product.PillarDate = solvePillarDate;
-                product.TradeId = ObjectName;
-
-                var cache = ContainerStores.GetObjectCache<OISFuture>();
-                cache.PutObject(ObjectName, new SessionItem<OISFuture> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -294,21 +270,16 @@ namespace Qwack.Excel.Instruments
                 }
 
                 var spreadOnPay = ParSpreadOnPay.OptionalExcel(true);
-
                 var tenor = new Frequency(SwapTenor);
 
-                var product = new IrBasisSwap(ValDate, tenor, ParSpread, spreadOnPay, rIndexPay.Value, rIndexRec.Value, ForecastCurvePay, ForecastCurveRec, DiscountCurve);
-
-                var solveCurve = SolveCurve.OptionalExcel(rIndexPay.Name);
-                var solvePillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
-
-                product.SolveCurve = solveCurve;
-                product.PillarDate = solvePillarDate;
-                product.TradeId = ObjectName;
-
-                var cache = ContainerStores.GetObjectCache<IrBasisSwap>();
-                cache.PutObject(ObjectName, new SessionItem<IrBasisSwap> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                var product = new IrBasisSwap(ValDate, tenor, ParSpread, spreadOnPay, rIndexPay.Value, rIndexRec.Value, ForecastCurvePay, ForecastCurveRec, DiscountCurve)
+                {
+                    SolveCurve = SolveCurve.OptionalExcel(rIndexPay.Name),
+                    TradeId = ObjectName
+                };
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate); 
+                
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
@@ -338,20 +309,73 @@ namespace Qwack.Excel.Instruments
                     TradeId = ObjectName
                 };
 
-                var cache = ContainerStores.GetObjectCache<FixedRateLoanDeposit>();
-                cache.PutObject(ObjectName, new SessionItem<FixedRateLoanDeposit> { Name = ObjectName, Value = product });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a metal contango swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateContangoSwap), IsThreadSafe = true)]
+        public static object CreateContangoSwap(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Spot Date")] DateTime SpotDate,
+            [ExcelArgument(Description = "Settle Date")] DateTime SettleDate,
+            [ExcelArgument(Description = "Metal Currency")] string MetalCcy,
+            [ExcelArgument(Description = "Cash Currency")] string CashCcy,
+            [ExcelArgument(Description = "Metal Notional")] double MetalNotional,
+            [ExcelArgument(Description = "Contango")] double Contango,
+            [ExcelArgument(Description = "Cash Discount Curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Solve Curve name ")] string SolveCurve,
+            [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(MetalCcy, out var metalCcy);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(CashCcy, out var cashCcy);
+
+                var product = new ContangoSwap
+                {
+                    MetalCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(MetalCcy),
+                    CashCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(CashCcy),
+                    MetalQuantity = MetalNotional,
+                    DeliveryDate = SettleDate,
+                    CashDiscountCurve = DiscountCurve,
+                    SolveCurve = SolveCurve,
+                    PillarDate = SolvePillarDate.OptionalExcel(SettleDate),
+                    ContangoRate = Contango,
+                    TradeId = ObjectName,
+                    Basis = DayCountBasis.ACT360,
+                    SpotDate = SpotDate
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
         [ExcelFunction(Description = "Creates a collection of funding instruments to calibrate a curve engine", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection), IsThreadSafe = true)]
         public static object CreateFundingInstrumentCollection(
            [ExcelArgument(Description = "Object name")] string ObjectName,
-           [ExcelArgument(Description = "Instruments")] object[] Instruments)
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsA,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsB,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsC,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsD,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsE,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsF,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsG,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsH,
+           [ExcelArgument(Description = "Instruments")] object[] InstrumentsI)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var swapCache = ContainerStores.GetObjectCache<IrSwap>();
+                var Instruments = InstrumentsA
+                .Concat(InstrumentsB)
+                .Concat(InstrumentsC)
+                .Concat(InstrumentsD)
+                .Concat(InstrumentsE)
+                .Concat(InstrumentsF)
+                .Concat(InstrumentsG)
+                .Concat(InstrumentsH)
+                .Concat(InstrumentsI)
+                .ToArray();
+
                 var swaps = Instruments.GetAnyFromCache<IrSwap>();
                 var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();
                 var futures = Instruments.GetAnyFromCache<STIRFuture>();
@@ -360,6 +384,7 @@ namespace Qwack.Excel.Instruments
                 var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
                 var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
+                var ctgoSwaps = Instruments.GetAnyFromCache<ContangoSwap>();
 
                 //allows merging of FICs into portfolios
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -375,11 +400,9 @@ namespace Qwack.Excel.Instruments
                 fic.AddRange(basisSwaps);
                 fic.AddRange(ficInstruments);
                 fic.AddRange(loanDepos);
+                fic.AddRange(ctgoSwaps);
 
-                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
-
-                ficCache.PutObject(ObjectName, new SessionItem<FundingInstrumentCollection> { Name = ObjectName, Value = fic });
-                return ObjectName + '¬' + ficCache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(fic, ObjectName);
             });
         }
 
@@ -414,22 +437,15 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 if (!Enum.TryParse(DaycountBasisFixed, out DayCountBasis dFixed))
-                {
                     return $"Could not parse fixed daycount - {DaycountBasisFixed}";
-                }
                 if (!Enum.TryParse(DaycountBasisFloat, out DayCountBasis dFloat))
-                {
                     return $"Could not parse float daycount - {DaycountBasisFloat}";
-                }
                 if (!Enum.TryParse(RollConvention, out RollType rConv))
-                {
                     return $"Could not parse roll convention - {RollConvention}";
-                }
 
                 var floatTenor = new Frequency(ForecastTenor);
                 var fixedTenor = new Frequency(FixedTenor);
                 var fixOffset = new Frequency(FixingOffset);
-
 
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(HolidayCalendars, out var cal))
                 {
@@ -449,9 +465,7 @@ namespace Qwack.Excel.Instruments
                     DayCountBasisFixed = dFixed
                 };
 
-                var cache = ContainerStores.GetObjectCache<FloatRateIndex>();
-                cache.PutObject(IndexName, new SessionItem<FloatRateIndex> { Name = IndexName, Value = rIndex });
-                return IndexName + '¬' + cache.GetObject(IndexName).Version;
+                return ExcelHelper.PushToCache(rIndex, IndexName);
             });
         }
 
@@ -484,9 +498,7 @@ namespace Qwack.Excel.Instruments
                 var matrix = new FxMatrix(currencies);
                 matrix.Init(currencies[BaseCurrency], BuildDate, spotRates, fxPairs, discountCurves);
 
-                var cache = ContainerStores.GetObjectCache<FxMatrix>();
-                cache.PutObject(ObjectName, new SessionItem<FxMatrix> { Name = ObjectName, Value = matrix });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(matrix, ObjectName);
             });
         }
 
@@ -510,15 +522,13 @@ namespace Qwack.Excel.Instruments
 
                 var pair = new FxPair()
                 {
-                    Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[DomesticCurrency],
-                    Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ForeignCurrency],
+                    Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCurrency),
+                    Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCurrency),
                     SettlementCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };
 
-                var cache = ContainerStores.GetObjectCache<FxPair>();
-                cache.PutObject(ObjectName, new SessionItem<FxPair> { Name = ObjectName, Value = pair });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(pair, ObjectName);
             });
         }
     }

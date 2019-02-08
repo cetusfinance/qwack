@@ -25,6 +25,8 @@ namespace Qwack.Models.Risk
         public int NScenarios { get; private set; }
         public bool ReturnDifferential { get; private set; }
 
+        public Currency Ccy2 { get; private set; }
+
         public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential=true)
         {
             AssetId = assetId;
@@ -38,7 +40,29 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
+        public RiskMatrix(Currency ccy1, Currency ccy2, MutationType shiftType, RiskMetric metric, double shiftStepSize1, double shiftStepSize2, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
+        {
+            Ccy2 = ccy2;
+            Ccy = ccy1;
+            ShiftType = shiftType;
+            Metric = metric;
+            ShiftSizeAsset = shiftStepSize1;
+            ShiftSizeFx = shiftStepSize2;
+            NScenarios = nScenarios;
+            _currencyProvider = currencyProvider;
+            ReturnDifferential = returnDifferential;
+        }
+
         public Dictionary<Tuple<string,string>, IPvModel> GenerateScenarios(IPvModel model)
+        {
+            if (!string.IsNullOrEmpty(AssetId))
+                return GenerateScenariosAssetFx(model);
+            else
+                return GenerateScenariosFxFx(model);
+        }
+
+
+        private Dictionary<Tuple<string, string>, IPvModel> GenerateScenariosAssetFx(IPvModel model)
         {
             var o = new Dictionary<Tuple<string, string>, IPvModel>();
             var axisLength = NScenarios * 2 + 1;
@@ -77,7 +101,7 @@ namespace Qwack.Models.Risk
                     else
                         shiftedFx = FlatShiftMutator.FxSpotShift(Ccy, thisShiftFx, shifted);
 
-                    results[assetIx*axisLength+fxIx] = new KeyValuePair<Tuple<string, string>, IPvModel>(
+                    results[assetIx * axisLength + fxIx] = new KeyValuePair<Tuple<string, string>, IPvModel>(
                         new Tuple<string, string>(thisLabelAsset, thisLabelFx), shiftedFx);
                 }
             }).Wait();
@@ -87,6 +111,57 @@ namespace Qwack.Models.Risk
 
             return o;
         }
+
+        private Dictionary<Tuple<string, string>, IPvModel> GenerateScenariosFxFx(IPvModel model)
+        {
+            var o = new Dictionary<Tuple<string, string>, IPvModel>();
+            var axisLength = NScenarios * 2 + 1;
+            var results = new KeyValuePair<Tuple<string, string>, IPvModel>[axisLength * axisLength];
+            ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
+            {
+                var thisShiftFx1 = i * ShiftSizeAsset;
+                var thisLabelAsset = Ccy.Ccy + "~" + thisShiftFx1;
+
+                var assetIx = i + NScenarios;
+
+                IPvModel shifted;
+
+                if (thisShiftFx1 == 0)
+                    shifted = model;
+                else
+                    switch (ShiftType)
+                    {
+                        case MutationType.FlatShift:
+                            shifted = FlatShiftMutator.FxSpotShift(Ccy, thisShiftFx1, model);
+                            break;
+                        default:
+                            throw new Exception($"Unable to process shift type {ShiftType}");
+                    }
+
+                for (var ifx = -NScenarios; ifx < NScenarios + 1; ifx++)
+                {
+                    var fxIx = ifx + NScenarios;
+                    var thisShiftFx = ifx * ShiftSizeFx;
+                    var thisLabelFx = Ccy2.Ccy + "~" + thisShiftFx;
+
+                    IPvModel shiftedFx;
+
+                    if (thisShiftFx1 == 0)
+                        shiftedFx = shifted;
+                    else
+                        shiftedFx = FlatShiftMutator.FxSpotShift(Ccy2, thisShiftFx, shifted);
+
+                    results[assetIx * axisLength + fxIx] = new KeyValuePair<Tuple<string, string>, IPvModel>(
+                        new Tuple<string, string>(thisLabelAsset, thisLabelFx), shiftedFx);
+                }
+            }).Wait();
+
+            foreach (var kv in results)
+                o.Add(kv.Key, kv.Value);
+
+            return o;
+        }
+
 
         public ICube Generate(IPvModel model, Portfolio portfolio = null)
         {

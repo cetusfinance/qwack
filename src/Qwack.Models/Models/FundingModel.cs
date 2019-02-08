@@ -111,6 +111,8 @@ namespace Qwack.Models
             return returnValue;
         }
 
+        public Currency GetCurrency(string currency) => _currencyProvider.GetCurrency(currency);
+
         public double GetFxRate(DateTime settlementDate, string fxPair)
         {
             var pair = fxPair.FxPairFromString(_currencyProvider, _calendarProvider);

@@ -18,7 +18,7 @@ namespace Qwack.Core.Instruments.Funding
         public Currency Currency { get; set; }
         public DateTime AverageStartDate { get; set; }
         public DateTime AverageEndDate { get; set; }
-
+        public string PortfolioName { get; set; }
         public string ForecastCurve { get; set; }
         public string SolveCurve { get; set; }
         public DateTime PillarDate { get; set; }

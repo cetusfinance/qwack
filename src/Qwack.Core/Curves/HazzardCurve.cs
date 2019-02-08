@@ -14,6 +14,7 @@ namespace Qwack.Core.Curves
 
         public double GetSurvivalProbability(DateTime startDate, DateTime endDate)
         {
+            if (startDate == endDate) return 1.0;
             var pStart = GetSurvivalProbability(startDate);
             var pEnd = GetSurvivalProbability(endDate);
             return pEnd/pStart;
@@ -26,6 +27,8 @@ namespace Qwack.Core.Curves
             var p = System.Math.Exp(-h * t);
             return p;
         }
+
+        public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetDefaultProbability(startDate, endDate);
 
         private IInterpolator1D _hazzardCurve;
 

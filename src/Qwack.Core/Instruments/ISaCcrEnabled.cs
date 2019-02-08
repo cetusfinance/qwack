@@ -13,4 +13,9 @@ namespace Qwack.Core.Instruments
         double MaturityFactor(DateTime today);
         string HedgingSet { get; set; }
     }
+
+    public interface ISaCcrEnabledIRD : ISaCcrEnabled
+    {
+        int MaturityBucket(DateTime today);
+    }
 }

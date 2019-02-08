@@ -11,7 +11,9 @@ namespace Qwack.Core.Curves
         Next=1,
         NYMEX=1,
         NextButOnExpiry=2,
-        ICE=2
+        ICE=2,
+        Flat=3,
+        Constant=3
     }
 
     public enum SparsePriceCurveType

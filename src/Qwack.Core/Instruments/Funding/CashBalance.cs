@@ -13,27 +13,28 @@ namespace Qwack.Core.Instruments.Funding
     {
         public CashBalance() { }
 
-        public CashBalance(Currency currency, double notional)
+        public CashBalance(Currency currency, double notional, DateTime? payDate = null)
         {
             Notional = notional;
             Currency = currency;
+            PayDate = payDate ?? DateTime.MinValue;
         }
         
         public double Notional { get; set; }
-    
+        public string PortfolioName { get; set; }
         public Currency Currency { get; set; }        
   
         public string SolveCurve { get; set; }
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
-
+        public DateTime PayDate { get; set; }
         public DateTime LastSensitivityDate => DateTime.MinValue;
 
         public string[] AssetIds => new string[0];
         public Currency PaymentCurrency => Currency;
 
-        public double Pv(IFundingModel model, bool updateState) => Notional;
+        public double Pv(IFundingModel model, bool updateState) => PayDate == DateTime.MinValue || PayDate <= model.BuildDate ? Notional : model.GetDf(Currency, model.BuildDate, PayDate) * Notional;
 
         public double FlowsT0(IFundingModel model) => 0.0;
 

@@ -12,7 +12,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public double ContangoRate { get; set; }
         public double MetalQuantity { get; set; }
-
+        public string PortfolioName { get; set; }
         public DateTime SpotDate { get; set; }
         public DateTime DeliveryDate { get; set; }
 

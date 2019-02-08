@@ -238,11 +238,22 @@ namespace Qwack.Excel.Curves
                 if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
                     throw new Exception($"Unknown risk metric {RiskMetric}");
 
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+                var retDiff = ReturnDiff.OptionalExcel(true);
+                var isFx = AssetId.Length == 7 && AssetId[3] == '/';
+                ICube result;
 
-                var riskLadder = new RiskLadder(AssetId, bType, metric, BumpStep, NScenarios, retDiff);
-                var result = riskLadder.Generate(model, model.Portfolio);
+                if (isFx)
+                {
+                    var ccy = ContainerStores.CurrencyProvider.GetCurrency(AssetId.Substring(0, 3));
+                    var riskLadder = new RiskLadder(ccy, bType, metric, BumpStep, NScenarios, retDiff);
+                    result = riskLadder.Generate(model, model.Portfolio);
+                }
+                else
+                {
+                    var riskLadder = new RiskLadder(AssetId, bType, metric, BumpStep, NScenarios, retDiff);
+                    result = riskLadder.Generate(model, model.Portfolio);
+                }
+
                 return PushCubeToCache(result, ResultObjectName);
             });
         }
@@ -302,13 +313,25 @@ namespace Qwack.Excel.Curves
                     throw new Exception($"Unknown bump/mutation type {BumpType}");
                 if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
                     throw new Exception($"Unknown risk metric {RiskMetric}");
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+                var retDiff = ReturnDiff.OptionalExcel(true);
 
-                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var isFxFx = AssetId.Length == 7 && AssetId[3] == '/';
 
-                var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
-                var result = riskMatrix.Generate(model, model.Portfolio);
+                ICube result;
+                if (isFxFx)
+                {
+                    var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                    var ccy2 = ContainerStores.CurrencyProvider.GetCurrency(AssetId.Substring(4));
+                    var riskMatrix = new RiskMatrix(ccy2, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+                    result = riskMatrix.Generate(model, model.Portfolio);
+                }
+                else
+                {
+                    var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                    var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+                    result = riskMatrix.Generate(model, model.Portfolio);
+                }
+
                 return PushCubeToCache(result, ResultObjectName);
             });
         }

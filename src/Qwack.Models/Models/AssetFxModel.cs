@@ -42,8 +42,13 @@ namespace Qwack.Models
 
         public void AddVolSurface(string name, IVolSurface surface) => _assetVols[name] = surface;
 
+        private bool IsFx(string name) => name.Length == 7 && name[3] == '/';
+
         public IPriceCurve GetPriceCurve(string name)
         {
+            if (IsFx(name))
+                return new FxForwardCurve(BuildDate, FundingModel, FundingModel.GetCurrency(name.Substring(0, 3)), FundingModel.GetCurrency(name.Substring(4, 3)));
+
             if (!_assetCurves.TryGetValue(name, out var curve))
                 throw new Exception($"Curve with name {name} not found");
             return curve;
@@ -51,6 +56,9 @@ namespace Qwack.Models
 
         public IVolSurface GetVolSurface(string name)
         {
+            if (IsFx(name))
+                return FundingModel.GetVolSurface(name);
+
             if (!_assetVols.TryGetValue(name, out var surface))
                 throw new Exception($"Vol surface with name {name} not found");
             return surface;
@@ -79,15 +87,15 @@ namespace Qwack.Models
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
-            var fwd = _assetCurves[name].GetPriceForDate(expiry); //needs to account for spot/fwd offset
-            var vol = _assetVols[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
+            var fwd = GetPriceCurve(name).GetPriceForDate(expiry); //needs to account for spot/fwd offset
+            var vol = GetVolSurface(name).GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
         }
 
         public double GetVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike)
         {
-            var fwd = _assetCurves[name].GetPriceForDate(expiry); //needs to account for spot/fwd offset
-            var vol = _assetVols[name].GetVolForDeltaStrike(strike, expiry, fwd);
+            var fwd = GetPriceCurve(name).GetPriceForDate(expiry); //needs to account for spot/fwd offset
+            var vol = GetVolSurface(name).GetVolForDeltaStrike(strike, expiry, fwd);
             return vol;
         }
 

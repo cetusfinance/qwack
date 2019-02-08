@@ -8,7 +8,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class IrSwap : IFundingInstrument
+    public class IrSwap : IFundingInstrument, ISaCcrEnabledIRD
     {
         public IrSwap() { }
 
@@ -72,7 +72,7 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public FloatRateIndex RateIndex { get; set; }
-
+        public string PortfolioName { get; set; }
 
         public DateTime LastSensitivityDate => EndDate;
 
@@ -183,5 +183,15 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public IFundingInstrument SetParRate(double parRate) => new IrSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurve, DiscountCurve);
+
+        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public double AdjustedNotional(IAssetFxModel model) => Notional * SupervisoryDuration(model.BuildDate);
+        private double tStart(DateTime today) => today.CalculateYearFraction(StartDate, DayCountBasis.Act365F);
+        private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate, DayCountBasis.Act365F);
+        public double SupervisoryDuration(DateTime today) => System.Math.Max(10.0, (System.Math.Exp(-0.05 * tStart(today)) - System.Math.Exp(-0.05 * tEnd(today))) / 0.05);
+        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public double MaturityFactor(DateTime today) => System.Math.Sqrt(System.Math.Min(tEnd(today), 1.0));
+        public string HedgingSet { get; set; }
+        public int MaturityBucket(DateTime today) => tEnd(today) <= 1.0 ? 1 : tEnd(today) <= 5.0 ? 2 : 3;
     }
 }

@@ -48,5 +48,27 @@
     "Ccy": "NGN",
     "DayCount": "Act365F",
     "SettlementCalendarName": "JHB"
+  },
+  {
+    "Ccy": "XAU",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XAG",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPD",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPT",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
   }
+
+
 ]

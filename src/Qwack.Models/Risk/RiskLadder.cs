@@ -20,10 +20,21 @@ namespace Qwack.Models.Risk
         public double ShiftSize { get; private set; }
         public int NScenarios { get; private set; }
         public bool ReturnDifferential { get; private set; }
+        public Currency Ccy { get; private set; }
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential=true)
         {
             AssetId = assetId;
+            ShiftType = shiftType;
+            Metric = metric;
+            ShiftSize = shiftStepSize;
+            NScenarios = nScenarios;
+            ReturnDifferential = returnDifferential;
+        }
+
+        public RiskLadder(Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
+        {
+            Ccy = ccy;
             ShiftType = shiftType;
             Metric = metric;
             ShiftSize = shiftStepSize;
@@ -39,21 +50,37 @@ namespace Qwack.Models.Risk
             ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
             {
                 var thisShift = i * ShiftSize;
-                var thisLabel = AssetId + "~" + thisShift;
+                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? Ccy.Ccy : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
                     results[i+NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
                 else
                 {
-                    IPvModel shifted;
-                    switch (ShiftType)
+                    if (string.IsNullOrWhiteSpace(AssetId))
                     {
-                        case MutationType.FlatShift:
-                            shifted = FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model);
-                            break;
-                        default:
-                            throw new Exception($"Unable to process shift type {ShiftType}");
+                        IPvModel shifted;
+                        switch (ShiftType)
+                        {
+                            case MutationType.FlatShift:
+                                shifted = FlatShiftMutator.FxSpotShift(Ccy, thisShift, model);
+                                break;
+                            default:
+                                throw new Exception($"Unable to process shift type {ShiftType}");
+                        }
+                        results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
                     }
-                    results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    else
+                    {
+                        IPvModel shifted;
+                        switch (ShiftType)
+                        {
+                            case MutationType.FlatShift:
+                                shifted = FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model);
+                                break;
+                            default:
+                                throw new Exception($"Unable to process shift type {ShiftType}");
+                        }
+                        results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    }
                 }
             }).Wait();
 

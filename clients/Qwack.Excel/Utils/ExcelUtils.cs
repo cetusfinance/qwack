@@ -260,6 +260,6 @@ namespace Qwack.Excel.Utils
         public static object QUtils_ErrorReplace(
             [ExcelArgument(Description = "Input value")] object Input,
             [ExcelArgument(Description = "Alternative value")] object Alternative) 
-            => ExcelHelper.Execute(_logger, () => (Input is string str) && str.StartsWith("#") ? Alternative : Input);
+            => ExcelHelper.Execute(_logger, () => ((Input is string str) && str.StartsWith("#")) || Input is ExcelError ? Alternative : Input);
     }
 }

@@ -641,7 +641,8 @@ namespace Qwack.Models.Risk
                 { "TradeId", typeof(string) },
                 { "TradeType", typeof(string) },
                 { "AssetId", typeof(string) },
-                { "Metric", typeof(string) }
+                { "Metric", typeof(string) },
+                { "Portfolio", typeof(string) },
             };
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
@@ -679,6 +680,7 @@ namespace Qwack.Models.Risk
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex("TradeId");
                 var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var pfIx = pvCube.GetColumnIndex("Portfolio");
 
                 var fxPair = $"{currency}/{domCcy}";
 
@@ -694,6 +696,8 @@ namespace Qwack.Models.Risk
 
                 ResultCubeRow[] bumpedRowsDown = null;
                 var inverseSpotBumpDown = 0.0;
+
+                var dfToSpotDate = m.FundingModel.GetDf(m.FundingModel.FxMatrix.BaseCurrency, m.BuildDate, m.FundingModel.FxMatrix.GetFxPair(fxPair).SpotDate(m.BuildDate));
 
                 if (computeGamma)
                 {
@@ -711,7 +715,7 @@ namespace Qwack.Models.Risk
 
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
-                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump;
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump / dfToSpotDate;
 
                     if (delta != 0.0)
                     {
@@ -720,14 +724,15 @@ namespace Qwack.Models.Risk
                             { "TradeId", bumpedRows[i].MetaData[tidIx] },
                             { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                             { "AssetId", fxPair },
-                            { "Metric", "FxSpotDelta" }
+                            { "Metric", "FxSpotDelta" },
+                            { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
                         cube.AddRow(row, delta);
                     }
 
                     if (computeGamma)
                     {
-                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown;
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown / dfToSpotDate;
                         var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
                         if (gamma != 0.0)
                         {
@@ -736,7 +741,8 @@ namespace Qwack.Models.Risk
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },
                                 { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
                                 { "AssetId", fxPair },
-                                { "Metric", "FxSpotGamma" }
+                                { "Metric", "FxSpotGamma" },
+                                { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
                             cube.AddRow(row, gamma);
                         }

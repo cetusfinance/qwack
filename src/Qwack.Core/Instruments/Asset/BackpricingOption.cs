@@ -15,7 +15,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
-
+        public string PortfolioName { get; set; }
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
 

@@ -47,7 +47,7 @@ namespace Qwack.Core.Tests.AssetModel
                 Domestic = usd,
                 Foreign = xaf,
                 SettlementCalendar = cal,
-                SpotLag = new Frequency("0b")
+                SpotLag = new Frequency("2b")
             };
             fxMatrix.Init(usd, startDate, rates, new List<FxPair> { fxPair }, discoMap);
 
@@ -91,12 +91,12 @@ namespace Qwack.Core.Tests.AssetModel
             var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);
             var df = xafCurve.GetDf(startDate, settleDate);
-            Assert.Equal(994.673992862018, delta,7);
+            Assert.Equal(995.361065482776, delta,7);
 
             var fxDeltaCube = portfolio.FxDelta(aModel,usd, TestProviderHelper.CurrencyProvider);
             var dfxAgg = fxDeltaCube.Pivot("TradeId", AggregationAction.Sum);
             var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
-            Assert.Equal(-1000 * df * fxFwd * 100 / (t0Spot / fxSpot), fxDelta, 4);
+            Assert.Equal(-1000 * df * fxFwd * 100 / (t0Spot / fxSpot) / usdCurve.GetDf(startDate, fxPair.SpotDate(startDate)), fxDelta, 4);
         }
 
     }

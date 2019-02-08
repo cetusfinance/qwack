@@ -19,7 +19,7 @@ namespace Qwack.Core.Curves
         private readonly DayCountBasis _basis = DayCountBasis.Act_365F;
         private readonly IInterpolator1D _interpolator;
         private readonly RateType _rateStorageType;
-        private readonly Interpolator1DType _interpKind;
+        internal readonly Interpolator1DType _interpKind;
         private readonly string _name;
 
         public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null, RateType rateStorageType = RateType.Exponential)
@@ -223,10 +223,11 @@ namespace Qwack.Core.Curves
 
         public IrCurve RebaseDate(DateTime newAnchorDate)
         {
-            var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
+            var pillarsDropped = _pillars.Count(x => x < newAnchorDate);
+            var newLength =  _pillars.Length - pillarsDropped;
             var newPillars = new DateTime[newLength];
-            var isShorter = newLength < _pillars.Length;
-            Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
+
+            Array.Copy(_pillars, pillarsDropped, newPillars, 0, newLength);
 
             var dfAdjust = GetDf(BuildDate, newAnchorDate);
             var newDfs = newPillars.Select(x => GetDf(BuildDate, x)/ dfAdjust).ToArray();
@@ -235,15 +236,6 @@ namespace Qwack.Core.Curves
                 newRates[0] = newRates[1];
 
             var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
-
-            //var newLength = _pillars.Length > 1 && _pillars[1] == newAnchorDate ? _pillars.Length - 1 : _pillars.Length;
-            //var newPillars = new DateTime[newLength];
-            //var newRates = new double[newLength];
-            //var isShorter = newLength < _pillars.Length;
-            //Array.Copy(_pillars, isShorter ? 1 : 0, newPillars, 0, newLength);
-            //Array.Copy(_rates, isShorter ? 1 : 0, newRates, 0, newLength);
-
-            //var newCurve = new IrCurve(newPillars, newRates, newAnchorDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType);
 
             return newCurve;
         }

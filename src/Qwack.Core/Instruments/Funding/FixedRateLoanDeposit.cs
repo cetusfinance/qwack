@@ -9,7 +9,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class FixedRateLoanDeposit : IFundingInstrument
+    public class FixedRateLoanDeposit : IFundingInstrument, IAssetInstrument
     {
         public FixedRateLoanDeposit() { }
 
@@ -57,7 +57,7 @@ namespace Qwack.Core.Instruments.Funding
         public double InterestRate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-
+        public string PortfolioName { get; set; }
         public Currency Currency { get; set; }
         public CashFlowSchedule LoanDepoSchedule { get; set; }
         public DayCountBasis Basis { get; set; }
@@ -69,6 +69,9 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime PillarDate { get; set; }
 
         public DateTime LastSensitivityDate => EndDate;
+
+        public string[] AssetIds => new string[0];
+        public Currency PaymentCurrency => Currency;
 
         public double Pv(IFundingModel model, bool updateState)
         {
@@ -130,5 +133,17 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public IFundingInstrument SetParRate(double parRate) => new FixedRateLoanDeposit(StartDate, EndDate, parRate, Currency, Basis, Notional, DiscountCurve);
+
+        public string[] IrCurves(IAssetFxModel model) => new[] { model.FundingModel.FxMatrix.DiscountCurveMap[Currency] };
+
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+
+        public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
+
+        public string FxPair(IAssetFxModel model) => string.Empty;
+
+        IAssetInstrument IAssetInstrument.Clone()=> (IAssetInstrument)Clone();
+
+        public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();
     }
 }

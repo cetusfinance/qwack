@@ -964,5 +964,33 @@
     "DaysToAlwaysExclude": [ 6, 0 ],
     "DaysToExclude": [],
     "MonthsToExclude": []
+  },
+  "XAU": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XAU",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XAG": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XAG",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XPT": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XPT",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XPD": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XPD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
   }
 }

@@ -1,6 +1,7 @@
 using System;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 
@@ -28,6 +29,9 @@ namespace Qwack.Core.Instruments
         public double FixedRateOrMargin { get; set; }
 
         public FlowType FlowType { get; set; }
+        public DayCountBasis Basis { get; set; }
+        public FloatRateIndex RateIndex { get; set; }
+
 
         public CashFlow Clone() => new CashFlow
         {
@@ -36,7 +40,6 @@ namespace Qwack.Core.Instruments
             SettleDate = SettleDate,
             ResetDateStart = ResetDateStart,
             ResetDateEnd = ResetDateEnd,
-
             FixingDateStart = FixingDateStart,
             FixingDateEnd = FixingDateEnd,
             Fv = Fv,
@@ -45,7 +48,9 @@ namespace Qwack.Core.Instruments
             NotionalByYearFraction = NotionalByYearFraction,
             Currency = Currency,
             FixedRateOrMargin = FixedRateOrMargin,
-            FlowType = FlowType
+            FlowType = FlowType,
+            Basis = Basis,
+            RateIndex = RateIndex
         };
     }
 

@@ -402,8 +402,9 @@ namespace Qwack.Models.MCModels
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
+                { "Currency", typeof(string) },
                 { "TradeType", typeof(string) },
-                { "Currency", typeof(string) }
+                { "Portfolio", typeof(string) }
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
@@ -429,21 +430,15 @@ namespace Qwack.Models.MCModels
                         else
                             ccy = aIns.Currency.ToString();
                         break;
-                    case FixedRateLoanDeposit loanDepo:
-                        tradeType = "LoanDepo";
-                        if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, loanDepo.Currency);
-                        else
-                            ccy = loanDepo.Currency.ToString();
-                        break;
                     default:
                         throw new Exception($"Unabled to handle product of type {ins.GetType()}");
                 }
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", tradeId },
+                    { "Currency", ccy },
                     { "TradeType", tradeType },
-                    { "Currency", ccy }
+                    { "Portfolio", ins.PortfolioName??string.Empty  },
                 };
                 cube.AddRow(row, pv / fxRate);
             }

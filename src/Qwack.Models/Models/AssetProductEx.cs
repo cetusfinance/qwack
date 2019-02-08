@@ -352,13 +352,18 @@ namespace Qwack.Models.Models
                 throw new Exception("Only European style options currently supported");
 
             var price = model.GetPriceCurve(option.AssetId).GetPriceForDate(option.ExpiryDate);
+
             var df = option.MarginingType == OptionMarginingType.FuturesStyle ? 1.0
                 : model.FundingModel.GetDf(option.DiscountCurve, model.BuildDate, option.ExpiryDate);
             var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate, DayCountBasis.Act365F);
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
 
-
             var fv = BlackFunctions.BlackPV(price, option.Strike, 0.0, t, vol, option.CallPut);
+            if (option.Premium != 0)
+            {
+                fv -= option.Premium;
+            }
+
             return fv * df * option.ContractQuantity * option.LotSize;
         }
 
@@ -494,6 +499,7 @@ namespace Qwack.Models.Models
                 { "TradeId", typeof(string) },
                 { "Currency", typeof(string) },
                 { "TradeType", typeof(string) },
+                { "Portfolio", typeof(string) },
             };
             cube.Initialize(dataTypes);
 
@@ -636,6 +642,7 @@ namespace Qwack.Models.Models
                         { "TradeId", tradeId },
                         { "Currency", ccy },
                         { "TradeType", tradeType },
+                        { "Portfolio", ins.PortfolioName??string.Empty },
                   };
 
                 pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv / fxRate);

@@ -186,23 +186,25 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var ficCache = ContainerStores.GetObjectCache<FundingInstrumentCollection>();
-                var fic = ficCache.GetObject(FundingInstrumentCollection).Value;
+                ContainerStores.GetObjectCache<FundingInstrumentCollection>().TryGetObject(FundingInstrumentCollection, out var fic);
 
-                var emptyCurves = fic.ImplyContainedCurves(BuildDate, Interpolator1DType.Linear);
-
-                if(!(SolveStages is ExcelMissing))
+                var emptyCurves = new Dictionary<string, IrCurve>();
+                if (fic != null)
                 {
-                    var stageDict = ((object[,])SolveStages).RangeToDictionary<string,int>();
-                    foreach(var kv in stageDict)
+                    emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.Linear);
+                    if (!(SolveStages is ExcelMissing))
                     {
-                        if(emptyCurves.TryGetValue(kv.Key, out var curve))
+                        var stageDict = ((object[,])SolveStages).RangeToDictionary<string, int>();
+                        foreach (var kv in stageDict)
                         {
-                            curve.SolveStage = kv.Value;
-                        }
-                        else
-                        {
-                            throw new Exception($"Solve stage specified for curve {kv.Key} but curve not present");
+                            if (emptyCurves.TryGetValue(kv.Key, out var curve))
+                            {
+                                curve.SolveStage = kv.Value;
+                            }
+                            else
+                            {
+                                throw new Exception($"Solve stage specified for curve {kv.Key} but curve not present");
+                            }
                         }
                     }
                 }
@@ -227,9 +229,11 @@ namespace Qwack.Excel.Curves
                         model.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
                 }
 
-
-                var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
-                calibrator.Solve(model, fic);
+                if (fic != null)
+                {
+                    var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
+                    calibrator.Solve(model, fic.Value);
+                }
 
                 var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
                 modelCache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = model });

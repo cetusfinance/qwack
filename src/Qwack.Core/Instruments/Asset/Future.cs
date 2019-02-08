@@ -12,7 +12,7 @@ namespace Qwack.Core.Instruments.Asset
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
-
+        public string PortfolioName { get; set; }
         public double ContractQuantity { get; set; }
         public double LotSize { get; set; }
         public double PriceMultiplier { get; set; } = 1.0;

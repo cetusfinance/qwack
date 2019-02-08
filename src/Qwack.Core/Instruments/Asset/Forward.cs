@@ -9,11 +9,11 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class Forward : IAssetInstrument
+    public class Forward : IAssetInstrument, ISaCcrEnabled
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
-
+        public string PortfolioName { get; set; }
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
         public DateTime ExpiryDate { get; set; }
@@ -118,5 +118,11 @@ namespace Qwack.Core.Instruments.Asset
                    DiscountCurve == forward.DiscountCurve &&
                    FxConversionType == forward.FxConversionType &&
                    EqualityComparer<Currency>.Default.Equals(Currency, forward.Currency);
+
+        public double EffectiveNotional(IAssetFxModel model) => AsBulletSwap().EffectiveNotional(model);
+        public double AdjustedNotional(IAssetFxModel model) => AsBulletSwap().AdjustedNotional(model);
+        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public double MaturityFactor(DateTime today) => AsBulletSwap().MaturityFactor(today);
+        public string HedgingSet { get; set; }
     }
 }

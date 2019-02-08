@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Asset
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
+        public string PortfolioName { get; set; }
 
         public AsianSwap[] PaySwaplets { get; set; }
         public AsianSwap[] RecSwaplets { get; set; }

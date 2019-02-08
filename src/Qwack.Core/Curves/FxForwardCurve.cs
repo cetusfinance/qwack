@@ -21,7 +21,7 @@ namespace Qwack.Core.Curves
 
         public PriceCurveType CurveType => PriceCurveType.Linear;
 
-        public Currency Currency { get; set; }
+        public Currency Currency { get => ForeignCurrency; set => throw new Exception(); }
 
         public bool UnderlyingsAreForwards => true;
 

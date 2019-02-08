@@ -17,7 +17,7 @@ namespace Qwack.Core.Instruments.Funding
         public double DCF { get; set; } = 0.25;
         public Currency Currency { get; set; }
         public DateTime Expiry { get; set; }
-
+        public string PortfolioName { get; set; }
         public double ConvexityAdjustment { get; set; }
         public string TradeId { get; set; }
         public string Counterparty { get; set; }

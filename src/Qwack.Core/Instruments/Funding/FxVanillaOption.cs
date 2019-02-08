@@ -26,7 +26,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Strike { get; set; }
         public double DomesticQuantity { get; set; }
         public DateTime DeliveryDate { get; set; }
-
+        public string PortfolioName { get; set; }
         public Currency DomesticCCY { get; set; }
         public Currency ForeignCCY { get; set; }
         public Currency PaymentCurrency => ForeignCCY;

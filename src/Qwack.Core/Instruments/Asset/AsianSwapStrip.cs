@@ -11,7 +11,7 @@ namespace Qwack.Core.Instruments.Asset
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
-
+        public string PortfolioName { get; set; }
         public AsianSwap[] Swaplets { get; set; }
 
         public string[] IrCurves(IAssetFxModel model) => Swaplets.SelectMany(x => x.IrCurves(model)).Distinct().ToArray();

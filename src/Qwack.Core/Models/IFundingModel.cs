@@ -30,5 +30,7 @@ namespace Qwack.Core.Models
 
         double GetDf(string curveName, DateTime startDate, DateTime endDate);
         double GetDf(Currency ccy, DateTime startDate, DateTime endDate);
+
+        Currency GetCurrency(string currency);
     }
 }

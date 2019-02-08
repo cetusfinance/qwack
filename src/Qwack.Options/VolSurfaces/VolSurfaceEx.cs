@@ -465,7 +465,7 @@ namespace Qwack.Options.VolSurfaces
                     compoInterpolators.Add(expiry, compoSmile);
                     fwds.Add(expiry, assetFwd * fxFwd);
                 }
-            }, false).Wait();
+            }).Wait();
 
             var ATMs = compoInterpolators.OrderBy(x=>x.Key).Select(x => x.Value.Interpolate(0.5)).ToArray();
             var wingDeltas = new[] { 0.25, 0.1 };

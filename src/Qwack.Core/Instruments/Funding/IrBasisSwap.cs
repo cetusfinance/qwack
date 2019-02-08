@@ -61,7 +61,7 @@ namespace Qwack.Core.Instruments.Funding
             ForecastCurveRec = forecastCurveRec;
             DiscountCurve = discountCurve;
         }
-
+        public string PortfolioName { get; set; }
         public double Notional { get; set; }
         public double ParSpreadPay { get; set; }
         public double ParSpreadRec { get; set; }

@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments
     public class Portfolio : IInstrument
     {
         public List<IInstrument> Instruments { get; set; }
-
+        public string PortfolioName { get; set; }
         public string TradeId => throw new NotImplementedException();
 
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -233,9 +233,9 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 1] = "Cash";
                         o[i + 1, 2] = c.Currency.Ccy;
                         o[i + 1, 3] = c.Currency.Ccy;
-                        o[i + 1, 4] = string.Empty;
-                        o[i + 1, 5] = string.Empty;
-                        o[i + 1, 6] = string.Empty;
+                        o[i + 1, 4] = c.PayDate == DateTime.MinValue ? string.Empty : (object)c.PayDate;
+                        o[i + 1, 5] = c.PayDate == DateTime.MinValue ? string.Empty : (object)c.PayDate;
+                        o[i + 1, 6] = c.PayDate == DateTime.MinValue ? string.Empty : (object)c.PayDate;
                         o[i + 1, 7] = string.Empty;
                         o[i + 1, 8] = c.Notional;
                         o[i + 1, 9] = string.Empty;
@@ -356,7 +356,7 @@ namespace Qwack.Core.Instruments
             var pfe = SaCcrAddon(pf, model.VanillaModel, reportingCcy, AssetIdToHedgingSetMap);
             var pvModel = model.Rebuild(model.VanillaModel, pf);
             var rcCube = pvModel.PV(reportingCcy);
-            var rc = rcCube.GetAllRows().Sum(x => x.Value);
+            var rc = System.Math.Max(0.0, rcCube.GetAllRows().Sum(x => x.Value));
             var alpha = 1.4;
 
             return alpha * (rc + pfe);

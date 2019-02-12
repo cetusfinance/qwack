@@ -50,7 +50,7 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfPaths = (int)System.Math.Pow(2, 16),
                 NumberOfTimesteps = 120,
                 ReportingCurrency = usd,
-                PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
+                ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);
             return sut;

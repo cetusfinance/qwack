@@ -7,7 +7,10 @@ namespace Qwack.Core.Basic
     public enum BaseMetric
     {
         PV,
-        XVA,
+        CVA,
+        FVA,
+        KVA,
+        ExpectedCapital,
         PFE
     }
 }

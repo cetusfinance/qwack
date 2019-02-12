@@ -97,6 +97,8 @@ namespace Qwack.Math.Tests.Random
 
             public DateTime[] Dates => throw new NotImplementedException();
 
+            public int RoundedNumberOfPaths => throw new NotImplementedException();
+
             public void AddDate(DateTime date) => throw new NotImplementedException();
 
             public void AddDates(IEnumerable<DateTime> dates) => throw new NotImplementedException();

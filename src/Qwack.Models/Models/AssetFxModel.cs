@@ -260,5 +260,10 @@ namespace Qwack.Models
 
         public string[] GetDependentCurves(string curve) => _dependencyTree.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
         public string[] GetAllDependentCurves(string curve) => _dependencyTreeFull.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
+
+        public void OverrideBuildDate(DateTime buildDate)
+        {
+            _buildDate = buildDate;
+        }
     }
 }

@@ -42,41 +42,61 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Enable debug mode")] object DebugMode,
            [ExcelArgument(Description = "Enable average path correction")] object PathCorrection,
            [ExcelArgument(Description = "Enable reduced memory operation")] object CompactMemoryMode,
-           [ExcelArgument(Description = "Avoid regresison if possible for BackPricing options")] object AvoidBPRegression)
+           [ExcelArgument(Description = "Avoid regresison if possible for BackPricing options")] object AvoidBPRegression,
+           [ExcelArgument(Description = "Metric to calculate, default PV")] string Metric,
+           [ExcelArgument(Description = "Credit curve for CVA calc")] object CreditCurve,
+           [ExcelArgument(Description = "Funding curve for xVA")] object FundingCurve,
+           [ExcelArgument(Description = "Base discount curve for xVA")] object BaseDiscountCurve)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var rGen = RandomGenerator.OptionalExcel("MersenneTwister");
-                var reportingCurrency = ReportingCurrency.OptionalExcel("USD");
-                var regressor = PortfolioRegressor.OptionalExcel("MultiLinear");
+                if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(ReportingCurrency.OptionalExcel("USD"), out var repCcy))
+                    return $"Could not find currency {ReportingCurrency} in cache";
 
-                if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(reportingCurrency, out var repCcy))
-                    return $"Could not find currency {reportingCurrency} in cache";
+                if (!Enum.TryParse(RandomGenerator.OptionalExcel("MersenneTwister"), out RandomGeneratorType randomGenerator))
+                    return $"Could not parse random generator name - {RandomGenerator}";
 
-                if (!Enum.TryParse(rGen, out RandomGeneratorType randomGenerator))
-                    return $"Could not parse random generator name - {rGen}";
+                if (!Enum.TryParse(PortfolioRegressor.OptionalExcel("MultiLinear"), out PFERegressorType regType))
+                    return $"Could not parse portfolio regressor type - {PortfolioRegressor}";
 
-                if (!Enum.TryParse(regressor, out PFERegressorType regType))
-                    return $"Could not parse portfolio regressor type - {regressor}";
+                if (!Enum.TryParse(Metric.OptionalExcel("PV"), out BaseMetric metric))
+                    return $"Could not parse metric - {Metric}";
+
+                var fCurve = FundingCurve is ExcelMissing || !(FundingCurve is string fStr) ? 
+                    null : 
+                    ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(fStr, $"Unable to find IrCurve {FundingCurve}");
+
+                var bCurve = BaseDiscountCurve is ExcelMissing || !(BaseDiscountCurve is string bStr) ?
+                    null :
+                    ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(bStr, $"Unable to find IrCurve {BaseDiscountCurve}");
+
+                var cCurve = CreditCurve is ExcelMissing || !(CreditCurve is string cStr) ?
+                    null :
+                    ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(cStr, $"Unable to find hazzard curve {CreditCurve}");
+
 
                 var settings = new McSettings
                 {
                     Generator = randomGenerator,
                     NumberOfPaths = NumberOfPaths,
                     NumberOfTimesteps = NumberOfTimesteps,
-                    PfeExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null,
+                    ExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null,
                     ReportingCurrency = repCcy,
                     LocalVol = LocalVol,
                     ExpensiveFuturesSimulation = FuturesSim,
                     PfeRegressorType = regType,
                     Parallelize = Parallel,
-                    FuturesMappingTable = (FutMappingDict is ExcelMissing) ? 
-                        new Dictionary<string, string>() : 
-                        ((object[,])FutMappingDict).RangeToDictionary<string,string>(),
+                    FuturesMappingTable = (FutMappingDict is ExcelMissing) ?
+                        new Dictionary<string, string>() :
+                        ((object[,])FutMappingDict).RangeToDictionary<string, string>(),
                     DebugMode = DebugMode.OptionalExcel(false),
                     AveragePathCorrection = PathCorrection.OptionalExcel(false),
                     CompactMemoryMode = CompactMemoryMode.OptionalExcel(false),
-                    AvoidRegressionForBackPricing = AvoidBPRegression.OptionalExcel(false)
+                    AvoidRegressionForBackPricing = AvoidBPRegression.OptionalExcel(false),
+                    Metric = metric,
+                    FundingCurve = fCurve?.Value,
+                    CreditCurve = cCurve?.Value,
+                    BaseDiscountCurve = bCurve?.Value
                 };
 
                 return ExcelHelper.PushToCache(settings, ObjectName);
@@ -150,11 +170,106 @@ namespace Qwack.Excel.Curves
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
                 var settings = ContainerStores.GetObjectCache<McSettings>()
                     .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
-
+                settings.Value.Metric = BaseMetric.PFE;
                 var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
 
                 var result = mc.PFE(ConfidenceLevel);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns CVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioCVA))]
+        public static object McPortfolioCVA(
+          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+          [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+          [ExcelArgument(Description = "MC settings name")] string SettingsName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                settings.Value.Metric = BaseMetric.CVA;
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+
+                var result = mc.CVA();
+                return result;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns FVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioFVA))]
+        public static object McPortfolioFVA(
+          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+          [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+          [ExcelArgument(Description = "MC settings name")] string SettingsName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                settings.Value.Metric = BaseMetric.FVA;
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+
+                var (FBA, FCA) = mc.FVA();
+                var o = new object[2, 2]
+                {
+                    {"FCA",FCA },
+                    {"FBA",FBA },
+                };
+                return o;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns expected SA-CCR capital profile of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioExpectedCapital))]
+        public static object McPortfolioExpectedCapital(
+          [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+          [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+          [ExcelArgument(Description = "MC settings name")] string SettingsName,
+          [ExcelArgument(Description = "Counterparty risk weight")] double CounterpartyRiskWeight,
+          [ExcelArgument(Description = "Map for assetIds to hedge sets")] object[,] AssetIdToHedgeSetMap)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                settings.Value.Metric = BaseMetric.ExpectedCapital;
+                settings.Value.CounterpartyRiskWeighting = CounterpartyRiskWeight;
+                settings.Value.AssetIdToHedgeGroupMap = AssetIdToHedgeSetMap.RangeToDictionary<string, string>();
+
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+
+                var result = mc.ExpectedCapital();
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns KVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioKVA))]
+        public static object McPortfolioKVA(
+          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+          [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+          [ExcelArgument(Description = "MC settings name")] string SettingsName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                settings.Value.Metric = BaseMetric.KVA;
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+
+                var result = mc.KVA();
+                return result;
             });
         }
 

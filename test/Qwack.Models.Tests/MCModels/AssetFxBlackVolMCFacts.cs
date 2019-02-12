@@ -16,7 +16,7 @@ namespace Qwack.Models.Tests.MCModels
 {
     public class AssetFxBlackVolMCFacts
     {
-        private AssetFxMCModel GetSut(bool expensiveFutures)
+        private AssetFxMCModel GetSut(bool expensiveFutures, BaseMetric baseMetric=BaseMetric.PV)
         {
             var buildDate = DateTime.Parse("2018-10-04");
             var usd = TestProviderHelper.CurrencyProvider["USD"];
@@ -50,10 +50,11 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfPaths = 16384,
                 NumberOfTimesteps = 10,
                 ReportingCurrency = usd,
-                PfeExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
+                ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
                 ExpensiveFuturesSimulation = expensiveFutures,
                 Parallelize = expensiveFutures,
-                FuturesMappingTable = new Dictionary<string, string> { { "CL","CL"} }
+                FuturesMappingTable = new Dictionary<string, string> { { "CL","CL"} },
+                Metric = baseMetric
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);
             return sut;
@@ -82,7 +83,7 @@ namespace Qwack.Models.Tests.MCModels
         [Fact]
         public void CanRunPFE()
         {
-            var sut = GetSut(false);
+            var sut = GetSut(false, BaseMetric.PFE);
             var pvCube = sut.PFE(0.95);
 
             Assert.Equal(3, pvCube.GetAllRows().Length);

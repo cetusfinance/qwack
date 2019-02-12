@@ -22,6 +22,7 @@ using Qwack.Utils.Parallel;
 using Qwack.Core.Descriptors;
 using Qwack.Models.Models;
 using Qwack.Core.Curves;
+using Qwack.Models.Risk;
 
 namespace Qwack.Models.MCModels
 {
@@ -54,6 +55,7 @@ namespace Qwack.Models.MCModels
         private readonly ICurrencyProvider _currencyProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly ICalendarProvider _calendarProvider;
+        private readonly ExpectedCapitalCalculator _capitalCalc;
 
         public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider)
         {
@@ -96,7 +98,7 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
                 Engine.IncrementDepth();
             }
-                
+
             var lastDate = portfolio.LastSensitivityDate();
             var assetIds = portfolio.AssetIds();
             var assetInstruments = portfolio.Instruments
@@ -122,7 +124,7 @@ namespace Qwack.Models.MCModels
             var corrections = new Dictionary<string, SimpleAveragePathCorrector>();
             foreach (var assetId in assetIds)
             {
-                if(assetId.Length==7 && assetId[3]=='/')
+                if (assetId.Length == 7 && assetId[3] == '/')
                 {
                     fxAssetsToAdd.Add(assetId);
                     continue;
@@ -196,7 +198,7 @@ namespace Qwack.Models.MCModels
                             fxAdjustSurface: adjSurface,
                             fxAssetCorrelation: correlation
                         );
-                        Engine.AddPathProcess(asset);                 
+                        Engine.AddPathProcess(asset);
                     }
                     else
                     {
@@ -225,7 +227,7 @@ namespace Qwack.Models.MCModels
             {
                 var fxPairName = fxPair;
                 var pair = fxPairName.FxPairFromString(_currencyProvider, _calendarProvider);
-   
+
                 if (pairsAdded.Contains(pair.ToString()))
                     continue;
 
@@ -260,13 +262,13 @@ namespace Qwack.Models.MCModels
                 }
                 else
                 {
-                    if (fxPairName.Substring(fxPairName.Length - 3, 3)!= settings.ReportingCurrency)
+                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != settings.ReportingCurrency)
                     {//needs to be drift-adjusted
                         var fxAdjPair = settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
                         if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
-                        if(correlation!=-1.0 && model.CorrelationMatrix!=null)
+                        if (correlation != -1.0 && model.CorrelationMatrix != null)
                         {
                             if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
                                 correlation = correl;
@@ -309,7 +311,7 @@ namespace Qwack.Models.MCModels
                 }
             }
             //apply path correctin
-            if(settings.AveragePathCorrection && corrections.Any())
+            if (settings.AveragePathCorrection && corrections.Any())
             {
                 Engine.IncrementDepth();
                 foreach (var pc in corrections)
@@ -352,29 +354,43 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(product.Value);
             }
 
+            var metricsNeedRegression = new[] { BaseMetric.PFE, BaseMetric.KVA, BaseMetric.CVA, BaseMetric.FVA };
             //Need to calculate PFE
-            if (settings.PfeExposureDates != null && settings.ReportingCurrency != null)//setup for PFE
+            if (settings.ExposureDates != null && settings.ReportingCurrency != null && metricsNeedRegression.Contains(settings.Metric))//setup for PFE, etc
             {
                 Engine.IncrementDepth();
 
                 switch (settings.PfeRegressorType)
                 {
                     case PFERegressorType.MultiLinear:
-                        _regressor = new LinearPortfolioValueRegressor(settings.PfeExposureDates,
+                        _regressor = new LinearPortfolioValueRegressor(settings.ExposureDates,
                             _payoffs.Values.ToArray(), settings);
                         break;
                     case PFERegressorType.MonoLinear:
-                        _regressor = new MonoIndexRegressor(settings.PfeExposureDates,
+                        _regressor = new MonoIndexRegressor(settings.ExposureDates,
                             _payoffs.Values.ToArray(), settings, true);
                         break;
                 }
                 Engine.AddPathProcess(_regressor);
             }
+
+            //Need to calculate expected capital
+            if (settings.ExposureDates != null && settings.ReportingCurrency != null && settings.Metric == BaseMetric.ExpectedCapital)
+            {
+                Engine.IncrementDepth();
+                _capitalCalc = new ExpectedCapitalCalculator(Portfolio, settings.CounterpartyRiskWeighting, settings.AssetIdToHedgeGroupMap, settings.ReportingCurrency, VanillaModel, settings.ExposureDates);
+                Engine.AddPathProcess(_capitalCalc);
+            }
+
             Engine.SetupFeatures();
         }
         public ICube PFE(double confidenceLevel) => PackResults(() => _regressor.PFE(Model, confidenceLevel));
         public ICube EPE() => PackResults(() => _regressor.EPE(Model));
         public ICube ENE() => PackResults(() => _regressor.ENE(Model));
+        public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital);
+        public double CVA() => XVACalculator.CVA(Model.BuildDate, EPE(), Settings.CreditCurve, Settings.FundingCurve);
+        public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(),ENE(), Settings.CreditCurve, Settings.BaseDiscountCurve, Settings.FundingCurve);
+        public double KVA() => XVACalculator.KVA(Model.BuildDate, ExpectedCapital(), Settings.FundingCurve);
 
         private ICube PackResults(Func<double[]> method)
         {
@@ -390,7 +406,26 @@ namespace Qwack.Models.MCModels
 
             for (var i = 0; i < e.Length; i++)
             {
-                cube.AddRow(new object[] { Settings.PfeExposureDates[i] }, e[i]);
+                cube.AddRow(new object[] { Settings.ExposureDates[i] }, e[i]);
+            }
+            return cube;
+        }
+
+        private ICube PackResults(Func<Dictionary<DateTime,double>> method)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "ExposureDate", typeof(DateTime) }
+            };
+            cube.Initialize(dataTypes);
+            Engine.RunProcess();
+
+            var e = method.Invoke();
+
+            foreach(var kv in e)
+            {
+                cube.AddRow(new object[] { kv.Key }, kv.Value);
             }
             return cube;
         }

@@ -61,12 +61,12 @@ namespace Qwack.Excel.Capital
                         epeDates[i] = (DateTime)arr[i, 0];
                         epeValues[i] = (double)arr[i, 1];
                     }
-                    return CVACalculator.CVA(OriginDate, epeDates, epeValues, hz.Value, disc.Value);
+                    return XVACalculator.CVA(OriginDate, epeDates, epeValues, hz.Value, disc.Value);
                 }
                 else if (EPEProfile is string epeCubeName)
                 {
                     var cube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(epeCubeName, $"Cube {epeCubeName} not found");
-                    return CVACalculator.CVA(OriginDate, cube.Value, hz.Value, disc.Value);
+                    return XVACalculator.CVA(OriginDate, cube.Value, hz.Value, disc.Value);
                 }
 
                 throw new Exception("EPE profile must be cube reference or Nx2 array");

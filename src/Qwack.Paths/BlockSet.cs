@@ -26,11 +26,17 @@ namespace Qwack.Paths
 
         private readonly bool _compactMode;
 
+        public static int RoundedNumberOfPaths(int numberOfPaths)
+        {
+            var overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
+            return numberOfPaths + overrun;
+        }
+
         public BlockSet(int numberOfPaths, int factors, int steps, bool compactMode = false)
         {
             _compactMode = compactMode;
             _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
-            numberOfPaths += _overrun;
+            numberOfPaths = RoundedNumberOfPaths(numberOfPaths);
             
             _steps = steps;
             _factors = factors;

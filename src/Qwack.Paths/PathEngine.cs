@@ -33,6 +33,7 @@ namespace Qwack.Paths
 
         public BlockSet BlockSet => _blockset;
         public int NumberOfPaths => _numberOfPaths;
+        public int RoundedNumberOfPaths => BlockSet.RoundedNumberOfPaths(_numberOfPaths);
         public bool Parallelize { get; set; } = false;
         public bool CompactMemoryMode { get; set; } = false;
 

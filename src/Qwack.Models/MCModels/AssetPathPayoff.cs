@@ -39,6 +39,7 @@ namespace Qwack.Models.MCModels
         private bool _isCompo;
         private OptionType _optionType;
         private FxConversionType _fxType;
+        private int _rawNumberOfPaths;
 
         private List<IAssetPathPayoff> _subInstruments;
 
@@ -247,7 +248,8 @@ namespace Qwack.Models.MCModels
             _isComplete = true;
 
             var engine = collection.GetFeature<IEngineFeature>();
-            _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
+            _results = new Vector<double>[engine.RoundedNumberOfPaths / Vector<double>.Count];
+            _rawNumberOfPaths = engine.NumberOfPaths;
         }
 
         public void Process(IPathBlock block)
@@ -333,36 +335,28 @@ namespace Qwack.Models.MCModels
                 dates.AddDates(_asianFxDates);
         }
 
-        public double AverageResult => _results.Select(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec.Average();
-        }).Average();
-
+        public double AverageResult => ResultsByPath.Average();
 
         public double[] ResultsByPath
         {
             get {
                 var vecLen = Vector<double>.Count;
-                var results = new double[_results.Length * vecLen];
+                var results = new double[_rawNumberOfPaths];
                 for (var i = 0; i < _results.Length; i++)
                 {
                     for (var j = 0; j < vecLen; j++)
                     {
-                        results[i * vecLen + j] = _results[i][j];
+                        var c = i * vecLen + j;
+                        if (c >= results.Length)
+                            break;
+                        results[c] = _results[i][j];
                     }
                 }
                 return results;
             }
         }
 
-        public double ResultStdError => _results.SelectMany(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec;
-        }).StdDev();
+        public double ResultStdError => ResultsByPath.StdDev();
 
         public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
         {

@@ -47,5 +47,7 @@ namespace Qwack.Core.Models
         void BuildDependencyTree();
         string[] GetDependentCurves(string curve);
         string[] GetAllDependentCurves(string curve);
+
+        void OverrideBuildDate(DateTime buildDate);
     }
 }

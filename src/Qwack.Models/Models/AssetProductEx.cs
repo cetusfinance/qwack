@@ -704,6 +704,7 @@ namespace Qwack.Models.Models
                     tradeType = "LookNack";
                     break;
                 case BackPricingOption bpo:
+                case MultiPeriodBackpricingOption mpbpo:
                     tradeType = "BackPricing";
                     break;
                 default:

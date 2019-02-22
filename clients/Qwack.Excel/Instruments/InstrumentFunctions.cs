@@ -633,6 +633,59 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a multi-period backpricing option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMultiPeriodBackPricingOption))]
+        public static object CreateMultiPeriodBackPricingOption(
+           [ExcelArgument(Description = "Object name")] string ObjectName,
+           [ExcelArgument(Description = "Period dates array")] object PeriodDates,
+           [ExcelArgument(Description = "Decision date")] DateTime DecisionDate,
+           [ExcelArgument(Description = "Settlement date")] DateTime PayDate,
+           [ExcelArgument(Description = "Asset Id")] string AssetId,
+           [ExcelArgument(Description = "Currency")] string Currency,
+           [ExcelArgument(Description = "Put/Call")] string PutOrCall,
+           [ExcelArgument(Description = "Notional")] double Notional,
+           [ExcelArgument(Description = "Fixing calendar")] object FixingCalendar,
+           [ExcelArgument(Description = "Spot lag")] object SpotLag,
+           [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
+           [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fixingCal = FixingCalendar.OptionalExcel("WeekendsOnly");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
+
+                if (!Enum.TryParse(PutOrCall, out OptionType oType))
+                {
+                    return $"Could not parse put/call flag - {PutOrCall}";
+                }
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCal);
+                    return $"Calendar {fixingCal} not found in cache";
+                }
+
+                var sLag = new Frequency(spotLag);
+                if (!Enum.TryParse(dGenType, out DateGenerationType dType))
+                {
+                    return $"Could not parse date generation type - {dGenType}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
+
+                MultiPeriodBackpricingOption product;
+                if (!(PeriodDates is object[,] pd) || pd.GetLength(1) != 2)
+                    throw new Exception("Period dates must be a Nx2 range");
+
+                var dates = pd.ObjectRangeToVector<double, double>().ToDateTimeArray();
+
+                product = AssetProductFactory.CreateMultiPeriodBackPricingOption(dates, DecisionDate, AssetId, oType, fCal, PayDate, currency, TradeDirection.Long, sLag, Notional, dType);
+                product.TradeId = ObjectName;
+                product.DiscountCurve = DiscountCurve;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Creates a european option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAmericanBarrierOption), IsThreadSafe = true)]
         public static object CreateAmericanBarrierOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -1076,6 +1129,8 @@ namespace Qwack.Excel.Instruments
             var futuresOptions = Instruments.GetAnyFromCache<FuturesOption>();
             var lookbacks = Instruments.GetAnyFromCache<AsianLookbackOption>();
             var bps = Instruments.GetAnyFromCache<BackPricingOption>();
+            var mpbps = Instruments.GetAnyFromCache<MultiPeriodBackpricingOption>();
+            var baOpts = Instruments.GetAnyFromCache<EuropeanBarrierOption>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -1111,6 +1166,8 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(futuresOptions);
             pf.Instruments.AddRange(lookbacks);
             pf.Instruments.AddRange(bps);
+            pf.Instruments.AddRange(mpbps);
+            pf.Instruments.AddRange(baOpts);
 
             return pf;
         }

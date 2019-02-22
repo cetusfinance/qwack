@@ -63,6 +63,10 @@ namespace Qwack.Models.MCModels
                         var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
                         bpob.VanillaModel = value;
                         break;
+                    case MultiPeriodBackpricingOption mpbpo:
+                        var mbpob = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOption;
+                        mbpob.VanillaModel = value;
+                        break;
                 }
             }
         }
@@ -86,6 +90,12 @@ namespace Qwack.Models.MCModels
                     var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
                     if (bpob.SettlementRegressor == regressor) bpob.SettlementRegressor = regressor;
                     if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
+                    break;
+                case MultiPeriodBackpricingOption mpbpo:
+                    var mbpo = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOption;
+                    if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
+                    for(var i=0;i<mbpo.AverageRegressors.Length;i++)
+                        if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
                     break;
             }
         }
@@ -135,6 +145,12 @@ namespace Qwack.Models.MCModels
                     _payDate = fxeo.DeliveryDate;
                     _ccy = fxeo.PaymentCurrency;
                     _fxType = FxConversionType.None;
+                    break;
+                case EuropeanBarrierOption ebo:
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        new Paths.Payoffs.EuropeanBarrierOption(ebo.AssetId,ebo.BarrierObservationStartDate,ebo.BarrierObservationEndDate,ebo.ExpiryDate,ebo.CallPut,ebo.Strike,ebo.Barrier,ebo.DiscountCurve,ebo.Currency,ebo.PaymentDate,ebo.Notional,ebo.BarrierSide,ebo.BarrierType)
+                    };
                     break;
                 case EuropeanOption eo:
                     _asianDates = new List<DateTime> { eo.ExpiryDate };
@@ -195,6 +211,18 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { bp.AverageRegressor, bp.SettlementRegressor };
                     else
                         Regressors = new[] { bp.SettlementRegressor };
+                    break;
+                case MultiPeriodBackpricingOption mbpo:
+                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, mbpo.SettlementDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional)
+                    { VanillaModel = VanillaModel };
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        mbp
+                    };
+                    if (mbp.AverageRegressors != null)
+                        Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
+                    else
+                        Regressors = new[] { mbp.SettlementRegressor };
                     break;
             }
             _isCompo = _fxName != null;

@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using static System.Math;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class FxForward : IFundingInstrument, IAssetInstrument
+    public class FxForward : IFundingInstrument, IAssetInstrument, ISaCcrEnabled
     {
         public double Strike { get; set; }
         public double DomesticQuantity { get; set; }
@@ -32,6 +33,8 @@ namespace Qwack.Core.Instruments.Funding
         public string[] AssetIds => new[] { Pair };
 
         public Currency PaymentCurrency => DomesticCCY;
+
+        public string HedgingSet { get; set; }
 
         public List<string> Dependencies(IFxMatrix matrix)
         {
@@ -150,5 +153,12 @@ namespace Qwack.Core.Instruments.Funding
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
 
         public string FxPair(IAssetFxModel model) => Pair;
+
+        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public double AdjustedNotional(IAssetFxModel model) => DomesticQuantity * model.FundingModel.GetFxRate(model.BuildDate, DomesticCCY, model.FundingModel.FxMatrix.BaseCurrency);
+        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
+        private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
+
     }
 }

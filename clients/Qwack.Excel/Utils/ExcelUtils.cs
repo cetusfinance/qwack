@@ -167,11 +167,16 @@ namespace Qwack.Excel.Utils
 
         [ExcelFunction(Description = "Returns filename for newest file in a folder", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_LatestFileInFolder(
-        [ExcelArgument(Description = "Filename")] string FolderPath)
+        [ExcelArgument(Description = "Filename")] string FolderPath,
+        [ExcelArgument(Description = "Search pattern, default *")] object SearchPattern)
         {
             return ExcelHelper.Execute(_logger, () => 
             {
-                var files = System.IO.Directory.GetFiles(FolderPath);
+
+                var files = SearchPattern is ExcelEmpty || !(SearchPattern is string sp) ?
+                    System.IO.Directory.GetFiles(FolderPath) :
+                    System.IO.Directory.GetFiles(FolderPath, sp);
+
                 var latestFile = string.Empty;
                 var latestStamp = DateTime.MinValue;
                 foreach(var file in files)

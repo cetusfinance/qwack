@@ -130,13 +130,13 @@ namespace Qwack.Paths
         {
             foreach (var ppLevel in _pathProcesses)
             {
-                if (Parallelize)
-                    ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection)).Wait();
-                else
-                    foreach (var pp in ppLevel)
-                    {
-                        pp.SetupFeatures(_featureCollection);
-                    }
+                //    if (Parallelize)
+                //        ParallelUtils.Instance.Foreach(ppLevel, (process) => process.SetupFeatures(_featureCollection)).Wait();
+                //    else
+                foreach (var pp in ppLevel)
+                {
+                    pp.SetupFeatures(_featureCollection);
+                }
             }
 
             _dimensions = _featureCollection.GetFeature<IPathMappingFeature>().NumberOfDimensions;

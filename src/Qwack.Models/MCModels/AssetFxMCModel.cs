@@ -173,7 +173,8 @@ namespace Qwack.Models.MCModels
 
                     if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
                     {
-                        var fxAdjPair = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                        var fxAdjPair = settings.ReportingCurrency + "/" + model.GetPriceCurve(assetId).Currency;
+                        var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
                         if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface2))
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         adjSurface = adjSurface2;
@@ -181,6 +182,8 @@ namespace Qwack.Models.MCModels
                         {
                             if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
                                 correlation = correl;
+                            else if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPairInv, assetId, out var correl2))
+                                correlation = -correl2;
                         }
                     }
 
@@ -348,7 +351,7 @@ namespace Qwack.Models.MCModels
             }
             foreach (var product in _payoffs)
             {
-                if (settings.AvoidRegressionForBackPricing && product.Value.AssetInstrument is BackPricingOption)
+                if (settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption))
                     product.Value.VanillaModel = VanillaModel;
 
                 Engine.AddPathProcess(product.Value);

@@ -295,5 +295,28 @@ namespace Qwack.Core.Instruments.Asset
             var (Start, End) = period.ParsePeriod();
             return CreateBackPricingOption(Start, End, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
+
+        public static MultiPeriodBackpricingOption CreateMultiPeriodBackPricingOption(Tuple<DateTime,DateTime>[] periodDates, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
+                    periodDates.Select(pd=>pd.Item1.BusinessDaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList() :
+                    periodDates.Select(pd => pd.Item1.FridaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList();
+            return new MultiPeriodBackpricingOption
+            {
+                AssetId = assetId,
+                PeriodDates = periodDates,
+                DecisionDate = decision,
+                FixingCalendar = fixingCalendar,
+                FixingDates = fixingDates,
+                SpotLag = spotLag,
+                CallPut = putCall,
+                PaymentDate = payDate,
+                SettlementDate = payDate,
+                PaymentCurrency = currency,
+                Direction = tradeDirection,
+                Notional = notional,
+                FxConversionType = currency.Ccy == "USD" ? FxConversionType.None : FxConversionType.AverageThenConvert
+            };
+        }
     }
 }

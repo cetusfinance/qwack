@@ -19,12 +19,6 @@ namespace Qwack.Paths.Processes
         private int _factorIndex;
         private int _nPaths;
         private bool _isComplete;
-    
-        public double[] PathSum { get; private set; }
-        public double[] PathAvg => PathSum.Select(x => x / _nPaths).ToArray();
-
-        public Dictionary<int,double[]> PathSumsByBlock { get; private set; }
-        public Dictionary<int, int> PathCountsByBlock { get; private set; }
 
         public ExpectedCapitalCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string,string> assetIdToGroupMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates)
         {
@@ -37,7 +31,7 @@ namespace Qwack.Paths.Processes
             _assetIds = _portfolio.AssetIds();
         }
 
-        public Dictionary<DateTime, double> ExpectedCapital => _expectedCapital;
+        public Dictionary<DateTime, double> ExpectedCapital => _expectedCapital.ToDictionary(x => x.Key, x => x.Value / _nPaths);
 
         public bool IsComplete => _isComplete;
 
@@ -53,6 +47,8 @@ namespace Qwack.Paths.Processes
         private int[] _calculationDateIndices;
         private int[] _assetIndices;
 
+        private ITimeStepsFeature _timeFeature;
+
         private readonly Dictionary<DateTime, double> _expectedCapital = new Dictionary<DateTime, double>();
 
         public void Process(IPathBlock block)
@@ -67,14 +63,26 @@ namespace Qwack.Paths.Processes
                 var nextIndex = _calculationDateIndices[indexCounter];
 
                 var steps = stepsByFactor.First().Value;
+                var fixingDictionaries = _assetFxModel.FixingDictionaryNames.ToDictionary(x => x, x => (IFixingDictionary)new FixingDictionary(_assetFxModel.GetFixingDictionary(x)));
 
                 for (var i = 0; i < steps.Length; i++)
                 {
+                    var d = _timeFeature.Dates[i];
+                    for (var j = 0; j < Vector<double>.Count; j++)
+                    {
+                        for (var a = 0; a < _assetIndices.Length; a++)
+                        {
+                            fixingDictionaries[_assetIds[a]][d] = stepsByFactor[a][i][j];  
+                        }
+                    }
+
                     if (i == nextIndex)
                     {
                         var currentDate = _calculationDates[indexCounter];
                         var newModel = _assetFxModel.Clone();
                         newModel.OverrideBuildDate(currentDate);
+                        newModel.AddFixingDictionaries(fixingDictionaries);
+
                         var spotsByAsset = stepsByFactor.ToDictionary(x=>x.Key, x => x.Value[i]);
                         for (var j = 0; j < Vector<double>.Count; j++)
                         {
@@ -97,6 +105,9 @@ namespace Qwack.Paths.Processes
                                     if (!_expectedCapital.ContainsKey(currentDate))
                                         _expectedCapital.Add(currentDate, 0.0);
                                 }
+                            if (double.IsNaN(capital) || double.IsInfinity(capital))
+                                throw new Exception("Invalid capital generated");
+
                             _expectedCapital[currentDate] += capital;
                         }
 
@@ -104,11 +115,6 @@ namespace Qwack.Paths.Processes
                         nextIndex = indexCounter < _calculationDateIndices.Length 
                             ? _calculationDateIndices[indexCounter] : int.MaxValue;
                     }
-                }
-
-                foreach (var key in _expectedCapital.Keys)
-                {
-                    _expectedCapital[key] /= _nPaths;
                 }
             }
         }
@@ -127,8 +133,8 @@ namespace Qwack.Paths.Processes
 
         public void Finish(IFeatureCollection collection)
         {
-            var dates = collection.GetFeature<ITimeStepsFeature>();
-            _calculationDateIndices = _calculationDates.Select(d => dates.GetDateIndex(d)).ToArray();
+            _timeFeature = collection.GetFeature<ITimeStepsFeature>();
+            _calculationDateIndices = _calculationDates.Select(d => _timeFeature.GetDateIndex(d)).ToArray();
             _isComplete = true;
         }
     }

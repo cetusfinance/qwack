@@ -100,7 +100,7 @@ namespace Qwack.Paths.Payoffs
                     {
                         minValue = Vector.Min(steps[_dateIndexes[i]], minValue);
                     }
-                    barrierHit = Vector.LessThan<double>(minValue, _barrierVec);
+                    barrierHit = Vector.ConvertToDouble(Vector.LessThan(minValue, _barrierVec));
                     expiryValue = steps[_expiryIx];
 
                     var vanillaValue = _callPut == OptionType.C
@@ -132,7 +132,7 @@ namespace Qwack.Paths.Payoffs
                     {
                         maxValue = Vector.Max(steps[_dateIndexes[i]], maxValue);
                     }
-                    barrierHit = Vector.GreaterThan<double>(maxValue, _barrierVec);
+                    barrierHit = Vector.ConvertToDouble(Vector.GreaterThan(maxValue, _barrierVec));
                     expiryValue = steps[_expiryIx];
 
                     var vanillaValue = _callPut == OptionType.C
@@ -147,7 +147,7 @@ namespace Qwack.Paths.Payoffs
                     }
                     else //KO
                     {
-                        var didntHit = (new Vector<double>(1.0)) - barrierHit;
+                        var didntHit = (new Vector<double>(1.0)) + barrierHit;
                         var payoff = vanillaValue * didntHit * _notional;
                         var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                         _results[resultIx] = payoff;

@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -122,7 +123,7 @@ namespace Qwack.Core.Instruments.Asset
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
         public double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        private double M(DateTime today) => today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F);
+        private double M(DateTime today) => Max(0,today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
         internal double Fwd(IAssetFxModel model)
         {
             var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?
@@ -130,7 +131,7 @@ namespace Qwack.Core.Instruments.Asset
                 model.FundingModel.GetFxAverage(FixingDates, model.GetPriceCurve(AssetId).Currency, Currency);
             return model.GetPriceCurve(AssetId).GetAveragePriceForDates(FixingDates) * fxRate;
         }
-        public double MaturityFactor(DateTime today) => System.Math.Sqrt(System.Math.Min(M(today), 1.0));
+        public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
         public string HedgingSet { get; set; }
     }
 }

@@ -42,7 +42,7 @@ namespace Qwack.Models
 
         public void AddVolSurface(string name, IVolSurface surface) => _assetVols[name] = surface;
 
-        private bool IsFx(string name) => name.Length == 7 && name[3] == '/';
+        public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';
 
         public IPriceCurve GetPriceCurve(string name)
         {

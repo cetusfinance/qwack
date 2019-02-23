@@ -43,7 +43,7 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Enable average path correction")] object PathCorrection,
            [ExcelArgument(Description = "Enable reduced memory operation")] object CompactMemoryMode,
            [ExcelArgument(Description = "Avoid regresison if possible for BackPricing options")] object AvoidBPRegression,
-           [ExcelArgument(Description = "Metric to calculate, default PV")] string Metric,
+           [ExcelArgument(Description = "Metric to calculate, default PV")] object Metric,
            [ExcelArgument(Description = "Credit curve for CVA calc")] object CreditCurve,
            [ExcelArgument(Description = "Funding curve for xVA")] object FundingCurve,
            [ExcelArgument(Description = "Base discount curve for xVA")] object BaseDiscountCurve)

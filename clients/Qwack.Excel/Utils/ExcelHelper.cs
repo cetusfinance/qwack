@@ -34,6 +34,7 @@ namespace Qwack.Excel.Services
         }
 
         public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles) => datesAsDoubles.Select(DateTime.FromOADate).ToArray();
+        public static Tuple<DateTime, DateTime>[] ToDateTimeArray(this IEnumerable<Tuple<double, double>> datesAsDoubles) => datesAsDoubles.Select(x => new Tuple<DateTime, DateTime>(DateTime.FromOADate(x.Item1), DateTime.FromOADate(x.Item2))).ToArray();
 
         public static T[][] SquareToJagged<T>(this T[,] data)
         {
@@ -236,6 +237,35 @@ namespace Qwack.Excel.Services
                 for (var i = 0; i < input.GetLength(1); i++)
                 {
                     o[i] = input[0, i] is ExcelEmpty ? default : (T)Convert.ChangeType(input[0, i], typeof(T));
+                }
+                return o;
+            }
+        }
+
+        public static Tuple<T1,T2> [] ObjectRangeToVector<T1,T2>(this object[,] input)
+        {
+            if (input.GetLength(0) != 2 && input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 or 2xN range");
+
+            if (input.GetLength(1) == 2)
+            {
+                var o = new Tuple<T1,T2>[input.GetLength(0)];
+                for (var i = 0; i < input.GetLength(0); i++)
+                {
+                    o[i] = new Tuple<T1, T2>(
+                        input[i, 0] is ExcelEmpty ? default : (T1)Convert.ChangeType(input[i, 0], typeof(T1)),
+                        input[i, 1] is ExcelEmpty ? default : (T2)Convert.ChangeType(input[i, 1], typeof(T2)));
+                }
+                return o;
+            }
+            else
+            {
+                var o = new Tuple<T1, T2>[input.GetLength(1)];
+                for (var i = 0; i < input.GetLength(1); i++)
+                {
+                    o[i] = new Tuple<T1, T2>(
+                       input[0, i] is ExcelEmpty ? default : (T1)Convert.ChangeType(input[0, i], typeof(T1)),
+                       input[1, i] is ExcelEmpty ? default : (T2)Convert.ChangeType(input[1, i], typeof(T2)));
                 }
                 return o;
             }

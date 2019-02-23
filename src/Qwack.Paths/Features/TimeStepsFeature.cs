@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Models;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Paths.Features
 {
@@ -11,28 +12,25 @@ namespace Qwack.Paths.Features
     {
         private object _locker = new object();
 
-        private HashSet<DateTime> _requiredDates = new HashSet<DateTime>();
+        private ConcurrentHashSet<DateTime> _requiredDates = new ConcurrentHashSet<DateTime>();
         private double[] _timeSteps;
         private double[] _timeStepsSqrt;
         private double[] _times;
         private bool _isComplete;
         private Dictionary<DateTime, int> _dateIndexes = new Dictionary<DateTime, int>();
 
-        public int TimeStepCount => _requiredDates.Count;
+        public int TimeStepCount => Dates?.Length ?? _requiredDates.Count;
         public double[] TimeSteps => _timeSteps;
         public double[] TimeStepsSqrt => _timeStepsSqrt;
         public double[] Times => _times;
-        public DateTime[] Dates => _requiredDates.ToArray();
+        public DateTime[] Dates { get; private set; }
 
         public bool IsComplete => _isComplete;
 
-        public int GetDateIndex(DateTime date) => _dateIndexes[date];
+        public int GetDateIndex(DateTime date) => _dateIndexes.TryGetValue(date, out var d) ? d : -1;
         public void AddDate(DateTime date)
         {
-            lock (_locker)
-            {
-                _requiredDates.Add(date);
-            }
+            _requiredDates.Add(date);
         }
 
 
@@ -40,40 +38,35 @@ namespace Qwack.Paths.Features
         {
             foreach (var d in dates)
             {
-                lock (_locker)
-                {
-                    _requiredDates.Add(d);
-                }
+                _requiredDates.Add(d);
             }
         }
 
         public void Finish(IFeatureCollection collection)
         {
-            lock (_locker)
+            Dates = _requiredDates.ToArray().OrderBy(v => v).ToArray();
+            _timeSteps = new double[_requiredDates.Count];
+            _timeStepsSqrt = new double[_requiredDates.Count];
+            _times = new double[_requiredDates.Count];
+            _dateIndexes = new Dictionary<DateTime, int>();
+            var index = 0;
+            var firstDate = default(DateTime);
+            foreach (var d in Dates)
             {
-                _timeSteps = new double[_requiredDates.Count];
-                _timeStepsSqrt = new double[_requiredDates.Count];
-                _times = new double[_requiredDates.Count];
-                _dateIndexes = new Dictionary<DateTime, int>();
-                var index = 0;
-                var firstDate = default(DateTime);
-                foreach (var d in _requiredDates.OrderBy(v => v))
+                _dateIndexes.Add(d, index);
+                if (index == 0)
                 {
-                    _dateIndexes.Add(d, index);
-                    if (index == 0)
-                    {
-                        firstDate = d;
-                        _timeSteps[0] = 0.0;
-                        _times[0] = 0.0;
-                        _timeStepsSqrt[0] = 0;
-                        index++;
-                        continue;
-                    }
-                    _times[index] = ((d - firstDate).TotalDays / 365.0);
-                    _timeSteps[index] = _times[index] - _times[index - 1];
-                    _timeStepsSqrt[index] = System.Math.Sqrt(_timeSteps[index]);
+                    firstDate = d;
+                    _timeSteps[0] = 0.0;
+                    _times[0] = 0.0;
+                    _timeStepsSqrt[0] = 0;
                     index++;
+                    continue;
                 }
+                _times[index] = ((d - firstDate).TotalDays / 365.0);
+                _timeSteps[index] = _times[index] - _times[index - 1];
+                _timeStepsSqrt[index] = System.Math.Sqrt(_timeSteps[index]);
+                index++;
             }
             _isComplete = true;
         }

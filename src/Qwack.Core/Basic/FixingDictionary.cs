@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Qwack.Core.Basic;
 using Qwack.Core.Models;
-namespace Qwack.Models.Models
+
+namespace Qwack.Core.Basic
 {
     public class FixingDictionary : Dictionary<DateTime, double>, IFixingDictionary
     {
@@ -12,6 +12,17 @@ namespace Qwack.Models.Models
         public string AssetId { get; set; }
         public string FxPair { get; set; }
         public FixingDictionaryType FixingDictionaryType { get; set; }
+
+        public FixingDictionary() { }
+        public FixingDictionary(Dictionary<DateTime, double> source) :
+            base(source)
+        {
+        }
+        public FixingDictionary(IFixingDictionary source) :
+            base(source)
+        {
+        }
+
         public IFixingDictionary Clone()
         {
             var o = new FixingDictionary() { AssetId = AssetId, Name = Name, FixingDictionaryType = FixingDictionaryType, FxPair = FxPair };

@@ -19,6 +19,12 @@ namespace Qwack.Core.Instruments
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public DateTime LastSensitivityDate => throw new NotImplementedException();
+
+        public Portfolio Clone() => new Portfolio
+        {
+            Instruments = new List<IInstrument>(Instruments),
+            PortfolioName = PortfolioName
+        };
     }
 
     public static class PortfolioEx
@@ -360,6 +366,48 @@ namespace Qwack.Core.Instruments
             var alpha = 1.4;
 
             return alpha * (rc + pfe);
+        }
+
+        public static Portfolio RollWithLifecycle(this Portfolio pf,  DateTime rollToDate)
+        {
+            var o = new Portfolio
+            {
+                PortfolioName = pf.PortfolioName,
+                Instruments = new List<IInstrument>()
+            };
+            foreach(var i in pf.Instruments)
+            {
+                switch(i)
+                {
+                    case FxForward fxf:
+                        if(fxf.DeliveryDate<rollToDate)
+                        {
+                            o.Instruments.Add(new CashBalance(fxf.DomesticCCY, fxf.DomesticQuantity) { TradeId = i.TradeId + "d" });
+                            o.Instruments.Add(new CashBalance(fxf.ForeignCCY, -fxf.DomesticQuantity * fxf.Strike) { TradeId = i.TradeId + "f" });
+                        }
+                        else
+                        {
+                            o.Instruments.Add(fxf);
+                        }
+                        break;
+                    case FixedRateLoanDeposit l:
+                        if (l.EndDate < rollToDate)
+                        {
+                            o.Instruments.Add(new CashBalance(l.Currency, -l.Notional) { TradeId = i.TradeId + "n" });
+                            
+                        }
+                        else
+                        {
+                            o.Instruments.Add(l);
+                        }
+                        break;
+                    default:
+                        o.Instruments.Add(i);
+                        break;
+                }
+            }
+
+            return o;
         }
     }
 }

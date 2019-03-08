@@ -282,8 +282,7 @@ namespace Qwack.Excel.Curves
                 if (!Enum.TryParse(RiskMetric.OptionalExcel("AssetCurveDelta"), out RiskMetric metric))
                     throw new Exception($"Unknown risk metric {RiskMetric}");
 
-                if (!bool.TryParse(ReturnDiff.OptionalExcel("True"), out var retDiff))
-                    throw new Exception($"Could not parse differential flag {ReturnDiff}");
+                var retDiff = ReturnDiff.OptionalExcel(true);
 
                 var riskLadder = new TimeLadder(metric, NScenarios, cal, ContainerStores.CurrencyProvider, retDiff);
                 var result = riskLadder.Generate(model, model.Portfolio);

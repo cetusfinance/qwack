@@ -374,13 +374,30 @@ namespace Qwack.Models.Models
             if (euOpt.ExpiryDate < model.BuildDate)
                 return 0.0;
 
+            var isCompo = euOpt.Currency != model.GetPriceCurve(euOpt.AssetId).Currency;
+            var curve = model.GetPriceCurve(euOpt.AssetId);
             var fwdDate = euOpt.ExpiryDate.AddPeriod(RollType.F, euOpt.FixingCalendar, euOpt.SpotLag);
-            var fwd = model.GetPriceCurve(euOpt.AssetId).GetPriceForDate(fwdDate);
-            var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike);
+            var fwd = curve.GetPriceForDate(fwdDate);
+            var fxFwd = isCompo ?
+                 model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency) :
+                 1.0;
+
+
+
+            var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike / fxFwd);
+            if (isCompo)
+            {
+                var fxId = $"{curve.Currency.Ccy}/{euOpt.PaymentCurrency.Ccy}";
+                var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
+                var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
+                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId);
+                vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
+            }
+
             var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
             var t = model.BuildDate.CalculateYearFraction(euOpt.PaymentDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
-            return BlackFunctions.BlackPV(fwd, euOpt.Strike, rf, t, vol, euOpt.CallPut) * euOpt.Notional;
+            return BlackFunctions.BlackPV(fwd*fxFwd, euOpt.Strike, rf, t, vol, euOpt.CallPut) * euOpt.Notional;
         }
 
         public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model)
@@ -983,7 +1000,7 @@ namespace Qwack.Models.Models
                     {
                         if (newDict.FixingDictionaryType == FixingDictionaryType.Asset)
                         {
-                            var curve = (PriceCurve)model.GetPriceCurve(newDict.AssetId);
+                            var curve = model.GetPriceCurve(newDict.AssetId);
                             var estFixing = curve.GetPriceForDate(date.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag));
                             newDict.Add(date, estFixing);
                         }

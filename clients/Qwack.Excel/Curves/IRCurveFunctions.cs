@@ -56,6 +56,45 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromRates), IsThreadSafe = true)]
+        public static object CreateDiscountCurveFromRates(
+             [ExcelArgument(Description = "Object name")] string ObjectName,
+             [ExcelArgument(Description = "Curve name")] object CurveName,
+             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+             [ExcelArgument(Description = "Array of pillar dates")] double[] Pillars,
+             [ExcelArgument(Description = "Array of rates")] double[] ZeroRates,
+             [ExcelArgument(Description = "Rate type, e.g. CC or Linear")] object RateType,
+             [ExcelArgument(Description = "Type of interpolation, e.g. CubicSpline or Linear")] object InterpolationType,
+             [ExcelArgument(Description = "Currency - default USD")] object Currency,
+             [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var curveName = CurveName.OptionalExcel(ObjectName);
+                var ccyStr = Currency.OptionalExcel("USD");
+                var colSpecStr = CollateralSpec.OptionalExcel("LIBOR.3M");
+
+                if (!Enum.TryParse(InterpolationType.OptionalExcel("Linear"), out Interpolator1DType iType))
+                {
+                    return $"Could not parse interpolator type - {InterpolationType}";
+                }
+
+                if (!Enum.TryParse(RateType.OptionalExcel("CC"), out RateType rType))
+                {
+                    return $"Could not parse rate type - {RateType}";
+                }
+
+                var pDates = Pillars.ToDateTimeArray();
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+                var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ccyStr);
+
+                var cObj = new IrCurve(pDates, ZeroRates, BuildDate, curveName, iType, ccy, colSpecStr, rType);
+                var cache = ContainerStores.GetObjectCache<IIrCurve>();
+                cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromDFs), IsThreadSafe = true)]
         public static object CreateDiscountCurveFromDFs(
              [ExcelArgument(Description = "Object name")] string ObjectName,

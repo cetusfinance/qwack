@@ -46,7 +46,7 @@ namespace Qwack.Models.Risk
                 {
                     d = d.AddPeriod(RollType.F, Calendar, 1.Bd());
                     m = m.RollModel(d, _currencyProvider);
-                    var newPvModel = model.Rebuild(m, model.Portfolio);
+                    var newPvModel = model.Rebuild(m, model.Portfolio.RollWithLifecycle(d));
                     o.Add(thisLabel, m);
                 }
             }
@@ -67,7 +67,7 @@ namespace Qwack.Models.Risk
                 var baseModel = model;
                 if (portfolio != null)
                 {
-                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
+                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio.RollWithLifecycle(model.VanillaModel.BuildDate));
                 }
                 baseRiskCube = GetRisk(baseModel);
             }
@@ -82,7 +82,7 @@ namespace Qwack.Models.Risk
                 var pvModel = scenario.Value;
                 if (portfolio != null)
                 {
-                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
+                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate));
                 }
                 var result = GetRisk(pvModel);
 
@@ -109,6 +109,8 @@ namespace Qwack.Models.Risk
             {
                 case RiskMetric.AssetCurveDelta:
                     return model.AssetDelta();
+                case RiskMetric.FxDelta:
+                    return model.FxDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency,_currencyProvider,false);
                 default:
                     throw new Exception($"Unable to process risk metric {Metric}");
 

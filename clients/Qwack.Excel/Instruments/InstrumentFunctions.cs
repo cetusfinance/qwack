@@ -1059,6 +1059,30 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolioByName), IsThreadSafe = true)]
+        public static object FilterPortfolioByName(
+            [ExcelArgument(Description = "Output object name")] string ObjectName,
+            [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Portfolios to filter on")] object[] FilterPortfolios)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
+                var pfIn = pFolioCache.GetObjectOrThrow(PortfolioName, $"Portfolio {PortfolioName} not found");
+                var ids = FilterPortfolios.ObjectRangeToVector<string>();
+                var pf = new Portfolio
+                {
+                    Instruments = new List<IInstrument>
+                    (
+                        pfIn.Value.Instruments.Where(x => ids.Contains(x.PortfolioName))
+                    )
+                };
+                pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });
+                return ObjectName + '¬' + pFolioCache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Displays a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(DisplayPortfolio), IsThreadSafe = true)]
         public static object DisplayPortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName)

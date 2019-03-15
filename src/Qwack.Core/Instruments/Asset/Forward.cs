@@ -30,16 +30,29 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
 
         public Currency Currency => PaymentCurrency;
+
+        private bool IsFx => AssetId.Length == 7 && AssetId[3] == '/';
+
         public string[] IrCurves(IAssetFxModel model)
         {
-            if (FxConversionType == FxConversionType.None)
-                return new[] { DiscountCurve };
+            if (IsFx)
+            {
+                var ccys = AssetId.Split('/');
+                var c1 = model.FundingModel.FxMatrix.GetDiscountCurve(ccys[0]);
+                var c2 = model.FundingModel.FxMatrix.GetDiscountCurve(ccys[1]);
+                return (new[] { DiscountCurve, c1, c2 }).Distinct().ToArray();
+            }
             else
             {
-                var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
-                var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
-                var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
-                return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+                if (FxConversionType == FxConversionType.None)
+                    return new[] { DiscountCurve };
+                else
+                {
+                    var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
+                    var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
+                    var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
+                    return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+                }
             }
         }
 

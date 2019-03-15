@@ -105,14 +105,16 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
             [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName,
             [ExcelArgument(Description = "Home currency, e.g. ZAR")] string HomeCcy,
-            [ExcelArgument(Description = "Compute gamma, default false")] object ComputeGamma)
+            [ExcelArgument(Description = "Compute gamma, default false")] object ComputeGamma,
+            [ExcelArgument(Description = "Report delta on opposite side of pair, default true")] object InverseDelta)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var gamma = ComputeGamma.OptionalExcel(false);
+                var inverseD = InverseDelta.OptionalExcel(true);
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
                 var ccy = ContainerStores.CurrencyProvider[HomeCcy];
-                var result = model.FxDelta(ccy, ContainerStores.CurrencyProvider, gamma);
+                var result = model.FxDelta(ccy, ContainerStores.CurrencyProvider, gamma, inverseD);
                 return PushCubeToCache(result, ResultObjectName);
             });
         }
@@ -152,12 +154,16 @@ namespace Qwack.Excel.Curves
         public static object PortfolioIrDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Optional reporting ccy")] string ReportingCurrency,
+            [ExcelArgument(Description = "Bump size, default 0.0001")] object BumpSize)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var bump = BumpSize.OptionalExcel(0.0001);
+                var repCCy = ContainerStores.CurrencyProvider.TryGetCurrency(ReportingCurrency, out var ccy) ? ccy : null;
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
-                var result = model.AssetIrDelta();
+                var result = model.AssetIrDelta(repCCy,bump);
                 return PushCubeToCache(result, ResultObjectName);
             });
         }

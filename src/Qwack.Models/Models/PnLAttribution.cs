@@ -907,9 +907,13 @@ namespace Qwack.Models.Models
             var fxGreeks = portfolio.FxDelta(model, reportingCcy, currencyProvider, true);
             r_tidIx = fxGreeks.GetColumnIndex("TradeId");
             r_tTypeIx = fxGreeks.GetColumnIndex("TradeType");
-            foreach (var fxSpot in endModel.FundingModel.FxMatrix.SpotRates)
+            var emRemap = FundingModel.RemapBaseCurrency(endModel.FundingModel, reportingCcy, currencyProvider);
+            var smRemap = FundingModel.RemapBaseCurrency(model.FundingModel, reportingCcy, currencyProvider);
+            model.FundingModel.SetupFx(smRemap.FxMatrix);
+
+            foreach (var fxSpot in emRemap.FxMatrix.SpotRates)
             {
-                var fxPair = $"{endModel.FundingModel.FxMatrix.BaseCurrency.Ccy}/{fxSpot.Key.Ccy}";
+                var fxPair = $"{reportingCcy}/{fxSpot.Key.Ccy}";
 
                 //delta
                 var riskForCurve = fxGreeks.Filter(
@@ -921,7 +925,7 @@ namespace Qwack.Models.Models
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
-                    var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
+                    var startRate = smRemap.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate);
 
@@ -936,10 +940,11 @@ namespace Qwack.Models.Models
                     };
                     cube.AddRow(row, explained);
 
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    var key = (string)r.MetaData[r_tidIx] + "~" + fxPair;
+                    if (!explainedByTrade.ContainsKey(key))
+                        explainedByTrade[key] = explained;
                     else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                        explainedByTrade[key] += explained;
                 }
 
                 //gamma
@@ -951,7 +956,7 @@ namespace Qwack.Models.Models
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
-                    var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
+                    var startRate = smRemap.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate) * (endRate - startRate) * 0.5;
 
@@ -966,10 +971,11 @@ namespace Qwack.Models.Models
                     };
                     cube.AddRow(row, explained);
 
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    var key = (string)r.MetaData[r_tidIx] + "~" + fxPair;
+                    if (!explainedByTrade.ContainsKey(key))
+                        explainedByTrade[key] = explained;
                     else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                        explainedByTrade[key] += explained;
                 }
 
                 model.FundingModel.FxMatrix.SpotRates[fxSpot.Key] = fxSpot.Value;
@@ -989,7 +995,8 @@ namespace Qwack.Models.Models
                         { "SubSubStep", "Unexplained" },
                         { "PointLabel", "Unexplained" }
                     };
-                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                    var key = (string)r.MetaData[r_tidIx] + "~" + fxPair;
+                    explainedByTrade.TryGetValue(key, out var explained);
                     cube.AddRow(row, r.Value - explained);
                 }
                 lastPVCuve = newPVCube;

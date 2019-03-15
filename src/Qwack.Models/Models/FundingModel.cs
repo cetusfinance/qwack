@@ -185,5 +185,32 @@ namespace Qwack.Models
 
         public IrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
         public IVolSurface GetVolSurface(string name) => VolSurfaces.TryGetValue(name, out var curve) ? curve : throw new Exception($"Surface named {name} not found");
+
+        public static IFundingModel RemapBaseCurrency(IFundingModel input, Currency newBaseCurrency, ICurrencyProvider currencyProvider)
+        {
+            if (newBaseCurrency == input.FxMatrix.BaseCurrency)
+                return input.Clone();
+
+            var mf = input.DeepClone(null);   
+            var homeToBase = mf.FxMatrix.SpotRates[newBaseCurrency];
+            var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
+                .Concat(new[] { mf.FxMatrix.BaseCurrency })
+                .Where(x => x != newBaseCurrency);
+            var newRateDict = new Dictionary<Currency, double>();
+            foreach (var ccy in ccys)
+            {
+                var spotDate = mf.FxMatrix.GetFxPair(newBaseCurrency, ccy).SpotDate(mf.BuildDate);
+                var newRate = mf.GetFxRate(spotDate, newBaseCurrency, ccy);
+                newRateDict.Add(ccy, newRate);
+            }
+
+            var newFx = new FxMatrix(currencyProvider);
+            newFx.Init(newBaseCurrency, mf.FxMatrix.BuildDate, newRateDict, mf.FxMatrix.FxPairDefinitions, mf.FxMatrix.DiscountCurveMap);
+            mf.SetupFx(newFx);
+
+            return mf;
+        }
     }
+
+    
 }

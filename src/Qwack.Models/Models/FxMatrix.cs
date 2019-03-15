@@ -70,5 +70,7 @@ namespace Qwack.Models
             o.Init(BaseCurrency, newBuildDate, newSpotRates, new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
             return o;
         }
+
+        public string GetDiscountCurve(string currency) => DiscountCurveMap.TryGetValue(_currencyProvider.GetCurrency(currency), out var curve) ? curve : null;
     }
 }

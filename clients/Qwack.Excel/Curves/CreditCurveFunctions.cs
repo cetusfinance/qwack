@@ -57,5 +57,23 @@ namespace Qwack.Excel.Curves
             });
         }
 
+
+        [ExcelFunction(Description = "Gets risky discount factor from a pair of hazzard and discount curves", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetRiskyDiscountFactor))]
+        public static object GetRiskyDiscountFactor(
+             [ExcelArgument(Description = "Credit curve object name")] string ObjectName,
+             [ExcelArgument(Description = "Discount curve object name")] string DiscoObjectName,
+             [ExcelArgument(Description = "Start date")] DateTime StartDate,
+             [ExcelArgument(Description = "End date")] DateTime EndDate,
+             [ExcelArgument(Description = "LGD, e.g. 0.45")] double LGD)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var disco = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscoObjectName, $"Could not find discount curve {DiscoObjectName}");
+                return ContainerStores
+                .GetObjectCache<HazzardCurve>()
+                .GetObjectOrThrow(ObjectName, $"Could not find curve {ObjectName}")
+                .Value.RiskyDiscountFactor(StartDate, EndDate, disco.Value, LGD);
+            });
+        }
     }
 }

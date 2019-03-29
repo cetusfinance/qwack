@@ -23,12 +23,11 @@ namespace Qwack.Core.Curves
         public double GetSurvivalProbability(DateTime endDate)
         {
             var t = Basis.CalculateYearFraction(OriginDate, endDate);
-            var h = _hazzardCurve.Interpolate(t);
-            var p = System.Math.Exp(-h * t);
+            var p = _hazzardCurve.Interpolate(t);
             return p;
         }
 
-        public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetDefaultProbability(startDate, endDate);
+        public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetSurvivalProbability(startDate, endDate);
 
         private IInterpolator1D _hazzardCurve;
 
@@ -37,6 +36,14 @@ namespace Qwack.Core.Curves
             OriginDate = originDate;
             Basis = basis;
             _hazzardCurve = hazzardRateInterpolator;
+        }
+
+        public double RiskyDiscountFactor(DateTime startDate, DateTime endDate, IIrCurve discountCurve, double LGD)
+        {
+            var dp = GetDefaultProbability(startDate, endDate);
+            var el = dp * LGD;
+            var df = discountCurve.GetDf(startDate, endDate);
+            return (1.0 - el) * df;
         }
     }
 }

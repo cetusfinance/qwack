@@ -54,6 +54,10 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
+        public RiskMatrix(Currency c1, Currency c2, MutationType shiftType, RiskMetric metric, double shiftStepSize1, double shiftStepSize2, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
+        {
+        }
+
         public Dictionary<Tuple<string,string>, IPvModel> GenerateScenarios(IPvModel model)
         {
             if (!string.IsNullOrEmpty(AssetId))

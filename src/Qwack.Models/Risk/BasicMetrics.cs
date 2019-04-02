@@ -32,7 +32,7 @@ namespace Qwack.Models.Risk
             return results.ToDictionary(k => k.Item1, v => v.Item2);
         }
 
-        public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy, bool parallelize=true)
+        public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy, bool parallelize = true)
         {
             var bumpSize = 0.001;
             var cube = new ResultCube();
@@ -60,11 +60,11 @@ namespace Qwack.Models.Risk
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
-                
+
                 var lastDateInBook = subPortfolio.LastSensitivityDate();
 
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
-                var pvCube = basePvModel.PV(reportingCcy); 
+                var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex("TradeId");
                 var tTypeIx = pvCube.GetColumnIndex("TradeType");
@@ -80,7 +80,7 @@ namespace Qwack.Models.Risk
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");
-                    
+
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
                         //vega quoted for a 1% shift, irrespective of bump size
@@ -99,10 +99,10 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, vega);
                         }
                     }
-                },!(parallelize)).Wait();
+                }, !(parallelize)).Wait();
             }
 
-            return cube.Sort();
+            return cube.Sort(new List<string> {"AssetId","PointDate","TradeType"});
         }
 
         public static ICube AssetSegaRega(this IPvModel pvModel, Currency reportingCcy)
@@ -632,7 +632,7 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
 
-        public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
+        public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta=false)
         {
             var bumpSize = 0.0001;
             var cube = new ResultCube();
@@ -654,21 +654,7 @@ namespace Qwack.Models.Risk
             if (homeCcy != null && homeCcy != domCcy)//remap onto new base currency
             {
                 domCcy = homeCcy;
-                var homeToBase = mf.FxMatrix.SpotRates[homeCcy];
-                var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
-                    .Concat(new[] { mf.FxMatrix.BaseCurrency })
-                    .Where(x => x != homeCcy);
-                var newRateDict = new Dictionary<Currency, double>();
-                foreach (var ccy in ccys)
-                {
-                    var spotDate = mf.FxMatrix.GetFxPair(homeCcy, ccy).SpotDate(mf.BuildDate);
-                    var newRate = mf.GetFxRate(spotDate, homeCcy, ccy);
-                    newRateDict.Add(ccy, newRate);
-                }
-
-                var newFx = new FxMatrix(currencyProvider);
-                newFx.Init(homeCcy, mf.FxMatrix.BuildDate, newRateDict, mf.FxMatrix.FxPairDefinitions, mf.FxMatrix.DiscountCurveMap);
-                mf.SetupFx(newFx);
+                mf = FundingModel.RemapBaseCurrency(mf, homeCcy, currencyProvider);
             }
 
             var m = model.Clone(mf);
@@ -682,12 +668,13 @@ namespace Qwack.Models.Risk
                 var tTypeIx = pvCube.GetColumnIndex("TradeType");
                 var pfIx = pvCube.GetColumnIndex("Portfolio");
 
-                var fxPair = $"{currency}/{domCcy}";
+                var fxPair = $"{domCcy}/{currency}";
+                //var fxPair = $"{currency}/{domCcy}";
 
                 var newModel = m.Clone();
                 var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var inverseSpotBump = 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+                var inverseSpotBump = reportInverseDelta ? 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency] : bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency];
                 var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
@@ -703,7 +690,7 @@ namespace Qwack.Models.Risk
                 {
                     var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
                     newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
-                    inverseSpotBumpDown = 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency];
+                    inverseSpotBumpDown = reportInverseDelta ? 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency] : bumpedSpotDown - m.FundingModel.FxMatrix.SpotRates[currency];
 
                     var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
 

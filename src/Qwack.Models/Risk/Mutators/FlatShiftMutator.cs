@@ -51,5 +51,32 @@ namespace Qwack.Models.Risk.Mutators
             var newVanillaModel = FxSpotShift(ccy, shiftSize, model.VanillaModel);
             return model.Rebuild(newVanillaModel, model.Portfolio);
         }
+
+        public static IAssetFxModel FxSpotShift(FxPair pair, double shiftSize, IAssetFxModel model)
+        {
+            var o = model.Clone();
+            if(pair.Domestic==model.FundingModel.FxMatrix.BaseCurrency)
+            {
+                var spot = model.FundingModel.FxMatrix.GetSpotRate(pair.Foreign);
+                o.FundingModel.FxMatrix.SpotRates[pair.Foreign] = spot + shiftSize;
+            }
+            else if (pair.Foreign == model.FundingModel.FxMatrix.BaseCurrency)
+            {
+                var spot = model.FundingModel.FxMatrix.GetSpotRate(pair.Domestic);
+                o.FundingModel.FxMatrix.SpotRates[pair.Domestic] = 1 / (1 / spot + shiftSize);
+            }
+            else
+            {
+                throw new Exception("Shifted FX pair must contain base currency of model");
+            }
+
+            return o;
+        }
+
+        public static IPvModel FxSpotShift(FxPair pair, double shiftSize, IPvModel model)
+        {
+            var newVanillaModel = FxSpotShift(pair, shiftSize, model.VanillaModel);
+            return model.Rebuild(newVanillaModel, model.Portfolio);
+        }
     }
 }

@@ -336,8 +336,14 @@ namespace Qwack.Models.Models
         {
             if (future.ExpiryDate < model.BuildDate)
                 return 0.0;
+            var curve = model.GetPriceCurve(future.AssetId);
 
-            var price = model.GetPriceCurve(future.AssetId).GetPriceForDate(future.ExpiryDate);
+            var price = 0.0;
+            if (curve.CurveType == PriceCurveType.NextButOnExpiry)
+                price = curve.GetPriceForDate(future.ExpiryDate.AddDays(-1));
+            else
+                price = curve.GetPriceForDate(future.ExpiryDate);
+
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
 
@@ -355,7 +361,7 @@ namespace Qwack.Models.Models
 
             var df = option.MarginingType == OptionMarginingType.FuturesStyle ? 1.0
                 : model.FundingModel.GetDf(option.DiscountCurve, model.BuildDate, option.ExpiryDate);
-            var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate, DayCountBasis.Act365F);
+            var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate, DayCountBasis.Act365F, false);
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
 
             var fv = BlackFunctions.BlackPV(price, option.Strike, 0.0, t, vol, option.CallPut);
@@ -718,7 +724,7 @@ namespace Qwack.Models.Models
                     tradeType = "Cash";
                     break;
                 case AsianLookbackOption lbo:
-                    tradeType = "LookNack";
+                    tradeType = "LookBack";
                     break;
                 case BackPricingOption bpo:
                 case MultiPeriodBackpricingOption mpbpo:
@@ -882,11 +888,11 @@ namespace Qwack.Models.Models
             return m.AssetDelta(false);
         }
 
-        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
+        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse=true)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.FxDelta(homeCcy, currencyProvider, computeGamma);
+            return m.FxDelta(homeCcy, currencyProvider, computeGamma, reportInverse);
         }
 
         public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model)

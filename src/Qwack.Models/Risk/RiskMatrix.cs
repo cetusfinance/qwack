@@ -25,7 +25,8 @@ namespace Qwack.Models.Risk
         public int NScenarios { get; private set; }
         public bool ReturnDifferential { get; private set; }
 
-        public Currency Ccy2 { get; private set; }
+        public FxPair Pair1 { get; private set; }
+        public FxPair Pair2 { get; private set; }
 
         public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential=true)
         {
@@ -40,10 +41,10 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
-        public RiskMatrix(Currency ccy1, Currency ccy2, MutationType shiftType, RiskMetric metric, double shiftStepSize1, double shiftStepSize2, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
+        public RiskMatrix(FxPair p1, FxPair p2, MutationType shiftType, RiskMetric metric, double shiftStepSize1, double shiftStepSize2, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
         {
-            Ccy2 = ccy2;
-            Ccy = ccy1;
+            Pair1 = p1;
+            Pair2 = p2;
             ShiftType = shiftType;
             Metric = metric;
             ShiftSizeAsset = shiftStepSize1;
@@ -51,6 +52,10 @@ namespace Qwack.Models.Risk
             NScenarios = nScenarios;
             _currencyProvider = currencyProvider;
             ReturnDifferential = returnDifferential;
+        }
+
+        public RiskMatrix(Currency c1, Currency c2, MutationType shiftType, RiskMetric metric, double shiftStepSize1, double shiftStepSize2, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
+        {
         }
 
         public Dictionary<Tuple<string,string>, IPvModel> GenerateScenarios(IPvModel model)
@@ -120,7 +125,7 @@ namespace Qwack.Models.Risk
             ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
             {
                 var thisShiftFx1 = i * ShiftSizeAsset;
-                var thisLabelAsset = Ccy.Ccy + "~" + thisShiftFx1;
+                var thisLabelAsset = Pair1.ToString() + "~" + thisShiftFx1;
 
                 var assetIx = i + NScenarios;
 
@@ -132,7 +137,7 @@ namespace Qwack.Models.Risk
                     switch (ShiftType)
                     {
                         case MutationType.FlatShift:
-                            shifted = FlatShiftMutator.FxSpotShift(Ccy, thisShiftFx1, model);
+                            shifted = FlatShiftMutator.FxSpotShift(Pair1, thisShiftFx1, model);
                             break;
                         default:
                             throw new Exception($"Unable to process shift type {ShiftType}");
@@ -142,14 +147,14 @@ namespace Qwack.Models.Risk
                 {
                     var fxIx = ifx + NScenarios;
                     var thisShiftFx = ifx * ShiftSizeFx;
-                    var thisLabelFx = Ccy2.Ccy + "~" + thisShiftFx;
+                    var thisLabelFx = Pair2.ToString() + "~" + thisShiftFx;
 
                     IPvModel shiftedFx;
 
                     if (thisShiftFx1 == 0)
                         shiftedFx = shifted;
                     else
-                        shiftedFx = FlatShiftMutator.FxSpotShift(Ccy2, thisShiftFx, shifted);
+                        shiftedFx = FlatShiftMutator.FxSpotShift(Pair2, thisShiftFx, shifted);
 
                     results[assetIx * axisLength + fxIx] = new KeyValuePair<Tuple<string, string>, IPvModel>(
                         new Tuple<string, string>(thisLabelAsset, thisLabelFx), shiftedFx);

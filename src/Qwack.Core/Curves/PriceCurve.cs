@@ -81,7 +81,7 @@ namespace Qwack.Core.Curves
                     _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.NextValue);
                     break;
                 case PriceCurveType.NextButOnExpiry:
-                    pillarsAsDoubles.Select(x => x - 1).ToArray();
+                    pillarsAsDoubles = pillarsAsDoubles.Select(x => x - 1).ToArray();
                     _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.NextValue);
                     break;
                 case PriceCurveType.Constant:

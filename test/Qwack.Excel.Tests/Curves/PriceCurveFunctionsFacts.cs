@@ -45,7 +45,7 @@ namespace Qwack.Excel.Tests.Curves
         {
             Assert.Equal("Price curve pwahhh not found in cache", PriceCurveFunctions.GetPrice("pwahhh", DateTime.Today));
             PriceCurveFunctions.CreatePriceCurve("pwahhh", "pwahAid", DateTime.Today, new double[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(10).ToOADate() }, new double[] { 1.0, 1.1 }, "ICE", ExcelDna.Integration.ExcelMissing.Value, "USD", "gwah", "2b", "USD");
-            Assert.Equal(1.0, PriceCurveFunctions.GetPrice("pwahhh", DateTime.Today));
+            Assert.Equal(1.1, PriceCurveFunctions.GetPrice("pwahhh", DateTime.Today));
         }
 
         [Fact]
@@ -53,7 +53,7 @@ namespace Qwack.Excel.Tests.Curves
         {
             Assert.Equal("Price curve pwahhhff not found in cache", PriceCurveFunctions.GetAveragePrice("pwahhhff", new[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(1).ToOADate() }));
             PriceCurveFunctions.CreatePriceCurve("pwahhhff", "pwahAid", DateTime.Today, new double[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(10).ToOADate() }, new double[] { 1.0, 1.1 }, "ICE", ExcelDna.Integration.ExcelMissing.Value, "USD", "gwah", "2b", "USD");
-            Assert.Equal(1.05, PriceCurveFunctions.GetAveragePrice("pwahhhff", new[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(1).ToOADate() }));
+            Assert.Equal(1.1, PriceCurveFunctions.GetAveragePrice("pwahhhff", new[] { DateTime.Today.ToOADate(), DateTime.Today.AddDays(1).ToOADate() }));
         }
 
         [Fact]

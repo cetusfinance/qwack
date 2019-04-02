@@ -15,6 +15,7 @@ namespace Qwack.Math
         public static double CumulativeNormalDistribution(double d) => FiNormSDist(d);
         public static double ProbabilityDensityFunction(double z) => StandardNormalDistribution(z);
         public static double StandardNormalDistribution(double x) => Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
+        public static double NormalDistribution(double x, double mu, double sigma) => Exp(0.5 * ((x - mu) / sigma).IntPow(2)) / DoubleExtensions.Sqrt2Pi / sigma / sigma;
 
         public static double NormInv(double p) => NormInv(p, 0.0, 1.0);
 

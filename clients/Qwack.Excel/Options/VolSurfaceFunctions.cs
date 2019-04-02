@@ -362,7 +362,7 @@ namespace Qwack.Excel.Options
                         throw new Exception($"No vol surface found in model for fx pair {FxPair}");
                     model.Value.GetVolSurface(AssetId);
 
-                    var surface = model.Value.GenerateCompositeSurface(AssetId, FxPair, NumberOfSamples, Correlation);
+                    var surface = model.Value.GenerateCompositeSurface(AssetId, FxPair, NumberOfSamples, Correlation, true);
                     return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
                 }
                 else

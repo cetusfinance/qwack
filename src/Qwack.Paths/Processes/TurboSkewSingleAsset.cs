@@ -8,10 +8,11 @@ using System.Linq;
 using Qwack.Core.Models;
 using Qwack.Serialization;
 using static System.Math;
+using Qwack.Math;
 
 namespace Qwack.Paths.Processes
 {
-    public class BlackSingleAsset : IPathProcess, IRequiresFinish
+    public class TurboSkewSingleAsset : IPathProcess, IRequiresFinish
     {
         private IATMVolSurface _surface;
 
@@ -30,9 +31,9 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
+        private IInterpolator1D[] _transformers;
 
-
-        public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
+        public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -58,6 +59,7 @@ namespace Qwack.Paths.Processes
             //drifts and vols...
             _drifts = new double[_timesteps.TimeStepCount];
             _vols = new double[_timesteps.TimeStepCount];
+            _transformers = new IInterpolator1D[_timesteps.TimeStepCount];
 
             var prevSpot = _forwardCurve(0);
             for (var t = 1; t < _drifts.Length; t++)
@@ -71,6 +73,7 @@ namespace Qwack.Paths.Processes
                 var fwdVariance = Max(0,varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
+                _transformers[t] = _surface.GenerateMapper(100, _timesteps.Dates[t], spot, atmVol);
 
                 prevSpot = spot;
             }
@@ -97,6 +100,17 @@ namespace Qwack.Paths.Processes
                     var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
                     previousStep *= bm.Exp();
                     steps[step] = previousStep;
+                }
+
+                //transform
+                for (var step = c + 1; step < block.NumberOfSteps; step++)
+                {
+                    var transformed = new double[Vector<double>.Count];
+                    for(var v=0;v< transformed.Length; v++)
+                    {
+                        transformed[v] = _transformers[step].Interpolate(steps[step][v]);
+                    }
+                    steps[step] = new Vector<double>(transformed);
                 }
             }
         }

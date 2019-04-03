@@ -31,7 +31,12 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
-        private IInterpolator1D[] _transformers;
+        private double[] _spotDrifts;
+        private double[] _spotVols;
+        private double[] _spotTimesSqrt;
+        private double _spot0;
+
+        private IInterpolator1D[] _invCdfs;
 
         public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
         {
@@ -59,9 +64,12 @@ namespace Qwack.Paths.Processes
             //drifts and vols...
             _drifts = new double[_timesteps.TimeStepCount];
             _vols = new double[_timesteps.TimeStepCount];
-            _transformers = new IInterpolator1D[_timesteps.TimeStepCount];
+            _spotDrifts = new double[_timesteps.TimeStepCount];
+            _spotVols = new double[_timesteps.TimeStepCount];
+            _invCdfs = new IInterpolator1D[_timesteps.TimeStepCount];
 
-            var prevSpot = _forwardCurve(0);
+            _spot0 = _forwardCurve(0);
+            var prevSpot = _spot0;
             for (var t = 1; t < _drifts.Length; t++)
             {
                 var atmVol = _surface.GetForwardATMVol(0, _timesteps.Times[t]);
@@ -73,10 +81,16 @@ namespace Qwack.Paths.Processes
                 var fwdVariance = Max(0,varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
-                _transformers[t] = _surface.GenerateMapper(100, _timesteps.Dates[t], spot, atmVol);
+                _invCdfs[t] = _surface.GenerateCDF2(500, _timesteps.Dates[t], spot, true, driftAdj);
+                
+                _spotVols[t] = atmVol;
+                _spotDrifts[t] = Log(spot / _spot0) / _timesteps.Times[t];
 
                 prevSpot = spot;
             }
+
+            _spotTimesSqrt = _timesteps.Times.Select(x => Sqrt(x)).ToArray();
+
             _isComplete = true;
         }
 
@@ -105,12 +119,17 @@ namespace Qwack.Paths.Processes
                 //transform
                 for (var step = c + 1; step < block.NumberOfSteps; step++)
                 {
-                    var transformed = new double[Vector<double>.Count];
-                    for(var v=0;v< transformed.Length; v++)
+                    var ws = new double[Vector<double>.Count];
+                    for(var v=0;v< ws.Length; v++)
                     {
-                        transformed[v] = _transformers[step].Interpolate(steps[step][v]);
+                        var t1 = Log(steps[step][v]/ _spot0);
+                        var t2 = (_spotDrifts[step] - _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
+                        t1 -= t2;
+                        t1 /= _spotVols[step] * _spotTimesSqrt[step];
+                        t1 = Statistics.NormSDist(t1);
+                        ws[v] = _invCdfs[step].Interpolate(t1);
                     }
-                    steps[step] = new Vector<double>(transformed);
+                    steps[step] = new Vector<double>(ws);
                 }
             }
         }

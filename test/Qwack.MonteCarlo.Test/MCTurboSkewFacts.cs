@@ -20,26 +20,26 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCTurboSkewFacts
     {
-        //[Fact]
+        [Fact]
         public void TSMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(15));
+            var engine = new PathEngine(2.IntPow(17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                 UseNormalInverse = true,
-                UseAnthithetic = false
+                UseAnthithetic = true
             });
 
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
-            var deltaKs = new[] { -0.1, -0.25, -0.5, -0.75, -0.9 };
+            var deltaKs = new[] { 0.1, 0.25, 0.5, 0.75, 0.9 };
             var smileVols = new[] { 0.32, 0.3, 0.29, 0.3, 0.32 };
             var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
 
             var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols,
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap,
+                StrikeType.ForwardDelta, Interpolator1DType.GaussianKernel,
                 Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
             var fwdCurve = new Func<double, double>(t => { return 900 + 100 * t; });
@@ -49,7 +49,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddYears(1),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps: 365,
+                    nTimeSteps: 1,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);
@@ -65,8 +65,6 @@ namespace Qwack.MonteCarlo.Test
             Assert.Equal(blackPv, pv, 0);
             var fwd = payoff2.AverageResult;
             Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
-            //var output = new OutputPathsToImage(engine,2000,1000);
-
         }
     }
 }

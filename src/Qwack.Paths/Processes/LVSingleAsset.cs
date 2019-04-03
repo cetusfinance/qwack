@@ -77,16 +77,18 @@ namespace Qwack.Paths.Processes
                 }
                 else
                 {
-                    strikes[t] = new double[98];
+                    var nStrikes = 200;
+                    var strikeStep = 1.0 / nStrikes;
+                    strikes[t] = new double[nStrikes];
                     for (var k = 0; k < strikes[t].Length; k++)
                     {
-                        var deltaK = -(0.01 + 0.01 * k);
+                        var deltaK = -(strikeStep + strikeStep * k);
                         strikes[t][k] = Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, _timesteps.Times[t], atmVols[t]);
                     }
                 }
             }
 
-            var lvSurface = Options.LocalVol.ComputeLocalVarianceOnGrid(_surface, strikes, _timesteps.Times, _forwardCurve);
+            var lvSurface = Options.LocalVol.ComputeLocalVarianceOnGridFromCalls(_surface, strikes, _timesteps.Times, _forwardCurve);
             
             for (var t = 0; t < _lvInterps.Length; t++)
             {

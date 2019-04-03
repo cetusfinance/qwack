@@ -4,6 +4,8 @@ using System.Text;
 using Qwack.Options.VolSurfaces;
 using Qwack.Core.Basic;
 using static System.Math;
+using System.Linq;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Options
 {
@@ -12,16 +14,11 @@ namespace Qwack.Options
         public static double[][] ComputeLocalVarianceOnGrid(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double,double> forwardFunc)
         {
             var numberOfTimesteps = timeSteps.Length;
-
-        
-            var deltaK = 0.0001 * forwardFunc(timeSteps[0]);
-            var deltaKsqr = deltaK * deltaK;
-          
+            var deltaK = 0.001 * forwardFunc(timeSteps[0]);     
             var lvGrid = new double[numberOfTimesteps-1][];
 
-
             var Ss = new double[numberOfTimesteps];
-            for (var i = 0; i < numberOfTimesteps; i++)
+            for (var i = 0; i < Ss.Length; i++)
             {
                 Ss[i] = forwardFunc(timeSteps[i]);
             }
@@ -53,8 +50,8 @@ namespace Qwack.Options
                     yPlus2 = Log((K + deltaK * 2) / S);
                     yMinus = Log((K - deltaK) / S);
                     yMinus2 = Log((K - deltaK * 2) / S);
-                    Y1 = Log(Sqrt(K * K + 2 * deltaK * K) / S);
-                    Y2 = Log(Sqrt(K * K - 2 * deltaK * K) / S);                  
+                    //Y1 = Log(Sqrt(K * K + 2 * deltaK * K) / S);
+                    //Y2 = Log(Sqrt(K * K - 2 * deltaK * K) / S);                  
                     V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
                     w = V * V * T;
                     V_t1 = VanillaSurface.GetVolForAbsoluteStrike(K_tm1, T1, fwd);
@@ -70,9 +67,10 @@ namespace Qwack.Options
                     dwdY_p = (w_kPlus2 - w) / (yPlus2 - y);
                     dwdY = (dwdY_m + dwdY_p) / 2;
 
-                    d2wd2Y = (dwdY_p - dwdY_m) / (Y1 - Y2);
+                    //d2wd2Y = (dwdY_p - dwdY_m) / (Y1 - Y2);
+                    d2wd2Y = (dwdY_p - dwdY_m) / (yPlus - yMinus);
 
-                    localVariance = dwdT / (1 - y / w * dwdY + 0.25 * (-0.25 - 1 / w + (y * y / (w * w))) * dwdY * dwdY + 0.5 * d2wd2Y);
+                    localVariance = dwdT / (1 - y / w * dwdY + 0.25 * (-0.25 - 1 / w + (y * y / (w))) * dwdY * dwdY + 0.5 * d2wd2Y);
 
                     lvGrid[it - 1][ik] = localVariance;
                 }
@@ -81,5 +79,45 @@ namespace Qwack.Options
             return lvGrid;
         }
 
+        public static double[][] ComputeLocalVarianceOnGridFromCalls(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double, double> forwardFunc)
+        {
+            var numberOfTimesteps = timeSteps.Length;
+            var deltaK = 0.001 * forwardFunc(timeSteps[0]);
+            var lvGrid = new double[numberOfTimesteps - 1][];
+
+            var fwds = timeSteps.Select(t => forwardFunc(t)).ToArray();
+
+            ParallelUtils.Instance.For(1, numberOfTimesteps, 1, it =>
+            //for (var it = 1; it < numberOfTimesteps; it++)
+            {
+                var T = timeSteps[it];
+                var T1 = timeSteps[it - 1];
+                var fwd = fwds[it];
+                var fwdtm1 = fwds[it - 1];
+                var rmq = Log(fwd / fwdtm1) / (T - T1);
+                var numberOfStrikes = strikes[it - 1].Length;
+                var cInterp = VanillaSurface.GeneratePremiumInterpolator(numberOfStrikes * 2, T, fwd, OptionType.C);
+
+                lvGrid[it - 1] = new double[numberOfStrikes];
+
+                for (var ik = 0; ik < numberOfStrikes; ik++)
+                {
+                    var K = strikes[it][ik];
+                    var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
+                    var C = BlackFunctions.BlackPV(fwd, K, 0.0, T, V, OptionType.C);
+                    var Vtm1 = VanillaSurface.GetVolForAbsoluteStrike(K, T1, fwdtm1);
+
+                    //var dcdt = -BlackFunctions.BlackTheta(fwd, K, 0.0, T, V, OptionType.C);
+                    var dcdt = -(BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C) - C) / (T - T1);
+                    var dcdk = cInterp.FirstDerivative(K);
+                    var d2cdk2 = cInterp.SecondDerivative(K);
+
+                    var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);
+                    lvGrid[it - 1][ik] = localVariance;
+                }
+            }, false).Wait();
+
+            return lvGrid;
+        }
     }
 }

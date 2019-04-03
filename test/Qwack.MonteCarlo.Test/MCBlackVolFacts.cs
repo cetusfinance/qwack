@@ -21,11 +21,11 @@ namespace Qwack.MonteCarlo.Test
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(17));
+            var engine = new PathEngine(2.IntPow(15));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,
-                 UseAnthithetic = false
+                 UseAnthithetic = true
             });
             var volSurface = new ConstantVolSurface(origin, 0.32);
             var fwdCurve = new Func<double, double>(t => { return 900 + 100*t; });

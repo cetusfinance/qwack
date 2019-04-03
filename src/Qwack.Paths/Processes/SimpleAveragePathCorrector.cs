@@ -108,7 +108,7 @@ namespace Qwack.Paths.Processes
 
                     for (var step = 0; step < block.NumberOfSteps; step++)
                     {
-                        steps[step] /= factorsForThisBlock[step];
+                        steps[step] *= factorsForThisBlock[step];
                     }
                 }
             }
@@ -120,7 +120,7 @@ namespace Qwack.Paths.Processes
 
                     for (var step = 0; step < block.NumberOfSteps; step++)
                     {
-                        steps[step] /= _correctionFactors[step];
+                        steps[step] *= _correctionFactors[step];
                     }
                 }
             }

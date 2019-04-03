@@ -27,12 +27,13 @@ namespace Qwack.MonteCarlo.Test
         {
             var origin = DateTime.Now.Date;
             var engine = new PathEngine(2.IntPow(15));
-            //engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
-            //{
-            //    UseNormalInverse = true,
-            //    UseAnthithetic = false
-            //});
-            engine.AddPathProcess(new Random.Sobol.SobolShiftedPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
+            engine.Parallelize = true;
+            engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+            {
+                UseNormalInverse = true,
+                UseAnthithetic = true
+            });
+            //engine.AddPathProcess(new Random.Sobol.SobolShiftedPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
             var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
@@ -64,7 +65,7 @@ namespace Qwack.MonteCarlo.Test
             var pv = payoff.AverageResult;
             var blackVol = volSurface.GetVolForAbsoluteStrike(900, origin.AddYears(1), fwdCurve(1.0));
             var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, blackVol, OptionType.P);
-            Assert.Equal(blackPv, pv, 0);
+            Assert.True(System.Math.Abs(blackPv / pv - 1.0) < 0.01);
             var fwd = payoff2.AverageResult;
             Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
             //var output = new OutputPathsToImage(engine,2000,1000);

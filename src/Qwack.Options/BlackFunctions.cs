@@ -69,6 +69,24 @@ namespace Qwack.Options
             }
         }
 
+        public static double BlackTheta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
+        {
+            double d1, d2, DF;
+            DF = Exp(-riskFreeRate * expTime);
+            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
+            d2 = d1 - volatility * Sqrt(expTime);
+
+            //Delta
+            if (CP == OptionType.Put)
+            {
+                return -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) + riskFreeRate * forward * DF * Statistics.NormSDist(d1) - riskFreeRate * strike * DF * Statistics.NormSDist(d2);
+            }
+            else
+            {
+                return -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) - riskFreeRate * forward * DF * Statistics.NormSDist(-d1) + riskFreeRate * strike * DF * Statistics.NormSDist(-d2);
+            }
+        }
+
         public static double[] BlackDerivs(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             var output = new double[3];

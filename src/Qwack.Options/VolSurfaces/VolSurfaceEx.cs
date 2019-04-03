@@ -19,10 +19,10 @@ namespace Qwack.Options.VolSurfaces
         {
 
             var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
-            var lowStrikeVol = surface.GetVolForDeltaStrike(0.0001, t, fwd);
-            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.0001, 0, t, lowStrikeVol);
-            var hiStrikeVol = surface.GetVolForDeltaStrike(0.9999, t, fwd);
-            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.9999, 0, t, hiStrikeVol);
+            var lowStrikeVol = surface.GetVolForDeltaStrike(0.00001, t, fwd);
+            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.00091, 0, t, lowStrikeVol);
+            var hiStrikeVol = surface.GetVolForDeltaStrike(0.99999, t, fwd);
+            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.99999, 0, t, hiStrikeVol);
 
             var x = new double[numSamples + 2];
             var y = new double[numSamples + 2];
@@ -60,8 +60,37 @@ namespace Qwack.Options.VolSurfaces
             }
 
             return returnInverse ? 
-                InterpolatorFactory.GetInterpolator(y, x, Interpolator1DType.LinearFlatExtrap) : 
-                InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.LinearFlatExtrap);
+                InterpolatorFactory.GetInterpolator(y, x, Interpolator1DType.MonotoneCubicSpline) : 
+                InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
+        }
+
+        public static IInterpolator1D GenerateCDF2(this IVolSurface surface, int numSamples, DateTime expiry, double fwd, bool returnInverse = false, double strikeScale=1.0)
+        {
+            var premInterp = GeneratePremiumInterpolator(surface, numSamples, expiry, fwd, OptionType.P);
+            var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+            var lowStrikeVol = surface.GetVolForDeltaStrike(0.00001, t, fwd);
+            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.00091, 0, t, lowStrikeVol);
+            var hiStrikeVol = surface.GetVolForDeltaStrike(0.99999, t, fwd);
+            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.99999, 0, t, hiStrikeVol);
+
+            var x = new double[numSamples + 2];
+            var y = new double[numSamples + 2];
+
+            var kStepD = (0.9998) / (numSamples + 1.0);
+
+            for (var i = 0; i < x.Length; i++)
+            {
+                var deltaKNew = -0.0001 - i * kStepD;
+                var newStrikeVol = surface.GetVolForDeltaStrike(-deltaKNew, t, fwd);
+                var k = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaKNew, 0, t, newStrikeVol);
+                var digital = premInterp.FirstDerivative(k);
+                y[i] = digital;
+                x[i] = k * strikeScale;
+            }
+
+            return returnInverse ?
+                InterpolatorFactory.GetInterpolator(y, x, Interpolator1DType.MonotoneCubicSpline) :
+                InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
         }
 
         public static IInterpolator1D GenerateMapper(this IVolSurface surface, int numSamples, DateTime expiry, double fwd, double blackVol)
@@ -257,13 +286,14 @@ namespace Qwack.Options.VolSurfaces
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.Linear);
         }
 
-        public static IInterpolator1D GeneratePremiumInterpolator(this IVolSurface surface, int numSamples, DateTime expiry, double fwd, OptionType cp)
-        {
+        public static IInterpolator1D GeneratePremiumInterpolator(this IVolSurface surface, int numSamples, DateTime expiry, double fwd, OptionType cp) 
+            => GeneratePremiumInterpolator(surface, numSamples, surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, cp);
 
-            var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
-            var lowStrikeVol = surface.GetVolForDeltaStrike(0.000001, t, fwd);
+        public static IInterpolator1D GeneratePremiumInterpolator(this IVolSurface surface, int numSamples, double t, double fwd, OptionType cp)
+        {
+            var lowStrikeVol = surface.GetVolForDeltaStrike(0.00000001, t, fwd);
             var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.000001, 0, t, lowStrikeVol);
-            var hiStrikeVol = surface.GetVolForDeltaStrike(0.999999, t, fwd);
+            var hiStrikeVol = surface.GetVolForDeltaStrike(0.99999999, t, fwd);
             var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.999999, 0, t, hiStrikeVol);
 
             var x = new double[numSamples];
@@ -284,6 +314,7 @@ namespace Qwack.Options.VolSurfaces
 
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
         }
+
 
         public static IInterpolator1D GenerateCompositeSmileBasic(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool deltaStrikeOutput=false)
         {

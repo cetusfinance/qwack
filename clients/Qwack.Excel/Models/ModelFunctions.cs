@@ -35,7 +35,7 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates,
            [ExcelArgument(Description = "Portfolio regression method for PFE etc")] object PortfolioRegressor,
            [ExcelArgument(Description = "Reporting currency")] object ReportingCurrency,
-           [ExcelArgument(Description = "Use Local vol? (True/False)")] bool LocalVol,
+           [ExcelArgument(Description = "Model to use, e.g. Black,LocalVol or TurboSkew")] string McModel,
            [ExcelArgument(Description = "Full futures simulation? (True/False)")] bool FuturesSim,
            [ExcelArgument(Description = "Parallel execution? (True/False)")] bool Parallel,
            [ExcelArgument(Description = "Futures mapping dictionary, assetId to futures code")] object FutMappingDict,
@@ -53,14 +53,18 @@ namespace Qwack.Excel.Curves
                 if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(ReportingCurrency.OptionalExcel("USD"), out var repCcy))
                     return $"Could not find currency {ReportingCurrency} in cache";
 
-                if (!Enum.TryParse(RandomGenerator.OptionalExcel("MersenneTwister"), out RandomGeneratorType randomGenerator))
+                if (!Enum.TryParse(RandomGenerator.OptionalExcel("MersenneTwister"), true, out RandomGeneratorType randomGenerator))
                     return $"Could not parse random generator name - {RandomGenerator}";
 
-                if (!Enum.TryParse(PortfolioRegressor.OptionalExcel("MultiLinear"), out PFERegressorType regType))
+                if (!Enum.TryParse(PortfolioRegressor.OptionalExcel("MultiLinear"), true, out PFERegressorType regType))
                     return $"Could not parse portfolio regressor type - {PortfolioRegressor}";
 
-                if (!Enum.TryParse(Metric.OptionalExcel("PV"), out BaseMetric metric))
+                if (!Enum.TryParse(Metric.OptionalExcel("PV"), true, out BaseMetric metric))
                     return $"Could not parse metric - {Metric}";
+
+                if (!Enum.TryParse(McModel.OptionalExcel("Black"), true, out McModelType mcModel))
+                    return $"Could not parse model type - {McModel}";
+
 
                 var fCurve = FundingCurve is ExcelMissing || !(FundingCurve is string fStr) ? 
                     null : 
@@ -82,7 +86,7 @@ namespace Qwack.Excel.Curves
                     NumberOfTimesteps = NumberOfTimesteps,
                     ExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() : null,
                     ReportingCurrency = repCcy,
-                    LocalVol = LocalVol,
+                    McModelType = mcModel,
                     ExpensiveFuturesSimulation = FuturesSim,
                     PfeRegressorType = regType,
                     Parallelize = Parallel,

@@ -72,7 +72,7 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfPaths = (int)2.0.IntPow(16),
                 NumberOfTimesteps = 1,
                 ReportingCurrency = zar,
-                Parallelize = true,
+                Parallelize = false,
                 LocalCorrelation = true, 
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);

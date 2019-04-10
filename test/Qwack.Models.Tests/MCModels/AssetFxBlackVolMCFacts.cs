@@ -31,7 +31,7 @@ namespace Qwack.Models.Tests.MCModels
             var comSurface = new ConstantVolSurface(buildDate, 0.32);
             var fModel = new FundingModel(buildDate, new Dictionary<string, IrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             var fxM = new FxMatrix(TestProviderHelper.CurrencyProvider);
-            fxM.Init(usd, buildDate, new Dictionary<Core.Basic.Currency, double>(), new List<Core.Basic.FxPair>(), new Dictionary<Core.Basic.Currency, string> { { usd, "DISCO" } });
+            fxM.Init(usd, buildDate, new Dictionary<Currency, double>(), new List<FxPair>(), new Dictionary<Currency, string> { { usd, "DISCO" } });
             fModel.SetupFx(fxM);
 
             var aModel = new AssetFxModel(buildDate, fModel);
@@ -47,12 +47,12 @@ namespace Qwack.Models.Tests.MCModels
             var settings = new McSettings
             {
                 Generator = RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = 16384,
-                NumberOfTimesteps = 10,
+                NumberOfPaths = 8196,
+                NumberOfTimesteps = 1,
                 ReportingCurrency = usd,
                 ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
                 ExpensiveFuturesSimulation = expensiveFutures,
-                Parallelize = expensiveFutures,
+                Parallelize = false,
                 FuturesMappingTable = new Dictionary<string, string> { { "CL","CL"} },
                 Metric = baseMetric
             };

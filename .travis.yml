@@ -8,6 +8,4 @@ script:
   - dotnet test ./test/Qwack.Math.Tests
   - dotnet test ./test/Qwack.Dates.Tests
   - dotnet test ./test/Qwack.Core.Tests
-  - dotnet test ./test/Qwack.Models.Tests
-  - dotnet test ./test/Qwack.MonteCarlo.Tests
   - dotnet test ./test/Qwack.Serialization.Test

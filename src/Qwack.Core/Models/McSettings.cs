@@ -17,6 +17,7 @@ namespace Qwack.Core.Models
         public Dictionary<string, string> FuturesMappingTable { get; set; } = new Dictionary<string, string>();
         public McModelType McModelType { get; set; }
         public PFERegressorType PfeRegressorType { get; set; }
+        public bool LocalCorrelation { get; set; }
         public bool Parallelize { get; set; }
         public bool DebugMode { get; set; }
         public bool AveragePathCorrection { get; set; }

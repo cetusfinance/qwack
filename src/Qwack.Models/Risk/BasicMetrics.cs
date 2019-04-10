@@ -921,6 +921,60 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
+        public static ICube AssetAnalyticTheta(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            var thetasByTrade = pvModel.Portfolio.Instruments
+                .Select(x => new KeyValuePair<IInstrument, (double Financing, double Option)>(x, x.Theta(model, fwdValDate, reportingCcy)))
+                .ToArray();
+
+            foreach(var t in thetasByTrade)
+            {
+                var finTheta = t.Value.Financing;
+                if (finTheta != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", t.Key.TradeId},
+                        { "TradeType", (t.Key as IAssetInstrument)?.TradeType()  },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", "Financing" },
+                        { "Metric", "Theta" }
+                    };
+                    cube.AddRow(row, finTheta);
+                }
+
+                var optTheta = t.Value.Option;
+                if (optTheta != 0.0)
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", t.Key.TradeId},
+                        { "TradeType", (t.Key as IAssetInstrument)?.TradeType()  },
+                        { "AssetId", string.Empty },
+                        { "PointLabel", "Option" },
+                        { "Metric", "Theta" }
+                    };
+                    cube.AddRow(row, optTheta);
+                }
+            }
+
+            return cube;
+        }
+
+
         public static ICube CorrelationDelta(this IPvModel pvModel, Currency reportingCcy, double epsilon)
         {
             var cube = new ResultCube();

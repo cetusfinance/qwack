@@ -6,6 +6,8 @@ using Qwack.Core.Basic;
 using static System.Math;
 using System.Linq;
 using Qwack.Utils.Parallel;
+using Qwack.Core.Models;
+using Qwack.Math.Extensions;
 
 namespace Qwack.Options
 {
@@ -118,6 +120,90 @@ namespace Qwack.Options
             }, false).Wait();
 
             return lvGrid;
+        }
+
+        public static List<double[][]> LocalCorrelationRaw(this IAssetFxModel model, double[] times)
+        {
+            var o = new List<double[][]>();
+            var matrix = model.CorrelationMatrix;
+
+            for (var it = 0; it < times.Length; it++)
+            {
+                o.Add(new double[matrix.LabelsX.Length][]);
+                for(var ix=0; ix < matrix.LabelsX.Length; ix++)
+                {
+                    o[it][ix] = new double[matrix.LabelsY.Length];
+                }
+            }
+
+            for (var ix = 0; ix < matrix.LabelsX.Length; ix++)
+            {
+                for (var iy = 0; iy < matrix.LabelsY.Length; iy++)
+                {
+                    var labelX = matrix.LabelsX[ix];
+                    var labelY = matrix.LabelsY[iy];
+                    var lastVarBasket = 0.0;
+                    var tLast = 0.0;
+                    for (var it = 0; it < times.Length; it++)
+                    {
+                        var t = times[it];
+                        var dt = t - tLast;
+                        var termCorrel = matrix.GetCorrelation(labelX, labelY, t);
+                        var volX = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(0, t);
+                        var volY = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(0, t);
+                        var termVar = (volX * volX + volY * volY + 2 * termCorrel * volX * volY) * t;
+                        var incrementalVar = (termVar - lastVarBasket)/dt;
+                        var volXfwd = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(tLast, t);
+                        var volYfwd = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(tLast, t);
+                        var localCorrel = (incrementalVar - volXfwd * volXfwd - volYfwd * volYfwd) / (2 * volXfwd * volYfwd);
+                        o[it][ix][iy] = (t == 0) ? termCorrel : localCorrel;
+                        tLast = t;
+                        lastVarBasket = termVar;
+                    }
+                }
+            }
+
+            return o;
+        }
+
+        public static List<CorrelationMatrix> LocalCorrelationObjects(this IAssetFxModel model, double[] times)
+        {
+            var o = new List<double[,]>();
+            var matrix = model.CorrelationMatrix;
+
+            for (var it = 0; it < times.Length; it++)
+            {
+                o.Add(new double[matrix.LabelsX.Length, matrix.LabelsY.Length]);  
+            }
+
+            for (var ix = 0; ix < matrix.LabelsX.Length; ix++)
+            {
+                for (var iy = 0; iy < matrix.LabelsY.Length; iy++)
+                {
+                    var labelX = matrix.LabelsX[ix];
+                    var labelY = matrix.LabelsY[iy];
+                    var lastVarBasket = 0.0;
+                    var tLast = 0.0;
+                    for (var it = 0; it < times.Length; it++)
+                    {
+                        var t = times[it];
+                        var dt = t - tLast;
+                        var termCorrel = matrix.GetCorrelation(labelX, labelY, t);
+                        var volX = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(0, t);
+                        var volY = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(0, t);
+                        var termVar = (volX * volX + volY * volY + 2 * termCorrel * volX * volY) * t;
+                        var incrementalVar = (termVar - lastVarBasket) / dt;
+                        var volXfwd = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(tLast, t);
+                        var volYfwd = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(tLast, t);
+                        var localCorrel = (incrementalVar - volXfwd * volXfwd - volYfwd * volYfwd) / (2 * volXfwd * volYfwd);
+                        o[it][ix,iy] = (t == 0) ? termCorrel : localCorrel;
+                        tLast = t;
+                        lastVarBasket = termVar;
+                    }
+                }
+            }
+
+            return o.Select(m => new CorrelationMatrix(matrix.LabelsX, matrix.LabelsY, m)).ToList();
         }
     }
 }

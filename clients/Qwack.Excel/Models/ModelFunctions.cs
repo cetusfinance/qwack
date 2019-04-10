@@ -46,7 +46,8 @@ namespace Qwack.Excel.Curves
            [ExcelArgument(Description = "Metric to calculate, default PV")] object Metric,
            [ExcelArgument(Description = "Credit curve for CVA calc")] object CreditCurve,
            [ExcelArgument(Description = "Funding curve for xVA")] object FundingCurve,
-           [ExcelArgument(Description = "Base discount curve for xVA")] object BaseDiscountCurve)
+           [ExcelArgument(Description = "Base discount curve for xVA")] object BaseDiscountCurve,
+           [ExcelArgument(Description = "Enable local correlation? (True/False)")] bool LocalCorrelation)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -100,7 +101,8 @@ namespace Qwack.Excel.Curves
                     Metric = metric,
                     FundingCurve = fCurve?.Value,
                     CreditCurve = cCurve?.Value,
-                    BaseDiscountCurve = bCurve?.Value
+                    BaseDiscountCurve = bCurve?.Value,
+                    LocalCorrelation = LocalCorrelation                    
                 };
 
                 return ExcelHelper.PushToCache(settings, ObjectName);

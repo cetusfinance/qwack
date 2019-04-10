@@ -6,7 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 
-namespace Qwack.Models
+namespace Qwack.Core.Basic
 {
     public class FxMatrix : IFxMatrix
     {

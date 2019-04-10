@@ -260,7 +260,7 @@ namespace Qwack.Core.Instruments
             var newTrades = new Portfolio { Instruments = newTradesIns.ToList() };
 
             var endIds = end.Instruments.Select(x => x.TradeId).ToList();
-            var removedTradesIns = start.Instruments.Where(i => !endIds.Contains(i.TradeId) && (i.LastSensitivityDate > endDate || i is CashBalance));
+            var removedTradesIns = start.Instruments.Where(i => !endIds.Contains(i.TradeId) && (i.LastSensitivityDate > endDate || (i is CashBalance cb && cb.PayDate != endDate)));
             var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
 
             var commonIds = startIds.Intersect(endIds).ToList();
@@ -400,6 +400,32 @@ namespace Qwack.Core.Instruments
                         {
                             o.Instruments.Add(l);
                         }
+                        break;
+                    default:
+                        o.Instruments.Add(i);
+                        break;
+                }
+            }
+
+            return o;
+        }
+
+        public static Portfolio CashAccrual(this Portfolio pf, DateTime rollToDate, IFundingModel model)
+        {
+            var o = new Portfolio
+            {
+                PortfolioName = pf.PortfolioName,
+                Instruments = new List<IInstrument>()
+            };
+            foreach (var i in pf.Instruments)
+            {
+                switch (i)
+                {
+                    case CashBalance cash:
+                        o.Instruments.Add(cash.PayDate > rollToDate ?
+                            cash :
+                            new CashBalance(cash.Currency, cash.Notional / model.GetDf(cash.Currency, model.BuildDate, rollToDate))
+                            { TradeId = cash.TradeId, Counterparty = cash.Counterparty, PortfolioName = cash.PortfolioName });
                         break;
                     default:
                         o.Instruments.Add(i);

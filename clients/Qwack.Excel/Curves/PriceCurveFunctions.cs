@@ -17,6 +17,7 @@ using Qwack.Futures;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Core.Instruments;
+using Qwack.Math.Interpolation;
 
 namespace Qwack.Excel.Curves
 {
@@ -332,9 +333,7 @@ namespace Qwack.Excel.Curves
                     model.CorrelationMatrix = correlatinMatrix.First();
                 }
 
-                var cache = ContainerStores.GetObjectCache<IAssetFxModel>();
-                cache.PutObject(ObjectName, new SessionItem<IAssetFxModel> { Name = ObjectName, Value = model });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IAssetFxModel>(model, ObjectName);
             });
         }
 
@@ -365,9 +364,7 @@ namespace Qwack.Excel.Curves
                 foreach (var kv in dictData)
                     dict.Add(kv.Key, kv.Value);
 
-                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
-                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFixingDictionary>(dict, ObjectName);
             });
         }
 
@@ -402,9 +399,7 @@ namespace Qwack.Excel.Curves
                     if (FixingDates[i] != 0)
                         dict.Add(DateTime.FromOADate(FixingDates[i]), Fixings[i]);
 
-                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
-                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFixingDictionary>(dict, ObjectName);
             });
         }
 
@@ -439,10 +434,7 @@ namespace Qwack.Excel.Curves
                     else
                         dict.Add(kv.Key, dictData2m[kv.Key]);
                 }
-
-                var cache = ContainerStores.GetObjectCache<IFixingDictionary>();
-                cache.PutObject(ObjectName, new SessionItem<IFixingDictionary> { Name = ObjectName, Value = dict });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFixingDictionary>(dict, ObjectName);
             });
         }
 
@@ -499,10 +491,27 @@ namespace Qwack.Excel.Curves
             return ExcelHelper.Execute(_logger, () =>
             {
                 var matrix = new CorrelationMatrix(LabelsX.ObjectRangeToVector<string>(), LabelsY.ObjectRangeToVector<string>(), Correlations);
+                return ExcelHelper.PushToCache<ICorrelationMatrix>(matrix, ObjectName);
+            });
+        }
 
-                var cache = ContainerStores.GetObjectCache<ICorrelationMatrix>();
-                cache.PutObject(ObjectName, new SessionItem<ICorrelationMatrix> { Name = ObjectName, Value = matrix });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+
+        [ExcelFunction(Description = "Creates a correlation matrix/time vector", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationTimeVecvtor), IsThreadSafe = true)]
+        public static object CreateCorrelationTimeVecvtor(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Label A")] string LabelA,
+            [ExcelArgument(Description = "Label B")] string LabelB,
+            [ExcelArgument(Description = "Times")] double[] Times,
+            [ExcelArgument(Description = "Correlations")] double[] Correlations,
+            [ExcelArgument(Description = "Interpolation type, default Linear")] object InterpType)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Enum.TryParse<Interpolator1DType>(InterpType.OptionalExcel("Linear"), out var iType))
+                    throw new Exception($"Could not parse interpolator type {InterpType}");
+
+                var matrix = new CorrelationTimeVector(LabelA, LabelB, Correlations, Times, iType);
+                return ExcelHelper.PushToCache<ICorrelationMatrix>(matrix, ObjectName);
             });
         }
 

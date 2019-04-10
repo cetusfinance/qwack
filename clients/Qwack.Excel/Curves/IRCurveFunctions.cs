@@ -89,9 +89,7 @@ namespace Qwack.Excel.Curves
                 var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ccyStr);
 
                 var cObj = new IrCurve(pDates, ZeroRates, BuildDate, curveName, iType, ccy, colSpecStr, rType);
-                var cache = ContainerStores.GetObjectCache<IIrCurve>();
-                cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IIrCurve>(cObj, ObjectName);
             });
         }
 
@@ -139,9 +137,7 @@ namespace Qwack.Excel.Curves
                     zeroRates[0] = zeroRates[1];
 
                 var cObj = new IrCurve(pDates, zeroRates, BuildDate, curveName, iType, ccy, colSpecStr, rType);
-                var cache = ContainerStores.GetObjectCache<IIrCurve>();
-                cache.PutObject(ObjectName, new SessionItem<IIrCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IIrCurve>(cObj, ObjectName);
             });
         }
 
@@ -274,9 +270,7 @@ namespace Qwack.Excel.Curves
                     calibrator.Solve(model, fic.Value);
                 }
 
-                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
-                modelCache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = model });
-                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFundingModel>(model, ObjectName);
             });
         }
 
@@ -312,9 +306,7 @@ namespace Qwack.Excel.Curves
                         fModel.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
                 }
 
-                var cache = ContainerStores.GetObjectCache<IFundingModel>();
-                cache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = fModel });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFundingModel>(fModel, ObjectName);
             });
         }
 
@@ -372,8 +364,7 @@ namespace Qwack.Excel.Curves
 
                 outModel.SetupFx(fxMatrix);
 
-                modelCache.PutObject(ObjectName, new SessionItem<IFundingModel> { Name = ObjectName, Value = outModel });
-                return ObjectName + '¬' + modelCache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache<IFundingModel>(outModel, ObjectName);
             });
         }
 
@@ -398,17 +389,11 @@ namespace Qwack.Excel.Curves
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
-                var model = modelCache.GetObject(FundingModelName).Value;
+                var model = ContainerStores.GetObjectCache<IFundingModel>().GetObject(FundingModelName).Value;
 
-                if (!model.Curves.TryGetValue(CurveName, out var curve))
-                {
-                    return $"Curve {CurveName} not found in model";
-                }
-
-                var curveCache = ContainerStores.GetObjectCache<IIrCurve>();
-                curveCache.PutObject(OutputName, new SessionItem<IIrCurve> { Name = OutputName, Value = curve });
-                return OutputName + '¬' + curveCache.GetObject(OutputName).Version;
+                return model.Curves.TryGetValue(CurveName, out var curve) ?
+                    ExcelHelper.PushToCache<IIrCurve>(curve, OutputName) :
+                    $"Curve {CurveName} not found in model";
             });
         }
     }

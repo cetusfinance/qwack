@@ -95,7 +95,10 @@ namespace Qwack.Models.MCModels
 
             if (model.CorrelationMatrix != null)
             {
-                Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
+                if (settings.LocalCorrelation)
+                    Engine.AddPathProcess(new CholeskyWithTime(model.CorrelationMatrix, model));
+                else
+                    Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
                 Engine.IncrementDepth();
             }
 

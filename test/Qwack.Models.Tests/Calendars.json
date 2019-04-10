@@ -838,5 +838,159 @@
     "DaysToAlwaysExclude": [ 6, 0 ],
     "DaysToExclude": [ "20040101", "20040102", "20040409", "20040412", "20040520", "20040531", "20041224", "20041231", "20050325", "20050328", "20050505", "20050516", "20051226", "20060102", "20060414", "20060417", "20060501", "20060525", "20060605", "20060801", "20061225", "20061226", "20070101", "20070102", "20070406", "20070409", "20070501", "20070517", "20070528", "20070801", "20071224", "20071225", "20071226", "20071231", "20080101", "20080102", "20080321", "20080324", "20080501", "20080512", "20080801", "20081224", "20081225", "20081226", "20081231", "20090101", "20090102", "20090410", "20090413", "20090501", "20090521", "20090601", "20091224", "20091225", "20091231", "20100101", "20100402", "20100405", "20100513", "20100524", "20101224", "20101231", "20110422", "20110425", "20110602", "20110613", "20110801", "20111226", "20120102", "20120406", "20120409", "20120501", "20120517", "20120528", "20120801", "20121224", "20121225", "20121226", "20121231", "20130101", "20130102", "20130329", "20130401", "20130501", "20130509", "20130520", "20130801", "20131224", "20131225", "20131226", "20131231", "20140101", "20140102", "20140418", "20140421", "20140501", "20140529", "20140609", "20140801", "20141224", "20141225", "20141226", "20141231", "20150101", "20150102", "20150403", "20150406", "20150501", "20150514", "20150525", "20151224", "20151225", "20151231", "20160101", "20160325", "20160328", "20160505", "20160516", "20160801", "20161226", "20170102", "20170414", "20170417", "20170501", "20170525", "20170605", "20170801", "20171225", "20171226", "20180101", "20180102", "20180330", "20180402", "20180501", "20180510", "20180521", "20180801", "20181224", "20181225", "20181226", "20181231", "20190101", "20190102", "20190419", "20190422", "20190501", "20190530", "20190610", "20190801", "20191224", "20191225", "20191226", "20191231", "20200101", "20200102", "20200410", "20200413", "20200501", "20200521", "20200601", "20201224", "20201225", "20201231" ],
     "MonthsToExclude": []
+  },
+  "USD": {
+    "InheritedCalendar": [ "NYC" ],
+    "Name": "USD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "GBP": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "GBP",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "CHF": {
+    "InheritedCalendar": [ "ZUR" ],
+    "Name": "CHF",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "ZAR": {
+    "InheritedCalendar": [ "JHB" ],
+    "Name": "ZAR",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "AUD": {
+    "InheritedCalendar": [ "SYD" ],
+    "Name": "AUD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "NZD": {
+    "InheritedCalendar": [ "WEL" ],
+    "Name": "NZD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "CAD": {
+    "InheritedCalendar": [ "TOR" ],
+    "Name": "CAD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "CZK": {
+    "InheritedCalendar": [ "PRA" ],
+    "Name": "CZK",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "SEK": {
+    "InheritedCalendar": [ "STO" ],
+    "Name": "SEK",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "NOK": {
+    "InheritedCalendar": [ "OSL" ],
+    "Name": "NOK",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "DKK": {
+    "InheritedCalendar": [ "COH" ],
+    "Name": "DKK",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "HUF": {
+    "InheritedCalendar": [ "BUD" ],
+    "Name": "HUF",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "BRL": {
+    "InheritedCalendar": [ "SAO" ],
+    "Name": "BRL",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "KRW": {
+    "InheritedCalendar": [ "SEO" ],
+    "Name": "KRW",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "HKD": {
+    "InheritedCalendar": [ "HKG" ],
+    "Name": "HKD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "THB": {
+    "InheritedCalendar": [ "BAN" ],
+    "Name": "THB",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "INR": {
+    "InheritedCalendar": [ "MUM" ],
+    "Name": "INR",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "JPY": {
+    "InheritedCalendar": [ "TOK" ],
+    "Name": "JPY",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XAU": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XAU",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XAG": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XAG",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XPT": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XPT",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "XPD": {
+    "InheritedCalendar": [ "LON" ],
+    "Name": "XPD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
   }
 }

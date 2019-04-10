@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Models;
 
-namespace Qwack.Models.Models
+namespace Qwack.Core.Basic
 {
     public class CorrelationMatrix : ICorrelationMatrix
     {
@@ -24,7 +24,7 @@ namespace Qwack.Models.Models
                 throw new Exception("Inconsistent dimensions between labels and data");
         }
 
-        public double GetCorrelation(string label1, string label2)
+        public double GetCorrelation(string label1, string label2, double t=0)
         {
             if (LabelsX.Contains(label1) && LabelsY.Contains(label2))
             {
@@ -42,7 +42,7 @@ namespace Qwack.Models.Models
             throw new Exception($"Correlation not found for {label1}/{label2}");
         }
 
-        public bool TryGetCorrelation(string label1, string label2, out double correl)
+        public bool TryGetCorrelation(string label1, string label2, out double correl, double t = 0)
         {
             if (LabelsX.Contains(label1) && LabelsY.Contains(label2))
             {

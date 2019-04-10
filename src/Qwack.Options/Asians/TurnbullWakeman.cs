@@ -113,6 +113,59 @@ namespace Qwack.Options.Asians
             return df * pv;
         }
 
+        public static double Theta(double[] forwards, DateTime[] fixingDates, DateTime evalDate, DateTime payDate, double[] sigmas, double K, double riskFree, OptionType callPut)
+        {
+            if (payDate < evalDate) return 0.0;
+
+            if (forwards.Length != fixingDates.Length || fixingDates.Length != sigmas.Length)
+                throw new DataMisalignedException();
+
+            var m1 = forwards.Average();
+            var tExpiry = evalDate.CalculateYearFraction(fixingDates.Last(), DayCountBasis.Act365F);
+            var tPay = evalDate.CalculateYearFraction(payDate, DayCountBasis.Act365F);
+            var df = Exp(-riskFree * tPay);
+
+            if (tExpiry <= 0) //work out intrinsic
+            {
+                return -riskFree * df * (callPut == OptionType.Call ? Max(0, m1 - K) : Max(0, K - m1));
+            }
+
+            var m2 = 0.0;
+            var ts = fixingDates.Select(x => Max(0, evalDate.CalculateYearFraction(x, DayCountBasis.Act365F))).ToArray();
+            for (var i = 0; i < fixingDates.Length; i++)
+                for (var j = 0; j < fixingDates.Length; j++)
+                    m2 += forwards[i] * forwards[j] * Exp(sigmas[i] * sigmas[j] * ts[Min(i, j)]);
+            m2 /= (forwards.Length * forwards.Length);
+            var sigma_a = Sqrt(1 / tExpiry * Log(m2 / (m1 * m1)));
+
+            var tAvgStart = evalDate.CalculateYearFraction(fixingDates.First(), DayCountBasis.Act365F);
+            var tIx = fixingDates.Where(x => x < evalDate).Count();
+            var knownAverage = tIx == 0 ? 0.0 : forwards.Take(tIx).Average();
+            var forward = tIx == fixingDates.Count() ? 0.0 : forwards.Skip(tIx).Average();
+
+            if (tAvgStart < 0)
+            {
+                var t2 = tExpiry - tAvgStart;
+                K = K * t2 / tExpiry - knownAverage * (t2 - tExpiry) / tExpiry;
+
+                if (K <= 0)
+                {
+                    if (callPut == OptionType.P)
+                        return 0;
+
+                    return df * m1;
+                }
+            }
+
+            var theta = BlackFunctions.BlackTheta(m1, K, riskFree, tExpiry, sigma_a, callPut);
+
+            if (tAvgStart < 0)
+            {
+                theta *= tExpiry / (tExpiry - tAvgStart);
+            }
+            return theta;
+        }
+
         public static double Delta(double forward, double knownAverage, double sigma, double K, double tAvgStart, double tExpiry, double riskFree, OptionType callPut)
         {
             var M = 2 * (Exp(sigma * sigma * tExpiry) - Exp(sigma * sigma * tAvgStart) * (1 + sigma * sigma * (tExpiry - tAvgStart)));

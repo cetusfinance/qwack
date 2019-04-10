@@ -755,9 +755,52 @@ namespace Qwack.Models.Models
             var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
             var cashRows = cashCube.GetAllRows();
 
-            //first step roll time fwd
+            //analytic theta explain
+            var theta = portfolio.AssetAnalyticTheta(startModel, endModel.BuildDate, reportingCcy, currencyProvider);
+            var r_tidIx = theta.GetColumnIndex("TradeId");
+            var r_plIx = theta.GetColumnIndex("PointLabel");
+            var r_tTypeIx = theta.GetColumnIndex("TradeType");
+            var thetaByTrade = new Dictionary<string, double>();
+            var thetaRows = theta.GetAllRows();
+            foreach(var r in thetaRows)
+            {
+                var row = new Dictionary<string, object>
+                {
+                    { "TradeId", r.MetaData[tidIx] },
+                    { "TradeType", r.MetaData[tTypeIx] },
+                    { "Step", "Theta" },
+                    { "SubStep", r.MetaData[r_plIx] },
+                    { "SubSubStep", string.Empty },
+                    { "PointLabel", string.Empty }
+                };
+                cube.AddRow(row, r.Value);
+                if (thetaByTrade.ContainsKey((string)r.MetaData[tidIx]))
+                    thetaByTrade[(string)r.MetaData[tidIx]] += r.Value;
+                else
+                    thetaByTrade[(string)r.MetaData[tidIx]] = r.Value;
+            }
+
+            //grow cash by financing adjustments
+            portfolio = portfolio.CashAccrual(endModel.BuildDate, startModel.FundingModel);
+
+            //next step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
             var newPVCube = portfolio.PV(model, reportingCcy);
+
+            //cash moves
+            var cashByTrade = new Dictionary<string, double>();
+            for (var i = 0; i < cashRows.Length; i++)
+            {
+                var cash = cashRows[i].Value;
+                if (cash != 0.0)
+                {
+                    var tid = (string)cashRows[i].MetaData[tidIx];
+                    if (cashByTrade.ContainsKey(tid))
+                        cashByTrade[tid] = cashByTrade[tid] + cash;
+                    else
+                        cashByTrade[tid] = cash;
+                }
+            }
 
             var step = newPVCube.QuickDifference(pvCubeBase);
             foreach (var r in step.GetAllRows())
@@ -767,32 +810,17 @@ namespace Qwack.Models.Models
                     { "TradeId", r.MetaData[tidIx] },
                     { "TradeType", r.MetaData[tTypeIx] },
                     { "Step", "Theta" },
-                    { "SubStep", "TimeMove" },
+                    { "SubStep", "TimeMoveOther" },
                     { "SubSubStep", string.Empty },
                     { "PointLabel", string.Empty }
                 };
-                cube.AddRow(row, r.Value);
+                thetaByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                cashByTrade.TryGetValue((string)r.MetaData[tidIx], out var cash);
+                cube.AddRow(row, r.Value - explained + cash);
             }
             var lastPVCuve = newPVCube;
 
-            //next cash move
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { "TradeId", cashRows[i].MetaData[tidIx] },
-                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
-                        { "Step", "Theta" },
-                        { "SubStep", "CashMove" },
-                        { "SubSubStep", string.Empty },
-                        { "PointLabel", string.Empty }
-                    };
-                    cube.AddRow(row, cash);
-                }
-            }
+
 
             //next replace fixings with actual values
             foreach (var fixingDictName in endModel.FixingDictionaryNames)
@@ -823,9 +851,9 @@ namespace Qwack.Models.Models
             //next move ir curves
             var irBump = 0.0001;
             var irGreeks = portfolio.AssetIrDelta(model, reportingCcy, irBump);
-            var r_tidIx = irGreeks.GetColumnIndex("TradeId");
-            var r_plIx = irGreeks.GetColumnIndex("PointLabel");
-            var r_tTypeIx = irGreeks.GetColumnIndex("TradeType");
+            r_tidIx = irGreeks.GetColumnIndex("TradeId");
+            r_plIx = irGreeks.GetColumnIndex("PointLabel");
+            r_tTypeIx = irGreeks.GetColumnIndex("TradeType");
             foreach (var irCurve in endModel.FundingModel.Curves)
             {
                 var riskForCurve = irGreeks.Filter(
@@ -904,7 +932,7 @@ namespace Qwack.Models.Models
             }
 
             //next move fx spots
-            var fxGreeks = portfolio.FxDelta(model, reportingCcy, currencyProvider, true);
+            var fxGreeks = portfolio.FxDelta(model, reportingCcy, currencyProvider, true, false);
             r_tidIx = fxGreeks.GetColumnIndex("TradeId");
             r_tTypeIx = fxGreeks.GetColumnIndex("TradeType");
             var emRemap = FundingModel.RemapBaseCurrency(endModel.FundingModel, reportingCcy, currencyProvider);

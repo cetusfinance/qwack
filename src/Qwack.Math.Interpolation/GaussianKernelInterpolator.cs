@@ -57,8 +57,6 @@ namespace Qwack.Math.Interpolation
 
         public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false) => throw new NotImplementedException();
 
-        public double FirstDerivative(double t) => throw new NotImplementedException();
-
         public double Interpolate(double t) => GKernInterpolate(t, _x, _weights, _bandwidth);
 
         private static double GKernInterpolate(double X, double[] Xmeans, double[] weights, double Bandwidth)
@@ -76,7 +74,50 @@ namespace Qwack.Math.Interpolation
             return output / Q;
         }
 
-        public double SecondDerivative(double x) => throw new NotImplementedException();
+        public double FirstDerivative(double t)
+        {
+            var du = 0.0;
+            var u = 0.0;
+            var dv = 0.0;
+            var v = 0.0;
+
+            for (var i = 0; i < _x.Length; i++)
+            {
+                var K = Distributions.Gaussian.GKern(t, _x[i], _bandwidth);
+                var Kd = Distributions.Gaussian.GKernDeriv(t, _x[i], _bandwidth);
+                v += K;
+                u += _weights[i] * K;
+                dv += Kd;
+                du += _weights[i] * Kd;
+            }
+
+            return (du * v - dv * u) / (v * v);
+        }
+
+        public double SecondDerivative(double t)
+        {
+            var d2u = 0.0;
+            var du = 0.0;
+            var u = 0.0;
+            var d2v = 0.0;
+            var dv = 0.0;
+            var v = 0.0;
+
+            for (var i = 0; i < _x.Length; i++)
+            {
+                var K = Distributions.Gaussian.GKern(t, _x[i], _bandwidth);
+                var Kd = Distributions.Gaussian.GKernDeriv(t, _x[i], _bandwidth);
+                var K2d = Distributions.Gaussian.GKernDeriv2(t, _x[i], _bandwidth);
+                v += K;
+                u += _weights[i] * K;
+                dv += Kd;
+                du += _weights[i] * Kd;
+                d2v += K2d;
+                d2u += _weights[i] * K2d;
+            }
+
+            return (v * v * (d2u * v - d2v * u - 2 * dv * du) + 2 * u * v * dv * dv) / (v * v * v * v);
+        }
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false) => throw new NotImplementedException();
 

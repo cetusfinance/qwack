@@ -1,4 +1,5 @@
 ﻿{
   "methodDisplay": "method",
+  "diagnosticMessages": true,
   "longRunningTestSeconds": 15
 }

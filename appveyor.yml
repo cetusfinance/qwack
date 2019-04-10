@@ -16,7 +16,7 @@ test_script:
   - dotnet test test/Qwack.Math.Tests/Qwack.Math.Tests.csproj
   - dotnet test test/Qwack.Dates.Tests/Qwack.Dates.Tests.csproj
   - dotnet test test/Qwack.Core.Tests/Qwack.Core.Tests.csproj
-  - dotnet test test/Qwack.Models.Tests/Qwack.Models.Tests.csproj
+  - dotnet test test/Qwack.Models.Tests/Qwack.Models.Tests.csproj --blame -v diag
   - dotnet test test/Qwack.MonteCarlo.Tests/Qwack.MonteCarlo.Tests.csproj
   - dotnet test test/Qwack.Serialization.Test/Qwack.Serialization.Test.csproj
   

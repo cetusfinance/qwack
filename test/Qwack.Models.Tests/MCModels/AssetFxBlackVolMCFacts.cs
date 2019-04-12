@@ -47,7 +47,8 @@ namespace Qwack.Models.Tests.MCModels
             var settings = new McSettings
             {
                 Generator = RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = 8196,
+                McModelType = McModelType.Black,
+                NumberOfPaths = 2048,
                 NumberOfTimesteps = 1,
                 ReportingCurrency = usd,
                 ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },

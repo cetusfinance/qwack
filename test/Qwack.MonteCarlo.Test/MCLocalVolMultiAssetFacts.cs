@@ -25,9 +25,9 @@ namespace Qwack.MonteCarlo.Test
         public void LVMCDualPathsGenerated(double correlation)
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(12))
+            var engine = new PathEngine(2.IntPow(10))
             {
-                Parallelize = true
+                Parallelize = false
             };
 
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
@@ -48,7 +48,7 @@ namespace Qwack.MonteCarlo.Test
 
             engine.IncrementDepth();
 
-            var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
+            var tenorsStr = new[] { "1m", "2m", "3m", "6m" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
             var deltaKs = new[] { -0.1, -0.25, -0.5, -0.75, -0.9 };
@@ -56,27 +56,27 @@ namespace Qwack.MonteCarlo.Test
             var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
 
             var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols, 
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap, 
+                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.GaussianKernel, 
                 Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
             var fwdCurve1 = new Func<double, double>(t => { return 1000; });
             var asset1 = new LVSingleAsset
                 (
                     startDate : origin,
-                    expiryDate: origin.AddYears(1),
+                    expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve1,
-                    nTimeSteps:365,
+                    nTimeSteps: 100,
                     name: "TestAsset1"
                 );
             var fwdCurve2 = new Func<double, double>(t => { return 1000; });
             var asset2 = new LVSingleAsset
                 (
                     startDate: origin,
-                    expiryDate: origin.AddYears(1),
+                    expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve2,
-                    nTimeSteps: 365,
+                    nTimeSteps: 100,
                     name: "TestAsset2"
                 );
             engine.AddPathProcess(asset1);
@@ -94,7 +94,7 @@ namespace Qwack.MonteCarlo.Test
             var corr = correl.AverageResult;
             var errCorr = correl.ResultStdError;
 
-            Assert.Equal(correlation, corr, 2);
+            Assert.Equal(correlation, corr, 1);
         }
 
         //[Theory(Skip = "Broken")]

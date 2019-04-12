@@ -18,6 +18,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Qwack.MonteCarlo.Test
 {
+    [CollectionDefinition("MCTests", DisableParallelization = true)]
     public class MCBLocalVolFacts
     {
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");

@@ -14,6 +14,7 @@ using Xunit;
 
 namespace Qwack.MonteCarlo.Test
 {
+    [CollectionDefinition("MCTests", DisableParallelization = true)]
     public class MCLocalVolMultiAssetFacts
     {
         [Theory]

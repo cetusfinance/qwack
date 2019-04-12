@@ -26,49 +26,50 @@ namespace Qwack.MonteCarlo.Test
         public void LVMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(15));
-            engine.Parallelize = true;
+            var engine = new PathEngine(2.IntPow(12));
+            engine.Parallelize = false;
+
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                 UseNormalInverse = true,
                 UseAnthithetic = true
             });
-            //engine.AddPathProcess(new Random.Sobol.SobolShiftedPathGenerator(new Random.Sobol.SobolDirectionNumbers(s_directionNumbers), 0) { UseNormalInverse = true });
-            var tenorsStr = new[] { "1m", "2m", "3m", "6m", "9m", "1y" };
+
+            var tenorsStr = new[] { "1m", "2m", "3m", "6m" };
             var tenors = tenorsStr.Select(x => new Frequency(x));
             var expiries = tenors.Select(t => origin.AddPeriod(RollType.F, new Calendar(), t)).ToArray();
-            var deltaKs = new[] { -0.1, -0.25, -0.5, -0.75, -0.9 };
+            var deltaKs = new[] { 0.1, 0.25, 0.5, 0.75, 0.9 };
             var smileVols = new[] { 0.32, 0.3, 0.29, 0.3, 0.32 };
             var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
-
+            var tExp = (origin.AddMonths(6) - origin).TotalDays / 365.0;
             var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols,
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.LinearFlatExtrap,
+                StrikeType.ForwardDelta, Interpolator1DType.GaussianKernel,
                 Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
-            var fwdCurve = new Func<double, double>(t => { return 900 + 100 * t; });
+            var fwdCurve = new Func<double, double>(t => { return 900 + 100 * t/ tExp; });
             var asset = new LVSingleAsset
                 (
                     startDate: origin,
-                    expiryDate: origin.AddYears(1),
+                    expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps: 365,
+                    nTimeSteps: 100,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);
-            var payoff = new EuropeanPut("TestAsset", 900, origin.AddYears(1));
-            var payoff2 = new EuropeanCall("TestAsset", 0, origin.AddYears(1));
+            var payoff = new EuropeanPut("TestAsset", 900, origin.AddMonths(6));
+            var payoff2 = new EuropeanCall("TestAsset", 0, origin.AddMonths(6));
             engine.AddPathProcess(payoff);
             engine.AddPathProcess(payoff2);
             engine.SetupFeatures();
             engine.RunProcess();
             var pv = payoff.AverageResult;
-            var blackVol = volSurface.GetVolForAbsoluteStrike(900, origin.AddYears(1), fwdCurve(1.0));
-            var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, blackVol, OptionType.P);
-            Assert.True(System.Math.Abs(blackPv / pv - 1.0) < 0.01);
+            var blackVol = volSurface.GetVolForAbsoluteStrike(900, origin.AddMonths(6), fwdCurve(tExp));
+            var blackPv = BlackFunctions.BlackPV(fwdCurve(tExp), 900, 0, tExp, blackVol, OptionType.P);
+            Assert.True(System.Math.Abs(blackPv / pv - 1.0) < 0.02);
             var fwd = payoff2.AverageResult;
-            Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
-            //var output = new OutputPathsToImage(engine,2000,1000);
+            Assert.True(System.Math.Abs(fwdCurve(tExp) / fwd - 1.0) < 0.005);
+
 
         }
     }

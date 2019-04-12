@@ -25,7 +25,7 @@ namespace Qwack.MonteCarlo.Test
         public void LVMCDualPathsGenerated(double correlation)
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(10))
+            var engine = new PathEngine(2.IntPow(8))
             {
                 Parallelize = false
             };

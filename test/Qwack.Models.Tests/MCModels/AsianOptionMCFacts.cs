@@ -47,9 +47,10 @@ namespace Qwack.Models.Tests.MCModels
             var settings = new McSettings
             {
                 Generator = RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = (int)System.Math.Pow(2, 15),
+                NumberOfPaths = (int)System.Math.Pow(2, 13),
                 NumberOfTimesteps = 1,
                 ReportingCurrency = usd,
+                Parallelize = false,
                 ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);

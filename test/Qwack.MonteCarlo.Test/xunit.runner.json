@@ -1,5 +1,7 @@
-﻿{
+{
   "methodDisplay": "method",
   "diagnosticMessages": true,
-  "longRunningTestSeconds": 15
+  "longRunningTestSeconds": 15,
+  "parallelizeTestCollections": false,
+  "parallelizeAssembly": false
 }

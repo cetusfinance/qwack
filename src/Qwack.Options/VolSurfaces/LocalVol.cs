@@ -89,8 +89,8 @@ namespace Qwack.Options
 
             var fwds = timeSteps.Select(t => forwardFunc(t)).ToArray();
 
-            ParallelUtils.Instance.For(1, numberOfTimesteps, 1, it =>
-            //for (var it = 1; it < numberOfTimesteps; it++)
+            //ParallelUtils.Instance.For(1, numberOfTimesteps, 1, it =>
+            for (var it = 1; it < numberOfTimesteps; it++)
             {
                 var T = timeSteps[it];
                 var T1 = timeSteps[it - 1];
@@ -117,7 +117,7 @@ namespace Qwack.Options
                     var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);
                     lvGrid[it - 1][ik] = localVariance;
                 }
-            }, false).Wait();
+            }//, false).Wait();
 
             return lvGrid;
         }

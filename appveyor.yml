@@ -17,12 +17,12 @@ test_script:
   - dotnet test test/Qwack.Dates.Tests/Qwack.Dates.Tests.csproj
   - dotnet test test/Qwack.Core.Tests/Qwack.Core.Tests.csproj
   - dotnet test test/Qwack.Models.Tests/Qwack.Models.Tests.csproj
-  - dotnet test test/Qwack.MonteCarlo.Test/Qwack.MonteCarlo.Test.csproj --blame -v d
+  - dotnet test test/Qwack.MonteCarlo.Test/Qwack.MonteCarlo.Test.csproj
   - dotnet test test/Qwack.Serialization.Test/Qwack.Serialization.Test.csproj
   
 after_test:
   # Build and pack source
-  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\script\runtests.bat" -searchdirs:".\test\Qwack.Math.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Excel.Tests\bin\Debug\net471;.\test\Qwack.Dates.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Core.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Models.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.MonteCarlo.Tests\bin\Debug\netcoreapp2.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Qwack*]* -[*Tests]* -[*Benchmark]*"')
+  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\script\runtests.bat" -searchdirs:".\test\Qwack.Math.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Excel.Tests\bin\Debug\net471;.\test\Qwack.Dates.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Core.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.Models.Tests\bin\Debug\netcoreapp2.1;.\test\Qwack.MonteCarlo.Test\bin\Debug\netcoreapp2.1;.\test\Qwack.Serialization.Test\bin\Debug\netcoreapp2.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Qwack*]* -[*Tests]* -[*Benchmark]*"')
   - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\coveralls.io'))[0].FullName + '\tools\coveralls.net.exe' + ' --opencover coverage.xml')
   - dotnet pack -c Release src/Qwack.Math
   - dotnet pack -c Release src/Qwack.Math.Interpolation

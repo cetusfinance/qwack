@@ -63,6 +63,7 @@ namespace Qwack.Serialization.Test
             return obj;
         }
 
+        [ThreadStatic]
         private static Random _random = new Random();
     }
 

@@ -50,5 +50,20 @@ namespace Qwack.Core.Instruments.Asset
         public double AdjustedNotional(IAssetFxModel model) => Swaplets.Sum(x => x.AdjustedNotional(model));
         public double SupervisoryDelta(IAssetFxModel model) => Swaplets.Average(x => x.SupervisoryDelta(model));
         public double MaturityFactor(DateTime today) => Swaplets.Max(x => x.MaturityFactor(today));
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1585809677;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TradeId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Counterparty);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PortfolioName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<AsianSwap[]>.Default.GetHashCode(Swaplets);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string[]>.Default.GetHashCode(AssetIds);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(Currency);
+            hashCode = hashCode * -1521134295 + LastSensitivityDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(PaymentCurrency);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(HedgingSet);
+            return hashCode;
+        }
     }
 }

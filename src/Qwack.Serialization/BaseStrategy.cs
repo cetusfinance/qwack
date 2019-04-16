@@ -78,8 +78,17 @@ namespace Qwack.Serialization
             else if (fieldExp.Type.IsArray)
             {
                 var elementType = fieldExp.Type.GetElementType();
-                if (_methodMapping.ContainsKey(elementType)) return BuildSimpleArrayExpression(fieldExp, buffer, elementType, context);
-                throw new NotSupportedException(elementType.Name);
+                if (elementType.IsArray)
+                {
+                    var subElementType = elementType.GetElementType();
+                    if (_methodMapping.ContainsKey(subElementType)) return BuildJaggedArrayExpression(fieldExp, buffer, elementType, context);
+                    throw new NotSupportedException(subElementType.Name);
+                }
+                else
+                {
+                    if (_methodMapping.ContainsKey(elementType)) return BuildSimpleArrayExpression(fieldExp, buffer, elementType, context);
+                    throw new NotSupportedException(elementType.Name);
+                }
             }
             else if (fieldExp.Type.Namespace.StartsWith("Qwack"))
             {
@@ -132,5 +141,6 @@ namespace Qwack.Serialization
         protected abstract Expression BuildSimpleDictionaryExpression(Expression field, ParameterExpression buffer, Type keyType, Type valueType, ParameterExpression context);
         protected abstract Expression BuildSimpleHashsetOrListExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
         protected abstract Expression BuildExpression(Type fieldType, Expression field, ParameterExpression buffer, Type convertType = null);
+        protected abstract Expression BuildJaggedArrayExpression(Expression field, ParameterExpression buffer, Type elementType, ParameterExpression context);
     }
 }

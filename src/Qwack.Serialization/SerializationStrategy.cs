@@ -17,6 +17,30 @@ namespace Qwack.Serialization
             _serializer(obj, ref buffer, context);
         }
 
+        protected override Expression BuildJaggedArrayExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
+        {
+            var size = Expression.ArrayLength(fieldExp);
+            var compareToNull = Expression.Equal(fieldExp, Expression.Default(elementType.MakeArrayType()));
+            var writeNull = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, Expression.Constant(-1));
+
+            var writeSize = Expression.Call(null, GetSimpleMethod("WriteInt"), buffer, size);
+            var index = Expression.Parameter(typeof(int), "parentIndex");
+            var assignZero = Expression.Assign(index, Expression.Constant(0));
+            var label = Expression.Label();
+            var arrayValue = Expression.ArrayAccess(fieldExp, index);
+
+            var itemType = elementType.GetElementType();
+
+            var writeArrayValue = BuildSimpleArrayExpression(arrayValue, buffer, itemType, context);
+            var increment = Expression.AddAssign(index, Expression.Constant(1));
+            var ifThenExit = Expression.IfThen(Expression.Equal(index, size), Expression.Break(label));
+            var expressionLoop = Expression.Loop(Expression.Block(ifThenExit, writeArrayValue, increment), label);
+
+            var block = Expression.Block(new[] { index }, writeSize, assignZero, expressionLoop);
+            var compareIf = Expression.IfThenElse(compareToNull, writeNull, block);
+            return compareIf;
+        }
+
         protected override Expression BuildSimpleArrayExpression(Expression fieldExp, ParameterExpression buffer, Type elementType, ParameterExpression context)
         {
             var size = Expression.ArrayLength(fieldExp);

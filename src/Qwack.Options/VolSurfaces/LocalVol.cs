@@ -33,7 +33,7 @@ namespace Qwack.Options
 
                 double K, V, S, Td, dwdT, localVariance, TdSq, T, T1;
                 double V_t1, V_Kp2, V_Km2, K_tm1, St;
-                double y, yPlus, yPlus2, yMinus, yMinus2, dwdY, dwdY_p, dwdY_m, d2wd2Y, w, w_t1, w_kPlus2, w_kMinus2, Y1, Y2;
+                double y, yPlus, yPlus2, yMinus, yMinus2, dwdY, dwdY_p, dwdY_m, d2wd2Y, w, w_t1, w_kPlus2, w_kMinus2; //, Y1, Y2;
 
                 T = timeSteps[it];
                 T1 = timeSteps[it - 1];

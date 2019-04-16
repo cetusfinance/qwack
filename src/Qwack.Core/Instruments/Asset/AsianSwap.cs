@@ -132,6 +132,40 @@ namespace Qwack.Core.Instruments.Asset
             return model.GetPriceCurve(AssetId).GetAveragePriceForDates(FixingDates) * fxRate;
         }
         public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
+
+        public override int GetHashCode()
+        {
+            var hashCode = -99770110;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TradeId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Counterparty);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PortfolioName);
+            hashCode = hashCode * -1521134295 + Notional.GetHashCode();
+            hashCode = hashCode * -1521134295 + Direction.GetHashCode();
+            hashCode = hashCode * -1521134295 + AverageStartDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + AverageEndDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<DateTime[]>.Default.GetHashCode(FixingDates);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Calendar>.Default.GetHashCode(FixingCalendar);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Calendar>.Default.GetHashCode(PaymentCalendar);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Frequency>.Default.GetHashCode(SpotLag);
+            hashCode = hashCode * -1521134295 + SpotLagRollType.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<Frequency>.Default.GetHashCode(PaymentLag);
+            hashCode = hashCode * -1521134295 + PaymentLagRollType.GetHashCode();
+            hashCode = hashCode * -1521134295 + PaymentDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + Strike.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AssetId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AssetFixingId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FxFixingId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<DateTime[]>.Default.GetHashCode(FxFixingDates);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(PaymentCurrency);
+            hashCode = hashCode * -1521134295 + FxConversionType.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DiscountCurve);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string[]>.Default.GetHashCode(AssetIds);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(Currency);
+            hashCode = hashCode * -1521134295 + LastSensitivityDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(HedgingSet);
+            return hashCode;
+        }
+
         public string HedgingSet { get; set; }
     }
 }

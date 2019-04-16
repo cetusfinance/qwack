@@ -47,5 +47,17 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
 
         public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? new string[0] : new[] { DiscountCurve };
+
+        public override int GetHashCode()
+        {
+            var hashCode = -215212781;
+            hashCode = hashCode * -1521134295 + CallPut.GetHashCode();
+            hashCode = hashCode * -1521134295 + ExerciseType.GetHashCode();
+            hashCode = hashCode * -1521134295 + MarginingType.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DiscountCurve);
+            hashCode = hashCode * -1521134295 + Premium.GetHashCode();
+            hashCode = hashCode * -1521134295 + PremiumDate.GetHashCode();
+            return hashCode;
+        }
     }
 }

@@ -48,18 +48,23 @@ namespace Qwack.Serialization.Test
                 ShortArray = new short[1024],
                 UShortArray = new ushort[1024],
                 FloatArray = new float[1024],
-                StringArray = new [] {string.Empty, null, "Test1", "Test 2 Test", string.Empty, "Test 3 Test", null},
+                StringArray = new[] { string.Empty, null, "Test1", "Test 2 Test", string.Empty, "Test 3 Test", null },
             };
-            _random.NextBytes(obj.ByteArray);
-            for(var i = 0; i < obj.UIntArray.Length;i++)
+
+            var random = new Random();
+
+            random.NextBytes(obj.ByteArray);
+
+            for (var i = 0; i < obj.UIntArray.Length; i++)
             {
-                obj.UIntArray[i] = (uint)_random.Next(0, int.MaxValue);
-                obj.IntArray[i] = _random.Next();
-                obj.DoubleArray[i] = _random.NextDouble();
-                obj.UShortArray[i] = (ushort)_random.Next(ushort.MinValue, ushort.MaxValue);
-                obj.ShortArray[i] = (short)_random.Next(short.MinValue, short.MaxValue);
-                obj.FloatArray[i] = (float)_random.NextDouble();
+                obj.UIntArray[i] = (uint)random.Next(0, int.MaxValue);
+                obj.IntArray[i] = random.Next();
+                obj.DoubleArray[i] = random.NextDouble();
+                obj.UShortArray[i] = (ushort)random.Next(ushort.MinValue, ushort.MaxValue);
+                obj.ShortArray[i] = (short)random.Next(short.MinValue, short.MaxValue);
+                obj.FloatArray[i] = (float)random.NextDouble();
             }
+
             return obj;
         }
 

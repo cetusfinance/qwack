@@ -21,14 +21,18 @@ namespace Qwack.MonteCarlo.Test
     [CollectionDefinition("MCTests", DisableParallelization = true)]
     public class MCBLocalVolFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
         [Fact]
         public void LVMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(12));
-            engine.Parallelize = false;
+            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 12))
+            {
+                Parallelize = false
+            };
 
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
@@ -54,7 +58,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps: 100,
+                    nTimeSteps: IsCoverageOnly ? 3 : 100,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);
@@ -64,13 +68,17 @@ namespace Qwack.MonteCarlo.Test
             engine.AddPathProcess(payoff2);
             engine.SetupFeatures();
             engine.RunProcess();
+
             var pv = payoff.AverageResult;
             var blackVol = volSurface.GetVolForAbsoluteStrike(900, origin.AddMonths(6), fwdCurve(tExp));
             var blackPv = BlackFunctions.BlackPV(fwdCurve(tExp), 900, 0, tExp, blackVol, OptionType.P);
-            Assert.True(System.Math.Abs(blackPv / pv - 1.0) < 0.02);
-            var fwd = payoff2.AverageResult;
-            Assert.True(System.Math.Abs(fwdCurve(tExp) / fwd - 1.0) < 0.005);
 
+            if (!IsCoverageOnly)
+            {
+                Assert.True(System.Math.Abs(blackPv / pv - 1.0) < 0.02);
+                var fwd = payoff2.AverageResult;
+                Assert.True(System.Math.Abs(fwdCurve(tExp) / fwd - 1.0) < 0.005);
+            }
 
         }
     }

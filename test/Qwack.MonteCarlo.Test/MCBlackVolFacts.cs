@@ -17,11 +17,13 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCBlackVolFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(15));
+            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 15));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,
@@ -35,7 +37,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddYears(1),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps:365,
+                    nTimeSteps: IsCoverageOnly ? 1 : 365,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);
@@ -47,10 +49,12 @@ namespace Qwack.MonteCarlo.Test
             engine.RunProcess();
             var pv = payoff.AverageResult;
             var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, 0.32, OptionType.P);
-            Assert.Equal(blackPv, pv, 0);
-            var fwd = payoff2.AverageResult;
-            Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
-            //var output = new OutputPathsToImage(engine,2000,1000);
+            if (!IsCoverageOnly)
+            {
+                Assert.Equal(blackPv, pv, 0);
+                var fwd = payoff2.AverageResult;
+                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
+            }            
 
         }
     }

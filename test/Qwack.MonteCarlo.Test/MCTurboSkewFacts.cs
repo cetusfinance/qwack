@@ -20,11 +20,13 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCTurboSkewFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void TSMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(17));
+            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                 UseNormalInverse = true,
@@ -62,9 +64,12 @@ namespace Qwack.MonteCarlo.Test
             var pv = payoff.AverageResult;
             var blackVol = volSurface.GetVolForAbsoluteStrike(900, origin.AddYears(1), fwdCurve(1.0));
             var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, blackVol, OptionType.P);
-            Assert.Equal(blackPv, pv, 0);
-            var fwd = payoff2.AverageResult;
-            Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
+            if (!IsCoverageOnly)
+            {
+                Assert.Equal(blackPv, pv, 0);
+                var fwd = payoff2.AverageResult;
+                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
+            }
         }
     }
 }

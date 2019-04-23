@@ -8,18 +8,21 @@ using Qwack.Options;
 using Qwack.Paths;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
+using Qwack.Math.Extensions;
 using Xunit;
 
 namespace Qwack.MonteCarlo.Test
 {
     public class MCConstantVolFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void PathsGenerated()
         {
             var vol = 0.32;
 
-            var engine = new PathEngine(2 << 10);
+            var engine = new PathEngine(IsCoverageOnly ? 2.IntPow(6) : 2 << 10);
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true
@@ -31,7 +34,7 @@ namespace Qwack.MonteCarlo.Test
                     vol: vol,
                     spot: 500,
                     drift: 0.00,
-                    numberOfSteps: 365,
+                    numberOfSteps: IsCoverageOnly ? 1 : 365,
                     name: "TestAsset2"
                 );
 
@@ -43,9 +46,8 @@ namespace Qwack.MonteCarlo.Test
 
             var pv = payoff.AverageResult;
             var blackPv = BlackFunctions.BlackPV(500, 500, 0, 1, vol, OptionType.P);
-            Assert.Equal(blackPv, pv, 0);
-            //var output = new OutputPathsToImage(engine,2000,1000);
-
+            if (!IsCoverageOnly)
+                Assert.Equal(blackPv, pv, 0);
         }
     }
 }

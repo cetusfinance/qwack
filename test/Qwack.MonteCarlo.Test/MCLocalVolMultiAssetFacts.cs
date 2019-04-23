@@ -14,9 +14,11 @@ using Xunit;
 
 namespace Qwack.MonteCarlo.Test
 {
-    [CollectionDefinition("MCTests", DisableParallelization = true)]
+    [CollectionDefinition("MCLVTests", DisableParallelization = true)]
     public class MCLocalVolMultiAssetFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Theory]
         [InlineData(0.0)]
         [InlineData(1.0)]
@@ -25,8 +27,10 @@ namespace Qwack.MonteCarlo.Test
         [InlineData(-0.5)]
         public void LVMCDualPathsGenerated(double correlation)
         {
+            
+
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(8))
+            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 8))
             {
                 Parallelize = false
             };
@@ -67,7 +71,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve1,
-                    nTimeSteps: 100,
+                    nTimeSteps: IsCoverageOnly ? 3 : 100,
                     name: "TestAsset1"
                 );
             var fwdCurve2 = new Func<double, double>(t => { return 1000; });
@@ -77,7 +81,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddMonths(6),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve2,
-                    nTimeSteps: 100,
+                    nTimeSteps: IsCoverageOnly ? 3 : 100,
                     name: "TestAsset2"
                 );
             engine.AddPathProcess(asset1);
@@ -95,7 +99,8 @@ namespace Qwack.MonteCarlo.Test
             var corr = correl.AverageResult;
             var errCorr = correl.ResultStdError;
 
-            Assert.Equal(correlation, corr, 1);
+            if(!IsCoverageOnly)
+                Assert.Equal(correlation, corr, 1);
         }
 
         //[Theory(Skip = "Broken")]

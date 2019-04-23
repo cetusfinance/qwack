@@ -19,6 +19,8 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class EuroDollarFuturesFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void FuturesStripNoConvexity()
         {
@@ -71,13 +73,19 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
+            var s = new Calibrators.NewtonRaphsonMultiCurveSolver()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
             s.Solve(model, fic);
 
-            for (var i = 0; i < nContracts; i++)
+            if (!IsCoverageOnly)
             {
-                var resultPV = instruments[i].Pv(model, false);
-                Assert.Equal(0, resultPV, 6);
+                for (var i = 0; i < nContracts; i++)
+                {
+                    var resultPV = instruments[i].Pv(model, false);
+                    Assert.Equal(0, resultPV, 6);
+                }
             }
         }
 
@@ -136,13 +144,19 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
+            var s = new Calibrators.NewtonRaphsonMultiCurveSolver()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
             s.Solve(model, fic);
 
-            for (var i = 0; i < nContracts; i++)
+            if (!IsCoverageOnly)
             {
-                var resultPV = instruments[i].Pv(model, false);
-                Assert.Equal(0, resultPV, 6);
+                for (var i = 0; i < nContracts; i++)
+                {
+                    var resultPV = instruments[i].Pv(model, false);
+                    Assert.Equal(0, resultPV, 6);
+                }
             }
         }
     }

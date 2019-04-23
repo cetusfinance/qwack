@@ -19,6 +19,8 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class OisFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         private static readonly Currency ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
         private static readonly Calendar _usd = TestProviderHelper.CalendarProvider.Collection["nyc"];
         private static readonly Calendar JHB = TestProviderHelper.CalendarProvider.Collection["JHB"];
@@ -120,13 +122,20 @@ namespace Qwack.Core.Tests.CurveSolving
             var curveOIS = new IrCurve(pillarDatesOIS, new double[pillarDatesOIS.Length], startDate, "ZAR.OIS.1B", Interpolator1DType.LinearFlatExtrap, ccyZar);
             var model = new FundingModel(startDate, new IrCurve[] { curve3m, curveOIS }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var S = new NewtonRaphsonMultiCurveSolver();
+            var S = new NewtonRaphsonMultiCurveSolver
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
+
             S.Solve(model, fic);
 
-            foreach (var ins in fic)
+            if (!IsCoverageOnly)
             {
-                var pv = ins.Pv(model, false);
-                Assert.Equal(0.0, pv, 7);
+                foreach (var ins in fic)
+                {
+                    var pv = ins.Pv(model, false);
+                    Assert.Equal(0.0, pv, 7);
+                }
             }
         }
 
@@ -241,26 +250,36 @@ namespace Qwack.Core.Tests.CurveSolving
             var engine0 = new FundingModel(startDate, new IrCurve[] { ZARcurve3m0, ZARcurveOIS0, USDcurve3m0, USDcurveOIS0 }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
 
-            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
-            var S0 = new NewtonRaphsonMultiCurveSolverStaged();
+            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
+            var S0 = new NewtonRaphsonMultiCurveSolverStaged()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
+
             S.Solve(engine, FIC);
             S0.Solve(engine0, FIC);
 
-            foreach (var ins in FIC)
+            if (!IsCoverageOnly)
             {
-                var pv = ins.Pv(engine, false);
-                Assert.Equal(0.0, pv, 7);
-            }
-
-            foreach (var curve in engine.Curves)
-            {
-                var otherCurve = engine0.Curves[curve.Key];
-                Assert.Equal(curve.Value.NumberOfPillars, otherCurve.NumberOfPillars);
-                var otherRates = otherCurve.GetRates();
-                var rates = curve.Value.GetRates();
-                for (var i=0;i<otherRates.Length;i++)
+                foreach (var ins in FIC)
                 {
-                    Assert.Equal(otherRates[i], rates[i], 10);
+                    var pv = ins.Pv(engine, false);
+                    Assert.Equal(0.0, pv, 7);
+                }
+
+                foreach (var curve in engine.Curves)
+                {
+                    var otherCurve = engine0.Curves[curve.Key];
+                    Assert.Equal(curve.Value.NumberOfPillars, otherCurve.NumberOfPillars);
+                    var otherRates = otherCurve.GetRates();
+                    var rates = curve.Value.GetRates();
+                    for (var i = 0; i < otherRates.Length; i++)
+                    {
+                        Assert.Equal(otherRates[i], rates[i], 10);
+                    }
                 }
             }
         }
@@ -421,13 +440,19 @@ namespace Qwack.Core.Tests.CurveSolving
             fxMatrix.Init(ccyUsd, startDate, spotRates, fxPairs, discountMap);
             engine.SetupFx(fxMatrix);
 
-            var S = new NewtonRaphsonMultiCurveSolverStaged();
+            var S = new NewtonRaphsonMultiCurveSolverStaged()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
             S.Solve(engine, FIC);
 
-            foreach (var ins in FIC)
+            if (!IsCoverageOnly)
             {
-                var pv = ins.Pv(engine, false);
-                Assert.Equal(0.0, pv, 7);
+                foreach (var ins in FIC)
+                {
+                    var pv = ins.Pv(engine, false);
+                    Assert.Equal(0.0, pv, 7);
+                }
             }
 
         }
@@ -472,16 +497,20 @@ namespace Qwack.Core.Tests.CurveSolving
         
             var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian();
-            //var S = new NewtonRaphsonMultiCurveSolverStaged();
+            var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
             S.Solve(engine, FIC);
 
-            foreach (var ins in FIC)
+            if (!IsCoverageOnly)
             {
-                var pv = ins.Pv(engine, false);
-                Assert.Equal(0.0, pv, 7);
+                foreach (var ins in FIC)
+                {
+                    var pv = ins.Pv(engine, false);
+                    Assert.Equal(0.0, pv, 7);
+                }
             }
-
         }
     }
 }

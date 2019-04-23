@@ -13,6 +13,7 @@ using Qwack.Models;
 using Qwack.Models.Models;
 using Qwack.Providers.Json;
 using Xunit;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Core.Tests.AssetModel
 {
@@ -21,6 +22,8 @@ namespace Qwack.Core.Tests.AssetModel
         [Fact]
         public void FxDeltaOnUSDTrade()
         {
+            ParallelUtils.Instance.MultiThreaded = false;
+
             var startDate = new DateTime(2018, 07, 28);
             var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
             var zar = TestProviderHelper.CurrencyProvider["ZAR"];

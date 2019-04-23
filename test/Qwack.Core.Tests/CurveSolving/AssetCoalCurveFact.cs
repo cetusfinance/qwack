@@ -11,6 +11,8 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class AssetCoalCurveFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void StripCoalSparse()
         {
@@ -32,13 +34,19 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, xaf);
 
-            var s = new Calibrators.NewtonRaphsonAssetCurveSolver();
+            var s = new Calibrators.NewtonRaphsonAssetCurveSolver()
+            {
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+            };
             var curve = s.Solve(instruments, pillars, discountCurve, startDate, TestProviderHelper.CurrencyProvider);
 
-            for (var i = 0; i < instruments.Count; i++)
+            if (!IsCoverageOnly)
             {
-                var resultPV = Calibrators.NewtonRaphsonAssetCurveSolver.SwapPv(curve, instruments[i], discountCurve);
-                Assert.Equal(0, resultPV, 6);
+                for (var i = 0; i < instruments.Count; i++)
+                {
+                    var resultPV = Calibrators.NewtonRaphsonAssetCurveSolver.SwapPv(curve, instruments[i], discountCurve);
+                    Assert.Equal(0, resultPV, 6);
+                }
             }
         }
 

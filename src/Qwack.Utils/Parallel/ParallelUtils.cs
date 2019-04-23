@@ -25,13 +25,13 @@ namespace Qwack.Utils.Parallel
 
         }
 
-        public bool MultiThreaded { get; } = true;
+        public bool MultiThreaded { get; set; } = true;
 
         private BlockingCollection<Task> _taskQueue = new BlockingCollection<Task>();
 
         public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
-            if (overrideMTFlag)
+            if (overrideMTFlag || !MultiThreaded)
             {
                 RunInSeries(values, code);
                 return;

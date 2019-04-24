@@ -42,7 +42,7 @@ namespace Qwack.Core.Curves
             _interpolator = InterpolatorFactory.GetInterpolator(pillarsD.ToArray(), _rates.ToArray(), interpKind, isSorted: true, noCopy: true);
             _name = name;
             Currency = ccy;
-            CollateralSpec = collateralSpec ?? (
+            CollateralSpec = collateralSpec ?? (string.IsNullOrWhiteSpace(_name) ? null :
                 (_name.Contains("[")) ? _name.Split('[').Last().Trim("[]".ToCharArray()) : _name.Split('.').Last());
         }
 

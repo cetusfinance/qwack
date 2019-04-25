@@ -1295,6 +1295,13 @@ namespace Qwack.Models.Models
             return m.FxDelta(homeCcy, currencyProvider, computeGamma, reportInverse);
         }
 
+        public static ICube FxDeltaRaw(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
+        {
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.FxDeltaRaw(homeCcy, currencyProvider, computeGamma);
+        }
+
         public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model)
         {
             var m = model.Clone();

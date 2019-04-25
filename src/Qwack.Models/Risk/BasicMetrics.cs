@@ -739,6 +739,109 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
+        public static ICube FxDeltaRaw(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false)
+        {
+            var bumpSize = 0.0001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "Metric", typeof(string) },
+                { "Portfolio", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var mf = model.FundingModel.DeepClone(null);
+            var baseCcy = model.FundingModel.FxMatrix.BaseCurrency;
+            var m = model.Clone(mf);
+
+            var homeBasePair = mf.FxMatrix.GetFxPair(homeCcy, baseCcy);
+            var homeToBase = mf.GetFxRate(homeBasePair.SpotDate(model.BuildDate), homeCcy, baseCcy);
+
+            foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
+            {
+                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                var pvCube = newPvModel.PV(homeCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var pfIx = pvCube.GetColumnIndex("Portfolio");
+
+                //var fxPair = $"{domCcy}/{currency}";
+                var fxPair = $"{currency}/{baseCcy}";
+
+                var newModel = m.Clone();
+                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
+                newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
+                var spotBump = bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency];
+                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                var bumpedPVCube = bumpedPvModel.PV(homeCcy);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                ResultCubeRow[] bumpedRowsDown = null;
+                var spotBumpDown = 0.0;
+
+                var dfToSpotDate = m.FundingModel.GetDf(m.FundingModel.FxMatrix.BaseCurrency, m.BuildDate, m.FundingModel.FxMatrix.GetFxPair(fxPair).SpotDate(m.BuildDate));
+
+                if (computeGamma)
+                {
+                    var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
+                    newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
+                    spotBumpDown = bumpedSpotDown - m.FundingModel.FxMatrix.SpotRates[currency];
+
+                    var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
+
+                    var bumpedPVCubeDown = bumpedPvModelDown.PV(homeCcy);
+                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                    if (bumpedRowsDown.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                }
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / spotBump / dfToSpotDate * homeToBase;
+
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                        {
+                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                            { "AssetId", fxPair },
+                            { "Metric", "FxSpotDelta" },
+                            { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
+                        };
+                        cube.AddRow(row, delta);
+                    }
+
+                    if (computeGamma)
+                    {
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / spotBumpDown / dfToSpotDate * homeToBase;
+                        var gamma = (delta - deltaDown) / (spotBump - spotBumpDown) * 2.0;
+                        if (gamma != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", fxPair },
+                                { "Metric", "FxSpotGamma" },
+                                { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
+                            };
+                            cube.AddRow(row, gamma);
+                        }
+                    }
+                }
+            }
+            return cube;
+        }
+
+
         public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize=0.0001)
         {
             var cube = new ResultCube();

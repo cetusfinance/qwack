@@ -51,6 +51,9 @@ namespace Qwack.Core.Basic
 
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
+            if(domesticCcy==foreignCcy)
+                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, SettlementCalendar = new Calendar(), SpotLag = 0.Day() };
+
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
             return pair ?? 
                 FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy) ?? 

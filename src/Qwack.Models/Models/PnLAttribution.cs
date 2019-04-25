@@ -932,17 +932,15 @@ namespace Qwack.Models.Models
             }
 
             //next move fx spots
-            var fxGreeks = portfolio.FxDelta(model, reportingCcy, currencyProvider, true, false);
+            var fxGreeks = portfolio.FxDeltaRaw(model, reportingCcy, currencyProvider, true, false);
             r_tidIx = fxGreeks.GetColumnIndex("TradeId");
             r_tTypeIx = fxGreeks.GetColumnIndex("TradeType");
-            var emRemap = FundingModel.RemapBaseCurrency(endModel.FundingModel, reportingCcy, currencyProvider);
-            var smRemap = FundingModel.RemapBaseCurrency(model.FundingModel, reportingCcy, currencyProvider);
-            model.FundingModel.SetupFx(smRemap.FxMatrix);
 
-            foreach (var fxSpot in emRemap.FxMatrix.SpotRates)
+            var baseToRep = endModel.FundingModel.GetFxRate(endModel.BuildDate, endModel.FundingModel.FxMatrix.BaseCurrency, reportingCcy);
+            foreach (var fxSpot in endModel.FundingModel.FxMatrix.SpotRates)
             {
-                var fxPair = $"{reportingCcy}/{fxSpot.Key.Ccy}";
-
+                var fxPair = $"{fxSpot.Key.Ccy}/{endModel.FundingModel.FxMatrix.BaseCurrency}";
+                
                 //delta
                 var riskForCurve = fxGreeks.Filter(
                     new Dictionary<string, object> {
@@ -953,9 +951,10 @@ namespace Qwack.Models.Models
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
-                    var startRate = smRemap.FxMatrix.SpotRates[fxSpot.Key];
+                    var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate);
+                    explained *= baseToRep;
 
                     var row = new Dictionary<string, object>
                     {
@@ -984,9 +983,10 @@ namespace Qwack.Models.Models
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
-                    var startRate = smRemap.FxMatrix.SpotRates[fxSpot.Key];
+                    var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate) * (endRate - startRate) * 0.5;
+                    explained *= baseToRep;
 
                     var row = new Dictionary<string, object>
                     {
@@ -1353,7 +1353,6 @@ namespace Qwack.Models.Models
 
             return cube;
         }
-
 
         public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {

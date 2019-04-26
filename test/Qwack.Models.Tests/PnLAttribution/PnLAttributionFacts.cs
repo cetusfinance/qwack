@@ -14,10 +14,13 @@ using Qwack.Models.Models;
 
 namespace Qwack.Models.Tests.PnLAttribution
 {
+    [CollectionDefinition("PnLAttributionTests", DisableParallelization = true)]
     public class PnLAttributionFacts
     {
         private (IAssetFxModel startModel, IAssetFxModel endModel, Portfolio portfolio) GenerateTestData()
         {
+            Utils.Parallel.ParallelUtils.Instance.MultiThreaded = false;
+
             var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
             var zar = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR");
             var nyc = TestProviderHelper.CalendarProvider.Collection["NYC"];

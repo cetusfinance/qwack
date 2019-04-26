@@ -33,6 +33,9 @@ after_test:
   - dotnet pack -c Release src/Qwack.Providers
   - dotnet pack -c Release src/Qwack.Random
   - dotnet pack -c Release src/Qwack.Utils
+  - dotnet pack -c Release src/Qwack.Models
+  - dotnet pack -c Release src/Qwack.MonteCarlo
+  - dotnet pack -c Release src/Qwack.Futures
   
 artifacts:
   path: '**/*.nupkg'

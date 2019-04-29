@@ -513,7 +513,7 @@ namespace Qwack.Options.VolSurfaces
                     var pA = premA.SecondDerivative(kA);
                     pFx = Statistics.NormInv(Min(1.0 - 1e-10, Max(pFx, 1e-10)));
                     pA = Statistics.NormInv(Min(1.0 - 1e-10, Max(pA, 1e-10)));
-                    var p = Math.Distributions.BivariateNormal.CDF(pFx, pA, correlation);
+                    var p = BivariateNormal.CDF(pFx, pA, correlation);
                     y[i] += p;
 
                     kA += kStepA;
@@ -603,7 +603,7 @@ namespace Qwack.Options.VolSurfaces
 
                     var zA = Statistics.NormInv(pA);
                     var zFx = Statistics.NormInv(pFx);
-                    var pC = Math.Distributions.BivariateNormal.CDF(zA, zFx, correlation);
+                    var pC = BivariateNormal.CDF(zA, zFx, correlation);
 
                     y[i + 1] += pC / numSamples;
                     kA += kStepA;

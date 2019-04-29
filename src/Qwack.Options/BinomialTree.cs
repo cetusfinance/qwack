@@ -29,7 +29,7 @@ namespace Qwack.Options
         {
             var deltaT = T / (double)n;
             var up = System.Math.Exp(sigma * System.Math.Sqrt(deltaT));
-            var p0 = (up * System.Math.Exp(-r * deltaT) - System.Math.Exp(-q * deltaT)) * up / (System.Math.Pow(up, 2) - 1);
+            var p0 = up == 1.0 ? 1.0 : (up * System.Math.Exp(-r * deltaT) - System.Math.Exp(-q * deltaT)) * up / (System.Math.Pow(up, 2) - 1);
             var p1 = System.Math.Exp(-r * deltaT) - p0;
 
             var p = new double[n + 1];

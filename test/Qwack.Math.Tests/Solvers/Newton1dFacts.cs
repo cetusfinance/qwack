@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +28,9 @@ namespace Qwack.Math.Tests.Solvers
         {
             var output = Math.Solvers.Newton1D.MethodSolve(QuadraticFunction1d, 10, 1e-8);
             var functionOutput = QuadraticFunction1d(output);
+            Assert.Equal(0, functionOutput, 8);
+
+            output = Math.Solvers.Newton1D.MethodSolveWithProgress(QuadraticFunction1d, 10, 1e-8);
             Assert.Equal(0, functionOutput, 8);
         }
 

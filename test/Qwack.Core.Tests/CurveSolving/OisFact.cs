@@ -124,7 +124,8 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var S = new NewtonRaphsonMultiCurveSolver
             {
-                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001,
+                MaxItterations = IsCoverageOnly ? 1 : 100,
             };
 
             S.Solve(model, fic);
@@ -252,11 +253,13 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian()
             {
-                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001,
+                MaxItterations = IsCoverageOnly ? 1 : 100,
             };
             var S0 = new NewtonRaphsonMultiCurveSolverStaged()
             {
-                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001,
+                MaxItterations = IsCoverageOnly ? 1 : 100,
             };
 
             S.Solve(engine, FIC);
@@ -442,7 +445,8 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var S = new NewtonRaphsonMultiCurveSolverStaged()
             {
-                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001,
+                MaxItterations = IsCoverageOnly ? 1 : 100,
             };
             S.Solve(engine, FIC);
 
@@ -499,7 +503,8 @@ namespace Qwack.Core.Tests.CurveSolving
 
             var S = new NewtonRaphsonMultiCurveSolverStagedWithAnalyticJacobian()
             {
-                Tollerance = IsCoverageOnly ? 1 : 0.00000001
+                Tollerance = IsCoverageOnly ? 1 : 0.00000001,
+                MaxItterations = IsCoverageOnly ? 1 : 100,
             };
             S.Solve(engine, FIC);
 

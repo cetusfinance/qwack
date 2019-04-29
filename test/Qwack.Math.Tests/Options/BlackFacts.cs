@@ -102,6 +102,15 @@ namespace Qwack.Math.Tests.Options
             var thetaEst = (PV2 - PV1) / bumpT;
             var theta = BlackFunctions.BlackTheta(f, k, rf, t, vol,cp);
             Assert.Equal(thetaEst, theta, 3);
+
+
+            //theta closely matches numerical estimate
+            cp = OptionType.C;
+            PV1 = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
+            PV2 = BlackFunctions.BlackPV(f, k, rf, t - bumpT, vol, cp);
+            thetaEst = (PV2 - PV1) / bumpT;
+            theta = BlackFunctions.BlackTheta(f, k, rf, t, vol, cp);
+            Assert.Equal(thetaEst, theta, 3);
         }
 
         [Fact]
@@ -132,7 +141,7 @@ namespace Qwack.Math.Tests.Options
             var deltaPut = BlackFunctions.BlackDelta(f, k, rf, t, vol, OptionType.P);
 
             var syntheticFwdDelta = deltaCall - deltaPut;
-            Assert.Equal(System.Math.Exp(-rf * t), syntheticFwdDelta, 10);
+            Assert.Equal(Exp(-rf * t), syntheticFwdDelta, 10);
 
             //gamma closely matches numerical estimate
             var delta1 = BlackFunctions.BlackDelta(f + 0.000005, k, rf, t, vol, cp);
@@ -150,6 +159,16 @@ namespace Qwack.Math.Tests.Options
             Assert.Equal(0, gamma, 8);
             gamma = BlackFunctions.BlackGamma(f, 1e6, rf, t, vol);
             Assert.Equal(0, gamma, 8);
+
+            //derivs
+            k = 100;
+            delta = BlackFunctions.BlackDelta(f, k, rf, t, vol, cp);
+            var derivs = BlackFunctions.BlackDerivs(f, k, rf, t, vol, cp);
+            Assert.Equal(delta, derivs[0]);
+            cp = OptionType.C;
+            delta = BlackFunctions.BlackDelta(f, k, rf, t, vol, cp);
+            derivs = BlackFunctions.BlackDerivs(f, k, rf, t, vol, cp);
+            Assert.Equal(delta, derivs[0]);
         }
 
 

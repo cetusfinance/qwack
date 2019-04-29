@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Options;
 using Xunit;
 using Qwack.Core.Basic;
+using Qwack.Math.Interpolation;
 
 namespace Qwack.Math.Tests.Options
 {
@@ -14,8 +15,8 @@ namespace Qwack.Math.Tests.Options
         public void PVFacts()
         {
             var t = 1.0;
-            var k = 0;
-            var f = 100;
+            var k = 0.0;
+            var f = 100.0;
             var vol = 0.32;
             var rf = 0.05;
             var cp = OptionType.P;
@@ -24,6 +25,10 @@ namespace Qwack.Math.Tests.Options
             var PV = TrinomialTree.AmericanAssetOptionPV(f, k, rf, f, t, vol, cp);
             Assert.Equal(0, PV, 10);
             PV = BinomialTree.AmericanPV(t, f, k, rf, vol, cp, rf, 100);
+            Assert.Equal(0, PV, 10);
+            var flatInterp = new DummyPointInterpolator(new[] { 1.0 }, new[] { rf });
+            var flatFwdInterp = new DummyPointInterpolator(new[] { 1.0 }, new[] { f });
+            PV = TrinomialTree.VanillaPV(t, f, k, flatInterp, vol, cp, flatFwdInterp, 100, true);
             Assert.Equal(0, PV, 10);
 
             //zero strike call is worth fwd with no discounting
@@ -35,7 +40,7 @@ namespace Qwack.Math.Tests.Options
 
             //OTM option with zero vol is worthless
             vol = 0.0;
-            k = f + 1;
+            k = f + 1.0;
             PV = BinomialTree.AmericanPV(t, f, k, rf, vol, cp, rf, 100);
             Assert.Equal(0, PV, 10);
             PV = TrinomialTree.AmericanAssetOptionPV(f, k, rf, f, t, vol, cp);

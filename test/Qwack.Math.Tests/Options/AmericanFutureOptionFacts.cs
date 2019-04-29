@@ -37,6 +37,8 @@ namespace Qwack.Math.Tests.Options
             //and has delta = 1.0
             var greeks = TrinomialTree.AmericanFutureOption(f, k, rf, t, vol, cp);
             Assert.Equal(1.0,(double)greeks[1,0], 10);
+            greeks = BinomialTree.AmericanFutureOption(f, k, rf, t, vol, cp);
+            Assert.Equal(1.0, (double)greeks[1, 0], 10);
 
             //OTM option with zero vol is worthless
             vol = 0.0;

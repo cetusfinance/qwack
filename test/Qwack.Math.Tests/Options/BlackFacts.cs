@@ -28,7 +28,7 @@ namespace Qwack.Math.Tests.Options
             //zero strike call is worth discounted fwd
             cp = OptionType.C;
             PV = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
-            Assert.Equal(System.Math.Exp(-rf * t) * f, PV, 10);
+            Assert.Equal(Exp(-rf * t) * f, PV, 10);
 
             //OTM option with zero vol is worthless
             vol = 0.0;
@@ -47,7 +47,7 @@ namespace Qwack.Math.Tests.Options
             rf = 0;
             var variance = vol * vol * t;
             var t2 = t * 2.0;
-            var vol2 = System.Math.Sqrt(variance / t2);
+            var vol2 = Sqrt(variance / t2);
 
             var PVnear = BlackFunctions.BlackPV(f, k, rf, t, vol, OptionType.C);
             var PVfar = BlackFunctions.BlackPV(f, k, rf, t2, vol2, OptionType.C);
@@ -82,6 +82,26 @@ namespace Qwack.Math.Tests.Options
 
             vega = BlackFunctions.BlackVega(f, 1e6, rf, t, vol);
             Assert.Equal(0, vega, 8);
+        }
+
+        [Fact]
+        public void ThetaFacts()
+        {
+            var t = 1.0;
+            var k = 100;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.05;
+            var cp = OptionType.P;
+
+
+            //theta closely matches numerical estimate
+            var bumpT = 1e-10;
+            var PV1 = BlackFunctions.BlackPV(f, k, rf, t, vol, cp);
+            var PV2 = BlackFunctions.BlackPV(f, k, rf, t- bumpT, vol, cp);
+            var thetaEst = (PV2 - PV1) / bumpT;
+            var theta = BlackFunctions.BlackTheta(f, k, rf, t, vol,cp);
+            Assert.Equal(thetaEst, theta, 3);
         }
 
         [Fact]
@@ -193,6 +213,25 @@ namespace Qwack.Math.Tests.Options
             var df = Exp(-rf * t);
             var fwdPV = (f - k) * df;
             Assert.Equal(fwdPV, PVc - PVp, 10);
+        }
+
+        [Fact]
+        public void DigitalFacts()
+        {
+            var t = 1.0;
+            var f = 100;
+            var vol = 0.32;
+            var rf = 0.0;
+            var cp = OptionType.C;
+            var k = 110;
+
+            var digiPV = BlackFunctions.BlackDigitalPV(f, k, rf, t, vol, cp);
+            var spread = 0.0001;
+            var expected = (BlackFunctions.BlackPV(f, k, rf, t, vol, cp) - BlackFunctions.BlackPV(f, k + spread, rf, t, vol, cp)) / spread;
+            Assert.Equal(expected, digiPV, 6);
+
+            var iv = BlackFunctions.BlackDigitalImpliedVol(f, k, rf, t, digiPV, cp);
+            Assert.Equal(vol, iv, 6);
         }
     }
 }

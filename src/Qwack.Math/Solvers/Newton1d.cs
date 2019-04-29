@@ -28,6 +28,7 @@ namespace Qwack.Math.Solvers
                 var fBumped = function(x + bump);
                 var dfdx = (fBumped - f) / bump;
                 x -= f / dfdx;
+                itteration++;
             }
 
             return x;
@@ -52,6 +53,7 @@ namespace Qwack.Math.Solvers
                 var f = function(x);
                 var dfdx = derivativeFunction(x);
                 x -= f / dfdx;
+                itteration++;
             }
 
             return x;
@@ -82,6 +84,7 @@ namespace Qwack.Math.Solvers
                 if (Abs(fNew) > Abs(fLast))
                     break;
                 fLast = fNew;
+                itteration++;
             }
 
             return x;

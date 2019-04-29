@@ -138,7 +138,7 @@ namespace Qwack.Options
                 return BlackDigitalPV(forward, strike, riskFreeRate, expTime, vol, CP) - premium;
             });
 
-            var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testBlack, 0.000000001, 5.0000000, 1e-10);
+            var impliedVol = Math.Solvers.Newton1D.MethodSolve(testBlack, 0.16, 1e-18);
             return impliedVol;
         }
 

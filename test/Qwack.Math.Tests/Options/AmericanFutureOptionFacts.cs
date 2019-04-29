@@ -19,6 +19,7 @@ namespace Qwack.Math.Tests.Options
             var vol = 0.32;
             var rf = 0.05;
             var cp = OptionType.P;
+            var df = System.Math.Exp(-rf * t);
 
             //zero strike put is worthless
             var PV = BinomialTree.AmericanFutureOptionPV(f, k, rf, t, vol, cp);
@@ -32,6 +33,10 @@ namespace Qwack.Math.Tests.Options
             Assert.Equal(f, PV, 10);
             PV = TrinomialTree.AmericanFutureOptionPV(f, k, rf, t, vol, cp);
             Assert.Equal(f, PV, 10);
+
+            //and has delta = 1.0
+            var greeks = TrinomialTree.AmericanFutureOption(f, k, rf, t, vol, cp);
+            Assert.Equal(1.0,(double)greeks[1,0], 10);
 
             //OTM option with zero vol is worthless
             vol = 0.0;
@@ -49,6 +54,8 @@ namespace Qwack.Math.Tests.Options
             Assert.True(PV >= PVBlack);
             PV = TrinomialTree.AmericanFutureOptionPV(f, k, rf, t, vol, cp);
             Assert.True(PV >= PVBlack);
+
+            
         }
 
         [Fact]

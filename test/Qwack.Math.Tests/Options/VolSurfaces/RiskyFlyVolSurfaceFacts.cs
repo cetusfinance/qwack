@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Options;
 using Xunit;
 using Qwack.Core.Basic;
+using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
 {
@@ -21,12 +22,23 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var wingDeltas = new[] { 0.1, 0.25 };
             var riskies = new[] { new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 }, new[] { 0.025, 0.015 } };
             var flies = new[] { new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 } };
-            var surface = new Qwack.Options.VolSurfaces.RiskyFlySurface(
+            var surface = new RiskyFlySurface(
                 origin, atms, maturities, wingDeltas, riskies, flies, fwds, WingQuoteType.Simple,
                 AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.LinearInVariance);
 
             Assert.Equal(atms[1], surface.GetVolForDeltaStrike(0.5, maturities[1], fwds[1]));
+
+            var cube = surface.ToCube();
+            Assert.Equal(fwds[0], cube.GetAllRows().First().Value);
+
+            var recon = RiskyFlySurface.FromCube(cube, origin, Math.Interpolation.Interpolator1DType.Linear,
+                Math.Interpolation.Interpolator1DType.LinearInVariance);
+            Assert.Equal(surface.GetVolForDeltaStrike(0.5, maturities[1], fwds[1]), recon.GetVolForDeltaStrike(0.5, maturities[1], fwds[1]));
+
+            var quotes = surface.DisplayQuotes();
+            Assert.Equal(maturities[0], (DateTime) quotes[1,0]);
+
         }
 
         [Fact]

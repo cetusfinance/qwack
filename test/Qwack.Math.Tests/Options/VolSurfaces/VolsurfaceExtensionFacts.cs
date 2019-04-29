@@ -22,7 +22,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
     {
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
-        [Fact(Skip = "Broken")]
+        [Fact]
         public void CompositeSmimleFacts_Trivial()
         {
             var origin = new DateTime(2017, 02, 07);
@@ -31,7 +31,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var correl = 0.4;
             var surfaceAsset = new ConstantVolSurface(origin, volAsset);
             var surfaceFx = new ConstantVolSurface(origin, volFx);
-            var surfaceCompo = surfaceAsset.GenerateCompositeSmile(surfaceFx, 100, origin.AddYears(1), 100, 10, correl);
+            var surfaceCompo = surfaceAsset.GenerateCompositeSmileBasic(surfaceFx, 100, origin.AddYears(1), 100, 10, correl);
 
             var expectedVol = Sqrt(volFx * volFx + volAsset * volAsset + 2.0 * correl * volAsset * volFx);
 
@@ -39,6 +39,22 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             Assert.Equal(expectedVol, surfaceCompo.Interpolate(200.0 * 10.0), 6);
             Assert.Equal(expectedVol, surfaceCompo.Interpolate(0.0 * 10.0), 6);
             Assert.Equal(expectedVol, surfaceCompo.Interpolate(101 * 10.0), 6);
+        }
+
+        [Fact]
+        public void PremiumInterpolatorFacts()
+        {
+            var origin = new DateTime(2017, 02, 07);
+            var expiry = origin.AddYears(1);
+            var t = (expiry - origin).TotalDays / 365.0;
+            var volAsset = 0.32;
+            var fwd = 100.0;
+            var surfaceAsset = new ConstantVolSurface(origin, volAsset);
+
+            var premInterp = surfaceAsset.GeneratePremiumInterpolator(100, expiry, fwd, OptionType.P);
+
+            var strike = fwd * 0.8;
+            Assert.Equal(BlackFunctions.BlackPV(fwd, strike, 0.0, t, volAsset, OptionType.P), premInterp.Interpolate(strike),2);
         }
 
         [Fact(Skip ="Broken")]

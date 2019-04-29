@@ -18,6 +18,8 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class SelfDiscountingFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void BasicSelfDiscounting()
         {
@@ -56,15 +58,21 @@ namespace Qwack.Core.Tests.CurveSolving
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
+            if (IsCoverageOnly)
+                s.Tollerance = 1;
+
             s.Solve(model, fic);
 
             var resultSwap1 = swap.Pv(model, false);
             var resultSwap2 = swap2.Pv(model, false);
             var resultDepo = depo.Pv(model, false);
 
-            Assert.Equal(0, resultSwap1, 6);
-            Assert.Equal(0, resultSwap2, 6);
-            Assert.Equal(0, resultDepo, 6);
+            if (!IsCoverageOnly)
+            {
+                Assert.Equal(0, resultSwap1, 6);
+                Assert.Equal(0, resultSwap2, 6);
+                Assert.Equal(0, resultDepo, 6);
+            }
         }
     }
 }

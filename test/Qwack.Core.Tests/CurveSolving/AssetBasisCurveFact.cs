@@ -20,6 +20,8 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class AssetBasisCurveFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         [Fact]
         public void StripCrackedCurve()
         {
@@ -27,7 +29,7 @@ namespace Qwack.Core.Tests.CurveSolving
             string[] futures = { "COV8", "COX8", "COZ8", "COF9", "COG9" };
             double[] futuresPrices = { 77, 78, 79, 79.5, 79.75 };
             string[] periods = { "AUG18", "SEP18", "OCT18", "NOV18" };
-            double[] strikes = { -10, -11, -12, -13};
+            double[] strikes = { -10, -11, -12, -13 };
 
             var cal = TestProviderHelper.CalendarProvider.Collection["LON"];
             var usd = TestProviderHelper.CurrencyProvider["USD"];
@@ -40,22 +42,26 @@ namespace Qwack.Core.Tests.CurveSolving
 
 
             var instruments = periods.Select((p, ix) =>
-            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000/6.35))
+            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
             .ToList();
-            var pillars = instruments.Select(x =>((AsianBasisSwap)x).RecSwaplets.Max(sq => sq.AverageEndDate)).ToList();
+            var pillars = instruments.Select(x => ((AsianBasisSwap)x).RecSwaplets.Max(sq => sq.AverageEndDate)).ToList();
 
             DateTime[] dPillars = { buildDate, buildDate.AddDays(1000) };
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
             var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
+            if (IsCoverageOnly)
+                s.Tollerance = 1.0;
+
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.ICE);
 
-            for (var i = 0; i < instruments.Count; i++)
-            {
-                var resultPV = Calibrators.NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
-                Assert.Equal(0, resultPV, 6);
-            }
+            if (!IsCoverageOnly)
+                for (var i = 0; i < instruments.Count; i++)
+                {
+                    var resultPV = Calibrators.NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
+                    Assert.Equal(0, resultPV, 6);
+                }
         }
 
         [Fact]

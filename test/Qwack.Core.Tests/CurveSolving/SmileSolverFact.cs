@@ -20,8 +20,11 @@ using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
 {
-    public class SmileSolverFact
+       public class SmileSolverFact
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
+
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 
@@ -48,12 +51,17 @@ namespace Qwack.Core.Tests.CurveSolving
             };
 
             var s = new NewtonRaphsonAssetSmileSolver();
+            if (IsCoverageOnly)
+                s.Tollerance = 1;
 
             var smile = s.Solve(atmConstraint, new[] { smile25d }, valDate, expDate, fwd, strikes, Interpolator1DType.Linear);
 
-            Assert.Equal(atmConstraint.MarketVol, smile[1], 8);
-            Assert.Equal(smile25d.RisykVol, smile[2] - smile[0], 8);
-            Assert.Equal(smile25d.FlyVol, (smile[2] + smile[0]) / 2 - atmConstraint.MarketVol, 8);
+            if (!IsCoverageOnly)
+            {
+                Assert.Equal(atmConstraint.MarketVol, smile[1], 8);
+                Assert.Equal(smile25d.RisykVol, smile[2] - smile[0], 8);
+                Assert.Equal(smile25d.FlyVol, (smile[2] + smile[0]) / 2 - atmConstraint.MarketVol, 8);
+            }
         }
 
         [Fact]
@@ -80,10 +88,13 @@ namespace Qwack.Core.Tests.CurveSolving
             };
 
             var s = new NewtonRaphsonAssetSmileSolver();
+            if (IsCoverageOnly)
+                s.Tollerance = 1;
 
             var smile = s.Solve(atmConstraint, new[] { smile25d }, valDate, expDate, fwd, strikes, Interpolator1DType.Linear);
 
-            Assert.Equal(atmConstraint.MarketVol, smile[1], 8);
+            if (!IsCoverageOnly)
+                Assert.Equal(atmConstraint.MarketVol, smile[1], 8);
 
             var surface = new GridVolSurface(valDate, strikes, new[] { expDate }, new[] { smile }, StrikeType.ForwardDelta, Interpolator1DType.Linear, Interpolator1DType.Linear, DayCountBasis.Act365F);
 
@@ -102,7 +113,8 @@ namespace Qwack.Core.Tests.CurveSolving
             var put25FV = BlackFunctions.BlackPV(fwd, marketKP25, 0, tExp, volP25d, OptionType.P);
             var smileRR = call25FV - put25FV;
 
-            Assert.Equal(marketRR, smileRR, 8);
+            if (!IsCoverageOnly)
+                Assert.Equal(marketRR, smileRR, 8);
 
             //reprice market BF structrure off smile, premium must match
             var marketVolBF = atmConstraint.MarketVol + smile25d.FlyVol; 
@@ -118,7 +130,8 @@ namespace Qwack.Core.Tests.CurveSolving
             var putBF25FV = BlackFunctions.BlackPV(fwd, marketKBFP25, 0, tExp, volPBF25d, OptionType.P);
             var smileBF = callBF25FV + putBF25FV;
 
-            Assert.Equal(marketBF, smileBF, 8);
+            if (!IsCoverageOnly)
+                Assert.Equal(marketBF, smileBF, 8);
 
         }
     }

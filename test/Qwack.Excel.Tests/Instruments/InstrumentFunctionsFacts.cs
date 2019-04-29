@@ -89,14 +89,14 @@ namespace Qwack.Excel.Tests.Instruments
             Assert.Equal("Could not parse date generation type - sqw",
                 InstrumentFunctions.CreateMonthlyAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "sqw", "disco"));
 
-            Assert.Equal("swppp¬0",
-                InstrumentFunctions.CreateMonthlyAsianSwap("swppp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
+            Assert.Equal("swppp1¬0",
+                InstrumentFunctions.CreateMonthlyAsianSwap("swppp1", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
 
-            Assert.Equal("swppq¬0",
-                InstrumentFunctions.CreateMonthlyAsianSwap("swppq", DateTime.Today.ToOADate(), "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
+            Assert.Equal("swppq1¬0",
+                InstrumentFunctions.CreateMonthlyAsianSwap("swppq1", DateTime.Today.ToOADate(), "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
 
-            Assert.Equal("swppz¬0",
-                InstrumentFunctions.CreateMonthlyAsianSwap("swppz", new object[,] { { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() } }, "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "BusinessDays", "disco"));
+            Assert.Equal("swppz1¬0",
+                InstrumentFunctions.CreateMonthlyAsianSwap("swppz1", new object[,] { { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() } }, "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "BusinessDays", "disco"));
         }
 
         [Fact]

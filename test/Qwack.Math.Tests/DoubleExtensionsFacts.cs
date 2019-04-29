@@ -5,6 +5,7 @@ using System.Text;
 using Xunit;
 using Qwack.Math.Extensions;
 using static System.Math;
+using System.Numerics;
 
 namespace Qwack.Math.Tests
 {
@@ -61,6 +62,33 @@ namespace Qwack.Math.Tests
 
             Assert.True(Enumerable.SequenceEqual(new double[] { 1, 2, 3 }, e.GetRow(0)));
             Assert.True(Enumerable.SequenceEqual(new double[] { 7, 8, 9 }, e.GetRow(2)));
+        }
+
+        [Fact]
+        public void VectorMinMaxFacts()
+        {
+            var e = new[] { 0.0, 1.0, 0.5, -1.0 };
+
+            var (min, max) = e.MinMax();
+            Assert.Equal(-1.0, min);
+            Assert.Equal(1.0, max);
+        }
+
+        [Fact]
+        public void VectorIntPowFacts()
+        {
+            var v = new Vector<double>(2.0);
+            var vd = v.IntPow(2);
+            Assert.Equal(4.0, vd[0]);
+        }
+
+        [Fact]
+        public void VectorValuesFacts()
+        {
+            var v = new Vector<double>(1.0);
+            var vd = v.Values();
+            Assert.Equal(Vector<double>.Count, vd.Length);
+            Assert.Equal(1.0, vd[0]);
         }
     }
 }

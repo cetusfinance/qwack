@@ -6,6 +6,7 @@ using Qwack.Options.Asians;
 using Xunit;
 using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
+using Qwack.Dates;
 
 namespace Qwack.Math.Tests.Options
 {
@@ -21,8 +22,17 @@ namespace Qwack.Math.Tests.Options
             var vol = 0.32;
             var rf = 0.05;
             var cp = OptionType.P;
+
+            //expired is worthless
+            var PV = TurnbullWakeman.PV(f, 0, vol, 0, t, 0, rf, OptionType.P);
+            Assert.Equal(0, PV, 10);
+            PV = TurnbullWakeman.PV(f, 0, vol, 0, t, 0, rf, OptionType.C);
+            Assert.Equal(0, PV, 10);
+
             //zero strike put is worthless
-            var PV = TurnbullWakeman.PV(f, 0, vol, 0, t, t2, rf, cp);
+            PV = TurnbullWakeman.PV(f, 0, vol, 0, t, t2, rf, cp);
+            Assert.Equal(0, PV, 10);
+            PV = TurnbullWakeman.PV(f, 50, vol, 0, -0.1, t2, rf, cp);
             Assert.Equal(0, PV, 10);
 
             //zero strike call is worth discounted fwd
@@ -50,8 +60,8 @@ namespace Qwack.Math.Tests.Options
             var evalDate = DateTime.Today;
             var avgStart = evalDate.AddDays(365);
             var avgEnd = avgStart.AddDays(32);
-            var k = 110;
-            var f = 100;
+            var k = 110.0;
+            var f = 100.0;
             var vol = 0.32;
             var rf = 0.0;
 
@@ -61,6 +71,13 @@ namespace Qwack.Math.Tests.Options
             var pv = TurnbullWakeman.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
 
             var strike = TurnbullWakeman.StrikeForPV(pv, f, 0, volSurface, DateTime.Today, avgStart, avgEnd, rf, OptionType.C);
+            Assert.Equal(k, strike, 10);
+
+            var fixingDates = avgStart.CalendarDaysInPeriod(avgEnd).ToArray();
+            var fwds = fixingDates.Select(d => f).ToArray();
+            var sigmas = fixingDates.Select(d => vol).ToArray();
+            pv = TurnbullWakeman.PV(fwds, fixingDates, evalDate, avgEnd,sigmas, k,rf, OptionType.C);
+            strike = TurnbullWakeman.StrikeForPV(pv,fwds ,fixingDates, volSurface, evalDate, avgEnd, rf, OptionType.C);
             Assert.Equal(k, strike, 10);
         }
 

@@ -244,11 +244,11 @@ namespace Qwack.Excel.Instruments
                 var mStyle = MarginType.OptionalExcel("FuturesStyle");
 
                 if (!Enum.TryParse(CallPut, true, out OptionType cp))
-                    throw new Exception($"Could not parse call/put flag {cp}");
+                    throw new Exception($"Could not parse call/put flag {CallPut}");
                 if (!Enum.TryParse(exStyle, true, out OptionExerciseType exType))
                     throw new Exception($"Could not parse option style flag {exStyle}");
                 if (!Enum.TryParse(mStyle, true, out OptionMarginingType mType))
-                    throw new Exception($"Could not parse margining type flag {mType}");
+                    throw new Exception($"Could not parse margining type flag {mStyle}");
 
                 var product = new FuturesOption
                 {

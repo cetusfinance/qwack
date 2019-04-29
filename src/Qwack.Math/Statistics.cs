@@ -15,7 +15,7 @@ namespace Qwack.Math
         public static double CumulativeNormalDistribution(double d) => FiNormSDist(d);
         public static double ProbabilityDensityFunction(double z) => StandardNormalDistribution(z);
         public static double StandardNormalDistribution(double x) => Exp(-x * x / 2) / DoubleExtensions.Sqrt2Pi;
-        public static double NormalDistribution(double x, double mu, double sigma) => Exp(0.5 * ((x - mu) / sigma).IntPow(2)) / DoubleExtensions.Sqrt2Pi / sigma / sigma;
+        public static double NormalDistribution(double x, double mu, double sigma) => Exp(-((x - mu) / 2.0 * sigma).IntPow(2)) / DoubleExtensions.Sqrt2Pi / sigma / sigma;
 
         public static double NormInv(double p) => NormInv(p, 0.0, 1.0);
 
@@ -471,42 +471,6 @@ namespace Qwack.Math
                 }
             }
             return x > 0 ? 1 - cumNorm : cumNorm;
-        }
-
-        public static double HistogramMean(double[] Xs, double[] Ys)
-        {
-            var n = Xs.Length;
-            var sumXY = 0.0;
-            var sumY = 0.0;
-
-            for (var i = 0; i < n; i++)
-            {
-                sumXY += Xs[i] * Ys[i];
-                sumY += Ys[i];
-            }
-
-            return sumXY / sumY;
-        }
-
-        public static double HistogramMedian(double[] Xs, double[] Ys)
-        {
-            var n = Xs.Length;
-            var m = 0.0;
-            var sumY = 0.0;
-
-            var yTarget = Ys.Sum() / 2;
-
-            for (var i = 0; i < n; i++)
-            {
-                sumY += Ys[i];
-                if (sumY > yTarget)
-                {
-                    m = Xs[i];
-                    break;
-                }
-            }
-
-            return m;
         }
 
         public static double Median(this IEnumerable<double> X)

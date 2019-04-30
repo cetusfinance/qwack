@@ -7,6 +7,7 @@ using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
 using Qwack.Futures;
+using Qwack.Models.Models;
 using Qwack.Providers.Json;
 using Qwack.Utils;
 
@@ -33,6 +34,8 @@ namespace Qwack.Excel
                 SessionContainer = GlobalContainer.CreateScope().ServiceProvider;
 
                 SessionContainer.GetRequiredService<IFutureSettingsProvider>();
+
+                PnLAttributor = new PnLAttributor();
             }
             catch(Exception ex)
             {
@@ -49,6 +52,8 @@ namespace Qwack.Excel
         public static ICalendarProvider CalendarProvider => GlobalContainer.GetRequiredService<ICalendarProvider>();
         public static IFutureSettingsProvider FuturesProvider => GlobalContainer.GetRequiredService<IFutureSettingsProvider>();
         public static ILogger GetLogger<T>() => GlobalContainer.GetRequiredService<ILoggerFactory>().CreateLogger<T>();
+
+        public static IPnLAttributor PnLAttributor { get; set; } 
 
         private static string GetFutureSettingsFile() => Path.Combine(GetRunningDirectory(), _futureSettingsFile);
 

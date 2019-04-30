@@ -960,7 +960,9 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolio.BasicAttribution(modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
+                
+                var result = ContainerStores.PnLAttributor.BasicAttribution(pfolio , modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
+
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -987,7 +989,8 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(GreeksStart, $"Could not find greeks cube with name {GreeksStart}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolio.ExplainAttribution(modelStart.Value, modelEnd.Value, ccy, greeksStart.Value, ContainerStores.CurrencyProvider);
+                var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolio, modelStart.Value, modelEnd.Value, greeksStart.Value, ccy, ContainerStores.CurrencyProvider);
+
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -1013,7 +1016,7 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = pfolioStart.ExplainAttribution(pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
+                var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolioStart, pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
@@ -1105,7 +1108,7 @@ namespace Qwack.Excel.Instruments
                 if (newPf.Instruments.Any())
                     return newPf;
 
-                throw new Exception($"Could not find porfolio or trade with name {name}");
+                throw new Exception($"Could not find portfolio or trade with name {name}");
             }
 
             return pfolio.Value;

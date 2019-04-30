@@ -43,7 +43,7 @@ namespace Qwack.Excel.Tests.Capital
             ContainerStores.GetObjectCache<Portfolio>().PutObject("moqPf", new SessionItem<Portfolio>() { Name = "moqPf", Value = pf });
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("moqModel", new SessionItem<IAssetFxModel>() { Name = "moqModel", Value = moqModel.Object });
 
-            Assert.Equal("Could not find porfolio or trade with name blash", CapitalFunctions.ComputeEAD("blash", "frah", "ZAR", null));
+            Assert.Equal("Could not find portfolio or trade with name blash", CapitalFunctions.ComputeEAD("blash", "frah", "ZAR", null));
             Assert.Equal("Model frah not found", CapitalFunctions.ComputeEAD("moqPf", "frah", "ZAR", null));
             Assert.Equal(0.0, CapitalFunctions.ComputeEAD("moqPf", "moqModel", "ZAR", new object[,] { { "fakeAsset", "woooh"} }));
         }

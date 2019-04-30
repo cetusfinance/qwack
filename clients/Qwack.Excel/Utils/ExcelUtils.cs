@@ -87,7 +87,7 @@ namespace Qwack.Excel.Utils
             return ExcelHelper.Execute(_logger, () =>
             {
                 var charArr = Characters.OptionalExcel<string>(" ");
-                return Text.Where(x => !charArr.Contains(x)).ToString();
+                return new string(Text.Where(x => !charArr.Contains(x)).ToArray());
             });
         }
 

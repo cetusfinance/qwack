@@ -700,5 +700,41 @@ namespace Qwack.Dates
             d = d.IfHolidayRollForward(otherCal);
             return d;
         }
+
+        //http://www.henk-reints.nl/easter/index.htm?frame=easteralg2.htm
+        public static DateTime EasterGauss(int year)
+        {
+            var P = year / 100;
+            var Q = (3 * P + 3) / 4;
+            var R = (8 * P + 13) / 25;
+            var M = (15 + Q - R) % 30;
+            var N = (4 + Q) % 7;
+
+            var a = year % 19;
+            var b = year % 4;
+            var c = year % 7;
+            var d = (19 * a + M) % 30;
+            var e = (2 * b + 4 * c + 6 * d + N) % 7;
+
+            var f = 22 + d + e;
+            if (f == 57 || (f == 56 && e == 6 && a > 10))
+                f -= 7;
+
+            var ge = (new DateTime(year, 3, 1)).AddDays(f-1);
+            return ge;
+        }
+
+        /// <summary>
+        /// Returns the dates of westerns easter for a given year
+        /// </summary>
+        /// <param name="dateInYear"></param>
+        /// <returns>
+        /// GoodFriday, EasterMonday
+        /// </returns>
+        public static (DateTime GoodFriday, DateTime EasterMonday) Easter(this DateTime dateInYear)
+        {
+            var easterSunday = EasterGauss(dateInYear.Year);
+            return (easterSunday.AddDays(-2), easterSunday.AddDays(1));
+        }
     }
 }

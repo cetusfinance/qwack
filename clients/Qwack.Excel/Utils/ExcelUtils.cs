@@ -266,5 +266,17 @@ namespace Qwack.Excel.Utils
             [ExcelArgument(Description = "Input value")] object Input,
             [ExcelArgument(Description = "Alternative value")] object Alternative) 
             => ExcelHelper.Execute(_logger, () => ((Input is string str) && str.StartsWith("#")) || Input is ExcelError ? Alternative : Input);
+
+        [ExcelFunction(Description = "Turns an excel into a csv string", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_RangeToXSV(
+            [ExcelArgument(Description = "Input range")] object[] Input,
+            [ExcelArgument(Description = "Seperator, default ','")] object Seperator)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var s = Seperator.OptionalExcel(",");
+                return string.Join(s, Input);
+            });
+        }
     }
 }

@@ -102,20 +102,30 @@ namespace Qwack.Options
 
                 lvGrid[it - 1] = new double[numberOfStrikes];
 
-                for (var ik = 0; ik < numberOfStrikes; ik++)
+                if (numberOfStrikes > 1)
                 {
-                    var K = strikes[it][ik];
+                    for (var ik = 0; ik < numberOfStrikes; ik++)
+                    {
+
+                        var K = strikes[it][ik];
+                        var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
+                        var C = BlackFunctions.BlackPV(fwd, K, 0.0, T, V, OptionType.C);
+                        var Vtm1 = VanillaSurface.GetVolForAbsoluteStrike(K, T1, fwdtm1);
+
+                        //var dcdt = -BlackFunctions.BlackTheta(fwd, K, 0.0, T, V, OptionType.C);
+                        var dcdt = -(BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C) - C) / (T - T1);
+                        var dcdk = cInterp.FirstDerivative(K);
+                        var d2cdk2 = cInterp.SecondDerivative(K);
+
+                        var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);
+                        lvGrid[it - 1][ik] = localVariance;
+                    }
+                }
+                else
+                {
+                    var K = strikes[it][0];
                     var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
-                    var C = BlackFunctions.BlackPV(fwd, K, 0.0, T, V, OptionType.C);
-                    var Vtm1 = VanillaSurface.GetVolForAbsoluteStrike(K, T1, fwdtm1);
-
-                    //var dcdt = -BlackFunctions.BlackTheta(fwd, K, 0.0, T, V, OptionType.C);
-                    var dcdt = -(BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C) - C) / (T - T1);
-                    var dcdk = cInterp.FirstDerivative(K);
-                    var d2cdk2 = cInterp.SecondDerivative(K);
-
-                    var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);
-                    lvGrid[it - 1][ik] = localVariance;
+                    lvGrid[it - 1][0] = V*V;
                 }
             }//, false).Wait();
 

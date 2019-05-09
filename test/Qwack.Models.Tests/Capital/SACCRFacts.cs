@@ -43,6 +43,7 @@ namespace Qwack.Models.Tests.Capital
             {
                 AssetId = "Crude",
                 ExpiryDate = origin.AddDays(9 * 365/12.0),
+                PaymentDate = origin.AddDays(9 * 365 / 12.0),
                 Notional = 100000,
                 Strike = 100.5,
                 PaymentCurrency = usd,
@@ -53,6 +54,7 @@ namespace Qwack.Models.Tests.Capital
             {
                 AssetId = "Crude",
                 ExpiryDate = origin.AddDays(2 * 365),
+                PaymentDate = origin.AddDays(2 * 365),
                 Notional = -200000,
                 Strike = 99.85,
                 PaymentCurrency = usd,
@@ -63,6 +65,7 @@ namespace Qwack.Models.Tests.Capital
             {
                 AssetId = "Silver",
                 ExpiryDate = origin.AddDays(5 * 365),
+                PaymentDate = origin.AddDays(5 * 365),
                 Notional = 1000000,
                 Strike = 9.9,
                 PaymentCurrency = usd,

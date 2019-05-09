@@ -180,7 +180,7 @@ namespace Qwack.Models.MCModels
                     {
                         var fxAdjPair = settings.ReportingCurrency + "/" + model.GetPriceCurve(assetId).Currency;
                         var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
-                        if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface2))
+                        if (!(model.FundingModel.GetVolSurface(fxAdjPair) is IATMVolSurface adjSurface2))
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         adjSurface = adjSurface2;
                         if (model.CorrelationMatrix != null)

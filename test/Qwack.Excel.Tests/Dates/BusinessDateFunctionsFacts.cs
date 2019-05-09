@@ -180,5 +180,14 @@ namespace Qwack.Excel.Tests.Dates
 
             Assert.Equal(DateTime.Parse("2018-09-04"), BusinessDateFunctions.QDates_SpotDate(DateTime.Parse("2018-08-31"), "2b", "LON", "NYC"));
         }
+
+        [Fact]
+        public void QDates_Easter_Facts()
+        {
+            var e = (object[])BusinessDateFunctions.QDates_Easter(DateTime.Parse("2019-12-24"));
+
+            Assert.Equal(DateTime.Parse("2019-04-19"), e[0]);
+            Assert.Equal(DateTime.Parse("2019-04-22"), e[1]);
+        }
     }
 }

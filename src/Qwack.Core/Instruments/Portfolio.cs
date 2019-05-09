@@ -260,7 +260,10 @@ namespace Qwack.Core.Instruments
             var newTrades = new Portfolio { Instruments = newTradesIns.ToList() };
 
             var endIds = end.Instruments.Select(x => x.TradeId).ToList();
-            var removedTradesIns = start.Instruments.Where(i => !endIds.Contains(i.TradeId) && (i.LastSensitivityDate > endDate || (i is CashBalance cb && cb.PayDate != endDate)));
+            var removedTradesIns = start.Instruments
+                .Where(i => 
+                !endIds.Contains(i.TradeId) && 
+                (i.LastSensitivityDate > endDate || (i is CashBalance cb && cb.PayDate != endDate)));
             var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
 
             var commonIds = startIds.Intersect(endIds).ToList();

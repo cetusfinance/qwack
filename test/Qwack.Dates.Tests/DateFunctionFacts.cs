@@ -22,7 +22,7 @@ namespace Qwack.Dates.Tests
             Assert.Equal(177, noWeekends.Count);
             Assert.Equal(0, noWeekends.Count(d => d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday));
 
-            Assert.Throws<ArgumentException>(()=>endDate.BusinessDaysInPeriod(startDate, WeekendsOnly));
+            Assert.Throws<ArgumentException>(() => endDate.BusinessDaysInPeriod(startDate, WeekendsOnly));
         }
 
         [Fact]
@@ -352,8 +352,8 @@ namespace Qwack.Dates.Tests
                 new object[] { new DateTime(2016,07,04), new DateTime(2016, 08, 04), DayCountBasis.Act_Act, 31.0/366.0 }, //year is leap
                 new object[] { new DateTime(2016,07,04), new DateTime(2017, 07, 04), DayCountBasis.Act_Act, 180/366.0 + 185/365.0 },  //cross years
 
-                new object[] { new DateTime(2015,07,04), new DateTime(2015, 08, 04), DayCountBasis._30_360, 1.0/12 }, 
-                new object[] { new DateTime(2016,07,04), new DateTime(2016, 08, 04), DayCountBasis._30_360, 1.0/12 }, 
+                new object[] { new DateTime(2015,07,04), new DateTime(2015, 08, 04), DayCountBasis._30_360, 1.0/12 },
+                new object[] { new DateTime(2016,07,04), new DateTime(2016, 08, 04), DayCountBasis._30_360, 1.0/12 },
                 new object[] { new DateTime(2016,07,04), new DateTime(2017, 07, 04), DayCountBasis._30_360, 1.0 },
 
                 new object[] { new DateTime(2016,03,04), new DateTime(2017, 09, 04), DayCountBasis.Unity, 1.0 },
@@ -366,11 +366,48 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void xDigitYear()
         {
-            Assert.Equal(18,DateExtensions.DoubleDigitYear(2018));
+            Assert.Equal(18, DateExtensions.DoubleDigitYear(2018));
             Assert.Equal(8, DateExtensions.SingleDigitYear(2018));
 
             Assert.Equal(28, DateExtensions.DoubleDigitYear(2028));
             Assert.Equal(8, DateExtensions.SingleDigitYear(2028));
+        }
+
+
+        [Theory]
+        //https://en.wikipedia.org/wiki/List_of_dates_for_Easter
+        [InlineData(1999, "1999-04-04")]
+        [InlineData(2001, "2001-04-15")]
+        [InlineData(2002, "2002-03-31")]
+        [InlineData(2005, "2005-03-27")]
+        [InlineData(2010, "2010-04-04")]
+        [InlineData(2019, "2019-04-21")]
+        [InlineData(2020, "2020-04-12")]
+        [InlineData(2024, "2024-03-31")]
+        public void GaussEaster(int year, string expected)
+        {
+            var e = DateTime.Parse(expected);
+            Assert.Equal(e, DateExtensions.EasterGauss(year));
+        }
+
+        [Fact]
+        public void RuleBased_ZARule()
+        {
+            var calendar = new Calendar
+            {
+                CalendarType = CalendarType.FixedDateZARule,
+                FixedDate = new DateTime(2000, 07, 07),
+                ValidFromYear = 1994,
+                ValidToYear = 2020
+            };
+           
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendar.IsHoliday(new DateTime(2019, 07, 08)));
+
+            Assert.True(calendar.IsHoliday(new DateTime(2020, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(2021, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(1993, 07, 07)));
         }
     }
 }

@@ -304,5 +304,16 @@ namespace Qwack.Excel.Dates
                 return ValDate.SpotDate(lag, cal1, cal2);
             });
         }
+
+        [ExcelFunction(Description = "Returns dates for Good Friday and Easter Monday in the given year", Category = "QDates", IsThreadSafe = true)]
+        public static object QDates_Easter(
+            [ExcelArgument(Description = "Date")] DateTime Date)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var (GoodFriday, EasterMonday) = Date.Easter();
+                return new object[] { GoodFriday, EasterMonday };
+            });
+        }
     }
 }

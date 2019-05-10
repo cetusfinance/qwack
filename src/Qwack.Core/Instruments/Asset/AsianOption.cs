@@ -63,15 +63,7 @@ namespace Qwack.Core.Instruments.Asset
             d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
             d2 = d1 - volatility * Sqrt(expTime);
 
-            //Delta
-            if (CP == OptionType.Put)
-            {
-                return DF * (Math.Statistics.NormSDist(d1) - 1);
-            }
-            else
-            {
-                return DF * Math.Statistics.NormSDist(d1);
-            }
+            return (CP == OptionType.Put) ? DF * (Math.Statistics.NormSDist(d1) - 1) : DF * Math.Statistics.NormSDist(d1);
         }
     }
 }

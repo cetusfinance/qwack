@@ -81,5 +81,71 @@ namespace Qwack.Math.Tests.Options
             Assert.Equal(k, strike, 10);
         }
 
+        [Fact]
+        public void ThetaFacts()
+        {
+            var originDate = new DateTime(2019, 05, 10);
+            var fixingDates = originDate.AddDays(30).CalendarDaysInPeriod(originDate.AddDays(60)).ToArray();
+            var fwds = fixingDates.Select(d => 100.0).ToArray();
+            var vols = fixingDates.Select(d => 0.32).ToArray();
+            var k = 100.0;
+            var pv = TurnbullWakeman.PV(fwds, fixingDates, originDate, fixingDates.Last(), vols, k, 0.0, OptionType.C);
+            var pv2 = TurnbullWakeman.PV(fwds, fixingDates, originDate.AddDays(1), fixingDates.Last(), vols, k, 0.0, OptionType.C);
+            var theta = TurnbullWakeman.Theta(fwds, fixingDates, originDate, fixingDates.Last(), vols, k, 0.0, OptionType.C);
+
+            Assert.Equal((pv2 - pv) * 365, theta, 0);
+
+            theta = TurnbullWakeman.Theta(fwds, fixingDates, fixingDates.Last().AddDays(1), fixingDates.Last(), vols, k, 0.0, OptionType.C);
+            Assert.Equal(0, theta);
+
+            theta = TurnbullWakeman.Theta(fwds, fixingDates, fixingDates.Last(), fixingDates.Last(), vols, k, 0.0, OptionType.C);
+            Assert.Equal(0, theta);
+
+            Assert.Throws<DataMisalignedException>(() => TurnbullWakeman.Theta(new[] { 1.0 }, fixingDates, originDate, fixingDates.Last(), vols, k, 0.0, OptionType.C));
+        }
+
+        [Fact]
+        public void DeltaFacts()
+        {
+            var evalDate = new DateTime(2019, 05, 10);
+            var avgStart = evalDate.AddDays(365);
+            var avgEnd = avgStart.AddDays(32);
+            var k = 100.0;
+            var f = 100.0;
+            var vol = 0.32;
+            var rf = 0.0;
+            var deltaBump = 1e-6;
+            var pv = TurnbullWakeman.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            var pv2 = TurnbullWakeman.PV(f + deltaBump, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            var delta = TurnbullWakeman.Delta(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+
+            Assert.Equal((pv2 - pv)/ deltaBump, delta, 2);
+
+            evalDate = avgStart.AddDays(16);
+            pv = TurnbullWakeman.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            pv2 = TurnbullWakeman.PV(f + deltaBump, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            delta = TurnbullWakeman.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = TurnbullWakeman.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+            pv2 = TurnbullWakeman.PV(f + deltaBump, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+            delta = TurnbullWakeman.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = TurnbullWakeman.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            pv2 = TurnbullWakeman.PV(f + deltaBump, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+            delta = TurnbullWakeman.Delta(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = TurnbullWakeman.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+            pv2 = TurnbullWakeman.PV(f + deltaBump, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+            delta = TurnbullWakeman.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+        }
+
     }
 }

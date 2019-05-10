@@ -389,6 +389,9 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime IfHolidayRollForward(this DateTime input, Calendar calendar)
         {
+            if (calendar == null)
+                return input;
+
             input = input.Date;
             while (calendar.IsHoliday(input))
             {
@@ -405,6 +408,9 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime IfHolidayRollBack(this DateTime input, Calendar calendar)
         {
+            if (calendar == null)
+                return input;
+
             while (calendar.IsHoliday(input))
             {
                 input = input.AddDays(-1);
@@ -422,6 +428,9 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime IfHolidayRoll(this DateTime date, RollType rollType, Calendar calendar)
         {
+            if (calendar == null)
+                return date;
+
             date = date.Date;
             DateTime d, d1, d2;
             double distFwd, distBack;

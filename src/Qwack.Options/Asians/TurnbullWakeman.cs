@@ -27,21 +27,18 @@ namespace Qwack.Options.Asians
 
             var sigma_a = tExpiry == 0 ? 0.0 : Sqrt(Log(M) / tExpiry);
 
-            if (tAvgStart < 0)
+            K = AsianUtils.AdjustedStrike(K, knownAverage, tExpiry, tAvgStart);
+
+            if (K <= 0 && tAvgStart < 0)
             {
+                if (callPut == OptionType.P)
+                    return 0;
                 var t2 = tExpiry - tAvgStart;
-                K = K * t2 / tExpiry - knownAverage * (t2 - tExpiry) / tExpiry;
-
-                if (K <= 0)
-                {
-                    if (callPut == OptionType.P)
-                        return 0;
-
-                    var expAvg = knownAverage * (t2 - tExpiry) / t2 + forward * tExpiry / t2;
-                    var df = Exp(-riskFree * tExpiry);
-                    return df * expAvg;
-                }
+                var expAvg = knownAverage * (t2 - tExpiry) / t2 + forward * tExpiry / t2;
+                var df = Exp(-riskFree * tExpiry);
+                return df * expAvg;
             }
+            
 
             var pv = BlackFunctions.BlackPV(forward, K, riskFree, tExpiry, sigma_a, callPut);
 
@@ -68,8 +65,8 @@ namespace Qwack.Options.Asians
                 throw new DataMisalignedException();
 
             var m1 = forwards.Average();
-            var tExpiry = evalDate.CalculateYearFraction(fixingDates.Last(), DayCountBasis.Act365F);
-            var tPay = evalDate.CalculateYearFraction(payDate, DayCountBasis.Act365F);
+            var tExpiry = evalDate.CalculateYearFraction(fixingDates.Last(), DayCountBasis.Act365F, false);
+            var tPay = evalDate.CalculateYearFraction(payDate, DayCountBasis.Act365F, false);
             var df = Exp(-riskFree * tPay);
 
             if (tExpiry <= 0) //work out intrinsic
@@ -78,32 +75,25 @@ namespace Qwack.Options.Asians
             }
 
             var m2 = 0.0;
-            var ts = fixingDates.Select(x => Max(0, evalDate.CalculateYearFraction(x, DayCountBasis.Act365F))).ToArray();
+            var ts = fixingDates.Select(x => Max(0, evalDate.CalculateYearFraction(x, DayCountBasis.Act365F, false))).ToArray();
             for (var i = 0; i < fixingDates.Length; i++)
                 for (var j = 0; j < fixingDates.Length; j++)
                     m2 += forwards[i] * forwards[j] * Exp(sigmas[i] * sigmas[j] * ts[Min(i, j)]);
             m2 /= (forwards.Length * forwards.Length);
             var sigma_a = Sqrt(1 / tExpiry * Log(m2 / (m1 * m1)));
 
-            var tAvgStart = evalDate.CalculateYearFraction(fixingDates.First(), DayCountBasis.Act365F);
+            var tAvgStart = evalDate.CalculateYearFraction(fixingDates.First(), DayCountBasis.Act365F, false);
             var tIx = fixingDates.Where(x => x < evalDate).Count();
             var knownAverage = tIx == 0 ? 0.0 : forwards.Take(tIx).Average();
             var forward = tIx == fixingDates.Count() ? 0.0 : forwards.Skip(tIx).Average();
 
-            if (tAvgStart < 0)
+            K = AsianUtils.AdjustedStrike(K, knownAverage, tExpiry, tAvgStart);
+
+            if (K <= 0)
             {
-                var t2 = tExpiry - tAvgStart;
-                K = K * t2 / tExpiry - knownAverage * (t2 - tExpiry) / tExpiry;
-
-                if (K <= 0)
-                {
-                    if (callPut == OptionType.P)
-                        return 0;
-
-                    return df * m1;
-                }
+                return (callPut == OptionType.P) ? 0.0 : df * m1;
             }
-
+            
             var pv = BlackFunctions.BlackPV(m1, K, 0.0, tExpiry, sigma_a, callPut);
 
             if (tAvgStart < 0)
@@ -130,67 +120,37 @@ namespace Qwack.Options.Asians
                 return -riskFree * df * (callPut == OptionType.Call ? Max(0, m1 - K) : Max(0, K - m1));
             }
 
-            var m2 = 0.0;
-            var ts = fixingDates.Select(x => Max(0, evalDate.CalculateYearFraction(x, DayCountBasis.Act365F))).ToArray();
-            for (var i = 0; i < fixingDates.Length; i++)
-                for (var j = 0; j < fixingDates.Length; j++)
-                    m2 += forwards[i] * forwards[j] * Exp(sigmas[i] * sigmas[j] * ts[Min(i, j)]);
-            m2 /= (forwards.Length * forwards.Length);
-            var sigma_a = Sqrt(1 / tExpiry * Log(m2 / (m1 * m1)));
+            var pv1 = PV(forwards, fixingDates, evalDate, payDate, sigmas, K, riskFree, callPut);
+            var pv2 = PV(forwards, fixingDates, evalDate.AddDays(1), payDate, sigmas, K, riskFree, callPut);
 
-            var tAvgStart = evalDate.CalculateYearFraction(fixingDates.First(), DayCountBasis.Act365F);
-            var tIx = fixingDates.Where(x => x < evalDate).Count();
-            var knownAverage = tIx == 0 ? 0.0 : forwards.Take(tIx).Average();
-            var forward = tIx == fixingDates.Count() ? 0.0 : forwards.Skip(tIx).Average();
-
-            if (tAvgStart < 0)
-            {
-                var t2 = tExpiry - tAvgStart;
-                K = K * t2 / tExpiry - knownAverage * (t2 - tExpiry) / tExpiry;
-
-                if (K <= 0)
-                {
-                    if (callPut == OptionType.P)
-                        return 0;
-
-                    return df * m1;
-                }
-            }
-
-            var theta = BlackFunctions.BlackTheta(m1, K, riskFree, tExpiry, sigma_a, callPut);
-
-            if (tAvgStart < 0)
-            {
-                theta *= tExpiry / (tExpiry - tAvgStart);
-            }
-            return theta;
+            return (pv2 - pv1) * 365;
         }
 
         public static double Delta(double forward, double knownAverage, double sigma, double K, double tAvgStart, double tExpiry, double riskFree, OptionType callPut)
         {
-            var M = 2 * (Exp(sigma * sigma * tExpiry) - Exp(sigma * sigma * tAvgStart) * (1 + sigma * sigma * (tExpiry - tAvgStart)));
-            M /= Pow(sigma, 4.0) * (tExpiry - tAvgStart) * (tExpiry - tAvgStart);
+            var tau = Max(0, tAvgStart);
+            var M = 2 * (Exp(sigma * sigma * tExpiry) - Exp(sigma * sigma * tau) * (1 + sigma * sigma * (tExpiry - tau)));
+            M /= Pow(sigma, 4.0) * (tExpiry - tau) * (tExpiry - tau);
 
             var sigma_a = Sqrt(Log(M) / tExpiry);
+            K = AsianUtils.AdjustedStrike(K, knownAverage, tExpiry, tAvgStart);
 
+            if (K <= 0)
+            {
+                if (callPut == OptionType.P)
+                    return 0;
+                var t2 = tExpiry - tAvgStart;
+                var expAvg = knownAverage * (t2 - tExpiry) / t2 + forward * tExpiry / t2;
+                var df = Exp(-riskFree * tExpiry);
+                return df * (expAvg - K);
+            }
+            
+            var delta = BlackFunctions.BlackDelta(forward, K, riskFree, tExpiry, sigma_a, callPut);
             if (tAvgStart < 0)
             {
-                var t2 = tExpiry - tAvgStart;
-                K = K * t2 / tExpiry - knownAverage * (t2 - tExpiry) / tExpiry;
-
-                if (K <= 0)
-                {
-                    if (callPut == OptionType.P)
-                        return 0;
-
-                    var expAvg = knownAverage * (t2 - tExpiry) / t2 + forward * tExpiry / t2;
-                    var df = Exp(-riskFree * tExpiry);
-                    return df * (expAvg - K);
-                }
+                delta *= tExpiry / (tExpiry - tAvgStart);
             }
-
-            var pv = BlackFunctions.BlackDelta(forward, K, riskFree, tExpiry, sigma_a, callPut);
-            return pv;
+            return delta;
         }
 
         public static double Delta(double forward, double knownAverage, double sigma, double K, DateTime evalDate, DateTime avgStartDate, DateTime avgEndDate, double riskFree, OptionType callPut)

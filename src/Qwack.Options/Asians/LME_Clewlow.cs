@@ -149,11 +149,7 @@ namespace Qwack.Options.Asians
 
             var df = System.Math.Exp(-riskFree * (avgEndDate - evalDate).TotalDays / 365.0);
 
-            d1 = Math.Statistics.NormSDist(d1 *
-                (callPut == OptionType.Call ? 1.0 : -1.0));
-
-            var delta = d1 * df;
-            return delta;
+            return df * ((callPut == OptionType.Put) ? Math.Statistics.NormSDist(d1) - 1 : Math.Statistics.NormSDist(d1));
         }
     }
 }

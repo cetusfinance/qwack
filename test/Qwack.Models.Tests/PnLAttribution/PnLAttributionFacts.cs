@@ -11,6 +11,7 @@ using Qwack.Core.Basic;
 using Qwack.Dates;
 using System.Linq;
 using Qwack.Models.Models;
+using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Models.Tests.PnLAttribution
 {
@@ -51,11 +52,16 @@ namespace Qwack.Models.Tests.PnLAttribution
             var fModel = new FundingModel(originDate, new[] { discoUsd, discoZar }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             fModel.SetupFx(fxMatrix);
             var startModel = new AssetFxModel(originDate, fModel);
+            startModel.AddFixingDictionary("FakeAsset", new FixingDictionary());
+            startModel.AddPriceCurve("FakeAsset", new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider));
+            startModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00));
 
             var endFModel = fModel.DeepClone();
             endFModel.FxMatrix.SpotRates[usd] = 15;
             var endModel = startModel.Clone(endFModel);
-
+            endModel.AddFixingDictionary("FakeAsset", new FixingDictionary());
+            endModel.AddPriceCurve("FakeAsset", new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider));
+            endModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00));
             return (startModel, endModel, pf);
         }
 
@@ -85,5 +91,22 @@ namespace Qwack.Models.Tests.PnLAttribution
             Assert.Equal(expected, sum, 10);
         }
 
+        [Fact]
+        public void ExplainPnLAttributionWithActivityFacts()
+        {
+            var (startModel, endModel, portfolio) = GenerateTestData();
+            var endPf = portfolio.Clone();
+            var newIns = (FxForward)((FxForward)portfolio.Instruments.First()).Clone();
+            newIns.TradeId = "newTrade";
+            endPf.Instruments.Add(newIns);
+
+            var zar = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR");
+
+            var result = Models.PnLAttribution.ExplainAttribution(portfolio, endPf, startModel, endModel, zar, TestProviderHelper.CurrencyProvider);
+            var sum = result.GetAllRows().Sum(x => x.Value);
+            var expected = 2.0*portfolio.PV(endModel, zar).GetAllRows().Sum(x => x.Value)
+                - portfolio.PV(startModel, zar).GetAllRows().Sum(x => x.Value);
+            Assert.Equal(expected, sum, 10);
+        }
     }
 }

@@ -7,6 +7,7 @@ using Xunit;
 using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
 using Qwack.Dates;
+using Qwack.Options;
 
 namespace Qwack.Math.Tests.Options
 {
@@ -47,9 +48,66 @@ namespace Qwack.Math.Tests.Options
             var PVcall = LME_Clewlow.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, fixCal);
             var PVput = LME_Clewlow.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, fixCal);
             Assert.Equal(PVcall, PVput, 2);
+
+            //bullet defaults to european
+            avgStart = avgEnd;
+            PV = LME_Clewlow.PV(f, 0.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, fixCal);
+            var blackPV = BlackFunctions.BlackPV(f, k, rf, t, vol, OptionType.P);
+            Assert.Equal(blackPV, PV, 10);
+
+            //on expiry its intrinsic
+            evalDate = avgEnd;
+            PV = LME_Clewlow.PV(f, f, vol, f+10, evalDate, avgStart, avgEnd, rf, OptionType.P, fixCal);
+            Assert.Equal(10.0, PV, 10);
+            PV = LME_Clewlow.PV(f,f, vol, f - 10, evalDate, avgStart, avgEnd, rf, OptionType.C, fixCal);
+            Assert.Equal(10.0, PV, 10);
+
         }
 
-     
+        [Fact]
+        public void DeltaFacts()
+        {
+            var cal = TestProviderHelper.CalendarProvider.Collection["nyc"];
+
+            var evalDate = new DateTime(2019, 05, 10);
+            var avgStart = evalDate.AddDays(365);
+            var avgEnd = avgStart.AddDays(32);
+            var k = 100.0;
+            var f = 100.0;
+            var vol = 0.32;
+            var rf = 0.0;
+            var deltaBump = 1e-6;
+            var pv = LME_Clewlow.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            var pv2 = LME_Clewlow.PV(f + deltaBump, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            var delta = LME_Clewlow.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            evalDate = avgStart.AddDays(16);
+            pv = LME_Clewlow.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            pv2 = LME_Clewlow.PV(f + deltaBump, f+deltaBump, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            delta = LME_Clewlow.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = LME_Clewlow.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+            pv2 = LME_Clewlow.PV(f + deltaBump, f + deltaBump, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+            delta = LME_Clewlow.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = LME_Clewlow.PV(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            pv2 = LME_Clewlow.PV(f + deltaBump, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+            delta = LME_Clewlow.Delta(f, 0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.C, cal);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+
+            pv = LME_Clewlow.PV(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+            pv2 = LME_Clewlow.PV(f + deltaBump, f + deltaBump, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+            delta = LME_Clewlow.Delta(f, 100.0, vol, k, evalDate, avgStart, avgEnd, rf, OptionType.P, cal);
+
+            Assert.Equal((pv2 - pv) / deltaBump, delta, 2);
+        }
 
     }
 }

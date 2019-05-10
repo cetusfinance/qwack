@@ -56,7 +56,7 @@ namespace Qwack.Models.Tests.PnLAttribution
 
             var curve = new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider);
             model.AddPriceCurve("FakeAsset", curve);
-
+            model.AddFixingDictionary("FakeAsset", new FixingDictionary());
             model.AttachPortfolio(pf);
             return model;
         }

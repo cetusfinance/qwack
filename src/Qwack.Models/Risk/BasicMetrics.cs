@@ -1129,8 +1129,10 @@ namespace Qwack.Models.Risk
                 { "TradeType", typeof(string) },
                 { "AssetId", typeof(string) },
                 { "PointLabel", typeof(string) },
+                { "PointDate", typeof(DateTime) },
                 { "Metric", typeof(string) },
-                { "Currency", typeof(string) }
+                { "Currency", typeof(string) },
+                { "Portfolio", typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -1155,6 +1157,7 @@ namespace Qwack.Models.Risk
             {
                  { "AssetId", string.Empty },
                  { "PointLabel", string.Empty },
+                 { "PointDate", fwdValDate },
                  { "Metric", "Theta" }
             });
 
@@ -1164,6 +1167,7 @@ namespace Qwack.Models.Risk
             {
                  { "AssetId", string.Empty },
                  { "PointLabel", "CashMove"  },
+                 { "PointDate", fwdValDate },
                  { "Metric", "Theta" }
             });
 
@@ -1234,8 +1238,9 @@ namespace Qwack.Models.Risk
             baseDeltaCube = tasks["FxDeltaGamma"].Result;
             cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
             {
-                 { "PointLabel", string.Empty },
-                 { "Currency", string.Empty },
+                { "PointDate", DateTime.MinValue },
+                { "PointLabel", string.Empty },
+                { "Currency", string.Empty },
             });
             rolledDeltaGammaCube = tasks["RolledFxDeltaGamma"].Result;
             rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
@@ -1244,6 +1249,7 @@ namespace Qwack.Models.Risk
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
+                 { "PointDate", DateTime.MinValue },
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
@@ -1253,6 +1259,7 @@ namespace Qwack.Models.Risk
             cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
             {
                  { "PointLabel", string.Empty },
+                 { "PointDate", DateTime.MinValue },
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
@@ -1269,6 +1276,7 @@ namespace Qwack.Models.Risk
                     { "TradeType", charmRow.MetaData[tTypeIx] },
                     { "AssetId", charmRow.MetaData[fId] },
                     { "PointLabel", string.Empty },
+                    { "PointDate", DateTime.MinValue },
                     { "Currency", string.Empty },
                     { "Metric", "Charm" }
                 };

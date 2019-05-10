@@ -129,6 +129,8 @@ namespace Qwack.Dates.Tests
             Assert.True(calendarC.IsHoliday(new DateTime(2019, 12, 07)));
             Assert.True(calendarC.IsHoliday(new DateTime(2019, 01, 07)));
 
+            Assert.False(CalendarA.Equals(CalendarB));
+            Assert.True(CalendarA.Equals(CalendarA));
         }
     }
 }

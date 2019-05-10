@@ -86,7 +86,7 @@ namespace Qwack.Utils.Parallel
             var taskList = new List<Task>();
             foreach (var t in tasks)
             {
-                if (_slimLock.Wait(0))
+                if (MultiThreaded && _slimLock.Wait(0))
                 {
                     taskList.Add(t.ContinueWith((t1) => _slimLock.Release(),TaskContinuationOptions.ExecuteSynchronously));
                     t.Start();

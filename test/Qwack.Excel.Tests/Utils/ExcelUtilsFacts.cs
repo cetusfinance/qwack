@@ -86,5 +86,13 @@ namespace Qwack.Excel.Tests.Utils
             var result = ((object[])ExcelUtils.QUtils_ToNumbers(data)).Select(x => (double)x).ToArray();
             Assert.True(Enumerable.SequenceEqual(new[] { 2.0, 3300.6, 4200.0 }, result));
         }
+
+        [Fact]
+        public void RangeToXSVFact()
+        {
+            var data = new object[] { "A", "B", "C" };
+            var result = (string)ExcelUtils.QUtils_RangeToXSV(data,Value);
+            Assert.Equal("A,B,C",result);
+        }
     }
 }

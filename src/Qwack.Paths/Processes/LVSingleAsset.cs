@@ -2,8 +2,6 @@ using Qwack.Options.VolSurfaces;
 using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Qwack.Core.Underlyings;
 using System.Numerics;
 using Qwack.Math;
 using Qwack.Math.Extensions;

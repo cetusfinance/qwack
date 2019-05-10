@@ -7,52 +7,6 @@ namespace Qwack.Math.Interpolation
 {
     public static class SegmentedLinearRegression
     {
-        public static IInterpolator1D RegressNR(double[] Xs, double[] Ys, int nSegments, double precision = 1e-4)
-        {
-            var nSamples = Xs.Length;
-            var x = new double[nSegments + 1];
-            var y = new double[nSegments + 1];
-            var samplesPerSegment = nSamples / nSegments;
-            for (var i = 0; i < nSegments; i++)
-            {
-                var sampleXs = Xs.Skip(i * samplesPerSegment).Take(samplesPerSegment).ToArray();
-                var sampleYs = Ys.Skip(i * samplesPerSegment).Take(samplesPerSegment).ToArray();
-                var lr = LinearRegression.LinearRegressionVector(sampleXs, sampleYs);
-                var xLo = sampleXs.First();
-                var xHi = sampleXs.Last();
-                var yLo = lr.Alpha + lr.Beta * xLo;
-                var yHi = lr.Alpha + lr.Beta * xHi;
-
-                if (i == 0)
-                {
-                    x[0] = xLo;
-                    y[0] = yLo;
-                    x[1] = xHi;
-                    y[1] = yHi;
-                }
-                else
-                {
-                    var targetFunc = new Func<double, double>(q =>
-                    {
-                        var slope = (q - y[i]) / (xHi - x[i]);
-                        var err = 0.0;
-                        for (var j = 0; j < samplesPerSegment; j++)
-                        {
-                            var dx = sampleXs[j] - xLo;
-                            var yEst = yLo + slope * dx;
-                            err += (yEst - sampleYs[j]) * (yEst - sampleYs[j]);
-                        }
-                        return err;
-                    });
-
-                    var yHiBetter = Solvers.Newton1D.MethodSolveWithProgress(targetFunc, yHi, precision);
-                    x[i + 1] = xHi;
-                    y[i + 1] = yHiBetter;
-                }
-            }
-            return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.Linear);
-        }
-
         public static IInterpolator1D Regress(double[] Xs, double[] Ys, int nSegments)
         {
             var nSamples = Xs.Length;

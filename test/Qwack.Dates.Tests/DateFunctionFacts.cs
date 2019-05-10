@@ -390,24 +390,6 @@ namespace Qwack.Dates.Tests
             Assert.Equal(e, DateExtensions.EasterGauss(year));
         }
 
-        [Fact]
-        public void RuleBased_ZARule()
-        {
-            var calendar = new Calendar
-            {
-                CalendarType = CalendarType.FixedDateZARule,
-                FixedDate = new DateTime(2000, 07, 07),
-                ValidFromYear = 1994,
-                ValidToYear = 2020
-            };
-           
-            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 07)));
-            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 06)));
-            Assert.True(calendar.IsHoliday(new DateTime(2019, 07, 08)));
-
-            Assert.True(calendar.IsHoliday(new DateTime(2020, 07, 07)));
-            Assert.False(calendar.IsHoliday(new DateTime(2021, 07, 07)));
-            Assert.False(calendar.IsHoliday(new DateTime(1993, 07, 07)));
-        }
+        
     }
 }

@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Qwack.Excel.Utils
 {
@@ -148,6 +149,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_FileExists(
             [ExcelArgument(Description = "Filename")] string Filename)
@@ -155,6 +157,7 @@ namespace Qwack.Excel.Utils
             return ExcelHelper.Execute(_logger, () => System.IO.File.Exists(Filename));
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Returns timestamp for a given file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_FileTimeStamp(
             [ExcelArgument(Description = "Filename")] string Filename)
@@ -165,6 +168,7 @@ namespace Qwack.Excel.Utils
                 (object)"File does not exist");
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Returns filename for newest file in a folder", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_LatestFileInFolder(
         [ExcelArgument(Description = "Filename")] string FolderPath,
@@ -193,6 +197,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Copies file from one location to another", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_CopyFile(
             [ExcelArgument(Description = "Filename Source")] string Source,
@@ -207,6 +212,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_SerializeObject(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -228,6 +234,7 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "De-Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_DeSerializeObject(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
@@ -266,6 +273,7 @@ namespace Qwack.Excel.Utils
             [ExcelArgument(Description = "Input value")] object Input,
             [ExcelArgument(Description = "Alternative value")] object Alternative) 
             => ExcelHelper.Execute(_logger, () => ((Input is string str) && str.StartsWith("#")) || Input is ExcelError ? Alternative : Input);
+
 
         [ExcelFunction(Description = "Turns an excel into a csv string", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_RangeToXSV(

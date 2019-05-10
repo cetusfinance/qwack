@@ -15,6 +15,7 @@ namespace Qwack.Dates
             CalendarType = CalendarType.Regular;
             ValidFromYear = int.MinValue;
             ValidToYear = int.MaxValue;
+            FalsePositives = new HashSet<DateTime>();
         }
 
         public bool IsMerged { get; set; }
@@ -28,6 +29,8 @@ namespace Qwack.Dates
         public DateTime FixedDate { get; set; }
         public int ValidFromYear { get; set; }
         public int ValidToYear { get; set; }
+        public HashSet<DateTime> FalsePositives { get; set; }
+
 
         public bool IsHoliday(DateTime date)
         {
@@ -65,7 +68,7 @@ namespace Qwack.Dates
                     var dateThisyear = new DateTime(date.Year, FixedDate.Month, FixedDate.Day);
                     if (dateThisyear.DayOfWeek == DayOfWeek.Sunday)
                         dateThisyear = dateThisyear.AddDays(1);
-                    return dateThisyear == date;
+                    return dateThisyear == date && !FalsePositives.Contains(date);
             }
             return false;
         }
@@ -84,6 +87,8 @@ namespace Qwack.Dates
         }
         public Calendar Merge(Calendar otherCalendar)
         {
+            if (otherCalendar.CalendarType != CalendarType)
+                throw new Exception("Cannot merge calendars of differing types");
             var newCalender = new Calendar()
             {
                 DaysToAlwaysExclude = DaysToAlwaysExclude.Concat(otherCalendar.DaysToAlwaysExclude).Distinct().ToList(),
@@ -95,6 +100,23 @@ namespace Qwack.Dates
             return newCalender;
         }
 
-        public override bool Equals(object obj) => obj is Calendar calendar && Name == calendar.Name;
+        public override bool Equals(object obj) => obj is Calendar calendar && GetHashCode()==calendar.GetHashCode();
+
+        public override int GetHashCode()
+        {
+            var hashCode = 471772613;
+            hashCode = hashCode * -1521134295 + IsMerged.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<string>>.Default.GetHashCode(InheritedCalendar);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<DayOfWeek>>.Default.GetHashCode(DaysToAlwaysExclude);
+            hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<DateTime>>.Default.GetHashCode(DaysToExclude);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<MonthEnum>>.Default.GetHashCode(MonthsToExclude);
+            hashCode = hashCode * -1521134295 + CalendarType.GetHashCode();
+            hashCode = hashCode * -1521134295 + FixedDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + ValidFromYear.GetHashCode();
+            hashCode = hashCode * -1521134295 + ValidToYear.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<DateTime>>.Default.GetHashCode(FalsePositives);
+            return hashCode;
+        }
     }
 }

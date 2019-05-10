@@ -63,5 +63,72 @@ namespace Qwack.Dates.Tests
 
             return holidays;
         }
+
+        [Fact]
+        public void RuleBased_ZARule()
+        {
+            var calendar = new Calendar
+            {
+                CalendarType = CalendarType.FixedDateZARule,
+                FixedDate = new DateTime(2000, 07, 07),
+                ValidFromYear = 1994,
+                ValidToYear = 2020
+            };
+
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendar.IsHoliday(new DateTime(2019, 07, 08)));
+
+            Assert.True(calendar.IsHoliday(new DateTime(2020, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(2021, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(1993, 07, 07)));
+
+            calendar.FalsePositives.Add(new DateTime(2019, 07, 08));
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 08)));
+
+        }
+
+        [Fact]
+        public void RuleBased_Easter()
+        {
+            var calendarGF = new Calendar
+            {
+                CalendarType = CalendarType.EasterGoodFriday,
+            };
+            var calendarEM = new Calendar
+            {
+                CalendarType = CalendarType.EasterMonday,
+            };
+
+            Assert.False(calendarGF.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendarEM.IsHoliday(new DateTime(2019, 07, 07)));
+
+            Assert.True(calendarGF.IsHoliday(new DateTime(2019, 04, 19)));
+            Assert.True(calendarEM.IsHoliday(new DateTime(2019, 04, 22)));
+        }
+
+        [Fact]
+        public void Merged_Calendar()
+        {
+            var calendarA = new Calendar();
+            var calendarB = new Calendar();
+
+            calendarA.DaysToExclude.Add(new DateTime(2019, 07, 07));
+            calendarB.DaysToExclude.Add(new DateTime(2019, 07, 08));
+
+            calendarA.MonthsToExclude.Add(MonthEnum.Dec);
+            calendarB.MonthsToExclude.Add(MonthEnum.Dec);
+            calendarB.MonthsToExclude.Add(MonthEnum.Jan);
+
+            var calendarC = calendarA.Merge(calendarB);
+
+            Assert.False(calendarC.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendarC.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.True(calendarC.IsHoliday(new DateTime(2019, 07, 08)));
+
+            Assert.True(calendarC.IsHoliday(new DateTime(2019, 12, 07)));
+            Assert.True(calendarC.IsHoliday(new DateTime(2019, 01, 07)));
+
+        }
     }
 }

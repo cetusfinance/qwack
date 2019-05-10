@@ -24,23 +24,10 @@ namespace Qwack.Core.Basic
                 throw new Exception("Inconsistent dimensions between labels and data");
         }
 
-        public double GetCorrelation(string label1, string label2, double t=0)
-        {
-            if (LabelsX.Contains(label1) && LabelsY.Contains(label2))
-            {
-                var ix1 = Array.IndexOf(LabelsX, label1);
-                var ix2 = Array.IndexOf(LabelsY, label2);
-                return Correlations[ix1, ix2];
-            }
-            else if (LabelsY.Contains(label1) && LabelsX.Contains(label2))
-            {
-                var ix1 = Array.IndexOf(LabelsX, label2);
-                var ix2 = Array.IndexOf(LabelsY, label1);
-                return Correlations[ix1, ix2];
-            }
-
+        public double GetCorrelation(string label1, string label2, double t = 0) =>
+            (TryGetCorrelation(label1, label2, out var correl, t)) ?
+                correl :
             throw new Exception($"Correlation not found for {label1}/{label2}");
-        }
 
         public bool TryGetCorrelation(string label1, string label2, out double correl, double t = 0)
         {

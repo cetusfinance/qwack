@@ -14,7 +14,8 @@ namespace Qwack.Math.Tests.Interpolation
         {
             var alpha = 7.6;
             var beta = 1.3;
-            var z = new ParametricLinearInterpolator(alpha, beta);
+            var z = new ParametricLinearInterpolator();
+            z = new ParametricLinearInterpolator(alpha, beta);
 
             var tgtFunc = new Func<double, double>(x => alpha + beta * x);
             
@@ -30,6 +31,10 @@ namespace Qwack.Math.Tests.Interpolation
             Assert.Equal(0, z.SecondDerivative(0));
             Assert.Equal(0, z.SecondDerivative(100));
             Assert.Equal(0, z.SecondDerivative(-99));
+
+            Assert.Throws<NotImplementedException>(() => z.Sensitivity(0));
+            Assert.Throws<NotImplementedException>(() => z.Bump(0, 0));
+            Assert.Throws<NotImplementedException>(() => z.UpdateY(0, 0));
         }
 
 

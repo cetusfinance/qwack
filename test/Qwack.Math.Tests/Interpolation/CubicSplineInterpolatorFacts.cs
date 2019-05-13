@@ -18,6 +18,18 @@ namespace Qwack.Math.Tests.Interpolation
             Assert.Equal(40.0, interp.Interpolate(20));
 
             Assert.True(interp.Interpolate(5) > 10 && interp.Interpolate(5) < 15);
+
+            interp = new CubicHermiteSplineInterpolator();
+            interp = new CubicHermiteSplineInterpolator(new double[] { 0 }, new double[] { 10 });
+            Assert.Equal(10.0, interp.Interpolate(20));
+            Assert.Equal(200.0, interp.DefiniteIntegral(0,20));
+
+            interp = new CubicHermiteSplineInterpolator(new double[] { 0, 10, 20 }, new double[] { 10, 10, 40 });
+            Assert.Equal(10.0, interp.Interpolate(0));
+            Assert.Equal(10.0, interp.Interpolate(10));
+            Assert.Equal(40.0, interp.Interpolate(20));
+
+            Assert.Throws<NotImplementedException>(() => interp.Sensitivity(0));
         }
 
         [Fact]
@@ -52,6 +64,10 @@ namespace Qwack.Math.Tests.Interpolation
             Assert.Equal(15.0, i2.Interpolate(10));
             Assert.Equal(50.0, i2.Interpolate(20));
 
+            var i3 = interp.Bump(2, 10);
+            Assert.Equal(10.0, i3.Interpolate(0));
+            Assert.Equal(15.0, i3.Interpolate(10));
+            Assert.Equal(50.0, i3.Interpolate(20));
         }
 
         [Theory]
@@ -97,6 +113,7 @@ namespace Qwack.Math.Tests.Interpolation
         [InlineData(5, 15, 163.54166666666669)]
         [InlineData(20, 25, 231.25)] //linear extrap right
         [InlineData(-10, 0, 75)] //lienar extrap left
+        [InlineData(0, 100, -107883.33333333)] 
         public void Integral(double pointA, double pointB, double expected)
         {
             var interp = new CubicHermiteSplineInterpolator(new double[] { 0, 10, 20 }, new double[] { 10, 15, 40 });

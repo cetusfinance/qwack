@@ -112,7 +112,7 @@ namespace Qwack.Math.Interpolation
             var k = FindFloorPoint(x);
             if (_slope.Length == 1 || k == 0)
                 return _slope[0];
-            return (_slope[k] + _slope[k - 1]) / 2.0;
+            return (_slope[k] - _slope[k - 1]) / 2.0;
         }
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
@@ -139,7 +139,7 @@ namespace Qwack.Math.Interpolation
                 Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
                 var newSlope = new double[_slope.Length];
                 Buffer.BlockCopy(_slope, 0, newSlope, 0, _slope.Length * 8);
-                var returnValue = new LinearInterpolator(_x, newY, newSlope).Bump(pillar, newValue, true);
+                var returnValue = new LinearInterpolator(_x, newY, newSlope).Bump(pillar, newValue-_y[pillar], true);
                 return returnValue;
             }
         }

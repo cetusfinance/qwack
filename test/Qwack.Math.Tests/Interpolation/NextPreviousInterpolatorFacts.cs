@@ -53,6 +53,10 @@ namespace Qwack.Math.Tests.Interpolation
             Assert.Equal(27, interp.Interpolate(5));
             Assert.Equal(100, interp.Interpolate(11));
             Assert.Equal(100, interp.Interpolate(25));
+
+            Assert.Equal(0, interp.FirstDerivative(25));
+            Assert.Equal(0, interp.SecondDerivative(25));
+            Assert.Throws<NotImplementedException>(() => interp.Sensitivity(0));
         }
 
         [Fact]
@@ -99,6 +103,10 @@ namespace Qwack.Math.Tests.Interpolation
             Assert.Equal(20, interp.Interpolate(5));
             Assert.Equal(27, interp.Interpolate(11));
             Assert.Equal(100, interp.Interpolate(25));
+
+            Assert.Equal(0, interp.FirstDerivative(25));
+            Assert.Equal(0, interp.SecondDerivative(25));
+            Assert.Throws<NotImplementedException>(() => interp.Sensitivity(0));
         }
     }
 }

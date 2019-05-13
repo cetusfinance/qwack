@@ -14,6 +14,7 @@ namespace Qwack.Math.Interpolation
 
         private double[] _x;
         private double[] _y;
+        private double[] _rawY;
         private double[] _slope;
         private double _minX;
         private double _maxX;
@@ -21,6 +22,7 @@ namespace Qwack.Math.Interpolation
         public LinearInVarianceInterpolator(double[] x, double[] y)
         {
             _x = x;
+            _rawY = y;
             _y = x.Select((v, ix) => v * y[ix] * y[ix]).ToArray();
             _minX = _x[0];
             _maxX = _x[x.Length - 1];
@@ -33,6 +35,7 @@ namespace Qwack.Math.Interpolation
         private LinearInVarianceInterpolator(double[] x, double[] y, double[] slope)
         {
             _x = x;
+            _rawY = y;
             _y = x.Select((v, ix) => v * y[ix] * y[ix]).ToArray();
             _slope = slope;
         }
@@ -60,20 +63,20 @@ namespace Qwack.Math.Interpolation
 
         public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false)
         {
-            var newY = _y[pillar] + delta;
+            var newY = _rawY[pillar] + delta;
             return UpdateY(pillar, newY, updateInPlace);
         }
 
         public double FirstDerivative(double t)
         {
-            if (t < _minX || t > _maxX)
+            if (t <= _minX || t >= _maxX)
             {
                 return 0;
             }
             else
             {
                 var k = FindFloorPoint(t);
-                return _slope[k];
+                return 0.5 / Interpolate(t) * (_x[k] * _slope[k] - _y[k]) / (t * t);
             }
         }
 
@@ -102,22 +105,31 @@ namespace Qwack.Math.Interpolation
 
         public double SecondDerivative(double x)
         {
-            if (!_x.Contains(x))
+            if (x <= _minX || x >= _maxX)
+            {
                 return 0;
-            var k = FindFloorPoint(x);
-            if (k == 0)
-                return 0.5 * _slope[0];
-            if (k == _x.Length)
-                return 0.5 * _slope[_slope.Length];
+            }
+            else
+            {
+                var k = FindFloorPoint(x);
+                var y = Interpolate(x);
+                var f = 0.5 / y;
+                var u = y * y;
+                var g = (_x[k] * _slope[k] - _y[k]) / (x * x);
+                var df = -Pow(u, -1.5) / 4.0 * g;
+                var dg = -2.0 * g / x;
 
-            return (_slope[k] + _slope[k - 1]) / 2.0;
+                var d2ydx = df * g + dg * f;
+                return d2ydx;
+            }
         }
 
         public IInterpolator1D UpdateY(int pillar, double newValue, bool updateInPlace = false)
         {
             if (updateInPlace)
             {
-                _y[pillar] = newValue;
+                _rawY[pillar] = newValue;
+                _y[pillar] = newValue * newValue * _x[pillar];
                 if (pillar < _slope.Length)
                 {
                     _slope[pillar] = (_y[pillar + 1] - _y[pillar]) / (_x[pillar + 1] - _x[pillar]);
@@ -133,34 +145,15 @@ namespace Qwack.Math.Interpolation
             }
             else
             {
-                var newY = new double[_y.Length];
-                Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
+                var newY = new double[_rawY.Length];
+                Buffer.BlockCopy(_rawY, 0, newY, 0, _rawY.Length * 8);
                 var newSlope = new double[_slope.Length];
                 Buffer.BlockCopy(_slope, 0, newSlope, 0, _slope.Length * 8);
-                var returnValue = new LinearInVarianceInterpolator(_x, newY, newSlope).Bump(pillar, newValue, true);
+                var returnValue = new LinearInVarianceInterpolator(_x, newY, newSlope).Bump(pillar, newValue - _rawY[pillar], true);
                 return returnValue;
             }
         }
 
-        public double[] Sensitivity(double t)
-        {
-            var o = new double[_y.Length];
-            if (t <= _minX)
-            {
-                o[0] = 1;
-            }
-            else if (t >= _maxX)
-            {
-                o[o.Length - 1] = 1;
-            }
-            else
-            {
-                var k = FindFloorPoint(t);
-                var prop = (t - _x[k]) / (_x[k + 1] - _x[k]);
-                o[k + 1] = prop;
-                o[k] = (1.0 - prop);
-            }
-            return o;
-        }
+        public double[] Sensitivity(double t) => throw new NotImplementedException();
     }
 }

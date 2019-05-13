@@ -123,7 +123,7 @@ namespace Qwack.Math.Interpolation
                 Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
                 var newSlope = new double[_slope.Length];
                 Buffer.BlockCopy(_slope, 0, newSlope, 0, _slope.Length * 8);
-                var returnValue = new LinearInterpolatorFlatExtrapNoBinSearch(_x, newY, newSlope).Bump(pillar, newValue, true);
+                var returnValue = new LinearInterpolatorFlatExtrapNoBinSearch(_x, newY, newSlope).Bump(pillar, newValue-_y[pillar], true);
                 return returnValue;
             }
         }

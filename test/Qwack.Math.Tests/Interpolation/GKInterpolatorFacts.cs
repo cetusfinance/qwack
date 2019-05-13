@@ -19,6 +19,11 @@ namespace Qwack.Math.Tests.Interpolation
             //test pillar values are returned
             for (var i = 0; i < xs.Length; i++)
                 Assert.Equal(ys[i], interp.Interpolate(xs[i]), 10);
+
+            var gk = new GaussianKernelInterpolator();
+            Assert.Throws<NotImplementedException>(() => interp.Bump(0,0));
+            Assert.Throws<NotImplementedException>(() => interp.UpdateY(0, 0));
+            Assert.Throws<NotImplementedException>(() => interp.Sensitivity(0));
         }
 
         [Theory]

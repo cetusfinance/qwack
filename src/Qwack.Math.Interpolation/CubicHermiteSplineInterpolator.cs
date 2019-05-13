@@ -62,6 +62,9 @@ namespace Qwack.Math.Interpolation
 
         private void Setup()
         {
+            if (_x.Length == 1)
+                return;
+
             var dk = new double[_tangents.Length-1];
             _tangents[0] = (_y[1] - _y[0]) / (_x[1] - _x[0]);
             dk[0] = _tangents[0];

@@ -32,14 +32,6 @@ namespace Qwack.Math.Interpolation
             _maxX = _x[x.Length - 1];
             FitWeights();
         }
-
-        private GaussianKernelInterpolator(double[] x, double[] y, double[] weights)
-        {
-            _x = x;
-            _y = y;
-            _weights = weights;
-        }
-
       
         private void FitWeights()
         {

@@ -22,6 +22,39 @@ namespace Qwack.MonteCarlo.Test
             engine.RunProcess();
         }
 
+        [Fact]
+        public void TestBlockGenerationSobol()
+        {
+            var engine = new PathEngine(64);
+            var directionNumbers = new Random.Sobol.SobolDirectionNumbers("SobolDirectionNumbers.txt");
+            engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumbers, 1000));
+            engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 10));
+            engine.SetupFeatures();
+            engine.RunProcess();
+        }
+
+        [Fact]
+        public void TestBlockGenerationSobolShifted()
+        {
+            var engine = new PathEngine(64);
+            var directionNumbers = new Random.Sobol.SobolDirectionNumbers("SobolDirectionNumbers.txt");
+            engine.AddPathProcess(new Random.Sobol.SobolShiftedPathGenerator(directionNumbers, 1000));
+            engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 10));
+            engine.SetupFeatures();
+            engine.RunProcess();
+        }
+
+        [Fact]
+        public void TestBlockGenerationSobolFlipShifted()
+        {
+            var engine = new PathEngine(64);
+            var directionNumbers = new Random.Sobol.SobolDirectionNumbers("SobolDirectionNumbers.txt");
+            engine.AddPathProcess(new Random.Sobol.SobolFlipShiftedPathGenerator(true,directionNumbers));
+            engine.AddPathProcess(new FakeAssetProcess("TestUnderlying", numberOfDimensions: 2, timesteps: 10));
+            engine.SetupFeatures();
+            engine.RunProcess();
+        }
+
         private class FakeAssetProcess : IPathProcess
         {
             private readonly string _name;

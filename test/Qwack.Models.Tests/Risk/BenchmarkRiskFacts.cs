@@ -13,7 +13,7 @@ using System.Linq;
 using Qwack.Models.Risk;
 using Qwack.Core.Instruments.Asset;
 
-namespace Qwack.Models.Tests.PnLAttribution
+namespace Qwack.Models.Tests.Risk
 {
     [CollectionDefinition("BenchmarkRiskFacts", DisableParallelization = true)]
     public class BenchmarkRiskFacts

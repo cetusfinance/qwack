@@ -62,7 +62,7 @@ namespace Qwack.Core.Tests.Instruments
             var rateEst = discoCurve.GetForwardRate(accrualStart, accrualEnd, RateType.Linear, ix.DayCountBasis);
             var fairPrice = 100.0 - rateEst * 100;
 
-            var expectedPv = (price - fairPrice) * 1e6 * dcf;
+            var expectedPv = (price - fairPrice) * 1e6 * dcf / 100.0;
 
             Assert.Equal(expectedPv, pv);
 

@@ -194,7 +194,11 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec, RateStorageType);
+                var returnCurve = new IrCurve(_pillars.ToArray(), _rates.Select((r, ix) => ix == pillarIx ? r + delta : r).ToArray(), _buildDate, _name, _interpKind, Currency, CollateralSpec, RateStorageType)
+                {
+                    SolveStage = SolveStage,
+                    RateIndex = RateIndex,
+                };
                 return returnCurve;
             }
         }

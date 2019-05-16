@@ -131,6 +131,7 @@ namespace Qwack.Core.Instruments.Funding
             SolveCurve = SolveCurve,
             Strike = Strike,
             TradeId = TradeId,
+            PortfolioName = PortfolioName
         };
 
         public IFundingInstrument SetParRate(double parRate)

@@ -54,11 +54,14 @@ namespace Qwack.Excel.Instruments
                 if (!Enum.TryParse(discType, out FraDiscountingType fType))
                     return $"Could not parse FRA discounting type - {discType}";
 
+                ContainerStores.CurrencyProvider.TryGetCurrency(Currency, out var ccy);
+
                 var product = new ForwardRateAgreement(ValDate, PeriodCode, ParRate, rIndex.Value, pType, fType, ForecastCurve, DiscountCurve)
                 {
                     Notional = Notional,
                     TradeId = ObjectName,
-                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name)
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    Currency = ccy
                 };
                 product.PillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
                 
@@ -172,12 +175,12 @@ namespace Qwack.Excel.Instruments
                 var expiry = c.GetExpiry();
                 var accrualStart = expiry.AddPeriod(RollType.F, rIndex.Value.HolidayCalendars, rIndex.Value.FixingOffset);
                 var accrualEnd = accrualStart.AddPeriod(rIndex.Value.RollConvention, rIndex.Value.HolidayCalendars, rIndex.Value.ResetTenor);
-                var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
+                //var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
                 var product = new STIRFuture
                 {
                     Currency = rIndex.Value.Currency,
                     ContractSize = c.Settings.LotSize,
-                    DCF = dcf,
+                    //DCF = dcf,
                     ConvexityAdjustment= ConvexityAdjustment,
                     Expiry =expiry,
                     ForecastCurve = ForecastCurve,

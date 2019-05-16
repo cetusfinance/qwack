@@ -50,7 +50,7 @@ namespace Qwack.Models.Risk
             var parRates = insToRisk.Select(x => x.CalculateParRate(pvModel.VanillaModel.FundingModel)).ToList();
             var newIns = insToRisk.Select((x, ix) => x.SetParRate(parRates[ix]));
             var newFic = new FundingInstrumentCollection(currencyProvider);
-            newFic.AddRange(newIns);
+            newFic.AddRange(newIns.OrderBy(x=>x.SolveCurve).ThenBy(x=>x.PillarDate));
 
             var fModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
             var s = new NewtonRaphsonMultiCurveSolverStaged();
@@ -115,9 +115,9 @@ namespace Qwack.Models.Risk
                 case FxForward fxf:
                     return 1.0 / (parBump - parFlat);
                 case STIRFuture st:
-                    return -1.0 / (parBump - parFlat) / st.UnitPV01;
+                    return -1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
                 case ForwardRateAgreement fra:
-                    return 1.0 / (parBump - parFlat) * fra.FlowScheduleFra.Flows.First().NotionalByYearFraction;
+                    return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().NotionalByYearFraction);
                 default:
                     return 1.0;
             }

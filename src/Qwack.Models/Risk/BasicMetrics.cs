@@ -864,9 +864,10 @@ namespace Qwack.Models.Risk
                 var subPortfolio = new Portfolio()
                 {
                     Instruments = model.Portfolio.Instruments
-                    .Where(x => (x is IAssetInstrument ia) && (ia.IrCurves(model).Contains(curve.Key) || (reportingCcy!=null && reportingCcy!=ia.Currency)))
+                    .Where(x => (x is IAssetInstrument ia) && (ia.IrCurves(model).Contains(curve.Key) || (reportingCcy != null && reportingCcy != ia.Currency)))
                     .ToList()
                 };
+                //var subPortfolio = model.Portfolio.Clone();
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
@@ -882,7 +883,8 @@ namespace Qwack.Models.Risk
 
                 var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
 
-                ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                //ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                foreach(var bCurve in bumpedCurves.ToList())
                 {
                     var newModel = model.Clone();
                     newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
@@ -909,7 +911,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, delta);
                         }
                     }
-                }).Wait();
+                }//).Wait();
             }
 
             return cube.Sort();

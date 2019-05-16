@@ -10,10 +10,10 @@ namespace Qwack.Core.Calibrators
 {
     public class NewtonRaphsonMultiCurveSolverStaged
     {
-        public double Tollerance { get; set; } = 0.00000001;
+        public double Tollerance { get; set; } = 0.0000001;
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
-        private const double JacobianBump = 0.0001;
+        private const double JacobianBump = 0.00001;
 
         private double[][] _jacobian;
         double[] _currentPvs;

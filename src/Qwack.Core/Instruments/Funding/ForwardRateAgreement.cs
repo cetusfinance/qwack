@@ -221,7 +221,8 @@ namespace Qwack.Core.Instruments.Funding
             new ForwardRateAgreement(StartDate, parRate, RateIndex, PayRec, FraType, ForecastCurve, DiscountCurve)
             {
                 Notional = Notional,
-                SolveCurve = SolveCurve
+                SolveCurve = SolveCurve,
+                Currency = Currency,
             };
     }
 }

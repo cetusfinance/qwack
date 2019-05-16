@@ -32,7 +32,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Pv(IFundingModel Model, bool updateState)
         {
             var fairPrice = CalculateParRate(Model);
-            var PV = (Price - fairPrice) * Position * ContractSize * DCF;
+            var PV = (Price - fairPrice) / 100.0 * Position * ContractSize * DCF ;
             return PV;
         }
 
@@ -90,7 +90,8 @@ namespace Qwack.Core.Instruments.Funding
             Position = Position,
             Price = Price,
             SolveCurve = SolveCurve,
-            TradeId = TradeId
+            TradeId = TradeId,
+            PortfolioName = PortfolioName
         };
 
         public IFundingInstrument SetParRate(double parRate)

@@ -91,7 +91,7 @@ namespace Qwack.Models.Tests.PnLAttribution
             Assert.Equal(expected, sum, 10);
 
             startModel.AttachPortfolio(portfolio);
-            var greeks = Risk.BasicMetrics.AssetGreeks((AssetFxModel)startModel, endModel.BuildDate, zar, TestProviderHelper.CurrencyProvider).Result;
+            var greeks = Qwack.Models.Risk.BasicMetrics.AssetGreeks((AssetFxModel)startModel, endModel.BuildDate, zar, TestProviderHelper.CurrencyProvider).Result;
             result = Models.PnLAttribution.ExplainAttribution(portfolio, startModel, endModel, zar, greeks, TestProviderHelper.CurrencyProvider);
             sum = result.GetAllRows().Sum(x => x.Value);
             Assert.Equal(expected, sum, 10);

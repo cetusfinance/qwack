@@ -64,7 +64,7 @@ namespace Qwack.Core.Tests.Instruments
 
             var expectedPv = (price - fairPrice) * 1e6 * dcf / 100.0;
 
-            Assert.Equal(expectedPv, pv);
+            Assert.Equal(expectedPv, pv, 8);
 
             var ss = s.Sensitivities(fModel);
             Assert.True(ss.Count == 1 && ss.Keys.Single() == "USD.BLAH");

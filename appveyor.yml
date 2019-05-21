@@ -39,7 +39,7 @@ after_test:
 artifacts:
   path: '**/*.nupkg'
 
-#deploy:  
+deploy:  
 - provider: NuGet
   server: https://www.myget.org/F/qwack/api/v2/package
   api_key:

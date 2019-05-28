@@ -263,7 +263,7 @@ namespace Qwack.Core.Instruments
             var removedTradesIns = start.Instruments
                 .Where(i => 
                 !endIds.Contains(i.TradeId) && 
-                (i.LastSensitivityDate > endDate || (i is CashBalance cb && cb.PayDate != endDate)));
+                ((!(i is AsianSwap asw) && i.LastSensitivityDate > endDate )|| (i is CashBalance cb && cb.PayDate != endDate) || (i is AsianSwap aswp && aswp.PaymentDate > endDate)));
             var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
 
             var commonIds = startIds.Intersect(endIds).ToList();

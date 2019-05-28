@@ -1006,8 +1006,8 @@ namespace Qwack.Models.Risk
                 }
 
                 //charm-fx
-                baseDeltaCube = pvModel.FxDelta(reportingCcy, currencyProvider);
-                rolledDeltaCube = rolledPvModel.FxDelta(reportingCcy, currencyProvider);
+                baseDeltaCube = pvModel.FxDeltaRaw(reportingCcy, currencyProvider);
+                rolledDeltaCube = rolledPvModel.FxDeltaRaw(reportingCcy, currencyProvider);
                 charmCube = rolledDeltaCube.Difference(baseDeltaCube);
                 var fId = charmCube.GetColumnIndex("AssetId");
                 foreach (var charmRow in charmCube.GetAllRows())

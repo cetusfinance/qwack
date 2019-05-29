@@ -33,6 +33,10 @@ namespace Qwack.Core.Tests.Curves
             Assert.Equal(baseCurve.SpotLag, sut.SpotLag);
             Assert.Equal(baseCurve.CurveType, sut.CurveType);
             Assert.Equal(baseCurve.PillarDates, sut.PillarDates);
+            Assert.Equal(baseCurve.NumberOfPillars, sut.NumberOfPillars);
+            Assert.Equal(baseCurve.BuildDate, sut.BuildDate);
+            Assert.Equal(baseCurve.UnderlyingsAreForwards, sut.UnderlyingsAreForwards);
+            Assert.Equal(baseCurve.PillarDatesForLabel(DateTime.Today.ToString("yyyy-MM-dd")), sut.PillarDatesForLabel(DateTime.Today.ToString("yyyy-MM-dd")));
 
             Assert.Throws<NotImplementedException>(() => sut.RebaseDate(DateTime.Today));
             Assert.Throws<NotImplementedException>(() => sut.Name = "yooooo");

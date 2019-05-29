@@ -22,6 +22,7 @@ namespace Qwack.Core.Tests.Curves
             Assert.Equal(pillars.Length, sut.NumberOfPillars);
 
             Assert.Equal(100.0 * (1.0 + 100.0 / 360.0 * 0.1), sut.GetPriceForDate(pillars[0]));
+            Assert.Equal(100.0 * (1.0 + 100.0 / 360.0 * 0.1), sut.GetPriceForFixingDate(pillars[0]));
             Assert.Equal(100.0 * (1.0 + 100.0 / 360.0 * 0.1), sut.GetAveragePriceForDates(new[] { pillars[0] }));
             Assert.Equal(100.0 * (1.0 + 150.0 / 360.0 * 0.15), sut.GetPriceForDate(DateTime.Today.AddDays(150)));
 

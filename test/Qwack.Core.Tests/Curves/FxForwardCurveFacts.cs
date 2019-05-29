@@ -27,7 +27,10 @@ namespace Qwack.Core.Tests.Curves
             {
                 Name = "gooo",
             };
+            var sut2 = new FxForwardCurve(originDate, new Func<Models.IFundingModel>(() => fModel), zar, usd);
+
             Assert.Equal(10, sut.GetPriceForDate(originDate));
+            Assert.Equal(10, sut2.GetPriceForDate(originDate));
             Assert.Equal(10, sut.GetPriceForFixingDate(originDate));
             Assert.Equal(10, sut.GetAveragePriceForDates(new[] { originDate }));
 
@@ -37,7 +40,7 @@ namespace Qwack.Core.Tests.Curves
             Assert.True(sut.UnderlyingsAreForwards);
             Assert.Equal(0, sut.NumberOfPillars);
             Assert.Equal(usd.Ccy, sut.AssetId);
-            
+            Assert.Null(sut.PillarDates);
 
             Assert.Throws<NotImplementedException>(() => sut.RebaseDate(DateTime.Today));
             Assert.Throws<NotImplementedException>(() => sut.PillarDatesForLabel(""));

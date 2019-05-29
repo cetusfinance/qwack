@@ -171,7 +171,7 @@ namespace Qwack.Core.Curves
             var te = _buildDate.CalculateYearFraction(endDate, _basis);
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
             var q = GetDf(startDate, endDate);
-            return Log(q) / (te - ts);
+            return -Log(q) / (te - ts);
         }
 
         public double[] GetRates() => _rates.ToArray();

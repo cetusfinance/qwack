@@ -74,7 +74,7 @@ namespace Qwack.Core.Curves
             switch(_curveType)
             {
                 case SparsePriceCurveType.Coal:
-                    _interpA = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.Linear);
+                    _interpA = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.LinearFlatExtrap);
                     var allDates = _pillarDates.First().CalendarDaysInPeriod(_pillarDates.Last());
                     var monthlyDates = allDates.Select(x => x.NthLastSpecificWeekDay(DayOfWeek.Friday,1)).Distinct();
                     var monthlyPillars = monthlyDates.Select(x => x.ToOADate()).ToArray();

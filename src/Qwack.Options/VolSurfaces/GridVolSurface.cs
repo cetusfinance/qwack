@@ -1,5 +1,4 @@
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -37,10 +36,6 @@ namespace Qwack.Options.VolSurfaces
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
 
         private IInterpolator1D[] _interpolators;
 

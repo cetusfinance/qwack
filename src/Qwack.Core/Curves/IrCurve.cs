@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Math;
@@ -65,29 +64,7 @@ namespace Qwack.Core.Curves
 
         public void SetRateIndex(FloatRateIndex rateIndex) => RateIndex = rateIndex;
 
-        public List<MarketDataDescriptor> Descriptors
-        {
-            get
-            {
-                var o = new List<MarketDataDescriptor>
-                    {new DiscountCurveDescriptor {
-                        CollateralSpec = CollateralSpec,
-                        Currency = Currency,
-                        Name =Name,
-                        ValDate =BuildDate}};
-                if (RateIndex != null)
-                    o.Add(new ForecastCurveDescriptor
-                    {
-                        Index = RateIndex,
-                        Name = Name,
-                        ValDate = BuildDate});
-                return o;
-            }
-        }
-        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-
-
+    
         public double GetDf(DateTime startDate, DateTime endDate)
         {
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);

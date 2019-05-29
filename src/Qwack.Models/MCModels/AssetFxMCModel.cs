@@ -19,7 +19,6 @@ using System.Reflection;
 using Qwack.Paths.Regressors;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
-using Qwack.Core.Descriptors;
 using Qwack.Models.Models;
 using Qwack.Core.Curves;
 using Qwack.Models.Risk;
@@ -43,10 +42,6 @@ namespace Qwack.Models.MCModels
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
         public McSettings Settings { get; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public List<MarketDataDescriptor> Dependencies => Model.Dependencies;
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public IAssetFxModel VanillaModel => Model;
 

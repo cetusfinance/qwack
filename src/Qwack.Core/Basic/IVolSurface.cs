@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Interpolation;
 using Qwack.Math;
-using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Basic
 {
-    public interface IVolSurface : IHasDescriptors
+    public interface IVolSurface
     {
         double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward);
         double GetVolForAbsoluteStrike(double strike, double maturity, double forward);

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Calibrators;
 using System.Linq;
@@ -43,10 +42,6 @@ namespace Qwack.Core.Curves
         public bool UnderlyingsAreForwards => Curve.UnderlyingsAreForwards;
         public DateTime[] PillarDates => Curve.PillarDates;
         public PriceCurveType CurveType { get; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => throw new NotImplementedException();
 
         public List<IAssetInstrument> Instruments { get; }
         public List<DateTime> Pillars { get; }

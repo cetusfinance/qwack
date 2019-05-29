@@ -5,7 +5,6 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
@@ -78,10 +77,6 @@ namespace Qwack.Models
         public string[] CurveNames => _assetCurves.Keys.Select(x => x).ToArray();
         public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x).ToArray();
         public string[] FixingDictionaryNames => _fixings.Keys.Select(x => x).ToArray();
-
-        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>();
-        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public IAssetFxModel VanillaModel => this;
 

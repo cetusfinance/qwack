@@ -785,22 +785,25 @@ namespace Qwack.Models.Models
 
             //next step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
+
+            portfolio = portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
+
             var newPVCube = portfolio.PV(model, reportingCcy);
 
             //cash moves
             var cashByTrade = new Dictionary<string, double>();
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var tid = (string)cashRows[i].MetaData[tidIx];
-                    if (cashByTrade.ContainsKey(tid))
-                        cashByTrade[tid] = cashByTrade[tid] + cash;
-                    else
-                        cashByTrade[tid] = cash;
-                }
-            }
+            //for (var i = 0; i < cashRows.Length; i++)
+            //{
+            //    var cash = cashRows[i].Value;
+            //    if (cash != 0.0)
+            //    {
+            //        var tid = (string)cashRows[i].MetaData[tidIx];
+            //        if (cashByTrade.ContainsKey(tid))
+            //            cashByTrade[tid] = cashByTrade[tid] + cash;
+            //        else
+            //            cashByTrade[tid] = cash;
+            //    }
+            //}
 
             var step = newPVCube.QuickDifference(pvCubeBase);
             foreach (var r in step.GetAllRows())

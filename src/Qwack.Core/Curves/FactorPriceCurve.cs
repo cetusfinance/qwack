@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Dates;
 
 namespace Qwack.Core.Curves
@@ -29,10 +28,7 @@ namespace Qwack.Core.Curves
 
         public Frequency SpotLag { get => BaseCurve.SpotLag; set => throw new NotImplementedException(); }
         public Calendar SpotCalendar { get => BaseCurve.SpotCalendar; set => throw new NotImplementedException(); }
-        public List<MarketDataDescriptor> Descriptors => BaseCurve.Descriptors;
-        public List<MarketDataDescriptor> Dependencies => BaseCurve.Dependencies;
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => BaseCurve.DependentReferences;
-
+     
         public double GetAveragePriceForDates(DateTime[] dates) => BaseCurve.GetAveragePriceForDates(dates) * ScalingFactor;
 
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump) => throw new NotImplementedException();

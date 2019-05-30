@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Qwack.Core.Descriptors;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -33,10 +32,6 @@ namespace Qwack.Options.VolSurfaces
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
 
         private IInterpolator1D _alphaInterp;
         private IInterpolator1D _betaInterp;

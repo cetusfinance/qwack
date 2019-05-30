@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
@@ -1473,63 +1472,7 @@ namespace Qwack.Models.Models
             return curves.ToArray();
         }
 
-        public static List<MarketDataDescriptor> GetRequirements(this Portfolio portfolio, DateTime valDate)
-        {
-            var o = new List<MarketDataDescriptor>();
-
-            foreach (var trade in portfolio.Instruments)
-            {
-                switch (trade)
-                {
-                    case AsianOption aOpt:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aOpt.AssetId, ValDate = valDate });
-                            o.Add(new AssetVolSurfaceDescriptor { AssetId = aOpt.AssetId, ValDate = valDate });
-                            foreach (var fixingDate in aOpt.FixingDates.Where(f => f < valDate))
-                            {
-                                o.Add(new AssetFixingDescriptor { AssetId = aOpt.AssetId, FixingDate = fixingDate });
-                            }
-                            if (aOpt.FxConversionType != FxConversionType.None)
-                            {
-                                var fxId = aOpt.GetFxFixingId("USD");
-                                var fxDates = aOpt.FxFixingDates ?? aOpt.FixingDates;
-                                foreach (var fixingDate in fxDates.Where(f => f < valDate))
-                                {
-                                    o.Add(new AssetFixingDescriptor { AssetId = fxId, FixingDate = fixingDate });
-                                }
-                            }
-
-                            break;
-                        }
-                    case AsianSwap aSwp:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aSwp.AssetId, ValDate = valDate });
-                            foreach (var fixingDate in aSwp.FixingDates.Where(f => f < valDate))
-                            {
-                                o.Add(new AssetFixingDescriptor { AssetId = aSwp.AssetId, FixingDate = fixingDate });
-                            }
-                            if (aSwp.FxConversionType != FxConversionType.None)
-                            {
-                                var fxId = aSwp.GetFxFixingId("USD");
-                                var fxDates = aSwp.FxFixingDates ?? aSwp.FixingDates;
-                                foreach (var fixingDate in fxDates.Where(f => f < valDate))
-                                {
-                                    o.Add(new AssetFixingDescriptor { AssetId = fxId, FixingDate = fixingDate });
-                                }
-                            }
-
-                            break;
-                        }
-                    case Future aFut:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aFut.AssetId, ValDate = valDate });
-                            break;
-                        }
-                }
-            }
-
-            return o;
-        }
+      
 
         public static double ParRate(this IAssetInstrument instrument, IAssetFxModel model)
         {

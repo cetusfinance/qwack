@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Math;
 
 namespace Qwack.Options.VolSurfaces
@@ -28,10 +27,6 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get => InvertedPair; set => throw new NotImplementedException(); }
 
         public IInterpolator2D LocalVolGrid { get; set; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => throw new NotImplementedException();
 
         public IATMVolSurface FxSurface { get; }
 

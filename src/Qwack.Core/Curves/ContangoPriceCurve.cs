@@ -6,7 +6,6 @@ using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Curves
 {
@@ -38,17 +37,6 @@ namespace Qwack.Core.Curves
         public int NumberOfPillars => _pillarDates.Length;
 
         public Currency Currency { get; set; }
-
-        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
-            {
-                    new AssetCurveDescriptor {
-                        AssetId =AssetId,
-                        Currency =Currency,
-                        Name =Name,
-                        ValDate =BuildDate}
-            };
-        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
 
         public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, ICurrencyProvider currencyProvider,
             DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)

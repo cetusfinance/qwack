@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Models;
 using Qwack.Dates;
 
 namespace Qwack.Core.Curves
 {
-    public interface IPriceCurve : IHasDescriptors
+    public interface IPriceCurve 
     {
         DateTime BuildDate { get; }
         

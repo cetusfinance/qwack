@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -109,7 +110,12 @@ namespace Qwack.Core.Cubes
                 var rowKey = string.Join("~", ixs.Select(i => row.MetaData[i].ToString()));
                 if (!aggData.ContainsKey(rowKey))
                 {
-                    aggData[rowKey] = 0;
+                    if (aggregationAction == AggregationAction.Min)
+                        aggData[rowKey] = double.MaxValue;
+                    else if (aggregationAction == AggregationAction.Max)
+                        aggData[rowKey] = double.MinValue;
+                    else
+                        aggData[rowKey] = 0;
                     aggDataCount[rowKey] = 0;
                     var filetedMetaData = new object[ixs.Length];
                     for (var i = 0; i < ixs.Length; i++)
@@ -119,30 +125,16 @@ namespace Qwack.Core.Cubes
                 switch (aggregationAction)
                 {
                     case AggregationAction.Sum:
-                        if (!aggData.ContainsKey(rowKey))
-                        {
-                            aggData[rowKey] = 0;
-                            aggDataCount[rowKey] = 0;
-                        }
                         aggData[rowKey] += row.Value;
                         break;
                     case AggregationAction.Average:
-                        if (!aggData.ContainsKey(rowKey))
-                        {
-                            aggData[rowKey] = 0;
-                            aggDataCount[rowKey] = 0;
-                        }
                         aggData[rowKey] += row.Value;
                         aggDataCount[rowKey]++;
                         break;
                     case AggregationAction.Min:
-                        if (!aggData.ContainsKey(rowKey))
-                            aggData[rowKey] = double.MaxValue;
                         aggData[rowKey] = System.Math.Min(aggData[rowKey], row.Value);
                         break;
                     case AggregationAction.Max:
-                        if (!aggData.ContainsKey(rowKey))
-                            aggData[rowKey] = double.MinValue;
                         aggData[rowKey] = System.Math.Max(aggData[rowKey], row.Value);
                         break;
                 }
@@ -150,10 +142,9 @@ namespace Qwack.Core.Cubes
             }
 
             //final post-processing for average
-            foreach (var aggRow in aggData)
+            foreach (var rowKey in aggData.Keys.ToList())
             {
                 var rowDict = new Dictionary<string, object>();
-                var rowKey = aggRow.Key;
                 if (aggregationAction == AggregationAction.Average)
                     aggData[rowKey] /= aggDataCount[rowKey];
 
@@ -607,6 +598,7 @@ namespace Qwack.Core.Cubes
             }
         }
 
+        [ExcludeFromCodeCoverage]
         public static void ToCSVFile(this ICube cube, string fileName)
         {
             var output = new List<string>
@@ -626,6 +618,7 @@ namespace Qwack.Core.Cubes
             System.IO.File.WriteAllLines(fileName, output.ToArray());
         }
 
+        [ExcludeFromCodeCoverage]
         public static ICube FromCSVFile(string fileName)
         {
             var rawData = System.IO.File.ReadAllLines(fileName);

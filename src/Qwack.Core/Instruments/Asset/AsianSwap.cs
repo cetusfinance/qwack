@@ -78,7 +78,10 @@ namespace Qwack.Core.Instruments.Asset
             FxConversionType = FxConversionType,
             FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
             FxFixingId = FxFixingId,
-            Strike = Strike
+            Strike = Strike,
+            Counterparty = Counterparty,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName
         };
 
         public IAssetInstrument SetStrike(double strike)
@@ -96,29 +99,6 @@ namespace Qwack.Core.Instruments.Asset
                 new Dictionary<string, List<DateTime>>() :
                 new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
-        public override bool Equals(object obj) => obj is AsianSwap swap &&
-                 AverageStartDate == swap.AverageStartDate &&
-                 AverageEndDate == swap.AverageEndDate &&
-                 AssetId == swap.AssetId &&
-                 AssetFixingId == swap.AssetFixingId &&
-                 Currency == swap.Currency &&
-                 Direction == swap.Direction &&
-                 DiscountCurve == swap.DiscountCurve &&
-                 FixingCalendar == swap.FixingCalendar &&
-                 Enumerable.SequenceEqual(FixingDates, swap.FixingDates) &&
-                 FxConversionType == swap.FxConversionType &&
-                 FxFixingId == swap.FxFixingId &&
-                 Notional == swap.Notional &&
-                 PaymentCalendar == swap.PaymentCalendar &&
-                 PaymentCurrency == swap.PaymentCurrency &&
-                 PaymentDate == swap.PaymentDate &&
-                 PaymentLag == swap.PaymentLag &&
-                 PaymentLagRollType == swap.PaymentLagRollType &&
-                 SpotLag == swap.SpotLag &&
-                 SpotLagRollType == swap.SpotLagRollType &&
-                 Strike == swap.Strike &&
-                 TradeId == swap.TradeId;
-
 
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
@@ -133,38 +113,32 @@ namespace Qwack.Core.Instruments.Asset
         }
         public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
 
-        public override int GetHashCode()
-        {
-            var hashCode = -99770110;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TradeId);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Counterparty);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PortfolioName);
-            hashCode = hashCode * -1521134295 + Notional.GetHashCode();
-            hashCode = hashCode * -1521134295 + Direction.GetHashCode();
-            hashCode = hashCode * -1521134295 + AverageStartDate.GetHashCode();
-            hashCode = hashCode * -1521134295 + AverageEndDate.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<DateTime[]>.Default.GetHashCode(FixingDates);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Calendar>.Default.GetHashCode(FixingCalendar);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Calendar>.Default.GetHashCode(PaymentCalendar);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Frequency>.Default.GetHashCode(SpotLag);
-            hashCode = hashCode * -1521134295 + SpotLagRollType.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<Frequency>.Default.GetHashCode(PaymentLag);
-            hashCode = hashCode * -1521134295 + PaymentLagRollType.GetHashCode();
-            hashCode = hashCode * -1521134295 + PaymentDate.GetHashCode();
-            hashCode = hashCode * -1521134295 + Strike.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AssetId);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AssetFixingId);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FxFixingId);
-            hashCode = hashCode * -1521134295 + EqualityComparer<DateTime[]>.Default.GetHashCode(FxFixingDates);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(PaymentCurrency);
-            hashCode = hashCode * -1521134295 + FxConversionType.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DiscountCurve);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string[]>.Default.GetHashCode(AssetIds);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(Currency);
-            hashCode = hashCode * -1521134295 + LastSensitivityDate.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(HedgingSet);
-            return hashCode;
-        }
+        public override bool Equals(object obj) => obj is AsianSwap swap &&
+                   TradeId == swap.TradeId &&
+                   Counterparty == swap.Counterparty &&
+                   PortfolioName == swap.PortfolioName &&
+                   Notional == swap.Notional &&
+                   Direction == swap.Direction &&
+                   AverageStartDate == swap.AverageStartDate &&
+                   AverageEndDate == swap.AverageEndDate &&
+                   EqualityComparer<DateTime[]>.Default.Equals(FixingDates, swap.FixingDates) &&
+                   EqualityComparer<Calendar>.Default.Equals(FixingCalendar, swap.FixingCalendar) &&
+                   EqualityComparer<Calendar>.Default.Equals(PaymentCalendar, swap.PaymentCalendar) &&
+                   EqualityComparer<Frequency>.Default.Equals(SpotLag, swap.SpotLag) &&
+                   SpotLagRollType == swap.SpotLagRollType &&
+                   EqualityComparer<Frequency>.Default.Equals(PaymentLag, swap.PaymentLag) &&
+                   PaymentLagRollType == swap.PaymentLagRollType &&
+                   PaymentDate == swap.PaymentDate &&
+                   Strike == swap.Strike &&
+                   AssetId == swap.AssetId &&
+                   AssetFixingId == swap.AssetFixingId &&
+                   FxFixingId == swap.FxFixingId &&
+                   EqualityComparer<DateTime[]>.Default.Equals(FxFixingDates, swap.FxFixingDates) &&
+                   EqualityComparer<Currency>.Default.Equals(PaymentCurrency, swap.PaymentCurrency) &&
+                   FxConversionType == swap.FxConversionType &&
+                   DiscountCurve == swap.DiscountCurve &&
+                   EqualityComparer<Currency>.Default.Equals(Currency, swap.Currency) &&
+                   HedgingSet == swap.HedgingSet;
 
         public string HedgingSet { get; set; }
     }

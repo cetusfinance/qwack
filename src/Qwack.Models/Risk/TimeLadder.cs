@@ -37,6 +37,7 @@ namespace Qwack.Models.Risk
             var shifts = new double[NScenarios + 1];
             var m = model.VanillaModel.Clone();
             var d = model.VanillaModel.BuildDate;
+            var pd = d;
             for (var i = 0; i < NScenarios; i++)
             {
                 var thisLabel = $"+{i} days";
@@ -46,8 +47,9 @@ namespace Qwack.Models.Risk
                 {
                     d = d.AddPeriod(RollType.F, Calendar, 1.Bd());
                     m = m.RollModel(d, _currencyProvider);
-                    var newPvModel = model.Rebuild(m, model.Portfolio.RollWithLifecycle(d));
+                    var newPvModel = model.Rebuild(m, model.Portfolio.RollWithLifecycle(d, pd));
                     o.Add(thisLabel, m);
+                    pd = d;
                 }
             }
 
@@ -67,7 +69,7 @@ namespace Qwack.Models.Risk
                 var baseModel = model;
                 if (portfolio != null)
                 {
-                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio.RollWithLifecycle(model.VanillaModel.BuildDate));
+                    baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio.RollWithLifecycle(model.VanillaModel.BuildDate, model.VanillaModel.BuildDate));
                 }
                 baseRiskCube = GetRisk(baseModel);
             }
@@ -82,7 +84,7 @@ namespace Qwack.Models.Risk
                 var pvModel = scenario.Value;
                 if (portfolio != null)
                 {
-                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate));
+                    pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio.RollWithLifecycle(model.VanillaModel.BuildDate, pvModel.VanillaModel.BuildDate));
                 }
                 var result = GetRisk(pvModel);
 

@@ -18,7 +18,7 @@ namespace Qwack.Core.Instruments
 
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public DateTime LastSensitivityDate => throw new NotImplementedException();
+        public DateTime LastSensitivityDate => Instruments.Max(i=>i.LastSensitivityDate);
 
         public Portfolio Clone() => new Portfolio
         {

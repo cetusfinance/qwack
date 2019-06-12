@@ -24,7 +24,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 };
             var surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
-                Core.Basic.StrikeType.Absolute,
+                StrikeType.Absolute,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Dates.DayCountBasis.Act_365F);
@@ -46,7 +46,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 
             surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
-                Core.Basic.StrikeType.Absolute,
+                StrikeType.Absolute,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Dates.DayCountBasis.Act_365F);
@@ -62,6 +62,16 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             Assert.Equal(vol, volForDeltaK, 8);
 
             Assert.Throws<Exception>(() => surface.GetForwardATMVol(DateTime.Today, DateTime.Today.AddDays(1)));
+
+            surface = new Qwack.Options.VolSurfaces.GridVolSurface(
+                origin, strikes, maturities, vols,
+                StrikeType.Absolute,
+                Math.Interpolation.Interpolator1DType.Linear,
+                Math.Interpolation.Interpolator1DType.Linear,
+                Dates.DayCountBasis.Act_365F,
+                new[] { "A", "B" });
+
+            Assert.Equal(maturities[1], surface.PillarDatesForLabel("B"));
         }
 
         [Fact]
@@ -78,7 +88,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 };
             var surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
-                Core.Basic.StrikeType.ForwardDelta,
+                StrikeType.ForwardDelta,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Math.Interpolation.Interpolator1DType.Linear,
                 Dates.DayCountBasis.Act_365F);
@@ -93,6 +103,13 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 
             Assert.Throws<Exception>(() => surface.GetForwardATMVol(DateTime.Today.AddDays(1), DateTime.Today));
             Assert.Equal(vols[0][0], surface.GetForwardATMVol(DateTime.Today, DateTime.Today.AddDays(10)),12);
+            Assert.Equal(0.0, surface.RiskReversal(0.25, 1, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => surface.GetVolForDeltaStrike(-2, origin, 1));
+
+            var s = surface.GetATMVegaScenarios(0.0, null);
+            Assert.Equal(2, s.Count);
+            s = surface.GetATMVegaScenarios(0.0, origin);
+            Assert.Equal(2, s.Count);
         }
 
     }

@@ -213,6 +213,18 @@ namespace Qwack.Excel.Utils
         }
 
         [ExcludeFromCodeCoverage]
+        [ExcelFunction(Description = "Creates a folder", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_CreateFolder(
+            [ExcelArgument(Description = "Folder name")] string Folder)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                System.IO.Directory.CreateDirectory(Folder);
+                return "Success";
+            });
+        }
+
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_SerializeObject(
             [ExcelArgument(Description = "Object name")] string ObjectName,

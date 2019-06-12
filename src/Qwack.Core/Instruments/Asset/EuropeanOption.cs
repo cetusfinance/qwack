@@ -11,17 +11,33 @@ namespace Qwack.Core.Instruments.Asset
     {
         public OptionType CallPut { get; set; }
 
-        public new IAssetInstrument Clone()
+        public new IAssetInstrument Clone() => new EuropeanOption
         {
-            var o = (EuropeanOption)base.Clone();
-            o.CallPut = CallPut;
-            return o;
-        }
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            ExpiryDate = ExpiryDate,
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            PaymentLag = PaymentLag,
+            Strike = Strike,
+            AssetId = AssetId,
+            PaymentCurrency = PaymentCurrency,
+            FxFixingId = FxFixingId,
+            DiscountCurve = DiscountCurve,
+            PaymentDate = PaymentDate,
+            Counterparty = Counterparty,
+            FxConversionType = FxConversionType,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName,
+            CallPut = CallPut
+        };
 
         public new IAssetInstrument SetStrike(double strike)
         {
-            var o = (EuropeanOption)base.SetStrike(strike);
-            o.CallPut = CallPut;
+            var o = (EuropeanOption)Clone();
+            o.Strike = strike;
             return o;
         }
 

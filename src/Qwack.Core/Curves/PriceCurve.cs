@@ -157,6 +157,8 @@ namespace Qwack.Core.Curves
         public DateTime PillarDatesForLabel(string label)
         {
             var labelIx = Array.IndexOf(_pillarLabels, label);
+            if (labelIx < 0)
+                throw new Exception($"Could not find pillar matching label {label}");
             return _pillarDates[labelIx];
         }
     }

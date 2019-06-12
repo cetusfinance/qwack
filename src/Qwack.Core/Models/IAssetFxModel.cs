@@ -28,8 +28,8 @@ namespace Qwack.Core.Models
         double GetFxVolForStrikeAndDate(string name, DateTime expiry, double strike);
         double GetFxVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike);
 
-        IPriceCurve GetPriceCurve(string name);
-        IVolSurface GetVolSurface(string name);
+        IPriceCurve GetPriceCurve(string name, Currency ccy = null);
+        IVolSurface GetVolSurface(string name, Currency ccy = null);
         IFixingDictionary GetFixingDictionary(string name);
         bool TryGetFixingDictionary(string name, out IFixingDictionary fixings);
 

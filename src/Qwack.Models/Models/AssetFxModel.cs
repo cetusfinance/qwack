@@ -10,12 +10,13 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Models.Models;
+using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Models
 {
     public class AssetFxModel : IAssetFxModel
     {
-        private Dictionary<string, IVolSurface> _assetVols;
+        private Dictionary<VolSurfaceKey, IVolSurface> _assetVols;
         private Dictionary<string, IPriceCurve> _assetCurves;
         private Dictionary<string, IFixingDictionary> _fixings;
         private DateTime _buildDate;
@@ -31,7 +32,7 @@ namespace Qwack.Models
         public AssetFxModel(DateTime buildDate, IFundingModel fundingModel)
         {
             _assetCurves = new Dictionary<string, IPriceCurve>();
-            _assetVols = new Dictionary<string, IVolSurface>();
+            _assetVols = new Dictionary<VolSurfaceKey, IVolSurface>();
             _fixings = new Dictionary<string, IFixingDictionary>();
             _buildDate = buildDate;
             _fundingModel = fundingModel;
@@ -39,28 +40,43 @@ namespace Qwack.Models
 
         public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
 
-        public void AddVolSurface(string name, IVolSurface surface) => _assetVols[name] = surface;
+        public void AddVolSurface(string name, IVolSurface surface) => _assetVols[new VolSurfaceKey(surface.AssetId,surface.Currency)] = surface;
+        public void AddVolSurface(VolSurfaceKey key, IVolSurface surface) => _assetVols[key] = surface;
 
         public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';
 
-        public IPriceCurve GetPriceCurve(string name)
+        public IPriceCurve GetPriceCurve(string name, Currency currency = null)
         {
             if (IsFx(name))
                 return new FxForwardCurve(BuildDate, FundingModel, FundingModel.GetCurrency(name.Substring(0, 3)), FundingModel.GetCurrency(name.Substring(4, 3)));
 
             if (!_assetCurves.TryGetValue(name, out var curve))
                 throw new Exception($"Curve with name {name} not found");
+
+            if (currency != null && curve.Currency != currency)
+                return new CompositePriceCurve(curve.BuildDate, curve, FundingModel, currency);
+
             return curve;
         }
 
-        public IVolSurface GetVolSurface(string name)
+        public IVolSurface GetVolSurface(string name, Currency currency = null)
         {
             if (IsFx(name))
                 return FundingModel.GetVolSurface(name);
 
-            if (!_assetVols.TryGetValue(name, out var surface))
-                throw new Exception($"Vol surface with name {name} not found");
-            return surface;
+            if (currency != null)
+            {
+                if (!_assetVols.TryGetValue(new VolSurfaceKey(name,currency), out var surface))
+                    throw new Exception($"Vol surface {name}/{currency} not found");
+
+                return surface;
+            }
+
+            var surfaces = _assetVols.Where(x => x.Key.AssetId == name);
+            if(!surfaces.Any())
+                throw new Exception($"Vol surface {name} not found");
+
+            return surfaces.First().Value;
         }
 
         public void AddFixingDictionary(string name, IFixingDictionary fixings) => _fixings[name] = fixings;
@@ -75,7 +91,7 @@ namespace Qwack.Models
         public bool TryGetFixingDictionary(string name, out IFixingDictionary fixings) => _fixings.TryGetValue(name, out fixings);
 
         public string[] CurveNames => _assetCurves.Keys.Select(x => x).ToArray();
-        public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x).ToArray();
+        public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x.ToString()).ToArray();
         public string[] FixingDictionaryNames => _fixings.Keys.Select(x => x).ToArray();
 
         public IAssetFxModel VanillaModel => this;
@@ -112,7 +128,7 @@ namespace Qwack.Models
 
         public double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike)
         {
-            var surface = _assetVols[name];
+            var surface = GetVolSurface(name);
             var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
             var fwds = expiries.Select(expiry=>_assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
             var vols = fwds.Select((fwd,ix)=> surface.GetVolForAbsoluteStrike(strike, expiries[ix], fwd));
@@ -124,7 +140,7 @@ namespace Qwack.Models
 
         public double GetAverageVolForMoneynessAndDates(string name, DateTime[] expiries, double moneyness)
         {
-            var surface = _assetVols[name];
+            var surface = GetVolSurface(name);
             var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
             var fwds = expiries.Select(expiry => _assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
             var vols = fwds.Select((fwd, ix) => surface.GetVolForAbsoluteStrike(fwd * moneyness, expiries[ix], fwd));
@@ -180,7 +196,7 @@ namespace Qwack.Models
         public void AddVolSurfaces(Dictionary<string, IVolSurface> surfaces)
         {
             foreach (var kv in surfaces)
-                _assetVols[kv.Key] = kv.Value;
+                AddVolSurface(new VolSurfaceKey(kv.Value.AssetId, kv.Value.Currency), kv.Value);
         }
 
         public void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings)

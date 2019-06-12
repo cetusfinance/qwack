@@ -38,7 +38,9 @@ namespace Qwack.Core.Instruments.Asset
             LotSize = LotSize,
             PriceMultiplier = PriceMultiplier,
             Strike = Strike,
-            TradeId = TradeId
+            TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName
         };
 
         public IAssetInstrument SetStrike(double strike)

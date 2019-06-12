@@ -17,25 +17,40 @@ namespace Qwack.Core.Instruments.Asset
         public DateTime BarrierObservationStartDate { get; set; }
         public DateTime BarrierObservationEndDate { get; set; }
 
-        public new IAssetInstrument Clone()
+        public new IAssetInstrument Clone() => new EuropeanBarrierOption
         {
-            var o = (EuropeanBarrierOption)base.Clone();
-            o.Barrier = Barrier;
-            o.BarrierObservationEndDate = BarrierObservationEndDate;
-            o.BarrierObservationStartDate = BarrierObservationStartDate;
-            o.BarrierObservationType = BarrierObservationType;
-            o.BarrierSide = BarrierSide;
-            return o;
-        }
-
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            ExpiryDate = ExpiryDate,
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            PaymentLag = PaymentLag,
+            Strike = Strike,
+            AssetId = AssetId,
+            PaymentCurrency = PaymentCurrency,
+            FxFixingId = FxFixingId,
+            DiscountCurve = DiscountCurve,
+            PaymentDate = PaymentDate,
+            Counterparty = Counterparty,
+            FxConversionType = FxConversionType,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName,
+            CallPut = CallPut,
+            Barrier = Barrier,
+            BarrierObservationEndDate = BarrierObservationEndDate,
+            BarrierObservationStartDate = BarrierObservationStartDate,
+            BarrierObservationType = BarrierObservationType,
+            BarrierSide = BarrierSide,
+            BarrierType = BarrierType,
+        };
+        
+          
         public new IAssetInstrument SetStrike(double strike)
         {
-            var o = (EuropeanBarrierOption)base.SetStrike(strike);
-            o.Barrier = Barrier;
-            o.BarrierObservationEndDate = BarrierObservationEndDate;
-            o.BarrierObservationStartDate = BarrierObservationStartDate;
-            o.BarrierObservationType = BarrierObservationType;
-            o.BarrierSide = BarrierSide;
+            var o = (EuropeanBarrierOption)Clone();
+            o.Strike = strike;
             return o;
         }
 

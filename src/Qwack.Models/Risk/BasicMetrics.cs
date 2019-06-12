@@ -55,7 +55,7 @@ namespace Qwack.Models.Risk
 
                 var subPortfolio = new Portfolio()
                 {
-                    Instruments = pvModel.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                    Instruments = pvModel.Portfolio.Instruments.Where(x => (x is IHasVega || (x is CashWrapper cw && cw.UnderlyingInstrument is IHasVega)) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
                 };
 
                 if (subPortfolio.Instruments.Count == 0)

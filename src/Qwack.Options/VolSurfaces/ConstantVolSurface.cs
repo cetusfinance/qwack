@@ -26,7 +26,7 @@ namespace Qwack.Options.VolSurfaces
 
         public ConstantVolSurface()         {        }
 
-        public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);
+        public ConstantVolSurface(DateTime originDate, double volatility):base() => Build(originDate, volatility);
 
         public void Build(DateTime originDate, double volatility)
         {
@@ -41,8 +41,6 @@ namespace Qwack.Options.VolSurfaces
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => Volatility;
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => Volatility;
-
-        public double GetFwdATMVol(DateTime startDate, DateTime endDate) => Volatility;
 
         public double GetForwardATMVol(DateTime startDate, DateTime endDate) => Volatility;
 

@@ -72,7 +72,7 @@ namespace Qwack.Models
                 return surface;
             }
 
-            var surfaces = _assetVols.Where(x => x.Key.AssetId == name);
+            var surfaces = _assetVols.Where(x => name.Contains("~") ? x.Key.ToString() == name : x.Key.AssetId == name);
             if(!surfaces.Any())
                 throw new Exception($"Vol surface {name} not found");
 

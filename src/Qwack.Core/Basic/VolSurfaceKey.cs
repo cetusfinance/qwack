@@ -21,7 +21,7 @@ namespace Qwack.Core.Basic
                    AssetId == key.AssetId &&
                    EqualityComparer<Currency>.Default.Equals(Currency, key.Currency);
 
-        public override string ToString() => AssetId + "~" + Currency.Ccy;
+        public override string ToString() => AssetId + "~" + Currency?.Ccy;
 
         public override int GetHashCode()
         {

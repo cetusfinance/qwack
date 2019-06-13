@@ -91,7 +91,7 @@ namespace Qwack.Models
         public bool TryGetFixingDictionary(string name, out IFixingDictionary fixings) => _fixings.TryGetValue(name, out fixings);
 
         public string[] CurveNames => _assetCurves.Keys.Select(x => x).ToArray();
-        public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x.ToString()).ToArray();
+        public string[] VolSurfaceNames => _assetVols.Keys.Select(x => x.AssetId).ToArray();
         public string[] FixingDictionaryNames => _fixings.Keys.Select(x => x).ToArray();
 
         public IAssetFxModel VanillaModel => this;

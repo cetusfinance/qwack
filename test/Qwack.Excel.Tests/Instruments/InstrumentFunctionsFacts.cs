@@ -285,7 +285,7 @@ namespace Qwack.Excel.Tests.Instruments
             ContainerStores.GetObjectCache<IrSwap>().PutObject("prodIRS", new SessionItem<IrSwap>() { Name = "prodIRS", Value = irs.Object });
 
             var model = new Mock<IAssetFxModel>();
-            model.Setup(m => m.GetPriceCurve("xx")).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
+            model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
             model.Setup(m => m.FundingModel).Returns(fModel.Object);
@@ -314,7 +314,7 @@ namespace Qwack.Excel.Tests.Instruments
             ContainerStores.GetObjectCache<IrSwap>().PutObject("prodIRS", new SessionItem<IrSwap>() { Name = "prodIRS", Value = irs.Object });
 
             var model = new Mock<IAssetFxModel>();
-            model.Setup(m => m.GetPriceCurve("xx")).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
+            model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
             model.Setup(m => m.FundingModel).Returns(fModel.Object);
@@ -340,7 +340,7 @@ namespace Qwack.Excel.Tests.Instruments
             InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
 
             var model = new Mock<IAssetFxModel>();
-            model.Setup(m => m.GetPriceCurve("xx")).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
+            model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
             model.Setup(m => m.FundingModel).Returns(fModel.Object);

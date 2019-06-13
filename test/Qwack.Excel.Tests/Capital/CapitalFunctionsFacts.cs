@@ -26,7 +26,7 @@ namespace Qwack.Excel.Tests.Capital
             var curve = new PriceCurve(DateTime.MinValue, new[] { DateTime.MinValue }, new[] { 0.0 }, PriceCurveType.Flat, ContainerStores.CurrencyProvider)
             { Currency = ContainerStores.CurrencyProvider.GetCurrency("ZAR") };
             var moqModel = new Mock<IAssetFxModel>();
-            moqModel.Setup(m => m.GetPriceCurve("fakeAsset")).Returns(curve);
+            moqModel.Setup(m => m.GetPriceCurve("fakeAsset",null)).Returns(curve);
             moqModel.Setup(m => m.VanillaModel).Returns(moqModel.Object);
             moqModel.Setup(m => m.Rebuild(It.IsAny<IAssetFxModel>(),It.IsAny<Portfolio>())).Returns(moqModel.Object);
             var cube = new ResultCube();

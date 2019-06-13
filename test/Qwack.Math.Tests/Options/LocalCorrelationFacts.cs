@@ -18,8 +18,8 @@ namespace Qwack.Math.Tests.Options
             var constVolA = 0.32;
             var constVolB = 0.16;
             var originDate = new DateTime(2017, 02, 21);
-            var impliedSurfaceA = new ConstantVolSurface(originDate, constVolA);
-            var impliedSurfaceB = new ConstantVolSurface(originDate, constVolB);
+            var impliedSurfaceA = new ConstantVolSurface(originDate, constVolA) { AssetId = "A" };
+            var impliedSurfaceB = new ConstantVolSurface(originDate, constVolB) { AssetId = "B" };
 
             var model = new AssetFxModel(originDate, null);
             model.AddVolSurface("A", impliedSurfaceA);

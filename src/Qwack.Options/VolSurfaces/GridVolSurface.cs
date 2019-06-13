@@ -41,19 +41,9 @@ namespace Qwack.Options.VolSurfaces
 
         public GridVolSurface()         {        }
 
-        public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols, string[] pillarLabels = null)
-        {
-            if (pillarLabels == null)
-                PillarLabels = expiries.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
-            else
-                PillarLabels = pillarLabels;
-
-            Build(originDate, strikes, expiries, vols);
-        }
-
         public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols, 
             StrikeType strikeType, Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType, 
-            DayCountBasis timeBasis, string[] pillarLabels = null)
+            DayCountBasis timeBasis, string[] pillarLabels = null):base()
         {
             StrikeType = strikeType;
             StrikeInterpolatorType = strikeInterpType;

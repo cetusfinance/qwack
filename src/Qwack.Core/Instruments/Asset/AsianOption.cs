@@ -14,17 +14,39 @@ namespace Qwack.Core.Instruments.Asset
     {
         public OptionType CallPut { get; set; }
 
-        public new IAssetInstrument Clone()
+        public new IAssetInstrument Clone() => new AsianOption
         {
-            var o = (AsianOption)base.Clone();
-            o.CallPut = CallPut;
-            return o;
-        }
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            AverageStartDate = AverageStartDate,
+            AverageEndDate = AverageEndDate,
+            FixingDates = (DateTime[])FixingDates.Clone(),
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            SpotLagRollType = SpotLagRollType,
+            PaymentLag = PaymentLag,
+            PaymentLagRollType = PaymentLagRollType,
+            PaymentDate = PaymentDate,
+            PaymentCurrency = PaymentCurrency,
+            AssetFixingId = AssetFixingId,
+            AssetId = AssetId,
+            DiscountCurve = DiscountCurve,
+            FxConversionType = FxConversionType,
+            FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+            FxFixingId = FxFixingId,
+            Strike = Strike,
+            Counterparty = Counterparty,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName,
+            CallPut = CallPut
+        };
 
         public new IAssetInstrument SetStrike(double strike)
         {
-            var o = (AsianOption)base.SetStrike(strike);
-            o.CallPut = CallPut;
+            var o = (AsianOption)Clone();
+            o.Strike = strike;
             return o;
         }
 

@@ -95,7 +95,17 @@ namespace Qwack.Core.Curves
         {
             var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
             var newSpot = GetPriceForDate(newSpotDate);
-            var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, _contangos, _currencyProvider, _basis, _pillarLabels);
+            var fwds = _pillarDates.Select(p => GetPriceForDate(p)).ToArray();
+            var times = _pillarDates.Select(p => newSpotDate.CalculateYearFraction(p, _basis)).ToArray();
+            var newCtgos = fwds.Select((f, ix) => (f / newSpot - 1.0) / times[ix]).ToArray();
+            var o = new ContangoPriceCurve(newAnchorDate, newSpot, newSpotDate, _pillarDates, newCtgos, _currencyProvider, _basis, _pillarLabels)
+            {
+                AssetId = AssetId,
+                Currency = Currency,
+                Name = Name,
+                SpotCalendar = SpotCalendar,
+                SpotLag = SpotLag
+            };
             return o;
         }
 

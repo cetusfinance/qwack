@@ -28,7 +28,7 @@ namespace Qwack.Models.Tests.MCModels
                 Name = "CL",
                 AssetId = "CL"
             };
-            var comSurface = new ConstantVolSurface(buildDate, 0.32);
+            var comSurface = new ConstantVolSurface(buildDate, 0.32) { AssetId = "CL" };
             var fModel = new FundingModel(buildDate, new Dictionary<string, IrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             var fxM = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxM.Init(usd, buildDate, new Dictionary<Currency, double>(), new List<FxPair>(), new Dictionary<Currency, string> { { usd, "DISCO" } });

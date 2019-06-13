@@ -19,10 +19,12 @@ namespace Qwack.Models.Tests
             var pair = new FxPair();
             var dict = new Mock<IFixingDictionary>();
             var surface = new Mock<IVolSurface>();
+            var surface2 = new Mock<IVolSurface>();
             var surfaceFx = new Mock<IVolSurface>();
             var curve = new Mock<IPriceCurve>();
             curve.Setup(c => c.GetPriceForDate(DateTime.Today)).Returns(456.0);
-
+            surface.Setup(s => s.AssetId).Returns("blah");
+            surface2.Setup(s => s.AssetId).Returns("blah2");
             matrix.Setup(f => f.GetFxPair(It.IsAny<string>())).Returns(pair);
             fModel.Setup(f => f.GetFxRate(It.IsAny<DateTime>(), It.IsAny<Currency>(), It.IsAny<Currency>())).Returns(77.0);
             fModel.Setup(f => f.FxMatrix).Returns(matrix.Object);
@@ -41,9 +43,9 @@ namespace Qwack.Models.Tests
             Assert.False(sut.TryGetFixingDictionary("wooo", out var flob));
 
             sut.AddVolSurface("blah", surface.Object);
-            sut.AddVolSurfaces(new Dictionary<string, IVolSurface> { { "blah2", surface.Object } });
+            sut.AddVolSurfaces(new Dictionary<string, IVolSurface> { { "blah2", surface2.Object } });
             Assert.Same(surface.Object, sut.GetVolSurface("blah"));
-            Assert.Same(surface.Object, sut.GetVolSurface("blah2"));
+            Assert.Same(surface2.Object, sut.GetVolSurface("blah2"));
 
             sut.GetVolForStrikeAndDate("blah", DateTime.Today, 123);
             surface.Verify(s => s.GetVolForAbsoluteStrike(123, DateTime.Today, 456), Times.Once);

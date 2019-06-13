@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +20,12 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             Assert.Equal(vol, surface.GetVolForDeltaStrike(999, origin.AddDays(303),100), 12);
             Assert.Equal(vol, surface.GetVolForAbsoluteStrike(999, 0.777,0), 12);
             Assert.Equal(vol, surface.GetVolForDeltaStrike(999, 0.123,55), 12);
+            Assert.Equal(vol, surface.GetForwardATMVol(origin, origin));
+            Assert.Equal(vol, surface.GetForwardATMVol(9, 10));
+
+            Assert.Single(surface.Expiries);
+            Assert.Single(surface.GetATMVegaScenarios(0, null));
+            Assert.Equal(origin, surface.PillarDatesForLabel(""));
         }
 
 

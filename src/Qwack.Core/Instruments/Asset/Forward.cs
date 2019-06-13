@@ -75,7 +75,10 @@ namespace Qwack.Core.Instruments.Asset
             FixingDates = new[] { ExpiryDate },
             FxFixingDates = new[] { ExpiryDate },
             FxConversionType = FxConversionType.AverageThenConvert,
-            PaymentDate = PaymentDate
+            PaymentDate = PaymentDate,
+            Counterparty = Counterparty,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName,
         };
 
         public IAssetInstrument Clone() => new Forward
@@ -94,6 +97,10 @@ namespace Qwack.Core.Instruments.Asset
             FxFixingId = FxFixingId,
             DiscountCurve = DiscountCurve,
             PaymentDate = PaymentDate,
+            Counterparty = Counterparty,
+            FxConversionType = FxConversionType,
+            HedgingSet = HedgingSet,
+            PortfolioName = PortfolioName,
         };
 
         public IAssetInstrument SetStrike(double strike)

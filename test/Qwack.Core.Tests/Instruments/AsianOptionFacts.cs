@@ -36,9 +36,9 @@ namespace Qwack.Core.Tests.Instruments
             };
 
             var fakeModel = new Mock<IAssetFxModel>();
-            var c = new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider) { Currency = usd };
+            var c = new ConstantPriceCurve(100, orgin, TestProviderHelper.CurrencyProvider) { Currency = usd };
             fakeModel.Setup(xx => xx.GetPriceCurve(It.IsAny<string>(), null)).Returns(c);
-            fakeModel.Setup(xx => xx.BuildDate).Returns(DateTime.Today);
+            fakeModel.Setup(xx => xx.BuildDate).Returns(orgin);
 
             Assert.Equal(usd, x.Currency);
             Assert.Equal(usd, x.PaymentCurrency);

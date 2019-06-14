@@ -61,7 +61,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
@@ -135,7 +135,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
@@ -238,7 +238,7 @@ namespace Qwack.Models.Risk
             if (subPortfolio.Instruments.Count == 0)
                 return cube;
 
-            var lastDateInBook = subPortfolio.LastSensitivityDate();
+            var lastDateInBook = subPortfolio.LastSensitivityDate;
             var basePvModel = pvModel.Rebuild(model, subPortfolio);
             var pvCube = basePvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
@@ -319,7 +319,7 @@ namespace Qwack.Models.Risk
             if (subPortfolio.Instruments.Count == 0)
                 return cube;
 
-            var lastDateInBook = subPortfolio.LastSensitivityDate();
+            var lastDateInBook = subPortfolio.LastSensitivityDate;
 
             var pvCube = subPortfolio.PV(model, curveObj.Currency);
             var pvRows = pvCube.GetAllRows();
@@ -493,7 +493,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var baseModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = baseModel.PV(curveObj.Currency);
@@ -872,7 +872,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var subModel = pvModel.Rebuild(pvModel.VanillaModel, subPortfolio);
                 var pvCube = subModel.PV(reportingCcy ?? curveObj.Currency);

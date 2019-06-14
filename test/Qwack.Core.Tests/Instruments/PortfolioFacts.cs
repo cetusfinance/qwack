@@ -35,9 +35,9 @@ namespace Qwack.Core.Tests.Instruments
 
             pf.Instruments = new List<IInstrument> { swp };
 
-            Assert.Equal(swp.LastSensitivityDate, PortfolioEx.LastSensitivityDate(pf));
+            Assert.Equal(swp.LastSensitivityDate, pf.LastSensitivityDate);
             Assert.Equal("AssetX", PortfolioEx.AssetIds(pf).First());
-            Assert.Equal(bd.AddYears(1), pf.LastSensitivityDate);
+            Assert.Equal(bd.AddYears(2), pf.LastSensitivityDate);
 
             var deets = PortfolioEx.Details(pf);
 

@@ -42,8 +42,10 @@ namespace Qwack.Core.Tests.Instruments
             var pf = x.PastFixingDates(DateTime.Today.AddDays(1));
             Assert.Contains("CL", pf.Keys);
 
-            Assert.True(x == x);
-            Assert.False(x == y);
+            var z = (AsianSwapStrip)x.Clone();
+            Assert.True(x.Equals(z));
+            z.TradeId = "zzz";
+            Assert.False(x.Equals(z));
 
             Assert.Equal(1.0, x.SupervisoryDelta(fakeModel.Object));
         }

@@ -34,6 +34,7 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Contains("QS", a);
             Assert.Single(x.IrCurves(fakeModel.Object));
             Assert.Equal(FxConversionType.None, x.FxType(fakeModel.Object));
+            Assert.Equal(string.Empty, x.FxPair(fakeModel.Object));
 
             Assert.Equal(6, x.Strike);
             var y = (AsianBasisSwap)x.SetStrike(7);
@@ -44,8 +45,8 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Contains("CL", pf.Keys);
             Assert.Contains("QS", pf.Keys);
 
-            Assert.True(x == x);
-            Assert.False(x == y);
+            Assert.True(x.Equals(x));
+            Assert.False(x.Equals(y));
         }
     }
 }

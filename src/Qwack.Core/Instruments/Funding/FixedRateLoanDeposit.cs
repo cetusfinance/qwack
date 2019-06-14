@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public FixedRateLoanDeposit() { }
 
-        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve)
+        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve):base()
         {
             StartDate = startDate;
             EndDate = endDate;

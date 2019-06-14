@@ -69,10 +69,21 @@ namespace Qwack.Core.Tests.Instruments
             var expectedPv = (fwdB - fwdA) * b.MetalQuantity;
             expectedPv *= df;
             Assert.Equal(expectedPv, pv, 10);
-
+            Assert.Equal(maturity, b.LastSensitivityDate);
+            Assert.Equal(usd, b.Currency);
 
             var s = b.Sensitivities(fModel);
             Assert.True(s.Count == 2 && s.Keys.Contains("USD.BLAH") && s.Keys.Contains("XAU.BLAH"));
+
+            var s2 = b.Dependencies(fModel.FxMatrix);
+            Assert.True(s2.Count == 2 && s2.Contains("USD.BLAH") && s2.Contains("XAU.BLAH"));
+
+            Assert.Throws<NotImplementedException>(() => b.ExpectedCashFlows(null));
+
+            Assert.Equal(0.0402428426839156, b.CalculateParRate(fModel),8);
+
+            var b2 = (ContangoSwap)b.SetParRate(0.05);
+            Assert.Equal(0.05, b2.ContangoRate);
         }
 
     }

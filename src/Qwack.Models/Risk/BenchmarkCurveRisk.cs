@@ -29,7 +29,7 @@ namespace Qwack.Models.Risk
             };
             cube.Initialize(dataTypes);
 
-            var lastDate = pvModel.Portfolio.LastSensitivityDate();
+            var lastDate = pvModel.Portfolio.LastSensitivityDate;
 
             var insByCurve = riskCollection.GroupBy(x => x.SolveCurve);
             var insToRisk = new List<IFundingInstrument>();

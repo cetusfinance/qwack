@@ -12,7 +12,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public IrBasisSwap() { }
 
-        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null)
+        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null):base()
         {
             SwapTenor = swapTenor;
 

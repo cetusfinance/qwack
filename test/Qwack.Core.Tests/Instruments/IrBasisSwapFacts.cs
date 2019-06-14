@@ -67,6 +67,22 @@ namespace Qwack.Core.Tests.Instruments
 
             var pv = swp.Pv(fModel, true);
             Assert.Equal(7211.8875428740866, pv, 8);
+
+            Assert.Equal(swp.EndDate, swp.LastSensitivityDate);
+
+            swp.SolveCurve = "USD.BLAH.6M";
+            var d = swp.Dependencies(null);
+            Assert.Single(d);
+            Assert.Throws<NotImplementedException>(() => swp.ExpectedCashFlows(fModel));
+
+            Assert.Equal(-0.109324115016209, swp.CalculateParRate(fModel), 10);
+
+            Assert.Equal(0.09, (swp.SetParRate(0.09) as IrBasisSwap).ParSpreadPay);
+
+            swp = new IrBasisSwap(startDate, 1.Years(), parSpread, false, ix, ix2, "USD.BLAH.3M", "USD.BLAH.6M", "USD.BLAH.3M", (decimal)notional);
+            Assert.Equal(0.077, (swp.SetParRate(0.077) as IrBasisSwap).ParSpreadRec);
+            Assert.Equal(-0.110017199809182, swp.CalculateParRate(fModel), 10);
+
         }
 
     }

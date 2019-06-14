@@ -51,10 +51,10 @@ namespace Qwack.Core.Tests.Instruments
             var pf = x.PastFixingDates(orgin.AddDays(1));
             Assert.Contains("QS", pf.Keys);
 
-            Assert.True(x == x);
+            Assert.True(x.Equals(x));
             var y = (AsianOption)x.Clone();
             y.TradeId = "xxx";
-            Assert.False(x == y);
+            Assert.False(x.Equals(y));
 
 
             var z = (AsianOption)x.SetStrike(0);

@@ -97,7 +97,7 @@ namespace Qwack.Models.MCModels
                 Engine.IncrementDepth();
             }
 
-            var lastDate = portfolio.LastSensitivityDate();
+            var lastDate = portfolio.LastSensitivityDate;
             var assetIds = portfolio.AssetIds();
             var assetInstruments = portfolio.Instruments
                .Where(x => x is IAssetInstrument)

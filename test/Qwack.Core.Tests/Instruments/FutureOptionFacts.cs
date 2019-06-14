@@ -45,10 +45,10 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(orgin, x.LastSensitivityDate);
             Assert.Empty(x.PastFixingDates(orgin.AddDays(1)));
 
-            Assert.True(x == x);
             var y = (FuturesOption)x.Clone();
+            Assert.True(x.Equals(y));
             y.TradeId = "xxx";
-            Assert.False(x == y);
+            Assert.False(x.Equals(y));
 
             var z = (FuturesOption)x.SetStrike(0);
             Assert.Equal(0, z.Strike);

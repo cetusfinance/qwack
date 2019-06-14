@@ -37,8 +37,14 @@ namespace Qwack.Core.Tests.Instruments
 
             Assert.Equal(swp.LastSensitivityDate, PortfolioEx.LastSensitivityDate(pf));
             Assert.Equal("AssetX", PortfolioEx.AssetIds(pf).First());
+            Assert.Equal(bd.AddYears(1), pf.LastSensitivityDate);
 
             var deets = PortfolioEx.Details(pf);
+
+            Assert.Throws<NotImplementedException>(() => pf.TradeId);
+            Assert.Throws<NotImplementedException>(() => pf.Counterparty);
+            Assert.Throws<NotImplementedException>(() => pf.Counterparty = null);
+
 
         }
 

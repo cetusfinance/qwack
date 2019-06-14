@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public CashBalance() { }
 
-        public CashBalance(Currency currency, double notional, DateTime? payDate = null)
+        public CashBalance(Currency currency, double notional, DateTime? payDate = null):base()
         {
             Notional = notional;
             Currency = currency;

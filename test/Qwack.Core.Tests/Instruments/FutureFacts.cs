@@ -43,11 +43,12 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(FxConversionType.None, x.FxType(fakeModel.Object));
             Assert.Equal(orgin, x.LastSensitivityDate);
             Assert.Empty(x.PastFixingDates(orgin.AddDays(1)));
+            Assert.Equal(string.Empty, x.FxPair(fakeModel.Object));
 
-            Assert.True(x == x);
+            Assert.True(x.Equals(x));
             var y = (Future)x.Clone();
             y.TradeId = "xxx";
-            Assert.False(x == y);
+            Assert.False(x.Equals(y));
 
             var z = (Future)x.SetStrike(0);
             Assert.Equal(0, z.Strike);

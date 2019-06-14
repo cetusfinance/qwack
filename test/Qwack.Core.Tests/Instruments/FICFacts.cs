@@ -31,6 +31,9 @@ namespace Qwack.Core.Tests.Instruments
             };
 
             Assert.True(Enumerable.SequenceEqual(f.SolveCurves, new[] { "1.blah", "2.blah" }));
+
+            var f2 = f.Clone();
+            Assert.True(Enumerable.SequenceEqual(f, f2));
         }
 
         [Fact]
@@ -49,6 +52,51 @@ namespace Qwack.Core.Tests.Instruments
             f.Add(new FxForward { SolveCurve = "usd.2blah", PillarDate = DateTime.Today });
 
             Assert.Throws<Exception>(()=>f.ImplyContainedCurves(DateTime.Today, Interpolator1DType.Linear));
+        }
+
+        [Fact]
+        public void ImplySolveStagesTest()
+        {
+            var f = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
+            {
+                new IrSwap
+                {
+                    SolveCurve = "usd.forecast",
+                    DiscountCurve = "usd.discount",
+                    ForecastCurve = "usd.forecast"
+                },
+                new IrBasisSwap
+                {
+                    SolveCurve = "usd.discount",
+                    DiscountCurve = "usd.discount",
+                    ForecastCurvePay = "usd.forecast",
+                    ForecastCurveRec = "usd.discount"
+                },
+                new XccyBasisSwap
+                {
+                    SolveCurve = "zar.discount.usd",
+                    DiscountCurvePay = "zar.discount.usd",
+                    ForecastCurvePay ="zar.discount.usd",
+                    DiscountCurveRec ="usd.discount",
+                    ForecastCurveRec ="usd.forecast"
+                }
+            };
+
+            var x = f.ImplySolveStages(null);
+
+            Assert.Equal(3, x.Count);
+            Assert.Equal(2, x.Where(xx => xx.Value == 0).Count());
+            Assert.Equal("zar.discount.usd", x.Single(xx => xx.Value == 1).Key);
+
+            f.Add(new IrBasisSwap
+            {
+                SolveCurve = "usd.discount2",
+                DiscountCurve = "usd.discount2",
+                ForecastCurvePay = "usd.forecast2",
+                ForecastCurveRec = "usd.discount2"
+            });
+
+            Assert.Throws<Exception>(() => f.ImplySolveStages(null));
         }
     }
 }

@@ -7,13 +7,14 @@ using Qwack.Math.Interpolation;
 using Qwack.Models;
 using Qwack.Dates;
 using static System.Math;
+using Qwack.Core.Basic;
 
 namespace Qwack.Core.Tests.Instruments
 {
-    public class ZeroBondFacts
+    public class CashBalanceFacts
     {
         [Fact]
-        public void ZeroBond()
+        public void CashBalanceFact()
         {
             var bd = DateTime.Today;
             var pillars = new[] { bd, bd.AddDays(1000) };
@@ -22,27 +23,35 @@ namespace Qwack.Core.Tests.Instruments
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var discoCurve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
             var fModel = new FundingModel(bd, new[] { discoCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            var price = 0.93;
             var notional = 100e6;
             var maturity = bd.AddDays(365);
-            var b = new ZeroBond(price, bd.AddDays(365), "USD.BLAH") { Notional = notional };
+            var b = new CashBalance(usd, notional, null);
+
             var t = bd.CalculateYearFraction(maturity, DayCountBasis.Act365F);
 
             var pv = b.Pv(fModel, false);
-            var expectedPv = (Exp(-flatRate * t) - price) * notional;
-            Assert.Equal(expectedPv, pv);
+            Assert.Equal(notional, pv);
 
-            var s = b.Sensitivities(fModel);
-            Assert.True(s.Count == 1 && s.Keys.Single() == "USD.BLAH");
-            Assert.True(s["USD.BLAH"].Count == 1 && s["USD.BLAH"].Single().Key == maturity);
-            Assert.Equal(-t*notional*Exp(-flatRate*t), s["USD.BLAH"][maturity]);
-
-            Assert.Equal(maturity, b.LastSensitivityDate);
-            Assert.Throws<NotImplementedException>(() => b.ExpectedCashFlows(null));
             Assert.Empty(b.Dependencies(null));
-            Assert.Equal(Exp(-flatRate * t), b.CalculateParRate(fModel));
-            var b2 =(ZeroBond)b.SetParRate(0.99);
-            Assert.Equal(0.99, b2.Price);
+            Assert.Empty(b.AssetIds);
+            Assert.Empty(b.PastFixingDates(bd));
+            Assert.Null(b.ExpectedCashFlows(null).Flows); 
+            Assert.Equal(0.0, b.CalculateParRate(null));
+            Assert.Equal(0.0, b.FlowsT0(null));
+            Assert.Equal(string.Empty, b.FxPair(null));
+            Assert.Equal(FxConversionType.None, b.FxType(null));
+            Assert.Equal(usd, b.Currency);
+            Assert.Equal(DateTime.MinValue, b.LastSensitivityDate);
+
+            var y = (CashBalance)b.Clone();
+            Assert.True(b.Equals(y));
+            y.TradeId = "xxx";
+            Assert.False(b.Equals(y));
+
+
+
+            Assert.Throws<NotImplementedException>(() => b.Sensitivities(fModel));
+            Assert.Equal(b, b.SetParRate(0.0));
         }
 
     }

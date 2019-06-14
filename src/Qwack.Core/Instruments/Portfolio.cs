@@ -18,7 +18,28 @@ namespace Qwack.Core.Instruments
 
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public DateTime LastSensitivityDate => Instruments.Max(i=>i.LastSensitivityDate);
+        public DateTime LastSensitivityDate
+        {
+            get
+            {
+                if (Instruments.Count == 0)
+                    return DateTime.MinValue;
+
+                var assetTrades = Instruments
+                    .Where(x => x is IAssetInstrument);
+
+                var fxTrades = Instruments
+                    .Where(x => x is FxForward || (x is CashWrapper cw && cw.UnderlyingInstrument is FxForward));
+
+                if (!fxTrades.Any() && !assetTrades.Any())
+                    return DateTime.MinValue;
+                else if (!fxTrades.Any())
+                    return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate);
+                else if (!assetTrades.Any())
+                    return fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate);
+                return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate).Max(fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate));
+            }
+        }
 
         public Portfolio Clone() => new Portfolio
         {
@@ -29,26 +50,6 @@ namespace Qwack.Core.Instruments
 
     public static class PortfolioEx
     {
-        public static DateTime LastSensitivityDate(this Portfolio portfolio)
-        {
-            if (portfolio.Instruments.Count == 0)
-                return DateTime.MinValue;
-
-            var assetTrades = portfolio.Instruments
-                .Where(x => x is IAssetInstrument);
-
-            var fxTrades = portfolio.Instruments
-                .Where(x => x is FxForward || (x is CashWrapper cw && cw.UnderlyingInstrument is FxForward));
-
-            if (!fxTrades.Any() && !assetTrades.Any())
-                return DateTime.MinValue;
-            else if (!fxTrades.Any())
-                return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate); 
-            else if (!assetTrades.Any())
-                return fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate);
-            return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate).Max(fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate));
-        }
-
         public static string[] AssetIds(this Portfolio portfolio)
         {
             if (portfolio.Instruments.Count == 0)

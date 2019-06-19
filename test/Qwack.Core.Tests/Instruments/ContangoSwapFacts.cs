@@ -23,7 +23,7 @@ namespace Qwack.Core.Tests.Instruments
         [Fact]
         public void ContangoSwap()
         {
-            var bd = DateTime.Today;
+            var bd = new DateTime(2019, 06, 14);
             var pillars = new[] { bd, bd.AddDays(1000) };
             var flatRateUsd = 0.05;
             var flatRateXau = 0.01;

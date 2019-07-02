@@ -66,8 +66,11 @@ namespace Qwack.Models.Tests.PnLAttribution
         {
             var model = GenerateTestData();
             var zar = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR");
-            var rm = new RiskMatrix("FakeAsset", zar, MutationType.FlatShift, RiskMetric.FxDelta, 10, 0.1, 2, TestProviderHelper.CurrencyProvider, true);
-
+            var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
+            var rm = new RiskMatrix("FakeAsset", zar, MutationType.FlatShift, RiskMetric.FxDelta, 10, 0.1, 2, TestProviderHelper.CurrencyProvider, true)
+            {
+                FxPairsForDelta = new List<FxPair>() { new FxPair() { Domestic = zar, Foreign = usd } }
+            };
             var cube = rm.Generate(model);
             
             foreach(var row in cube.GetAllRows())

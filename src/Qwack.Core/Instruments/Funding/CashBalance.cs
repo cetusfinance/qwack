@@ -58,7 +58,8 @@ namespace Qwack.Core.Instruments.Funding
             Notional = Notional,
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,
-            TradeId = TradeId
+            TradeId = TradeId,
+            PortfolioName = PortfolioName
         };
 
         public IFundingInstrument SetParRate(double parRate) => Clone();

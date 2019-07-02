@@ -28,6 +28,8 @@ namespace Qwack.Models.Risk
         public FxPair Pair1 { get; private set; }
         public FxPair Pair2 { get; private set; }
 
+        public List<FxPair> FxPairsForDelta { get; set; }
+
         public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential=true)
         {
             AssetId = assetId;
@@ -151,7 +153,7 @@ namespace Qwack.Models.Risk
 
                     IPvModel shiftedFx;
 
-                    if (thisShiftFx1 == 0)
+                    if (thisShiftFx == 0)
                         shiftedFx = shifted;
                     else
                         shiftedFx = FlatShiftMutator.FxSpotShift(Pair2, thisShiftFx, shifted);
@@ -234,7 +236,7 @@ namespace Qwack.Models.Risk
                 //case RiskMetric.AssetCurveDeltaGamma:
                 //    return portfolio.AssetDeltaGamma(model);
                 case RiskMetric.FxDelta:
-                    return model.FxDelta(_currencyProvider.GetCurrency("ZAR"), _currencyProvider);
+                    return model.FxDeltaSpecific(_currencyProvider.GetCurrency("ZAR"), FxPairsForDelta, _currencyProvider, false);
                 //case RiskMetric.FxDeltaGamma:
                 //    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
                 default:

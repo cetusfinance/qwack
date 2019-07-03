@@ -155,7 +155,7 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
-        public static ICube Filter(this ICube cube, Dictionary<string, object> fieldsToFilterOn)
+        public static ICube Filter(this ICube cube, Dictionary<string, object> fieldsToFilterOn, bool filterOut=false)
         {
             foreach (var fieldToFilterOn in fieldsToFilterOn.Keys)
                 if (!cube.DataTypes.ContainsKey(fieldToFilterOn))
@@ -178,6 +178,9 @@ namespace Qwack.Core.Cubes
                         break;
                     }
                 }
+                if (filterOut)
+                    rowIsRelevant = !rowIsRelevant;
+
                 if (rowIsRelevant)
                     outCube.AddRow(row.MetaData, row.Value);
             }
@@ -236,7 +239,7 @@ namespace Qwack.Core.Cubes
             return output;
         }
 
-        public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn)
+        public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn, bool filterOut=false)
         {
             foreach (var fieldToFilterOn in fieldsToFilterOn.Select(x=>x.Key))
                 if (!cube.DataTypes.ContainsKey(fieldToFilterOn))
@@ -270,6 +273,9 @@ namespace Qwack.Core.Cubes
                         break;
                     }
                 }
+                if (filterOut)
+                    rowIsRelevant = !rowIsRelevant;
+
                 if (rowIsRelevant)
                     outCube.AddRow(row.MetaData, row.Value);
             }

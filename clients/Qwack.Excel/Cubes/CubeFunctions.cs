@@ -134,16 +134,18 @@ namespace Qwack.Excel.Cubes
         public static object FilterCube(
            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
-           [ExcelArgument(Description = "Filter fields and values")] object[,] FilterDetails)
+           [ExcelArgument(Description = "Filter fields and values")] object[,] FilterDetails,
+           [ExcelArgument(Description = "Filter out? default false (i.e. filter in)")] object FilterOut)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var filterOut = FilterOut.OptionalExcel(false);
                 var cubeCache = ContainerStores.GetObjectCache<ICube>();
                 var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
 
                 var filterDeets = FilterDetails.RangeToKvList<string, object>();
 
-                var outCube = inCube.Value.Filter(filterDeets);
+                var outCube = inCube.Value.Filter(filterDeets, filterOut);
 
                 cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
                 return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;

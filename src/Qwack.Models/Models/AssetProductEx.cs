@@ -851,6 +851,8 @@ namespace Qwack.Models.Models
                     break;
                 case CashWrapper wrapper:
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy);
+                    if (reportingCurrency != null)
+                        ccy = reportingCurrency.Ccy;
                     foreach(var cb in wrapper.CashBalances)
                     {
                         var p = ComputePV(cb, model, pvCcy);

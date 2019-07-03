@@ -420,7 +420,11 @@ namespace Qwack.Core.Instruments
                                     wrapper.CashBalances.Add(new CashBalance(wfxf.ForeignCCY, -wfxf.DomesticQuantity * wfxf.Strike) { TradeId = i.TradeId + "f" });
                                 }                                break;
                             case FixedRateLoanDeposit wl:
-                                if (wl.EndDate < rollToDate && wl.EndDate >= rollfromDate)
+                                if (wl.StartDate < rollToDate && wl.StartDate >= rollfromDate)
+                                {
+                                    wrapper.CashBalances.Add(new CashBalance(wl.Currency, wl.Notional) { TradeId = i.TradeId + "nStart" });
+                                }
+                                else if (wl.EndDate < rollToDate && wl.EndDate >= rollfromDate)
                                 {
                                     wrapper.CashBalances.Add(new CashBalance(wl.Currency, -wl.Notional) { TradeId = i.TradeId + "n" });
                                 }
@@ -463,5 +467,8 @@ namespace Qwack.Core.Instruments
 
             return o;
         }
+
+        public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
+            => new Portfolio { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
     }
 }

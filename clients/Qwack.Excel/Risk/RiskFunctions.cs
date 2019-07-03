@@ -11,6 +11,8 @@ using Qwack.Core.Cubes;
 using Qwack.Excel.Instruments;
 using Qwack.Models.Risk;
 using Qwack.Core.Instruments.Funding;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Qwack.Excel.Curves
 {
@@ -119,15 +121,45 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxDeltaSpecific), IsThreadSafe = true)]
+        public static object PortfolioFxDeltaSpecific(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName,
+            [ExcelArgument(Description = "Pairs to bump")] object[] PairsToBump,
+            [ExcelArgument(Description = "Home currency, e.g. ZAR")] string HomeCcy,
+            [ExcelArgument(Description = "Compute gamma, default false")] object ComputeGamma)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var gamma = ComputeGamma.OptionalExcel(false);
+                var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
+                var ccy = ContainerStores.CurrencyProvider[HomeCcy];
+                var pairsToBumpStr = PairsToBump.ObjectRangeToVector<string>();
+                var pairsToBump = pairsToBumpStr.Select(p => p.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider)).ToList();
+                var result = model.FxDeltaSpecific(ccy, pairsToBump, ContainerStores.CurrencyProvider, gamma);
+                return PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns theta and charm of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioThetaCharm), IsThreadSafe = true)]
         public static object PortfolioThetaCharm(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
            [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
-           [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+           [ExcelArgument(Description = "Reporting currency")] string ReportingCcy,
+           [ExcelArgument(Description = "List of FxPairs for fx metrics")] object[] PairsToRisk)
         {
-            return ExcelHelper.Execute(_logger, () => ThetaCharm(ResultObjectName, PortfolioName, ModelName, FwdValDate, ReportingCcy, true));
+
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pairs = (PairsToRisk == null || !PairsToRisk.Any() || PairsToRisk.First() is ExcelMissing) ? null :
+                PairsToRisk.ObjectRangeToVector<string>()
+                        .Select(x => x.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider))
+                        .ToList();
+                return ThetaCharm(ResultObjectName, PortfolioName, ModelName, FwdValDate, ReportingCcy, true, pairs);
+            });
         }
 
         [ExcelFunction(Description = "Returns theta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioTheta), IsThreadSafe = true)]
@@ -138,14 +170,14 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Fwd value date, usually T+1")] DateTime FwdValDate,
             [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
         {
-            return ExcelHelper.Execute(_logger, () => ThetaCharm(ResultObjectName, PortfolioName, ModelName, FwdValDate, ReportingCcy, false));
+            return ExcelHelper.Execute(_logger, () => ThetaCharm(ResultObjectName, PortfolioName, ModelName, FwdValDate, ReportingCcy, false, null));
         }
 
-        private static string ThetaCharm(string ResultObjectName, string PortfolioName, string ModelName,DateTime FwdValDate, string ReportingCcy, bool computeCharm)
+        private static string ThetaCharm(string ResultObjectName, string PortfolioName, string ModelName,DateTime FwdValDate, string ReportingCcy, bool computeCharm, List<FxPair> fxPairs=null)
         {
             var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
             var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-            var result = model.AssetThetaCharm(FwdValDate, ccy, ContainerStores.CurrencyProvider, computeCharm);
+            var result = model.AssetThetaCharm(FwdValDate, ccy, ContainerStores.CurrencyProvider, computeCharm, fxPairs);
             return PushCubeToCache(result, ResultObjectName);
         }
 
@@ -308,7 +340,8 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Bump step size asset")] double BumpStepAsset,
             [ExcelArgument(Description = "Bump step size fx")] double BumpStepFx,
             [ExcelArgument(Description = "Risk metric to produce for each scenario")] object RiskMetric,
-            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff)
+            [ExcelArgument(Description = "Return differential to base case, default True")] object ReturnDiff,
+            [ExcelArgument(Description = "List of FxPairs for fx metrics")] object[] PairsToRisk)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -320,20 +353,38 @@ namespace Qwack.Excel.Curves
                     throw new Exception($"Unknown risk metric {RiskMetric}");
                 var retDiff = ReturnDiff.OptionalExcel(true);
 
-                var isFxFx = AssetId.Length == 7 && AssetId[3] == '/';
+
+                var isFxFx = AssetId.Length == 7 && AssetId[3] == '/' &&
+                             Currency.Length == 7 && Currency[3] == '/';
 
                 ICube result = null;
                 if (isFxFx)
                 {
-                    //var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                    //var ccy2 = ContainerStores.CurrencyProvider.GetCurrency(AssetId.Substring(4));
-                    //var riskMatrix = new RiskMatrix(ccy2, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
-                    //result = riskMatrix.Generate(model, model.Portfolio);
+                    var pair1 = Currency.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
+                    var pair2 = AssetId.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
+                    var riskMatrix = new RiskMatrix(pair2, pair1, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+
+                    if(PairsToRisk!=null && PairsToRisk.Any())
+                    {
+                        riskMatrix.FxPairsForDelta = PairsToRisk.ObjectRangeToVector<string>()
+                        .Select(x => x.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider))
+                        .ToList();
+                    }
+
+                    result = riskMatrix.Generate(model, model.Portfolio);
                 }
                 else
                 {
                     var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                     var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+
+                    if (PairsToRisk != null && PairsToRisk.Any())
+                    {
+                        riskMatrix.FxPairsForDelta = PairsToRisk.ObjectRangeToVector<string>()
+                        .Select(x => x.FxPairFromString(ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider))
+                        .ToList();
+                    }
+
                     result = riskMatrix.Generate(model, model.Portfolio);
                 }
 

@@ -42,9 +42,10 @@ namespace Qwack.Core.Instruments.Funding
             return curves.Distinct().Where(x => x != SolveCurve).ToList();
         }
 
-        public double Pv(IFundingModel Model, bool updateState)
+        public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
+        public double Pv(IFundingModel Model, bool updateState, bool ignoreTodayFlows)
         {
-            if (Model.BuildDate > DeliveryDate)
+            if (Model.BuildDate > DeliveryDate || (ignoreTodayFlows && Model.BuildDate == DeliveryDate))
                 return 0.0;
 
             var discountCurve = Model.Curves[ForeignDiscountCurve];

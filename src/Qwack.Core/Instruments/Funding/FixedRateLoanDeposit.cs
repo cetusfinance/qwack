@@ -73,10 +73,11 @@ namespace Qwack.Core.Instruments.Funding
         public string[] AssetIds => new string[0];
         public Currency PaymentCurrency => Currency;
 
-        public double Pv(IFundingModel model, bool updateState)
+        public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
+        public double Pv(IFundingModel model, bool updateState, bool ignoreTodayFlows)
         {
             var discountCurve = model.Curves[DiscountCurve];
-            var pv = LoanDepoSchedule.PV(discountCurve, discountCurve, updateState, true, false, DayCountBasis.ACT360, model.BuildDate);
+            var pv = LoanDepoSchedule.PV(discountCurve, discountCurve, updateState, true, false, DayCountBasis.ACT360, ignoreTodayFlows ? model.BuildDate.AddDays(1) : model.BuildDate);
             return pv;
         }
 

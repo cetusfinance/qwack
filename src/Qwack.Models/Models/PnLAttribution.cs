@@ -732,7 +732,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -747,13 +747,10 @@ namespace Qwack.Models.Models
 
             cube.Initialize(dataTypes);
 
-            var pvCubeBase = portfolio.PV(startModel, reportingCcy);
+            var pvCubeBase = portfolio.PV(startModel, reportingCcy, cashOnDayAlreadyPaid);
             var pvRows = pvCubeBase.GetAllRows();
             var tidIx = pvCubeBase.GetColumnIndex("TradeId");
             var tTypeIx = pvCubeBase.GetColumnIndex("TradeType");
-
-            var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
-            var cashRows = cashCube.GetAllRows();
 
             //analytic theta explain
             var theta = portfolio.AssetAnalyticTheta(startModel, endModel.BuildDate, reportingCcy, currencyProvider);
@@ -785,27 +782,11 @@ namespace Qwack.Models.Models
 
             //next step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
-
-            portfolio = portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
-
+            portfolio = cashOnDayAlreadyPaid?portfolio:portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
             var newPVCube = portfolio.PV(model, reportingCcy);
 
-            //cash moves
-            var cashByTrade = new Dictionary<string, double>();
-            //for (var i = 0; i < cashRows.Length; i++)
-            //{
-            //    var cash = cashRows[i].Value;
-            //    if (cash != 0.0)
-            //    {
-            //        var tid = (string)cashRows[i].MetaData[tidIx];
-            //        if (cashByTrade.ContainsKey(tid))
-            //            cashByTrade[tid] = cashByTrade[tid] + cash;
-            //        else
-            //            cashByTrade[tid] = cash;
-            //    }
-            //}
 
-            var step = newPVCube.QuickDifference(pvCubeBase);
+            var step = newPVCube.Difference(pvCubeBase);
             foreach (var r in step.GetAllRows())
             {
                 var row = new Dictionary<string, object>
@@ -818,8 +799,7 @@ namespace Qwack.Models.Models
                     { "PointLabel", string.Empty }
                 };
                 thetaByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
-                cashByTrade.TryGetValue((string)r.MetaData[tidIx], out var cash);
-                cube.AddRow(row, r.Value - explained + cash);
+                cube.AddRow(row, r.Value - explained);
             }
             var lastPVCuve = newPVCube;
 
@@ -1357,10 +1337,10 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
         {
             //first do normal attribution
-            var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider);
+            var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider, cashOnDayAlreadyPaid);
 
             //then do activity PnL
             var (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd) = startPortfolio.ActivityBooks(endPortfolio, endModel.BuildDate);

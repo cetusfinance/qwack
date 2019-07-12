@@ -433,26 +433,26 @@ namespace Qwack.Excel.Tests.Instruments
 
             var pnlAttribMock = new Mock<IPnLAttributor>();
             pnlAttribMock
-                .Setup(p => p.ExplainAttribution(It.IsAny<Portfolio>(), It.IsAny<Portfolio>(), It.IsAny<IAssetFxModel>(), It.IsAny<IAssetFxModel>(), It.IsAny<Currency>(), It.IsAny<ICurrencyProvider>()))
+                .Setup(p => p.ExplainAttribution(It.IsAny<Portfolio>(), It.IsAny<Portfolio>(), It.IsAny<IAssetFxModel>(), It.IsAny<IAssetFxModel>(), It.IsAny<Currency>(), It.IsAny<ICurrencyProvider>(), It.IsAny<bool>()))
                 .Returns(new ResultCube());
             ContainerStores.PnLAttributor = pnlAttribMock.Object;
 
             Assert.Equal("Could not find portfolio or trade with name trdS",
-                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "trdS", "trdE", "ms1", "ms2", "USD"));
+                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "trdS", "trdE", "ms1", "ms2", "USD", false));
 
             Assert.Equal("Could not find portfolio or trade with name trdE",
-                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "trdE", "ms1", "ms2", "USD"));
+                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "trdE", "ms1", "ms2", "USD", false));
 
             Assert.Equal("Could not find model with name ms1",
-                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "ms1", "ms2", "USD"));
+                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "ms1", "ms2", "USD", false));
 
             Assert.Equal("Could not find model with name ms2",
-                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "model", "ms2", "USD"));
+                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "model", "ms2", "USD", false));
 
             Assert.Equal("outzzy¬0",
-                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "model", "model", "USD"));
+                InstrumentFunctions.AssetPnLAttributionExplainWithActivity("outzzy", "swpFake", "swpFake", "model", "model", "USD", false));
 
-            pnlAttribMock.Verify(p => p.ExplainAttribution(It.IsAny<Portfolio>(), It.IsAny<Portfolio>(), It.IsAny<IAssetFxModel>(), It.IsAny<IAssetFxModel>(), It.IsAny<Currency>(), It.IsAny<ICurrencyProvider>()), Times.Once);
+            pnlAttribMock.Verify(p => p.ExplainAttribution(It.IsAny<Portfolio>(), It.IsAny<Portfolio>(), It.IsAny<IAssetFxModel>(), It.IsAny<IAssetFxModel>(), It.IsAny<Currency>(), It.IsAny<ICurrencyProvider>(), It.IsAny<bool>()), Times.Once);
         }
 
         [Fact]

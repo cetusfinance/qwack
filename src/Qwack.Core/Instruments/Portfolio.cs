@@ -250,6 +250,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = c.Counterparty ?? string.Empty;
                         break;
+                    case ETC etc:
+                        o[i + 1, 1] = "ETC";
+                        o[i + 1, 2] = etc.AssetId;
+                        o[i + 1, 3] = etc.Currency.Ccy;
+                        o[i + 1, 4] = etc.LastSensitivityDate;
+                        o[i + 1, 5] = etc.LastSensitivityDate;
+                        o[i + 1, 6] = etc.LastSensitivityDate;
+                        o[i + 1, 7] = string.Empty;
+                        o[i + 1, 8] = etc.Notional;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = etc.Counterparty ?? string.Empty;
+                        break;
                 }
             }
 
@@ -316,6 +328,8 @@ namespace Qwack.Core.Instruments
                     return loanDeposit.Equals((FixedRateLoanDeposit)B);
                 case CashWrapper wrapper:
                     return Equals(wrapper.UnderlyingInstrument, (CashWrapper)B);
+                case ETC etc:
+                    return etc.Equals((ETC)B);
                 default:
                     return false;
             }

@@ -101,6 +101,29 @@ namespace Qwack.Math.Extensions
             }
             return r;
         }
+
+        public static double Nearest(this IEnumerable<double> xs, double x) => xs.Aggregate((current, next) => System.Math.Abs((long)current - x) < System.Math.Abs((long)next - x) ? current : next);
+
+        public static double LinearInterpolate(this double[] ys, double[] xs, double x)
+        {
+            if (ys.Length != xs.Length)
+                throw new Exception("xs and ys must be of same length");
+
+            if(x>xs.Last() || x<xs.First())
+                throw new Exception("x must lie in range of xs");
+
+            for (var i=0;i<xs.Length-1;i++)
+            {
+                if (x == xs[i]) return ys[i];
+                if(x>xs[i] && x<=xs[i+1])
+                {
+                    var slope = (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
+                    return ys[i] + slope * (x - xs[i]);
+                }
+            }
+
+            return double.NaN;
+        }
         #endregion
     }
 }

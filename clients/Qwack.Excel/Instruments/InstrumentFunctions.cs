@@ -1004,10 +1004,12 @@ namespace Qwack.Excel.Instruments
             [ExcelArgument(Description = "Ending portolio object name")] string PortfolioEndName,
             [ExcelArgument(Description = "Starting Asset-FX model name")] string ModelNameStart,
             [ExcelArgument(Description = "Ending Asset-FX model name")] string ModelNameEnd,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy,
+            [ExcelArgument(Description = "Today cash already paid? (false)")] object CashTodayAlreadyPaid)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var cashTodayAlradyPaid = CashTodayAlreadyPaid.OptionalExcel(false);
                 var pfolioStart = GetPortfolioOrTradeFromCache(PortfolioStartName);
                 var pfolioEnd = GetPortfolioOrTradeFromCache(PortfolioEndName);
                 var modelStart = ContainerStores.GetObjectCache<IAssetFxModel>()
@@ -1016,7 +1018,7 @@ namespace Qwack.Excel.Instruments
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
-                var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolioStart, pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
+                var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolioStart, pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider, cashTodayAlradyPaid);
                 var resultCache = ContainerStores.GetObjectCache<ICube>();
                 resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
                 return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;

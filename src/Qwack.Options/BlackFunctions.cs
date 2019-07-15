@@ -13,12 +13,19 @@ namespace Qwack.Options
     /// </summary>
     public class BlackFunctions
     {
+        public static (double d1, double d2) D1d2(double forward, double strike, double expTime, double volatility)
+        {
+            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
+            var d2 = d1 - volatility * Sqrt(expTime);
+
+            return (d1, d2);
+        }
+
         public static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
 
-            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            var d2 = d1 - volatility * Sqrt(expTime);
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
 
             var num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
             var num3 = num2 - (volatility * Sqrt(expTime));
@@ -28,10 +35,7 @@ namespace Qwack.Options
         public static double BlackDigitalPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
-
-            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            var d2 = d1 - volatility * Sqrt(expTime);
-   
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
             return Exp(-riskFreeRate * expTime) * Statistics.NormSDist(d2 * cpf);
         }
 
@@ -44,67 +48,37 @@ namespace Qwack.Options
         
         public static double BlackGamma(double forward, double strike, double riskFreeRate, double expTime, double volatility)
         {
-            double d1, d2, dF;
-            dF = Exp(-riskFreeRate * expTime);
-            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            d2 = d1 - volatility * Sqrt(expTime);
+            var dF = Exp(-riskFreeRate * expTime);
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
             return dF * Statistics.Phi(d1) / (forward * volatility * Sqrt(expTime)) * (0.01 * forward);
         }
-        
+
         public static double BlackDelta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
-            double d1, d2, DF;
-            DF = Exp(-riskFreeRate * expTime);
-            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            d2 = d1 - volatility * Sqrt(expTime);
+            var DF = Exp(-riskFreeRate * expTime);
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
 
-            //Delta
-            if (CP == OptionType.Put)
-            {
-                return DF * (Statistics.NormSDist(d1) - 1);
-            }
-            else
-            {
-                return DF * Statistics.NormSDist(d1);
-            }
+            return DF * ((CP == OptionType.Put) ? (Statistics.NormSDist(d1) - 1) : Statistics.NormSDist(d1));
         }
 
         public static double BlackTheta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
-            double d1, d2, DF;
-            DF = Exp(-riskFreeRate * expTime);
-            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            d2 = d1 - volatility * Sqrt(expTime);
+            var DF = Exp(-riskFreeRate * expTime);
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
 
-            //Delta
-            if (CP == OptionType.Put)
-            {
-                return -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) + riskFreeRate * forward * DF * Statistics.NormSDist(d1) - riskFreeRate * strike * DF * Statistics.NormSDist(d2);
-            }
-            else
-            {
-                return -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) - riskFreeRate * forward * DF * Statistics.NormSDist(-d1) + riskFreeRate * strike * DF * Statistics.NormSDist(-d2);
-            }
+            return (CP == OptionType.Put) ?
+                -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) + riskFreeRate * forward * DF * Statistics.NormSDist(d1) - riskFreeRate * strike * DF * Statistics.NormSDist(d2) :
+            -forward * DF * Statistics.Phi(d1) * volatility / (2.0 * Sqrt(expTime)) - riskFreeRate * forward * DF * Statistics.NormSDist(-d1) + riskFreeRate * strike * DF * Statistics.NormSDist(-d2);
         }
 
         public static double[] BlackDerivs(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             var output = new double[3];
-            double d1, d2, DF;
-
-            DF = Exp(-riskFreeRate * expTime);
-            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            d2 = d1 - volatility * Sqrt(expTime);
+            var DF = Exp(-riskFreeRate * expTime);
+            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
 
             //delta
-            if (CP == OptionType.Put)
-            {
-                output[0] = DF * (Statistics.NormSDist(d1) - 1);
-            }
-            else
-            {
-                output[0] = DF * Statistics.NormSDist(d1);
-            }
+            output[0] = (CP == OptionType.Put) ? DF * (Statistics.NormSDist(d1) - 1) : DF * Statistics.NormSDist(d1);
             //gamma
             output[1] = DF * Statistics.Phi(d1) / (forward * volatility * Sqrt(expTime));
             //speed

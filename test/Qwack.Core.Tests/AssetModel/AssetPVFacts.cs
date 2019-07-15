@@ -81,7 +81,7 @@ namespace Qwack.Core.Tests.AssetModel
                 sw.DiscountCurve = "XAF.CURVE";
                 sw.FxConversionType = FxConversionType.AverageThenConvert;
             }
-            var pv = asianSwap.PV(aModel);
+            var pv = asianSwap.PV(aModel, false);
             Assert.Equal(0, pv, 8);
 
             var portfolio = new Portfolio() { Instruments = new List<IInstrument> { asianSwap } };

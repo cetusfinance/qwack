@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Math;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -33,6 +34,9 @@ namespace Qwack.Options.VolSurfaces
         public DateTime[] Expiries { get; set; }
         public string[] PillarLabels { get; set; }
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
+
+        public bool FlatDeltaSmileInExtreme { get; set; }
+        public double FlatDeltaPoint { get; set; } = 0.001;
 
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
@@ -89,23 +93,26 @@ namespace Qwack.Options.VolSurfaces
                 var cp = strike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (deltaK =>
                 {
+                    var dkModified = FlatDeltaSmileInExtreme ? Min(1.0-FlatDeltaPoint,Max(deltaK, FlatDeltaPoint)) : deltaK;
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
-                   _interpolators.Select(x => x.Interpolate(-deltaK)).ToArray(),
+                   _interpolators.Select(x => x.Interpolate(-dkModified)).ToArray(),
                    TimeInterpolatorType);
                     var vol2 = interpForStrike.Interpolate(maturity);
                     var absK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, maturity, vol2);
                     return absK - strike;
                 });
 
-                var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
-                if (solvedStrike == 0.000000001 || solvedStrike == 0.999999999) //out of bounds
+                var hiK = FlatDeltaSmileInExtreme ? 1.0 - FlatDeltaPoint : 0.999999999;
+                var loK = FlatDeltaSmileInExtreme ? FlatDeltaPoint : 0.000000001;
+                var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -hiK, -loK, 1e-12);
+                if (solvedStrike == loK || solvedStrike == hiK) //out of bounds
                 {
-                    var upperK = testFunc(-0.000000001);
-                    var lowerK = testFunc(-0.999999999);
-                    if (System.Math.Abs(upperK - fwd) < System.Math.Abs(lowerK - fwd))
-                        solvedStrike = 0.000000001;
+                    var upperK = testFunc(-loK);
+                    var lowerK = testFunc(-hiK);
+                    if (Abs(upperK - fwd) < Abs(lowerK - fwd))
+                        solvedStrike = loK;
                     else
-                        solvedStrike = 0.999999999;
+                        solvedStrike = hiK;
                 }
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
@@ -154,7 +161,7 @@ namespace Qwack.Options.VolSurfaces
                    TimeInterpolatorType);
                     var vol2 = interpForStrike.Interpolate(maturity);
                     var deltaK = BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol2, cp);
-                    return deltaK - System.Math.Abs(deltaStrike);
+                    return deltaK - Abs(deltaStrike);
                 });
 
                 var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
@@ -179,7 +186,7 @@ namespace Qwack.Options.VolSurfaces
                 return deltaK - deltaStrike;
             });
 
-            var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
+            var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 50 * fwd, 1e-8);
 
             return solvedStrike;
         }
@@ -195,15 +202,15 @@ namespace Qwack.Options.VolSurfaces
                 return absK - strike;
             });
 
-            var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
-            if (solvedStrike == 0.000000001 || solvedStrike == 0.999999999) //out of bounds
+            var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.99999999999, -0.00000000001, 1e-8);
+            if (solvedStrike == 0.00000000001 || solvedStrike == 0.99999999999) //out of bounds
             {
-                var upperK = testFunc(-0.000000001);
-                var lowerK = testFunc(-0.999999999);
-                if (System.Math.Abs(upperK - fwd) < System.Math.Abs(lowerK - fwd))
-                    solvedStrike = 0.000000001;
+                var upperK = testFunc(-0.00000000001);
+                var lowerK = testFunc(-0.99999999999);
+                if (Abs(upperK - fwd) < Abs(lowerK - fwd))
+                    solvedStrike = 0.00000000001;
                 else
-                    solvedStrike = 0.999999999;
+                    solvedStrike = 0.99999999999;
             }
 
             return solvedStrike;
@@ -222,7 +229,7 @@ namespace Qwack.Options.VolSurfaces
                 var ix = Array.BinarySearch(Expiries, LastSensitivityDate.Value);
                 ix = (ix < 0) ? ~ix : ix;
                 ix += 2;
-                lastBumpIx = System.Math.Min(ix, lastBumpIx); //cap at last pillar
+                lastBumpIx = Min(ix, lastBumpIx); //cap at last pillar
             }
 
             for (var i=0;i< lastBumpIx; i++)
@@ -268,7 +275,7 @@ namespace Qwack.Options.VolSurfaces
                 if (vDiff < 0)
                     throw new Exception("Negative forward variance detected");
 
-                return System.Math.Sqrt(vDiff / (end - start));
+                return Sqrt(vDiff / (end - start));
             }
 
             throw new Exception("Only Forward-Delta type supported for fwd vol calcs");
@@ -303,19 +310,52 @@ namespace Qwack.Options.VolSurfaces
         {
             var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
             var vol = GetVolForAbsoluteStrike(strike, expiry, fwd);
+            var nu = vol * Sqrt(t);
             (var d1, var d2) = BlackFunctions.D1d2(fwd, strike, t, vol);
-            var vega = BlackFunctions.BlackVega(fwd, strike, 0.0, t, vol);
-            return NormSDist(-d2) + vega * Dvdk(strike, expiry, fwd);
+            var vega = BlackFunctions.BlackVega(fwd, strike, 0.0, t, vol) / 0.01;
+            var digi = BlackFunctions.BlackDigitalPV(fwd, strike, 0.0, t, vol, OptionType.P);
+            var dvdk = Dvdk(strike, expiry, fwd);
+            return digi + vega * dvdk;
+
+            //var dk = fwd * 1e-10;
+            //var volU = GetVolForAbsoluteStrike(strike + dk, expiry, fwd);
+            //var volD = GetVolForAbsoluteStrike(strike - dk, expiry, fwd);
+            //var pU = BlackFunctions.BlackPV(fwd, strike + dk, 0.0, t, volU, OptionType.P);
+            //var pD = BlackFunctions.BlackPV(fwd, strike - dk, 0.0, t, volD, OptionType.P);
+            //var dPdK = (pU - pD) / (2.0 * dk);
+
+            //return dPdK;
         }
 
         public double InverseCDF(DateTime expiry, double fwd, double p)
         {
             var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
             var targetFunc = new Func<double, double>(k => p - Cdf(k, expiry, fwd));
-            var minK = GetAbsStrikeForDelta(fwd, -1e-8, t);
-            var maxK = GetAbsStrikeForDelta(fwd, -(1.0 - 1e-8), t);
-            //var b = Math.Solvers.Newton1D.MethodSolve2(targetFunc, fwd, 1e-4, 1000, fwd * 0.0001);
+            var minK = GetAbsStrikeForDelta(fwd, -1e-10, t) / 2.0;
+            var maxK = GetAbsStrikeForDelta(fwd, -(1.0 - 1e-10), t) * 10.0;
+
+            var breakCount = 0;
+            while (targetFunc(minK) < 0)
+            {
+                maxK = minK;
+                minK /= 10.0;
+                breakCount++;
+                if (breakCount == 10)
+                    return minK;
+            }
+            breakCount = 0;
+            while (targetFunc(maxK) > 0)
+            {
+                minK = maxK;
+                maxK *= 2.0;
+                breakCount++;
+                if (breakCount == 10)
+                    return maxK;
+            }
+
+            //var b = Math.Solvers.Newton1D.MethodSolve2(targetFunc, fwd, 1e-8, 1000, fwd * 0.000000001);
             var b = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, minK, maxK, 1e-8);
+            if (b == minK || b == maxK) throw new Exception("Solution outside of solving bounds");
             return b;
         }
     }

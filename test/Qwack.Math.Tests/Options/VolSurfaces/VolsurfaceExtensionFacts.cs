@@ -65,12 +65,19 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var origin = new DateTime(2017, 02, 07);
             var expiry = origin.AddMonths(2);
             var tExp = origin.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+            var fwdCurveAsset = new Func<double, double>(t => { return 100; });
+            var fwdCurveFx = new Func<double, double>(t => { return 15; });
             var volAsset = 0.32;
             var volFx = 0.16;
             var correl = 0.25;
-            var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25,0.1 }, new[] { new[] { 0.02,0.03 } }, new[] { new[] { 0.005,0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear);
-            var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015,0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear);
-            var surfaceCompo = surfaceAsset.GenerateCompositeSmile(surfaceFx, 100, expiry, 100, 15, correl);
+
+            //var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme=true};
+            //var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015,0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme = true };
+
+            var surfaceAsset = new SabrVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            var surfaceFx = new SabrVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+
+            var surfaceCompo = surfaceAsset.GenerateCompositeSmileB(surfaceFx, 200, expiry, 100, 15, correl);
         
             //setup MC
             var engine = new PathEngine(2.IntPow(IsCoverageOnly?5:15));
@@ -86,7 +93,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             };
             engine.AddPathProcess(new Cholesky(correlMatrix));
 
-            var fwdCurveAsset = new Func<double, double>(t => { return 100; });
+
             var asset1 = new TurboSkewSingleAsset
                 (
                     startDate: origin,
@@ -96,7 +103,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                     nTimeSteps: 1,
                     name: "Asset"
                 );
-            var fwdCurveFx = new Func<double, double>(t => { return 15; });
+
             var asset2 = new TurboSkewSingleAsset
                 (
                     startDate: origin,
@@ -161,7 +168,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var productAssetIv = BlackFunctions.BlackImpliedVol(100, 100, 0.0, tExp, pathProductAsset.AverageResult, OptionType.C);
             var productFxIv = BlackFunctions.BlackImpliedVol(10, 10, 0.0, tExp, pathProductFx.AverageResult, OptionType.C);
 
-            Assert.True(Abs(productIv - surfaceCompo.Interpolate(strike)) < 0.03);
+            Assert.True(Abs(productIv - surfaceCompo.Interpolate(strike)) < 0.01);
         }
     }
 }

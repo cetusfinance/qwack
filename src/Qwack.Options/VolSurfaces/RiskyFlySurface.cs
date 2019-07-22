@@ -19,7 +19,6 @@ namespace Qwack.Options.VolSurfaces
         public WingQuoteType WingQuoteType { get; }
         public AtmVolType AtmVolType { get; }
 
-
         public RiskyFlySurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas,
             double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType,
             Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType, string[] pillarLabels = null)

@@ -78,6 +78,8 @@ namespace Qwack.Math.Solvers
             {
                 var f = function(x);
                 var dfdx = derivativeFunction(x);
+                if (dfdx == 0)
+                    return x;
                 x -= f / dfdx;
                 itteration++;
             }

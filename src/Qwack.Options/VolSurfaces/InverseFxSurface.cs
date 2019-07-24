@@ -41,6 +41,8 @@ namespace Qwack.Options.VolSurfaces
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => FxSurface.GetVolForDeltaStrike(-strike, expiry, 1.0 / forward);
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => FxSurface.GetVolForDeltaStrike(-deltaStrike, maturity, 1.0 / forward);
 
+        public double InverseCDF(DateTime expiry, double fwd, double p) => FxSurface.InverseCDF(expiry, 1 / fwd, 1 - p);
+
         public DateTime PillarDatesForLabel(string label) => FxSurface.PillarDatesForLabel(label);
 
     }

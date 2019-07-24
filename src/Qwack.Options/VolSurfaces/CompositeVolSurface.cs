@@ -104,6 +104,6 @@ namespace Qwack.Options.VolSurfaces
             return GetVolForAbsoluteStrike(solvedStrike, maturity, forward);
         }
 
-
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
     }
 }

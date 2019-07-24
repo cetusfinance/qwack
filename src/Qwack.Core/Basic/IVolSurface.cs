@@ -25,5 +25,7 @@ namespace Qwack.Core.Basic
         IInterpolator2D LocalVolGrid { get; set; }
 
         DateTime PillarDatesForLabel(string label);
+
+        double InverseCDF(DateTime expiry, double fwd, double p);
     }
 }

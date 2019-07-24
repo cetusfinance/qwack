@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Calibrators;
 using Qwack.Core.Cubes;
 using Qwack.Math.Interpolation;
+using Qwack.Options.Calibrators;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -64,7 +65,7 @@ namespace Qwack.Options.VolSurfaces
 
             var wingConstraints = new RRBFConstraint[expiries.Length][];
             var vols = new double[expiries.Length][];
-            var f = new NewtonRaphsonAssetSmileSolver();
+            var f = new AssetSmileSolver();
 
             if (needsFlip)
             {

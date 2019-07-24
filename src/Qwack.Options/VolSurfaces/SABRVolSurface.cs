@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Calibrators;
+using Qwack.Options.Calibrators;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -97,7 +98,7 @@ namespace Qwack.Options.VolSurfaces
 
             var wingConstraints = new RRBFConstraint[expiries.Length][];
             var parameters = new SABRParameters[expiries.Length];
-            var f = new NewtonRaphsonAssetSmileSolver();
+            var f = new AssetSmileSolver();
 
             if (needsFlip)
             {
@@ -216,6 +217,7 @@ namespace Qwack.Options.VolSurfaces
                 ? SABR.CalcImpVol_Beta1(forward, strike, maturity, sabrParams.Alpha, sabrParams.Rho, sabrParams.Nu)
                 : SABR.CalcImpVol_Hagan(forward, strike, maturity, sabrParams.Alpha, sabrParams.Beta, sabrParams.Rho, sabrParams.Nu);
 
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
         public double GetVolForAbsoluteStrike(double strike, double maturity, double forward) => GetVolForAbsoluteStrike(strike, maturity, forward, new SABRParameters
         {
             Alpha = _alphaInterp.Interpolate(maturity),
@@ -224,25 +226,7 @@ namespace Qwack.Options.VolSurfaces
             Rho = _rhoInterp.Interpolate(maturity)
         });
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
-
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
-        {
-            var fwd = forward;
-            var cp = OptionType.Put;
-
-            Func<double, double> testFunc = (absK =>
-            {
-                var vol = GetVolForAbsoluteStrike(absK, maturity, forward);
-                var deltaK = System.Math.Abs(BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol, cp));
-                return deltaK - System.Math.Abs(deltaStrike);
-            });
-
-            var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, fwd/10, 10 * fwd, 1e-8);
-
-            return GetVolForAbsoluteStrike(solvedStrike, maturity, forward);
-        }
-
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => VolUtils.GetVolForDeltaStrike(deltaStrike, maturity, forward, (k) => GetVolForAbsoluteStrike(k, maturity, forward));
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => throw new NotImplementedException();
@@ -251,27 +235,8 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(DateTime startDate, DateTime endDate) => GetForwardATMVol(TimeBasis.CalculateYearFraction(OriginDate, startDate), TimeBasis.CalculateYearFraction(OriginDate, endDate));
 
-        public double GetForwardATMVol(double start, double end)
-        {
-            if (start > end)
-                throw new Exception("Start must be strictly less than end");
+        public double GetForwardATMVol(double start, double end) => VolUtils.GetForwardATMVol(start, end, _fwdsInterp.Interpolate(start), _fwdsInterp.Interpolate(end), GetVolForAbsoluteStrike);
 
-            var fwdStart = _fwdsInterp.Interpolate(start);
-            var fwdEnd = _fwdsInterp.Interpolate(end);
-            if (start == end)
-                return start == 0 ? 0.0 : GetVolForAbsoluteStrike(fwdStart, start, fwdStart);
-
-            var vStart = start == 0 ? 0.0 : GetVolForDeltaStrike(fwdStart, start, fwdStart);
-            vStart *= vStart * start;
-
-            var vEnd = GetVolForDeltaStrike(fwdEnd, end, fwdEnd);
-            vEnd *= vEnd * end;
-
-            var vDiff = vEnd - vStart;
-            if (vDiff < 0)
-                throw new Exception("Negative forward variance detected");
-
-            return System.Math.Sqrt(vDiff / (end - start));
-        }
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
     }
 }

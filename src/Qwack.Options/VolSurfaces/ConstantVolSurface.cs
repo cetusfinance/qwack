@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Core.Basic;
-
+using Qwack.Dates;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -55,5 +55,7 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
+
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
     }
 }

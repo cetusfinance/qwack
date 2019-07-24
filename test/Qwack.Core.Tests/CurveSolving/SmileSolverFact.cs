@@ -14,16 +14,16 @@ using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
 using Qwack.Options;
+using Qwack.Options.Calibrators;
 using Qwack.Options.VolSurfaces;
 using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
 {
-       public class SmileSolverFact
+    public class SmileSolverFact
     {
         bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
-
 
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
@@ -50,7 +50,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 WingQuoteType = WingQuoteType.Arithmatic
             };
 
-            var s = new NewtonRaphsonAssetSmileSolver();
+            var s = new AssetSmileSolver();
             if (IsCoverageOnly)
                 s.Tollerance = 1;
 
@@ -87,7 +87,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 WingQuoteType = WingQuoteType.Market
             };
 
-            var s = new NewtonRaphsonAssetSmileSolver();
+            var s = new AssetSmileSolver();
             if (IsCoverageOnly)
                 s.Tollerance = 1;
 
@@ -117,7 +117,7 @@ namespace Qwack.Core.Tests.CurveSolving
                 Assert.Equal(marketRR, smileRR, 8);
 
             //reprice market BF structrure off smile, premium must match
-            var marketVolBF = atmConstraint.MarketVol + smile25d.FlyVol; 
+            var marketVolBF = atmConstraint.MarketVol + smile25d.FlyVol;
             var marketKBFC25 = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, 0.25, 0, tExp, marketVolBF);
             var marketKBFP25 = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.25, 0, tExp, marketVolBF);
             var marketBFC25FV = BlackFunctions.BlackPV(fwd, marketKBFC25, 0, tExp, marketVolBF, OptionType.C);

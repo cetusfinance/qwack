@@ -354,7 +354,7 @@ namespace Qwack.Options.VolSurfaces
             }
 
             //var b = Math.Solvers.Newton1D.MethodSolve2(targetFunc, fwd, 1e-8, 1000, fwd * 0.000000001);
-            var b = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, minK, maxK, 1e-8);
+            var b = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, minK, maxK, 1e-10);
             if (b == minK || b == maxK) throw new Exception("Solution outside of solving bounds");
             return b;
         }

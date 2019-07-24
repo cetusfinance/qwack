@@ -525,9 +525,7 @@ namespace Qwack.Options.VolSurfaces
             var yAsset = new Func<double, double>(z =>
             {
                 if (assetCDFCache.TryGetValue(z, out var K)) return K;
-                K = surface is GridVolSurface gv ?
-                    gv.InverseCDF(expiry, fwdAsset, Statistics.NormSDist(z)) :
-                    surface.InverseCDF(t, fwdAsset, Statistics.NormSDist(z));
+                K = surface.InverseCDF(t, fwdAsset, Statistics.NormSDist(z));
                 assetCDFCache.Add(z, K);
                 return K;
             });

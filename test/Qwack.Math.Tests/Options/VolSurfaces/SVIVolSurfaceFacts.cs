@@ -9,38 +9,11 @@ using Xunit;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
 {
-    public class SABRVolSurfaceFacts
+    public class SVIVolSurfaceFacts
     {
         [Fact]
-        public void SABRSurfaceFlat()
+        public void SVISurfaceRRBF()
         {
-            //flat surface
-            var origin = new DateTime(2017, 02, 07);
-            var strikes = new double[][] { new[] { 1.4, 1.6 }, new[] { 1.4, 1.6 } };
-            var maturities = new DateTime[] { new DateTime(2018, 02, 07), new DateTime(2019, 02, 07) };
-            var fwd = 1.5;
-            Func<double, double> fwdCurve = (t => { return fwd; });
-
-            var vols = new double[][]
-                {
-                    new double[] { 0.32, 0.32 },
-                    new double[] { 0.32, 0.32 }
-                };
-            var surface = new SabrVolSurface(
-                origin, strikes, maturities, vols, fwdCurve,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
-
-            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(1.5, origin.AddDays(33), fwd), 2);
-            Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(-0.3, origin.AddDays(303), fwd), 2);
-            Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(3, 0.777, fwd), 2);
-            Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(0.9, 0.123, fwd), 2);
-        }
-
-        [Fact]
-        public void SABRSurfaceRRBF()
-        {
-            //flat surface
             var origin = new DateTime(2017, 02, 07);
             var expiry = origin.AddYears(1);
             var t = (expiry - origin).TotalDays / 365.0;
@@ -51,7 +24,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 
             Func<double, double> fwdCurve = (tt => { return fwd; });
 
-            var surface = new SabrVolSurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            var surface = new SVIVolSurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
             var gSurface = new RiskyFlySurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear, Math.Interpolation.Interpolator1DType.Linear);
 
             var atmK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, 0.5, 0.0, t, vol);

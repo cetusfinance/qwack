@@ -32,6 +32,9 @@ namespace Qwack.Math.Tests.Solvers
 
             output = Math.Solvers.Newton1D.MethodSolveWithProgress(QuadraticFunction1d, 10, 1e-8);
             Assert.Equal(0, functionOutput, 8);
+
+            output = Math.Solvers.Newton1D.MethodSolve2(QuadraticFunction1d, 10, 1e-8);
+            Assert.Equal(0, functionOutput, 8);
         }
 
         [Fact]

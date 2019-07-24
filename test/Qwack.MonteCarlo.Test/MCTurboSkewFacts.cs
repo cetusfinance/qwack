@@ -68,7 +68,7 @@ namespace Qwack.MonteCarlo.Test
             {
                 Assert.Equal(blackPv, pv, 0);
                 var fwd = payoff2.AverageResult;
-                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.0015);
+                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.002);
             }
         }
     }

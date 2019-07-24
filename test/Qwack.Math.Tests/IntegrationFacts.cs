@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Qwack.Math.Integration;
+using static System.Math;
 using Xunit;
 
 namespace Qwack.Math.Tests
@@ -33,6 +34,9 @@ namespace Qwack.Math.Tests
 
             fxy = new Func<double, double, double>((x, y) => x * x + 4 * y);
             Assert.Equal(1719.0054, TwoDimensionalTrapezoid(fxy, 11, 14, 7, 10, 50), 10);
+
+            fxy = new Func<double, double, double>((x, y) => 9 * Exp(-x * x * x - y * y * y));
+            Assert.Equal(5.86869, TwoDimensionalTrapezoid(fxy, 0, 1, 0, 1, 20), 2);
         }
 
         [Fact]
@@ -58,6 +62,9 @@ namespace Qwack.Math.Tests
 
             fxy = new Func<double, double, double>((x, y) => x * x + 4 * y);
             Assert.Equal(1719, TwoDimensionalSimpsons(fxy, 11, 14, 7, 10, 50), 10);
+
+            fxy = new Func<double, double, double>((x, y) => 9 * Exp(-x * x * x - y * y * y));
+            Assert.Equal(5.86869, TwoDimensionalSimpsons(fxy, 0, 1, 0, 1, 8), 4);
         }
 
         [Fact]
@@ -88,13 +95,29 @@ namespace Qwack.Math.Tests
         public void GuassLegendreFacts()
         {
             var f = new Func<double, double>(t => t * 2.0);
-            Assert.Throws<Exception>(() => GaussLegendre(f, 0, 7, 11));
+            Assert.Throws<Exception>(() => GaussLegendre(f, 0, 7, 25));
             Assert.Equal(0, GaussLegendre(f, 0, 0, 5), 10);
             Assert.Equal(100, GaussLegendre(f, 0, 10, 5), 10);
 
             f = new Func<double, double>(t => t * t);
             var fi = new Func<double, double>(t => t * t * t / 3.0);
-            Assert.Equal(fi(10)-fi(0), GaussLegendre(f, 0, 10, 5), 5);
+            for (var n = 2; n<= 16; n++)
+            {
+                Assert.Equal(fi(10) - fi(0), GaussLegendre(f, 0, 10, n), 0);
+            }
+        }
+
+        [Fact]
+        public void GuassLegendre2dFacts()
+        {
+            var fxy = new Func<double, double, double>((x, y) => 2);
+            Assert.Equal(12, TwoDimensionalGaussLegendre(fxy, 3, 6, 2, 4, 5), 10);
+
+            fxy = new Func<double, double, double>((x, y) => x * x + 4 * y);
+            Assert.Equal(1719, TwoDimensionalGaussLegendre(fxy, 11, 14, 7, 10, 5), 10);
+
+            fxy = new Func<double, double, double>((x, y) => 9 * Exp(-x * x * x - y * y * y));
+            Assert.Equal(5.86869, TwoDimensionalGaussLegendre(fxy, 0, 1, 0, 1, 5), 4);
         }
     }
 }

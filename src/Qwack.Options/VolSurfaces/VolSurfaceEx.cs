@@ -73,16 +73,12 @@ namespace Qwack.Options.VolSurfaces
         {
             var premInterp = GeneratePremiumInterpolator(surface, numSamples, expiry, fwd, OptionType.P);
             var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
-            var lowStrikeVol = surface.GetVolForDeltaStrike(0.00000001, t, fwd);
-            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.00000001, 0, t, lowStrikeVol);
-            var hiStrikeVol = surface.GetVolForDeltaStrike(0.99999999, t, fwd);
-            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.99999999, 0, t, hiStrikeVol);
 
             var x = new double[numSamples];
             var y = new double[numSamples];
 
-            var deltaKLow = 0.000001;
-            var deltaKHi = 0.999999;
+            var deltaKLow = 0.0000000001;
+            var deltaKHi = 0.9999999999;
             var kStepD = (deltaKHi-deltaKLow) / numSamples;
 
             for (var i = 0; i < x.Length; i++)
@@ -200,7 +196,10 @@ namespace Qwack.Options.VolSurfaces
 
         public static double InverseCDF(this IVolSurface surface, double t, double fwd, double p)
         {
-            var deltaK = fwd * 1e-8;
+            var deltaK = fwd * 1e-10;
+            var lowGuess = fwd / 2;
+            var highGuess = fwd * 2;
+
             var targetFunc = new Func<double, double>(k =>
                  {
                      var volM = surface.GetVolForAbsoluteStrike(k - deltaK, t, fwd);
@@ -208,11 +207,53 @@ namespace Qwack.Options.VolSurfaces
                      var pvM = BlackFunctions.BlackPV(fwd, k - deltaK, 0.0, t, volM, OptionType.P);
                      var pvP = BlackFunctions.BlackPV(fwd, k + deltaK, 0.0, t, volP, OptionType.P);
                      var digi = (pvP - pvM) / (2 * deltaK);
+                     //var digi = BlackFunctions.BlackDigitalPV(fwd, k, 0, t, surface.GetVolForAbsoluteStrike(k, t, fwd), OptionType.P);
                      return p - digi;
                  });
 
+            var breakCount = 0;
+            while (targetFunc(lowGuess) < 0)
+            {
+               // highGuess = lowGuess*2.0;
+                lowGuess /= 2.0;
+                breakCount++;
+                if (breakCount == 10)
+                    return lowGuess;
+            }
+            breakCount = 0;
+            while (targetFunc(highGuess) > 0)
+            {
+                //lowGuess = highGuess/2.0;
+                highGuess *= 2.0;
+                breakCount++;
+                if (breakCount == 10)
+                    return highGuess;
+            }
+
+            var b = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, lowGuess, highGuess, 1e-8);
+            //var b = Math.Solvers.Newton1D.MethodSolve2(targetFunc, fwd, 1e-6, 1000, fwd * 0.00001);
+            if (double.IsInfinity(b) || double.IsNaN(b))
+                throw new Exception("Invalid strike found");
+            if (b==lowGuess || b==highGuess)
+                throw new Exception("Strike outside of bounds");
+
+            return b;
+        }
+
+        public static double InverseCDF(IInterpolator1D putPremiumInterp, double t, double fwd, double p)
+        {
+            var deltaK = fwd * 1e-8;
+            var targetFunc = new Func<double, double>(k =>
+            {
+                var digi = putPremiumInterp.FirstDerivative(k);
+                return p - digi;
+            });
+            var targetFunc2 = new Func<double, double>(k => -putPremiumInterp.SecondDerivative(k));
+
             //var b = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, lowGuess, highGuess, 1e-6);
-            var b = Math.Solvers.Newton1D.MethodSolve2(targetFunc, fwd, 1e-4, 1000, fwd * 0.0001);
+            var b = Math.Solvers.Newton1D.MethodSolve(targetFunc,targetFunc2, fwd, 1e-6, 1000);
+            if (double.IsInfinity(b) || double.IsNaN(b))
+                throw new Exception("Invalid strike found");
 
             return b;
         }
@@ -263,26 +304,36 @@ namespace Qwack.Options.VolSurfaces
 
         public static IInterpolator1D GeneratePremiumInterpolator(this IVolSurface surface, int numSamples, double t, double fwd, OptionType cp)
         {
-            var lowStrikeVol = surface.GetVolForDeltaStrike(0.00000001, t, fwd);
-            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.000001, 0, t, lowStrikeVol);
-            var hiStrikeVol = surface.GetVolForDeltaStrike(0.99999999, t, fwd);
-            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.999999, 0, t, hiStrikeVol);
+            var lowStrikeVol = surface.GetVolForDeltaStrike(0.001, t, fwd);
+            var lowStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.001, 0, t, lowStrikeVol);
+            var hiStrikeVol = surface.GetVolForDeltaStrike(0.999, t, fwd);
+            var hiStrike = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, -0.999, 0, t, hiStrikeVol);
 
-            var x = new double[numSamples];
-            var y = new double[numSamples];
+            var x = new double[numSamples + 2];
+            var y = new double[numSamples + 2];
 
             var k = lowStrike;
 
             var kStep = (hiStrike - lowStrike) / (numSamples + 1.0);
 
-            for (var i = 0; i < x.Length; i++)
+            var vol = surface.GetVolForAbsoluteStrike(k/10, t, fwd);
+            var call = BlackFunctions.BlackPV(fwd, k/10, 0, t, vol, cp);
+            y[0] = call;
+            x[0] = k/10;
+
+            for (var i = 0; i < x.Length-1; i++)
             {
-                var vol = surface.GetVolForAbsoluteStrike(k, t, fwd);
-                var call = BlackFunctions.BlackPV(fwd, k, 0, t, vol, cp);
-                y[i] = call;
-                x[i] = k;
+                vol = surface.GetVolForAbsoluteStrike(k, t, fwd);
+                call = BlackFunctions.BlackPV(fwd, k, 0, t, vol, cp);
+                y[i+1] = call;
+                x[i+1] = k;
                 k += kStep;
             }
+
+            vol = surface.GetVolForAbsoluteStrike(k * 10, t, fwd);
+            call = BlackFunctions.BlackPV(fwd, k * 10, 0, t, vol, cp);
+            y[x.Length-1] = call;
+            x[x.Length - 1] = k*10;
 
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
         }
@@ -347,7 +398,6 @@ namespace Qwack.Options.VolSurfaces
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.LinearFlatExtrap);
         }
 
-
         public static IInterpolator1D GenerateCompositeSmile(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool strikesInDeltaSpace = false)
         {
             var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
@@ -357,11 +407,109 @@ namespace Qwack.Options.VolSurfaces
 
             var compoFwd = fwdAsset * fwdFx;
             var atmCompo = Sqrt(atmFx * atmFx + atmA * atmA + 2.0 * correlation * atmA * atmFx);
-            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.00001, 0, t, atmCompo);
-            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.99999, 0, t, atmCompo);
+            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.01, 0, t, atmCompo);
+            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.99, 0, t, atmCompo);
 
-            //var cdfInvFx = fxSurface.GenerateCDF2(numSamples * 2, expiry, fwdFx, true);
-            //var cdfInvAsset = surface.GenerateCDF2(numSamples * 2, expiry, fwdAsset, true);
+            //var cdfInvFx = fxSurface.GenerateCDF2(numSamples * 10, expiry, fwdFx, true);
+            //var cdfInvAsset = surface.GenerateCDF2(numSamples * 10, expiry, fwdAsset, true);
+            //var yFx = new Func<double, double>(z => cdfInvFx.Interpolate(Statistics.NormSDist(z)));
+            //var yAsset = new Func<double, double>(z => cdfInvAsset.Interpolate(Statistics.NormSDist(z)));
+
+            var fxCDFCache = new Dictionary<double, double>();
+            var assetCDFCache = new Dictionary<double, double>();
+            var putFx = fxSurface.GeneratePremiumInterpolator(numSamples * 10, expiry, fwdFx, OptionType.P);
+            var putAsset = surface.GeneratePremiumInterpolator(numSamples * 10, expiry, fwdAsset, OptionType.P);
+            var yFx = new Func<double, double>(z =>
+            {
+                if (fxCDFCache.TryGetValue(z, out var K)) return K;
+                K = InverseCDF(putFx, t, fwdFx, Statistics.NormSDist(z));
+                var kl = fxCDFCache.Keys.ToList();
+                var closerIx = kl.BinarySearch(z);
+                if(closerIx<0 && z<0)
+                {
+                    if (fxCDFCache[kl[~closerIx]] < K)
+                        K = fxCDFCache[kl[~closerIx]];
+                }
+                fxCDFCache.Add(z, K);
+                return K;
+            });
+            var yAsset = new Func<double, double>(z =>
+            {
+                if (assetCDFCache.TryGetValue(z, out var K)) return K;
+                K = InverseCDF(putAsset, t, fwdAsset, Statistics.NormSDist(z));
+                var kl = assetCDFCache.Keys.ToList();
+                var closerIx = kl.BinarySearch(z);
+                if (closerIx < 0 && z < 0)
+                {
+                    if (assetCDFCache[kl[~closerIx]] < K)
+                        K = assetCDFCache[kl[~closerIx]];
+                }
+                assetCDFCache.Add(z, K);
+                return K;
+            });
+
+
+            //var fxCDFCache = new Dictionary<double, double>();
+            //var assetCDFCache = new Dictionary<double, double>();
+            //var yFx = new Func<double, double>(z =>
+            //{
+            //    if (fxCDFCache.TryGetValue(z, out var K)) return K;
+            //    K = fxSurface is GridVolSurface gv ?
+            //        gv.InverseCDF(expiry, fwdFx, Statistics.NormSDist(z)) :
+            //        fxSurface.InverseCDF(t, fwdFx, Statistics.NormSDist(z));
+            //    fxCDFCache.Add(z, K);
+            //    return K;
+            //});
+            //var yAsset = new Func<double, double>(z =>
+            //{
+            //    if (assetCDFCache.TryGetValue(z, out var K)) return K;
+            //    K = surface is GridVolSurface gv ?
+            //        gv.InverseCDF(expiry, fwdAsset, Statistics.NormSDist(z)) :
+            //        surface.InverseCDF(t, fwdAsset, Statistics.NormSDist(z));
+            //    assetCDFCache.Add(z, K);
+            //    return K;
+            //});
+
+            var payoff = new Func<double, double, double, double>((z1, z2, kQ) => Max(kQ - yAsset(z1) * yFx(z2), 0));
+            var integrand = new Func<double, double, double, double>((z1, z2, kQ) => payoff(z1, z2, kQ) * BivariateNormal.PDF(z1, z2, correlation));
+
+            var kStep = (hiK - lowK) / numSamples;
+            var ks = Enumerable.Range(0, numSamples).Select(kk => lowK + kk * kStep).ToArray();
+            var premiums = new double[ks.Length];
+            var vols = new double[ks.Length];
+            for (var i = 0; i < ks.Length; i++)
+            {
+                var ik = new Func<double, double, double>((z1, z2) => integrand(z1, z2, ks[i]));
+                var pk = Integration.TwoDimensionalGaussLegendre(ik, -5, 5, -5, 5, 16);
+                //var pk = Integration.TwoDimensionalSimpsons(ik, -5, 5, -5, 5, 50);
+                var volK = BlackFunctions.BlackImpliedVol(compoFwd, ks[i], 0.0, t, pk, OptionType.P);
+                vols[i] = volK;
+                premiums[i] = pk;
+            }
+
+
+            if (strikesInDeltaSpace)
+                ks = ks.Select((ak, ix) => -BlackFunctions.BlackDelta(compoFwd, ak, 0.0, t, vols[ix], OptionType.P)).ToArray();
+
+            return InterpolatorFactory.GetInterpolator(ks, vols, Interpolator1DType.CubicSpline);
+        }
+
+
+        public static IInterpolator1D GenerateCompositeSmileB(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool strikesInDeltaSpace = false)
+        {
+            var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+            var fxInv = new InverseFxSurface("fxInv", fxSurface as IATMVolSurface, null);
+
+            var atmFx = fxSurface.GetVolForDeltaStrike(0.5, t, fwdFx);
+            var atmA = surface.GetVolForDeltaStrike(0.5, t, fwdAsset);
+
+            var compoFwd = fwdAsset * fwdFx;
+            var atmCompo = Sqrt(atmFx * atmFx + atmA * atmA + 2.0 * correlation * atmA * atmFx);
+            var lowK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.01, 0, t, atmCompo);
+            var hiK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(compoFwd, -0.99, 0, t, atmCompo);
+
+            //var cdfInvFx = fxSurface.GenerateCDF2(numSamples * 10, expiry, fwdFx, true);
+            //var cdfInvAsset = surface.GenerateCDF2(numSamples * 10, expiry, fwdAsset, true);
             //var yFx = new Func<double, double>(z => cdfInvFx.Interpolate(Statistics.NormSDist(z)));
             //var yAsset = new Func<double, double>(z => cdfInvAsset.Interpolate(Statistics.NormSDist(z)));
 
@@ -370,24 +518,47 @@ namespace Qwack.Options.VolSurfaces
             var yFx = new Func<double, double>(z =>
             {
                 if (fxCDFCache.TryGetValue(z, out var K)) return K;
-                K = fxSurface is GridVolSurface gv ?
-                    gv.InverseCDF(expiry, fwdFx, Statistics.NormSDist(z)) :
-                    fxSurface.InverseCDF(t, fwdFx, Statistics.NormSDist(z));
+                K = fxInv.InverseCDF(t, 1.0/fwdFx, Statistics.NormSDist(z));
                 fxCDFCache.Add(z, K);
                 return K;
             });
             var yAsset = new Func<double, double>(z =>
             {
                 if (assetCDFCache.TryGetValue(z, out var K)) return K;
-                K = surface is GridVolSurface gv ?
-                    gv.InverseCDF(expiry, fwdAsset, Statistics.NormSDist(z)) :
-                    surface.InverseCDF(t, fwdAsset, Statistics.NormSDist(z));
+                K = surface.InverseCDF(t, fwdAsset, Statistics.NormSDist(z));
                 assetCDFCache.Add(z, K);
                 return K;
             });
 
-            var payoff = new Func<double, double, double, double>((z1, z2, kQ) => Max(kQ - yAsset(z1) * yFx(z2), 0));
-            var integrand = new Func<double, double, double, double>((z1, z2, kQ) => payoff(z1, z2, kQ) * BivariateNormal.PDF(z1, z2, correlation));
+            //var fxCDFCache = new Dictionary<double, double>();
+            //var assetCDFCache = new Dictionary<double, double>();
+            //var putFx = fxInv.GeneratePremiumInterpolator(numSamples * 10, expiry, 1.0/fwdFx, OptionType.P);
+            //var putAsset = surface.GeneratePremiumInterpolator(numSamples * 10, expiry, fwdAsset, OptionType.P);
+            //var yFx = new Func<double, double>(z =>
+            //{
+            //    if (fxCDFCache.TryGetValue(z, out var K)) return K;
+            //    K = InverseCDF(putFx, t, 1.0/fwdFx, Statistics.NormSDist(z));
+            //    fxCDFCache.Add(z, K);
+            //    return K;
+            //});
+            //var yAsset = new Func<double, double>(z =>
+            //{
+            //    if (assetCDFCache.TryGetValue(z, out var K)) return K;
+            //    K = InverseCDF(putAsset, t, fwdAsset, Statistics.NormSDist(z));
+            //    var kl = assetCDFCache.Keys.ToList();
+            //    var closerIx = kl.BinarySearch(z);
+            //    var keyIx = ~closerIx;
+            //    if (closerIx < 0 && z < 0 && kl.Count > keyIx)
+            //    {
+            //        if (assetCDFCache[kl[keyIx]] < K)
+            //            K = assetCDFCache[kl[keyIx]];
+            //    }
+            //    assetCDFCache.Add(z, K);
+            //    return K;
+            //});
+
+            var payoff = new Func<double, double, double, double>((z1, z2, kQ) => Max(kQ * yFx(z2) - yAsset(z1), 0));
+            var integrand = new Func<double, double, double, double>((z1, z2, kQ) => payoff(z1, z2, kQ) * BivariateNormal.PDF(z1, z2, -correlation));
                        
             var kStep = (hiK - lowK) / numSamples;
             var ks = Enumerable.Range(0, numSamples).Select(kk => lowK + kk * kStep).ToArray();
@@ -396,7 +567,9 @@ namespace Qwack.Options.VolSurfaces
             for (var i = 0; i < ks.Length; i++)
             {
                 var ik = new Func<double, double, double>((z1, z2) => integrand(z1, z2, ks[i]));
-                var pk = Integration.TwoDimensionalTrapezoid(ik, -5, 5, -5, 5, numSamples);
+                var pk = Integration.TwoDimensionalGaussLegendre(ik, -5, 5, -5, 5, 16);
+                //var pk = Integration.TwoDimensionalSimpsons(ik, -5, 5, -5, 5, 100);
+                pk *= fwdFx;
                 var volK = BlackFunctions.BlackImpliedVol(compoFwd, ks[i], 0.0, t, pk, OptionType.P);
                 vols[i] = volK;
                 premiums[i] = pk;
@@ -425,7 +598,7 @@ namespace Qwack.Options.VolSurfaces
                 var assetFwd = priceCurve.GetPriceForFixingDate(expiry);
                 var fxFwd = model.FundingModel.GetFxRate(fxPair.SpotDate(expiry), FxPair);
                 var compoSmile = newMethod ?
-                GenerateCompositeSmile(inSurface, inFxSurface, numSamples, expiry, assetFwd, fxFwd, correlation, true) :
+                GenerateCompositeSmileB(inSurface, inFxSurface, numSamples, expiry, assetFwd, fxFwd, correlation, true) :
                 GenerateCompositeSmileBasic(inSurface, inFxSurface, numSamples, expiry, assetFwd, fxFwd, correlation, true);
 
                 lock (locker)

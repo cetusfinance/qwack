@@ -10,11 +10,13 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
+using Qwack.Math.Solvers;
 using static System.Math;
+using static Qwack.Options.BlackFunctions;
 
-namespace Qwack.Core.Calibrators
+namespace Qwack.Options.Calibrators
 {
-    public class NewtonRaphsonAssetSmileSolver
+    public class AssetSmileSolver
     {
         public double Tollerance { get; set; } = 0.00000001;
         public int MaxItterations { get; set; } = 1000;
@@ -26,6 +28,10 @@ namespace Qwack.Core.Calibrators
         private RRBFConstraint[] _smileConstraints;
         private ATMStraddleConstraint _atmConstraint;
 
+        private SABRParameters _currentSABR;
+        private SviRawParameters _currentSVIRaw;
+        private SviNaturalParameters _currentSVINatural;
+
         private int _numberOfConstraints;
         private double _fwd;
         private double _tExp;
@@ -36,6 +42,8 @@ namespace Qwack.Core.Calibrators
         private double[] _currentGuess;
         private double[] _currentErrors;
         private double[][] _jacobian;
+
+        private bool _vegaWeighted;
 
         public double[] Solve(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate, 
             DateTime expiry, double fwd, double[] strikesToFit, Interpolator1DType interpType)
@@ -79,6 +87,94 @@ namespace Qwack.Core.Calibrators
             }
 
             return _currentGuess;
+        }
+
+        public SABRParameters SolveSABR(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate,
+        DateTime expiry, double fwd, double beta = 1.0, bool vegaWeightedFit=true)
+        {
+            _atmConstraint = atmConstraint;
+            _smileConstraints = smileConstraints;
+
+            _numberOfConstraints = smileConstraints.Length * 2 + 1;
+            _vegaWeighted = vegaWeightedFit;
+
+            _fwd = fwd;
+            _buildDate = buildDate;
+            _tExp = (expiry - buildDate).TotalDays / 365.0;
+
+            var startingPoint = new[] { atmConstraint.MarketVol, Sqrt(atmConstraint.MarketVol), smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1 };
+            var initialStep = new[] { 0.1, 0.25, 0.25 };
+
+            var currentError = new Func<double[], double>(x =>
+            {
+                var currentSABR = new SABRParameters
+                {
+                    Alpha = x[0],
+                    Beta = beta,
+                    Nu = x[1],
+                    Rho = x[2],
+                };
+
+                var e = ComputeErrorsSABR(currentSABR);
+                return e.Sum(ee => ee * ee);
+            });
+
+            SetupConstraints();
+
+            var optimal = NelderMead.MethodSolve(currentError, startingPoint, initialStep, 1e-8, 10000);
+
+            return new SABRParameters
+            {
+                Alpha = optimal[0],
+                Beta = beta,
+                Nu = optimal[1],
+                Rho = optimal[2],
+            };
+        }
+
+        public SviRawParameters SolveSviRaw(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate,
+            DateTime expiry, double fwd, bool vegaWeightedFit = true)
+        {
+            _atmConstraint = atmConstraint;
+            _smileConstraints = smileConstraints;
+
+            _numberOfConstraints = smileConstraints.Length * 2 + 1;
+            _vegaWeighted = vegaWeightedFit;
+
+            _fwd = fwd;
+            _buildDate = buildDate;
+            _tExp = (expiry - buildDate).TotalDays / 365.0;
+
+            var startingPoint = new[] { atmConstraint.MarketVol, 0.5, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1, 0, Sqrt(atmConstraint.MarketVol) };
+            var initialStep = new[] { 0.1, 0.25, 0.25, 0.1, 0.1 };
+
+            var currentError = new Func<double[], double>(x =>
+            {
+                var currentSVI = new SviRawParameters
+                {
+                    A = x[0],
+                    B = x[1],
+                    Rho = x[2],
+                    M = x[3],
+                    Sigma = x[4],
+                };
+
+                var e = ComputeErrorsSviRaw(currentSVI);
+                return e.Sum();
+            });
+
+            SetupConstraints();
+
+            var optimal = NelderMead.MethodSolve(currentError, startingPoint, initialStep, 1e-8, 10000);
+
+            return new SviRawParameters
+            {
+                A = optimal[0],
+                B = optimal[1],
+                Rho = optimal[2],
+                M = optimal[3],
+                Sigma = optimal[4],
+            };
         }
 
         private void NaNCheck()
@@ -161,8 +257,6 @@ namespace Qwack.Core.Calibrators
                 ss.BFCallFV = BlackPV(_fwd, ss.BFCallStrike, 0, _tExp, ss.BFCallVol, OptionType.C);
                 ss.BFPutFV = BlackPV(_fwd, ss.BFPutStrike, 0, _tExp, ss.BFPutVol, OptionType.P);
             }
-
-           
         }
 
         private void ComputeNextGuess()
@@ -193,37 +287,90 @@ namespace Qwack.Core.Calibrators
         private double[] ComputeErrors(double[] currentGuess)
         {
             var interp = InterpolatorFactory.GetInterpolator(_strikes, currentGuess, _interpType);
+            var volFunc = new Func<double, double>(k => GetVolForAbsoluteStrike(k, interp));
+            var o = ComputeErrorsGeneric(volFunc, false);
+            return o;
+        }
+
+        private double[] ComputeErrorsSABR(SABRParameters currentSABR)
+        {
+            var volFunc = new Func<double, double>(k => CalcImpVol_Beta1(k, currentSABR));
+            var o = ComputeErrorsGeneric(volFunc, true);
+            if (currentSABR.Rho > 1.0 || currentSABR.Rho < -1.0 || currentSABR.Alpha < 0.0 || currentSABR.Nu < 0.0)
+                o = o.Select(x => x * 1e10).ToArray();
+            return o;
+        }
+
+        private double[] ComputeErrorsSviRaw(SviRawParameters currentSviRaw)
+        {
+            var volFunc = new Func<double, double>(k => CalcVolSviRaw(k, currentSviRaw));
+            var o = ComputeErrorsGeneric(volFunc, true);
+            if (currentSviRaw.A < 0.0 || currentSviRaw.B < 0.0 || currentSviRaw.Sigma <= 0.0 || currentSviRaw.Rho < -1.0 || currentSviRaw.Rho > 1.0)
+                o = o.Select(x => x * 1e10).ToArray();
+            return o;
+        }
+
+        private double[] ComputeErrorsGeneric(Func<double,double> volForStrike, bool squareErrors)
+        {
             double callVol, putVol;
 
             var o = new double[_numberOfConstraints];
             for (var i = 0; i < _smileConstraints.Length; i++)
             {
-                callVol = GetVolForAbsoluteStrike(_smileConstraints[i].RRCallStrike, interp);
-                putVol = GetVolForAbsoluteStrike(_smileConstraints[i].RRPutStrike, interp);
+                callVol = volForStrike(_smileConstraints[i].RRCallStrike);
+                putVol = volForStrike(_smileConstraints[i].RRPutStrike);
                 var callFV = BlackPV(_fwd, _smileConstraints[i].RRCallStrike, 0, _tExp, callVol, OptionType.C);
                 var putFV = BlackPV(_fwd, _smileConstraints[i].RRPutStrike, 0, _tExp, putVol, OptionType.P);
                 var onSmileRRFV = callFV - putFV;
                 var constraintRRFV = _smileConstraints[i].RRCallFV - _smileConstraints[i].RRPutFV;
                 o[i] = onSmileRRFV - constraintRRFV;
+
+                if (_vegaWeighted)
+                {
+                    var vega = (BlackVega(_fwd, _smileConstraints[i].RRCallStrike, 0, _tExp, callVol)
+                        + BlackVega(_fwd, _smileConstraints[i].RRPutStrike, 0, _tExp, putVol)) / 2.0;
+
+                    o[i] *= vega;
+                }
             }
 
             var a = _smileConstraints.Length;
-            callVol = GetVolForAbsoluteStrike(_atmConstraint.CallStrike, interp);
-            putVol = GetVolForAbsoluteStrike(_atmConstraint.PutStrike, interp);
+            callVol = volForStrike(_atmConstraint.CallStrike);
+            putVol = volForStrike(_atmConstraint.PutStrike);
             o[a] = BlackPV(_fwd, _atmConstraint.CallStrike, 0, _tExp, callVol, OptionType.C)
                 + BlackPV(_fwd, _atmConstraint.PutStrike, 0, _tExp, putVol, OptionType.P);
             o[a] -= (_atmConstraint.CallFV + _atmConstraint.PutFV);
+
+            if (_vegaWeighted)
+            {
+                var vega = BlackVega(_fwd, _atmConstraint.CallStrike, 0, _tExp, callVol);
+                o[a] *= vega;
+            }
+
             a++;
 
             for (var i = 0; i < _smileConstraints.Length; i++)
             {
-                callVol = GetVolForAbsoluteStrike(_smileConstraints[i].BFCallStrike, interp);
-                putVol = GetVolForAbsoluteStrike(_smileConstraints[i].BFPutStrike, interp);
+                callVol = volForStrike(_smileConstraints[i].BFCallStrike);
+                putVol = volForStrike(_smileConstraints[i].BFPutStrike);
                 var callFV = BlackPV(_fwd, _smileConstraints[i].BFCallStrike, 0, _tExp, callVol, OptionType.C);
                 var putFV = BlackPV(_fwd, _smileConstraints[i].BFPutStrike, 0, _tExp, putVol, OptionType.P);
                 var onSmileBFFV = callFV + putFV;
                 var constraintBFFV = _smileConstraints[i].BFCallFV + _smileConstraints[i].BFPutFV;
-                o[i+a] = onSmileBFFV - constraintBFFV;
+                o[i + a] = onSmileBFFV - constraintBFFV;
+
+                if (_vegaWeighted)
+                {
+                    var vega = (BlackVega(_fwd, _smileConstraints[i].BFCallStrike, 0, _tExp, callVol)
+                        + BlackVega(_fwd, _smileConstraints[i].BFPutStrike, 0, _tExp, putVol)) / 2.0;
+
+                    o[i + a] *= vega;
+                }
+            }
+
+            if (squareErrors)
+            {
+                o = o.Select(x => x * x).ToArray();
             }
 
             return o;
@@ -231,25 +378,7 @@ namespace Qwack.Core.Calibrators
 
         private void UpdateInterpolator() => _interp = InterpolatorFactory.GetInterpolator(_strikes, _currentGuess, _interpType);
 
-        private static double BlackPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
-        {
-            var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
-
-            var d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            var d2 = d1 - volatility * Sqrt(expTime);
-
-            var num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
-            var num3 = num2 - (volatility * Sqrt(expTime));
-            return (Exp(-riskFreeRate * expTime) * (((cpf * forward) * Statistics.NormSDist(num2 * cpf)) - ((cpf * strike) * Statistics.NormSDist(num3 * cpf))));
-        }
-
-        private static double AbsoluteStrikefromDeltaKAnalytic(double forward, double delta, double riskFreeRate, double expTime, double volatility)
-        {
-            double psi = Sign(delta);
-            var sqrtT = Sqrt(expTime);
-            var q = Statistics.NormInv(psi * delta);
-            return forward * Exp(-psi * volatility * sqrtT * q + 0.5 * Pow(volatility, 2) * expTime);
-        }
+   
 
         private double GetVolForAbsoluteStrike(double strike, IInterpolator1D interp)
         {
@@ -261,9 +390,13 @@ namespace Qwack.Core.Calibrators
                 return absK - strike;
             });
 
-            var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
+            var solvedStrike = -Brent.BrentsMethodSolve(testFunc, -0.999999999, -0.000000001, 1e-8);
             return interp.Interpolate(solvedStrike);
         }
+
+        public double CalcImpVol_Beta1(double k, SABRParameters currentSABR) => SABR.CalcImpVol_Beta1(_fwd, k, _tExp, currentSABR.Alpha, currentSABR.Rho, currentSABR.Nu);
+
+        public double CalcVolSviRaw(double k, SviRawParameters currentSVI) => SVI.SVI_Raw_ImpliedVol(currentSVI.A, currentSVI.B, currentSVI.Rho, k, _fwd, _tExp, currentSVI.M, currentSVI.Sigma);
     }
 
     public class RRBFConstraint

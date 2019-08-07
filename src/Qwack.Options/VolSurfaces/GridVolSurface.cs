@@ -22,7 +22,7 @@ namespace Qwack.Options.VolSurfaces
         private readonly bool _allowCaching = true;
         private ConcurrentDictionary<string, double> _absVolCache = new ConcurrentDictionary<string, double>();
         private ConcurrentDictionary<string, double> _deltaVolCache = new ConcurrentDictionary<string, double>();
-
+        public Frequency OverrideSpotLag { get; set; }
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
         public double[] Strikes { get; set; }
@@ -306,7 +306,7 @@ namespace Qwack.Options.VolSurfaces
             }
         }
 
-        public double Cdf(double strike, DateTime expiry, double fwd)
+        public double CDF(DateTime expiry, double fwd, double strike)
         {
             var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
             var vol = GetVolForAbsoluteStrike(strike, expiry, fwd);
@@ -330,7 +330,7 @@ namespace Qwack.Options.VolSurfaces
         public double InverseCDF(DateTime expiry, double fwd, double p)
         {
             var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
-            var targetFunc = new Func<double, double>(k => p - Cdf(k, expiry, fwd));
+            var targetFunc = new Func<double, double>(k => p - CDF(expiry, fwd, k));
             var minK = GetAbsStrikeForDelta(fwd, -1e-10, t) / 2.0;
             var maxK = GetAbsStrikeForDelta(fwd, -(1.0 - 1e-10), t) * 10.0;
 

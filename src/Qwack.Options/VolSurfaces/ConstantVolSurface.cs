@@ -23,7 +23,7 @@ namespace Qwack.Options.VolSurfaces
         public IInterpolator2D LocalVolGrid { get; set; }
 
         public DateTime[] Expiries => new[] { OriginDate };
-
+        public Frequency OverrideSpotLag { get; set; }
         public ConstantVolSurface()         {        }
 
         public ConstantVolSurface(DateTime originDate, double volatility):base() => Build(originDate, volatility);
@@ -56,6 +56,7 @@ namespace Qwack.Options.VolSurfaces
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
 
-        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

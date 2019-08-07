@@ -98,14 +98,18 @@ namespace Qwack.Models
 
         public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike)
         {
-            var fwd = GetPriceCurve(name).GetPriceForDate(expiry); //needs to account for spot/fwd offset
-            var vol = GetVolSurface(name).GetVolForAbsoluteStrike(strike, expiry, fwd);
+            var surface = GetVolSurface(name);
+            var curve = GetPriceCurve(name);
+            var fwd = surface.OverrideSpotLag == null ? 
+                curve.GetPriceForFixingDate(expiry) : 
+                curve.GetPriceForDate(expiry.AddPeriod(RollType.F, curve.SpotCalendar, surface.OverrideSpotLag));
+            var vol = surface.GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
         }
 
         public double GetVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike)
         {
-            var fwd = GetPriceCurve(name).GetPriceForDate(expiry); //needs to account for spot/fwd offset
+            var fwd = GetPriceCurve(name).GetPriceForFixingDate(expiry); //needs to account for spot/fwd offset
             var vol = GetVolSurface(name).GetVolForDeltaStrike(strike, expiry, fwd);
             return vol;
         }

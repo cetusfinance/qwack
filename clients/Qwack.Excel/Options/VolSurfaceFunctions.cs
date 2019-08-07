@@ -60,7 +60,8 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Time Interpolation - default Linear")] object TimeInterpolation,
               [ExcelArgument(Description = "Time basis - default ACT365F")] object TimeBasis,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
-              [ExcelArgument(Description = "Currency - default USD")] object Currency)
+              [ExcelArgument(Description = "Currency - default USD")] object Currency,
+              [ExcelArgument(Description = "Override spot lag - default none")] object SpotLag)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -95,6 +96,10 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
+                if (SpotLag != null && !(SpotLag is ExcelMissing))
+                {
+                    surface.OverrideSpotLag = new Frequency((string)SpotLag);
+                }
                 return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }
@@ -116,7 +121,8 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Stike Interpolation - default GaussianKernel")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
-              [ExcelArgument(Description = "Currency - default USD")] object Currency)
+              [ExcelArgument(Description = "Currency - default USD")] object Currency,
+              [ExcelArgument(Description = "Override spot lag - default none")] object SpotLag)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -169,6 +175,10 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
+                if(SpotLag!=null && !(SpotLag is ExcelMissing))
+                {
+                    surface.OverrideSpotLag = new Frequency((string)SpotLag);
+                }
                 return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }

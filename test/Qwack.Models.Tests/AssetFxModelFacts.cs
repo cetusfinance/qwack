@@ -23,6 +23,7 @@ namespace Qwack.Models.Tests
             var surfaceFx = new Mock<IVolSurface>();
             var curve = new Mock<IPriceCurve>();
             curve.Setup(c => c.GetPriceForDate(DateTime.Today)).Returns(456.0);
+            curve.Setup(c => c.GetPriceForFixingDate(DateTime.Today)).Returns(457.0);
             surface.Setup(s => s.AssetId).Returns("blah");
             surface2.Setup(s => s.AssetId).Returns("blah2");
             matrix.Setup(f => f.GetFxPair(It.IsAny<string>())).Returns(pair);
@@ -50,7 +51,7 @@ namespace Qwack.Models.Tests
             sut.GetVolForStrikeAndDate("blah", DateTime.Today, 123);
             surface.Verify(s => s.GetVolForAbsoluteStrike(123, DateTime.Today, 456), Times.Once);
             sut.GetVolForDeltaStrikeAndDate("blah", DateTime.Today, 123);
-            surface.Verify(s => s.GetVolForDeltaStrike(123, DateTime.Today, 456), Times.Once);
+            surface.Verify(s => s.GetVolForDeltaStrike(123, DateTime.Today, 457.0), Times.Once);
 
             sut.GetAverageVolForStrikeAndDates("blah", new[] { DateTime.Today }, 123);
             surface.Verify(s => s.GetVolForAbsoluteStrike(123, DateTime.Today, 456), Times.Exactly(2));

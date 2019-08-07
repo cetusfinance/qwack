@@ -298,5 +298,20 @@ namespace Qwack.Excel.Utils
                 return string.Join(s, Input);
             });
         }
+
+        [ExcelFunction(Description = "Splits a string on a given character and returns the nTh instance", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_Split(
+            [ExcelArgument(Description = "Input string")] string Input,
+            [ExcelArgument(Description = "Seperator character")] string Seperator,
+            [ExcelArgument(Description = "nth instance, negative to count from last backwards")] int n)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var s = Input.Split(Seperator.ToCharArray());
+                if (System.Math.Abs(n) > s.Length)
+                    return "#Too few instances";
+                return n > 0 ? s[n - 1] : s[s.Length + n];
+            });
+        }
     }
 }

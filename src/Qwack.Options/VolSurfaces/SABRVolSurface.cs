@@ -29,7 +29,7 @@ namespace Qwack.Options.VolSurfaces
         public double[] ExpiriesDouble { get; set; }
 
         public Currency Currency { get; set; }
-
+        public Frequency OverrideSpotLag { get; set; }
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
         public string AssetId { get; set; }
@@ -237,6 +237,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => VolUtils.GetForwardATMVol(start, end, _fwdsInterp.Interpolate(start), _fwdsInterp.Interpolate(end), GetVolForAbsoluteStrike);
 
-        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
+using Qwack.Dates;
 using Qwack.Math;
 
 namespace Qwack.Options.VolSurfaces
@@ -21,7 +22,7 @@ namespace Qwack.Options.VolSurfaces
         public DateTime[] Expiries => FxSurface.Expiries;
         public string Name { get; set; }
         public string InvertedPair => FxSurface.AssetId.Substring(FxSurface.AssetId.Length - 3, 3) + '/' + FxSurface.AssetId.Substring(0, 3);
-
+        public Frequency OverrideSpotLag { get; set; }
 
         public Currency Currency { get => _currencyProvider.GetCurrency(FxSurface.AssetId.Substring(0, 3)); set => throw new NotImplementedException(); }
         public string AssetId { get => InvertedPair; set => throw new NotImplementedException(); }
@@ -29,6 +30,8 @@ namespace Qwack.Options.VolSurfaces
         public IInterpolator2D LocalVolGrid { get; set; }
 
         public IATMVolSurface FxSurface { get; }
+
+        public double CDF(DateTime expiry, double fwd, double strike) => 1.0 - FxSurface.CDF(expiry, 1 / fwd, 1 / strike);
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => FxSurface.GetATMVegaScenarios(bumpSize, LastSensitivityDate);
 

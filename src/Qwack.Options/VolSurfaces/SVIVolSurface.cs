@@ -32,6 +32,7 @@ namespace Qwack.Options.VolSurfaces
         public IInterpolator2D LocalVolGrid { get; set; }
 
         public string[] PillarLabels { get; }
+        public Frequency OverrideSpotLag { get; set; }
 
         private IInterpolator1D[] _interps;
         private IInterpolator1D _fwdsInterp;
@@ -99,7 +100,7 @@ namespace Qwack.Options.VolSurfaces
                             WingQuoteType = wingQuoteType,
                         };
                     }
-                    RawParams[i] = f.SolveSviRaw(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i]);
+                    RawParams[i] = f.SolveSviRaw(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], true);
                 }
             }
             else
@@ -117,7 +118,7 @@ namespace Qwack.Options.VolSurfaces
                             WingQuoteType = wingQuoteType,
                         };
                     }
-                    RawParams[i] = f.SolveSviRaw(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i]);
+                    RawParams[i] = f.SolveSviRaw(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], true);
                 }
             }
 
@@ -159,6 +160,8 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => VolUtils.GetForwardATMVol(start, end, _fwdsInterp.Interpolate(start), _fwdsInterp.Interpolate(end), GetVolForAbsoluteStrike);
 
-        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

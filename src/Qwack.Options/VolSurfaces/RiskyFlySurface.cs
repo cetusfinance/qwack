@@ -61,8 +61,6 @@ namespace Qwack.Options.VolSurfaces
             }
             strikes[wingDeltas.Length] = 0.5;
 
-
-
             var wingConstraints = new RRBFConstraint[expiries.Length][];
             var vols = new double[expiries.Length][];
             var f = new AssetSmileSolver();

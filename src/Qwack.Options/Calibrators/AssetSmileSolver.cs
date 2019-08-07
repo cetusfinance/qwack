@@ -145,8 +145,13 @@ namespace Qwack.Options.Calibrators
             _buildDate = buildDate;
             _tExp = (expiry - buildDate).TotalDays / 365.0;
 
-            var startingPoint = new[] { atmConstraint.MarketVol, 0.5, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1, 0, Sqrt(atmConstraint.MarketVol) };
-            var initialStep = new[] { 0.1, 0.25, 0.25, 0.1, 0.1 };
+            var startingPoint = new[] { atmConstraint.MarketVol* atmConstraint.MarketVol *_tExp-Sqrt(atmConstraint.MarketVol), 1.0, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1, 0, Sqrt(atmConstraint.MarketVol) };
+            //var startingPoint = new[] { atmConstraint.MarketVol* atmConstraint.MarketVol *_tExp-Sqrt(atmConstraint.MarketVol), 0.5, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.25 : -0.25, 0, Sqrt(atmConstraint.MarketVol) };
+            var initialStep = new[] { atmConstraint.MarketVol * atmConstraint.MarketVol, 0.5, 0.5, 0.002, Sqrt(atmConstraint.MarketVol) /2};
+
+            //var startingPoint = new[] { atmConstraint.MarketVol, 1.0, 0.1, 0, 0.1 };
+            //var initialStep = new[] { 0.1, 0.25, 0.25, 0.01, 0.1 };
+
 
             var currentError = new Func<double[], double>(x =>
             {
@@ -160,12 +165,12 @@ namespace Qwack.Options.Calibrators
                 };
 
                 var e = ComputeErrorsSviRaw(currentSVI);
-                return e.Sum();
+                return Sqrt(e.Sum());
             });
 
             SetupConstraints();
 
-            var optimal = NelderMead.MethodSolve(currentError, startingPoint, initialStep, 1e-8, 10000);
+            var optimal = NelderMead.MethodSolve(currentError, startingPoint, initialStep, 1e-10, 50000);
 
             return new SviRawParameters
             {
@@ -305,8 +310,8 @@ namespace Qwack.Options.Calibrators
         {
             var volFunc = new Func<double, double>(k => CalcVolSviRaw(k, currentSviRaw));
             var o = ComputeErrorsGeneric(volFunc, true);
-            if (currentSviRaw.A < 0.0 || currentSviRaw.B < 0.0 || currentSviRaw.Sigma <= 0.0 || currentSviRaw.Rho < -1.0 || currentSviRaw.Rho > 1.0)
-                o = o.Select(x => x * 1e10).ToArray();
+            if (currentSviRaw.B < 0.0 || currentSviRaw.B > 4.0/(_tExp*(1+Abs(currentSviRaw.Rho))) || currentSviRaw.Sigma <= 0.0 || currentSviRaw.Sigma > 10.0 || currentSviRaw.Rho < -1.0 || currentSviRaw.Rho > 1.0)
+                o = o.Select(x => x * 1e100).ToArray();
             return o;
         }
 
@@ -327,8 +332,8 @@ namespace Qwack.Options.Calibrators
 
                 if (_vegaWeighted)
                 {
-                    var vega = (BlackVega(_fwd, _smileConstraints[i].RRCallStrike, 0, _tExp, callVol)
-                        + BlackVega(_fwd, _smileConstraints[i].RRPutStrike, 0, _tExp, putVol)) / 2.0;
+                    var vega = ((BlackVega(_fwd, _smileConstraints[i].RRCallStrike, 0, _tExp, callVol)
+                        + BlackVega(_fwd, _smileConstraints[i].RRPutStrike, 0, _tExp, putVol)) / 2.0);
 
                     o[i] *= vega;
                 }
@@ -343,7 +348,7 @@ namespace Qwack.Options.Calibrators
 
             if (_vegaWeighted)
             {
-                var vega = BlackVega(_fwd, _atmConstraint.CallStrike, 0, _tExp, callVol);
+                var vega = (BlackVega(_fwd, _atmConstraint.CallStrike, 0, _tExp, callVol));
                 o[a] *= vega;
             }
 
@@ -361,8 +366,8 @@ namespace Qwack.Options.Calibrators
 
                 if (_vegaWeighted)
                 {
-                    var vega = (BlackVega(_fwd, _smileConstraints[i].BFCallStrike, 0, _tExp, callVol)
-                        + BlackVega(_fwd, _smileConstraints[i].BFPutStrike, 0, _tExp, putVol)) / 2.0;
+                    var vega = ((BlackVega(_fwd, _smileConstraints[i].BFCallStrike, 0, _tExp, callVol)
+                        + BlackVega(_fwd, _smileConstraints[i].BFPutStrike, 0, _tExp, putVol)) / 2.0);
 
                     o[i + a] *= vega;
                 }

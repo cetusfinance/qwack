@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Interpolation;
 using Qwack.Math;
+using Qwack.Dates;
 
 namespace Qwack.Core.Basic
 {
@@ -27,5 +28,7 @@ namespace Qwack.Core.Basic
         DateTime PillarDatesForLabel(string label);
 
         double InverseCDF(DateTime expiry, double fwd, double p);
+        double CDF(DateTime expiry, double fwd, double strike);
+        Frequency OverrideSpotLag { get; set; }
     }
 }

@@ -18,6 +18,7 @@ namespace Qwack.Options.VolSurfaces
         public string Name { get; }
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
+        public Frequency OverrideSpotLag { get; set; }
 
         public CompositeVolSurface()
         {
@@ -104,6 +105,7 @@ namespace Qwack.Options.VolSurfaces
             return GetVolForAbsoluteStrike(solvedStrike, maturity, forward);
         }
 
-        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDF(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

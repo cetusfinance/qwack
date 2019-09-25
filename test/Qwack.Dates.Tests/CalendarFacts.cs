@@ -85,7 +85,42 @@ namespace Qwack.Dates.Tests
 
             calendar.FalsePositives.Add(new DateTime(2019, 07, 08));
             Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 08)));
+        }
 
+        [Fact]
+        public void RuleBased_WithChildren()
+        {
+            var calendar = new Calendar
+            {
+                CalendarType = CalendarType.FixedDateZARule,
+                FixedDate = new DateTime(2000, 07, 07),
+                ValidFromYear = 1994,
+                ValidToYear = 2020
+            };
+
+            var calendar2 = new Calendar
+            {
+                CalendarType = CalendarType.Regular,
+                InheritedCalendarObjects = new List<Calendar>() { calendar }
+            };
+
+            var calendar3 = new Calendar
+            {
+                CalendarType = CalendarType.Regular,
+                InheritedCalendarObjects = new List<Calendar>() { calendar2 }
+            };
+
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendar.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendar.IsHoliday(new DateTime(2019, 07, 08)));
+
+            Assert.False(calendar2.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendar2.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendar2.IsHoliday(new DateTime(2019, 07, 08)));
+
+            Assert.False(calendar3.IsHoliday(new DateTime(2019, 07, 07)));
+            Assert.False(calendar3.IsHoliday(new DateTime(2019, 07, 06)));
+            Assert.True(calendar3.IsHoliday(new DateTime(2019, 07, 08)));
         }
 
         [Fact]

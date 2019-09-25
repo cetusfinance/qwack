@@ -87,11 +87,12 @@ namespace Qwack.Options.Asians
             var knownAverage = tIx == 0 ? 0.0 : forwards.Take(tIx).Average();
             var forward = tIx == fixingDates.Count() ? 0.0 : forwards.Skip(tIx).Average();
 
+            var k0 = K;
             K = AsianUtils.AdjustedStrike(K, knownAverage, tExpiry, tAvgStart);
 
             if (K <= 0)
             {
-                return (callPut == OptionType.P) ? 0.0 : df * m1;
+                return (callPut == OptionType.P) ? 0.0 : df * Max(m1 - k0, 0);
             }
             
             var pv = BlackFunctions.BlackPV(m1, K, 0.0, tExpiry, sigma_a, callPut);

@@ -58,9 +58,16 @@ namespace Qwack.Core.Cubes
                 if (!_types.ContainsKey(d.Key))
                     throw new Exception($"Could not map field {d.Key}");
 
-                var valAsType = Convert.ChangeType(d.Value, _types[d.Key]);
-                if (valAsType == null)
-                    throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
+                if (d.Value == null && _types[d.Key]==typeof(string))
+                {
+
+                }
+                else
+                {
+                    var valAsType = Convert.ChangeType(d.Value, _types[d.Key]);
+                    if (valAsType == null)
+                        throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
+                }
 
                 var ix = _fieldNames.IndexOf(d.Key);
                 row[ix] = d.Value;
@@ -69,6 +76,12 @@ namespace Qwack.Core.Cubes
             {
                 _rows.Add(new ResultCubeRow(row, value));
             }
+        }
+
+        bool IsOfNullableType<T>(T o)
+        {
+            var type = typeof(T);
+            return Nullable.GetUnderlyingType(type) != null;
         }
 
         public void AddRow(object[] data, double value)

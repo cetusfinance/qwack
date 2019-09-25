@@ -390,7 +390,7 @@ namespace Qwack.Core.Instruments
             return alpha * (rc + pfe);
         }
 
-        public static Portfolio RollWithLifecycle(this Portfolio pf, DateTime rollfromDate, DateTime rollToDate)
+        public static Portfolio RollWithLifecycle(this Portfolio pf, DateTime rollfromDate, DateTime rollToDate, bool cashOnDayAlreadyPaid=false)
         {
             var o = new Portfolio
             {
@@ -416,7 +416,6 @@ namespace Qwack.Core.Instruments
                         if (l.EndDate < rollToDate && l.EndDate >= rollfromDate)
                         {
                             o.Instruments.Add(new CashBalance(l.Currency, -l.Notional) { TradeId = i.TradeId + "n" });
-                            
                         }
                         else
                         {
@@ -434,11 +433,11 @@ namespace Qwack.Core.Instruments
                                     wrapper.CashBalances.Add(new CashBalance(wfxf.ForeignCCY, -wfxf.DomesticQuantity * wfxf.Strike) { TradeId = i.TradeId + "f" });
                                 }                                break;
                             case FixedRateLoanDeposit wl:
-                                if (wl.StartDate < rollToDate && wl.StartDate >= rollfromDate)
+                                if (wl.StartDate < rollToDate && ((!cashOnDayAlreadyPaid && wl.StartDate >= rollfromDate) || (cashOnDayAlreadyPaid && wl.StartDate > rollfromDate)))
                                 {
                                     wrapper.CashBalances.Add(new CashBalance(wl.Currency, wl.Notional) { TradeId = i.TradeId + "nStart" });
                                 }
-                                else if (wl.EndDate < rollToDate && wl.EndDate >= rollfromDate)
+                                if (wl.EndDate < rollToDate && ((!cashOnDayAlreadyPaid && wl.EndDate >= rollfromDate) || (cashOnDayAlreadyPaid && wl.EndDate > rollfromDate)))
                                 {
                                     wrapper.CashBalances.Add(new CashBalance(wl.Currency, -wl.Notional) { TradeId = i.TradeId + "n" });
                                 }

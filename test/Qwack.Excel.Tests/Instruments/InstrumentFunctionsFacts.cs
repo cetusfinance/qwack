@@ -462,10 +462,10 @@ namespace Qwack.Excel.Tests.Instruments
             InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } });
 
             Assert.Equal("Portfolio hhhh not found",
-                InstrumentFunctions.FilterPortfolio("filterPfOutK", "hhhh", new object[] { "swpFake" }));
+                InstrumentFunctions.FilterPortfolio("filterPfOutK", "hhhh", new object[] { "swpFake" }, false));
 
             Assert.Equal("filterPfOutK¬0",
-                InstrumentFunctions.FilterPortfolio("filterPfOutK", "pfOutK", new object[] { "swpFake" }));
+                InstrumentFunctions.FilterPortfolio("filterPfOutK", "pfOutK", new object[] { "swpFake" }, false));
         }
 
         [Fact]

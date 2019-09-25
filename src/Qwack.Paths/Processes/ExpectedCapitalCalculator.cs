@@ -28,7 +28,8 @@ namespace Qwack.Paths.Processes
             _reportingCurrency = reportingCurrency;
             _assetFxModel = assetFxModel;
             _calculationDates = calculationDates;
-            _assetIds = _portfolio.AssetIds();
+            _assetIds = _portfolio.AssetIds().Concat(_portfolio.FxPairs(assetFxModel)).ToArray();
+            
         }
 
         public Dictionary<DateTime, double> ExpectedCapital => _expectedCapital.ToDictionary(x => x.Key, x => x.Value / _nPaths);
@@ -72,7 +73,9 @@ namespace Qwack.Paths.Processes
                     {
                         for (var a = 0; a < _assetIndices.Length; a++)
                         {
-                            fixingDictionaries[_assetIds[a]][d] = stepsByFactor[a][i][j];  
+                            if (!fixingDictionaries.TryGetValue(_assetIds[a], out var fd))
+                                throw new Exception($"Fixing dictionary not found for asset {_assetIds[a]} ");
+                            fd[d] = stepsByFactor[a][i][j];  
                         }
                     }
 

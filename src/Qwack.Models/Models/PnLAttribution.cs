@@ -782,7 +782,8 @@ namespace Qwack.Models.Models
 
             //next step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
-            portfolio = cashOnDayAlreadyPaid?portfolio:portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
+            //portfolio = cashOnDayAlreadyPaid?portfolio:portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
+            portfolio = portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate, cashOnDayAlreadyPaid);
             var newPVCube = portfolio.PV(model, reportingCcy);
 
 
@@ -1342,22 +1343,29 @@ namespace Qwack.Models.Models
             //first do normal attribution
             var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider, cashOnDayAlreadyPaid);
 
+            cube = cube.EnrichWithPortfolio(startPortfolio);
+
             //then do activity PnL
             var (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd) = startPortfolio.ActivityBooks(endPortfolio, endModel.BuildDate);
+
+            var pfEndDict = endPortfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
+            var pfStartDict = startPortfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
 
             var newTradesPnL = newTrades.PV(endModel, reportingCcy);
             var tidIx = newTradesPnL.GetColumnIndex("TradeId");
             var tTypeIx = newTradesPnL.GetColumnIndex("TradeType");
             foreach (var t in newTradesPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId",  tid},
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "New" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfEndDict[tid]}
                 };
                 cube.AddRow(row, t.Value);
             }
@@ -1365,14 +1373,16 @@ namespace Qwack.Models.Models
             var removedTradesPnL = removedTrades.PV(endModel, reportingCcy);
             foreach (var t in removedTradesPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId", tid },
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Removed" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfStartDict[tid]}
                 };
                 cube.AddRow(row, -t.Value);
             }
@@ -1382,19 +1392,39 @@ namespace Qwack.Models.Models
             var ammendedPnL = ammendedTradesPnLEnd.QuickDifference(ammendedTradesPnLStart);
             foreach (var t in ammendedPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId", tid },
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Ammended" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfStartDict[tid]}
                 };
                 cube.AddRow(row, t.Value);
             }
 
             return cube;
+        }
+
+        private static ICube EnrichWithPortfolio(this ICube results, Portfolio pfolio)
+        {
+            var o = new ResultCube();
+            var dt = new Dictionary<string,Type>(results.DataTypes);
+            dt.Add("Portfolio", typeof(string));
+            o.Initialize(dt);
+
+            var pfDict = pfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
+            var tidIx = results.GetColumnIndex("TradeId");
+            foreach (var r in results.GetAllRows())
+            {
+                r.MetaData = r.MetaData.Concat(new object[] { pfDict[(string)r.MetaData[tidIx]] }).ToArray();
+                o.AddRow(r.MetaData, r.Value);
+            }
+
+            return o;
         }
     }
 }

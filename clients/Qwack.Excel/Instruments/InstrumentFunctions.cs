@@ -1044,11 +1044,12 @@ namespace Qwack.Excel.Instruments
         public static object FilterPortfolio(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
             [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
-            [ExcelArgument(Description = "Trade Ids")] object[] TradeIds)
+            [ExcelArgument(Description = "Trade Ids")] object[] TradeIds,
+            [ExcelArgument(Description = "Filter out? (false)")] object FilterOut)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-
+                var fo = FilterOut.OptionalExcel(false);
                 var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
                 var pfIn = pFolioCache.GetObjectOrThrow(PortfolioName, $"Portfolio {PortfolioName} not found");
                 var ids = TradeIds.ObjectRangeToVector<string>();
@@ -1056,6 +1057,8 @@ namespace Qwack.Excel.Instruments
                 {
                     Instruments = new List<IInstrument>
                     (
+                        fo ? 
+                        pfIn.Value.Instruments.Where(x => !ids.Contains(x.TradeId)) : 
                         pfIn.Value.Instruments.Where(x => ids.Contains(x.TradeId))
                     )
                 };

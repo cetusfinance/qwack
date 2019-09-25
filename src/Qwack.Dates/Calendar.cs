@@ -16,10 +16,12 @@ namespace Qwack.Dates
             ValidFromYear = int.MinValue;
             ValidToYear = int.MaxValue;
             FalsePositives = new HashSet<DateTime>();
+            InheritedCalendarObjects = new List<Calendar>();
         }
 
         public bool IsMerged { get; set; }
         public List<string> InheritedCalendar { get; set; }
+        public List<Calendar> InheritedCalendarObjects{ get; set; }
         public string Name { get; set; }
         public List<DayOfWeek> DaysToAlwaysExclude { get; set; }
         public HashSet<DateTime> DaysToExclude { get; set; }
@@ -48,6 +50,12 @@ namespace Qwack.Dates
             else if (DaysToExclude.Contains(date.Date))
             {
                 return true;
+            }
+
+            foreach(var ic in InheritedCalendarObjects)
+            {
+                if (ic.IsHoliday(date))
+                    return true;
             }
 
             return false;

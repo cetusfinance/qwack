@@ -130,7 +130,7 @@ namespace Qwack.Models.Models
             return pv;
         }
 
-        public static string GetFxFixingId(this AsianSwap swap, string curveCcy) => string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
+        public static string GetFxFixingId(this AsianSwap swap, string curveCcy) => string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}/{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
 
         public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
         {
@@ -715,13 +715,16 @@ namespace Qwack.Models.Models
                 return (0.0, 0.0);
 
             //financing theta
-            var dfAdjDom = model.FundingModel.GetDf(fxf.DomesticCCY, model.BuildDate, fwdDate);
-            var dfAdjFor = model.FundingModel.GetDf(fxf.ForeignCCY, model.BuildDate, fwdDate);
-            var fxDomRep = model.FundingModel.GetFxRate(fwdDate, fxf.DomesticCCY, repCcy);
-            var fxForRep = model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
-            var forQ = -fxf.DomesticQuantity * fxf.Strike;
-            var finTheta = fxf.DomesticQuantity * (1 - dfAdjDom) * fxDomRep + forQ * (1 - dfAdjFor) * fxForRep;
-
+            //var dfAdjDom = model.FundingModel.GetDf(fxf.DomesticCCY, model.BuildDate, fwdDate);
+            //var dfAdjFor = model.FundingModel.GetDf(fxf.ForeignCCY, model.BuildDate, fwdDate);
+            //var fxDomRep = model.FundingModel.GetFxRate(fwdDate, fxf.DomesticCCY, repCcy);
+            //var fxForRep = model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
+            //var forQ = -fxf.DomesticQuantity * fxf.Strike;
+            //var finTheta = fxf.DomesticQuantity * (1 - dfAdjDom) * fxDomRep + forQ * (1 - dfAdjFor) * fxForRep;
+            var pv = fxf.Pv(model.FundingModel, false);
+            var pvRep = pv * model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
+            var dfAdjRep = model.FundingModel.GetDf(repCcy, model.BuildDate, fwdDate);
+            var finTheta = pvRep * (1 - dfAdjRep);
             return (finTheta, 0.0);
         }
 

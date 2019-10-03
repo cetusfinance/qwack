@@ -96,8 +96,11 @@ namespace Qwack.Paths.Regressors
         {
             var nPaths = _pathwiseValuesFwd.Length;
             var pathAvgs = _pathwiseValuesFwd.Select(x => x.Average()).ToArray();
-            var lr = LinearRegression.LinearRegressionVector(_pathwiseValuesReg, pathAvgs);
 
+            if (_pathwiseValuesReg.All(x => x == _pathwiseValuesReg.First()) && pathAvgs.All(x => x == pathAvgs.First()))
+                return new ParametricLinearInterpolator(pathAvgs.First(), 0.0);
+
+            var lr = LinearRegression.LinearRegressionVector(_pathwiseValuesReg, pathAvgs);
             return new ParametricLinearInterpolator(lr.Alpha, lr.Beta);
         }
 

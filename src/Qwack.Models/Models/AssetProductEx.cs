@@ -78,12 +78,14 @@ namespace Qwack.Models.Models
                 {
                     var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                     var fxPair = model.FundingModel.FxMatrix.GetFxPair(fxId);
-                    var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
+
                     for (var i = 0; i < sigmas.Length; i++)
                     {
                         var fxSpotDate = fxPair.SpotDate(asianOption.FixingDates[i]);
                         var fxFwd = model.FundingModel.GetFxRate(fxSpotDate, fxId);
                         var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, asianOption.FixingDates[i], fxFwd);
+                        var tExpC = model.BuildDate.CalculateYearFraction(asianOption.FixingDates[i], DayCountBasis.Act365F);
+                        var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId, tExpC);
                         sigmas[i] = Sqrt(sigmas[i] * sigmas[i] + fxVol * fxVol + 2 * correl * fxVol * sigmas[i]);
                     }
                 }
@@ -401,7 +403,8 @@ namespace Qwack.Models.Models
                 var fxId = $"{curve.Currency.Ccy}/{euOpt.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId);
+                var tExpC = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate, DayCountBasis.Act365F);
+                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId, tExpC);
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 
@@ -1035,11 +1038,17 @@ namespace Qwack.Models.Models
                 case ETC etc:
                     tradeType = "ETC";
                     break;
+                case OneTouchOption oto:
+                    tradeType = "OneTouch";
+                    break;
+                case DoubleNoTouchOption dnt:
+                    tradeType = "DoubleNoTouch";
+                    break;
                 case CashWrapper wrapper:
                     tradeType = TradeType(wrapper.UnderlyingInstrument);
                     break;
                 default:
-                    throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                    throw new Exception($"Unable to handle product of type {ins.GetType()}");
             }
             return tradeType;
         }

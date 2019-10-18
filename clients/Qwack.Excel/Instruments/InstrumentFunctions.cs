@@ -758,6 +758,125 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a one-touch/no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOneTouchOption), IsThreadSafe = true)]
+        public static object CreateOneTouchOption(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Barrier observation start date")] DateTime ObservationStart,
+            [ExcelArgument(Description = "Barrier observation end date")] DateTime ObservationEnd,
+            [ExcelArgument(Description = "Payment date")] DateTime PayDate,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Notional")] double Notional,
+            [ExcelArgument(Description = "Barrier level")] double Barrier,
+            [ExcelArgument(Description = "Barrier side, Up or Down")] object BarrierSide,
+            [ExcelArgument(Description = "Barrier type, KI or KO")] object BarrierType,
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Spot lag: 0b (Energy), 2b (PM) or 2w (BM) typically")] object SpotLag,
+            [ExcelArgument(Description = "Fixing calendar for spot lag")] object FixingCalendar)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var bSideStr = BarrierSide.OptionalExcel("Up");
+                var bTypeStr = BarrierType.OptionalExcel("KI");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var fCal = FixingCalendar.OptionalExcel(Currency);
+
+                if (!Enum.TryParse(bSideStr, out BarrierSide bSide))
+                {
+                    return $"Could not parse barrier side {bSideStr}";
+                }
+                if (!Enum.TryParse(bTypeStr, out BarrierType bType))
+                {
+                    return $"Could not parse barrier type {bTypeStr}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
+                var sLag = new Frequency(spotLag);
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fCal, out var cal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fCal);
+                    return $"Calendar {fCal} not found in cache";
+                }
+
+                var product = new OneTouchOption
+                {
+                    AssetId = AssetId,
+                    Barrier = Barrier,
+                    BarrierObservationEndDate = ObservationEnd,
+                    BarrierObservationStartDate = ObservationStart,
+                    BarrierType = bType,
+                    BarrierObservationType = BarrierObservationType.Continuous,
+                    BarrierSide = bSide,
+                    Direction = TradeDirection.Long,
+                    DiscountCurve = DiscountCurve,
+                    Notional = Notional,
+                    PaymentCurrency = currency,
+                    PaymentDate = PayDate,
+                    TradeId = ObjectName,
+                    SpotLag = sLag,
+                    FixingCalendar = cal
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a double-no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateDoubleNoTouchOption), IsThreadSafe = true)]
+        public static object CreateDoubleNoTouchOption(
+           [ExcelArgument(Description = "Object name")] string ObjectName,
+           [ExcelArgument(Description = "Asset Id")] string AssetId,
+           [ExcelArgument(Description = "Barrier observation start date")] DateTime ObservationStart,
+           [ExcelArgument(Description = "Barrier observation end date")] DateTime ObservationEnd,
+           [ExcelArgument(Description = "Payment date")] DateTime PayDate,
+           [ExcelArgument(Description = "Currency")] string Currency,
+           [ExcelArgument(Description = "Notional")] double Notional,
+           [ExcelArgument(Description = "Barrier up level")] double BarrierUp,
+           [ExcelArgument(Description = "Barrier down level")] double BarrierDown,
+           [ExcelArgument(Description = "Barrier type, KI or KO")] object BarrierType,
+           [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+           [ExcelArgument(Description = "Spot lag: 0b (Energy), 2b (PM) or 2w (BM) typically")] object SpotLag,
+           [ExcelArgument(Description = "Fixing calendar for spot lag")] object FixingCalendar)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var bTypeStr = BarrierType.OptionalExcel("KI");
+                var spotLag = SpotLag.OptionalExcel("0b");
+                var fCal = FixingCalendar.OptionalExcel(Currency);
+
+                if (!Enum.TryParse(bTypeStr, out BarrierType bType))
+                {
+                    return $"Could not parse barrier type {bTypeStr}";
+                }
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
+                var sLag = new Frequency(spotLag);
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fCal, out var cal))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fCal);
+                    return $"Calendar {fCal} not found in cache";
+                }
+
+                var product = new DoubleNoTouchOption
+                {
+                    AssetId = AssetId,
+                    BarrierUp = BarrierUp,
+                    BarrierDown = BarrierDown,
+                    BarrierObservationEndDate = ObservationEnd,
+                    BarrierObservationStartDate = ObservationStart,
+                    BarrierType = bType,
+                    BarrierObservationType = BarrierObservationType.Continuous,
+                    Direction = TradeDirection.Long,
+                    DiscountCurve = DiscountCurve,
+                    Notional = Notional,
+                    PaymentCurrency = currency,
+                    PaymentDate = PayDate,
+                    TradeId = ObjectName,
+                    SpotLag = sLag,
+                    FixingCalendar = cal
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Creates an european option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanOption), IsThreadSafe = true)]
         public static object CreateEuropeanOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -1180,6 +1299,8 @@ namespace Qwack.Excel.Instruments
             var bps = Instruments.GetAnyFromCache<BackPricingOption>();
             var mpbps = Instruments.GetAnyFromCache<MultiPeriodBackpricingOption>();
             var baOpts = Instruments.GetAnyFromCache<EuropeanBarrierOption>();
+            var otOpts = Instruments.GetAnyFromCache<OneTouchOption>();
+            var dntOpts = Instruments.GetAnyFromCache<DoubleNoTouchOption>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -1217,6 +1338,8 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(bps);
             pf.Instruments.AddRange(mpbps);
             pf.Instruments.AddRange(baOpts);
+            pf.Instruments.AddRange(otOpts);
+            pf.Instruments.AddRange(dntOpts);
 
             return pf;
         }

@@ -164,6 +164,20 @@ namespace Qwack.Models.MCModels
                     _ccy = eo.PaymentCurrency;
                     _fxType = eo.FxConversionType;
                     break;
+                case OneTouchOption ot:
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        new Paths.Payoffs.OneTouch(ot.AssetId,ot.BarrierObservationStartDate,ot.BarrierObservationEndDate
+                        ,ot.Barrier,ot.DiscountCurve,ot.Currency,ot.PaymentDate,ot.Notional,ot.BarrierSide,ot.BarrierType)
+                    };
+                    break;
+                case DoubleNoTouchOption dnt:
+                    _subInstruments = new List<IAssetPathPayoff>
+                    {
+                        new Paths.Payoffs.DoubleNoTouch(dnt.AssetId,dnt.BarrierObservationStartDate,dnt.BarrierObservationEndDate
+                        ,dnt.BarrierDown,dnt.BarrierUp,dnt.DiscountCurve,dnt.Currency,dnt.PaymentDate,dnt.Notional,dnt.BarrierType)
+                    };
+                    break;
                 case Forward f:
                     _asianDates = new List<DateTime> { f.ExpiryDate };
                     _strike = f.Strike;

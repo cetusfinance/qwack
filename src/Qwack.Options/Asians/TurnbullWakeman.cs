@@ -57,42 +57,50 @@ namespace Qwack.Options.Asians
             return PV(forward, knownAverage, sigma, K, tAvgStart, tExpiry, riskFree, callPut);
         }
 
-        public static double PV(double[] forwards, DateTime[] fixingDates, DateTime evalDate, DateTime payDate, double[] sigmas, double K, double riskFree, OptionType callPut)
+        public static double PV(double[] forwards, DateTime[] fixingDates, DateTime evalDate, DateTime payDate, double[] sigmas, double K, double riskFree, OptionType callPut, bool todayFixed=false)
         {
             if (payDate < evalDate) return 0.0;
 
             if (forwards.Length != fixingDates.Length || fixingDates.Length != sigmas.Length)
                 throw new DataMisalignedException();
 
-            var m1 = forwards.Average();
+
+
+            var nFixed = evalDate < fixingDates.First() ? 0 :
+                fixingDates.Where(x => (todayFixed ? x <= evalDate : x < evalDate)).Count();
+            var nFloat = fixingDates.Length - nFixed;
+
+            var m1 = forwards.Skip(nFixed).Average();
+            var wholeAverage = forwards.Average();
+
             var tExpiry = evalDate.CalculateYearFraction(fixingDates.Last(), DayCountBasis.Act365F, false);
             var tPay = evalDate.CalculateYearFraction(payDate, DayCountBasis.Act365F, false);
             var df = Exp(-riskFree * tPay);
 
             if (tExpiry <= 0) //work out intrinsic
             {
-                return df * (callPut == OptionType.Call ? Max(0, m1 - K) : Max(0, K - m1));
+                return df * (callPut == OptionType.Call ? Max(0, wholeAverage - K) : Max(0, K - wholeAverage));
             }
 
             var m2 = 0.0;
             var ts = fixingDates.Select(x => Max(0, evalDate.CalculateYearFraction(x, DayCountBasis.Act365F, false))).ToArray();
-            for (var i = 0; i < fixingDates.Length; i++)
-                for (var j = 0; j < fixingDates.Length; j++)
+
+            for (var i = nFixed; i < fixingDates.Length; i++)
+                for (var j = nFixed; j < fixingDates.Length; j++)
                     m2 += forwards[i] * forwards[j] * Exp(sigmas[i] * sigmas[j] * ts[Min(i, j)]);
-            m2 /= (forwards.Length * forwards.Length);
+
+            m2 /= nFloat * nFloat;
             var sigma_a = Sqrt(1 / tExpiry * Log(m2 / (m1 * m1)));
 
             var tAvgStart = evalDate.CalculateYearFraction(fixingDates.First(), DayCountBasis.Act365F, false);
-            var tIx = fixingDates.Where(x => x < evalDate).Count();
-            var knownAverage = tIx == 0 ? 0.0 : forwards.Take(tIx).Average();
-            var forward = tIx == fixingDates.Count() ? 0.0 : forwards.Skip(tIx).Average();
+            var knownAverage = nFixed == 0 ? 0.0 : forwards.Take(nFixed).Average();
 
             var k0 = K;
             K = AsianUtils.AdjustedStrike(K, knownAverage, tExpiry, tAvgStart);
 
             if (K <= 0)
             {
-                return (callPut == OptionType.P) ? 0.0 : df * Max(m1 - k0, 0);
+                return (callPut == OptionType.P) ? 0.0 : df * Max(wholeAverage - k0, 0);
             }
             
             var pv = BlackFunctions.BlackPV(m1, K, 0.0, tExpiry, sigma_a, callPut);

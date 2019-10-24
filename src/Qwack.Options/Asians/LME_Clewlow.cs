@@ -4,6 +4,7 @@ using System.Text;
 using Qwack.Dates;
 using Qwack.Core.Basic;
 using System.Linq;
+using static System.Math;
 
 namespace Qwack.Options.Asians
 {
@@ -13,9 +14,9 @@ namespace Qwack.Options.Asians
         {
             if (avgEndDate == evalDate)
                 if (callPut == OptionType.C)
-                    return System.Math.Max(knownAverage - K, 0);
+                    return Max(knownAverage - K, 0);
                 else
-                    return System.Math.Max(K - knownAverage, 0);
+                    return Max(K - knownAverage, 0);
 
             else if (avgEndDate < evalDate)
                 return 0;
@@ -27,50 +28,40 @@ namespace Qwack.Options.Asians
 
             //Build Vector of Observation Dates
             var resetDates = avgStartDate.BusinessDaysInPeriod(avgEndDate, fixingCalendar);
-            var RT = resetDates.Count;
+            var nResets = resetDates.Count;
+            var nFixed = resetDates.Count(x => x < evalDate);
+            var nFloat = nResets - nFixed;
 
-            //Initialise Variables
-            double E1 = 0.0, E2 = 0.0, E3 = 0.0, E4 = 0.0, E5 = 0.0;
-            double DeltaTPrime = 0.0, DeltaT = 0.0;
+            var DeltaTPrime = (nFixed > 0) ?
+                (resetDates[nFixed + 1] - resetDates[nFixed]).TotalDays / 365.0 :
+                (resetDates[0] - evalDate).TotalDays / 365.0;
 
-            var FBar = forward;
-            var tvs = resetDates.Count(x => x < evalDate);
+            var DeltaT = (nFixed + 2 >= nResets) ?
+                DeltaTPrime :
+                (avgEndDate - resetDates[nFixed + 1]).TotalDays / 365.0 / nFloat;
+            
+            var Ak = knownAverage * nFixed  / nResets;
+            var E5 = 2 * Ak * forward * nFloat / nResets + (Ak * Ak);
 
-            if (tvs > 0)
-                DeltaTPrime = (resetDates[tvs + 1] - resetDates[tvs]).TotalDays / 365.0;
-            else
-                DeltaTPrime = ((resetDates[0] - evalDate).TotalDays) / 365.0;
-
-            if (tvs + 2 >= RT)
-                DeltaT = DeltaTPrime;
-            else
-                DeltaT = (avgEndDate - resetDates[tvs+1]).TotalDays / 365.0 / (RT - tvs);
-
-            var Ak = knownAverage * tvs  / RT;
-            E5 = 2 * Ak * FBar * (RT - tvs) / RT + (Ak * Ak);
-
-            if (tvs < RT)
+            var E4 = 1.0;
+            if (nFixed < nResets)
             {
-                E4 = (1 + System.Math.Exp(sigma * sigma * DeltaT)) * (System.Math.Exp((RT - tvs) * sigma * sigma * DeltaT) - 1);
-                E4 += 2 * (RT - tvs) * (1 - System.Math.Exp(sigma * sigma * DeltaT));
-                E4 /= (System.Math.Pow(System.Math.Exp(sigma * sigma * DeltaT) - 1, 2));
+                E4 = (1 + Exp(sigma * sigma * DeltaT)) * (Exp(nFloat * sigma * sigma * DeltaT) - 1);
+                E4 += 2 * (nResets - nFixed) * (1 - Exp(sigma * sigma * DeltaT));
+                E4 /= Pow(Exp(sigma * sigma * DeltaT) - 1, 2);
             }
-            else
-                E4 = 1;
 
+            var E3 = Pow(forward / nResets, 2) * Exp(sigma * sigma * DeltaTPrime);
+            var E2 = E3 * E4 + E5;
+            var E1 = forward * (nResets - nFixed) / nResets  + Ak;
 
-            E3 = System.Math.Pow(FBar / RT, 2) * System.Math.Exp(sigma * sigma * DeltaTPrime);
-            E2 = E3 * E4 + E5;
-            E1 = FBar * (RT - tvs) / RT  + Ak;
+            var EA = Ak + forward * nFloat / nResets;
 
-            var EA = Ak + FBar * (RT - tvs) / RT;
+            var b = Log(E2) - 2 * Log(E1);
+            var d1 = (Log(EA / K) + 0.5 * b) / Sqrt(b);
+            var d2 = d1 - Sqrt(b);
 
-            var b = System.Math.Log(E2) - 2 * System.Math.Log(E1);
-            var d1 = (System.Math.Log(EA / K) + 0.5 * b) / System.Math.Sqrt(b);
-            var d2 = d1 - System.Math.Sqrt(b);
-
-
-            var df = System.Math.Exp(-riskFree * (avgEndDate - evalDate).TotalDays / 365.0);
+            var df = Exp(-riskFree * (avgEndDate - evalDate).TotalDays / 365.0);
 
             //Main Option valuation
             if (callPut == OptionType.Call)
@@ -130,24 +121,24 @@ namespace Qwack.Options.Asians
 
             if (tvs < RT)
             {
-                E4 = (1 + System.Math.Exp(sigma * sigma * DeltaT)) * (System.Math.Exp((RT - tvs) * sigma * sigma * DeltaT) - 1);
-                E4 += 2 * (RT - tvs) * (1 - System.Math.Exp(sigma * sigma * DeltaT));
-                E4 /= (System.Math.Pow(System.Math.Exp(sigma * sigma * DeltaT) - 1, 2));
+                E4 = (1 + Exp(sigma * sigma * DeltaT)) * (Exp((RT - tvs) * sigma * sigma * DeltaT) - 1);
+                E4 += 2 * (RT - tvs) * (1 - Exp(sigma * sigma * DeltaT));
+                E4 /= (Pow(Exp(sigma * sigma * DeltaT) - 1, 2));
             }
             else
                 E4 = 1;
 
 
-            E3 = System.Math.Pow(FBar / RT, 2) * System.Math.Exp(sigma * sigma * DeltaTPrime);
+            E3 = Pow(FBar / RT, 2) * Exp(sigma * sigma * DeltaTPrime);
             E2 = E3 * E4 + E5;
             E1 = FBar * (RT - tvs) / RT + Ak;
 
             var EA = Ak + FBar * (RT - tvs) / RT;
 
-            var b = System.Math.Log(E2) - 2 * System.Math.Log(E1);
-            var d1 = (System.Math.Log(EA / K) + 0.5 * b) / System.Math.Sqrt(b);
+            var b = Log(E2) - 2 * Log(E1);
+            var d1 = (Log(EA / K) + 0.5 * b) / Sqrt(b);
 
-            var df = System.Math.Exp(-riskFree * (avgEndDate - evalDate).TotalDays / 365.0);
+            var df = Exp(-riskFree * (avgEndDate - evalDate).TotalDays / 365.0);
 
             return df * ((callPut == OptionType.Put) ? Math.Statistics.NormSDist(d1) - 1 : Math.Statistics.NormSDist(d1));
         }

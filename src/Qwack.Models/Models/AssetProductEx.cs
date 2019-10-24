@@ -70,7 +70,7 @@ namespace Qwack.Models.Models
 
             if (_useFuturesMethod)
             {
-                var fwds = asianOption.GetFwdVector(model);
+                (var fwds, var todayFixed) = asianOption.GetFwdVector(model);
                 var moneyness = adjustedStrike / FloatAverage;
                 var sigmas = asianOption.FixingDates.Select((f, ix) => surface.GetVolForAbsoluteStrike(fwds[ix] * moneyness, f, fwds[ix])).ToArray();
 
@@ -90,7 +90,7 @@ namespace Qwack.Models.Models
                     }
                 }
 
-                return TurnbullWakeman.PV(fwds, asianOption.FixingDates, model.BuildDate, asianOption.PaymentDate, sigmas, asianOption.Strike, riskFree, asianOption.CallPut) * asianOption.Notional;
+                return TurnbullWakeman.PV(fwds, asianOption.FixingDates, model.BuildDate, asianOption.PaymentDate, sigmas, asianOption.Strike, riskFree, asianOption.CallPut, todayFixed) * asianOption.Notional;
             }
             else
             {
@@ -253,7 +253,7 @@ namespace Qwack.Models.Models
             }
         }
 
-        public static double[] GetFwdVector(this AsianSwap swap, IAssetFxModel model)
+        public static (double[] fwds, bool todayIsFixed) GetFwdVector(this AsianSwap swap, IAssetFxModel model)
         {
             var fxDates = swap.FxFixingDates ?? swap.FixingDates;
             var priceCurve = model.GetPriceCurve(swap.AssetId);
@@ -285,7 +285,7 @@ namespace Qwack.Models.Models
 
 
             if (swap.PaymentCurrency == priceCurve.Currency)
-                return fwds;
+                return (fwds, fixingForToday);
             else
             {
                 var fixingForTodayFx = fxDates.First() <= model.BuildDate &&
@@ -314,11 +314,11 @@ namespace Qwack.Models.Models
                 if (swap.FxConversionType == FxConversionType.AverageThenConvert)
                 {
                     var fxAvg = fxRates.Average();
-                    return fwds.Select(f => f * fxAvg).ToArray();
+                    return (fwds.Select(f => f * fxAvg).ToArray(), fixingForToday);
                 }
                 else
                 {
-                    return fwds.Select((f, ix) => f * fxRates[ix]).ToArray();
+                    return (fwds.Select((f, ix) => f * fxRates[ix]).ToArray(), fixingForToday); 
                 }
             }
         }
@@ -563,7 +563,7 @@ namespace Qwack.Models.Models
             var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
-            var fwds = asianOption.GetFwdVector(model);
+            (var fwds, var todayFixed) = asianOption.GetFwdVector(model);
             var moneyness = adjustedStrike / FloatAverage;
             var sigmas = asianOption.FixingDates.Select((f, ix) => surface.GetVolForAbsoluteStrike(fwds[ix] * moneyness, f, fwds[ix])).ToArray();
 

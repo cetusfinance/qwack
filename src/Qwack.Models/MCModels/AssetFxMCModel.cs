@@ -85,6 +85,12 @@ namespace Qwack.Models.MCModels
                         UseNormalInverse = true
                     });
                     break;
+                case RandomGeneratorType.Constant:
+                    Engine.AddPathProcess(new Random.Constant.Constant()
+                    {
+                        UseNormalInverse = true,
+                    });
+                    break;
             }
             Engine.IncrementDepth();
 

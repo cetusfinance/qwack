@@ -18,6 +18,7 @@ using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 using Qwack.Models.MCModels;
 using Qwack.Excel.Instruments;
+using Qwack.Models;
 
 namespace Qwack.Excel.Curves
 {
@@ -298,6 +299,27 @@ namespace Qwack.Excel.Curves
 
                 var result = mc.EPE();
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns composite volatility from a model", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(GetCompoVol))]
+        public static object GetCompoVol(
+        [ExcelArgument(Description = "Model object name")] string ModelName,
+        [ExcelArgument(Description = "Asset Id")] string AssetId,
+        [ExcelArgument(Description = "Currency")] string Currency,
+        [ExcelArgument(Description = "Strike")] double Strike,
+        [ExcelArgument(Description = "Expiry")] DateTime Expiry)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(Currency.OptionalExcel("USD"), out var ccy))
+                    return $"Could not find currency {Currency} in cache";
+
+                var vol = ((AssetFxModel)model.Value).GetCompositeVolForStrikeAndDate(AssetId, Expiry, Strike, ccy);
+                return vol;
             });
         }
     }

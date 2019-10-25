@@ -154,6 +154,23 @@ namespace Qwack.Models
             return varianceWeightedVol;
         }
 
+        public double GetCompositeVolForStrikeAndDate(string assetId, DateTime expiry, double strike, Currency ccy)
+        {
+            var curve = GetPriceCurve(assetId);
+
+            var fxId = $"{curve.Currency.Ccy}/{ccy.Ccy}";
+            var fxPair = FundingModel.FxMatrix.GetFxPair(fxId);
+
+            var fxSpotDate = fxPair.SpotDate(expiry);
+            var fxFwd = FundingModel.GetFxRate(fxSpotDate, fxId);
+            var fxVol = FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, expiry, fxFwd);
+            var tExpC = BuildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+            var correl = CorrelationMatrix.GetCorrelation(fxId, assetId, tExpC);
+            var sigma = GetVolForStrikeAndDate(assetId, expiry, strike / fxFwd);
+            sigma = System.Math.Sqrt(sigma  * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
+            return sigma;
+        }
+
         public IAssetFxModel Clone()
         {
             var c = new AssetFxModel(BuildDate, FundingModel.DeepClone(null));

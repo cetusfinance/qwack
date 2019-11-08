@@ -95,12 +95,6 @@ namespace Qwack.Core.Instruments.Funding
             return 0.0;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model)
-        {
-            Pv(model, true);
-            return LoanDepoSchedule;
-        }
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
         public override bool Equals(object obj) => obj is FixedRateLoanDeposit deposit &&
@@ -146,5 +140,11 @@ namespace Qwack.Core.Instruments.Funding
         IAssetInstrument IAssetInstrument.Clone()=> (IAssetInstrument)Clone();
 
         public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
+        {
+            Pv(model.FundingModel, true);
+            return LoanDepoSchedule.Flows;
+        }
     }
 }

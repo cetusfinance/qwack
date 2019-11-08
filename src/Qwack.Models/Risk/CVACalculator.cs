@@ -4,18 +4,21 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
+using Qwack.Math;
+using Qwack.Math.Interpolation;
 
 namespace Qwack.Models.Risk
 {
     public class XVACalculator
     {
-        public static double CVA(DateTime originDate, DateTime[] EPEDates, double[] EPEExposures, HazzardCurve hazzardCurve, IIrCurve discountCurve)
+        public static double CVA(DateTime originDate, DateTime[] EPEDates, double[] EPEExposures, HazzardCurve hazzardCurve, IIrCurve discountCurve, double LGD)
         {
             if (EPEDates.Length != EPEExposures.Length)
                 throw new Exception("Number of EPE dates and EPE values must be equal");
             
             var lastDate = originDate;
             var cva = 0.0;
+
             for(var i=0;i<EPEDates.Length;i++)
             {
                 if (EPEDates[i] < originDate)
@@ -23,14 +26,15 @@ namespace Qwack.Models.Risk
 
                 var pDefault = hazzardCurve.GetDefaultProbability(lastDate, EPEDates[i]);
                 var df = discountCurve.GetDf(originDate, EPEDates[i]);
-                cva += EPEExposures[i] * pDefault * df;
+                cva += EPEExposures[i] * pDefault * df * LGD;
 
                 lastDate = EPEDates[i];
             }
+            
             return cva;
         }
 
-        public static double CVA(DateTime originDate, ICube EPE, HazzardCurve hazzardCurve, IIrCurve discountCurve)
+        public static double CVA(DateTime originDate, ICube EPE, HazzardCurve hazzardCurve, IIrCurve discountCurve, double LGD)
         {
             if (!EPE.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
                 throw new Exception("EPE cube input not valid");
@@ -44,7 +48,7 @@ namespace Qwack.Models.Risk
                 epeDates[i] = (DateTime)rows[i].MetaData[dateIx];
                 epeValues[i] = rows[i].Value;
             }
-            return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve);
+            return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve, LGD);
         }
 
         public static (double FBA, double FCA) FVA(DateTime originDate, DateTime[] ExEDates, double[] EPEExposures, double[] ENEExposures, HazzardCurve hazzardCurve, IIrCurve discountCurve, IIrCurve fundingCurve)

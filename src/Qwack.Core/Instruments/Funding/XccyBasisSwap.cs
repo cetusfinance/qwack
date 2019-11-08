@@ -117,8 +117,6 @@ namespace Qwack.Core.Instruments.Funding
             return PV(model, updateState, updateDfPay, updateDfRec, updatePayEst, updateRecEst);
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public double PV(IFundingModel model, bool updateState, bool updateDfPay, bool updateDfRec, bool updatePayEst, bool updateRecEst)
         {
             var discountCurvePay = model.Curves[DiscountCurvePay];
@@ -416,5 +414,7 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public IFundingInstrument SetParRate(double parRate) => new XccyBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, RateIndexPay, RateIndexRec, NotionalExchange, MtmSwapType, ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec);
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowSchedulePay.Flows.Concat(FlowScheduleRec.Flows).ToList();
     }
 }

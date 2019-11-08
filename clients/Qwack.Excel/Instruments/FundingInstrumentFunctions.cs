@@ -84,7 +84,7 @@ namespace Qwack.Excel.Instruments
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var solvePillarDate = SolvePillarDate.OptionalExcel(SettleDate);
+                var solvePillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate()));
 
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(DomesticCcy, out var domesticCal);
                 ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ForeignCcy, out var foreignCal);
@@ -342,7 +342,7 @@ namespace Qwack.Excel.Instruments
                     DeliveryDate = SettleDate,
                     CashDiscountCurve = DiscountCurve,
                     SolveCurve = SolveCurve,
-                    PillarDate = SolvePillarDate.OptionalExcel(SettleDate),
+                    PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate())),
                     ContangoRate = Contango,
                     TradeId = ObjectName,
                     Basis = DayCountBasis.ACT360,

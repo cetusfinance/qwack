@@ -57,12 +57,12 @@ namespace Qwack.Excel.Tests.Capital
             ContainerStores.GetObjectCache<HazzardCurve>().PutObject("hz", new SessionItem<HazzardCurve>() { Name = "hz", Value = hz });
             ContainerStores.GetObjectCache<IIrCurve>().PutObject("disco", new SessionItem<IIrCurve>() { Name = "disco", Value = disco});
 
-            Assert.Equal("Hazzard curve blash not found", CapitalFunctions.ComputeCVA("blash", DateTime.Today, "woo", null));
-            Assert.Equal("Discount curve woo not found", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "woo", null));
-            Assert.Equal("Expected Nx2 array for EPE", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", new object[1,1]));
-            Assert.Equal("EPE profile must be cube reference or Nx2 array", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", 7));
+            Assert.Equal("Hazzard curve blash not found", CapitalFunctions.ComputeCVA("blash", DateTime.Today, "woo", null, 0.0));
+            Assert.Equal("Discount curve woo not found", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "woo", null, 0.0));
+            Assert.Equal("Expected Nx2 array for EPE", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", new object[1,1], 0.0));
+            Assert.Equal("EPE profile must be cube reference or Nx2 array", CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", 7, 0.0));
 
-            Assert.Equal(0.0, CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", new object[1, 2] { { DateTime.Today,0.0 } }));
+            Assert.Equal(0.0, CapitalFunctions.ComputeCVA("hz", DateTime.Today, "disco", new object[1, 2] { { DateTime.Today,0.0 } }, 0.0));
         }
     }
 }

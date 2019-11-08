@@ -1056,9 +1056,24 @@ namespace Qwack.Excel.Instruments
                 }
 
                 var result = pfolio.PV(model.Value, ccy);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return ExcelHelper.PushToCache(result, ResultObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns expected cashflows of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioExpectedFlows), IsThreadSafe = true)]
+        public static object AssetPortfolioExpectedFlows(
+           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+           [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+
+                var result = pfolio.ExpectedCashFlows(model.Value);
+                return ExcelHelper.PushToCache(result, ResultObjectName);
             });
         }
 
@@ -1078,13 +1093,9 @@ namespace Qwack.Excel.Instruments
                 var modelEnd = ContainerStores.GetObjectCache<IAssetFxModel>()
                 .GetObjectOrThrow(ModelNameEnd, $"Could not find model with name {ModelNameEnd}");
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
-
                 
                 var result = ContainerStores.PnLAttributor.BasicAttribution(pfolio , modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider);
-
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return ExcelHelper.PushToCache(result, ResultObjectName);
             });
         }
 
@@ -1109,10 +1120,7 @@ namespace Qwack.Excel.Instruments
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
                 var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolio, modelStart.Value, modelEnd.Value, greeksStart.Value, ccy, ContainerStores.CurrencyProvider);
-
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return ExcelHelper.PushToCache(result, ResultObjectName);
             });
         }
 
@@ -1138,9 +1146,7 @@ namespace Qwack.Excel.Instruments
                 var ccy = ContainerStores.CurrencyProvider[ReportingCcy];
 
                 var result = ContainerStores.PnLAttributor.ExplainAttribution(pfolioStart, pfolioEnd, modelStart.Value, modelEnd.Value, ccy, ContainerStores.CurrencyProvider, cashTodayAlradyPaid);
-                var resultCache = ContainerStores.GetObjectCache<ICube>();
-                resultCache.PutObject(ResultObjectName, new SessionItem<ICube> { Name = ResultObjectName, Value = result });
-                return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+                return ExcelHelper.PushToCache(result, ResultObjectName);
             });
         }
 

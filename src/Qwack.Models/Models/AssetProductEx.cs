@@ -531,6 +531,87 @@ namespace Qwack.Models.Models
             return payPV + recPV;
         }
 
+        public static List<CashFlow> ExpectedCashFlows(this AsianSwap asianSwap, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianSwap.AssetId);
+
+            var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
+             asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
+             asianSwap.PaymentDate;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
+            var fv = asianSwap.Notional * (FixedAverage - asianSwap.Strike);
+
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = asianSwap.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = payDate
+                }
+            };
+        }
+
+        public static List<CashFlow> ExpectedCashFlows(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().ExpectedCashFlows(model);
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.SelectMany(x => x.ExpectedCashFlows(model)).ToList();
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianBasisSwap asianBasisSwap, IAssetFxModel model) => 
+            asianBasisSwap.PaySwaplets.SelectMany(x => x.ExpectedCashFlows(model)).Concat(
+                    asianBasisSwap.RecSwaplets.SelectMany(x => x.ExpectedCashFlows(model))).ToList();
+
+
+        public static List<CashFlow> ExpectedCashFlows(this EuropeanOption euOpt, IAssetFxModel model)
+        {
+            var fixing = euOpt.PaymentDate < model.BuildDate ?
+                model.GetFixingDictionary(euOpt.AssetId).GetFixing(euOpt.ExpiryDate) :
+                model.GetPriceCurve(euOpt.AssetId).GetPriceForFixingDate(euOpt.ExpiryDate);
+
+            if(euOpt.Currency!= model.GetPriceCurve(euOpt.AssetId).Currency)
+            {
+                var fxRate = euOpt.PaymentDate < model.BuildDate ?
+                    model.GetFixingDictionary(euOpt.FxFixingId).GetFixing(euOpt.ExpiryDate) :
+                    model.FundingModel.GetFxRate(euOpt.ExpiryDate,euOpt.FxPair(model));
+                fixing *= fxRate;
+            }
+
+            var fv = euOpt.Notional * (euOpt.CallPut == OptionType.Call ? Max(0, fixing - euOpt.Strike) : Max(0, euOpt.Strike - fixing));
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = euOpt.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = euOpt.PaymentDate
+                }
+            };
+        }
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianOption asianOption, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianOption.AssetId);
+
+            var payDate = asianOption.PaymentDate == DateTime.MinValue ?
+             asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
+             asianOption.PaymentDate;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            var fv = asianOption.Notional * (asianOption.CallPut == OptionType.Call ? Max(0, FixedAverage - asianOption.Strike) : Max(0, asianOption.Strike - FixedAverage));
+
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = asianOption.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = asianOption.PaymentDate
+                }
+            };
+        }
 
         public static (double Financing, double Option) Theta(this AsianOption asianOption, IAssetFxModel model, DateTime fwdDate, Currency repCcy)
         {
@@ -984,6 +1065,52 @@ namespace Qwack.Models.Models
             return (flow / fxRate, tradeId, tradeType, ccy);
         }
 
+        private static (List<CashFlow> flows, string tradeId, string tradeType) ComputeExpectedCashFlows(IInstrument ins, IAssetFxModel model)
+        {
+            var flows = new List<CashFlow>();
+            var tradeId = ins.TradeId;
+            var tradeType = TradeType(ins);
+
+            switch (ins)
+            {
+                case IFundingInstrument fi:
+                    flows = fi.ExpectedCashFlows(model);
+                    break;
+                case AsianOption asianOption:
+                    flows = asianOption.ExpectedCashFlows(model);
+                    break;
+                case AsianSwap swap:
+                    flows = swap.ExpectedCashFlows(model);
+                    break;
+                case AsianSwapStrip swapStrip:
+                    flows = swapStrip.ExpectedCashFlows(model);
+                    break;
+                case AsianBasisSwap basisSwap:
+                    flows = basisSwap.ExpectedCashFlows(model);
+                    break;
+                case EuropeanBarrierOption euBOpt:
+                    flows = euBOpt.ExpectedCashFlows(model);
+                    break;
+                case EuropeanOption euOpt:
+                    flows = euOpt.ExpectedCashFlows(model);
+                    break;
+                case Forward fwd:
+                    flows = fwd.ExpectedCashFlows(model);
+                    break;
+                case CashWrapper wrapper:
+                    (flows, tradeId, tradeType) = ComputeExpectedCashFlows(wrapper.UnderlyingInstrument, model);
+                    flows = flows.Concat(wrapper.CashBalances.SelectMany(cb => cb.ExpectedCashFlows(model))).ToList();
+                    break;
+                    
+                default:
+                    //do nothing
+                    break;
+            }
+
+            return (flows, tradeId, tradeType);
+        }
+
+
         public static string TradeType(this IInstrument ins)
         {
             string tradeType;
@@ -1024,6 +1151,9 @@ namespace Qwack.Models.Models
                     break;
                 case FixedRateLoanDeposit loanDepo:
                     tradeType = "LoanDepo";
+                    break;
+                case PhysicalBalance phys:
+                    tradeType = "Physical";
                     break;
                 case CashBalance cash:
                     tradeType = "Cash";
@@ -1079,6 +1209,39 @@ namespace Qwack.Models.Models
 
             return cube;
         }
+
+        public static ICube ExpectedCashFlows(this Portfolio portfolio, IAssetFxModel model)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "Currency", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "PayDate", typeof(DateTime) },
+            };
+            cube.Initialize(dataTypes);
+
+            foreach (var ins in portfolio.Instruments)
+            {
+                var (flows, tradeId, tradeType) = ComputeExpectedCashFlows(ins, model);
+
+                foreach (var flow in flows.Where(f => f.SettleDate >= model.BuildDate))
+                {
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", tradeId },
+                        { "Currency", flow.Currency.Ccy },
+                        { "TradeType", tradeType },
+                        { "PayDate", flow.SettleDate }
+                    };
+                    cube.AddRow(row, flow.Fv);
+                }
+            }
+
+            return cube;
+        }
+
 
         public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model)
         {

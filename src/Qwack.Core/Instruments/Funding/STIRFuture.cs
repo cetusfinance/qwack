@@ -32,11 +32,9 @@ namespace Qwack.Core.Instruments.Funding
         public double Pv(IFundingModel Model, bool updateState)
         {
             var fairPrice = CalculateParRate(Model);
-            var PV = (Price - fairPrice) / 100.0 * Position * ContractSize * DCF ;
+            var PV = (Price - fairPrice) / 100.0 * Position * ContractSize * DCF;
             return PV;
         }
-
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
@@ -100,5 +98,7 @@ namespace Qwack.Core.Instruments.Funding
             newIns.Price = parRate;
             return newIns;
         }
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
     }
 }

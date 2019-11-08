@@ -78,8 +78,6 @@ namespace Qwack.Core.Tests.Instruments
             var s2 = b.Dependencies(fModel.FxMatrix);
             Assert.True(s2.Count == 2 && s2.Contains("USD.BLAH") && s2.Contains("XAU.BLAH"));
 
-            Assert.Throws<NotImplementedException>(() => b.ExpectedCashFlows(null));
-
             Assert.Equal(0.0402428426839156, b.CalculateParRate(fModel),8);
 
             var b2 = (ContangoSwap)b.SetParRate(0.05);

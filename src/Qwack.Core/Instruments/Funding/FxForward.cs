@@ -68,8 +68,6 @@ namespace Qwack.Core.Instruments.Funding
             return FV;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             var foreignCurve = model.FxMatrix.DiscountCurveMap[ForeignCCY];
@@ -162,5 +160,23 @@ namespace Qwack.Core.Instruments.Funding
         public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
         private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
 
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+            {
+                new CashFlow()
+                {
+                    Currency = DomesticCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity,
+                    Fv = DomesticQuantity
+                },
+                new CashFlow()
+                {
+                    Currency = ForeignCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity * Strike,
+                    Fv = DomesticQuantity * Strike
+                }
+        };
     }
 }

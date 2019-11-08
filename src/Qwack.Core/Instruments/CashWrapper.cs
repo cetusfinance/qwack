@@ -70,7 +70,7 @@ namespace Qwack.Core.Instruments
                 return wrapper.UnderlyingInstrument.Equals(UnderlyingInstrument);
             }
                 
-        }
+        }       
 
         public string FxPair(IAssetFxModel model) => UnderlyingInstrument.FxPair(model);
         public FxConversionType FxType(IAssetFxModel model) => UnderlyingInstrument.FxType(model);

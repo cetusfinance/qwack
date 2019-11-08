@@ -632,6 +632,93 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
 
+        public static ICube AssetParallelDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType",  typeof(string) },
+                { "AssetId", typeof(string) },
+                { "Metric", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var assetIds = pvModel.Portfolio.AssetIds();
+
+            foreach (var curveName in assetIds)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    ia.AssetIds.Contains(curveName))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                IPriceCurve bumpedCurve;
+
+                switch (curveObj)
+                {
+                    case ConstantPriceCurve con:
+                        bumpedCurve = new ConstantPriceCurve(con.Price * 1.01, con.BuildDate, currencyProvider);
+                        break;
+                    case ContangoPriceCurve cpc:
+                        bumpedCurve = new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels);
+                        break;
+                    case PriceCurve pc:
+                        bumpedCurve = new PriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels);
+                        break;
+                    default:
+                        throw new Exception("Unable to handle curve type for flat shift");
+                }
+
+                var newVanillaModel = model.Clone();
+                newVanillaModel.AddPriceCurve(curveName, bumpedCurve);
+
+                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+
+                var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / 0.01;
+
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "Metric", "ParallelDelta" },
+                            };
+                        cube.AddRow(row, delta);
+                    }
+                }
+            }
+
+            return cube.Sort(new List<string> { "AssetId", "TradeId" });
+        }
+
         public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta=false)
         {
             var bumpSize = 0.0001;

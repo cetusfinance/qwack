@@ -248,6 +248,13 @@ namespace Qwack.Models.MCModels
 
             var pairsAdded = new List<string>();
             var fxPairs = portfolio.FxPairs(model).Concat(fxAssetsToAdd);
+            var payoutCcys = portfolio.Instruments.Select(i => i.Currency);
+            if(payoutCcys.Any(p=>p!=settings.ReportingCurrency))
+            {
+                var ccysToAdd = payoutCcys.Where(p => p != settings.ReportingCurrency).Distinct();
+                var pairsToAdd = ccysToAdd.Select(c => $"{c.Ccy}/{settings.ReportingCurrency}");
+                fxPairs = fxPairs.Concat(pairsToAdd).Distinct();
+            }
             foreach (var fxPair in fxPairs)
             {
                 var fxPairName = fxPair;
@@ -401,7 +408,7 @@ namespace Qwack.Models.MCModels
 
             //payoffs
             Engine.IncrementDepth();
-            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider));
+            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider, settings.ReportingCurrency));
             if (!settings.AvoidRegressionForBackPricing && _payoffs.Any(x => x.Value.Regressors != null))
             {
                 var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
@@ -428,20 +435,20 @@ namespace Qwack.Models.MCModels
                 Engine.AddPathProcess(product.Value);
             }
 
-            var metricsNeedRegression = new[] { BaseMetric.PFE, BaseMetric.KVA, BaseMetric.CVA, BaseMetric.FVA };
+            var metricsNeedRegression = new[] { BaseMetric.PFE, BaseMetric.KVA, BaseMetric.CVA, BaseMetric.FVA, BaseMetric.EPE };
             //Need to calculate PFE
-            if (settings.ExposureDates != null && settings.ReportingCurrency != null && metricsNeedRegression.Contains(settings.Metric))//setup for PFE, etc
+            if (settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && metricsNeedRegression.Contains(settings.CreditSettings.Metric))//setup for PFE, etc
             {
                 Engine.IncrementDepth();
 
-                switch (settings.PfeRegressorType)
+                switch (settings.CreditSettings.PfeRegressorType)
                 {
                     case PFERegressorType.MultiLinear:
-                        _regressor = new LinearPortfolioValueRegressor(settings.ExposureDates,
+                        _regressor = new LinearPortfolioValueRegressor(settings.CreditSettings.ExposureDates,
                             _payoffs.Values.ToArray(), settings);
                         break;
                     case PFERegressorType.MonoLinear:
-                        _regressor = new MonoIndexRegressor(settings.ExposureDates,
+                        _regressor = new MonoIndexRegressor(settings.CreditSettings.ExposureDates,
                             _payoffs.Values.ToArray(), settings, true);
                         break;
                 }
@@ -449,10 +456,10 @@ namespace Qwack.Models.MCModels
             }
 
             //Need to calculate expected capital
-            if (settings.ExposureDates != null && settings.ReportingCurrency != null && settings.Metric == BaseMetric.ExpectedCapital)
+            if (settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && settings.CreditSettings.Metric == BaseMetric.ExpectedCapital)
             {
                 Engine.IncrementDepth();
-                _capitalCalc = new ExpectedCapitalCalculator(Portfolio, settings.CounterpartyRiskWeighting, settings.AssetIdToHedgeGroupMap, settings.ReportingCurrency, VanillaModel, settings.ExposureDates);
+                _capitalCalc = new ExpectedCapitalCalculator(Portfolio, settings.CreditSettings.CounterpartyRiskWeighting, settings.CreditSettings.AssetIdToHedgeGroupMap, settings.ReportingCurrency, VanillaModel, settings.CreditSettings.ExposureDates);
                 Engine.AddPathProcess(_capitalCalc);
             }
 
@@ -462,9 +469,9 @@ namespace Qwack.Models.MCModels
         public ICube EPE() => PackResults(() => _regressor.EPE(Model));
         public ICube ENE() => PackResults(() => _regressor.ENE(Model));
         public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital);
-        public double CVA() => XVACalculator.CVA(Model.BuildDate, EPE(), Settings.CreditCurve, Settings.FundingCurve);
-        public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(),ENE(), Settings.CreditCurve, Settings.BaseDiscountCurve, Settings.FundingCurve);
-        public double KVA() => XVACalculator.KVA(Model.BuildDate, ExpectedCapital(), Settings.FundingCurve);
+        public double CVA() => XVACalculator.CVA(Model.BuildDate, EPE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.FundingCurve, Settings.CreditSettings.LGD);
+        public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(),ENE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.BaseDiscountCurve, Settings.CreditSettings.FundingCurve);
+        public double KVA() => XVACalculator.KVA(Model.BuildDate, ExpectedCapital(), Settings.CreditSettings.FundingCurve);
 
         private ICube PackResults(Func<double[]> method)
         {
@@ -480,7 +487,7 @@ namespace Qwack.Models.MCModels
 
             for (var i = 0; i < e.Length; i++)
             {
-                cube.AddRow(new object[] { Settings.ExposureDates[i] }, e[i]);
+                cube.AddRow(new object[] { Settings.CreditSettings.ExposureDates[i] }, e[i]);
             }
             return cube;
         }
@@ -517,6 +524,33 @@ namespace Qwack.Models.MCModels
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
+            switch (Settings.CreditSettings.Metric)
+            {
+                case BaseMetric.CVA:
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", null },
+                        { "Currency", ccy },
+                        { "TradeType", null },
+                        { "Portfolio", null },
+                    };
+                    cube.AddRow(row, CVA());
+                    return cube;
+                case BaseMetric.FVA:
+                    var rowFVA = new Dictionary<string, object>
+                    {
+                        { "TradeId", null },
+                        { "Currency", ccy },
+                        { "TradeType", null },
+                        { "Portfolio", null },
+                    };
+                    var (FBA, FCA) = FVA();
+                    cube.AddRow(rowFVA, FBA + FCA);
+                    return cube;
+                default:
+                    break;
+            }
+
             foreach (var kv in _payoffs)
             {
                 var insQuery = Portfolio.Instruments.Where(x => x.TradeId == kv.Key);

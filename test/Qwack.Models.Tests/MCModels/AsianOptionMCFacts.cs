@@ -51,7 +51,10 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfTimesteps = 1,
                 ReportingCurrency = usd,
                 Parallelize = false,
-                ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
+                CreditSettings=  new CreditSettings
+                {
+                    ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) }
+                },
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);
             return sut;

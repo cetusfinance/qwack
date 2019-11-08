@@ -53,8 +53,8 @@ namespace Qwack.Core.Tests.Instruments
             fm2 = fModel.DeepClone(maturity.AddDays(1));
             Assert.Equal(0.0, depo.FlowsT0(fm2));
 
-            var flows = depo.ExpectedCashFlows(fModel);
-            Assert.Equal(3, flows.Flows.Count);
+            var flows = depo.ExpectedCashFlows(new AssetFxModel(bd,fModel));
+            Assert.Equal(3, flows.Count);
 
             var loan = new FixedRateLoanDeposit(bd, maturity, iRate, usd, DayCountBasis.ACT360, -notional, "USD.BLAH");
             pv = loan.Pv(fModel, false);

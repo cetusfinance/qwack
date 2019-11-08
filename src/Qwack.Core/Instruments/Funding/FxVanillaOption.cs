@@ -117,5 +117,29 @@ namespace Qwack.Core.Instruments.Funding
             SettlementCalendar = _calendarProvider.Collection[PairStr.Replace('/', '+')],
             SpotLag = 2.Bd()
         };
+
+        private bool InTheMoney(IAssetFxModel model) =>
+            CallPut == OptionType.Call ?
+                (model.FundingModel.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY) > Strike) :
+                (model.FundingModel.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY) < Strike);
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => !InTheMoney(model) ? new List<CashFlow>() : new List<CashFlow>
+            {
+                new CashFlow()
+                {
+                    Currency = DomesticCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity,
+                    Fv = DomesticQuantity
+                },
+                new CashFlow()
+                {
+                    Currency = ForeignCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity * Strike,
+                    Fv = DomesticQuantity * Strike
+                }
+            };
+            
     }
 }

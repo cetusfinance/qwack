@@ -38,7 +38,6 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(-t*notional*Exp(-flatRate*t), s["USD.BLAH"][maturity]);
 
             Assert.Equal(maturity, b.LastSensitivityDate);
-            Assert.Throws<NotImplementedException>(() => b.ExpectedCashFlows(null));
             Assert.Empty(b.Dependencies(null));
             Assert.Equal(Exp(-flatRate * t), b.CalculateParRate(fModel));
             var b2 =(ZeroBond)b.SetParRate(0.99);

@@ -42,7 +42,6 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Empty(b.Dependencies(null));
             Assert.Empty(b.AssetIds);
             Assert.Empty(b.PastFixingDates(bd));
-            Assert.Null(b.ExpectedCashFlows(null).Flows); 
             Assert.Equal(0.0, b.CalculateParRate(null));
             Assert.Equal(0.0, b.FlowsT0(null));
             Assert.Equal(string.Empty, b.FxPair(null));

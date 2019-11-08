@@ -62,7 +62,6 @@ namespace Qwack.Core.Tests.Instruments
 
             var d = swp.Dependencies(null);
             Assert.Single(d);
-            Assert.Throws<NotImplementedException>(() => swp.ExpectedCashFlows(fModel));
 
             Assert.Equal(0.0496254169169585, swp.CalculateParRate(fModel),10);
             Assert.Equal(0.09, (swp.SetParRate(0.09) as IrSwap).ParRate);

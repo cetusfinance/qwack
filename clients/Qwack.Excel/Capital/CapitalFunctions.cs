@@ -42,7 +42,8 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
             [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
-            [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile)
+            [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile,
+            [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -61,12 +62,12 @@ namespace Qwack.Excel.Capital
                         epeDates[i] = (DateTime)arr[i, 0];
                         epeValues[i] = (double)arr[i, 1];
                     }
-                    return XVACalculator.CVA(OriginDate, epeDates, epeValues, hz.Value, disc.Value);
+                    return XVACalculator.CVA(OriginDate, epeDates, epeValues, hz.Value, disc.Value, LGD);
                 }
                 else if (EPEProfile is string epeCubeName)
                 {
                     var cube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(epeCubeName, $"Cube {epeCubeName} not found");
-                    return XVACalculator.CVA(OriginDate, cube.Value, hz.Value, disc.Value);
+                    return XVACalculator.CVA(OriginDate, cube.Value, hz.Value, disc.Value, LGD);
                 }
 
                 throw new Exception("EPE profile must be cube reference or Nx2 array");

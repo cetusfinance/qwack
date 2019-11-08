@@ -8,6 +8,7 @@ namespace Qwack.Core.Basic
     {
         None,
         ConvertThenAverage,
-        AverageThenConvert
+        AverageThenConvert,
+        SettleOtherCurrency
     }
 }

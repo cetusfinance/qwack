@@ -73,7 +73,6 @@ namespace Qwack.Core.Tests.Instruments
 
             Assert.Equal(accrualEnd, s.LastSensitivityDate);
             Assert.Empty(s.Dependencies(null));
-            Assert.Throws<NotImplementedException>(() => s.ExpectedCashFlows(null));
 
             var s2 = (OISFuture)s.SetParRate(97);
             Assert.Equal(97, s2.Price);

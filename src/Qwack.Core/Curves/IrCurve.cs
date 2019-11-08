@@ -204,7 +204,7 @@ namespace Qwack.Core.Curves
 
         public IrCurve RebaseDate(DateTime newAnchorDate)
         {
-            var pillarsDropped = _pillars.Count(x => x < newAnchorDate);
+            var pillarsDropped = _pillars.Count(x => x <= newAnchorDate);
             var newLength =  _pillars.Length - pillarsDropped;
             var newPillars = new DateTime[newLength];
 

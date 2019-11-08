@@ -99,8 +99,6 @@ namespace Qwack.Core.Instruments.Funding
 
         public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate(model.Curves[ForecastCurve], Basis);
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public double Pv(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
         {
             var totalPV = 0.0;
@@ -224,5 +222,8 @@ namespace Qwack.Core.Instruments.Funding
                 SolveCurve = SolveCurve,
                 Currency = Currency,
             };
+
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFra.Flows;
     }
 }

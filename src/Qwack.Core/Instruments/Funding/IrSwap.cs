@@ -91,8 +91,6 @@ namespace Qwack.Core.Instruments.Funding
             return fixedPv + floatPv;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         //assumes zero cc rates for now
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
@@ -193,5 +191,7 @@ namespace Qwack.Core.Instruments.Funding
         public double MaturityFactor(DateTime today) => System.Math.Sqrt(System.Math.Min(tEnd(today), 1.0));
         public string HedgingSet { get; set; }
         public int MaturityBucket(DateTime today) => tEnd(today) <= 1.0 ? 1 : tEnd(today) <= 5.0 ? 2 : 3;
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFixed.Flows.Concat(FlowScheduleFloat.Flows).ToList();
     }
 }

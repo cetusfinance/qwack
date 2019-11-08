@@ -159,9 +159,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 Strike = 0.1,
                 FxConversionType = FxConversionType.None
             };
-            var pathProduct = new AssetPathPayoff(product, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            var pathProductAsset = new AssetPathPayoff(productAsset, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            var pathProductFx = new AssetPathPayoff(productFx, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            var pathProduct = new AssetPathPayoff(product, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
+            var pathProductAsset = new AssetPathPayoff(productAsset, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
+            var pathProductFx = new AssetPathPayoff(productFx, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
             engine.AddPathProcess(pathProduct);
             engine.AddPathProcess(pathProductAsset);
             engine.AddPathProcess(pathProductFx);

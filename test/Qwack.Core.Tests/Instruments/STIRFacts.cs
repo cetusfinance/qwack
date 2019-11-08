@@ -70,7 +70,6 @@ namespace Qwack.Core.Tests.Instruments
             Assert.True(ss.Count == 1 && ss.Keys.Single() == "USD.BLAH");
             Assert.True(ss["USD.BLAH"].Count == 2 && ss["USD.BLAH"].Keys.Contains(accrualStart) && ss["USD.BLAH"].Keys.Contains(accrualEnd));
 
-            Assert.Throws<NotImplementedException>(() => s.ExpectedCashFlows(null));
             Assert.Empty(s.Dependencies(null));
         }
 

@@ -154,9 +154,6 @@ namespace Qwack.Core.Instruments.Funding
             }
         }
 
-
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             //discounting first
@@ -274,5 +271,7 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public IFundingInstrument SetParRate(double parRate) => new IrBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, PayIndex, RecIndex, ForecastCurvePay, ForecastCurveRec, DiscountCurve, (decimal)Notional);
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowSchedulePay.Flows.Concat(FlowScheduleRec.Flows).ToList();
     }
 }

@@ -41,6 +41,8 @@ namespace Qwack.Core.Instruments
             }
         }
 
+        public Currency Currency => throw new NotImplementedException();
+
         public Portfolio Clone() => new Portfolio
         {
             Instruments = new List<IInstrument>(Instruments),
@@ -237,6 +239,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 8] = l.Notional;
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = l.Counterparty ?? string.Empty;
+                        break;
+                    case PhysicalBalance pb:
+                        o[i + 1, 1] = "Physical";
+                        o[i + 1, 2] = pb.Currency.Ccy;
+                        o[i + 1, 3] = pb.Currency.Ccy;
+                        o[i + 1, 4] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 5] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 6] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 7] = string.Empty;
+                        o[i + 1, 8] = pb.Notional;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = pb.Counterparty ?? string.Empty;
                         break;
                     case CashBalance c:
                         o[i + 1, 1] = "Cash";

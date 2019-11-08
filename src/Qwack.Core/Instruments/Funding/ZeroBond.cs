@@ -36,8 +36,6 @@ namespace Qwack.Core.Instruments.Funding
 
         public double Pv(IFundingModel model, bool updateState) => Notional * (model.Curves[DiscountCurve].GetDf(model.BuildDate, MaturityDate) - Price);
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             //discounting only
@@ -80,5 +78,15 @@ namespace Qwack.Core.Instruments.Funding
             newIns.Price = parRate;
             return newIns;
         }
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+            { new CashFlow()
+                {
+                    Currency = Currency,
+                    SettleDate = MaturityDate,
+                    Notional = Notional,
+                    Fv = Notional
+                }
+        };
     }
 }

@@ -11,6 +11,7 @@ namespace Qwack.Core.Basic
         FVA,
         KVA,
         ExpectedCapital,
-        PFE
+        PFE,
+        EPE
     }
 }

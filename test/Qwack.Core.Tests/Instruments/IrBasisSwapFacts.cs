@@ -73,7 +73,6 @@ namespace Qwack.Core.Tests.Instruments
             swp.SolveCurve = "USD.BLAH.6M";
             var d = swp.Dependencies(null);
             Assert.Single(d);
-            Assert.Throws<NotImplementedException>(() => swp.ExpectedCashFlows(fModel));
 
             Assert.Equal(-0.109324115016209, swp.CalculateParRate(fModel), 10);
 

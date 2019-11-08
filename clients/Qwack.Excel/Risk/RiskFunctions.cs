@@ -101,6 +101,20 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns asset delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioParallelDelta), IsThreadSafe = true)]
+        public static object PortfolioParallelDelta(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX or MC model name")] string ModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
+                var result = model.AssetParallelDelta(ContainerStores.CurrencyProvider);
+                return PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns fx delta of a portfolio given an AssetFx model", Category = CategoryNames.Risk, Name = CategoryNames.Risk + "_" + nameof(PortfolioFxDelta), IsThreadSafe = true)]
         public static object PortfolioFxDelta(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,

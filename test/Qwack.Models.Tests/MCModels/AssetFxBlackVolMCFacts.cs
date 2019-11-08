@@ -44,6 +44,11 @@ namespace Qwack.Models.Tests.MCModels
 
 
             var pfolio = new Portfolio { Instruments = new List<IInstrument> { product } };
+            var creditSettings = new CreditSettings
+            {
+                ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
+                Metric = baseMetric
+            };
             var settings = new McSettings
             {
                 Generator = RandomGeneratorType.MersenneTwister,
@@ -51,11 +56,10 @@ namespace Qwack.Models.Tests.MCModels
                 NumberOfPaths = 2048,
                 NumberOfTimesteps = 1,
                 ReportingCurrency = usd,
-                ExposureDates = new DateTime[] { buildDate.AddDays(5), buildDate.AddDays(20), buildDate.AddDays(22) },
                 ExpensiveFuturesSimulation = expensiveFutures,
                 Parallelize = false,
-                FuturesMappingTable = new Dictionary<string, string> { { "CL","CL"} },
-                Metric = baseMetric
+                FuturesMappingTable = new Dictionary<string, string> { { "CL", "CL" } },
+                CreditSettings = creditSettings
             };
             var sut = new AssetFxMCModel(buildDate, pfolio, aModel, settings, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CalendarProvider);
             return sut;

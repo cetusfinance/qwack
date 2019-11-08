@@ -38,8 +38,6 @@ namespace Qwack.Core.Instruments.Funding
 
         public double FlowsT0(IFundingModel model) => 0.0;
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => new CashFlowSchedule();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
         public override bool Equals(object obj) => obj is CashBalance balance &&
@@ -71,5 +69,15 @@ namespace Qwack.Core.Instruments.Funding
         public string FxPair(IAssetFxModel model) => string.Empty;
         IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+            { new CashFlow()
+                {
+                    Currency = Currency,
+                    SettleDate = PayDate==DateTime.MinValue ? model.BuildDate:PayDate,
+                    Notional = Notional,
+                    Fv = Notional
+                }
+        };
     }
 }

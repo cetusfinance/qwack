@@ -74,39 +74,47 @@ namespace Qwack.Core.Instruments.Funding
 
         public double CalculateParRate(IFundingModel model)
         {
-            var dFs = LoanDepoSchedule
-                .Flows
-                .Select(x => x.SettleDate)
-                .Select(y => model.Curves[DiscountCurve]
-                .GetDf(model.BuildDate, y))
-                .ToArray();
-            var floatRates = LoanDepoSchedule
-                .Flows
-                .Select(x => x.GetFloatRate(model.Curves[ForecastCurve], FloatRateIndex.DayCountBasis))
-                .ToArray();
-            var dcfs = LoanDepoSchedule
-                .Flows
-                .Select(x => x.NotionalByYearFraction)
-                .ToArray();
-            var nominals = LoanDepoSchedule
-                .Flows
-                .Select(x => x.Notional)
-                .ToArray();
+            //var dFs = LoanDepoSchedule
+            //    .Flows
+            //    .Select(x => x.SettleDate)
+            //    .Select(y => model.Curves[DiscountCurve]
+            //    .GetDf(model.BuildDate, y))
+            //    .ToArray();
+            //var floatRates = LoanDepoSchedule
+            //    .Flows
+            //    .Select(x => x.GetFloatRate(model.Curves[ForecastCurve], FloatRateIndex.DayCountBasis))
+            //    .ToArray();
+            //var dcfs = LoanDepoSchedule
+            //    .Flows
+            //    .Select(x => x.NotionalByYearFraction)
+            //    .ToArray();
+            //var nominals = LoanDepoSchedule
+            //    .Flows
+            //    .Select(x => x.Notional)
+            //    .ToArray();
 
-            var sumTop = 0.0;
-            var sumBottom = 0.0;
-            for(var i=0;i<LoanDepoSchedule.Flows.Count;i++)
+            //var sumTop = 0.0;
+            //var sumBottom = 0.0;
+            //for(var i=0;i<LoanDepoSchedule.Flows.Count;i++)
+            //{
+            //    var rowA = System.Math.Sign(nominals[i]) * dFs[i];
+            //    var rowB = floatRates[i] * dcfs[i];
+            //    if (LoanDepoSchedule.Flows[i].FlowType == FlowType.FloatRate)
+            //        rowA *= rowB;
+            //    sumTop += rowA;
+            //    sumBottom += rowB;
+            //}
+
+            //var parRate = sumTop / sumBottom;
+            //return parRate;
+
+            var targetFunc = new Func<double, double>(spd=>
             {
-                var rowA = System.Math.Sign(nominals[i]) * dFs[i];
-                var rowB = floatRates[i] * dcfs[i];
-                if (LoanDepoSchedule.Flows[i].FlowType == FlowType.FloatRate)
-                    rowA *= rowB;
-                sumTop += rowA;
-                sumBottom += rowB;
-            }
+                return SetParRate(spd).Pv(model, true);
+            });
 
-            var parRate = sumTop / sumBottom;
-            return parRate;
+            var par = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, -0.1, 0.5, 0.0001);
+            return par;
         }
 
         public IFundingInstrument Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve);

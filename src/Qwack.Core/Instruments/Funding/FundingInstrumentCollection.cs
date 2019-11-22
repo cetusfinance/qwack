@@ -48,6 +48,9 @@ namespace Qwack.Core.Instruments.Funding
                 var dummyRates = pillars.Select(x => 0.05).ToArray();
                 var ccy = _currencyProvider.GetCurrency(curveName.Split('.')[0]);
                 var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Split('.').Last();
+                if (o.Values.Any(v => v.CollateralSpec == colSpec))
+                    colSpec = colSpec + "_" + curveName;
+
                 var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType, ccy, colSpec);
                 o.Add(curveName, irCurve);
             }

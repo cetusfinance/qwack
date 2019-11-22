@@ -23,6 +23,8 @@ namespace Qwack.Core.Instruments.Funding
             BasisFloat = rateIndex.DayCountBasis;
             BasisFixed = rateIndex.DayCountBasisFixed;
             SwapType = swapType;
+            RateIndex = rateIndex;
+            Currency = rateIndex.Currency;
 
             FixedLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFixed)
@@ -177,10 +179,18 @@ namespace Qwack.Core.Instruments.Funding
             StartDate = StartDate,
             SwapTenor = SwapTenor,
             SwapType = SwapType,
-            TradeId = TradeId
+            TradeId = TradeId,
+            RateIndex = RateIndex,
+            PortfolioName = PortfolioName,
+            HedgingSet = HedgingSet
         };
 
-        public IFundingInstrument SetParRate(double parRate) => new IrSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurve, DiscountCurve);
+        public IFundingInstrument SetParRate(double parRate) => new IrSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurve, DiscountCurve)
+        {
+            TradeId = TradeId,
+            SolveCurve = SolveCurve,
+            PillarDate = PillarDate
+        };
 
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * SupervisoryDuration(model.BuildDate);
@@ -192,6 +202,10 @@ namespace Qwack.Core.Instruments.Funding
         public string HedgingSet { get; set; }
         public int MaturityBucket(DateTime today) => tEnd(today) <= 1.0 ? 1 : tEnd(today) <= 5.0 ? 2 : 3;
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFixed.Flows.Concat(FlowScheduleFloat.Flows).ToList();
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
+        {
+            Pv(model.FundingModel, true);
+            return FlowScheduleFixed.Flows.Concat(FlowScheduleFloat.Flows).ToList();
+        }
     }
 }

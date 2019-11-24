@@ -24,7 +24,7 @@ namespace Qwack.Providers.Json
             => serviceCollection.AddSingleton<ICurrencyProvider>(sp =>
             {
                 var calendars = sp.GetRequiredService<ICalendarProvider>();
-                return new CurrenciesFromJson(calendars, fileName, sp.GetRequiredService<ILoggerFactory>());
+                return new CurrenciesFromJson(calendars, fileName, sp.GetRequiredService<ILoggerFactory>().CreateLogger<CurrenciesFromJson>());
             });
     }
 }

@@ -53,9 +53,7 @@ namespace Qwack.Core.Instruments.Asset
         public Currency Currency => PaymentCurrency;
 
         public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
-
-
-
+               
         public IAssetInstrument Clone() => new AsianSwap
         {
             TradeId = TradeId,

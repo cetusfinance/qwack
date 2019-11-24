@@ -14,14 +14,14 @@ namespace Qwack.Providers.Json
     {
         [SkipSerialization]
         private readonly JsonSerializerSettings _jsonSettings;
-        private ICalendarProvider _calendarProvider;
-        private List<Currency> _allCurrencies;
-        private Dictionary<string, Currency> _currenciesByName;
-        private ILogger _logger;
+        private readonly ICalendarProvider _calendarProvider;
+        private readonly List<Currency> _allCurrencies;
+        private readonly Dictionary<string, Currency> _currenciesByName;
+        private readonly ILogger _logger;
 
-        public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
+        public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILogger<CurrenciesFromJson> logger)
         {
-            _logger = loggerFactory.CreateLogger<CurrenciesFromJson>();
+            _logger = logger;
             _calendarProvider = calendarProvider;
             _jsonSettings = new JsonSerializerSettings()
             {

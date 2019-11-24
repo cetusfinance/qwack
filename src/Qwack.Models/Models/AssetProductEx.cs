@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
-using Qwack.Core.Descriptors;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
@@ -24,7 +23,7 @@ namespace Qwack.Models.Models
     {
         private static readonly bool _useFuturesMethod = true;
 
-        public static double PV(this AsianOption asianOption, IAssetFxModel model)
+        public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows)
         {
             var curve = model.GetPriceCurve(asianOption.AssetId);
 
@@ -32,7 +31,7 @@ namespace Qwack.Models.Models
              asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
              asianOption.PaymentDate;
 
-            if (payDate < model.BuildDate)
+            if (payDate < model.BuildDate || (ignoreTodayFlows && payDate == model.BuildDate))
                 return 0.0;
 
             var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
@@ -71,7 +70,7 @@ namespace Qwack.Models.Models
 
             if (_useFuturesMethod)
             {
-                var fwds = asianOption.GetFwdVector(model);
+                (var fwds, var todayFixed) = asianOption.GetFwdVector(model);
                 var moneyness = adjustedStrike / FloatAverage;
                 var sigmas = asianOption.FixingDates.Select((f, ix) => surface.GetVolForAbsoluteStrike(fwds[ix] * moneyness, f, fwds[ix])).ToArray();
 
@@ -79,17 +78,19 @@ namespace Qwack.Models.Models
                 {
                     var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                     var fxPair = model.FundingModel.FxMatrix.GetFxPair(fxId);
-                    var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
+
                     for (var i = 0; i < sigmas.Length; i++)
                     {
                         var fxSpotDate = fxPair.SpotDate(asianOption.FixingDates[i]);
                         var fxFwd = model.FundingModel.GetFxRate(fxSpotDate, fxId);
                         var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, asianOption.FixingDates[i], fxFwd);
+                        var tExpC = model.BuildDate.CalculateYearFraction(asianOption.FixingDates[i], DayCountBasis.Act365F);
+                        var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId, tExpC);
                         sigmas[i] = Sqrt(sigmas[i] * sigmas[i] + fxVol * fxVol + 2 * correl * fxVol * sigmas[i]);
                     }
                 }
 
-                return TurnbullWakeman.PV(fwds, asianOption.FixingDates, model.BuildDate, asianOption.PaymentDate, sigmas, asianOption.Strike, riskFree, asianOption.CallPut) * asianOption.Notional;
+                return TurnbullWakeman.PV(fwds, asianOption.FixingDates, model.BuildDate, asianOption.PaymentDate, sigmas, asianOption.Strike, riskFree, asianOption.CallPut, todayFixed) * asianOption.Notional;
             }
             else
             {
@@ -112,13 +113,13 @@ namespace Qwack.Models.Models
             return TurnbullWakeman.PV(fwd, fixedAvg, sigma, asianOption.Strike, model.BuildDate, asianOption.AverageStartDate, asianOption.AverageEndDate, riskFree, asianOption.CallPut) * asianOption.Notional;
         }
 
-        public static double PV(this AsianSwap asianSwap, IAssetFxModel model)
+        public static double PV(this AsianSwap asianSwap, IAssetFxModel model, bool ignoreTodayFlows)
         {
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
                 asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
                 asianSwap.PaymentDate;
 
-            if (payDate < model.BuildDate)
+            if (payDate < model.BuildDate || (ignoreTodayFlows && payDate == model.BuildDate))
                 return 0.0;
 
             var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
@@ -131,7 +132,7 @@ namespace Qwack.Models.Models
             return pv;
         }
 
-        public static string GetFxFixingId(this AsianSwap swap, string curveCcy) => string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
+        public static string GetFxFixingId(this AsianSwap swap, string curveCcy) => string.IsNullOrEmpty(swap.FxFixingId) ? $"{curveCcy}/{swap.PaymentCurrency.Ccy}" : swap.FxFixingId;
 
         public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
         {
@@ -252,7 +253,7 @@ namespace Qwack.Models.Models
             }
         }
 
-        public static double[] GetFwdVector(this AsianSwap swap, IAssetFxModel model)
+        public static (double[] fwds, bool todayIsFixed) GetFwdVector(this AsianSwap swap, IAssetFxModel model)
         {
             var fxDates = swap.FxFixingDates ?? swap.FixingDates;
             var priceCurve = model.GetPriceCurve(swap.AssetId);
@@ -284,7 +285,7 @@ namespace Qwack.Models.Models
 
 
             if (swap.PaymentCurrency == priceCurve.Currency)
-                return fwds;
+                return (fwds, fixingForToday);
             else
             {
                 var fixingForTodayFx = fxDates.First() <= model.BuildDate &&
@@ -313,28 +314,29 @@ namespace Qwack.Models.Models
                 if (swap.FxConversionType == FxConversionType.AverageThenConvert)
                 {
                     var fxAvg = fxRates.Average();
-                    return fwds.Select(f => f * fxAvg).ToArray();
+                    return (fwds.Select(f => f * fxAvg).ToArray(), fixingForToday);
                 }
                 else
                 {
-                    return fwds.Select((f, ix) => f * fxRates[ix]).ToArray();
+                    return (fwds.Select((f, ix) => f * fxRates[ix]).ToArray(), fixingForToday); 
                 }
             }
         }
 
 
-        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.Sum(x => x.PV(model));
+        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model, bool ignoreTodayFlows) => asianSwap.Swaplets.Sum(x => x.PV(model, ignoreTodayFlows));
 
-        public static double PV(this AsianBasisSwap asianBasisSwap, IAssetFxModel model)
+        public static double PV(this AsianBasisSwap asianBasisSwap, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.PV(model));
-            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.PV(model));
+            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.PV(model, ignoreTodayFlows));
+            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.PV(model, ignoreTodayFlows));
             return payPV + recPV;
         }
 
-        public static double PV(this Future future, IAssetFxModel model)
+        public static double PV(this Future future, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            if (future.ExpiryDate < model.BuildDate)
+
+            if (future.ExpiryDate < model.BuildDate || (ignoreTodayFlows && future.ExpiryDate == model.BuildDate))
                 return 0.0;
             var curve = model.GetPriceCurve(future.AssetId);
 
@@ -347,9 +349,9 @@ namespace Qwack.Models.Models
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
 
-        public static double PV(this FuturesOption option, IAssetFxModel model)
+        public static double PV(this FuturesOption option, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            if (option.ExpiryDate < model.BuildDate)
+            if (option.ExpiryDate < model.BuildDate || (ignoreTodayFlows && option.ExpiryDate == model.BuildDate))
                 return 0.0;
 
             if (!(option.ExerciseType == OptionExerciseType.European ||
@@ -373,11 +375,11 @@ namespace Qwack.Models.Models
             return fv * df * option.ContractQuantity * option.LotSize;
         }
 
-        public static double PV(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().PV(model);
+        public static double PV(this Forward fwd, IAssetFxModel model, bool ignoreTodayFlows) => fwd.AsBulletSwap().PV(model, ignoreTodayFlows);
 
-        public static double PV(this EuropeanOption euOpt, IAssetFxModel model)
+        public static double PV(this EuropeanOption euOpt, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            if (euOpt.ExpiryDate < model.BuildDate)
+            if (euOpt.PaymentDate < model.BuildDate || (ignoreTodayFlows && euOpt.PaymentDate == model.BuildDate))
                 return 0.0;
 
             var isCompo = euOpt.Currency != model.GetPriceCurve(euOpt.AssetId).Currency;
@@ -388,7 +390,12 @@ namespace Qwack.Models.Models
                  model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency) :
                  1.0;
 
+            var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
 
+            if (euOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
+                return euOpt.Notional * df * (euOpt.CallPut == OptionType.Call ?
+                    Max((fwd * fxFwd) - euOpt.Strike, 0) :
+                    Max(euOpt.Strike - (fwd * fxFwd), 0));
 
             var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike / fxFwd);
             if (isCompo)
@@ -396,38 +403,51 @@ namespace Qwack.Models.Models
                 var fxId = $"{curve.Currency.Ccy}/{euOpt.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId);
+                var tExpC = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate, DayCountBasis.Act365F);
+                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId, tExpC);
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 
-            var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
+
             var tExp = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate.AddHours(18), DayCountBasis.Act365F, false);
             return BlackFunctions.BlackPV(fwd * fxFwd, euOpt.Strike, 0.0, tExp, vol, euOpt.CallPut) * euOpt.Notional * df;
         }
 
-        public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model)
+        public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            if (fxEuOpt.ExpiryDate < model.BuildDate)
+            if (fxEuOpt.DeliveryDate < model.BuildDate || (ignoreTodayFlows && fxEuOpt.DeliveryDate == model.BuildDate))
                 return 0.0;
-
+            var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
             var fwdDate = fxEuOpt.Pair.SpotDate(fxEuOpt.ExpiryDate);
             var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.PairStr);
+
+            if (fxEuOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
+                return fxEuOpt.DomesticQuantity * df * (fxEuOpt.CallPut == OptionType.Call ?
+                    Max(fwd  - fxEuOpt.Strike, 0) :
+                    Max(fxEuOpt.Strike - fwd , 0));
+
+
             var vol = model.FundingModel.GetVolSurface(fxEuOpt.PairStr).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
-            var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
             var t = model.BuildDate.CalculateYearFraction(fxEuOpt.DeliveryDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
             return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, rf, t, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity;
         }
 
-        public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model)
+        public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model, bool ignoreTodayFlows)
         {
-            if (euBOpt.ExpiryDate < model.BuildDate)
+            if (euBOpt.PaymentDate < model.BuildDate || (ignoreTodayFlows && euBOpt.PaymentDate == model.BuildDate))
                 return 0.0;
 
+            var df = model.FundingModel.GetDf(euBOpt.DiscountCurve, model.BuildDate, euBOpt.PaymentDate);
             var fwdDate = euBOpt.ExpiryDate.AddPeriod(RollType.F, euBOpt.FixingCalendar, euBOpt.SpotLag);
             var fwd = model.GetPriceCurve(euBOpt.AssetId).GetPriceForDate(fwdDate);
+
+            if (euBOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
+                return euBOpt.Notional * df * (euBOpt.CallPut == OptionType.Call ?
+                    Max(fwd - euBOpt.Strike, 0) :
+                    Max(euBOpt.Strike - fwd, 0));
+
             var vol = model.GetVolForStrikeAndDate(euBOpt.AssetId, euBOpt.ExpiryDate, euBOpt.Strike);
-            var df = model.FundingModel.GetDf(euBOpt.DiscountCurve, model.BuildDate, euBOpt.PaymentDate);
             var t = model.BuildDate.CalculateYearFraction(euBOpt.PaymentDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
             return BlackFunctions.BarrierOptionPV(fwd, euBOpt.Strike, rf, t, vol, euBOpt.CallPut, euBOpt.Barrier, euBOpt.BarrierType, euBOpt.BarrierSide);
@@ -511,6 +531,87 @@ namespace Qwack.Models.Models
             return payPV + recPV;
         }
 
+        public static List<CashFlow> ExpectedCashFlows(this AsianSwap asianSwap, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianSwap.AssetId);
+
+            var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
+             asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
+             asianSwap.PaymentDate;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
+            var fv = asianSwap.Notional * (FixedAverage - asianSwap.Strike);
+
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = asianSwap.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = payDate
+                }
+            };
+        }
+
+        public static List<CashFlow> ExpectedCashFlows(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().ExpectedCashFlows(model);
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.SelectMany(x => x.ExpectedCashFlows(model)).ToList();
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianBasisSwap asianBasisSwap, IAssetFxModel model) => 
+            asianBasisSwap.PaySwaplets.SelectMany(x => x.ExpectedCashFlows(model)).Concat(
+                    asianBasisSwap.RecSwaplets.SelectMany(x => x.ExpectedCashFlows(model))).ToList();
+
+
+        public static List<CashFlow> ExpectedCashFlows(this EuropeanOption euOpt, IAssetFxModel model)
+        {
+            var fixing = euOpt.PaymentDate < model.BuildDate ?
+                model.GetFixingDictionary(euOpt.AssetId).GetFixing(euOpt.ExpiryDate) :
+                model.GetPriceCurve(euOpt.AssetId).GetPriceForFixingDate(euOpt.ExpiryDate);
+
+            if(euOpt.Currency!= model.GetPriceCurve(euOpt.AssetId).Currency)
+            {
+                var fxRate = euOpt.PaymentDate < model.BuildDate ?
+                    model.GetFixingDictionary(euOpt.FxFixingId).GetFixing(euOpt.ExpiryDate) :
+                    model.FundingModel.GetFxRate(euOpt.ExpiryDate,euOpt.FxPair(model));
+                fixing *= fxRate;
+            }
+
+            var fv = euOpt.Notional * (euOpt.CallPut == OptionType.Call ? Max(0, fixing - euOpt.Strike) : Max(0, euOpt.Strike - fixing));
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = euOpt.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = euOpt.PaymentDate
+                }
+            };
+        }
+
+        public static List<CashFlow> ExpectedCashFlows(this AsianOption asianOption, IAssetFxModel model)
+        {
+            var curve = model.GetPriceCurve(asianOption.AssetId);
+
+            var payDate = asianOption.PaymentDate == DateTime.MinValue ?
+             asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
+             asianOption.PaymentDate;
+
+            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            var fv = asianOption.Notional * (asianOption.CallPut == OptionType.Call ? Max(0, FixedAverage - asianOption.Strike) : Max(0, asianOption.Strike - FixedAverage));
+
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = asianOption.Currency,
+                    Notional = fv,
+                    Fv = fv,
+                    SettleDate = asianOption.PaymentDate
+                }
+            };
+        }
 
         public static (double Financing, double Option) Theta(this AsianOption asianOption, IAssetFxModel model, DateTime fwdDate, Currency repCcy)
         {
@@ -525,7 +626,7 @@ namespace Qwack.Models.Models
 
             //financing theta
             var dfAdj = model.FundingModel.GetDf(asianOption.Currency, model.BuildDate, fwdDate);
-            var pV = asianOption.PV(model);
+            var pV = asianOption.PV(model, true);
             var finTheta = pV * (1 - dfAdj);
 
             //"black" theta
@@ -543,7 +644,7 @@ namespace Qwack.Models.Models
             var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
-            var fwds = asianOption.GetFwdVector(model);
+            (var fwds, var todayFixed) = asianOption.GetFwdVector(model);
             var moneyness = adjustedStrike / FloatAverage;
             var sigmas = asianOption.FixingDates.Select((f, ix) => surface.GetVolForAbsoluteStrike(fwds[ix] * moneyness, f, fwds[ix])).ToArray();
 
@@ -586,7 +687,7 @@ namespace Qwack.Models.Models
 
             //financing theta
             var dfAdj = model.FundingModel.GetDf(euroOption.Currency, model.BuildDate, fwdDate);
-            var pV = euroOption.PV(model);
+            var pV = euroOption.PV(model, true);
             var finTheta = pV * (1 - dfAdj);
 
             //"black" theta
@@ -634,7 +735,7 @@ namespace Qwack.Models.Models
             if (fOpt.MarginingType == OptionMarginingType.Regular)
             {
                 var dfAdj = model.FundingModel.GetDf(fOpt.Currency, model.BuildDate, fwdDate);
-                var pV = fOpt.PV(model);
+                var pV = fOpt.PV(model, true);
                 finTheta = pV * (1 - dfAdj);
             }
 
@@ -669,7 +770,7 @@ namespace Qwack.Models.Models
 
             //financing theta
             var dfAdj = model.FundingModel.GetDf(fxOption.Currency, model.BuildDate, fwdDate);
-            var pV = fxOption.PV(model);
+            var pV = fxOption.PV(model, true);
             var finTheta = pV * (1 - dfAdj);
 
             //"black" theta
@@ -698,19 +799,22 @@ namespace Qwack.Models.Models
                 return (0.0, 0.0);
 
             //financing theta
-            var dfAdjDom = model.FundingModel.GetDf(fxf.DomesticCCY, model.BuildDate, fwdDate);
-            var dfAdjFor = model.FundingModel.GetDf(fxf.ForeignCCY, model.BuildDate, fwdDate);
-            var fxDomRep = model.FundingModel.GetFxRate(fwdDate, fxf.DomesticCCY, repCcy);
-            var fxForRep = model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
-            var forQ = -fxf.DomesticQuantity * fxf.Strike;
-            var finTheta = fxf.DomesticQuantity * (1 - dfAdjDom) * fxDomRep + forQ * (1 - dfAdjFor) * fxForRep;
-
+            //var dfAdjDom = model.FundingModel.GetDf(fxf.DomesticCCY, model.BuildDate, fwdDate);
+            //var dfAdjFor = model.FundingModel.GetDf(fxf.ForeignCCY, model.BuildDate, fwdDate);
+            //var fxDomRep = model.FundingModel.GetFxRate(fwdDate, fxf.DomesticCCY, repCcy);
+            //var fxForRep = model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
+            //var forQ = -fxf.DomesticQuantity * fxf.Strike;
+            //var finTheta = fxf.DomesticQuantity * (1 - dfAdjDom) * fxDomRep + forQ * (1 - dfAdjFor) * fxForRep;
+            var pv = fxf.Pv(model.FundingModel, false);
+            var pvRep = pv * model.FundingModel.GetFxRate(fwdDate, fxf.ForeignCCY, repCcy);
+            var dfAdjRep = model.FundingModel.GetDf(repCcy, model.BuildDate, fwdDate);
+            var finTheta = pvRep * (1 - dfAdjRep);
             return (finTheta, 0.0);
         }
 
         public static (double Financing, double Option) Theta(this IInstrument ins, IAssetFxModel model, DateTime fwdDate, Currency repCcy)
         {
-            Currency ccy = null;
+            var ccy = ins.GetCurrency();
             double pv;
             switch (ins)
             {
@@ -725,35 +829,33 @@ namespace Qwack.Models.Models
                 case FxForward fxf:
                     return fxf.Theta(model, fwdDate, repCcy);
                 case AsianSwap aSwp:
-                    ccy = aSwp.Currency;
-                    pv = aSwp.PV(model);
+                    pv = aSwp.PV(model, true);
                     break;
                 case AsianSwapStrip aSwpStrip:
-                    ccy = aSwpStrip.Currency;
-                    pv = aSwpStrip.PV(model);
+                    pv = aSwpStrip.PV(model, true);
                     break;
                 case AsianBasisSwap asianBasisSwap:
-                    ccy = asianBasisSwap.Currency;
-                    pv = asianBasisSwap.PV(model);
+                    pv = asianBasisSwap.PV(model, true);
                     break;
                 case Forward fwd:
-                    ccy = fwd.Currency;
-                    pv = fwd.PV(model);
+                    pv = fwd.PV(model, true);
                     break;
                 case Future fut:
                     return (0.0, 0.0);
+                case ETC etc:
+                    pv = etc.PV(model);
+                    break;
                 case CashBalance cash:
-                    ccy = cash.Currency;
                     pv = cash.Pv(model.FundingModel, false);
                     break;
                 case FixedRateLoanDeposit loanDepo:
-                    ccy = loanDepo.Currency;
                     pv = loanDepo.Pv(model.FundingModel, false);
                     break;
+                case CashWrapper wrapper:
+                    return Theta(wrapper.UnderlyingInstrument, model, fwdDate, repCcy);
                 default:
                     throw new Exception("No theta logic defined for instrument type");
             }
-
 
             //financing theta
             var dfAdj = model.FundingModel.GetDf(ccy, model.BuildDate, fwdDate);
@@ -768,7 +870,7 @@ namespace Qwack.Models.Models
             return (finTheta, 0.0);
         }
 
-        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null)
+        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows=false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -785,7 +887,7 @@ namespace Qwack.Models.Models
             ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
             //for(var i=0;i< portfolio.Instruments.Count;i++)
             {
-                var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency);
+                var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows);
 
                 var row = new Dictionary<string, object>
                   {
@@ -806,137 +908,65 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency)
+        private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows=false)
         {
             var pv = 0.0;
             var fxRate = 1.0;
-            string tradeId = null;
             var ccy = reportingCurrency?.ToString();
-            string tradeType = null;
+            var pvCcy = ins.GetCurrency();
+            var tradeId = ins.TradeId;
+            var tradeType = TradeType(ins);
             switch (ins)
             {
                 case AsianOption asianOption:
-                    tradeType = "AsianOption";
-                    pv = asianOption.PV(model);
-                    tradeId = asianOption.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, asianOption.PaymentCurrency);
-                    else
-                        ccy = asianOption.PaymentCurrency.ToString();
+                    pv = asianOption.PV(model, ignoreTodayFlows);
                     break;
                 case AsianSwap swap:
-                    tradeType = "AsianSwap";
-                    pv = swap.PV(model);
-                    tradeId = swap.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swap.PaymentCurrency);
-                    else
-                        ccy = swap.PaymentCurrency.ToString();
+                    pv = swap.PV(model, ignoreTodayFlows);
                     break;
                 case AsianSwapStrip swapStrip:
-                    tradeType = "AsianSwapStrip";
-                    pv = swapStrip.PV(model);
-                    tradeId = swapStrip.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
-                    else
-                        ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
+                    pv = swapStrip.PV(model, ignoreTodayFlows);
                     break;
                 case AsianBasisSwap basisSwap:
-                    tradeType = "AsianBasisSwap";
-                    pv = basisSwap.PV(model);
-                    tradeId = basisSwap.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
-                    else
-                        ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
+                    pv = basisSwap.PV(model, ignoreTodayFlows);
                     break;
                 case EuropeanBarrierOption euBOpt:
-                    tradeType = "BarrierOption";
-                    pv = euBOpt.PV(model);
-                    tradeId = euBOpt.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
-                    else
-                        ccy = euBOpt.PaymentCurrency.ToString();
+                    pv = euBOpt.PV(model, ignoreTodayFlows);
                     break;
                 case FxVanillaOption euFxOpt:
-                    tradeType = "EuropeanOption";
-                    pv = euFxOpt.PV(model);
-                    tradeId = euFxOpt.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euFxOpt.PaymentCurrency);
-                    else
-                        ccy = euFxOpt.PaymentCurrency.ToString();
+                    pv = euFxOpt.PV(model, ignoreTodayFlows);
                     break;
                 case EuropeanOption euOpt:
-                    tradeType = "EuropeanOption";
-                    pv = euOpt.PV(model);
-                    tradeId = euOpt.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euOpt.PaymentCurrency);
-                    else
-                        ccy = euOpt.PaymentCurrency.ToString();
+                    pv = euOpt.PV(model, ignoreTodayFlows);
                     break;
                 case Forward fwd:
-                    tradeType = "Forward";
-                    pv = fwd.PV(model);
-                    tradeId = fwd.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
-                    else
-                        ccy = fwd.PaymentCurrency.ToString();
+                    pv = fwd.PV(model, ignoreTodayFlows);
                     break;
                 case FuturesOption futOpt:
-                    tradeType = "FutureOption";
-                    pv = futOpt.PV(model);
-                    tradeId = futOpt.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, futOpt.Currency);
-                    else
-                        ccy = futOpt.Currency.ToString();
+                    pv = futOpt.PV(model, ignoreTodayFlows);
                     break;
                 case Future fut:
-                    tradeType = "Future";
-                    pv = fut.PV(model);
-                    tradeId = fut.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fut.Currency);
-                    else
-                        ccy = fut.Currency.ToString();
+                    pv = fut.PV(model, ignoreTodayFlows);
                     break;
                 case FxForward fxFwd:
-                    tradeType = "FxForward";
-                    pv = fxFwd.Pv(model.FundingModel, false);
-                    tradeId = fxFwd.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
-                    else
-                        ccy = fxFwd.ForeignCCY.ToString();
+                    pv = fxFwd.Pv(model.FundingModel, false, ignoreTodayFlows);
                     break;
                 case FixedRateLoanDeposit loanDepo:
-                    tradeType = "LoanDepo";
-                    pv = loanDepo.Pv(model.FundingModel, false);
-                    tradeId = loanDepo.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Currency);
-                    else
-                        ccy = loanDepo.Currency.ToString();
+                    pv = loanDepo.Pv(model.FundingModel, false, ignoreTodayFlows);
                     break;
                 case CashBalance cash:
-                    tradeType = "Cash";
                     pv = cash.Pv(model.FundingModel, false);
-                    tradeId = cash.TradeId;
-                    if (reportingCurrency != null)
-                        fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Currency);
-                    else
-                        ccy = cash.Currency.ToString();
+                    break;
+                case ETC etc:
+                    pv = etc.PV(model);
                     break;
                 case CashWrapper wrapper:
-                    (pv, ccy, tradeId, tradeType ) = ComputePV(wrapper.UnderlyingInstrument, model, reportingCurrency);
+                    (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
+                    if (reportingCurrency != null)
+                        ccy = reportingCurrency.Ccy;
                     foreach(var cb in wrapper.CashBalances)
                     {
-                        var p = ComputePV(cb, model, reportingCurrency??wrapper.UnderlyingInstrument.Currency);
+                        var p = ComputePV(cb, model, pvCcy);
                         pv += p.pv;
                     }
                     break;
@@ -944,10 +974,144 @@ namespace Qwack.Models.Models
                     throw new Exception($"Unabled to handle product of type {ins.GetType()}");
             }
 
+            if (reportingCurrency != null)
+                fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, pvCcy);
+            else
+                ccy = pvCcy.ToString();
+
             return (pv / fxRate, ccy, tradeId, tradeType);
         }
 
-        public static string TradeType(this IAssetInstrument ins)
+        private static Currency GetCurrency(this IInstrument ins)
+        {
+            switch(ins)
+            {
+                case CashWrapper wrapper:
+                    return wrapper.UnderlyingInstrument.GetCurrency();
+                case FxForward fxf:
+                    return fxf.ForeignCCY;
+                case IAssetInstrument aIns:
+                    return aIns.PaymentCurrency;
+                default:
+                    throw new Exception("Unable to determine instrument currency");
+                
+            }
+        }
+
+        private static (double flow, string tradeId, string tradeType, string ccy) ComputeFlowsT0(IInstrument ins, IAssetFxModel model, Currency reportingCurrency)
+        {
+            var flow = 0.0;
+            var fxRate = 1.0;
+            var tradeId = ins.TradeId;
+            var tradeType = TradeType(ins);
+            var flowCcy = ins.GetCurrency();
+            var ccy = reportingCurrency?.ToString();
+            switch (ins)
+            {
+                case AsianOption asianOption:
+                    flow = asianOption.FlowsT0(model);
+                    break;
+                case AsianSwap swap:
+                    flow = swap.FlowsT0(model);
+                    break;
+                case AsianSwapStrip swapStrip:
+                    flow = swapStrip.FlowsT0(model);
+                    break;
+                case AsianBasisSwap basisSwap:
+                    flow = basisSwap.FlowsT0(model);
+                    break;
+                case EuropeanBarrierOption euBOpt:
+                    flow = euBOpt.FlowsT0(model);
+                    break;
+                case EuropeanOption euOpt:
+                    flow = euOpt.FlowsT0(model);
+                    break;
+                case Forward fwd:
+                    flow = fwd.FlowsT0(model);
+                    break;
+                case FuturesOption futOpt:
+                    flow = futOpt.FlowsT0(model);
+                    break;
+                case Future fut:
+                    flow = fut.FlowsT0(model);
+                    break;
+                case FxForward fxFwd:
+                    flow = fxFwd.FlowsT0(model.FundingModel);
+                    break;
+                case FixedRateLoanDeposit loanDepo:
+                    flow = loanDepo.FlowsT0(model.FundingModel);
+                    break;
+                case CashBalance cash:
+                case ETC etc:
+                    flow = 0;
+                    break;
+                case CashWrapper wrapper:
+                    (flow, tradeId, tradeType, ccy) = ComputeFlowsT0(wrapper.UnderlyingInstrument, model, flowCcy);
+                    foreach (var cb in wrapper.CashBalances)
+                    {
+                        var p = ComputeFlowsT0(cb, model, flowCcy);
+                        flow += p.flow;
+                    }
+                    break;
+                default:
+                    throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+            }
+
+            if (reportingCurrency != null)
+                fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, flowCcy);
+            else
+                ccy = flowCcy.ToString();            
+
+            return (flow / fxRate, tradeId, tradeType, ccy);
+        }
+
+        private static (List<CashFlow> flows, string tradeId, string tradeType) ComputeExpectedCashFlows(IInstrument ins, IAssetFxModel model)
+        {
+            var flows = new List<CashFlow>();
+            var tradeId = ins.TradeId;
+            var tradeType = TradeType(ins);
+
+            switch (ins)
+            {
+                case IFundingInstrument fi:
+                    flows = fi.ExpectedCashFlows(model);
+                    break;
+                case AsianOption asianOption:
+                    flows = asianOption.ExpectedCashFlows(model);
+                    break;
+                case AsianSwap swap:
+                    flows = swap.ExpectedCashFlows(model);
+                    break;
+                case AsianSwapStrip swapStrip:
+                    flows = swapStrip.ExpectedCashFlows(model);
+                    break;
+                case AsianBasisSwap basisSwap:
+                    flows = basisSwap.ExpectedCashFlows(model);
+                    break;
+                case EuropeanBarrierOption euBOpt:
+                    flows = euBOpt.ExpectedCashFlows(model);
+                    break;
+                case EuropeanOption euOpt:
+                    flows = euOpt.ExpectedCashFlows(model);
+                    break;
+                case Forward fwd:
+                    flows = fwd.ExpectedCashFlows(model);
+                    break;
+                case CashWrapper wrapper:
+                    (flows, tradeId, tradeType) = ComputeExpectedCashFlows(wrapper.UnderlyingInstrument, model);
+                    flows = flows.Concat(wrapper.CashBalances.SelectMany(cb => cb.ExpectedCashFlows(model))).ToList();
+                    break;
+                    
+                default:
+                    //do nothing
+                    break;
+            }
+
+            return (flows, tradeId, tradeType);
+        }
+
+
+        public static string TradeType(this IInstrument ins)
         {
             string tradeType;
             switch (ins)
@@ -988,6 +1152,9 @@ namespace Qwack.Models.Models
                 case FixedRateLoanDeposit loanDepo:
                     tradeType = "LoanDepo";
                     break;
+                case PhysicalBalance phys:
+                    tradeType = "Physical";
+                    break;
                 case CashBalance cash:
                     tradeType = "Cash";
                     break;
@@ -998,8 +1165,20 @@ namespace Qwack.Models.Models
                 case MultiPeriodBackpricingOption mpbpo:
                     tradeType = "BackPricing";
                     break;
+                case ETC etc:
+                    tradeType = "ETC";
+                    break;
+                case OneTouchOption oto:
+                    tradeType = "OneTouch";
+                    break;
+                case DoubleNoTouchOption dnt:
+                    tradeType = "DoubleNoTouch";
+                    break;
+                case CashWrapper wrapper:
+                    tradeType = TradeType(wrapper.UnderlyingInstrument);
+                    break;
                 default:
-                    throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                    throw new Exception($"Unable to handle product of type {ins.GetType()}");
             }
             return tradeType;
         }
@@ -1017,139 +1196,21 @@ namespace Qwack.Models.Models
 
             foreach (var ins in portfolio.Instruments)
             {
-                var flow = 0.0;
-                var fxRate = 1.0;
-                string tradeId = null;
-                string tradeType = null;
-                var ccy = reportingCurrency?.ToString();
-                switch (ins)
-                {
-                    case AsianOption asianOption:
-                        tradeType = "AsianOption";
-                        flow = asianOption.FlowsT0(model);
-                        tradeId = asianOption.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, asianOption.PaymentCurrency);
-                        else
-                            ccy = asianOption.PaymentCurrency.ToString();
-                        break;
-                    case AsianSwap swap:
-                        tradeType = "AsianSwap";
-                        flow = swap.FlowsT0(model);
-                        tradeId = swap.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swap.PaymentCurrency);
-                        else
-                            ccy = swap.PaymentCurrency.ToString();
-                        break;
-                    case AsianSwapStrip swapStrip:
-                        tradeType = "AsianSwapStrip";
-                        flow = swapStrip.FlowsT0(model);
-                        tradeId = swapStrip.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
-                        else
-                            ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case AsianBasisSwap basisSwap:
-                        tradeType = "AsianBasisSwap";
-                        flow = basisSwap.FlowsT0(model);
-                        tradeId = basisSwap.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
-                        else
-                            ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case EuropeanBarrierOption euBOpt:
-                        tradeType = "BarrierOption";
-                        flow = euBOpt.FlowsT0(model);
-                        tradeId = euBOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
-                        else
-                            ccy = euBOpt.PaymentCurrency.ToString();
-                        break;
-                    case EuropeanOption euOpt:
-                        tradeType = "EuropeanOption";
-                        flow = euOpt.FlowsT0(model);
-                        tradeId = euOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euOpt.PaymentCurrency);
-                        else
-                            ccy = euOpt.PaymentCurrency.ToString();
-                        break;
-                    case Forward fwd:
-                        tradeType = "Forward";
-                        flow = fwd.FlowsT0(model);
-                        tradeId = fwd.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
-                        else
-                            ccy = fwd.PaymentCurrency.ToString();
-                        break;
-                    case FuturesOption futOpt:
-                        tradeType = "FutureOption";
-                        flow = futOpt.FlowsT0(model);
-                        tradeId = futOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, futOpt.Currency);
-                        else
-                            ccy = futOpt.Currency.ToString();
-                        break;
-                    case Future fut:
-                        tradeType = "Future";
-                        flow = fut.FlowsT0(model);
-                        tradeId = fut.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fut.Currency);
-                        else
-                            ccy = fut.Currency.ToString();
-                        break;
-                    case FxForward fxFwd:
-                        tradeType = "FxForward";
-                        flow = fxFwd.FlowsT0(model.FundingModel);
-                        tradeId = fxFwd.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
-                        else
-                            ccy = fxFwd.ForeignCCY.ToString();
-                        break;
-                    case FixedRateLoanDeposit loanDepo:
-                        tradeType = "LoanDepo";
-                        flow = loanDepo.FlowsT0(model.FundingModel);
-                        tradeId = loanDepo.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Currency);
-                        else
-                            ccy = loanDepo.Currency.ToString();
-                        break;
-                    case CashBalance cash:
-                        tradeType = "Cash";
-                        flow = 0;
-                        tradeId = cash.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Currency);
-                        else
-                            ccy = cash.Currency.ToString();
-                        break;
-                    default:
-                        throw new Exception($"Unabled to handle product of type {ins.GetType()}");
-                }
-
-
+                var (flow, tradeId, tradeType, ccy) = ComputeFlowsT0(ins, model, reportingCurrency);
+                
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", tradeId },
                     { "Currency", ccy },
                     { "TradeType", tradeType }
                 };
-                cube.AddRow(row, flow / fxRate);
+                cube.AddRow(row, flow);
             }
 
             return cube;
         }
 
-        public static ICube AnalyticTheta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null)
+        public static ICube ExpectedCashFlows(this Portfolio portfolio, IAssetFxModel model)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1157,142 +1218,30 @@ namespace Qwack.Models.Models
                 { "TradeId", typeof(string) },
                 { "Currency", typeof(string) },
                 { "TradeType", typeof(string) },
+                { "PayDate", typeof(DateTime) },
             };
             cube.Initialize(dataTypes);
 
             foreach (var ins in portfolio.Instruments)
             {
-                var flow = 0.0;
-                var fxRate = 1.0;
-                string tradeId = null;
-                string tradeType = null;
-                var ccy = reportingCurrency?.ToString();
-                switch (ins)
+                var (flows, tradeId, tradeType) = ComputeExpectedCashFlows(ins, model);
+
+                foreach (var flow in flows.Where(f => f.SettleDate >= model.BuildDate))
                 {
-                    case AsianOption asianOption:
-                        tradeType = "AsianOption";
-                        flow = asianOption.FlowsT0(model);
-                        tradeId = asianOption.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, asianOption.PaymentCurrency);
-                        else
-                            ccy = asianOption.PaymentCurrency.ToString();
-                        break;
-                    case AsianSwap swap:
-                        tradeType = "AsianSwap";
-                        flow = swap.FlowsT0(model);
-                        tradeId = swap.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swap.PaymentCurrency);
-                        else
-                            ccy = swap.PaymentCurrency.ToString();
-                        break;
-                    case AsianSwapStrip swapStrip:
-                        tradeType = "AsianSwapStrip";
-                        flow = swapStrip.FlowsT0(model);
-                        tradeId = swapStrip.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, swapStrip.Swaplets.First().PaymentCurrency);
-                        else
-                            ccy = swapStrip.Swaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case AsianBasisSwap basisSwap:
-                        tradeType = "AsianBasisSwap";
-                        flow = basisSwap.FlowsT0(model);
-                        tradeId = basisSwap.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, basisSwap.PaySwaplets.First().PaymentCurrency);
-                        else
-                            ccy = basisSwap.PaySwaplets.First().PaymentCurrency.ToString();
-                        break;
-                    case EuropeanBarrierOption euBOpt:
-                        tradeType = "BarrierOption";
-                        flow = euBOpt.FlowsT0(model);
-                        tradeId = euBOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euBOpt.PaymentCurrency);
-                        else
-                            ccy = euBOpt.PaymentCurrency.ToString();
-                        break;
-                    case EuropeanOption euOpt:
-                        tradeType = "EuropeanOption";
-                        flow = euOpt.FlowsT0(model);
-                        tradeId = euOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, euOpt.PaymentCurrency);
-                        else
-                            ccy = euOpt.PaymentCurrency.ToString();
-                        break;
-                    case Forward fwd:
-                        tradeType = "Forward";
-                        flow = fwd.FlowsT0(model);
-                        tradeId = fwd.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fwd.PaymentCurrency);
-                        else
-                            ccy = fwd.PaymentCurrency.ToString();
-                        break;
-                    case FuturesOption futOpt:
-                        tradeType = "FutureOption";
-                        flow = futOpt.FlowsT0(model);
-                        tradeId = futOpt.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, futOpt.Currency);
-                        else
-                            ccy = futOpt.Currency.ToString();
-                        break;
-                    case Future fut:
-                        tradeType = "Future";
-                        flow = fut.FlowsT0(model);
-                        tradeId = fut.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fut.Currency);
-                        else
-                            ccy = fut.Currency.ToString();
-                        break;
-                    case FxForward fxFwd:
-                        tradeType = "FxForward";
-                        flow = fxFwd.FlowsT0(model.FundingModel);
-                        tradeId = fxFwd.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, fxFwd.ForeignCCY);
-                        else
-                            ccy = fxFwd.ForeignCCY.ToString();
-                        break;
-                    case FixedRateLoanDeposit loanDepo:
-                        tradeType = "LoanDepo";
-                        flow = loanDepo.FlowsT0(model.FundingModel);
-                        tradeId = loanDepo.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, loanDepo.Currency);
-                        else
-                            ccy = loanDepo.Currency.ToString();
-                        break;
-                    case CashBalance cash:
-                        tradeType = "Cash";
-                        flow = 0;
-                        tradeId = cash.TradeId;
-                        if (reportingCurrency != null)
-                            fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, cash.Currency);
-                        else
-                            ccy = cash.Currency.ToString();
-                        break;
-                    default:
-                        throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                    var row = new Dictionary<string, object>
+                    {
+                        { "TradeId", tradeId },
+                        { "Currency", flow.Currency.Ccy },
+                        { "TradeType", tradeType },
+                        { "PayDate", flow.SettleDate }
+                    };
+                    cube.AddRow(row, flow.Fv);
                 }
-
-
-                var row = new Dictionary<string, object>
-                {
-                    { "TradeId", tradeId },
-                    { "Currency", ccy },
-                    { "TradeType", tradeType }
-                };
-                cube.AddRow(row, flow / fxRate);
             }
 
             return cube;
         }
+
 
         public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model)
         {
@@ -1473,63 +1422,7 @@ namespace Qwack.Models.Models
             return curves.ToArray();
         }
 
-        public static List<MarketDataDescriptor> GetRequirements(this Portfolio portfolio, DateTime valDate)
-        {
-            var o = new List<MarketDataDescriptor>();
-
-            foreach (var trade in portfolio.Instruments)
-            {
-                switch (trade)
-                {
-                    case AsianOption aOpt:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aOpt.AssetId, ValDate = valDate });
-                            o.Add(new AssetVolSurfaceDescriptor { AssetId = aOpt.AssetId, ValDate = valDate });
-                            foreach (var fixingDate in aOpt.FixingDates.Where(f => f < valDate))
-                            {
-                                o.Add(new AssetFixingDescriptor { AssetId = aOpt.AssetId, FixingDate = fixingDate });
-                            }
-                            if (aOpt.FxConversionType != FxConversionType.None)
-                            {
-                                var fxId = aOpt.GetFxFixingId("USD");
-                                var fxDates = aOpt.FxFixingDates ?? aOpt.FixingDates;
-                                foreach (var fixingDate in fxDates.Where(f => f < valDate))
-                                {
-                                    o.Add(new AssetFixingDescriptor { AssetId = fxId, FixingDate = fixingDate });
-                                }
-                            }
-
-                            break;
-                        }
-                    case AsianSwap aSwp:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aSwp.AssetId, ValDate = valDate });
-                            foreach (var fixingDate in aSwp.FixingDates.Where(f => f < valDate))
-                            {
-                                o.Add(new AssetFixingDescriptor { AssetId = aSwp.AssetId, FixingDate = fixingDate });
-                            }
-                            if (aSwp.FxConversionType != FxConversionType.None)
-                            {
-                                var fxId = aSwp.GetFxFixingId("USD");
-                                var fxDates = aSwp.FxFixingDates ?? aSwp.FixingDates;
-                                foreach (var fixingDate in fxDates.Where(f => f < valDate))
-                                {
-                                    o.Add(new AssetFixingDescriptor { AssetId = fxId, FixingDate = fixingDate });
-                                }
-                            }
-
-                            break;
-                        }
-                    case Future aFut:
-                        {
-                            o.Add(new AssetCurveDescriptor { AssetId = aFut.AssetId, ValDate = valDate });
-                            break;
-                        }
-                }
-            }
-
-            return o;
-        }
+      
 
         public static double ParRate(this IAssetInstrument instrument, IAssetFxModel model)
         {

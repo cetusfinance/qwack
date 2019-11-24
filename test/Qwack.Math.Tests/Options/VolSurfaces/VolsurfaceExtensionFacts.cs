@@ -20,6 +20,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 {
     public class VolsurfaceExtensionFacts
     {
+        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
         [Fact]
@@ -63,16 +65,28 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var origin = new DateTime(2017, 02, 07);
             var expiry = origin.AddMonths(2);
             var tExp = origin.CalculateYearFraction(expiry, DayCountBasis.Act365F);
+            var fwdCurveAsset = new Func<double, double>(t => { return 100; });
+            var fwdCurveFx = new Func<double, double>(t => { return 15; });
             var volAsset = 0.32;
             var volFx = 0.16;
-            var correl = 0.0;
-            var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25 }, new[] { new[] { 0.02 } }, new[] { new[] { 0.005 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.CubicSpline, Math.Interpolation.Interpolator1DType.Linear);
-            //var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25 }, new[] { new[] { 0.015 } }, new[] { new[] { 0.005 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.CubicSpline, Math.Interpolation.Interpolator1DType.Linear);
-            var surfaceFx = new ConstantVolSurface(origin, volFx);
-            var surfaceCompo = surfaceAsset.GenerateCompositeSmile(surfaceFx, 200, expiry, 100, 0.10, correl);
+            var correl = 0.25;
+
+            var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme=true};
+            var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015,0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme = true };
+
+
+
+            //var surfaceAsset = new SabrVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            //var surfaceFx = new SabrVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+
+            //var surfaceAsset = new SVIVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            //var surfaceFx = new SVIVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+
+            var invFx = new InverseFxSurface("inv", surfaceFx, TestProviderHelper.CurrencyProvider);
+            var surfaceCompo = surfaceAsset.GenerateCompositeSmile(invFx, 200, expiry, 100, 1.0/15, correl);
         
             //setup MC
-            var engine = new PathEngine(2.IntPow(16));
+            var engine = new PathEngine(2.IntPow(IsCoverageOnly?5:15));
             engine.AddPathProcess(
                 new Qwack.Random.MersenneTwister.MersenneTwister64
                 { UseNormalInverse = true });
@@ -84,32 +98,31 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 new double[] { correl, 1.0 },
             };
             engine.AddPathProcess(new Cholesky(correlMatrix));
-            //engine.AddPathProcess(new SimpleCholesky(correl));
 
-            var fwdCurveAsset = new Func<double, double>(t => { return 100; });
-            var asset1 = new LVSingleAsset
+
+            var asset1 = new TurboSkewSingleAsset
                 (
                     startDate: origin,
                     expiryDate: expiry,
                     volSurface: surfaceAsset,
                     forwardCurve: fwdCurveAsset,
-                    nTimeSteps: 50,
+                    nTimeSteps: 1,
                     name: "Asset"
                 );
-            var fwdCurveFx = new Func<double, double>(t => { return 0.1; });
-            var asset2 = new LVSingleAsset
+
+            var asset2 = new TurboSkewSingleAsset
                 (
                     startDate: origin,
                     expiryDate: expiry,
                     volSurface: surfaceFx,
                     forwardCurve: fwdCurveFx,
-                    nTimeSteps: 50,
-                    name: "ZAR/USD"
+                    nTimeSteps: 1,
+                    name: "USD/ZAR"
                 );
             engine.AddPathProcess(asset1);
             engine.AddPathProcess(asset2);
 
-            var strike = 1000   ;
+            var strike = 1500;
             var product = new EuropeanOption
             {
                 AssetId = "Asset",
@@ -136,7 +149,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             };
             var productFx = new EuropeanOption
             {
-                AssetId = "ZAR/USD",
+                AssetId = "USD/ZAR",
                 CallPut = OptionType.C,
                 ExpiryDate = expiry,
                 PaymentCurrency = TestProviderHelper.CurrencyProvider["ZAR"],
@@ -146,9 +159,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 Strike = 0.1,
                 FxConversionType = FxConversionType.None
             };
-            var pathProduct = new AssetPathPayoff(product, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            var pathProductAsset = new AssetPathPayoff(productAsset, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            var pathProductFx = new AssetPathPayoff(productFx, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            var pathProduct = new AssetPathPayoff(product, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
+            var pathProductAsset = new AssetPathPayoff(productAsset, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
+            var pathProductFx = new AssetPathPayoff(productFx, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider["ZAR"]);
             engine.AddPathProcess(pathProduct);
             engine.AddPathProcess(pathProductAsset);
             engine.AddPathProcess(pathProductFx);
@@ -157,11 +170,11 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             engine.RunProcess();
             var q = pathProduct.ResultsByPath;
             var qq = q.Average();
-            var productIv = BlackFunctions.BlackImpliedVol(1000, 1000, 0.0, tExp, pathProduct.AverageResult, OptionType.C);
+            var productIv = BlackFunctions.BlackImpliedVol(1500, strike, 0.0, tExp, pathProduct.AverageResult, OptionType.C);
             var productAssetIv = BlackFunctions.BlackImpliedVol(100, 100, 0.0, tExp, pathProductAsset.AverageResult, OptionType.C);
             var productFxIv = BlackFunctions.BlackImpliedVol(10, 10, 0.0, tExp, pathProductFx.AverageResult, OptionType.C);
 
-            Assert.Equal(productIv, surfaceCompo.Interpolate(strike),2);
+            Assert.True(Abs(productIv - surfaceCompo.Interpolate(strike)) < 0.01);
         }
     }
 }

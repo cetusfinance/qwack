@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public ForwardRateAgreement() { }
 
-        public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve)
+        public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve):base()
         {
             var code = fraCode.ToUpper().Split('X');
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
@@ -98,8 +98,6 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate(model.Curves[ForecastCurve], Basis);
-
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
         public double Pv(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
         {
@@ -224,5 +222,8 @@ namespace Qwack.Core.Instruments.Funding
                 SolveCurve = SolveCurve,
                 Currency = Currency,
             };
+
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFra.Flows;
     }
 }

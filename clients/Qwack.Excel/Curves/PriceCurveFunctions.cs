@@ -500,9 +500,9 @@ namespace Qwack.Excel.Curves
         public static object CreateCorrelationTimeVecvtor(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Label A")] string LabelA,
-            [ExcelArgument(Description = "Label B")] string LabelB,
+            [ExcelArgument(Description = "Labels B")] object[] LabelsB,
             [ExcelArgument(Description = "Times")] double[] Times,
-            [ExcelArgument(Description = "Correlations")] double[] Correlations,
+            [ExcelArgument(Description = "Correlations")] double[,] Correlations,
             [ExcelArgument(Description = "Interpolation type, default Linear")] object InterpType)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -510,7 +510,7 @@ namespace Qwack.Excel.Curves
                 if (!Enum.TryParse<Interpolator1DType>(InterpType.OptionalExcel("Linear"), out var iType))
                     throw new Exception($"Could not parse interpolator type {InterpType}");
 
-                var matrix = new CorrelationTimeVector(LabelA, LabelB, Correlations, Times, iType);
+                var matrix = new CorrelationTimeVector(LabelA, LabelsB.ObjectRangeToVector<string>(), Correlations.SquareToJagged(), Times, iType);
                 return ExcelHelper.PushToCache<ICorrelationMatrix>(matrix, ObjectName);
             });
         }

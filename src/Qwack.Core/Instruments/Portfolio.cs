@@ -18,7 +18,30 @@ namespace Qwack.Core.Instruments
 
         public string Counterparty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public DateTime LastSensitivityDate => throw new NotImplementedException();
+        public DateTime LastSensitivityDate
+        {
+            get
+            {
+                if (Instruments.Count == 0)
+                    return DateTime.MinValue;
+
+                var assetTrades = Instruments
+                    .Where(x => x is IAssetInstrument);
+
+                var fxTrades = Instruments
+                    .Where(x => x is FxForward || (x is CashWrapper cw && cw.UnderlyingInstrument is FxForward));
+
+                if (!fxTrades.Any() && !assetTrades.Any())
+                    return DateTime.MinValue;
+                else if (!fxTrades.Any())
+                    return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate);
+                else if (!assetTrades.Any())
+                    return fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate);
+                return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate).Max(fxTrades.Max(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).DeliveryDate : ((FxForward)x).DeliveryDate));
+            }
+        }
+
+        public Currency Currency => throw new NotImplementedException();
 
         public Portfolio Clone() => new Portfolio
         {
@@ -29,26 +52,6 @@ namespace Qwack.Core.Instruments
 
     public static class PortfolioEx
     {
-        public static DateTime LastSensitivityDate(this Portfolio portfolio)
-        {
-            if (portfolio.Instruments.Count == 0)
-                return DateTime.MinValue;
-
-            var assetTrades = portfolio.Instruments
-                .Where(x => x is IAssetInstrument);
-
-            var fxTrades = portfolio.Instruments
-                .Where(x => x is FxForward);
-
-            if (!fxTrades.Any() && !assetTrades.Any())
-                return DateTime.MinValue;
-            else if (!fxTrades.Any())
-                return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate); 
-            else if (!assetTrades.Any())
-                return fxTrades.Max(x => ((FxForward)x).DeliveryDate);
-            return assetTrades.Max(x => ((IAssetInstrument)x).LastSensitivityDate).Max(fxTrades.Max(x => ((FxForward)x).DeliveryDate));
-        }
-
         public static string[] AssetIds(this Portfolio portfolio)
         {
             if (portfolio.Instruments.Count == 0)
@@ -71,9 +74,9 @@ namespace Qwack.Core.Instruments
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
             var fxTrades = portfolio.Instruments
-                .Where(x => x is FxForward);
+                .Where(x => x is FxForward || (x is CashWrapper cw && cw.UnderlyingInstrument is FxForward));
             var fxOptionTrades = portfolio.Instruments
-                .Where(x => x is FxVanillaOption);
+                .Where(x => x is FxVanillaOption || (x is CashWrapper cw && cw.UnderlyingInstrument is FxVanillaOption));
 
             if (!fxTrades.Any() && !assetTrades.Any() && !fxOptionTrades.Any())
                 return new string[0];
@@ -82,11 +85,11 @@ namespace Qwack.Core.Instruments
 
             if(fxTrades.Any())
             {
-                o.AddRange(fxTrades.Select(x => ((FxForward)x).Pair));
+                o.AddRange(fxTrades.Select(x => (x is CashWrapper cw)?(cw.UnderlyingInstrument as FxForward).Pair:((FxForward)x).Pair));
             }
             if (fxOptionTrades.Any())
             {
-                o.AddRange(fxOptionTrades.Select(x => ((FxVanillaOption)x).PairStr));
+                o.AddRange(fxOptionTrades.Select(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxVanillaOption).PairStr : ((FxVanillaOption)x).PairStr));
             }
             if (assetTrades.Any())
             {
@@ -124,6 +127,8 @@ namespace Qwack.Core.Instruments
             for(var i=0;i<nInstrumnets;i++)
             {
                 var ins = pf.Instruments[i];
+                if (ins is CashWrapper cw) ins = cw.UnderlyingInstrument;
+
                 o[i + 1, 0] = ins.TradeId ?? string.Empty;
                 switch (ins)
                 {
@@ -235,6 +240,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = l.Counterparty ?? string.Empty;
                         break;
+                    case PhysicalBalance pb:
+                        o[i + 1, 1] = "Physical";
+                        o[i + 1, 2] = pb.Currency.Ccy;
+                        o[i + 1, 3] = pb.Currency.Ccy;
+                        o[i + 1, 4] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 5] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 6] = pb.PayDate == DateTime.MinValue ? string.Empty : (object)pb.PayDate;
+                        o[i + 1, 7] = string.Empty;
+                        o[i + 1, 8] = pb.Notional;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = pb.Counterparty ?? string.Empty;
+                        break;
                     case CashBalance c:
                         o[i + 1, 1] = "Cash";
                         o[i + 1, 2] = c.Currency.Ccy;
@@ -246,6 +263,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 8] = c.Notional;
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = c.Counterparty ?? string.Empty;
+                        break;
+                    case ETC etc:
+                        o[i + 1, 1] = "ETC";
+                        o[i + 1, 2] = etc.AssetId;
+                        o[i + 1, 3] = etc.Currency.Ccy;
+                        o[i + 1, 4] = etc.LastSensitivityDate;
+                        o[i + 1, 5] = etc.LastSensitivityDate;
+                        o[i + 1, 6] = etc.LastSensitivityDate;
+                        o[i + 1, 7] = string.Empty;
+                        o[i + 1, 8] = etc.Notional;
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = etc.Counterparty ?? string.Empty;
                         break;
                 }
             }
@@ -311,6 +340,10 @@ namespace Qwack.Core.Instruments
                     return cash.Equals((CashBalance)B);
                 case FixedRateLoanDeposit loanDeposit:
                     return loanDeposit.Equals((FixedRateLoanDeposit)B);
+                case CashWrapper wrapper:
+                    return Equals(wrapper.UnderlyingInstrument, (CashWrapper)B);
+                case ETC etc:
+                    return etc.Equals((ETC)B);
                 default:
                     return false;
             }
@@ -371,7 +404,7 @@ namespace Qwack.Core.Instruments
             return alpha * (rc + pfe);
         }
 
-        public static Portfolio RollWithLifecycle(this Portfolio pf,  DateTime rollToDate)
+        public static Portfolio RollWithLifecycle(this Portfolio pf, DateTime rollfromDate, DateTime rollToDate, bool cashOnDayAlreadyPaid=false)
         {
             var o = new Portfolio
             {
@@ -383,7 +416,7 @@ namespace Qwack.Core.Instruments
                 switch(i)
                 {
                     case FxForward fxf:
-                        if(fxf.DeliveryDate<rollToDate)
+                        if(fxf.DeliveryDate<rollToDate && fxf.DeliveryDate >= rollfromDate)
                         {
                             o.Instruments.Add(new CashBalance(fxf.DomesticCCY, fxf.DomesticQuantity) { TradeId = i.TradeId + "d" });
                             o.Instruments.Add(new CashBalance(fxf.ForeignCCY, -fxf.DomesticQuantity * fxf.Strike) { TradeId = i.TradeId + "f" });
@@ -394,19 +427,42 @@ namespace Qwack.Core.Instruments
                         }
                         break;
                     case FixedRateLoanDeposit l:
-                        if (l.EndDate < rollToDate)
+                        if (l.EndDate < rollToDate && l.EndDate >= rollfromDate)
                         {
                             o.Instruments.Add(new CashBalance(l.Currency, -l.Notional) { TradeId = i.TradeId + "n" });
-                            
                         }
                         else
                         {
                             o.Instruments.Add(l);
                         }
                         break;
+                    case CashWrapper w:
+                        var wrapper = (CashWrapper)w.Clone();
+                        switch (wrapper.UnderlyingInstrument)
+                        {
+                            case FxForward wfxf:
+                                if (wfxf.DeliveryDate < rollToDate && wfxf.DeliveryDate >= rollfromDate)
+                                {
+                                    wrapper.CashBalances.Add(new CashBalance(wfxf.DomesticCCY, wfxf.DomesticQuantity) { TradeId = i.TradeId + "d" });
+                                    wrapper.CashBalances.Add(new CashBalance(wfxf.ForeignCCY, -wfxf.DomesticQuantity * wfxf.Strike) { TradeId = i.TradeId + "f" });
+                                }                                break;
+                            case FixedRateLoanDeposit wl:
+                                if (wl.StartDate < rollToDate && ((!cashOnDayAlreadyPaid && wl.StartDate >= rollfromDate) || (cashOnDayAlreadyPaid && wl.StartDate > rollfromDate)))
+                                {
+                                    wrapper.CashBalances.Add(new CashBalance(wl.Currency, wl.Notional) { TradeId = i.TradeId + "nStart" });
+                                }
+                                if (wl.EndDate < rollToDate && ((!cashOnDayAlreadyPaid && wl.EndDate >= rollfromDate) || (cashOnDayAlreadyPaid && wl.EndDate > rollfromDate)))
+                                {
+                                    wrapper.CashBalances.Add(new CashBalance(wl.Currency, -wl.Notional) { TradeId = i.TradeId + "n" });
+                                }
+                                break;
+                        }
+                        o.Instruments.Add(wrapper);
+                        break;
                     default:
                         o.Instruments.Add(i);
                         break;
+
                 }
             }
 
@@ -438,5 +494,8 @@ namespace Qwack.Core.Instruments
 
             return o;
         }
+
+        public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
+            => new Portfolio { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
     }
 }

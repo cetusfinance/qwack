@@ -42,7 +42,19 @@ namespace Qwack.Core.Tests.Instruments
             expectedPv += -notional * dfEnd; //final notional
             expectedPv += -notional * ( iRate * t) * dfEnd; //final notional
             Assert.Equal(expectedPv, pv, 8);
+            Assert.Equal(maturity, depo.LastSensitivityDate);
+            Assert.Empty(depo.AssetIds);
+            Assert.Equal(usd, depo.PaymentCurrency);
+            Assert.Equal(0.0, depo.CalculateParRate(fModel));
 
+            Assert.Equal(notional, depo.FlowsT0(fModel));
+            var fm2 = fModel.DeepClone(maturity);
+            Assert.Equal(-notional*(1+ (iRate * t)), depo.FlowsT0(fm2));
+            fm2 = fModel.DeepClone(maturity.AddDays(1));
+            Assert.Equal(0.0, depo.FlowsT0(fm2));
+
+            var flows = depo.ExpectedCashFlows(new AssetFxModel(bd,fModel));
+            Assert.Equal(3, flows.Count);
 
             var loan = new FixedRateLoanDeposit(bd, maturity, iRate, usd, DayCountBasis.ACT360, -notional, "USD.BLAH");
             pv = loan.Pv(fModel, false);
@@ -51,6 +63,21 @@ namespace Qwack.Core.Tests.Instruments
             expectedPv += notional * dfEnd; //final notional
             expectedPv += notional * (iRate * t) * dfEnd; //final notional
             Assert.Equal(expectedPv, pv, 8);
+
+            Assert.Throws<NotImplementedException>(() => depo.Sensitivities(fModel));
+            Assert.Throws<NotImplementedException>(() => depo.SetStrike(0.0));
+
+            Assert.Empty(depo.Dependencies(fModel.FxMatrix));
+            Assert.Empty(depo.PastFixingDates(maturity));
+            Assert.Equal(FxConversionType.None, depo.FxType(null));
+            Assert.Equal(string.Empty, depo.FxPair(null));
+
+
+            var depo2 = depo.Clone();
+            Assert.True(depo.Equals(depo2));
+            Assert.False(depo.Equals(loan));
+            var depo3 = depo.SetParRate(0.333);
+            Assert.False(depo.Equals(depo3));
         }
 
 

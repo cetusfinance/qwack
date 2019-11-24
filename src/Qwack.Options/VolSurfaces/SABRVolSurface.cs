@@ -7,7 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Qwack.Core.Descriptors;
+using Qwack.Core.Calibrators;
+using Qwack.Options.Calibrators;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -16,7 +17,7 @@ namespace Qwack.Options.VolSurfaces
     /// Can be built from SABR parameters directly or fitted to strike/vol pairs
     /// Interpolates in SABR parameter space in the time dimension using the method specified
     /// </summary>
-    public class SabrVolSurface : IVolSurface
+    public class SabrVolSurface : IATMVolSurface
     {
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
@@ -28,20 +29,18 @@ namespace Qwack.Options.VolSurfaces
         public double[] ExpiriesDouble { get; set; }
 
         public Currency Currency { get; set; }
-
+        public Frequency OverrideSpotLag { get; set; }
         public Interpolator1DType TimeInterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
-
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
+        public string[] PillarLabels { get; }
 
         private IInterpolator1D _alphaInterp;
         private IInterpolator1D _betaInterp;
         private IInterpolator1D _rhoInterp;
         private IInterpolator1D _nuInterp;
+        private IInterpolator1D _fwdsInterp;
 
         public SabrVolSurface() { }
 
@@ -54,6 +53,106 @@ namespace Qwack.Options.VolSurfaces
             TimeBasis = timeBasis;
 
             Build(originDate, strikes, expiries, vols, forwardCurve);
+        }
+
+        public SabrVolSurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas,
+          double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType,
+          Interpolator1DType timeInterpType, string[] pillarLabels = null)
+        {
+            if (pillarLabels == null)
+                PillarLabels = expiries.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
+            else
+                PillarLabels = pillarLabels;
+
+            if (ATMVols.Length != expiries.Length || expiries.Length != riskies.Length || riskies.Length != flies.Length)
+                throw new Exception("Inputs do not have consistent time dimensions");
+
+            if (wingDeltas.Length != riskies[0].Length || riskies[0].Length != flies[0].Length)
+                throw new Exception("Inputs do not have consistent strike dimensions");
+
+            var atmConstraints = ATMVols.Select(a => new ATMStraddleConstraint
+            {
+                ATMVolType = atmVolType,
+                MarketVol = a
+            }).ToArray();
+
+            var needsFlip = wingDeltas.First() > wingDeltas.Last();
+            var strikes = new double[2 * wingDeltas.Length + 1];
+            if (needsFlip)
+            {
+                for (var s = 0; s < wingDeltas.Length; s++)
+                {
+                    strikes[s] = wingDeltas[wingDeltas.Length - 1 - s];
+                    strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[wingDeltas.Length - 1 - s];
+                }
+            }
+            else
+            {
+                for (var s = 0; s < wingDeltas.Length; s++)
+                {
+                    strikes[s] = wingDeltas[s];
+                    strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[s];
+                }
+            }
+            strikes[wingDeltas.Length] = 0.5;
+
+            var wingConstraints = new RRBFConstraint[expiries.Length][];
+            var parameters = new SABRParameters[expiries.Length];
+            var f = new AssetSmileSolver();
+
+            if (needsFlip)
+            {
+                for (var i = 0; i < wingConstraints.Length; i++)
+                {
+                    var offset = wingDeltas.Length - 1;
+                    wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
+                    for (var j = 0; j < wingConstraints[i].Length; j++)
+                    {
+                        wingConstraints[i][j] = new RRBFConstraint
+                        {
+                            Delta = wingDeltas[offset - j],
+                            FlyVol = flies[i][offset - j],
+                            RisykVol = riskies[i][offset - j],
+                            WingQuoteType = wingQuoteType,
+                        };
+                    }
+                    parameters[i] = f.SolveSABR(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], 1.0);
+                }
+            }
+            else
+            {
+                for (var i = 0; i < wingConstraints.Length; i++)
+                {
+                    wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
+                    for (var j = 0; j < wingConstraints[i].Length; j++)
+                    {
+                        wingConstraints[i][j] = new RRBFConstraint
+                        {
+                            Delta = wingDeltas[j],
+                            FlyVol = flies[i][j],
+                            RisykVol = riskies[i][j],
+                            WingQuoteType = wingQuoteType,
+                        };
+                    }
+                    parameters[i] = f.SolveSABR(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], 1.0);
+                }
+            }
+
+            OriginDate = originDate;
+            TimeInterpolatorType = timeInterpType;
+            Expiries = expiries;
+            ExpiriesDouble = expiries.Select(x => originDate.CalculateYearFraction(x,TimeBasis)).ToArray();
+
+            Alphas = parameters.Select(x => x.Alpha).ToArray();
+            Betas = parameters.Select(x => x.Beta).ToArray();
+            Nus = parameters.Select(x => x.Nu).ToArray();
+            Rhos = parameters.Select(x => x.Rho).ToArray();
+
+            _alphaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble,  Alphas, TimeInterpolatorType);
+            _betaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Betas, TimeInterpolatorType);
+            _rhoInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Rhos, TimeInterpolatorType);
+            _nuInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Nus, TimeInterpolatorType);
+            _fwdsInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, fwds, TimeInterpolatorType);
         }
 
         public void Build(DateTime originDate, double[][] strikes, DateTime[] expiries, double[][] vols, Func<double, double> forwardCurve)
@@ -105,48 +204,40 @@ namespace Qwack.Options.VolSurfaces
                 Nus[i] = paramArr[2];
             }
 
+            var fwds = ExpiriesDouble.Select(x => forwardCurve(x)).ToArray();
+
             _alphaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Alphas, TimeInterpolatorType);
             _betaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Betas, TimeInterpolatorType);
             _rhoInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Rhos, TimeInterpolatorType);
             _nuInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Nus, TimeInterpolatorType);
+            _fwdsInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, fwds, TimeInterpolatorType);
         }
 
-        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
-        {
-            var alpha = _alphaInterp.Interpolate(maturity);
-            var beta = _betaInterp.Interpolate(maturity);
-            var nu = _nuInterp.Interpolate(maturity);
-            var rho = _rhoInterp.Interpolate(maturity);
-            var fwd = forward;
-            if (beta >= 1.0)
-                return SABR.CalcImpVol_Beta1(fwd, strike, maturity, alpha, rho, nu);
-            else
-                return SABR.CalcImpVol_Hagan(fwd, strike, maturity, alpha, beta, rho, nu);
-        }
+        public static double GetVolForAbsoluteStrike(double strike, double maturity, double forward, SABRParameters sabrParams) => sabrParams.Beta >= 1.0
+                ? SABR.CalcImpVol_Beta1(forward, strike, maturity, sabrParams.Alpha, sabrParams.Rho, sabrParams.Nu)
+                : SABR.CalcImpVol_Hagan(forward, strike, maturity, sabrParams.Alpha, sabrParams.Beta, sabrParams.Rho, sabrParams.Nu);
 
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
-
-        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
+        public double GetVolForAbsoluteStrike(double strike, double maturity, double forward) => GetVolForAbsoluteStrike(strike, maturity, forward, new SABRParameters
         {
-            var fwd = forward;
-            var cp = deltaStrike < 0 ? OptionType.Put : OptionType.Call;
+            Alpha = _alphaInterp.Interpolate(maturity),
+            Beta = _betaInterp.Interpolate(maturity),
+            Nu = _nuInterp.Interpolate(maturity),
+            Rho = _rhoInterp.Interpolate(maturity)
+        });
 
-            Func<double, double> testFunc = (absK =>
-            {
-                var vol = GetVolForAbsoluteStrike(absK, maturity, forward);
-                var deltaK = BlackFunctions.BlackDelta(fwd, absK, 0, maturity, vol, cp);
-                return deltaK - System.Math.Abs(deltaStrike);
-            });
-
-            var solvedStrike = Math.Solvers.Brent.BrentsMethodSolve(testFunc, 0.000000001, 10 * fwd, 1e-8);
-
-            return GetVolForAbsoluteStrike(solvedStrike, maturity, forward);
-        }
-
+        public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => VolUtils.GetVolForDeltaStrike(deltaStrike, maturity, forward, (k) => GetVolForAbsoluteStrike(k, maturity, forward));
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => throw new NotImplementedException();
 
         public DateTime PillarDatesForLabel(string label) => throw new NotImplementedException();
+
+        public double GetForwardATMVol(DateTime startDate, DateTime endDate) => GetForwardATMVol(TimeBasis.CalculateYearFraction(OriginDate, startDate), TimeBasis.CalculateYearFraction(OriginDate, endDate));
+
+        public double GetForwardATMVol(double start, double end) => VolUtils.GetForwardATMVol(start, end, _fwdsInterp.Interpolate(start), _fwdsInterp.Interpolate(end), GetVolForAbsoluteStrike);
+
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

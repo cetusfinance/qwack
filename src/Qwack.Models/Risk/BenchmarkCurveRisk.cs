@@ -29,7 +29,7 @@ namespace Qwack.Models.Risk
             };
             cube.Initialize(dataTypes);
 
-            var lastDate = pvModel.Portfolio.LastSensitivityDate();
+            var lastDate = pvModel.Portfolio.LastSensitivityDate;
 
             var insByCurve = riskCollection.GroupBy(x => x.SolveCurve);
             var insToRisk = new List<IFundingInstrument>();
@@ -58,16 +58,25 @@ namespace Qwack.Models.Risk
 
             var vModel = pvModel.VanillaModel.Clone(fModel);
             var newPvModel = pvModel.Rebuild(vModel, pvModel.Portfolio);
-         
+
+            //var basePVbyCurrency = new Dictionary<Currency, ICube>();
+
+            var basePV = newPvModel.PV(reportingCcy);
+
             for (var i = 0; i < newIns.Count(); i++)
             {
-                var basePV = newPvModel.PV(insToRisk[i].Currency);
+                //if (!basePVbyCurrency.TryGetValue(insToRisk[i].Currency, out var basePV))
+                //{
+                //    basePV = newPvModel.PV(insToRisk[i].Currency);
+                //    basePVbyCurrency[insToRisk[i].Currency] = basePV;
+                //}
+
                 var tIdIx = basePV.GetColumnIndex("TradeId");
                 var tTypeIx = basePV.GetColumnIndex("TradeType");
 
                 var bumpSize = GetBumpSize(insToRisk[i]);
 
-                var bumpedIns = insToRisk.Select((x, ix) => x.SetParRate(parRates[ix] + (ix == i ? bumpSize : 0.0)));
+                var bumpedIns = newIns.Select((x, ix) => x.SetParRate(parRates[ix] + (ix == i ? bumpSize : 0.0)));
                 var newFicb = new FundingInstrumentCollection(currencyProvider);
                 newFicb.AddRange(bumpedIns);
 
@@ -79,17 +88,21 @@ namespace Qwack.Models.Risk
                 var vModelb = pvModel.VanillaModel.Clone(fModelb);
                 var newPvModelb = pvModel.Rebuild(vModelb, pvModel.Portfolio);
 
-                var bumpedPV = newPvModelb.PV(insToRisk[i].Currency);
+                //var bumpedPV = newPvModelb.PV(insToRisk[i].Currency);
+                var bumpedPV = newPvModelb.PV(reportingCcy);
+
                 var bumpName = insToRisk[i].TradeId;
                 var riskDate = insToRisk[i].PillarDate;
                 var riskCurve = insToRisk[i].SolveCurve;
                 var riskUnits = GetRiskUnits(insToRisk[i]);
 
                 var deltaCube = bumpedPV.QuickDifference(basePV);
-                var deltaScale = GetScaleFactor(insToRisk[i], parRates[i], parRates[i] + bumpSize);
+                var deltaScale = GetScaleFactor(insToRisk[i], parRates[i], parRates[i] + bumpSize, fModel);
+                var fxToCurveCcy = fModel.GetFxRate(fModel.BuildDate, reportingCcy, insToRisk[i].Currency);
 
                 foreach (var dRow in deltaCube.GetAllRows())
                 {
+
                     var row = new Dictionary<string, object>
                             {
                                 { "TradeId", dRow.MetaData[tIdIx] },
@@ -101,14 +114,14 @@ namespace Qwack.Models.Risk
                                 { "Units", riskUnits },
                                 { "BumpSize", bumpSize},
                             };
-                    cube.AddRow(row, dRow.Value * deltaScale);
+                    cube.AddRow(row, dRow.Value * deltaScale * fxToCurveCcy);
                 }
             }
 
             return cube.Sort();
         }
 
-        private static double GetScaleFactor(IFundingInstrument ins, double parFlat, double parBump)
+        private static double GetScaleFactor(IFundingInstrument ins, double parFlat, double parBump, IFundingModel model)
         {
             switch (ins)
             {
@@ -118,6 +131,12 @@ namespace Qwack.Models.Risk
                     return -1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
                 case ForwardRateAgreement fra:
                     return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().NotionalByYearFraction);
+                case ContangoSwap cs:
+                    var t360 = (cs.PillarDate - model.BuildDate).TotalDays / 360.0;
+                    var spot = model.GetFxRate(model.BuildDate,cs.MetalCCY,cs.CashCCY);
+                    var fwdFlat = (1 + parFlat * t360)* spot;
+                    var fwdBumped = (1 + parBump * t360) * spot;
+                    return 1.0 / (fwdBumped - fwdFlat);
                 default:
                     return 1.0;
             }
@@ -143,6 +162,8 @@ namespace Qwack.Models.Risk
                 case ForwardRateAgreement fra:
                 case FxForward fxf:
                     return "Nominal";
+                case ContangoSwap cs:
+                    return "Oz";
                 default:
                     return "PnL";
             }

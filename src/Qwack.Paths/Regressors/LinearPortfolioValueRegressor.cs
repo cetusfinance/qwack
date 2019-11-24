@@ -116,7 +116,9 @@ namespace Qwack.Paths.Regressors
             {
                 if (_regressionDates[d] <= model.BuildDate)
                 {
-                    o[d] = new MultipleLinearRegressor(new double[_pathwiseValues[d][0].Length + 1]);
+                    var detVec = new double[_pathwiseValues[d][0].Length + 1];
+                    detVec[0] = finalValues[d].Average();
+                    o[d] = new MultipleLinearRegressor(detVec);
                 }
                 else
                 {
@@ -153,7 +155,7 @@ namespace Qwack.Paths.Regressors
 
             ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {
-                o[d] = _pathwiseValues[d].Select(p => Max(0, regressors[d].Regress(p))).OrderBy(x => x).Average();
+                o[d] = _pathwiseValues[d].Select(p => Max(0, regressors[d].Regress(p))).Average();
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }).Wait();
 
@@ -168,7 +170,7 @@ namespace Qwack.Paths.Regressors
 
             ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {
-                o[d] = _pathwiseValues[d].Select(p => Min(0, regressors[d].Regress(p))).OrderBy(x => x).Average();
+                o[d] = _pathwiseValues[d].Select(p => Min(0, regressors[d].Regress(p))).Average();
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }).Wait();
 

@@ -70,6 +70,12 @@ namespace Qwack.Core.Tests.Instruments
             var ss = s.Sensitivities(fModel);
             Assert.True(ss.Count == 1 && ss.Keys.Single() == "USD.BLAH");
             Assert.True(ss["USD.BLAH"].Count == 2 && ss["USD.BLAH"].Keys.Contains(accrualStart) && ss["USD.BLAH"].Keys.Contains(accrualEnd));
+
+            Assert.Equal(accrualEnd, s.LastSensitivityDate);
+            Assert.Empty(s.Dependencies(null));
+
+            var s2 = (OISFuture)s.SetParRate(97);
+            Assert.Equal(97, s2.Price);
         }
 
     }

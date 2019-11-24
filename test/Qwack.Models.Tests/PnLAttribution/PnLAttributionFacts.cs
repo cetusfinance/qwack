@@ -54,14 +54,14 @@ namespace Qwack.Models.Tests.PnLAttribution
             var startModel = new AssetFxModel(originDate, fModel);
             startModel.AddFixingDictionary("FakeAsset", new FixingDictionary());
             startModel.AddPriceCurve("FakeAsset", new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider));
-            startModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00));
+            startModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00) { AssetId = "FakeAsset", Currency = usd });
 
             var endFModel = fModel.DeepClone();
             endFModel.FxMatrix.SpotRates[usd] = 15;
             var endModel = startModel.Clone(endFModel);
             endModel.AddFixingDictionary("FakeAsset", new FixingDictionary());
             endModel.AddPriceCurve("FakeAsset", new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider));
-            endModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00));
+            endModel.AddVolSurface("FakeAsset", new ConstantVolSurface(originDate, 1.00) { AssetId = "FakeAsset", Currency = usd });
             return (startModel, endModel, pf);
         }
 
@@ -114,7 +114,7 @@ namespace Qwack.Models.Tests.PnLAttribution
             var sum = result.GetAllRows().Sum(x => x.Value);
             var expected = 2.0*portfolio.PV(endModel, zar).GetAllRows().Sum(x => x.Value)
                 - portfolio.PV(startModel, zar).GetAllRows().Sum(x => x.Value);
-            Assert.Equal(expected, sum, 10);
+            Assert.Equal(expected, sum, 9);
         }
     }
 }

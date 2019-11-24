@@ -45,8 +45,6 @@ namespace Qwack.Core.Instruments.Funding
             return fairPrice;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             var forecastDict =  new Dictionary<DateTime, double>();
@@ -91,5 +89,7 @@ namespace Qwack.Core.Instruments.Funding
             newIns.Price = parRate;
             return newIns;
         }
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
     }
 }

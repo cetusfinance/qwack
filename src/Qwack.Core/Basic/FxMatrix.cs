@@ -49,6 +49,9 @@ namespace Qwack.Core.Basic
 
         public double GetSpotRate(Currency ccy) => SpotRates.TryGetValue(ccy, out var spotRate) ? spotRate : throw new Exception($"Spot rate for currency {ccy.Ccy} not found");
 
+        public bool TryGetSpotRate(Currency ccy, out double spotRate) => SpotRates.TryGetValue(ccy, out spotRate);
+
+
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
             if(domesticCcy==foreignCcy)

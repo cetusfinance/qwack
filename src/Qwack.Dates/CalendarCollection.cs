@@ -31,6 +31,7 @@ namespace Qwack.Dates
                 foreach (var dc in currentCalendar.InheritedCalendar)
                 {
                     MergeCalendar(_mergedCalendars[dc], currentCalendar);
+                    currentCalendar.InheritedCalendarObjects.Add(_mergedCalendars[dc]);
                 }
                 _mergedCalendars.Add(currentCalendar.Name, currentCalendar);
             }

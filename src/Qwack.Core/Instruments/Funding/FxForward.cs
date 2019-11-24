@@ -42,9 +42,10 @@ namespace Qwack.Core.Instruments.Funding
             return curves.Distinct().Where(x => x != SolveCurve).ToList();
         }
 
-        public double Pv(IFundingModel Model, bool updateState)
+        public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
+        public double Pv(IFundingModel Model, bool updateState, bool ignoreTodayFlows)
         {
-            if (Model.BuildDate > DeliveryDate)
+            if (Model.BuildDate > DeliveryDate || (ignoreTodayFlows && Model.BuildDate == DeliveryDate))
                 return 0.0;
 
             var discountCurve = Model.Curves[ForeignDiscountCurve];
@@ -66,8 +67,6 @@ namespace Qwack.Core.Instruments.Funding
             var FV = (fwdRate - Strike) * DomesticQuantity;     
             return FV;
         }
-
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
@@ -161,5 +160,23 @@ namespace Qwack.Core.Instruments.Funding
         public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
         private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
 
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+            {
+                new CashFlow()
+                {
+                    Currency = DomesticCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity,
+                    Fv = DomesticQuantity
+                },
+                new CashFlow()
+                {
+                    Currency = ForeignCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = DomesticQuantity * Strike,
+                    Fv = DomesticQuantity * Strike
+                }
+        };
     }
 }

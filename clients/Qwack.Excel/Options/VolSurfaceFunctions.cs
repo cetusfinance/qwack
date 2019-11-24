@@ -60,7 +60,8 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Time Interpolation - default Linear")] object TimeInterpolation,
               [ExcelArgument(Description = "Time basis - default ACT365F")] object TimeBasis,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
-              [ExcelArgument(Description = "Currency - default USD")] object Currency)
+              [ExcelArgument(Description = "Currency - default USD")] object Currency,
+              [ExcelArgument(Description = "Override spot lag - default none")] object SpotLag)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -95,6 +96,10 @@ namespace Qwack.Excel.Options
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
                 };
+                if (SpotLag != null && !(SpotLag is ExcelMissing))
+                {
+                    surface.OverrideSpotLag = new Frequency((string)SpotLag);
+                }
                 return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
             });
         }
@@ -116,7 +121,8 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Stike Interpolation - default GaussianKernel")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
-              [ExcelArgument(Description = "Currency - default USD")] object Currency)
+              [ExcelArgument(Description = "Currency - default USD")] object Currency,
+              [ExcelArgument(Description = "Override spot lag - default none")] object SpotLag)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -164,6 +170,78 @@ namespace Qwack.Excel.Options
                 }
 
                 var surface = new RiskyFlySurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, siType, tiType, labels)
+                {
+                    Currency = ContainerStores.CurrencyProvider[ccyStr],
+                    Name = AssetId ?? ObjectName,
+                    AssetId = AssetId ?? ObjectName,
+                };
+                if(SpotLag!=null && !(SpotLag is ExcelMissing))
+                {
+                    surface.OverrideSpotLag = new Frequency((string)SpotLag);
+                }
+                return ExcelHelper.PushToCache<IVolSurface>(surface, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a SABR vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateSABRVolSurfaceFromRiskyFly), IsThreadSafe = true)]
+        public static object CreateSABRVolSurfaceFromRiskyFly(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Asset Id")] string AssetId,
+              [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
+              [ExcelArgument(Description = "Wing deltas")] double[] WingDeltas,
+              [ExcelArgument(Description = "Expiries")] double[] Expiries,
+              [ExcelArgument(Description = "ATM Volatilities")] double[] ATMVols,
+              [ExcelArgument(Description = "Risk Reversal quotes")] double[,] Riskies,
+              [ExcelArgument(Description = "Butterfly quotes")] double[,] Flies,
+              [ExcelArgument(Description = "Forwards or price curve object")] object FwdsOrCurve,
+              [ExcelArgument(Description = "ATM vol type - default zero-delta straddle")] object ATMType,
+              [ExcelArgument(Description = "Wing quote type - Simple or Market")] object WingType,
+              [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
+              [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
+              [ExcelArgument(Description = "Currency - default USD")] object Currency)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
+
+                var ccyStr = Currency.OptionalExcel("USD");
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ccyStr, out var ccyCal);
+
+                var atmType = ATMType.OptionalExcel("ZeroDeltaStraddle");
+                var wingType = WingType.OptionalExcel("Simple");
+                var timeInterpType = TimeInterpolation.OptionalExcel("LinearInVariance");
+                var expiries = ExcelHelper.ToDateTimeArray(Expiries);
+                var rr = Riskies.SquareToJagged<double>();
+                var bf = Flies.SquareToJagged<double>();
+
+                if (!Enum.TryParse(wingType, out WingQuoteType wType))
+                    return $"Could not parse wing quote type - {wingType}";
+
+                if (!Enum.TryParse(atmType, out AtmVolType aType))
+                    return $"Could not parse atm quote type - {atmType}";
+
+                if (!Enum.TryParse(timeInterpType, out Interpolator1DType tiType))
+                    return $"Could not parse time interpolator type - {timeInterpType}";
+
+                double[] fwds = null;
+                if (FwdsOrCurve is double)
+                {
+                    fwds = new double[] { (double)FwdsOrCurve };
+                }
+                else if (FwdsOrCurve is string)
+                {
+                    if (!ContainerStores.GetObjectCache<IPriceCurve>().TryGetObject(FwdsOrCurve as string, out var curve))
+                    {
+                        return $"Could not find fwd curve with name - {FwdsOrCurve as string}";
+                    }
+                    fwds = expiries.Select(e => curve.Value.GetPriceForDate(e)).ToArray();
+                }
+                else
+                {
+                    fwds = ((object[,])FwdsOrCurve).ObjectRangeToVector<double>();
+                }
+
+                var surface = new SabrVolSurface(OriginDate, ATMVols, expiries, WingDeltas, rr, bf, fwds, wType, aType, tiType, labels)
                 {
                     Currency = ContainerStores.CurrencyProvider[ccyStr],
                     Name = AssetId ?? ObjectName,

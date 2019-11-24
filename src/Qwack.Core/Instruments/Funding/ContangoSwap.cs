@@ -60,8 +60,6 @@ namespace Qwack.Core.Instruments.Funding
             return ctgo;
         }
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => throw new NotImplementedException();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             var foreignCurve = model.FxMatrix.DiscountCurveMap[CashCCY];
@@ -125,5 +123,41 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
+        {
+            var SpotRate = model.FundingModel.GetFxRate(SpotDate, MetalCCY, CashCCY);
+            var t = Basis.CalculateYearFraction(model.BuildDate, DeliveryDate);
+            var strike = SpotRate * (1.0 + ContangoRate * t);
+            return new List<CashFlow>
+            { new CashFlow()
+                {
+                    Currency = MetalCCY,
+                    SettleDate = SpotDate,
+                    Notional = MetalQuantity,
+                    Fv = MetalQuantity
+                },
+            new CashFlow()
+            {
+                    Currency = MetalCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = -MetalQuantity,
+                    Fv = -MetalQuantity
+                },
+             new CashFlow()
+                {
+                    Currency = CashCCY,
+                    SettleDate = SpotDate,
+                    Notional = -MetalQuantity * strike,
+                    Fv = -MetalQuantity *strike
+                },
+            new CashFlow()
+            {
+                    Currency = MetalCCY,
+                    SettleDate = DeliveryDate,
+                    Notional = MetalQuantity * strike,
+                    Fv = MetalQuantity * strike
+                }
+            };
+        }
     }
 }

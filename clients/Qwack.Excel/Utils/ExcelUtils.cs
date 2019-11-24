@@ -213,6 +213,18 @@ namespace Qwack.Excel.Utils
         }
 
         [ExcludeFromCodeCoverage]
+        [ExcelFunction(Description = "Creates a folder", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_CreateFolder(
+            [ExcelArgument(Description = "Folder name")] string Folder)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                System.IO.Directory.CreateDirectory(Folder);
+                return "Success";
+            });
+        }
+
+        [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Serializes an object to file", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_SerializeObject(
             [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -284,6 +296,21 @@ namespace Qwack.Excel.Utils
             {
                 var s = Seperator.OptionalExcel(",");
                 return string.Join(s, Input);
+            });
+        }
+
+        [ExcelFunction(Description = "Splits a string on a given character and returns the nTh instance", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_Split(
+            [ExcelArgument(Description = "Input string")] string Input,
+            [ExcelArgument(Description = "Seperator character")] string Seperator,
+            [ExcelArgument(Description = "nth instance, negative to count from last backwards")] int n)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var s = Input.Split(Seperator.ToCharArray());
+                if (System.Math.Abs(n) > s.Length)
+                    return "#Too few instances";
+                return n > 0 ? s[n - 1] : s[s.Length + n];
             });
         }
     }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
+using Qwack.Dates;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -22,15 +22,11 @@ namespace Qwack.Options.VolSurfaces
 
         public IInterpolator2D LocalVolGrid { get; set; }
 
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
-
         public DateTime[] Expiries => new[] { OriginDate };
-
+        public Frequency OverrideSpotLag { get; set; }
         public ConstantVolSurface()         {        }
 
-        public ConstantVolSurface(DateTime originDate, double volatility) => Build(originDate, volatility);
+        public ConstantVolSurface(DateTime originDate, double volatility):base() => Build(originDate, volatility);
 
         public void Build(DateTime originDate, double volatility)
         {
@@ -46,8 +42,6 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => Volatility;
 
-        public double GetFwdATMVol(DateTime startDate, DateTime endDate) => Volatility;
-
         public double GetForwardATMVol(DateTime startDate, DateTime endDate) => Volatility;
 
         public double GetForwardATMVol(double start, double end) => Volatility;
@@ -61,5 +55,8 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
+
+        public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
+        public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
     }
 }

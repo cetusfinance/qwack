@@ -732,7 +732,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -747,13 +747,10 @@ namespace Qwack.Models.Models
 
             cube.Initialize(dataTypes);
 
-            var pvCubeBase = portfolio.PV(startModel, reportingCcy);
+            var pvCubeBase = portfolio.PV(startModel, reportingCcy, cashOnDayAlreadyPaid);
             var pvRows = pvCubeBase.GetAllRows();
             var tidIx = pvCubeBase.GetColumnIndex("TradeId");
             var tTypeIx = pvCubeBase.GetColumnIndex("TradeType");
-
-            var cashCube = portfolio.FlowsT0(startModel, reportingCcy);
-            var cashRows = cashCube.GetAllRows();
 
             //analytic theta explain
             var theta = portfolio.AssetAnalyticTheta(startModel, endModel.BuildDate, reportingCcy, currencyProvider);
@@ -785,24 +782,12 @@ namespace Qwack.Models.Models
 
             //next step roll time fwd
             var model = startModel.RollModel(endModel.BuildDate, currencyProvider);
+            //portfolio = cashOnDayAlreadyPaid?portfolio:portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate);
+            portfolio = portfolio.RollWithLifecycle(startModel.BuildDate, endModel.BuildDate, cashOnDayAlreadyPaid);
             var newPVCube = portfolio.PV(model, reportingCcy);
 
-            //cash moves
-            var cashByTrade = new Dictionary<string, double>();
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var tid = (string)cashRows[i].MetaData[tidIx];
-                    if (cashByTrade.ContainsKey(tid))
-                        cashByTrade[tid] = cashByTrade[tid] + cash;
-                    else
-                        cashByTrade[tid] = cash;
-                }
-            }
 
-            var step = newPVCube.QuickDifference(pvCubeBase);
+            var step = newPVCube.Difference(pvCubeBase);
             foreach (var r in step.GetAllRows())
             {
                 var row = new Dictionary<string, object>
@@ -815,8 +800,7 @@ namespace Qwack.Models.Models
                     { "PointLabel", string.Empty }
                 };
                 thetaByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
-                cashByTrade.TryGetValue((string)r.MetaData[tidIx], out var cash);
-                cube.AddRow(row, r.Value - explained + cash);
+                cube.AddRow(row, r.Value - explained);
             }
             var lastPVCuve = newPVCube;
 
@@ -1354,27 +1338,34 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
         {
             //first do normal attribution
-            var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider);
+            var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider, cashOnDayAlreadyPaid);
+
+            cube = cube.EnrichWithPortfolio(startPortfolio);
 
             //then do activity PnL
             var (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd) = startPortfolio.ActivityBooks(endPortfolio, endModel.BuildDate);
+
+            var pfEndDict = endPortfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
+            var pfStartDict = startPortfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
 
             var newTradesPnL = newTrades.PV(endModel, reportingCcy);
             var tidIx = newTradesPnL.GetColumnIndex("TradeId");
             var tTypeIx = newTradesPnL.GetColumnIndex("TradeType");
             foreach (var t in newTradesPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId",  tid},
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "New" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfEndDict[tid]}
                 };
                 cube.AddRow(row, t.Value);
             }
@@ -1382,14 +1373,16 @@ namespace Qwack.Models.Models
             var removedTradesPnL = removedTrades.PV(endModel, reportingCcy);
             foreach (var t in removedTradesPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId", tid },
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Removed" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfStartDict[tid]}
                 };
                 cube.AddRow(row, -t.Value);
             }
@@ -1399,19 +1392,39 @@ namespace Qwack.Models.Models
             var ammendedPnL = ammendedTradesPnLEnd.QuickDifference(ammendedTradesPnLStart);
             foreach (var t in ammendedPnL.GetAllRows())
             {
+                var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", t.MetaData[tidIx] },
+                    { "TradeId", tid },
                     { "TradeType", t.MetaData[tTypeIx] },
                     { "Step", "Activity" },
                     { "SubStep", "Ammended" },
                     { "SubSubStep", string.Empty },
-                    { "PointLabel", string.Empty }
+                    { "PointLabel", string.Empty },
+                    { "Portfolio", pfStartDict[tid]}
                 };
                 cube.AddRow(row, t.Value);
             }
 
             return cube;
+        }
+
+        private static ICube EnrichWithPortfolio(this ICube results, Portfolio pfolio)
+        {
+            var o = new ResultCube();
+            var dt = new Dictionary<string,Type>(results.DataTypes);
+            dt.Add("Portfolio", typeof(string));
+            o.Initialize(dt);
+
+            var pfDict = pfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);
+            var tidIx = results.GetColumnIndex("TradeId");
+            foreach (var r in results.GetAllRows())
+            {
+                r.MetaData = r.MetaData.Concat(new object[] { pfDict[(string)r.MetaData[tidIx]] }).ToArray();
+                o.AddRow(r.MetaData, r.Value);
+            }
+
+            return o;
         }
     }
 }

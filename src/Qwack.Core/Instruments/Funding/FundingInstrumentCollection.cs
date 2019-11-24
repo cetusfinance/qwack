@@ -84,7 +84,7 @@ namespace Qwack.Core.Instruments.Funding
                 //first do curves which only have resolved dependencies
                 var resolvedCurves = o.Keys.ToList();
                 var canResolveThisTime = dependencies.Where(x => x.Value.All(y => resolvedCurves.Contains(y)));
-                foreach (var curve in canResolveThisTime)
+                foreach (var curve in canResolveThisTime.ToList())
                 {
                     o.Add(curve.Key, currentStage);
                     currentStage++;
@@ -110,6 +110,8 @@ namespace Qwack.Core.Instruments.Funding
 
                 if (currentCount == dependencies.Count())
                     throw new Exception($"Failed to make forward progress at stage {currentStage}");
+
+                currentCount = dependencies.Count();
             }
             return o;
         }

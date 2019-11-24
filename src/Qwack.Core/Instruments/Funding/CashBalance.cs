@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public CashBalance() { }
 
-        public CashBalance(Currency currency, double notional, DateTime? payDate = null)
+        public CashBalance(Currency currency, double notional, DateTime? payDate = null):base()
         {
             Notional = notional;
             Currency = currency;
@@ -38,8 +38,6 @@ namespace Qwack.Core.Instruments.Funding
 
         public double FlowsT0(IFundingModel model) => 0.0;
 
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model) => new CashFlowSchedule();
-
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
         public override bool Equals(object obj) => obj is CashBalance balance &&
@@ -58,7 +56,9 @@ namespace Qwack.Core.Instruments.Funding
             Notional = Notional,
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,
-            TradeId = TradeId
+            TradeId = TradeId,
+            PortfolioName = PortfolioName,
+            PayDate = PayDate
         };
 
         public IFundingInstrument SetParRate(double parRate) => Clone();
@@ -69,5 +69,15 @@ namespace Qwack.Core.Instruments.Funding
         public string FxPair(IAssetFxModel model) => string.Empty;
         IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+            { new CashFlow()
+                {
+                    Currency = Currency,
+                    SettleDate = PayDate==DateTime.MinValue ? model.BuildDate:PayDate,
+                    Notional = Notional,
+                    Fv = Notional
+                }
+        };
     }
 }

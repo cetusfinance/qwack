@@ -34,6 +34,32 @@ namespace Qwack.Math.Solvers
             return x;
         }
 
+        public static double MethodSolve2(Func<double, double> function, double initialGuess, double errorTol, int maxItterations = 1000, double bump = 1e-6)
+        {
+            var originalBump = bump;
+            var x = initialGuess;
+            var itteration = 0;
+
+            while (itteration < maxItterations && Abs(function(x)) > errorTol)
+            {
+                bump = originalBump;
+                var f = function(x);
+                var fBumped = function(x + bump);
+                var dfdx = (fBumped - f) / bump;
+                while(dfdx==0 && itteration < maxItterations)
+                {
+                    bump *= 2.0;
+                    fBumped = function(x + bump);
+                    dfdx = (fBumped - f) / bump;
+                    itteration++;
+                }
+                x -= f / dfdx;
+                itteration++;
+            }
+
+            return x;
+        }
+
         /// <summary>
         /// Implementation of Newton's method for root finding which uses an exact derivative
         /// </summary>
@@ -52,6 +78,8 @@ namespace Qwack.Math.Solvers
             {
                 var f = function(x);
                 var dfdx = derivativeFunction(x);
+                if (dfdx == 0)
+                    return x;
                 x -= f / dfdx;
                 itteration++;
             }

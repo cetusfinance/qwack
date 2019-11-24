@@ -7,6 +7,7 @@ using Xunit;
 using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
 using Qwack.Dates;
+using Qwack.Options;
 
 namespace Qwack.Math.Tests.Options
 {
@@ -52,6 +53,17 @@ namespace Qwack.Math.Tests.Options
             var PVcall = TurnbullWakeman.PV(f, 0, vol, k, t, t2, rf, OptionType.C);
             var PVput = TurnbullWakeman.PV(f, 0, vol, k, t, t2, rf, OptionType.P);
             Assert.Equal(PVcall, PVput, 2);
+
+            //independent fwds version
+            var valDate = new DateTime(2019, 10, 24);
+            var fixingStartDate = new DateTime(2019, 10, 01);
+            var fixingEndDate = new DateTime(2019, 10, 25);
+            var fixingDates = DateExtensions.BusinessDaysInPeriod(fixingStartDate, fixingEndDate, TestProviderHelper.CalendarProvider.Collection["NYC"]).ToArray();
+            var fwds = fixingDates.Select(x => 100.0).ToArray();
+            var sigmas = fixingDates.Select(x => 0.32).ToArray();
+            PV = TurnbullWakeman.PV(fwds, fixingDates, valDate, fixingEndDate, sigmas, 1, 0.0, OptionType.C, true);
+            var blackPV = BlackFunctions.BlackPV(100.0, 1, 0.0, 1 / 365.0, 0.32, OptionType.C);
+            Assert.Equal(blackPV, PV, 4);
         }
 
         [Fact]

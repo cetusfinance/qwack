@@ -73,9 +73,9 @@ namespace Qwack.Models.Tests.Capital
                 TradeId = "tradeC"
             };
 
-            var pvA = tradeA.PV(model);
-            var pvB = tradeB.PV(model);
-            var pvC = tradeC.PV(model);
+            var pvA = tradeA.PV(model, false);
+            var pvB = tradeB.PV(model, false);
+            var pvC = tradeC.PV(model, false);
 
             var pf = new Portfolio() { Instruments = new List<IInstrument> { tradeA, tradeB, tradeC } };
             var pvPf = pf.PV(model);

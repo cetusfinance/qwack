@@ -17,17 +17,31 @@ namespace Qwack.Core.Instruments.Asset
         public double Premium { get; set; }
         public DateTime PremiumDate { get; set; }
 
-        public new IAssetInstrument Clone()
+        public new IAssetInstrument Clone() => new FuturesOption
         {
-            var o = (FuturesOption)base.Clone();
-            o.CallPut = CallPut;
-            return o;
-        }
+            AssetId = AssetId,
+            ContractQuantity = ContractQuantity,
+            Currency = Currency,
+            Direction = Direction,
+            ExpiryDate = ExpiryDate,
+            LotSize = LotSize,
+            PriceMultiplier = PriceMultiplier,
+            Strike = Strike,
+            TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName,
+            CallPut = CallPut,
+            DiscountCurve = DiscountCurve,
+            ExerciseType = ExerciseType,
+            MarginingType = MarginingType,
+            Premium = Premium,
+            PremiumDate = PremiumDate
+        };
 
         public new IAssetInstrument SetStrike(double strike)
         {
-            var o = (FuturesOption)base.SetStrike(strike);
-            o.CallPut = CallPut;
+            var o = (FuturesOption)Clone();
+            o.Strike = strike;
             return o;
         }
 
@@ -47,17 +61,5 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
 
         public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? new string[0] : new[] { DiscountCurve };
-
-        public override int GetHashCode()
-        {
-            var hashCode = -215212781;
-            hashCode = hashCode * -1521134295 + CallPut.GetHashCode();
-            hashCode = hashCode * -1521134295 + ExerciseType.GetHashCode();
-            hashCode = hashCode * -1521134295 + MarginingType.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DiscountCurve);
-            hashCode = hashCode * -1521134295 + Premium.GetHashCode();
-            hashCode = hashCode * -1521134295 + PremiumDate.GetHashCode();
-            return hashCode;
-        }
     }
 }

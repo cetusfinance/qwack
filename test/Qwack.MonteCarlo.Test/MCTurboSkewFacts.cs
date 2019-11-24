@@ -25,7 +25,7 @@ namespace Qwack.MonteCarlo.Test
         [Fact]
         public void TSMC_PathsGenerated()
         {
-            var origin = DateTime.Now.Date;
+            var origin = new DateTime(2019, 06, 28);
             var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
@@ -68,7 +68,7 @@ namespace Qwack.MonteCarlo.Test
             {
                 Assert.Equal(blackPv, pv, 0);
                 var fwd = payoff2.AverageResult;
-                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
+                Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.002);
             }
         }
     }

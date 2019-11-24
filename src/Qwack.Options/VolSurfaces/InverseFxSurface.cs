@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
+using Qwack.Dates;
 using Qwack.Math;
 
 namespace Qwack.Options.VolSurfaces
@@ -22,18 +22,16 @@ namespace Qwack.Options.VolSurfaces
         public DateTime[] Expiries => FxSurface.Expiries;
         public string Name { get; set; }
         public string InvertedPair => FxSurface.AssetId.Substring(FxSurface.AssetId.Length - 3, 3) + '/' + FxSurface.AssetId.Substring(0, 3);
-
+        public Frequency OverrideSpotLag { get; set; }
 
         public Currency Currency { get => _currencyProvider.GetCurrency(FxSurface.AssetId.Substring(0, 3)); set => throw new NotImplementedException(); }
         public string AssetId { get => InvertedPair; set => throw new NotImplementedException(); }
 
         public IInterpolator2D LocalVolGrid { get; set; }
 
-        public List<MarketDataDescriptor> Descriptors => throw new NotImplementedException();
-        public List<MarketDataDescriptor> Dependencies => throw new NotImplementedException();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => throw new NotImplementedException();
-
         public IATMVolSurface FxSurface { get; }
+
+        public double CDF(DateTime expiry, double fwd, double strike) => 1.0 - FxSurface.CDF(expiry, 1 / fwd, 1 / strike);
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => FxSurface.GetATMVegaScenarios(bumpSize, LastSensitivityDate);
 
@@ -45,6 +43,8 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => FxSurface.GetVolForDeltaStrike(-strike, expiry, 1.0 / forward);
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => FxSurface.GetVolForDeltaStrike(-deltaStrike, maturity, 1.0 / forward);
+
+        public double InverseCDF(DateTime expiry, double fwd, double p) => FxSurface.InverseCDF(expiry, 1 / fwd, 1 - p);
 
         public DateTime PillarDatesForLabel(string label) => FxSurface.PillarDatesForLabel(label);
 

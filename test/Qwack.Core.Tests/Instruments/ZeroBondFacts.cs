@@ -36,6 +36,12 @@ namespace Qwack.Core.Tests.Instruments
             Assert.True(s.Count == 1 && s.Keys.Single() == "USD.BLAH");
             Assert.True(s["USD.BLAH"].Count == 1 && s["USD.BLAH"].Single().Key == maturity);
             Assert.Equal(-t*notional*Exp(-flatRate*t), s["USD.BLAH"][maturity]);
+
+            Assert.Equal(maturity, b.LastSensitivityDate);
+            Assert.Empty(b.Dependencies(null));
+            Assert.Equal(Exp(-flatRate * t), b.CalculateParRate(fModel));
+            var b2 =(ZeroBond)b.SetParRate(0.99);
+            Assert.Equal(0.99, b2.Price);
         }
 
     }

@@ -52,5 +52,6 @@ namespace Qwack.Core.Instruments.Asset
             TradeId == basisSwap.TradeId &&
             Enumerable.SequenceEqual(PaySwaplets, basisSwap.PaySwaplets) &&
             Enumerable.SequenceEqual(RecSwaplets, basisSwap.RecSwaplets);
+
     }
 }

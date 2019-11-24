@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Interpolation;
 using Qwack.Math;
-using Qwack.Core.Descriptors;
+using Qwack.Dates;
 
 namespace Qwack.Core.Basic
 {
-    public interface IVolSurface : IHasDescriptors
+    public interface IVolSurface
     {
         double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward);
         double GetVolForAbsoluteStrike(double strike, double maturity, double forward);
@@ -26,5 +26,9 @@ namespace Qwack.Core.Basic
         IInterpolator2D LocalVolGrid { get; set; }
 
         DateTime PillarDatesForLabel(string label);
+
+        double InverseCDF(DateTime expiry, double fwd, double p);
+        double CDF(DateTime expiry, double fwd, double strike);
+        Frequency OverrideSpotLag { get; set; }
     }
 }

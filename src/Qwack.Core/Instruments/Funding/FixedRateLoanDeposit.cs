@@ -13,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public FixedRateLoanDeposit() { }
 
-        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve)
+        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve):base()
         {
             StartDate = startDate;
             EndDate = endDate;
@@ -73,10 +73,11 @@ namespace Qwack.Core.Instruments.Funding
         public string[] AssetIds => new string[0];
         public Currency PaymentCurrency => Currency;
 
-        public double Pv(IFundingModel model, bool updateState)
+        public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
+        public double Pv(IFundingModel model, bool updateState, bool ignoreTodayFlows)
         {
             var discountCurve = model.Curves[DiscountCurve];
-            var pv = LoanDepoSchedule.PV(discountCurve, discountCurve, updateState, true, false, DayCountBasis.ACT360, model.BuildDate);
+            var pv = LoanDepoSchedule.PV(discountCurve, discountCurve, updateState, true, false, DayCountBasis.ACT360, ignoreTodayFlows ? model.BuildDate.AddDays(1) : model.BuildDate);
             return pv;
         }
 
@@ -92,12 +93,6 @@ namespace Qwack.Core.Instruments.Funding
                 return -Notional - Notional * dcf * InterestRate;
             }
             return 0.0;
-        }
-
-        public CashFlowSchedule ExpectedCashFlows(IFundingModel model)
-        {
-            Pv(model, true);
-            return LoanDepoSchedule;
         }
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
@@ -145,5 +140,11 @@ namespace Qwack.Core.Instruments.Funding
         IAssetInstrument IAssetInstrument.Clone()=> (IAssetInstrument)Clone();
 
         public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
+        {
+            Pv(model.FundingModel, true);
+            return LoanDepoSchedule.Flows;
+        }
     }
 }

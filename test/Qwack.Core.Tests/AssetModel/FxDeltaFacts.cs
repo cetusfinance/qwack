@@ -81,7 +81,7 @@ namespace Qwack.Core.Tests.AssetModel
                 sw.DiscountCurve = "USD.CURVE";
                 sw.FxConversionType = FxConversionType.None;
             }
-            var pv = asianSwap.PV(aModel);
+            var pv = asianSwap.PV(aModel, false);
             var expectedPV = (fairStrike - strike) * nominal;
             Assert.Equal(expectedPV, pv, 8);
 
@@ -159,7 +159,7 @@ namespace Qwack.Core.Tests.AssetModel
                 sw.DiscountCurve = "USD.CURVE";
                 sw.FxConversionType = FxConversionType.None;
             }
-            var pv = asianSwap.PV(aModel);
+            var pv = asianSwap.PV(aModel, false);
             var expectedPV = (fairStrike - strike) * nominal;
             Assert.Equal(expectedPV, pv, 8);
 
@@ -184,7 +184,7 @@ namespace Qwack.Core.Tests.AssetModel
                 sw.FxConversionType = FxConversionType.None;
             }
 
-            pv = asianSwap.PV(aModel);
+            pv = asianSwap.PV(aModel, false);
             expectedPV = (fairStrike - strike) * nominal;
             Assert.Equal(expectedPV, pv, 8);
 

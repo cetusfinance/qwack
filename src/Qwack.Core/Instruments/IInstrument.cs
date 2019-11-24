@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Qwack.Core.Basic;
+using Qwack.Core.Models;
 
 namespace Qwack.Core.Instruments
 {
@@ -10,5 +12,6 @@ namespace Qwack.Core.Instruments
         string Counterparty { get; set; }
         string PortfolioName { get; set; }
         DateTime LastSensitivityDate { get; }
+        Currency Currency { get; }
     }
 }

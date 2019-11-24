@@ -79,7 +79,7 @@ namespace Qwack.Math.Tests.Random
         }
 
 
-        private class FakeEngine : IEngineFeature, ITimeStepsFeature, IPathMappingFeature
+        public class FakeEngine : IEngineFeature, ITimeStepsFeature, IPathMappingFeature
         {
             public int NumberOfPaths => 512;
 

@@ -6,7 +6,6 @@ using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;
-using Qwack.Core.Descriptors;
 
 namespace Qwack.Core.Curves
 {
@@ -35,18 +34,6 @@ namespace Qwack.Core.Curves
         public Calendar SpotCalendar { get; set; }
         public Frequency SpotLag { get; set; }
 
-
-        public List<MarketDataDescriptor> Descriptors => new List<MarketDataDescriptor>()
-            {
-                    new AssetCurveDescriptor {
-                        AssetId =AssetId,
-                        Currency =Currency,
-                        Name =Name,
-                        ValDate =BuildDate}
-            };
-        public List<MarketDataDescriptor> Dependencies => new List<MarketDataDescriptor>();
-        public Dictionary<MarketDataDescriptor, object> DependentReferences => new Dictionary<MarketDataDescriptor, object>();
-
         public DateTime[] PillarDates => _pillarDates;
 
         public PriceCurveType CurveType => throw new NotImplementedException();
@@ -74,7 +61,7 @@ namespace Qwack.Core.Curves
             switch(_curveType)
             {
                 case SparsePriceCurveType.Coal:
-                    _interpA = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.Linear);
+                    _interpA = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.LinearFlatExtrap);
                     var allDates = _pillarDates.First().CalendarDaysInPeriod(_pillarDates.Last());
                     var monthlyDates = allDates.Select(x => x.NthLastSpecificWeekDay(DayOfWeek.Friday,1)).Distinct();
                     var monthlyPillars = monthlyDates.Select(x => x.ToOADate()).ToArray();

@@ -55,13 +55,13 @@ namespace Qwack.Models.Risk
 
                 var subPortfolio = new Portfolio()
                 {
-                    Instruments = pvModel.Portfolio.Instruments.Where(x => (x is IHasVega) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
+                    Instruments = pvModel.Portfolio.Instruments.Where(x => (x is IHasVega || (x is CashWrapper cw && cw.UnderlyingInstrument is IHasVega)) && (x is IAssetInstrument ia) && ia.AssetIds.Contains(volObj.AssetId)).ToList()
                 };
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
@@ -135,7 +135,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
@@ -232,13 +232,13 @@ namespace Qwack.Models.Risk
 
             var subPortfolio = new Portfolio()
             {
-                Instruments = model.Portfolio.Instruments.Where(x => x is IHasVega).ToList()
+                Instruments = model.Portfolio.Instruments.Where(x => x is IHasVega || (x is CashWrapper cw && cw.UnderlyingInstrument is IHasVega)).ToList()
             };
 
             if (subPortfolio.Instruments.Count == 0)
                 return cube;
 
-            var lastDateInBook = subPortfolio.LastSensitivityDate();
+            var lastDateInBook = subPortfolio.LastSensitivityDate;
             var basePvModel = pvModel.Rebuild(model, subPortfolio);
             var pvCube = basePvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
@@ -319,7 +319,7 @@ namespace Qwack.Models.Risk
             if (subPortfolio.Instruments.Count == 0)
                 return cube;
 
-            var lastDateInBook = subPortfolio.LastSensitivityDate();
+            var lastDateInBook = subPortfolio.LastSensitivityDate;
 
             var pvCube = subPortfolio.PV(model, curveObj.Currency);
             var pvRows = pvCube.GetAllRows();
@@ -493,7 +493,7 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var baseModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = baseModel.PV(curveObj.Currency);
@@ -630,6 +630,93 @@ namespace Qwack.Models.Risk
                 },!(parallelize)).Wait();
             }
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+        }
+
+        public static ICube AssetParallelDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType",  typeof(string) },
+                { "AssetId", typeof(string) },
+                { "Metric", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var assetIds = pvModel.Portfolio.AssetIds();
+
+            foreach (var curveName in assetIds)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    ia.AssetIds.Contains(curveName))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                IPriceCurve bumpedCurve;
+
+                switch (curveObj)
+                {
+                    case ConstantPriceCurve con:
+                        bumpedCurve = new ConstantPriceCurve(con.Price * 1.01, con.BuildDate, currencyProvider);
+                        break;
+                    case ContangoPriceCurve cpc:
+                        bumpedCurve = new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels);
+                        break;
+                    case PriceCurve pc:
+                        bumpedCurve = new PriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels);
+                        break;
+                    default:
+                        throw new Exception("Unable to handle curve type for flat shift");
+                }
+
+                var newVanillaModel = model.Clone();
+                newVanillaModel.AddPriceCurve(curveName, bumpedCurve);
+
+                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+
+                var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / 0.01;
+
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "Metric", "ParallelDelta" },
+                            };
+                        cube.AddRow(row, delta);
+                    }
+                }
+            }
+
+            return cube.Sort(new List<string> { "AssetId", "TradeId" });
         }
 
         public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta=false)
@@ -841,6 +928,126 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
+        public static ICube FxDeltaSpecific(this IPvModel pvModel, Currency homeCcy, List<FxPair> pairsToBump, ICurrencyProvider currencyProvider, bool computeGamma = false)
+        {
+            var bumpSize = 0.0001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "AssetId", typeof(string) },
+                { "Metric", typeof(string) },
+                { "Portfolio", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var mf = model.FundingModel.DeepClone(null);
+            var baseCcy = model.FundingModel.FxMatrix.BaseCurrency;
+            var m = model.Clone(mf);
+
+            var homeBasePair = mf.FxMatrix.GetFxPair(homeCcy, baseCcy);
+            var homeToBase = mf.GetFxRate(homeBasePair.SpotDate(model.BuildDate), homeCcy, baseCcy);
+
+            ParallelUtils.Instance.Foreach(pairsToBump, pair =>
+            //foreach (var pair in pairsToBump)
+            {
+                string fxPair;
+                bool flipDelta;
+                Currency currency;
+                if (pair.Foreign == baseCcy)
+                {
+                    fxPair = $"{pair.Domestic}/{baseCcy}";
+                    flipDelta = true;
+                    currency = pair.Domestic;
+                }
+                else if (pair.Domestic == baseCcy)
+                {
+                    fxPair = $"{pair.Foreign}/{baseCcy}";
+                    flipDelta = false;
+                    currency = pair.Foreign;
+                }
+                else
+                    throw new Exception("Pairs must contain base currency");
+
+                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                var pvCube = newPvModel.PV(homeCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var pfIx = pvCube.GetColumnIndex("Portfolio");
+
+                var newModel = m.Clone();
+                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
+                newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
+                var spotBump = flipDelta ?
+                    1.0 / bumpedSpot - 1.0 / m.FundingModel.FxMatrix.SpotRates[currency] :
+                    (bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency]) * homeToBase;
+                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                var bumpedPVCube = bumpedPvModel.PV(homeCcy);
+                var bumpedRows = bumpedPVCube.GetAllRows();
+                if (bumpedRows.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                ResultCubeRow[] bumpedRowsDown = null;
+                var spotBumpDown = 0.0;
+
+                var dfToSpotDate = m.FundingModel.GetDf(m.FundingModel.FxMatrix.BaseCurrency, m.BuildDate, m.FundingModel.FxMatrix.GetFxPair(fxPair).SpotDate(m.BuildDate));
+
+                if (computeGamma)
+                {
+                    var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
+                    newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
+                    spotBumpDown = bumpedSpotDown - m.FundingModel.FxMatrix.SpotRates[currency];
+
+                    var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
+
+                    var bumpedPVCubeDown = bumpedPvModelDown.PV(homeCcy);
+                    bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                    if (bumpedRowsDown.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+                }
+
+                for (var i = 0; i < bumpedRows.Length; i++)
+                {
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / spotBump / dfToSpotDate * homeToBase;
+
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                        {
+                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                            { "AssetId", pair.ToString() },
+                            { "Metric", "FxSpotDelta" },
+                            { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
+                        };
+                        cube.AddRow(row, delta);
+                    }
+
+                    if (computeGamma)
+                    {
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / spotBumpDown / dfToSpotDate * homeToBase;
+                        var gamma = (delta - deltaDown) / (spotBump - spotBumpDown) * 2.0;
+                        if (gamma != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", pair.ToString() },
+                                { "Metric", "FxSpotGamma" },
+                                { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
+                            };
+                            cube.AddRow(row, gamma);
+                        }
+                    }
+                }
+            }, false).Wait();
+            return cube.Sort();
+        }
+
 
         public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize=0.0001)
         {
@@ -867,12 +1074,10 @@ namespace Qwack.Models.Risk
                     .Where(x => (x is IAssetInstrument ia) && (ia.IrCurves(model).Contains(curve.Key) || (reportingCcy != null && reportingCcy != ia.Currency)))
                     .ToList()
                 };
-                //var subPortfolio = model.Portfolio.Clone();
-
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
-                var lastDateInBook = subPortfolio.LastSensitivityDate();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var subModel = pvModel.Rebuild(pvModel.VanillaModel, subPortfolio);
                 var pvCube = subModel.PV(reportingCcy ?? curveObj.Currency);
@@ -917,7 +1122,7 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
-        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false)
+        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1006,8 +1211,8 @@ namespace Qwack.Models.Risk
                 }
 
                 //charm-fx
-                baseDeltaCube = pvModel.FxDeltaRaw(reportingCcy, currencyProvider);
-                rolledDeltaCube = rolledPvModel.FxDeltaRaw(reportingCcy, currencyProvider);
+                baseDeltaCube = FxPairsToRisk == null ? pvModel.FxDeltaRaw(reportingCcy, currencyProvider) : pvModel.FxDeltaSpecific(reportingCcy, FxPairsToRisk, currencyProvider);
+                rolledDeltaCube = FxPairsToRisk == null ? rolledPvModel.FxDeltaRaw(reportingCcy, currencyProvider) : rolledPvModel.FxDeltaSpecific(reportingCcy, FxPairsToRisk, currencyProvider);
                 charmCube = rolledDeltaCube.Difference(baseDeltaCube);
                 var fId = charmCube.GetColumnIndex("AssetId");
                 foreach (var charmRow in charmCube.GetAllRows())

@@ -1,0 +1,52 @@
+[
+  {
+    "Ccy": "USD",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "NYC"
+  },
+  {
+    "Ccy": "EUR",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "EUR"
+  },
+  {
+    "Ccy": "GBP",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XAF",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "ZAR",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "JHB"
+  },
+  {
+    "Ccy": "CAD",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "TOR"
+  },
+  {
+    "Ccy": "AUD",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "SYD"
+  },
+  {
+    "Ccy": "NZD",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "WEL"
+  },
+  {
+    "Ccy": "ZMW",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "JHB"
+  },
+  {
+    "Ccy": "NGN",
+    "DayCount": "Act365F",
+    "SettlementCalendarName": "JHB"
+  }
+]

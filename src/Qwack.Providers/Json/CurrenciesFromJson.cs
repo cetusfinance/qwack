@@ -19,6 +19,12 @@ namespace Qwack.Providers.Json
         private readonly Dictionary<string, Currency> _currenciesByName;
         private readonly ILogger _logger;
 
+        public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
+            :this(calendarProvider, fileName, loggerFactory.CreateLogger<CurrenciesFromJson>())
+        {
+
+        }
+
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILogger<CurrenciesFromJson> logger)
         {
             _logger = logger;

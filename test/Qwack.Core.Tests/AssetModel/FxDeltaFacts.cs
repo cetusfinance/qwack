@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;

@@ -74,7 +74,6 @@ namespace Qwack.Core.Tests.Instruments
             var pf = x.PastFixingDates(orgin.AddDays(1));
             Assert.Contains("QS", pf.Keys);
 
-            Assert.True(x == x);
             var y = (BackPricingOption)x.Clone();
             y.TradeId = "xxx";
             Assert.False(x == y);

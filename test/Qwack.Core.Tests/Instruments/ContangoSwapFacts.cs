@@ -10,14 +10,13 @@ using Qwack.Core.Basic;
 using Qwack.Models;
 using Qwack.Dates;
 using static System.Math;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 
 namespace Qwack.Core.Tests.Instruments
 {
     public class ContangoSwapFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 
         [Fact]

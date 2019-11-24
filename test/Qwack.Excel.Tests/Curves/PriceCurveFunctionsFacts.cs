@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Curves;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 using Qwack.Math;
 
@@ -14,7 +13,7 @@ namespace Qwack.Excel.Tests.Curves
 {
     public class PriceCurveFunctionsFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 
         [Fact]

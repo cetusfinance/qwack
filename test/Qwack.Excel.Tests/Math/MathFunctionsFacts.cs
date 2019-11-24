@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Math;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 using Qwack.Math;
 using Qwack.Math.Distributions;

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Interpolation;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 
 namespace Qwack.Excel.Tests.Interpolation

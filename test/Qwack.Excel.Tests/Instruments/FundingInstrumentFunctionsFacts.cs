@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Instruments;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 using static ExcelDna.Integration.ExcelMissing;
 

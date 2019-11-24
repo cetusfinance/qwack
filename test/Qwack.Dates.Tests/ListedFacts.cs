@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Futures;
 using Qwack.Providers.Json;
 using Xunit;
@@ -9,8 +8,8 @@ namespace Qwack.Dates.Tests
 {
     public class ListedFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
-        public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Calendars.json");
+        public static readonly string JsonFuturesPath = System.IO.Path.Combine(AppContext.BaseDirectory, "futuresettings.json");
 
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 

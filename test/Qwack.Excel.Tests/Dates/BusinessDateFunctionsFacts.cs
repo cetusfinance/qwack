@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Dates;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 
 namespace Qwack.Excel.Tests.Dates
 {
     public class BusinessDateFunctionsFacts
     {
-        public static readonly string JsonCalendarPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Calendars.json");
+        public static readonly string JsonCalendarPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
 
         [Fact]

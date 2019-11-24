@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Providers.Json;
 using Xunit;
 

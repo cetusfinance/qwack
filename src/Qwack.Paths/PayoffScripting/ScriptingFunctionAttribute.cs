@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Qwack.Paths.PayoffScripting
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class ScriptingFunctionAttribute : Attribute
+    public sealed class ScriptingFunctionAttribute : Attribute
     {
         public ScriptingFunctionAttribute()
         {

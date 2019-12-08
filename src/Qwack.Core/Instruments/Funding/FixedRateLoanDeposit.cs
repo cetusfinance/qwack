@@ -70,7 +70,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => EndDate;
 
-        public string[] AssetIds => new string[0];
+        public string[] AssetIds => Array.Empty<string>();
         public Currency PaymentCurrency => Currency;
 
         public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);

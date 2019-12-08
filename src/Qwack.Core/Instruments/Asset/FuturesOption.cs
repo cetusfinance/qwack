@@ -60,6 +60,6 @@ namespace Qwack.Core.Instruments.Asset
                    DiscountCurve == futOpt.DiscountCurve &&
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
 
-        public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? new string[0] : new[] { DiscountCurve };
+        public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? Array.Empty<string>() : new[] { DiscountCurve };
     }
 }

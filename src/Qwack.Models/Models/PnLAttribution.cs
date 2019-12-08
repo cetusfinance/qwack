@@ -732,7 +732,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
+        public static ICube ExplainAttributionInLineGreeks(this Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -759,7 +759,7 @@ namespace Qwack.Models.Models
             var r_tTypeIx = theta.GetColumnIndex("TradeType");
             var thetaByTrade = new Dictionary<string, double>();
             var thetaRows = theta.GetAllRows();
-            foreach(var r in thetaRows)
+            foreach (var r in thetaRows)
             {
                 var row = new Dictionary<string, object>
                 {
@@ -924,7 +924,7 @@ namespace Qwack.Models.Models
             foreach (var fxSpot in endModel.FundingModel.FxMatrix.SpotRates)
             {
                 var fxPair = $"{fxSpot.Key.Ccy}/{endModel.FundingModel.FxMatrix.BaseCurrency}";
-                
+
                 //delta
                 var riskForCurve = fxGreeks.Filter(
                     new Dictionary<string, object> {
@@ -1161,19 +1161,19 @@ namespace Qwack.Models.Models
                 }
 
                 //Rega
-                 riskForCurve = assetSegaRega.Filter(
-                      new Dictionary<string, object> {
+                riskForCurve = assetSegaRega.Filter(
+                     new Dictionary<string, object> {
                         { "AssetId", surfaceName },
                         { "Metric", "Rega" }
-                      });
+                     });
 
                 foreach (var r in riskForCurve.GetAllRows())
                 {
                     if (r.Value == 0.0) continue;
                     var point = (string)r.MetaData[r_plIx];
                     var pointDate = startCurve.PillarDatesForLabel(point);
-                    var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75)- model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25);
-                    var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75)- endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25); ;
+                    var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25);
+                    var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25); ;
                     var explained = r.Value * (endRate - startRate) / 0.001;
 
                     var row = new Dictionary<string, object>
@@ -1205,7 +1205,7 @@ namespace Qwack.Models.Models
                     if (r.Value == 0.0) continue;
                     var point = (string)r.MetaData[r_plIx];
                     var pointDate = startCurve.PillarDatesForLabel(point);
-                    var startRate = (model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25))/2.0 - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                    var startRate = (model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
                     var endRate = (endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
                     var explained = r.Value * (endRate - startRate) / 0.001;
 
@@ -1338,7 +1338,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid=false)
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency reportingCcy, ICurrencyProvider currencyProvider, bool cashOnDayAlreadyPaid = false)
         {
             //first do normal attribution
             var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider, cashOnDayAlreadyPaid);
@@ -1412,8 +1412,7 @@ namespace Qwack.Models.Models
         private static ICube EnrichWithPortfolio(this ICube results, Portfolio pfolio)
         {
             var o = new ResultCube();
-            var dt = new Dictionary<string,Type>(results.DataTypes);
-            dt.Add("Portfolio", typeof(string));
+            var dt = new Dictionary<string, Type>(results.DataTypes) { { "Portfolio", typeof(string) } };
             o.Initialize(dt);
 
             var pfDict = pfolio.Instruments.ToDictionary(x => x.TradeId, x => x.PortfolioName);

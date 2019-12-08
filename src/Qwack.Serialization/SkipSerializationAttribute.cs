@@ -5,7 +5,7 @@ using System.Text;
 namespace Qwack.Serialization
 {
     [AttributeUsage(AttributeTargets.Field)]
-    public class SkipSerializationAttribute:Attribute
+    public sealed class SkipSerializationAttribute:Attribute
     {
     }
 }

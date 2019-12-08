@@ -31,7 +31,7 @@ namespace Qwack.Core.Instruments.Funding
         public DateTime PayDate { get; set; }
         public DateTime LastSensitivityDate => DateTime.MinValue;
 
-        public string[] AssetIds => new string[0];
+        public string[] AssetIds => Array.Empty<string>();
         public Currency PaymentCurrency => Currency;
 
         public double Pv(IFundingModel model, bool updateState) => PayDate == DateTime.MinValue || PayDate <= model.BuildDate ? Notional : model.GetDf(Currency, model.BuildDate, PayDate) * Notional;

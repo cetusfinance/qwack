@@ -39,7 +39,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public string PairStr => $"{DomesticCCY.Ccy}/{ForeignCCY.Ccy}";
         public DateTime LastSensitivityDate => DeliveryDate;
-        public string[] AssetIds => new string[0];
+        public string[] AssetIds => Array.Empty<string>();
 
 
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)

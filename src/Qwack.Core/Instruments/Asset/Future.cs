@@ -57,7 +57,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public DateTime LastSensitivityDate => ExpiryDate;
 
-        public string[] IrCurves(IAssetFxModel model) => new string[0];
+        public string[] IrCurves(IAssetFxModel model) => Array.Empty<string>();
 
         public override bool Equals(object obj) => obj is Future future &&
                    TradeId == future.TradeId &&

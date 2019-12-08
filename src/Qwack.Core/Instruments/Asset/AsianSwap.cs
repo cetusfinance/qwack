@@ -119,7 +119,7 @@ namespace Qwack.Core.Instruments.Asset
                    Direction == swap.Direction &&
                    AverageStartDate == swap.AverageStartDate &&
                    AverageEndDate == swap.AverageEndDate &&
-                   Enumerable.SequenceEqual(FixingDates ?? new DateTime[0], swap.FixingDates ?? new DateTime[0]) &&
+                   Enumerable.SequenceEqual(FixingDates ?? Array.Empty<DateTime>(), swap.FixingDates ?? Array.Empty<DateTime>()) &&
                    EqualityComparer<Calendar>.Default.Equals(FixingCalendar, swap.FixingCalendar) &&
                    EqualityComparer<Calendar>.Default.Equals(PaymentCalendar, swap.PaymentCalendar) &&
                    EqualityComparer<Frequency>.Default.Equals(SpotLag, swap.SpotLag) &&
@@ -131,7 +131,7 @@ namespace Qwack.Core.Instruments.Asset
                    AssetId == swap.AssetId &&
                    AssetFixingId == swap.AssetFixingId &&
                    FxFixingId == swap.FxFixingId &&
-                   Enumerable.SequenceEqual(FxFixingDates ?? new DateTime[0], swap.FxFixingDates ?? new DateTime[0]) &&
+                   Enumerable.SequenceEqual(FxFixingDates ?? Array.Empty<DateTime>(), swap.FxFixingDates ?? Array.Empty<DateTime>()) &&
                    EqualityComparer<Currency>.Default.Equals(PaymentCurrency, swap.PaymentCurrency) &&
                    FxConversionType == swap.FxConversionType &&
                    DiscountCurve == swap.DiscountCurve &&

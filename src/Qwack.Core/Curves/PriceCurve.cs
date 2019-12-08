@@ -11,7 +11,7 @@ namespace Qwack.Core.Curves
 {
     public class PriceCurve : IPriceCurve
     {
-        private readonly DateTime[] _pillarDates = new DateTime[0];
+        private readonly DateTime[] _pillarDates = Array.Empty<DateTime>();
         private readonly double[] _prices;
         private readonly PriceCurveType _curveType;
         private IInterpolator1D _interp;

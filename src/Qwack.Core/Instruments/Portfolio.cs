@@ -240,6 +240,18 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 9] = string.Empty;
                         o[i + 1, 10] = l.Counterparty ?? string.Empty;
                         break;
+                    case FloatingRateLoanDepo lf:
+                        o[i + 1, 1] = "LoanDepoFloat";
+                        o[i + 1, 2] = lf.Currency.Ccy;
+                        o[i + 1, 3] = lf.Currency.Ccy;
+                        o[i + 1, 4] = lf.LoanDepoSchedule.Flows.Where(x=>x.FlowType==FlowType.FloatRate).Min(x=>x.AccrualPeriodStart);
+                        o[i + 1, 5] = lf.LastSensitivityDate;
+                        o[i + 1, 6] = lf.LastSensitivityDate;
+                        o[i + 1, 7] = lf.LoanDepoSchedule.Flows.Where(x => x.FlowType == FlowType.FloatRate).Average(x => x.FixedRateOrMargin);
+                        o[i + 1, 8] = lf.LoanDepoSchedule.Flows.Where(x => x.FlowType == FlowType.FloatRate).Average(x => x.Notional);
+                        o[i + 1, 9] = string.Empty;
+                        o[i + 1, 10] = lf.Counterparty ?? string.Empty;
+                        break;
                     case PhysicalBalance pb:
                         o[i + 1, 1] = "Physical";
                         o[i + 1, 2] = pb.Currency.Ccy;
@@ -340,6 +352,8 @@ namespace Qwack.Core.Instruments
                     return cash.Equals((CashBalance)B);
                 case FixedRateLoanDeposit loanDeposit:
                     return loanDeposit.Equals((FixedRateLoanDeposit)B);
+                case FloatingRateLoanDepo loanDepositFl:
+                    return loanDepositFl.Equals((FloatingRateLoanDepo)B);
                 case CashWrapper wrapper:
                     return Equals(wrapper.UnderlyingInstrument, (CashWrapper)B);
                 case ETC etc:

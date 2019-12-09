@@ -91,6 +91,9 @@ namespace Qwack.Models.MCModels
                         UseNormalInverse = true,
                     });
                     break;
+                case RandomGeneratorType.FlipFlop:
+                    Engine.AddPathProcess(new Random.Constant.FlipFlop(settings.CreditSettings.ConfidenceInterval, true));
+                    break;
             }
             Engine.IncrementDepth();
 
@@ -456,7 +459,7 @@ namespace Qwack.Models.MCModels
             }
 
             //Need to calculate expected capital
-            if (settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && settings.CreditSettings.Metric == BaseMetric.ExpectedCapital)
+            if (settings.CreditSettings != null && settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && settings.CreditSettings.Metric == BaseMetric.ExpectedCapital)
             {
                 Engine.IncrementDepth();
                 _capitalCalc = new ExpectedCapitalCalculator(Portfolio, settings.CreditSettings.CounterpartyRiskWeighting, settings.CreditSettings.AssetIdToHedgeGroupMap, settings.ReportingCurrency, VanillaModel, settings.CreditSettings.ExposureDates);
@@ -465,7 +468,9 @@ namespace Qwack.Models.MCModels
 
             Engine.SetupFeatures();
         }
-        public ICube PFE(double confidenceLevel) => PackResults(() => _regressor.PFE(Model, confidenceLevel));
+        public ICube PFE(double confidenceLevel) => 
+            PackResults(() => _regressor.PFE(Model, confidenceLevel));
+
         public ICube EPE() => PackResults(() => _regressor.EPE(Model));
         public ICube ENE() => PackResults(() => _regressor.ENE(Model));
         public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital);

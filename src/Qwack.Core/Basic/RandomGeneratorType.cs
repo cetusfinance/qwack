@@ -8,6 +8,7 @@ namespace Qwack.Core.Basic
     {
         MersenneTwister,
         Sobol,
-        Constant
+        Constant,
+        FlipFlop
     }
 }

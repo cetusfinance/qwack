@@ -189,7 +189,11 @@ namespace Qwack.Core.Instruments.Funding
         {
             TradeId = TradeId,
             SolveCurve = SolveCurve,
-            PillarDate = PillarDate
+            PillarDate = PillarDate,
+            Notional = Notional,
+            RateIndex = RateIndex,
+            PortfolioName = PortfolioName,
+            HedgingSet = HedgingSet
         };
 
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);

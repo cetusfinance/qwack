@@ -102,6 +102,8 @@ namespace Qwack.Models.Risk
 
                 foreach (var dRow in deltaCube.GetAllRows())
                 {
+                    if (dRow.Value == 0.0)
+                        continue;
 
                     var row = new Dictionary<string, object>
                             {
@@ -118,7 +120,7 @@ namespace Qwack.Models.Risk
                 }
             }
 
-            return cube.Sort();
+            return cube.Sort(new List<string> {"Curve","RiskDate","TradeId"});
         }
 
         private static double GetScaleFactor(IFundingInstrument ins, double parFlat, double parBump, IFundingModel model)
@@ -137,6 +139,12 @@ namespace Qwack.Models.Risk
                     var fwdFlat = (1 + parFlat * t360)* spot;
                     var fwdBumped = (1 + parBump * t360) * spot;
                     return 1.0 / (fwdBumped - fwdFlat);
+                case IrSwap irs:
+                    var pv = irs.SetParRate(parBump).Pv(model, true);
+                    return 1.0 / pv * irs.Notional;
+                case FloatingRateLoanDepo fld:
+                    var pvF = fld.SetParRate(parBump).Pv(model, true);
+                    return 1.0 / pvF * fld.Notional;
                 default:
                     return 1.0;
             }
@@ -161,6 +169,8 @@ namespace Qwack.Models.Risk
                     return "Contracts";
                 case ForwardRateAgreement fra:
                 case FxForward fxf:
+                case IrSwap irs:
+                case FloatingRateLoanDepo fld:
                     return "Nominal";
                 case ContangoSwap cs:
                     return "Oz";

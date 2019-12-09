@@ -14,6 +14,7 @@ using Qwack.Dates;
 using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
+using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;
 using static System.Math;
 
@@ -868,6 +869,8 @@ namespace Qwack.Models.Models
             {
                 var fxRate = model.FundingModel.GetFxRate(fwdDate, ccy, repCcy);
                 finTheta *= fxRate;
+                var fxRate2 = model.FundingModel.GetFxRate(model.BuildDate, ccy, repCcy);
+                finTheta += pv * (fxRate - fxRate2);
             }
 
             return (finTheta, 0.0);
@@ -1345,7 +1348,12 @@ namespace Qwack.Models.Models
             var rolledFxVolSurfaces = new Dictionary<string, IVolSurface>();
             foreach (var surface in model.FundingModel.VolSurfaces)
             {
-                rolledFxVolSurfaces.Add(surface.Key, surface.Value);
+                if (surface.Value is RiskyFlySurface rf)
+                    rolledFxVolSurfaces.Add(surface.Key, rf.RollSurface(fwdValDate));
+                else if (surface.Value is GridVolSurface g)
+                    rolledFxVolSurfaces.Add(surface.Key, g.RollSurface(fwdValDate));
+                else
+                    rolledFxVolSurfaces.Add(surface.Key, surface.Value);
             }
 
             var matrix = model.FundingModel.FxMatrix;
@@ -1373,8 +1381,14 @@ namespace Qwack.Models.Models
             var rolledVolSurfaces = new Dictionary<string, IVolSurface>();
             foreach (var surfaceName in model.VolSurfaceNames)
             {
-                var rolledSurface = model.GetVolSurface(surfaceName);
-                rolledVolSurfaces.Add(surfaceName, rolledSurface);
+                var surface = model.GetVolSurface(surfaceName);
+
+                if (surface is RiskyFlySurface rf)
+                    rolledVolSurfaces.Add(surfaceName, rf.RollSurface(fwdValDate));
+                else if (surface is GridVolSurface g)
+                    rolledVolSurfaces.Add(surfaceName, g.RollSurface(fwdValDate));
+                else
+                    rolledVolSurfaces.Add(surfaceName, surface);
             }
 
             var rolledFixings = new Dictionary<string, IFixingDictionary>();

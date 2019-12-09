@@ -37,6 +37,7 @@ namespace Qwack.Core.Instruments.Funding
             ForecastCurve = forecastCurve;
             DiscountCurve = discountCurve;
             LoanDepoSchedule = schedule;
+            Notional = notional;
         }
 
         public double Notional { get; set; }
@@ -74,54 +75,45 @@ namespace Qwack.Core.Instruments.Funding
 
         public double CalculateParRate(IFundingModel model)
         {
-            //var dFs = LoanDepoSchedule
-            //    .Flows
-            //    .Select(x => x.SettleDate)
-            //    .Select(y => model.Curves[DiscountCurve]
-            //    .GetDf(model.BuildDate, y))
-            //    .ToArray();
-            //var floatRates = LoanDepoSchedule
-            //    .Flows
-            //    .Select(x => x.GetFloatRate(model.Curves[ForecastCurve], FloatRateIndex.DayCountBasis))
-            //    .ToArray();
-            //var dcfs = LoanDepoSchedule
-            //    .Flows
-            //    .Select(x => x.NotionalByYearFraction)
-            //    .ToArray();
-            //var nominals = LoanDepoSchedule
-            //    .Flows
-            //    .Select(x => x.Notional)
-            //    .ToArray();
-
-            //var sumTop = 0.0;
-            //var sumBottom = 0.0;
-            //for(var i=0;i<LoanDepoSchedule.Flows.Count;i++)
-            //{
-            //    var rowA = System.Math.Sign(nominals[i]) * dFs[i];
-            //    var rowB = floatRates[i] * dcfs[i];
-            //    if (LoanDepoSchedule.Flows[i].FlowType == FlowType.FloatRate)
-            //        rowA *= rowB;
-            //    sumTop += rowA;
-            //    sumBottom += rowB;
-            //}
-
-            //var parRate = sumTop / sumBottom;
-            //return parRate;
-
-            var targetFunc = new Func<double, double>(spd=>
+            var sumTop = 0.0;
+            var sumBottom = 0.0;
+            foreach(var flow in LoanDepoSchedule.Flows)
             {
-                return SetParRate(spd).Pv(model, true);
-            });
+                var n = flow.Notional;
+                var df = model.Curves[DiscountCurve].GetDf(model.BuildDate, flow.SettleDate);
+                var dcf = flow.Dcf;
+                var r = flow.FlowType == FlowType.FloatRate ?
+                    flow.GetFloatRate(model.Curves[ForecastCurve], FloatRateIndex.DayCountBasis) :
+                    1.0;
 
-            var par = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, -0.1, 0.5, 0.0001);
-            return par;
+                sumTop += -n * dcf * df * r;
+                sumBottom += flow.FlowType == FlowType.NotionalExchange ? 0.0 : n * dcf * df;
+            }
+
+            var parRate = sumTop / sumBottom;
+            return parRate;
+
+            //var targetFunc = new Func<double, double>(spd=>
+            //{
+            //    return SetParRate(spd).Pv(model, true);
+            //});
+
+            //var par = Math.Solvers.Brent.BrentsMethodSolve(targetFunc, -0.1, 0.5, 0.0001);
+            //return par;
         }
 
-        public IFundingInstrument Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve);
+        public IFundingInstrument Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x=>x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
+        {
+            PillarDate = PillarDate,
+            SolveCurve = SolveCurve,
+            PortfolioName = PortfolioName,
+            TradeId = TradeId,
+            Notional = Notional,
+        };
 
         public IFundingInstrument SetParRate(double parRate)
         {
-            var flowsNew = LoanDepoSchedule.Flows.ToArray();
+            var flowsNew = LoanDepoSchedule.Flows.Select(x => x.Clone()).ToArray();
             foreach(var flow in flowsNew.Where(x=>x.FlowType==FlowType.FloatRate))
             {
                 flow.FixedRateOrMargin = parRate;
@@ -131,7 +123,8 @@ namespace Qwack.Core.Instruments.Funding
                 PillarDate = PillarDate,
                 SolveCurve = SolveCurve,
                 PortfolioName = PortfolioName,
-                TradeId = TradeId
+                TradeId = TradeId,
+                Notional = Notional,
             };
         }
 
@@ -143,12 +136,13 @@ namespace Qwack.Core.Instruments.Funding
 
         public string FxPair(IAssetFxModel model) => string.Empty;
 
-        IAssetInstrument IAssetInstrument.Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
+        IAssetInstrument IAssetInstrument.Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x=>x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
         {
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,
             PortfolioName = PortfolioName,
-            TradeId = TradeId
+            TradeId = TradeId,
+            Notional = Notional,
         };
 
         public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();

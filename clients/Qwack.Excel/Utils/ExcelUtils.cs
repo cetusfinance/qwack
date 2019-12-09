@@ -149,6 +149,36 @@ namespace Qwack.Excel.Utils
             });
         }
 
+        [ExcelFunction(Description = "Computes average for a given period", Category = "QUtils", IsThreadSafe = true)]
+        public static object QUtils_PeriodAverage(
+            [ExcelArgument(Description = "Date range")] double[] DateRange,
+            [ExcelArgument(Description = "Value range")] double[] ValueRange,
+            [ExcelArgument(Description = "Average period start (inc)")] DateTime AveragePeriodStart,
+            [ExcelArgument(Description = "Average period end (inc)")] object AveragePeriodEnd)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (DateRange.Length != ValueRange.Length)
+                    return "Date and value ranges must be of same size";
+
+                DateTime avgEnd;
+                if (AveragePeriodEnd is ExcelMissing)
+                {
+                    AveragePeriodStart = new DateTime(AveragePeriodStart.Year, AveragePeriodStart.Month, 1);
+                    avgEnd = new DateTime(AveragePeriodStart.Year, AveragePeriodStart.Month, 1).AddMonths(1).AddDays(-1);
+                }
+                else
+                    avgEnd = DateTime.FromOADate((double)AveragePeriodEnd);
+
+                var dates = ExcelHelper.ToDateTimeArray(DateRange);
+                var indices = dates.Select((x, ix) => (x>=AveragePeriodStart && x<= avgEnd) ? ix : -1)
+                .Where(x => x != -1)
+                .ToArray();
+                var average = ValueRange.Select((x, ix) => indices.Contains(ix) ? x : -1).Where(x => x != -1).Average();
+                return average;
+            });
+        }
+
         [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Determines whether a file exists", Category = "QUtils", IsThreadSafe = true)]
         public static object QUtils_FileExists(

@@ -14,12 +14,12 @@ namespace Qwack.Curves.Benchmark
         {
             Add(Job.Default.
                 With(Platform.X64).
-                With(Runtime.Core).
+                With(CoreRuntime.Core21).
                 WithLaunchCount(2).
                 WithIterationTime(new BenchmarkDotNet.Horology.TimeInterval(2000, BenchmarkDotNet.Horology.TimeUnit.Millisecond)).
                 WithWarmupCount(1).
                 WithIterationCount(3));
-            Add(new BenchmarkDotNet.Diagnosers.MemoryDiagnoser());
+            Add(BenchmarkDotNet.Diagnosers.MemoryDiagnoser.Default);
         }
     }
 }

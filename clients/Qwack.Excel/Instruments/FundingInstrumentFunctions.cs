@@ -149,6 +149,48 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a floating rate deposit following conventions for the given rate index", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFloatingDepo), IsThreadSafe = true)]
+        public static object CreateFloatingDepo(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Start date")] DateTime StartDate,
+              [ExcelArgument(Description = "Tenor")] string SwapTenor,
+              [ExcelArgument(Description = "Rate Index")] string RateIndex,
+              [ExcelArgument(Description = "Par Rate")] double ParRate,
+              [ExcelArgument(Description = "Notional")] double Notional,
+              [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
+              [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
+              [ExcelArgument(Description = "Pay / Receive")] object PayRec,
+              [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+              [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var payRec = PayRec.OptionalExcel("Pay");
+
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
+                    return $"Rate index {RateIndex} not found in cache";
+                }
+
+                if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
+                {
+                    return $"Could not parse pay/rec - {payRec}";
+                }
+
+                var tenor = new Frequency(SwapTenor);
+
+                var product = new FloatingRateLoanDepo(StartDate, tenor, rIndex.Value, Notional, ParRate, ForecastCurve, DiscountCurve)
+                {
+                    TradeId = ObjectName,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                };
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.LastSensitivityDate);
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Creates a short-term interest rate future object from a futures code", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSTIRFromCode), IsThreadSafe = true)]
         public static object CreateSTIRFromCode(
               [ExcelArgument(Description = "Object name")] string ObjectName,
@@ -388,6 +430,7 @@ namespace Qwack.Excel.Instruments
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
                 var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
                 var ctgoSwaps = Instruments.GetAnyFromCache<ContangoSwap>();
+                var flrDepos = Instruments.GetAnyFromCache<FloatingRateLoanDepo>();
 
                 //allows merging of FICs into portfolios
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -404,6 +447,7 @@ namespace Qwack.Excel.Instruments
                 fic.AddRange(ficInstruments);
                 fic.AddRange(loanDepos);
                 fic.AddRange(ctgoSwaps);
+                fic.AddRange(flrDepos);
 
                 return ExcelHelper.PushToCache(fic, ObjectName);
             });
@@ -425,7 +469,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a new rate index object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateRateIndex), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a new rate index object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateRateIndex), IsThreadSafe = true, IsVolatile = true)]
         public static object CreateRateIndex(
               [ExcelArgument(Description = "Index name")] string IndexName,
               [ExcelArgument(Description = "Currency")] string Currency,

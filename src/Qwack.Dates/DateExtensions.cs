@@ -9,7 +9,7 @@ namespace Qwack.Dates
     /// </summary>
     public static class DateExtensions
     {
-        private const double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
+        private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
         private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
         private static readonly string[] _months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
         private static readonly string[] _futureMonths = { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
@@ -679,6 +679,44 @@ namespace Qwack.Dates
                     return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth());
                 default:
                     throw new Exception($"Could not parse period {period}");
+            }
+        }
+
+        public static (DateTime Start, DateTime End, bool valid) TryParsePeriod(this string period)
+        {
+            switch (period.ToUpper())
+            {
+                case string p when p.StartsWith("BALM"):
+                    return (Start: DateTime.Today, End: (DateTime.Today).LastDayOfMonth(), valid:true);
+                case string p when p.StartsWith("CAL"):
+                    if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var y))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31), valid:true);
+                case string p when p.Length == 2 && int.TryParse(p.Substring(1, 1), out var yr) && _futureMonths.Contains(p.Substring(0, 1)): //X8
+                    var m1 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) + 1;
+                    return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth(), valid:true); ;
+                case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && _futureMonths.Contains(p.Substring(0, 1)): //X18
+                    var m2 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) + 1;
+                    return (Start: new DateTime(2000 + yr, m2, 1), End: (new DateTime(2000 + yr, m2, 1)).LastDayOfMonth(), valid:true); ;
+                case string p when p.StartsWith("Q"):
+                    if (!int.TryParse(p.Substring(1, 1), out var q))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    if (!int.TryParse(p.Substring(2).Trim('-', ' '), out var yq))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    return (Start: new DateTime(2000 + yq, 3 * (q - 1) + 1, 1), End: (new DateTime(2000 + yq, 3 * q, 1)).LastDayOfMonth(), valid:true);
+                case string p when p.StartsWith("H"):
+                    if (!int.TryParse(p.Substring(1, 1), out var h))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    if (!int.TryParse(p.Substring(2).Trim('-', ' '), out var yh))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    return (Start: new DateTime(2000 + yh, (h - 1) * 6 + 1, 1), End: (new DateTime(2000 + yh, h * 6, 1)).LastDayOfMonth(), valid: true);
+                case string p when _months.Any(x => x == p.Substring(0, 3)):
+                    if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
+                        return (Start: default(DateTime), End: default(DateTime), valid: false);
+                    var m = _months.ToList().IndexOf(p.Substring(0, 3)) + 1;
+                    return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth(), valid:true);
+                default:
+                    return (Start: default(DateTime), End: default(DateTime), valid: false);
             }
         }
 

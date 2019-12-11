@@ -851,6 +851,9 @@ namespace Qwack.Models.Models
                 case FixedRateLoanDeposit loanDepo:
                     pv = loanDepo.Pv(model.FundingModel, false);
                     break;
+                case FloatingRateLoanDepo loanDepoFl:
+                    pv = loanDepoFl.Pv(model.FundingModel, false);
+                    break;
                 case CashWrapper wrapper:
                     return Theta(wrapper.UnderlyingInstrument, model, fwdDate, repCcy);
                 default:
@@ -952,7 +955,10 @@ namespace Qwack.Models.Models
                     pv = fxFwd.Pv(model.FundingModel, false, ignoreTodayFlows);
                     break;
                 case FixedRateLoanDeposit loanDepo:
-                    pv = loanDepo.Pv(model.FundingModel, false, ignoreTodayFlows);
+                    pv = loanDepo.Pv(model.FundingModel, true, ignoreTodayFlows);
+                    break;
+                case FloatingRateLoanDepo loanDepoFl:
+                    pv = loanDepoFl.Pv(model.FundingModel, true, ignoreTodayFlows);
                     break;
                 case CashBalance cash:
                     pv = cash.Pv(model.FundingModel, false);
@@ -1150,6 +1156,7 @@ namespace Qwack.Models.Models
                     tradeType = "FxForward";
                     break;
                 case FixedRateLoanDeposit loanDepo:
+                case FloatingRateLoanDepo loanDepoF:
                     tradeType = "LoanDepo";
                     break;
                 case PhysicalBalance phys:

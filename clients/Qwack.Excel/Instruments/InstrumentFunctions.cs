@@ -1307,6 +1307,7 @@ namespace Qwack.Excel.Instruments
             var baOpts = Instruments.GetAnyFromCache<EuropeanBarrierOption>();
             var otOpts = Instruments.GetAnyFromCache<OneTouchOption>();
             var dntOpts = Instruments.GetAnyFromCache<DoubleNoTouchOption>();
+            var fltDepos = Instruments.GetAnyFromCache<FloatingRateLoanDepo>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -1346,6 +1347,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(baOpts);
             pf.Instruments.AddRange(otOpts);
             pf.Instruments.AddRange(dntOpts);
+            pf.Instruments.AddRange(fltDepos);
 
             return pf;
         }

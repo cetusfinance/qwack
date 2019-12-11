@@ -22,7 +22,6 @@ namespace Qwack.Providers.Json
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
             :this(calendarProvider, fileName, loggerFactory.CreateLogger<CurrenciesFromJson>())
         {
-
         }
 
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILogger<CurrenciesFromJson> logger)

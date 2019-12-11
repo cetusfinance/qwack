@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using BenchmarkDotNet.Attributes;
-using Microsoft.Extensions.PlatformAbstractions;
 using Qwack.Random.Sobol;
 
 namespace Qwack.Curves.Benchmark
@@ -12,7 +11,7 @@ namespace Qwack.Curves.Benchmark
     {
         private static SobolDirectionNumbers DirectionNumbers()
         {
-            var path = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
+            var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SobolDirectionNumbers.txt");
             var dirNumbers = new SobolDirectionNumbers(path);
             return dirNumbers;
         }

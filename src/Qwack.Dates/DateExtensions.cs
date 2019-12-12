@@ -710,7 +710,7 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(2).Trim('-', ' '), out var yh))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     return (Start: new DateTime(2000 + yh, (h - 1) * 6 + 1, 1), End: (new DateTime(2000 + yh, h * 6, 1)).LastDayOfMonth(), valid: true);
-                case string p when _months.Any(x => x == p.Substring(0, 3)):
+                case string p when p.Length>2 && _months.Any(x => x == p.Substring(0, 3)):
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     var m = _months.ToList().IndexOf(p.Substring(0, 3)) + 1;

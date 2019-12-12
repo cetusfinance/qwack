@@ -55,13 +55,13 @@ namespace Qwack.Core.Instruments
         public static string[] AssetIds(this Portfolio portfolio)
         {
             if (portfolio.Instruments.Count == 0)
-                return Array.Empty<string>();
+                return new string[0];
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
 
             if(!assetTrades.Any())
-                return Array.Empty<string>();
+                return new string[0];
 
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
         }
@@ -69,7 +69,7 @@ namespace Qwack.Core.Instruments
         public static string[] FxPairs(this Portfolio portfolio, IAssetFxModel model)
         {
             if (portfolio.Instruments.Count == 0)
-                return Array.Empty<string>();
+                return new string[0];
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
@@ -79,7 +79,7 @@ namespace Qwack.Core.Instruments
                 .Where(x => x is FxVanillaOption || (x is CashWrapper cw && cw.UnderlyingInstrument is FxVanillaOption));
 
             if (!fxTrades.Any() && !assetTrades.Any() && !fxOptionTrades.Any())
-                return Array.Empty<string>();
+                return new string[0];
 
             var o = new List<string>();
 
@@ -495,7 +495,7 @@ namespace Qwack.Core.Instruments
                 switch (i)
                 {
                     case CashBalance cash:
-                        o.Instruments.Add(cash.PayDate > rollToDate ?
+                        o.Instruments.Add(cash.PayDate > rollToDate || cash.Currency.Ccy.StartsWith("X") ?
                             cash :
                             new CashBalance(cash.Currency, cash.Notional / model.GetDf(cash.Currency, model.BuildDate, rollToDate))
                             { TradeId = cash.TradeId, Counterparty = cash.Counterparty, PortfolioName = cash.PortfolioName });

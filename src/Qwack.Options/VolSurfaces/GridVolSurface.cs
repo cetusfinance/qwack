@@ -273,12 +273,41 @@ namespace Qwack.Options.VolSurfaces
 
                 var vDiff = vEnd - vStart;
                 if (vDiff < 0)
-                    throw new Exception("Negative forward variance detected");
+                    if (_suppressVarianceErrors)
+                        vDiff = 0.0;
+                    else
+                        throw new Exception("Negative forward variance detected");
 
                 return Sqrt(vDiff / (end - start));
             }
 
             throw new Exception("Only Forward-Delta type supported for fwd vol calcs");
+        }
+
+        private bool _suppressVarianceErrors;
+
+        public virtual IVolSurface RollSurface(DateTime newOrigin)
+        {
+            _suppressVarianceErrors = true;
+            var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
+            var newVols = new double[newMaturities.Length][];
+            var newATMs = newMaturities.Select(m => GetForwardATMVol(newOrigin, m)).ToArray();
+            var oldATMs = newMaturities.Select(m => GetForwardATMVol(OriginDate, m)).ToArray();
+            var numDropped = Expiries.Length - newMaturities.Length;
+
+            for (var i=0;i<newMaturities.Length;i++)
+            {
+                newVols[i] = new double[Strikes.Length];
+                for (var j = 0; j < Strikes.Length; j++)
+                    newVols[i][j] = Volatilities[i+ numDropped][j] / oldATMs[i] * newATMs[i];
+            }
+
+            return new GridVolSurface(newOrigin, Strikes, newMaturities, newVols, StrikeType, StrikeInterpolatorType, TimeInterpolatorType, TimeBasis, PillarLabels)
+            {
+                AssetId = AssetId,
+                Currency = Currency,
+                Name = Name,
+            };
         }
 
         public double Dvdk(double strike, DateTime expiry, double fwd)

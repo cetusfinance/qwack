@@ -141,7 +141,8 @@ namespace Qwack.Excel.Instruments
                 var product = new IrSwap(ValDate, tenor, rIndex.Value, ParRate, pType, ForecastCurve, DiscountCurve)
                 {
                     TradeId = ObjectName,
-                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name)
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    Notional = Notional
                 };
                 product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate); 
 
@@ -185,7 +186,7 @@ namespace Qwack.Excel.Instruments
                     TradeId = ObjectName,
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.LastSensitivityDate);
+                product.PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(product.LastSensitivityDate.ToOADate()));
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });

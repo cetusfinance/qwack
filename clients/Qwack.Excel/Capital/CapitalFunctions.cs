@@ -73,5 +73,28 @@ namespace Qwack.Excel.Capital
                 throw new Exception("EPE profile must be cube reference or Nx2 array");
             });
         }
+
+        [ExcelFunction(Description = "Computes approximate CVA for a portfolio", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVAApprox), IsThreadSafe = true)]
+        public static object ComputeCVAApprox(
+           [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
+           [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
+           [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+           [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+           [ExcelArgument(Description = "Portfolio")] string Portfolio,
+           [ExcelArgument(Description = "Asset-FX Model")] string Model,
+           [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
+           [ExcelArgument(Description = "Reporting currency")] string Currency)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurveName, $"Hazzard curve {HazzardCurveName} not found");
+                var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
+                var expDates = ExcelHelper.ToDateTimeArray(ExposureDates);
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                return XVACalculator.CVA_Approx(expDates, portfolio, hz.Value, model.Value, disc.Value, LGD, repCcy, ContainerStores.CurrencyProvider);
+            });
+        }
     }
 }

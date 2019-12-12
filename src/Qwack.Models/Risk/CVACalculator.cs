@@ -2,10 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
+using Qwack.Core.Instruments;
+using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
+using Qwack.Models.Models;
 
 namespace Qwack.Models.Risk
 {
@@ -49,6 +54,66 @@ namespace Qwack.Models.Risk
                 epeValues[i] = rows[i].Value;
             }
             return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve, LGD);
+        }
+
+        public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider)
+        {
+            if (portfolio.AssetIds().Length != 1 || portfolio.FxPairs(model).Length!=0)
+                throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
+
+            if (!portfolio.Instruments.All(x => x is AsianSwap))
+                throw new Exception("Approximate CVA only works for Asian Swap instruments");
+
+            if (portfolio.Instruments
+                .Select(x=>System.Math.Sign((x as AsianSwap).Notional))
+                .Distinct()
+                .Count()!=1)
+                throw new Exception("All swaps must be in same direction");
+
+            var cp = (portfolio.Instruments
+                .Select(x => System.Math.Sign((x as AsianSwap).Notional))
+                .Distinct().First() == 1.0) ? OptionType.C : OptionType.P;
+
+            var replicatingPF = new Portfolio
+            {
+                Instruments = portfolio.Instruments
+                .Select(s => s as AsianSwap)
+                .Select(s =>
+               new AsianOption
+               {
+                   AssetId = s.AssetId,
+                   AssetFixingId = s.AssetFixingId,
+                   AverageStartDate = s.AverageStartDate,
+                   AverageEndDate = s.AverageEndDate,
+                   CallPut = cp,
+                   Strike = s.Strike,
+                   Counterparty = s.Counterparty,
+                   DiscountCurve = s.DiscountCurve,
+                   FixingCalendar = s.FixingCalendar,
+                   FixingDates = s.FixingDates,
+                   HedgingSet = s.HedgingSet,
+                   Notional = System.Math.Abs(s.Notional),
+                   PaymentCalendar = s.PaymentCalendar,
+                   PaymentCurrency = s.PaymentCurrency,
+                   PaymentDate = s.PaymentDate,
+                   PaymentLag = s.PaymentLag,
+                   PaymentLagRollType = s.PaymentLagRollType,
+                   SpotLag = s.SpotLag,
+                   SpotLagRollType = s.SpotLagRollType,
+                   PortfolioName = s.PortfolioName,
+                   TradeId = s.TradeId
+               } as IInstrument).ToList()
+            };
+
+            var exposures = new double[exposureDates.Length];
+            var m = model.Clone();
+            for(var i=0;i<exposures.Length;i++)
+            {
+                m = m.RollModel(exposureDates[i], currencyProvider);
+                exposures[i] = System.Math.Max(0, replicatingPF.PV(m, reportingCurrency).GetAllRows().Sum(x=>x.Value));
+            }
+
+            return CVA(model.BuildDate, exposureDates, exposures, hazzardCurve, discountCurve, LGD);
         }
 
         public static (double FBA, double FCA) FVA(DateTime originDate, DateTime[] ExEDates, double[] EPEExposures, double[] ENEExposures, HazzardCurve hazzardCurve, IIrCurve discountCurve, IIrCurve fundingCurve)

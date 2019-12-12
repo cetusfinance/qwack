@@ -166,6 +166,41 @@ namespace Qwack.Paths.Regressors
             return o;
         }
 
+        public double[] PFETurbo(IAssetFxModel model)
+        {
+            var o = new double[_dateIndexes.Length];
+            var nPaths = _pathwiseValues.First().Length;
+
+            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model)).ToArray();
+            var finalValues = new double[_dateIndexes.Length][];
+
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                var exposureDate = _regressionDates[d];
+                finalValues[d] = new double[nPaths];
+                foreach (var schedule in finalSchedules)
+                {
+                    for (var p = 0; p < finalValues[d].Length; p++)
+                    {
+                        foreach (var flow in schedule[p].Flows)
+                        {
+                            if (flow.SettleDate > exposureDate)
+                                finalValues[d][p] += flow.Pv;
+                        }
+                    }
+                }
+            }).Wait();
+
+            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
+            {
+                var exposure = finalValues[d].Max();
+                o[d] = Max(0.0, exposure);
+                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
+            }).Wait();
+
+            return o;
+        }
+
         public double[] EPE(IAssetFxModel model)
         {
             var o = new double[_dateIndexes.Length];

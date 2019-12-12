@@ -25,6 +25,7 @@ namespace Qwack.Core.Instruments
         public double Pv { get; set; }
         public double Notional { get; set; }
         public double NotionalByYearFraction { get; set; }
+        public double Dcf { get; set; }
         public Currency Currency { get; set; }
         public double FixedRateOrMargin { get; set; }
 
@@ -50,7 +51,8 @@ namespace Qwack.Core.Instruments
             FixedRateOrMargin = FixedRateOrMargin,
             FlowType = FlowType,
             Basis = Basis,
-            RateIndex = RateIndex
+            RateIndex = RateIndex,
+            Dcf = Dcf
         };
     }
 

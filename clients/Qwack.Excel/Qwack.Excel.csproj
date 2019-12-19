@@ -42,7 +42,7 @@
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="2.2.0" />
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1000" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System" />

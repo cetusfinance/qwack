@@ -11,8 +11,8 @@ namespace Qwack.Dates
     {
         private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
         private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
-        private static readonly string[] _months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
-        private static readonly string[] _futureMonths = { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
+        public static readonly string[] Months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+        public static readonly string[] FutureMonths = { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
         /// <summary>
         /// Gets the next IMM date for a given input date. Returns 3rd Wednesday in March, June, September or December.  
         /// If an IMM date is given as the input, the following IMM date will be returned.
@@ -654,11 +654,11 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-',' '), out var y))
                         throw new Exception($"Could not parse year from {period}");
                     return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31));
-                case string p when p.Length == 2 && int.TryParse(p.Substring(1,1), out var yr) && _futureMonths.Contains(p.Substring(0,1)): //X8
-                    var m1 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) +1;
+                case string p when p.Length == 2 && int.TryParse(p.Substring(1,1), out var yr) && FutureMonths.Contains(p.Substring(0,1)): //X8
+                    var m1 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) +1;
                     return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth()); ;
-                case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && _futureMonths.Contains(p.Substring(0, 1)): //X18
-                    var m2 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) + 1;
+                case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X18
+                    var m2 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2000 + yr, m2, 1), End: (new DateTime(2000 + yr, m2, 1)).LastDayOfMonth()); ;
                 case string p when p.StartsWith("Q"):
                     if (!int.TryParse(p.Substring(1, 1), out var q))
@@ -672,10 +672,10 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(2).Trim('-',' '), out var yh))
                         throw new Exception($"Could not parse year from {period}");
                     return (Start: new DateTime(2000 + yh, (h-1)*6+1, 1), End: (new DateTime(2000 + yh, h * 6, 1)).LastDayOfMonth());
-                case string p when _months.Any(x => x == p.Substring(0, 3)):
+                case string p when Months.Any(x => x == p.Substring(0, 3)):
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
                         throw new Exception($"Could not parse year from {period}");
-                    var m = _months.ToList().IndexOf(p.Substring(0, 3))+1;
+                    var m = Months.ToList().IndexOf(p.Substring(0, 3))+1;
                     return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth());
                 default:
                     throw new Exception($"Could not parse period {period}");
@@ -692,11 +692,11 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var y))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31), valid:true);
-                case string p when p.Length == 2 && int.TryParse(p.Substring(1, 1), out var yr) && _futureMonths.Contains(p.Substring(0, 1)): //X8
-                    var m1 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) + 1;
+                case string p when p.Length == 2 && int.TryParse(p.Substring(1, 1), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X8
+                    var m1 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth(), valid:true); ;
-                case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && _futureMonths.Contains(p.Substring(0, 1)): //X18
-                    var m2 = Array.IndexOf(_futureMonths, p.Substring(0, 1)) + 1;
+                case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X18
+                    var m2 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2000 + yr, m2, 1), End: (new DateTime(2000 + yr, m2, 1)).LastDayOfMonth(), valid:true); ;
                 case string p when p.StartsWith("Q"):
                     if (!int.TryParse(p.Substring(1, 1), out var q))
@@ -710,10 +710,10 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(2).Trim('-', ' '), out var yh))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     return (Start: new DateTime(2000 + yh, (h - 1) * 6 + 1, 1), End: (new DateTime(2000 + yh, h * 6, 1)).LastDayOfMonth(), valid: true);
-                case string p when p.Length>2 && _months.Any(x => x == p.Substring(0, 3)):
+                case string p when Months.Any(x => x == p.Substring(0, 3)):
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
-                    var m = _months.ToList().IndexOf(p.Substring(0, 3)) + 1;
+                    var m = Months.ToList().IndexOf(p.Substring(0, 3)) + 1;
                     return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth(), valid:true);
                 default:
                     return (Start: default(DateTime), End: default(DateTime), valid: false);

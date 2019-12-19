@@ -30,6 +30,7 @@ namespace Qwack.Paths.Regressors
         private bool _isComplete;
         private string _regressionKey;
         private int[] _regressionIndices;
+        private IInterpolator1D[] _regressors;
 
         public MonoIndexRegressor(DateTime[] regressionDates, IAssetPathPayoff[] portfolio, McSettings settings, bool requireContinuity)
         {
@@ -110,6 +111,9 @@ namespace Qwack.Paths.Regressors
 
         public IInterpolator1D[] Regress(IAssetFxModel model)
         {
+            if (_regressors != null)
+                return _regressors;
+
             var o = new IInterpolator1D[_dateIndexes.Length];
 
             var nPaths = _pathwiseValues.First().Length;
@@ -145,7 +149,7 @@ namespace Qwack.Paths.Regressors
                     DumpDataToDisk(sortedFinalValues, o[d], $@"C:\temp\regData{d}.csv");
 
             }).Wait();
-
+            _regressors = o;
             return o;
         }
 
@@ -166,43 +170,14 @@ namespace Qwack.Paths.Regressors
             return o;
         }
 
-        public double[] PFETurbo(IAssetFxModel model)
-        {
-            var o = new double[_dateIndexes.Length];
-            var nPaths = _pathwiseValues.First().Length;
-
-            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model)).ToArray();
-            var finalValues = new double[_dateIndexes.Length][];
-
-            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
-            {
-                var exposureDate = _regressionDates[d];
-                finalValues[d] = new double[nPaths];
-                foreach (var schedule in finalSchedules)
-                {
-                    for (var p = 0; p < finalValues[d].Length; p++)
-                    {
-                        foreach (var flow in schedule[p].Flows)
-                        {
-                            if (flow.SettleDate > exposureDate)
-                                finalValues[d][p] += flow.Pv;
-                        }
-                    }
-                }
-            }).Wait();
-
-            ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
-            {
-                var exposure = finalValues[d].Max();
-                o[d] = Max(0.0, exposure);
-                o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
-            }).Wait();
-
-            return o;
-        }
+        private double[] _epe;
+        private double[] _ene;
 
         public double[] EPE(IAssetFxModel model)
         {
+            if (_epe != null)
+                return _epe;
+
             var o = new double[_dateIndexes.Length];
             var regressors = Regress(model);
             
@@ -211,11 +186,14 @@ namespace Qwack.Paths.Regressors
                 o[d] = _pathwiseValues[d].Select(p => Max(0,regressors[d].Interpolate(p))).OrderBy(x => x).Average();
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }).Wait();
-
+            _epe = o;
             return o;
         }
         public double[] ENE(IAssetFxModel model)
         {
+            if (_ene != null)
+                return _ene;
+
             var o = new double[_dateIndexes.Length];
             var regressors = Regress(model);
 
@@ -224,7 +202,7 @@ namespace Qwack.Paths.Regressors
                 o[d] = _pathwiseValues[d].Select(p => Min(0, regressors[d].Interpolate(p))).OrderBy(x => x).Average();
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }).Wait();
-
+            _ene = o;
             return o;
         }
 

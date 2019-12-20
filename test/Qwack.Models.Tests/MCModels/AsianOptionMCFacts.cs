@@ -11,6 +11,7 @@ using Qwack.Options.VolSurfaces;
 using System.Linq;
 using Qwack.Dates;
 using Qwack.Core.Basic;
+using Qwack.Options.Asians;
 
 namespace Qwack.Models.Tests.MCModels
 {
@@ -70,9 +71,9 @@ namespace Qwack.Models.Tests.MCModels
             var ins = sut.Portfolio.Instruments.First() as AsianOption;
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
 
-            var clewlowPV = Options.Asians.LME_Clewlow.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C, usdCal);
-            var tbPV = Options.Asians.TurnbullWakeman.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C);
-            var tbFutPV = Options.Asians.TurnbullWakeman.PV(ins.FixingDates.Select(x => 100.0).ToArray(), ins.FixingDates, sut.Model.BuildDate, ins.PaymentDate, ins.FixingDates.Select(x => 0.32).ToArray(), ins.Strike, 0.0, OptionType.C);
+            var clewlowPV = LME_Clewlow.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C, usdCal);
+            var tbPV = TurnbullWakeman.PV(100, 0, 0.32, 101, sut.Model.BuildDate, ins.AverageStartDate, ins.AverageEndDate, 0.0, OptionType.C);
+            var tbFutPV = TurnbullWakeman.PV(ins.FixingDates.Select(x => 100.0).ToArray(), ins.FixingDates, sut.Model.BuildDate, ins.PaymentDate, ins.FixingDates.Select(x => 0.32).ToArray(), ins.Strike, 0.0, OptionType.C);
 
             Assert.Equal(tbFutPV, pvCube.GetAllRows().First().Value, 1);
         }

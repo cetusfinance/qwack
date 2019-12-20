@@ -12,7 +12,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Core.Models;
-using Qwack.Core.Calibrators;
+using Qwack.Models.Calibrators;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Models;
 

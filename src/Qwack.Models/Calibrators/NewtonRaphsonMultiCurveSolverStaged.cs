@@ -6,7 +6,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 
-namespace Qwack.Core.Calibrators
+namespace Qwack.Models.Calibrators
 {
     public class NewtonRaphsonMultiCurveSolverStaged
     {

@@ -11,7 +11,7 @@ using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
 using Qwack.Models;
-using Qwack.Providers.Json;
+using Qwack.Models.Calibrators;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
@@ -72,7 +72,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver()
+            var s = new NewtonRaphsonMultiCurveSolver()
             {
                 Tollerance = IsCoverageOnly ? 1 : 0.00000001
             };
@@ -143,7 +143,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(pillars, new double[nContracts], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd);
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver()
+            var s = new NewtonRaphsonMultiCurveSolver()
             {
                 Tollerance = IsCoverageOnly ? 1 : 0.00000001
             };

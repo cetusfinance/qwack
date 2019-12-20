@@ -160,7 +160,7 @@ namespace Qwack.Excel.Curves
                 var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => x.Value);
 
                 var pDates = Pillars.ToDateTimeArray();
-                var fitter = new Core.Calibrators.NewtonRaphsonAssetCurveSolver();
+                var fitter = new Models.Calibrators.NewtonRaphsonAssetCurveSolver();
                 var cObj = (SparsePriceCurve)fitter.Solve(swaps.ToList(), pDates.ToList(), irCurve, BuildDate, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>());
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;
@@ -206,7 +206,7 @@ namespace Qwack.Excel.Curves
                 var swaps = Swaps.Select(s => swapCache.GetObject(s as string)).Select(x => (IAssetInstrument)x.Value);
 
                 var pDates = Pillars.ToDateTimeArray();
-                var fitter = new Core.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider);
+                var fitter = new Models.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider);
                 var cObj = (PriceCurve)fitter.SolveCurve(swaps.ToList(), pDates.ToList(), irCurve, baseCurve, BuildDate, cType);
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;
@@ -257,7 +257,7 @@ namespace Qwack.Excel.Curves
                 var labels = PillarLabels is ExcelMissing ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>().ToList();
 
                 var pDates = Pillars.ToDateTimeArray().ToList();
-                var cObj = new BasisPriceCurve(pf.Instruments.Where(x=>x is IAssetInstrument).Select(x=>x as IAssetInstrument).ToList(), pDates, irCurve, baseCurve, BuildDate, cType, ContainerStores.CurrencyProvider, labels)
+                var cObj = new BasisPriceCurve(pf.Instruments.Where(x=>x is IAssetInstrument).Select(x=>x as IAssetInstrument).ToList(), pDates, irCurve, baseCurve, BuildDate, cType, new Models.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider), labels)
                 {
                     Name = ObjectName,
                     AssetId = AssetId,

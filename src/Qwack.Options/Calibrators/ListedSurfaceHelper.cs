@@ -45,7 +45,7 @@ namespace Qwack.Options.Calibrators
         {
             var output = new Dictionary<DateTime, IInterpolator1D>();
 
-            var byExpiry = optionSettlements.GroupBy(r => r.ExpiryDate).OrderBy(o => o);
+            var byExpiry = optionSettlements.GroupBy(r => r.ExpiryDate).OrderBy(o => o.Key);
             foreach(var expGroup in byExpiry)
             {
                 var expiry = expGroup.Key;
@@ -63,7 +63,7 @@ namespace Qwack.Options.Calibrators
                     throw new Exception($"No future price found for contract {futCode}");
 
                 var filtered = new List<SmilePoint>();
-                var byStrike = expGroup.GroupBy(e => e.Strike).OrderBy(o => o);
+                var byStrike = expGroup.GroupBy(e => e.Strike).OrderBy(o => o.Key);
                 foreach (var strikeGrp in byStrike)
                 {
                     var k = strikeGrp.Key;

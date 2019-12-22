@@ -1,16 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\..\common.props" />
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <AssemblyName>Qwack.Models.Tests</AssemblyName>
         <PackageId>Qwack.Models.Tests</PackageId>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     </PropertyGroup>
     <ItemGroup>
+      <None Remove="cbt.settle.s_test.csv" />
+      <None Remove="cme.settle.s_test.csv" />
       <None Remove="nymex_future_test.csv" />
       <None Remove="nymex_option_test.csv" />
     </ItemGroup>
     <ItemGroup>
+      <Content Include="cbt.settle.s_test.csv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="cme.settle.s_test.csv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <Content Include="nymex_future_test.csv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>

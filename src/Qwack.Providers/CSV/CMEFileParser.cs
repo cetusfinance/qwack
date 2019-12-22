@@ -27,7 +27,7 @@ namespace Qwack.Providers.CSV
         public string Sym { get; set; }
         public string ID { get; set; }
         public double? StrkPx { get; set; }
-        public string SecType { get; set; }
+        public string SecTyp { get; set; }
         public string MMY { get; set; }
         public string MatDt { get; set; }
         public int? PutCall { get; set; }

@@ -7,7 +7,7 @@ using Xunit;
 using Qwack.Core.Basic;
 using Qwack.Models.Calibrators;
 
-namespace Qwack.Models.Tests.Options.Calibrators
+namespace Qwack.Models.Tests.Calibrators
 {
     public class NymexCalibratorFacts
     {

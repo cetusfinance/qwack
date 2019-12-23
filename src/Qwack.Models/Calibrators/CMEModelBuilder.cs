@@ -19,14 +19,15 @@ namespace Qwack.Models.Calibrators
         public static IrCurve GetCurveForCode(string cmeId, string cmeFilename, string qwackCode, string curveName, Dictionary<string,FloatRateIndex> indices, Dictionary<string,string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var parsed = CMEFileParser.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp=="FUT");
-            var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "MM/dd/yyyy", CultureInfo.InvariantCulture), x => x.SettlePrice);
-            var origin = DateTime.ParseExact(parsed.First().BizDt, "MM/dd/yyyy", CultureInfo.InvariantCulture);
-            var pillars = parsed.Select(x => DateTime.ParseExact(x.MatDt, "MM/dd/yyyy", CultureInfo.InvariantCulture)).ToArray();
-            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Math.Interpolation.Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"));
-            var fm = new FundingModel(origin, new[] { curve }, currencyProvider, calendarProvider);
+            var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
+            var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var instruments = parsed.Select(p => ToQwackIns(p, qwackCode, futureSettingsProvider, currencyProvider, indices, curves)).ToList();
+            var pillars = instruments.Select(x => x.PillarDate).OrderBy(x => x).ToArray();
             var fic = new FundingInstrumentCollection(currencyProvider);
             fic.AddRange(instruments);
+            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Math.Interpolation.Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"));
+            var fm = new FundingModel(origin, new[] { curve }, currencyProvider, calendarProvider);
+
             var solver = new NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(fm, fic);
             return curve;

@@ -55,7 +55,7 @@ namespace Qwack.Paths
         public int NumberOfPaths => _numberOfPaths;
         public int Factors => _numberOfFactors;
         public int NumberOfSteps => _numberOfSteps;
-        public static int MinNumberOfPaths => Vector<double>.Count;
+        public static int MinNumberOfPaths => Vector<double>.Count * Environment.ProcessorCount;
         public int TotalBlockSize => _numberOfPaths * _numberOfFactors * _numberOfSteps;
         public double[] RawData => _backingArray;
 

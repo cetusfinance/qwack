@@ -22,7 +22,7 @@ namespace Qwack.Models.Models
 {
     public static class AssetProductEx
     {
-        private static readonly bool _useFuturesMethod = true;
+        private const bool _useFuturesMethod = true;
 
         public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows)
         {

@@ -78,7 +78,7 @@ namespace Qwack.Core.Cubes
             }
         }
 
-        bool IsOfNullableType<T>(T o)
+        bool IsOfNullableType<T>()
         {
             var type = typeof(T);
             return Nullable.GetUnderlyingType(type) != null;

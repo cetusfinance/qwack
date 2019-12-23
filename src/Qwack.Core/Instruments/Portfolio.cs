@@ -55,13 +55,13 @@ namespace Qwack.Core.Instruments
         public static string[] AssetIds(this Portfolio portfolio)
         {
             if (portfolio.Instruments.Count == 0)
-                return new string[0];
+                return Array.Empty<string>();
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
 
             if(!assetTrades.Any())
-                return new string[0];
+                return Array.Empty<string>();
 
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
         }
@@ -69,7 +69,7 @@ namespace Qwack.Core.Instruments
         public static string[] FxPairs(this Portfolio portfolio, IAssetFxModel model)
         {
             if (portfolio.Instruments.Count == 0)
-                return new string[0];
+                return Array.Empty<string>();
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
@@ -79,7 +79,7 @@ namespace Qwack.Core.Instruments
                 .Where(x => x is FxVanillaOption || (x is CashWrapper cw && cw.UnderlyingInstrument is FxVanillaOption));
 
             if (!fxTrades.Any() && !assetTrades.Any() && !fxOptionTrades.Any())
-                return new string[0];
+                return Array.Empty<string>();
 
             var o = new List<string>();
 

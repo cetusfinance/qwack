@@ -13,10 +13,11 @@ namespace Qwack.Models.Tests.Calibrators
 {
     public class CmeCalibratorFacts
     {
-        private const string Filename = "cbt.settle.s_test.csv";
-        
+        private const string FilenameCME = "cme.settle.s_test.csv";
+        private const string FilenameCBOT = "cbt.settle.s_test.csv";
+
         [Fact]
-        public void CanStripCurve()
+        public void CanStripCurve_Eurodollar()
         {
             var i = new FloatRateIndex()
             {
@@ -29,10 +30,28 @@ namespace Qwack.Models.Tests.Calibrators
             };
             var indices = new Dictionary<string, FloatRateIndex> { { "ED", i } };
             var curves = new Dictionary<string, string> { { "ED", "USD.LIBOR.3M" } };
-            var curve = CMEModelBuilder.GetCurveForCode("41", Filename, "ED", "USD.LIBOR.3M", indices, curves, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            var curve = CMEModelBuilder.GetCurveForCode("ED", FilenameCME, "ED", "USD.LIBOR.3M", indices, curves, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             Assert.Equal(1.0, curve.GetDf(new DateTime(2020, 12, 18), new DateTime(2020, 12, 18)));
         }
 
+        [Fact]
+        public void CanStripCurve_FedFunds()
+        {
+            var i = new FloatRateIndex()
+            {
+                Currency = TestProviderHelper.CurrencyProvider.GetCurrency("USD"),
+                DayCountBasis = DayCountBasis.Act360,
+                FixingOffset = 0.Bd(),
+                HolidayCalendars = TestProviderHelper.CalendarProvider.Collection["NYC+LON"],
+                ResetTenor = 1.Months(),
+                RollConvention = RollType.MF
+            };
+            var indices = new Dictionary<string, FloatRateIndex> { { "FF", i } };
+            var curves = new Dictionary<string, string> { { "FF", "USD.OIS.1B" } };
+            var curve = CMEModelBuilder.GetCurveForCode("41", FilenameCBOT, "FF", "USD.OIS.1B", indices, curves, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+
+            Assert.Equal(1.0, curve.GetDf(new DateTime(2020, 12, 18), new DateTime(2020, 12, 18)));
+        }
     }
 }

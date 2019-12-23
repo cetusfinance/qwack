@@ -48,7 +48,7 @@ namespace Qwack.Models.Calibrators
                         Price = record.SettlePrice.Value,
                         Index = indices["ED"],
                         Expiry = edExp,
-                        PillarDate = edExp,
+                        PillarDate = edExp.AddMonths(3),
                         TradeId = qwackCode+record.MMY,
                         Position=1,
                         SolveCurve = forecastCurves["ED"],

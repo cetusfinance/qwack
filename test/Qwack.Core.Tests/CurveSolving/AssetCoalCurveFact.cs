@@ -5,6 +5,8 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
+using Qwack.Models.Calibrators;
+
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
@@ -34,7 +36,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, startDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, xaf);
 
-            var s = new Calibrators.NewtonRaphsonAssetCurveSolver()
+            var s = new NewtonRaphsonAssetCurveSolver()
             {
                 Tollerance = IsCoverageOnly ? 1 : 0.00000001
             };
@@ -44,7 +46,7 @@ namespace Qwack.Core.Tests.CurveSolving
             {
                 for (var i = 0; i < instruments.Count; i++)
                 {
-                    var resultPV = Calibrators.NewtonRaphsonAssetCurveSolver.SwapPv(curve, instruments[i], discountCurve);
+                    var resultPV = NewtonRaphsonAssetCurveSolver.SwapPv(curve, instruments[i], discountCurve);
                     Assert.Equal(0, resultPV, 6);
                 }
             }

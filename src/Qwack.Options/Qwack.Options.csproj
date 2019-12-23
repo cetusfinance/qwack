@@ -10,7 +10,9 @@
  <ItemGroup>
     <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\Qwack.Futures\Qwack.Futures.csproj" />
     <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
     <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
+    <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
   </ItemGroup>
 </Project>

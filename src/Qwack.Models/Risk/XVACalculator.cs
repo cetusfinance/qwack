@@ -8,9 +8,12 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
+using static System.Math;
 
 namespace Qwack.Models.Risk
 {
@@ -41,18 +44,7 @@ namespace Qwack.Models.Risk
 
         public static double CVA(DateTime originDate, ICube EPE, HazzardCurve hazzardCurve, IIrCurve discountCurve, double LGD)
         {
-            if (!EPE.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
-                throw new Exception("EPE cube input not valid");
-
-            var rows = EPE.GetAllRows();
-            var dateIx = EPE.GetColumnIndex("ExposureDate");
-            var epeDates = new DateTime[rows.Length];
-            var epeValues = new double[rows.Length];
-            for(var i=0;i<rows.Length;i++)
-            {
-                epeDates[i] = (DateTime)rows[i].MetaData[dateIx];
-                epeValues[i] = rows[i].Value;
-            }
+            (var epeDates, var epeValues) = CubeToExposures(EPE);
             return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve, LGD);
         }
 
@@ -65,13 +57,13 @@ namespace Qwack.Models.Risk
                 throw new Exception("Approximate CVA only works for Asian Swap instruments");
 
             if (portfolio.Instruments
-                .Select(x=>System.Math.Sign((x as AsianSwap).Notional))
+                .Select(x=>Sign((x as AsianSwap).Notional))
                 .Distinct()
                 .Count()!=1)
                 throw new Exception("All swaps must be in same direction");
 
             var cp = (portfolio.Instruments
-                .Select(x => System.Math.Sign((x as AsianSwap).Notional))
+                .Select(x => Sign((x as AsianSwap).Notional))
                 .Distinct().First() == 1.0) ? OptionType.C : OptionType.P;
 
             var replicatingPF = new Portfolio
@@ -92,7 +84,7 @@ namespace Qwack.Models.Risk
                    FixingCalendar = s.FixingCalendar,
                    FixingDates = s.FixingDates,
                    HedgingSet = s.HedgingSet,
-                   Notional = System.Math.Abs(s.Notional),
+                   Notional = Abs(s.Notional),
                    PaymentCalendar = s.PaymentCalendar,
                    PaymentCurrency = s.PaymentCurrency,
                    PaymentDate = s.PaymentDate,
@@ -193,11 +185,82 @@ namespace Qwack.Models.Risk
 
         public static double KVA(DateTime originDate, ICube ExpectedCapital, IIrCurve fundingCurve)
         {
-            if (!ExpectedCapital.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
-                throw new Exception("ExpectedCapital cube input not valid");
+            (var epeDates, var epeValues) = CubeToExposures(ExpectedCapital);
+            return KVA(originDate, epeDates, epeValues, fundingCurve);
+        }
 
-            var rows = ExpectedCapital.GetAllRows();
-            var dateIx = ExpectedCapital.GetColumnIndex("ExposureDate");
+        public static (double EEPE, double M) EEPE(DateTime originDate, DateTime[] exposureDates, double[] exposures)
+        {
+            if (exposureDates.Length != exposures.Length)
+                throw new Exception("Exposures and dates must be of same length");
+
+            var y1Date = originDate.AddYears(1);
+            var y1DateIx = Array.BinarySearch(exposureDates, y1Date);
+            if (y1DateIx < 0)
+                y1DateIx = ~y1DateIx;
+
+            var eepe = 0.0;
+            var sumDt = 0.0;
+            var mTop = 0.0;
+            var eee = new double[exposures.Length];
+            for(var i=0;i<eee.Length;i++)
+            {
+                var dt = (i == 0) ? 0.0 : exposureDates[i - 1].CalculateYearFraction(exposureDates[i], DayCountBasis.Act365F);
+                eee[i] = (i == 0) ? exposures[0] : Max(exposures[i], eee[i - 1]);
+                if (exposureDates[i] <= y1Date)
+                {
+                    eepe += eee[i] * dt;
+                    sumDt += dt;
+                }
+                else
+                {
+                    mTop += exposures[i] * dt;
+                }
+            }
+
+            var M = Min(1.0, Max(5, 1.0 + mTop / eepe));
+            eepe /= sumDt;
+
+            return (eepe, M);
+        }
+
+        public static double RWA_BaselII_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double alpha = 1.4)
+        {
+            (var efExpPE, var M) = EEPE(originDate, exposureDates, exposures);
+            var ead = efExpPE * alpha;
+
+            var RWA = BaselHelper.RWA(PD, LGD, M, ead);
+            return RWA;
+        }
+
+        public static double RWA_BaselIII_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double partyWeight, double alpha = 1.4)
+        {
+            (var efExpPE, var M) = EEPE(originDate, exposureDates, exposures);
+            var ead = efExpPE * alpha;
+
+            var RWA = 2.33 * partyWeight * M * ead; //simplified for single name and no hedges
+            return RWA;
+        }
+
+        public static double RWA_BaselII_IMM(DateTime originDate, ICube EPE, double PD, double LGD, double alpha = 1.4)
+        {
+            (var epeDates, var epeValues) = CubeToExposures(EPE);
+            return RWA_BaselII_IMM(originDate, epeDates, epeValues, PD, LGD, alpha);
+        }
+
+        public static double RWA_BaselIII_IMM(DateTime originDate, ICube EPE, double PD, double LGD, double partyWeight, double alpha = 1.4)
+        {
+            (var epeDates, var epeValues) = CubeToExposures(EPE);
+            return RWA_BaselIII_IMM(originDate, epeDates, epeValues, PD, LGD, partyWeight, alpha);
+        }
+
+        public static (DateTime[] dates, double[] exposures) CubeToExposures(ICube EPE)
+        {
+            if (!EPE.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
+                throw new Exception("EPE cube input not valid");
+
+            var rows = EPE.GetAllRows();
+            var dateIx = EPE.GetColumnIndex("ExposureDate");
             var epeDates = new DateTime[rows.Length];
             var epeValues = new double[rows.Length];
             for (var i = 0; i < rows.Length; i++)
@@ -205,7 +268,8 @@ namespace Qwack.Models.Risk
                 epeDates[i] = (DateTime)rows[i].MetaData[dateIx];
                 epeValues[i] = rows[i].Value;
             }
-            return KVA(originDate, epeDates, epeValues, fundingCurve);
+
+            return (epeDates, epeValues);
         }
     }
 }

@@ -7,7 +7,7 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
+using Qwack.Models.Calibrators;
 using Qwack.Dates;
 using Qwack.Futures;
 using Qwack.Math.Interpolation;
@@ -49,7 +49,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
+            var s = new NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             if (IsCoverageOnly)
                 s.Tollerance = 1.0;
 
@@ -58,7 +58,7 @@ namespace Qwack.Core.Tests.CurveSolving
             if (!IsCoverageOnly)
                 for (var i = 0; i < instruments.Count; i++)
                 {
-                    var resultPV = Calibrators.NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
+                    var resultPV = NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
                     Assert.Equal(0, resultPV, 6);
                 }
         }
@@ -88,7 +88,7 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var s = new Calibrators.NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
+            var s = new NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
             var curve = s.SolveCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.Linear);
 
             Assert.Equal((100.0 - 10.0) * 6.35, curve.GetPriceForDate(buildDate));
@@ -123,18 +123,18 @@ namespace Qwack.Core.Tests.CurveSolving
             double[] dRates = { 0, 0 };
             var discountCurve = new IrCurve(dPillars, dRates, buildDate, "zeroDiscount", Interpolator1DType.LinearFlatExtrap, usd);
 
-            var curve = new BasisPriceCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider);
+            var curve = new BasisPriceCurve(instruments, pillars, discountCurve, brentCurve, buildDate, PriceCurveType.NYMEX, new NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider));
 
             for (var i = 0; i < instruments.Count; i++)
             {
-                var resultPV = Calibrators.NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
+                var resultPV = NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve, instruments[i], discountCurve, brentCurve);
                 Assert.Equal(0, resultPV, 6);
             }
 
             var curve2 = curve.Clone();
             for (var i = 0; i < instruments.Count; i++)
             {
-                var resultPV = Calibrators.NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve2, instruments[i], discountCurve, brentCurve);
+                var resultPV = NewtonRaphsonAssetBasisCurveSolver.BasisSwapPv(curve2, instruments[i], discountCurve, brentCurve);
                 Assert.Equal(0, resultPV, 6);
             }
         }

@@ -464,21 +464,46 @@ namespace Qwack.Models.MCModels
             Engine.SetupFeatures();
         }
         public ICube PFE(double confidenceLevel) => 
-            PackResults(() => _regressor.PFE(Model, confidenceLevel));
+            PackResults(() => _regressor.PFE(Model, confidenceLevel),"PFE");
 
-        public ICube EPE() => PackResults(() => _regressor.EPE(Model));
-        public ICube ENE() => PackResults(() => _regressor.ENE(Model));
-        public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital);
+        public ICube EPE() => PackResults(() => _regressor.EPE(Model),"EPE");
+        public ICube ENE() => PackResults(() => _regressor.ENE(Model),"ENE");
+        public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital,"ExpCapital");
         public double CVA() => XVACalculator.CVA(Model.BuildDate, EPE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.FundingCurve, Settings.CreditSettings.LGD);
         public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(),ENE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.BaseDiscountCurve, Settings.CreditSettings.FundingCurve);
         public double KVA() => XVACalculator.KVA(Model.BuildDate, ExpectedCapital(), Settings.CreditSettings.FundingCurve);
 
-        private ICube PackResults(Func<double[]> method)
+        public ICube FullPack(double confidenceLevel)
+        {
+            var pfe = PFE(confidenceLevel);
+            var epe = EPE();
+            var cvaDouble = CVA();
+            var (FBA, FCA) = FVA();
+
+            var cube = pfe.Merge(epe);
+
+            cube.AddRow(new Dictionary<string, object>
+            {
+                {"ExposureDate", DateTime.Today},
+                {"Metric", "CVA"},
+            }, cvaDouble);
+
+            cube.AddRow(new Dictionary<string, object>
+            {
+                {"ExposureDate", DateTime.Today},
+                {"Metric", "FVA"},
+            }, FBA + FCA);
+
+            return cube;
+        }
+
+        private ICube PackResults(Func<double[]> method, string metric)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) }
+                { "ExposureDate", typeof(DateTime) },
+                { "Metric", typeof(string) }
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
@@ -487,17 +512,18 @@ namespace Qwack.Models.MCModels
 
             for (var i = 0; i < e.Length; i++)
             {
-                cube.AddRow(new object[] { Settings.CreditSettings.ExposureDates[i] }, e[i]);
+                cube.AddRow(new object[] { Settings.CreditSettings.ExposureDates[i], metric }, e[i]);
             }
             return cube;
         }
 
-        private ICube PackResults(Func<Dictionary<DateTime,double>> method)
+        private ICube PackResults(Func<Dictionary<DateTime,double>> method, string metric)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) }
+                { "ExposureDate", typeof(DateTime) },
+                { "Metric", typeof(string) }
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
@@ -506,7 +532,7 @@ namespace Qwack.Models.MCModels
 
             foreach(var kv in e)
             {
-                cube.AddRow(new object[] { kv.Key }, kv.Value);
+                cube.AddRow(new object[] { kv.Key, metric }, kv.Value);
             }
             return cube;
         }

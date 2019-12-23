@@ -4,13 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
-using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
+using Qwack.Models.Calibrators;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Models;
-using Qwack.Providers.Json;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving
@@ -56,7 +54,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var curve = new IrCurve(new [] { pillarDateDepo, pillarDate, pillarDate2 }, new double[3], startDate, "ZAR.JIBAR.3M", Interpolator1DType.LinearFlatExtrap, ccyZar);
             var model = new FundingModel(startDate, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
-            var s = new Calibrators.NewtonRaphsonMultiCurveSolver();
+            var s = new NewtonRaphsonMultiCurveSolver();
             if (IsCoverageOnly)
                 s.Tollerance = 1;
 

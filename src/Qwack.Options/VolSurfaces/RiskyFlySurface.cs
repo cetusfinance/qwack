@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Calibrators;
+using Qwack.Core.Models;
 using Qwack.Core.Cubes;
 using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;

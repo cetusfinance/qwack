@@ -20,7 +20,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 {
     public class VolsurfaceExtensionFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
@@ -86,7 +86,7 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var surfaceCompo = surfaceAsset.GenerateCompositeSmile(invFx, 200, expiry, 100, 1.0/15, correl);
         
             //setup MC
-            var engine = new PathEngine(2.IntPow(IsCoverageOnly?5:15));
+            using var engine = new PathEngine(2.IntPow(IsCoverageOnly?5:15));
             engine.AddPathProcess(
                 new Qwack.Random.MersenneTwister.MersenneTwister64
                 { UseNormalInverse = true });

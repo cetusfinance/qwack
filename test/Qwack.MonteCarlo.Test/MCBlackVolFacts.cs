@@ -17,13 +17,13 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCBlackVolFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         [Fact]
         public void BlackMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 15));
+            using var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 15));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,

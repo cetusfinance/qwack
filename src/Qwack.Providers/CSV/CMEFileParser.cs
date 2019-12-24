@@ -12,12 +12,10 @@ namespace Qwack.Providers.CSV
     {
         public static List<CMEFileRecord> Parse(string fileName)
         {
-            using (var textReader = File.OpenText(fileName))
-            using (var csv = new CsvReader(textReader))
-            {
-                csv.Configuration.HasHeaderRecord = true;
-                return csv.GetRecords<CMEFileRecord>().ToList();
-            }
+            using var textReader = File.OpenText(fileName);
+            using var csv = new CsvReader(textReader);
+            csv.Configuration.HasHeaderRecord = true;
+            return csv.GetRecords<CMEFileRecord>().ToList();
         }
     }
 

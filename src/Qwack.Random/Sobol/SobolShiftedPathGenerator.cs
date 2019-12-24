@@ -25,7 +25,7 @@ namespace Qwack.Random.Sobol
         protected override double ConvertRandToDouble(uint rand, int dimension)
         {
             var returnNumber = rand * s_convertToDoubleConstant;
-            returnNumber = returnNumber + _dimensionShifts[dimension + Seed];
+            returnNumber += _dimensionShifts[dimension + Seed];
             if (returnNumber >= 1.0)
                 returnNumber -= 1.0;
 

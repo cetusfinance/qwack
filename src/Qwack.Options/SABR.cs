@@ -76,7 +76,7 @@ namespace Qwack.Options
             double t54;
             if (k == fwd)
             {
-                k = k * (1 + 0.00000001);
+                k *= (1 + 0.00000001);
             }
             if (k == 0.0)
             {

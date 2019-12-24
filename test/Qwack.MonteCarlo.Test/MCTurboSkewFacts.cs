@@ -20,13 +20,13 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCTurboSkewFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         [Fact]
         public void TSMC_PathsGenerated()
         {
             var origin = new DateTime(2019, 06, 28);
-            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 17));
+            using var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 17));
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                 UseNormalInverse = true,

@@ -59,7 +59,7 @@ namespace Qwack.Math.Matrix
                     * the diagonal values are all 1 for L.
                     * */
                     var lij = i == j ? 1 : lu[i][j];
-                    suml = suml + (lij * y[j]);
+                    suml += (lij * y[j]);
                 }
                 y[i] = b[pi[i]] - suml;
             }
@@ -69,7 +69,7 @@ namespace Qwack.Math.Matrix
                 var sumu = 0.0;
                 for (var j = i + 1; j <= n; j++)
                 {
-                    sumu = sumu + (lu[i][j] * x[j]);
+                    sumu += (lu[i][j] * x[j]);
                 }
                 x[i] = (y[i] - sumu) / lu[i][i];
             }

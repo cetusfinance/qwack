@@ -9,8 +9,8 @@ namespace Qwack.Dates
     /// </summary>
     public static class DateExtensions
     {
-        private static readonly double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
-        private static readonly double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
+        private const double _ticksFraction360 = 1.0 / (TimeSpan.TicksPerDay * 360.0);
+        private const double _ticksFraction365 = 1.0 / (TimeSpan.TicksPerDay * 365.0);
         public static readonly string[] Months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
         public static readonly string[] FutureMonths = { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
         /// <summary>
@@ -52,7 +52,7 @@ namespace Qwack.Dates
             if (m % 3 == 0 && input > ThirdWednesday(input))
                 return ThirdWednesday(input);
 
-            m = m - (m % 3 == 0 ? 3 : m % 3); //roll to next IMM month
+            m -= (m % 3 == 0 ? 3 : m % 3); //roll to next IMM month
             if (m >= 1) return ThirdWednesday(new DateTime(y, m, 1));
             m += 12;
             y--;
@@ -548,24 +548,13 @@ namespace Qwack.Dates
                 }
                 return d;
             }
-
-            DateTime dt;
-            switch (datePeriod.PeriodType)
+            var dt = datePeriod.PeriodType switch
             {
-                case DatePeriodType.D:
-                    dt = date.AddDays(datePeriod.PeriodCount);
-                    break;
-                case DatePeriodType.M:
-                    dt = date.AddMonths(datePeriod.PeriodCount);
-                    break;
-                case DatePeriodType.W:
-                    dt = date.AddDays(datePeriod.PeriodCount * 7);
-                    break;
-                default:
-                    dt = date.AddYears(datePeriod.PeriodCount);
-                    break;
-            }
-
+                DatePeriodType.D => date.AddDays(datePeriod.PeriodCount),
+                DatePeriodType.M => date.AddMonths(datePeriod.PeriodCount),
+                DatePeriodType.W => date.AddDays(datePeriod.PeriodCount * 7),
+                _ => date.AddYears(datePeriod.PeriodCount),
+            };
             if ((rollType == RollType.MF_LIBOR) && (date == date.LastBusinessDayOfMonth(calendar)))
             {
                 dt = date.LastBusinessDayOfMonth(calendar);

@@ -101,7 +101,7 @@ namespace Qwack.Futures
             if (monthIndex < 0)
             {
                 //We are wrapping over the end of year
-                monthIndex = monthIndex + _settings.Months.Count;
+                monthIndex += _settings.Months.Count;
                 yearNumber--;
                 if (yearNumber < 0) yearNumber += 10;
             }

@@ -15,14 +15,14 @@ namespace Qwack.MonteCarlo.Test
 {
     public class MCConstantVolFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         [Fact]
         public void PathsGenerated()
         {
             var vol = 0.32;
 
-            var engine = new PathEngine(IsCoverageOnly ? 2.IntPow(6) : 2 << 10);
+            using var engine = new PathEngine(IsCoverageOnly ? 2.IntPow(6) : 2 << 10);
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true

@@ -12,14 +12,12 @@ namespace Qwack.Providers.CSV
     {
         public static List<NYMEXOptionRecord> Parse(string fileName)
         {
-            using (var textReader = File.OpenText(fileName))
-            using (var csv = new CsvReader(textReader))
-            {
-                csv.Configuration.HasHeaderRecord = true;
-                csv.Configuration.RegisterClassMap<NYMEXOptionRecordMap>();
+            using var textReader = File.OpenText(fileName);
+            using var csv = new CsvReader(textReader);
+            csv.Configuration.HasHeaderRecord = true;
+            csv.Configuration.RegisterClassMap<NYMEXOptionRecordMap>();
 
-                return csv.GetRecords<NYMEXOptionRecord>().ToList();
-            }
+            return csv.GetRecords<NYMEXOptionRecord>().ToList();
         }
     }
 

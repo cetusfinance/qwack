@@ -21,7 +21,7 @@ namespace Qwack.MonteCarlo.Test
     [CollectionDefinition("MCTests", DisableParallelization = true)]
     public class MCBLocalVolFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         private static readonly string s_directionNumbers = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "SobolDirectionNumbers.txt");
 
@@ -29,7 +29,7 @@ namespace Qwack.MonteCarlo.Test
         public void LVMC_PathsGenerated()
         {
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 12))
+            using var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 12))
             {
                 Parallelize = false
             };

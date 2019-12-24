@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Qwack.Math
 {
-    public class CurveBender
+    public static class CurveBender
     {
         public static double[] Bend(double[] inSpreads, double?[] sparseNewSpreads)
         {

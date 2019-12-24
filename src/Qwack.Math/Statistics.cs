@@ -458,7 +458,7 @@ namespace Qwack.Math
                     build = build * XAbs + 637.333633378831;
                     build = build * XAbs + 793.826512519948;
                     build = build * XAbs + 440.413735824752;
-                    cumNorm = cumNorm / build;
+                    cumNorm /= build;
                 }
                 else
                 {

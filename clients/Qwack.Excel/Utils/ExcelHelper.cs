@@ -19,7 +19,7 @@ namespace Qwack.Excel.Services
 
             try
             {
-                return functionToRun.Invoke();
+                return functionToRun();
             }
             catch (AggregateException agEx)
             {

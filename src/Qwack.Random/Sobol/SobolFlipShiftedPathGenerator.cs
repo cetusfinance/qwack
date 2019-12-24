@@ -42,7 +42,7 @@ namespace Qwack.Random.Sobol
 
         private double ShiftNumber(double originalNumber, int dimension)
         {
-            originalNumber = originalNumber + _dimensionShifts[dimension];
+            originalNumber += _dimensionShifts[dimension];
             if (originalNumber >= 1.0)
                 return originalNumber - 1.0;
             return originalNumber;
@@ -58,9 +58,9 @@ namespace Qwack.Random.Sobol
                 var bitMask = (uint)1 << bit;
 
                 var currentBit = uPath & bitMask;
-                currentBit = currentBit >> bit;
+                currentBit >>= bit;
 
-                returnValue = returnValue ^ (_v[dimension][bit + 1] * currentBit);
+                returnValue ^= (_v[dimension][bit + 1] * currentBit);
 
             }
             return returnValue;

@@ -17,7 +17,7 @@ namespace Qwack.MonteCarlo.Test
     [CollectionDefinition("MCLVTests", DisableParallelization = true)]
     public class MCLocalVolMultiAssetFacts
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         [Theory]
         [InlineData(0.0)]
@@ -27,10 +27,8 @@ namespace Qwack.MonteCarlo.Test
         [InlineData(-0.5)]
         public void LVMCDualPathsGenerated(double correlation)
         {
-            
-
             var origin = DateTime.Now.Date;
-            var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 8))
+            using var engine = new PathEngine(2.IntPow(IsCoverageOnly ? 6 : 8))
             {
                 Parallelize = false
             };

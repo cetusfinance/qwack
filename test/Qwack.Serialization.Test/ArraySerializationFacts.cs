@@ -40,7 +40,7 @@ namespace Qwack.Serialization.Test
             var obj = new BasicArraysObject()
             {
                 BoolNullArray = null,
-                BoolZeroLengthArray = new bool[0],
+                BoolZeroLengthArray = Array.Empty<bool>(),
                 ByteArray = new byte[1024],
                 UIntArray = new uint[1024],
                 IntArray = new int[1024],

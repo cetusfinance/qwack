@@ -85,7 +85,7 @@ namespace Qwack.Math.Distributions
                 {
                     var h6 = Abs(h1 - h2);
                     var h5 = h6 * h6 / 2.0;
-                    h6 = h6 / r3;
+                    h6 /= r3;
                     var AA = 0.5 - h3 / 8.0;
                     var ab = 3 - 2 * AA * h5;
                     LH = 0.13298076 * h6 * ab * (1 - Statistics.CumulativeNormalDistribution(h6)) - Exp(-h5 / r2) * (ab + AA * r2) * 0.053051647;
@@ -95,7 +95,7 @@ namespace Qwack.Math.Distributions
                         var rr = r1 * r1;
                         r2 = Sqrt(1.0 - rr);
                         var h8 = h7 == 0 ? 0.0 : Exp(-h3 / (1.0 + r2)) / r2 / h7;
-                        LH = LH - W[i] * Exp(-h5 / rr) * (h8 - 1.0 - AA * rr);
+                        LH -= W[i] * Exp(-h5 / rr) * (h8 - 1.0 - AA * rr);
                     }
                 }
                 output = LH * r3 * h7 + Statistics.CumulativeNormalDistribution(Min(h1, h2));
@@ -114,7 +114,7 @@ namespace Qwack.Math.Distributions
                     {
                         var r1 = r * x[i];
                         var r2 = 1 - r1 * r1;
-                        LH = LH + W[i] * Exp((r1 * h3 - h12) / r2) / Sqrt(r2);
+                        LH += W[i] * Exp((r1 * h3 - h12) / r2) / Sqrt(r2);
                     }
                 }
                 output = Statistics.CumulativeNormalDistribution(h1) * Statistics.CumulativeNormalDistribution(h2) + r * LH;

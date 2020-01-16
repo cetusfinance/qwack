@@ -28,7 +28,7 @@ namespace Qwack.Futures
             }
             else
             {
-                price = price - modValue;
+                price -= modValue;
             }
             return System.Math.Round(price, 8);
         }

@@ -12,7 +12,7 @@ namespace Qwack.Paths
     /// Contains a number of path blocks that make up an entire group of paths
     /// needed for pricing in memory
     /// </summary>
-    public class BlockSet : IEnumerable<PathBlock>, IDisposable
+    public sealed class BlockSet : IEnumerable<PathBlock>, IDisposable
     {
         public int NumberOfBlocks => _numberOfBlocks;
         

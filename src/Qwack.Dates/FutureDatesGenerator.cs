@@ -29,7 +29,7 @@ namespace Qwack.Dates
         public bool NeverExpires { get; set; }
         public string FixedFuture { get; set; }
 
-        private ICalendarProvider _calendarProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public FutureDatesGenerator(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
     }

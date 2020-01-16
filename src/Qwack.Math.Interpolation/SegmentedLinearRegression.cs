@@ -46,8 +46,8 @@ namespace Qwack.Math.Interpolation
         public static IInterpolator1D RegressNotContinuous(double[] Xs, double[] Ys, int nSegments)
         {
             var nSamples = Xs.Length;
-            var x = new double[nSegments + 1];
-            var y = new double[nSegments + 1];
+            //var x = new double[nSegments + 1];
+            //var y = new double[nSegments + 1];
             var samplesPerSegment = nSamples / nSegments;
             var interps = new IInterpolator1D[nSegments];
             var uBounds = new double[nSegments];

@@ -92,3 +92,7 @@ csharp_style_expression_bodied_operators = true:suggestion
 csharp_style_expression_bodied_properties = true:suggestion
 csharp_style_expression_bodied_indexers = true:suggestion
 csharp_style_expression_bodied_accessors = true:suggestion
+[*.cs]
+
+# CA1819: Properties should not return arrays
+dotnet_diagnostic.CA1819.severity = none

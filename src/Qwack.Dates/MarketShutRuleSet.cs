@@ -10,7 +10,7 @@ namespace Qwack.Dates
     {
         private string _calendarName;
         private Calendar _calendar;
-        private ICalendarProvider _calendarProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public DayOfWeek[] ShutWholeDay { get; set; }
         public TimeSpan CloseWhenHolidayFollows { get; set; }

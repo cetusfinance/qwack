@@ -10,7 +10,7 @@ namespace Qwack.Paths.Processes
         //private readonly string _name = "Cholesky";
         private readonly double _fac2;
         private readonly double _correl;
-        private readonly Vector<double> _two = new Vector<double>(2.0);
+        private static readonly Vector<double> _two = new Vector<double>(2.0);
 
         public SimpleCholesky(double correl)
         {

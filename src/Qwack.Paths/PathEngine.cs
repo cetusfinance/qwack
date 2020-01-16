@@ -10,7 +10,7 @@ using Qwack.Utils.Parallel;
 
 namespace Qwack.Paths
 {
-    public class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
+    public sealed class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
         private List<List<IPathProcess>> _pathProcesses = new List<List<IPathProcess>>();
         private int _numberOfPaths;

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Qwack.Core.Calibrators;
+using Qwack.Core.Models;
 using Qwack.Options.Calibrators;
 
 namespace Qwack.Options.VolSurfaces

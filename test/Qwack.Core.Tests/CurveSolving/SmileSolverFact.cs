@@ -3,15 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
-using Qwack.Core.Calibrators;
-using Qwack.Core.Curves;
-using Qwack.Core.Instruments;
-using Qwack.Core.Instruments.Asset;
-using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
-using Qwack.Math.Utils;
 using Qwack.Options;
 using Qwack.Options.Calibrators;
 using Qwack.Options.VolSurfaces;
@@ -22,7 +15,7 @@ namespace Qwack.Core.Tests.CurveSolving
 {
     public class SmileSolverFact
     {
-        bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
+        static bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
         public static readonly string JsonCalendarPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Calendars.json");
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);

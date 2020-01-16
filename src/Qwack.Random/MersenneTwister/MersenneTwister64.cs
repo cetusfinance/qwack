@@ -105,7 +105,7 @@ namespace Qwack.Random.MersenneTwister
         {
             if (!UseNormalInverse)
             {
-                for (var i = 0; i < block.TotalBlockSize; i = i + (UseAnthithetic ? 2 : 1))
+                for (var i = 0; i < block.TotalBlockSize; i += (UseAnthithetic ? 2 : 1))
                 {
                     block[i] = GenerateDouble();
                     if (UseAnthithetic)
@@ -114,7 +114,7 @@ namespace Qwack.Random.MersenneTwister
             }
             else
             {
-                for (var i = 0; i < block.TotalBlockSize; i = i + (UseAnthithetic ? 2 : 1))
+                for (var i = 0; i < block.TotalBlockSize; i += (UseAnthithetic ? 2 : 1))
                 {
                     block[i] = Math.Statistics.NormInv(GenerateDouble());
                     if (UseAnthithetic)

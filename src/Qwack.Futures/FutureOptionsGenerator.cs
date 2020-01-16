@@ -94,8 +94,8 @@ namespace Qwack.Futures
 
                     while ((upperPrice < (1 + (decimal)R.PercentRange) * atmPrice) || (lowerPrice > (1 - (decimal)R.PercentRange) * atmPrice))
                     {
-                        upperPrice = upperPrice + (upperPrice >= (decimal)R.Boundary ? strikeModAbove : strikeModBelow);
-                        lowerPrice = lowerPrice - (lowerPrice <= (decimal)R.Boundary ? strikeModBelow : strikeModAbove);
+                        upperPrice += (upperPrice >= (decimal)R.Boundary ? strikeModAbove : strikeModBelow);
+                        lowerPrice -= (lowerPrice <= (decimal)R.Boundary ? strikeModBelow : strikeModAbove);
                         if (!returnValues.Contains(upperPrice) && (upperPrice <= (1 + (decimal)R.PercentRange) * atmPrice))
                         {
                             returnValues.Add(upperPrice);

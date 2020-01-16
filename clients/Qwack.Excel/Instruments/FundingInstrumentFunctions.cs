@@ -46,7 +46,7 @@ namespace Qwack.Excel.Instruments
                 {
                     _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
                     return $"Rate index {RateIndex} not found in cache";
-                }      
+                }
 
                 if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
                     return $"Could not parse pay/rec - {payRec}";
@@ -64,7 +64,7 @@ namespace Qwack.Excel.Instruments
                     Currency = ccy
                 };
                 product.PillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
-                
+
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
@@ -144,7 +144,7 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
                     Notional = Notional
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate); 
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
@@ -224,12 +224,12 @@ namespace Qwack.Excel.Instruments
                     Currency = rIndex.Value.Currency,
                     ContractSize = c.Settings.LotSize,
                     //DCF = dcf,
-                    ConvexityAdjustment= ConvexityAdjustment,
-                    Expiry =expiry,
+                    ConvexityAdjustment = ConvexityAdjustment,
+                    Expiry = expiry,
                     ForecastCurve = ForecastCurve,
-                    Index =rIndex.Value,
+                    Index = rIndex.Value,
                     Position = Quantity,
-                    Price= Price,
+                    Price = Price,
                     SolveCurve = SolveCurve.OptionalExcel(ForecastCurve),
                     PillarDate = SolvePillarDate.OptionalExcel(accrualEnd),
                     TradeId = ObjectName
@@ -323,8 +323,8 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve.OptionalExcel(rIndexPay.Name),
                     TradeId = ObjectName
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate); 
-                
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
         }

@@ -9,10 +9,7 @@ namespace Qwack.Core.Curves
     {
 
         public ConstantPriceCurve(double price, DateTime originDate, ICurrencyProvider ccyProvider)
-            : base(originDate, new[] { originDate }, new[] { price }, PriceCurveType.Constant, ccyProvider)
-        {
-            Price = price;
-        }
+            : base(originDate, new[] { originDate }, new[] { price }, PriceCurveType.Constant, ccyProvider) => Price = price;
 
         public double Price { get; }
     }

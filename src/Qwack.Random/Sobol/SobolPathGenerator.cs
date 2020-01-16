@@ -80,7 +80,7 @@ namespace Qwack.Random.Sobol
             {
                 var mask = (uint)-(gCode & 1);
                 x ^= mask & _v[dimension + _seed][i];
-                gCode = gCode >> 1;
+                gCode >>= 1;
             }
             return x;
         }

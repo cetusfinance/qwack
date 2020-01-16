@@ -60,18 +60,12 @@ namespace Qwack.Excel.Tests.Instruments
 
 
         [Fact]
-        public void CreateFuturesCrackDiffSwap()
-        {
-            Assert.Equal("fdswap¬0",
+        public void CreateFuturesCrackDiffSwap() => Assert.Equal("fdswap¬0",
                InstrumentFunctions.CreateFutureCrackDiffSwap("fdswap", "COF9", "QSF9", "CO", "QS", "USD", -19, 1000, 7460, "DISCO"));
-        }
 
         [Fact]
-        public void CreateFuturesPositionSwap()
-        {
-            Assert.Equal("futXXX¬0",
+        public void CreateFuturesPositionSwap() => Assert.Equal("futXXX¬0",
                InstrumentFunctions.CreateFuture("futXXX", DateTime.Today, "CO", "USD", 74, 1000, 1000, 1.0));
-        }
 
         [Fact]
         public void CreateFutureOptionPositionSwap()

@@ -54,7 +54,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => LoanDepoSchedule.Flows.Max(x=>x.SettleDate);
 
-        public string[] AssetIds => new string[0];
+        public string[] AssetIds => Array.Empty<string>();
         public Currency PaymentCurrency => FloatRateIndex.Currency;
         public Currency Currency => FloatRateIndex.Currency;
 

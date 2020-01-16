@@ -339,29 +339,29 @@ namespace Qwack.Models.MCModels
                     for (var i = 0; i < _dateIndexes.Length; i++)
                         finalValues += steps[_dateIndexes[i]] * (_isCompo ? stepsfx[_dateIndexes[i]] : _one);
 
-                    finalValues = finalValues / new Vector<double>(_dateIndexes.Length);
+                    finalValues /= new Vector<double>(_dateIndexes.Length);
                 }
                 else
                 {
                     for (var i = 0; i < _dateIndexes.Length; i++)
                         finalValues += steps[_dateIndexes[i]];
 
-                    finalValues = finalValues / new Vector<double>(_dateIndexes.Length);
+                    finalValues /= new Vector<double>(_dateIndexes.Length);
 
                     if (_isCompo) //Average-then-convert
                     {
                         for (var i = 0; i < _fxDateIndexes.Length; i++)
                             finalValuesFx += stepsfx[_fxDateIndexes[i]];
                         
-                        finalValuesFx = finalValuesFx / new Vector<double>(_fxDateIndexes.Length);
-                        finalValues = finalValues * finalValuesFx;
+                        finalValuesFx /= new Vector<double>(_fxDateIndexes.Length);
+                        finalValues *= finalValuesFx;
                     }
                 }
 
                 switch (_optionType)
                 {
                     case OptionType.Call:
-                        finalValues = finalValues - new Vector<double>(_strike);
+                        finalValues -= new Vector<double>(_strike);
                         finalValues = Vector.Max(new Vector<double>(0), finalValues) * new Vector<double>(_notional);
                         break;
                     case OptionType.Put:
@@ -369,14 +369,14 @@ namespace Qwack.Models.MCModels
                         finalValues = Vector.Max(new Vector<double>(0), finalValues) * new Vector<double>(_notional);
                         break;
                     case OptionType.Swap:
-                        finalValues = finalValues  - new Vector<double>(_strike);
-                        finalValues = finalValues * new Vector<double>(_notional);
+                        finalValues -= new Vector<double>(_strike);
+                        finalValues *= new Vector<double>(_notional);
                         break;
                 }
 
                 if(_fxType==FxConversionType.SettleOtherCurrency)
                 {
-                    finalValues = finalValues * stepsfx[_payDateIx];
+                    finalValues *= stepsfx[_payDateIx];
                 }
 
                 var resultIx = (blockBaseIx + path) / Vector<double>.Count;

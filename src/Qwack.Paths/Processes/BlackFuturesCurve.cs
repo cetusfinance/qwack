@@ -47,9 +47,9 @@ namespace Qwack.Paths.Processes
             var fCode = new FutureCode(name, _futureSettingsProvider);
             var currentCode = fCode.GetFrontMonth(startDate);
             _codes.Add(currentCode);
-            fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
+            fCode = new FutureCode(currentCode, startDate.Year - 2, _futureSettingsProvider);
             _futuresExpiries.Add(fCode.GetRollDate());
-            fCode = new FutureCode(currentCode, DateTime.Today.Year - 2, _futureSettingsProvider);
+            fCode = new FutureCode(currentCode, startDate.Year - 2, _futureSettingsProvider);
             var targetCode = fCode.GetFrontMonth(expiryDate);
             while (currentCode != targetCode)
             {

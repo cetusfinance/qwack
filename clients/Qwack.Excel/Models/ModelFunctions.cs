@@ -284,7 +284,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by analysic methods given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD))]
+        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by analytic methods given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD))]
         public static object PortfolioExpectedEAD(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,

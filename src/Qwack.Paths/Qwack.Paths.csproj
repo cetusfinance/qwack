@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
   </ItemGroup>
  
   <ItemGroup>
@@ -16,5 +18,9 @@
     <ProjectReference Include="..\Qwack.Options\Qwack.Options.csproj" />
     <ProjectReference Include="..\Qwack.Serialization\Qwack.Serialization.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
+  </ItemGroup>
+ 
+  <ItemGroup>
+
   </ItemGroup>
 </Project>

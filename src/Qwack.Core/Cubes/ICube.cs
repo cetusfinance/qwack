@@ -10,7 +10,7 @@ namespace Qwack.Core.Cubes
         void Initialize(Dictionary<string, Type> dataTypes);
         void AddRow(Dictionary<string, object> descriptiveData, double value);
         ResultCubeRow[] GetAllRows();
-
+        double SumOfAllRows { get; }
         int GetColumnIndex(string columnName);
     }
 }

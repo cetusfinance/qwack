@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using Karambolo.Extensions.Logging.File;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

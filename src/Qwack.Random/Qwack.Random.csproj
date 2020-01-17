@@ -6,11 +6,20 @@
     <AssemblyName>Qwack.Random</AssemblyName>
     <PackageId>Qwack.Random</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
     <ProjectReference Include="..\Qwack.Paths\Qwack.Paths.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+
   </ItemGroup>
 </Project>

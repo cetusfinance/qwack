@@ -22,7 +22,7 @@ namespace Qwack.Models.Models
 {
     public static class AssetProductEx
     {
-        private const bool _useFuturesMethod = true;
+        private static readonly bool _useFuturesMethod = true;
 
         public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows)
         {
@@ -890,8 +890,8 @@ namespace Qwack.Models.Models
 
             var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
 
-            ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
             //for(var i=0;i< portfolio.Instruments.Count;i++)
+            ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
             {
                 var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows);
 
@@ -912,6 +912,54 @@ namespace Qwack.Models.Models
             }
 
             return cube;
+        }
+
+        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string,string> assetToGroupMap, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models=null)
+        {
+            var calcDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
+
+            if (assetToGroupMap == null && portfolio.AssetIds().Length == 1)
+            {
+                var aid = portfolio.AssetIds().First();
+                assetToGroupMap = new Dictionary<string, string>()
+                {
+                    { aid,aid }
+                };
+            }
+
+            var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates.ToArray(), currencyProvider);
+
+            if (models==null)
+                calculator.Process();
+            else
+                calculator.Process(models);
+
+            var ead = calculator.ResultCube();
+
+            var pvCapital = CapitalCalculator.PVCapital(model.BuildDate, ead, hazzardCurve, discountCurve, LGD);
+            return pvCapital;
+        }
+
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models)
+        {
+            var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
+            var capital = portfolio.PVCapital(model, reportingCurrency, hazzardCurve, LGD, partyRiskWeight, assetToGroupMap, discountCurve, currencyProvider, models);
+            var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
+            var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, LGD, reportingCurrency, currencyProvider, models);
+
+            return (pv + cva) / capital;
+        }
+
+        private static DateTime[] ExposureDatesForPortfolio(this Portfolio portfolio, DateTime startDate)
+        {
+            var calcDates = new List<DateTime>();
+            while (startDate < portfolio.LastSensitivityDate)
+            {
+                calcDates.Add(startDate);
+                startDate = startDate.AddDays(14);
+            }
+            calcDates.Add(portfolio.LastSensitivityDate.AddDays(-1));
+            return calcDates.Distinct().OrderBy(x => x).ToArray();
         }
 
         private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows=false)

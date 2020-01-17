@@ -48,6 +48,8 @@ namespace Qwack.Core.Cubes
 
         public Dictionary<string, Type> DataTypes => _types;
 
+        public double SumOfAllRows => _rows.Sum(x => x.Value);
+
         public int GetColumnIndex(string columnName) => _fieldNames.IndexOf(columnName);
 
         public void AddRow(Dictionary<string, object> data, double value)
@@ -78,7 +80,7 @@ namespace Qwack.Core.Cubes
             }
         }
 
-        bool IsOfNullableType<T>()
+        bool IsOfNullableType<T>(T o)
         {
             var type = typeof(T);
             return Nullable.GetUnderlyingType(type) != null;

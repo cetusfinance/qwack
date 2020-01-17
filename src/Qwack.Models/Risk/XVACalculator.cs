@@ -39,7 +39,7 @@ namespace Qwack.Models.Risk
                 lastDate = EPEDates[i];
             }
             
-            return cva;
+            return -cva;
         }
 
         public static double CVA(DateTime originDate, ICube EPE, HazzardCurve hazzardCurve, IIrCurve discountCurve, double LGD)
@@ -48,7 +48,7 @@ namespace Qwack.Models.Risk
             return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve, LGD);
         }
 
-        public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider)
+        public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models = null)
         {
             if (portfolio.AssetIds().Length != 1 || portfolio.FxPairs(model).Length!=0)
                 throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
@@ -101,8 +101,12 @@ namespace Qwack.Models.Risk
             var m = model.Clone();
             for(var i=0;i<exposures.Length;i++)
             {
-                m = m.RollModel(exposureDates[i], currencyProvider);
-                exposures[i] = System.Math.Max(0, replicatingPF.PV(m, reportingCurrency).GetAllRows().Sum(x=>x.Value));
+                if (models != null)
+                    m = models[exposureDates[i]];
+                else
+                    m = m.RollModel(exposureDates[i], currencyProvider);
+
+                exposures[i] = Max(0, replicatingPF.PV(m, reportingCurrency).SumOfAllRows);
             }
 
             return CVA(model.BuildDate, exposureDates, exposures, hazzardCurve, discountCurve, LGD);

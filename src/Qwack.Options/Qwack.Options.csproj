@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
@@ -6,6 +6,9 @@
     <AssemblyName>Qwack.Options</AssemblyName>
     <PackageId>Qwack.Options</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
+  </ItemGroup>
 
  <ItemGroup>
     <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
@@ -15,4 +18,9 @@
     <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
   </ItemGroup>
+
+ <ItemGroup>
+   <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+   <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
+ </ItemGroup>
 </Project>

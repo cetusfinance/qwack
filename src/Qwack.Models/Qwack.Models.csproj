@@ -5,6 +5,11 @@
 	<AssemblyName>Qwack.Models</AssemblyName>
     <PackageId>Qwack.Models</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Core\Qwack.Core.csproj" />
@@ -17,6 +22,10 @@
     <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
     <ProjectReference Include="..\Qwack.Random\Qwack.Random.csproj" />
     <ProjectReference Include="..\Qwack.Storage\Qwack.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+
   </ItemGroup>
 
 </Project>

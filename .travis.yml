@@ -2,7 +2,7 @@ language: csharp
 dist: trusty
 sudo: required
 mono: none
-dotnet: 3.0
+dotnet: 3.0.100
 script:
   - dotnet restore
   - dotnet test ./test/Qwack.Math.Tests

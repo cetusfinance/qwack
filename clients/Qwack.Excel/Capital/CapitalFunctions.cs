@@ -107,7 +107,9 @@ namespace Qwack.Excel.Capital
           [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
           [ExcelArgument(Description = "Party risk weight, e.g. 1.0")] double PartyRiskWeight,
           [ExcelArgument(Description = "Reporting currency")] string Currency,
-          [ExcelArgument(Description = "Target RoC")] double TargetRoC)
+          [ExcelArgument(Description = "Target RoC")] double TargetRoC,
+          [ExcelArgument(Description = "Weight for CVA Capital")] double CVACapitalWeight,
+          [ExcelArgument(Description = "(Optional) LGD for xVA")] object LGDOverrideXVA)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -116,12 +118,13 @@ namespace Qwack.Excel.Capital
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, PartyRiskWeight, disc.Value, ContainerStores.CurrencyProvider);
+                var xvaLgd = LGDOverrideXVA.OptionalExcel(LGD);
+                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, xvaLgd, PartyRiskWeight, CVACapitalWeight, disc.Value, ContainerStores.CurrencyProvider);
             });
         }
 
-        [ExcelFunction(Description = "Computes Basel II CVA capital from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVACapitalBaselII), IsThreadSafe = true)]
-        public static object ComputeCVACapitalBaselII(
+        [ExcelFunction(Description = "Computes Basel II CVA risk weighted assets from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCvaRwaBaselII), IsThreadSafe = true)]
+        public static object ComputeCvaRwaBaselII(
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
             [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile,
             [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,

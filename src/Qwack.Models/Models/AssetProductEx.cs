@@ -940,14 +940,14 @@ namespace Qwack.Models.Models
             return pvCapital;
         }
 
-        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models)
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double partyRiskWeight, double cvaCapitalWeight, Dictionary<string, string> assetToGroupMap, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models)
         {
             var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
-            var capital = portfolio.PVCapital(model, reportingCurrency, hazzardCurve, LGD, partyRiskWeight, assetToGroupMap, discountCurve, currencyProvider, models);
+            var ccrCapital = portfolio.PVCapital(model, reportingCurrency, hazzardCurve, LGD, partyRiskWeight, assetToGroupMap, discountCurve, currencyProvider, models);
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
-            var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, LGD, reportingCurrency, currencyProvider, models);
-
-            return (pv + cva) / capital;
+            var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, xVA_LGD, reportingCurrency, currencyProvider, models);
+            var cvaCapital = XVACalculator.CVA_CapitalB3_Approx(exposureDates, portfolio, hazzardCurve.ConstantPD(), model, LGD, cvaCapitalWeight, reportingCurrency, currencyProvider, models);
+            return (pv + cva) / (ccrCapital + cvaCapital);
         }
 
         private static DateTime[] ExposureDatesForPortfolio(this Portfolio portfolio, DateTime startDate)

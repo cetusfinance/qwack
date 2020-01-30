@@ -787,5 +787,21 @@ namespace Qwack.Dates
             var easterSunday = EasterGauss(dateInYear.Year);
             return (easterSunday.AddDays(-2), easterSunday.AddDays(1));
         }
+
+        public static DateTime[] HolidaysForRange(this Calendar calendar, DateTime start, DateTime end)
+        {
+            var o = new List<DateTime>();
+            var d = start;
+            while(d<=end)
+            {
+                if (calendar.IsHoliday(d))
+                    o.Add(d);
+                if (d.DayOfWeek == DayOfWeek.Friday)
+                    d = d.AddDays(3);
+                else
+                    d = d.AddDays(1);
+            }
+            return o.ToArray();
+        }
     }
 }

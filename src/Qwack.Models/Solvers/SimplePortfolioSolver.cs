@@ -40,7 +40,7 @@ namespace Qwack.Models.Solvers
                 throw new Exception("Failed to find solution after 1000 itterations");
         }
 
-        public static double SolveStrikeForGrossRoC(this Portfolio portfolio, IAssetFxModel model, double targetRoC, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider)
+        public static double SolveStrikeForGrossRoC(this Portfolio portfolio, IAssetFxModel model, double targetRoC, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double partyRiskWeight, double cvaCapitalWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider)
         {
             var insList = portfolio.Instruments.Select(x => x as IAssetInstrument).ToList();
 
@@ -63,7 +63,7 @@ namespace Qwack.Models.Solvers
                 {
                     Instruments = insList.Select(i => (IInstrument)i.SetStrike(k)).ToList()
                 };
-                var roc = newPf.GrossRoC(model, reportingCurrency, hazzardCurve, LGD, partyRiskWeight, null, discountCurve, currencyProvider, rolledModels);
+                var roc = newPf.GrossRoC(model, reportingCurrency, hazzardCurve, LGD, xVA_LGD, partyRiskWeight, cvaCapitalWeight, null, discountCurve, currencyProvider, rolledModels);
                 return roc-targetRoC;
             });
 

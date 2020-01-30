@@ -46,4 +46,13 @@ namespace Qwack.Core.Curves
             return (1.0 - el) * df;
         }
     }
+
+    public static class HazzardCurveEx
+    {
+        public static double ConstantPD(this HazzardCurve curve)
+        {
+            var pd = curve.GetDefaultProbability(curve.OriginDate, curve.OriginDate.AddDays(365));
+            return pd;
+        }
+    }
 }

@@ -315,5 +315,21 @@ namespace Qwack.Excel.Dates
                 return new object[] { GoodFriday, EasterMonday };
             });
         }
+
+        [ExcelFunction(Description = "Lists holidays for a calendar between two dates", Category = "QDates", IsThreadSafe = true)]
+        public static object QDates_ListHolidays(
+            [ExcelArgument(Description = "Start Date")] DateTime StartDate,
+            [ExcelArgument(Description = "End Date")] DateTime EndDate,
+            [ExcelArgument(Description = "calendar")] string Calendar)
+        {
+
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(Calendar, out var cal))
+                    return $"Calendar {Calendar} not found in cache";
+
+                return cal.HolidaysForRange(StartDate, EndDate).ReturnExcelRangeVectorFromDate();
+            });
+        }
     }
 }

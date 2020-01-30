@@ -50,16 +50,28 @@ namespace Qwack.Models.Risk
 
         public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models = null)
         {
-            if (portfolio.AssetIds().Length != 1 || portfolio.FxPairs(model).Length!=0)
+            var exposures = EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
+            return CVA(model.BuildDate, exposureDates, exposures, hazzardCurve, discountCurve, LGD);
+        }
+
+        public static double CVA_CapitalB3_Approx(DateTime[] exposureDates, Portfolio portfolio, double PD, IAssetFxModel model, double LGD, double partyWeight, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
+        {
+            var exposures = EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
+            return RWA_BaselIII_IMM(model.BuildDate, exposureDates, exposures, PD, LGD, partyWeight)*0.11;
+        }
+
+        public static double[] EPE_Approx(DateTime[] exposureDates, Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
+        {
+            if (portfolio.AssetIds().Length != 1 || portfolio.FxPairs(model).Length != 0)
                 throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
 
             if (!portfolio.Instruments.All(x => x is AsianSwap))
                 throw new Exception("Approximate CVA only works for Asian Swap instruments");
 
             if (portfolio.Instruments
-                .Select(x=>Sign((x as AsianSwap).Notional))
+                .Select(x => Sign((x as AsianSwap).Notional))
                 .Distinct()
-                .Count()!=1)
+                .Count() != 1)
                 throw new Exception("All swaps must be in same direction");
 
             var cp = (portfolio.Instruments
@@ -93,23 +105,31 @@ namespace Qwack.Models.Risk
                    SpotLag = s.SpotLag,
                    SpotLagRollType = s.SpotLagRollType,
                    PortfolioName = s.PortfolioName,
-                   TradeId = s.TradeId
+                   TradeId = s.TradeId ?? Guid.NewGuid().ToString()
                } as IInstrument).ToList()
             };
 
             var exposures = new double[exposureDates.Length];
             var m = model.Clone();
-            for(var i=0;i<exposures.Length;i++)
+            for (var i = 0; i < exposures.Length; i++)
             {
                 if (models != null)
                     m = models[exposureDates[i]];
                 else
                     m = m.RollModel(exposureDates[i], currencyProvider);
 
-                exposures[i] = Max(0, replicatingPF.PV(m, reportingCurrency).SumOfAllRows);
+                var pvCube = replicatingPF.PV(m, reportingCurrency);
+                foreach (var row in pvCube.GetAllRows())
+                {
+                    var tradeId = (string)row.MetaData[0];
+                    var ins = replicatingPF.Instruments.Single(x => x.TradeId == tradeId) as AsianOption;
+                    var df = m.FundingModel.GetCurve(ins.DiscountCurve).GetDf(m.BuildDate, ins.PaymentDate);
+                    exposures[i] += row.Value / df;
+                }
+                exposures[i] = Max(0, exposures[i]);
             }
 
-            return CVA(model.BuildDate, exposureDates, exposures, hazzardCurve, discountCurve, LGD);
+            return exposures;
         }
 
         public static (double FBA, double FCA) FVA(DateTime originDate, DateTime[] ExEDates, double[] EPEExposures, double[] ENEExposures, HazzardCurve hazzardCurve, IIrCurve discountCurve, IIrCurve fundingCurve)

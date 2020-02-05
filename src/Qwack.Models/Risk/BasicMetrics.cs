@@ -632,6 +632,95 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
 
+        public static ICube AssetCashDelta(this IPvModel pvModel)
+        {
+            var bumpSize = 0.01;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "TradeId", typeof(string) },
+                { "TradeType",  typeof(string) },
+                { "AssetId", typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { "PointLabel", typeof(string) },
+                { "Metric", typeof(string) },
+                { "CurveType", typeof(string) },
+            };
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+            model.BuildDependencyTree();
+
+            foreach (var curveName in model.CurveNames)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+                var linkedCurves = model.GetDependentCurves(curveName);
+                var allLinkedCurves = model.GetAllDependentCurves(curveName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid => allLinkedCurves.Contains(aid))))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex("TradeId");
+                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
+
+                ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
+
+                    var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+
+                    var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+
+                        if (delta != 0.0)
+                        {
+                            if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                                delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                            var date = bCurve.Value.PillarDatesForLabel(bCurve.Key);
+                            var fwd = bCurve.Value.GetPriceForDate(date);
+                            delta *= fwd;
+                            var row = new Dictionary<string, object>
+                                {
+                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
+                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
+                                { "AssetId", curveName },
+                                { "PointDate", date },
+                                { "PointLabel", bCurve.Key },
+                                { "Metric", "Delta" },
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                };
+                            cube.AddRow(row, delta);
+                        }
+                    }
+                }, false).Wait();
+            }
+            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+        }
+
+
         public static ICube AssetParallelDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider)
         {
             var cube = new ResultCube();

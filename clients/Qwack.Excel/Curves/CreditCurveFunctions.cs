@@ -29,8 +29,11 @@ namespace Qwack.Excel.Curves
                 var basis = Basis.OptionalExcel("Act365F");
                 if (!Enum.TryParse(basis, out DayCountBasis dayCountBasis))
                     throw new Exception($"Could not parse basis type - {basis}");
-                
-                var cObj = new HazzardCurve(BuildDate, dayCountBasis, new ConstantHazzardInterpolator(HazzardRate));
+
+                var cObj = new HazzardCurve(BuildDate, dayCountBasis, new ConstantHazzardInterpolator(HazzardRate))
+                {
+                    ConstantPD = HazzardRate
+                };
                 var cache = ContainerStores.GetObjectCache<HazzardCurve>();
                 cache.PutObject(ObjectName, new SessionItem<HazzardCurve> { Name = ObjectName, Value = cObj });
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;

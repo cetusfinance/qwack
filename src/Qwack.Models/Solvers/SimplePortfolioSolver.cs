@@ -63,7 +63,7 @@ namespace Qwack.Models.Solvers
                 {
                     Instruments = insList.Select(i => (IInstrument)i.SetStrike(k)).ToList()
                 };
-                var roc = newPf.GrossRoC(model, reportingCurrency, hazzardCurve, LGD, xVA_LGD, partyRiskWeight, cvaCapitalWeight, null, discountCurve, currencyProvider, rolledModels);
+                var roc = newPf.GrossRoC(model, reportingCurrency, hazzardCurve, LGD, xVA_LGD, cvaCapitalWeight, discountCurve, currencyProvider, rolledModels);
                 return roc-targetRoC;
             });
 

@@ -40,17 +40,33 @@ namespace Qwack.Core.Instruments.Asset
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
         {
-            if (FxConversionType == FxConversionType.None)
+            if (FxConversionType == FxConversionType.None && model.GetPriceCurve(AssetId).Currency== PaymentCurrency)
                 return new[] { DiscountCurve };
             else
             {
-                var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
-                var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
-                var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
-                return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+                if (IsFx)
+                {
+                    var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
+                    var ccy1 = model.FundingModel.GetCurrency(AssetId.Split('/')[0]);
+                    var ccy2 = model.FundingModel.GetCurrency(AssetId.Split('/')[1]);
+                    var ccy1Curve = model.FundingModel.FxMatrix.DiscountCurveMap[ccy1];
+                    var ccy2Curve = model.FundingModel.FxMatrix.DiscountCurveMap[ccy2];
+                    var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
+                    var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
+                    return (new[] { DiscountCurve, fxCurve, assetCurve, ccy1Curve, ccy2Curve }).Distinct().ToArray();
+                }
+                else
+                {
+                    var fxCurve = model.FundingModel.FxMatrix.DiscountCurveMap[PaymentCurrency];
+                    var assetCurveCcy = model.GetPriceCurve(AssetId).Currency;
+                    var assetCurve = model.FundingModel.FxMatrix.DiscountCurveMap[assetCurveCcy];
+                    return (new[] { DiscountCurve, fxCurve, assetCurve }).Distinct().ToArray();
+                }
             }
         }
         public Currency Currency => PaymentCurrency;
+
+        private bool IsFx => AssetId.Length == 7 && AssetId[3] == '/';
 
         public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
                

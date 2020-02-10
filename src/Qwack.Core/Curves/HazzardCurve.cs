@@ -9,6 +9,22 @@ namespace Qwack.Core.Curves
 {
     public class HazzardCurve
     {
+        private double? _constPD = null;
+        public double ConstantPD
+        {
+            get
+            {
+                if (_constPD.HasValue)
+                    return _constPD.Value;
+                else
+                    return GetDefaultProbability(OriginDate, OriginDate.AddDays(365));
+            }
+            set
+            {
+                _constPD = value;
+            }
+        }
+
         public DateTime OriginDate { get; private set; }
         public DayCountBasis Basis { get; private set; }
 
@@ -44,15 +60,6 @@ namespace Qwack.Core.Curves
             var el = dp * LGD;
             var df = discountCurve.GetDf(startDate, endDate);
             return (1.0 - el) * df;
-        }
-    }
-
-    public static class HazzardCurveEx
-    {
-        public static double ConstantPD(this HazzardCurve curve)
-        {
-            var pd = curve.GetDefaultProbability(curve.OriginDate, curve.OriginDate.AddDays(365));
-            return pd;
         }
     }
 }

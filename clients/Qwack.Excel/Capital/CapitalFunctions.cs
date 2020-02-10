@@ -13,6 +13,7 @@ using Qwack.Core.Curves;
 using Qwack.Models.Risk;
 using Qwack.Core.Cubes;
 using Qwack.Models.Solvers;
+using Qwack.Models.Models;
 
 namespace Qwack.Excel.Capital
 {
@@ -123,8 +124,8 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Computes Basel II CVA risk weighted assets from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCvaRwaBaselII), IsThreadSafe = true)]
-        public static object ComputeCvaRwaBaselII(
+        [ExcelFunction(Description = "Computes Basel II CVA risk weighted assets from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCvaRwaBaselII_IMM), IsThreadSafe = true)]
+        public static object ComputeCvaRwaBaselII_IMM(
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
             [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile,
             [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
@@ -144,7 +145,7 @@ namespace Qwack.Excel.Capital
                         epeDates[i] = (DateTime)arr[i, 0];
                         epeValues[i] = (double)arr[i, 1];
                     }
-                    return XVACalculator.RWA_BaselII_IMM(OriginDate, epeDates, epeValues, PD, LGD);
+                    return XVACalculator.RWA_BaselII_CCR_IMM(OriginDate, epeDates, epeValues, PD, LGD);
                 }
                 else if (EPEProfile is string epeCubeName)
                 {
@@ -155,6 +156,7 @@ namespace Qwack.Excel.Capital
                 throw new Exception("EPE profile must be cube reference or Nx2 array");
             });
         }
+
 
         [ExcelFunction(Description = "Computes Basel III CVA capital from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVACapitalBaselIII), IsThreadSafe = true)]
         public static object ComputeCVACapitalBaselIII(
@@ -178,7 +180,7 @@ namespace Qwack.Excel.Capital
                         epeDates[i] = (DateTime)arr[i, 0];
                         epeValues[i] = (double)arr[i, 1];
                     }
-                    return XVACalculator.RWA_BaselIII_IMM(OriginDate, epeDates, epeValues, PD, LGD, PartyWeight);
+                    return XVACalculator.RWA_BaselIII_CVA_IMM(OriginDate, epeDates, epeValues, PD, LGD, PartyWeight);
                 }
                 else if (EPEProfile is string epeCubeName)
                 {
@@ -187,6 +189,109 @@ namespace Qwack.Excel.Capital
                 }
 
                 throw new Exception("EPE profile must be cube reference or Nx2 array");
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PV capital / BaselII / IMM given an EAD profile and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioPvCcrCapital))]
+        public static object PortfolioPvCcrCapital(
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Expected EAD cube name")] string EADCubeName,
+            [ExcelArgument(Description = "Credit settings object name")] string CreditSettingsName,
+            [ExcelArgument(Description = "Origin date")] DateTime OriginDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var eadCube = ContainerStores.GetObjectCache<ICube>()
+                    .GetObjectOrThrow(EADCubeName, $"Could not find cube with name {EADCubeName}");
+                var creditSettings = ContainerStores.GetObjectCache<CreditSettings>()
+                    .GetObjectOrThrow(CreditSettingsName, $"Could not find credit settings with name {CreditSettingsName}");
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+
+                var result = CapitalCalculator.PVCapital_BII_IMM(OriginDate, eadCube.Value, creditSettings.Value.CreditCurve, creditSettings.Value.BaseDiscountCurve, creditSettings.Value.LGD, portfolio);
+                return result;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PV CCR capital / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioPvCcrCapital_B2_SM))]
+        public static object PortfolioPvCcrCapital_B2_SM(
+            [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Asset-FX Model")] string Model,
+            [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
+            [ExcelArgument(Description = "Reporting currency")] string Currency,
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurveName, $"Hazzard curve {HazzardCurveName} not found");
+                var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var expDates = ExposureDates.ToDateTimeArray();
+                var models = new IAssetFxModel[expDates.Length];
+                var m = model.Value.Clone();
+                for (var i=0;i<models.Length;i++)
+                {
+                    m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
+                    models[i] = m;
+                }
+                var result = CapitalCalculator.PvCcrCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, LGD);
+                return result;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PV CVA capital / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioPvCvaCapital_B2_SM))]
+        public static object PortfolioPvCvaCapital_B2_SM(
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Asset-FX Model")] string Model,
+            [ExcelArgument(Description = "Reporting currency")] string Currency,
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var expDates = ExposureDates.ToDateTimeArray();
+                var models = new IAssetFxModel[expDates.Length];
+                var m = model.Value.Clone();
+                for (var i = 0; i < models.Length; i++)
+                {
+                    m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
+                    models[i] = m;
+                }
+                var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight);
+                return result;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEad_B2_SM))]
+        public static object PortfolioExpectedEad_B2_SM(
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Asset-FX Model")] string Model,
+            [ExcelArgument(Description = "Reporting currency")] string Currency,
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var expDates = ExposureDates.ToDateTimeArray();
+                var models = new IAssetFxModel[expDates.Length];
+                var m = model.Value.Clone();
+                for (var i = 0; i < models.Length; i++)
+                {
+                    m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
+                    models[i] = m;
+                }
+                var result = CapitalCalculator.EAD_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy);
+                return result;
             });
         }
     }

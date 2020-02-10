@@ -313,25 +313,6 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns PV SA-CCR capital given an EAD profile and credit info", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioPVCapital))]
-        public static object PortfolioPVCapital(
-            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
-            [ExcelArgument(Description = "Expected EAD cube name")] string EADCubeName,
-            [ExcelArgument(Description = "Credit settings object name")] string CreditSettingsName,
-            [ExcelArgument(Description = "Origin date")] DateTime OriginDate)
-        {
-            return ExcelHelper.Execute(_logger, () =>
-            {
-                var eadCube = ContainerStores.GetObjectCache<ICube>()
-                    .GetObjectOrThrow(EADCubeName, $"Could not find cube with name {EADCubeName}");
-                var creditSettings = ContainerStores.GetObjectCache<CreditSettings>()
-                    .GetObjectOrThrow(CreditSettingsName, $"Could not find credit settings with name {CreditSettingsName}");
-
-                var result = CapitalCalculator.PVCapital(OriginDate, eadCube.Value, creditSettings.Value.CreditCurve, creditSettings.Value.BaseDiscountCurve, creditSettings.Value.LGD);
-                return result;
-            });
-        }
-
         [ExcelFunction(Description = "Returns KVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioKVA))]
         public static object McPortfolioKVA(
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,

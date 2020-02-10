@@ -936,17 +936,19 @@ namespace Qwack.Models.Models
 
             var ead = calculator.ResultCube();
 
-            var pvCapital = CapitalCalculator.PVCapital(model.BuildDate, ead, hazzardCurve, discountCurve, LGD);
+            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d=>models[d]).ToArray(), portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD);
             return pvCapital;
         }
 
-        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double partyRiskWeight, double cvaCapitalWeight, Dictionary<string, string> assetToGroupMap, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models)
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double cvaCapitalWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models)
         {
-            var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
-            var ccrCapital = portfolio.PVCapital(model, reportingCurrency, hazzardCurve, LGD, partyRiskWeight, assetToGroupMap, discountCurve, currencyProvider, models);
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
+            var modelsForDates = exposureDates.Select(d => models[d]).ToArray();
+            var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
             var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, xVA_LGD, reportingCurrency, currencyProvider, models);
-            var cvaCapital = XVACalculator.CVA_CapitalB3_Approx(exposureDates, portfolio, hazzardCurve.ConstantPD(), model, LGD, cvaCapitalWeight, reportingCurrency, currencyProvider, models);
+            var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency);
+            var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, eads);            
+            var cvaCapital = CapitalCalculator.PvCvaCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, discountCurve, cvaCapitalWeight, eads);
             return (pv + cva) / (ccrCapital + cvaCapital);
         }
 
@@ -1385,6 +1387,9 @@ namespace Qwack.Models.Models
 
         public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider)
         {
+            if (model.BuildDate == fwdValDate)
+                return model.Clone();
+
             //setup the "tomorrow" scenario
             var rolledIrCurves = new Dictionary<string, IrCurve>();
             foreach (var curve in model.FundingModel.Curves)

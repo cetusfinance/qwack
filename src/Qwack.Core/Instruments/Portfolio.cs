@@ -55,13 +55,13 @@ namespace Qwack.Core.Instruments
         public static string[] AssetIds(this Portfolio portfolio)
         {
             if (portfolio.Instruments.Count == 0)
-                return Array.Empty<string>();
+                return new string[0];
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
 
             if(!assetTrades.Any())
-                return Array.Empty<string>();
+                return new string[0];
 
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
         }
@@ -69,7 +69,7 @@ namespace Qwack.Core.Instruments
         public static string[] FxPairs(this Portfolio portfolio, IAssetFxModel model)
         {
             if (portfolio.Instruments.Count == 0)
-                return Array.Empty<string>();
+                return new string[0];
 
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
@@ -79,7 +79,7 @@ namespace Qwack.Core.Instruments
                 .Where(x => x is FxVanillaOption || (x is CashWrapper cw && cw.UnderlyingInstrument is FxVanillaOption));
 
             if (!fxTrades.Any() && !assetTrades.Any() && !fxOptionTrades.Any())
-                return Array.Empty<string>();
+                return new string[0];
 
             var o = new List<string>();
 
@@ -363,6 +363,43 @@ namespace Qwack.Core.Instruments
             }
         }
 
+        public static double Notional(this IInstrument ins)
+        {
+            switch (ins)
+            {
+                case AsianOption asianOption:
+                    return asianOption.Notional;
+                case AsianSwap asianSwap:
+                    return asianSwap.Notional;
+                case AsianSwapStrip asianSwapStrip:
+                    return asianSwapStrip.Swaplets.Sum(x => x.Notional);
+                case AsianBasisSwap asianBasisSwap:
+                    return asianBasisSwap.PaySwaplets.Sum(x => x.Notional);
+                case FxForward fxForward:
+                    return fxForward.DomesticQuantity;
+                case EuropeanOption europeanOption:
+                    return europeanOption.Notional;
+                case Forward forward:
+                    return forward.Notional;
+                case FuturesOption option:
+                    return option.ContractQuantity * option.LotSize;
+                case Future future:
+                    return future.ContractQuantity * future.LotSize;
+                case CashBalance cash:
+                    return cash.Notional;
+                case FixedRateLoanDeposit loanDeposit:
+                    return loanDeposit.Notional;
+                case FloatingRateLoanDepo loanDepositFl:
+                    return loanDepositFl.Notional;
+                case CashWrapper wrapper:
+                    return wrapper.UnderlyingInstrument.Notional();
+                case ETC etc:
+                    return etc.Notional;
+                default:
+                    return 0.0;
+            }
+        }
+
         private static double SupFacByHedgeSet(string hedgeSet) => hedgeSet == "Electricity" ? 0.4 : 0.18;
 
         public static double SaCcrAddon(this Portfolio pf, IAssetFxModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
@@ -507,6 +544,18 @@ namespace Qwack.Core.Instruments
             }
 
             return o;
+        }
+
+        public static double WeightedMaturity(this Portfolio portfolio, DateTime originDate)
+        {
+            var d = portfolio.Instruments
+                .Select(x => new Tuple<double, double>(originDate.CalculateYearFraction(x.LastSensitivityDate, DayCountBasis.Act365F), x.Notional()))
+                .Where(t => t.Item1 >= 0);
+            if (!d.Any())
+                return 0.0;
+            var totalNotional = d.Sum(x => x.Item2);
+            var m = d.Sum(x => x.Item1 * x.Item2) / totalNotional;
+            return m;
         }
 
         public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 

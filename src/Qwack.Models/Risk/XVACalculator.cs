@@ -57,7 +57,7 @@ namespace Qwack.Models.Risk
         public static double CVA_CapitalB3_Approx(DateTime[] exposureDates, Portfolio portfolio, double PD, IAssetFxModel model, double LGD, double partyWeight, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
             var exposures = EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
-            return RWA_BaselIII_IMM(model.BuildDate, exposureDates, exposures, PD, LGD, partyWeight)*0.11;
+            return RWA_BaselIII_CVA_IMM(model.BuildDate, exposureDates, exposures, PD, LGD, partyWeight)*0.11;
         }
 
         public static double[] EPE_Approx(DateTime[] exposureDates, Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
@@ -248,7 +248,7 @@ namespace Qwack.Models.Risk
             return (eepe, M);
         }
 
-        public static double RWA_BaselII_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double alpha = 1.4)
+        public static double RWA_BaselII_CCR_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double alpha = 1.4)
         {
             (var efExpPE, var M) = EEPE(originDate, exposureDates, exposures);
             var ead = efExpPE * alpha;
@@ -257,7 +257,7 @@ namespace Qwack.Models.Risk
             return RWA;
         }
 
-        public static double RWA_BaselIII_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double partyWeight, double alpha = 1.4)
+        public static double RWA_BaselIII_CVA_IMM(DateTime originDate, DateTime[] exposureDates, double[] exposures, double PD, double LGD, double partyWeight, double alpha = 1.4)
         {
             (var efExpPE, var M) = EEPE(originDate, exposureDates, exposures);
             var ead = efExpPE * alpha;
@@ -266,16 +266,22 @@ namespace Qwack.Models.Risk
             return RWA;
         }
 
+        public static double Capital_BaselII_CVA_SM(double ead, double M, double partyWeight)
+        {
+            var RWA = 2.33 * partyWeight * M * ead; //simplified for single name and no hedges
+            return RWA;
+        }
+
         public static double RWA_BaselII_IMM(DateTime originDate, ICube EPE, double PD, double LGD, double alpha = 1.4)
         {
             (var epeDates, var epeValues) = CubeToExposures(EPE);
-            return RWA_BaselII_IMM(originDate, epeDates, epeValues, PD, LGD, alpha);
+            return RWA_BaselII_CCR_IMM(originDate, epeDates, epeValues, PD, LGD, alpha);
         }
 
         public static double RWA_BaselIII_IMM(DateTime originDate, ICube EPE, double PD, double LGD, double partyWeight, double alpha = 1.4)
         {
             (var epeDates, var epeValues) = CubeToExposures(EPE);
-            return RWA_BaselIII_IMM(originDate, epeDates, epeValues, PD, LGD, partyWeight, alpha);
+            return RWA_BaselIII_CVA_IMM(originDate, epeDates, epeValues, PD, LGD, partyWeight, alpha);
         }
 
         public static (DateTime[] dates, double[] exposures) CubeToExposures(ICube EPE)

@@ -8,7 +8,7 @@ using Qwack.Dates;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class STIRFuture : IFundingInstrument
+    public class STIRFuture : IFundingInstrument, IAssetInstrument
     {
         public double Price { get; set; } = 100.0;
         public double ContractSize { get; set; } = 1.0;
@@ -29,10 +29,14 @@ namespace Qwack.Core.Instruments.Funding
 
         public double UnitPV01 => ContractSize * DCF * 0.0001;
 
+        public string[] AssetIds => Array.Empty<string>();
+
+        public Currency PaymentCurrency => Currency;
+
         public double Pv(IFundingModel Model, bool updateState)
         {
             var fairPrice = CalculateParRate(Model);
-            var PV = (Price - fairPrice) / 100.0 * Position * ContractSize * DCF;
+            var PV = (fairPrice - Price) / 100.0 * Position * ContractSize * DCF;
             return PV;
         }
 
@@ -100,5 +104,16 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
+
+        public string[] IrCurves(IAssetFxModel model) => new[] { ForecastCurve };
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
+        public string FxPair(IAssetFxModel model) => null;
+        IAssetInstrument IAssetInstrument.Clone() => (STIRFuture)Clone();
+
+        public IAssetInstrument SetStrike(double strike)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

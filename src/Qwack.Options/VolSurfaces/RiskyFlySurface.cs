@@ -393,11 +393,14 @@ namespace Qwack.Options.VolSurfaces
         public override IVolSurface RollSurface(DateTime newOrigin)
         {
             var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
-            var newVols = new double[newMaturities.Length][];
+            var newVols = new double[newMaturities.Length][];       
             var newATMs = newMaturities.Select(m => GetForwardATMVol(newOrigin, m)).ToArray();
             var newRRs = new double[newMaturities.Length][];
             var newBFs = new double[newMaturities.Length][];
             var numDropped = Expiries.Length - newMaturities.Length;
+
+            var newFwds = Forwards.Skip(numDropped).ToArray();
+            var newLabels = PillarLabels.Skip(numDropped).ToArray();
 
             for (var i = 0; i < newMaturities.Length; i++)
             {
@@ -405,7 +408,7 @@ namespace Qwack.Options.VolSurfaces
                 newBFs[i] = Flies[i + numDropped];
             }
 
-            return new RiskyFlySurface(newOrigin, newATMs, newMaturities, WingDeltas, newRRs, newBFs, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels)
+            return new RiskyFlySurface(newOrigin, newATMs, newMaturities, WingDeltas, newRRs, newBFs, newFwds, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, newLabels)
             {
                 AssetId = AssetId,
                 Currency = Currency,

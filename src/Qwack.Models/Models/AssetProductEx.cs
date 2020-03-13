@@ -842,6 +842,8 @@ namespace Qwack.Models.Models
                     pv = fwd.PV(model, true);
                     break;
                 case Future fut:
+                case STIRFuture sfut:
+                case OISFuture ofut:
                     return (0.0, 0.0);
                 case ETC etc:
                     pv = etc.PV(model);
@@ -1019,6 +1021,18 @@ namespace Qwack.Models.Models
                 case ETC etc:
                     pv = etc.PV(model);
                     break;
+                case STIRFuture stir:
+                    pv = stir.Pv(model.FundingModel,true);
+                    break;
+                case OISFuture ois:
+                    pv = ois.Pv(model.FundingModel, true);
+                    break;
+                case IrSwap irs:
+                    pv = irs.Pv(model.FundingModel, true);
+                    break;
+                case IrBasisSwap irsb:
+                    pv = irsb.Pv(model.FundingModel, true);
+                    break;
                 case CashWrapper wrapper:
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
                     if (reportingCurrency != null)
@@ -1049,6 +1063,12 @@ namespace Qwack.Models.Models
                     return wrapper.UnderlyingInstrument.GetCurrency();
                 case FxForward fxf:
                     return fxf.ForeignCCY;
+                case STIRFuture str:
+                    return str.Currency;
+                case OISFuture ois:
+                    return ois.Currency;
+                case IrSwap irs:
+                    return irs.Currency;
                 case IAssetInstrument aIns:
                     return aIns.PaymentCurrency;
                 default:
@@ -1233,6 +1253,18 @@ namespace Qwack.Models.Models
                     break;
                 case DoubleNoTouchOption dnt:
                     tradeType = "DoubleNoTouch";
+                    break;
+                case STIRFuture str:
+                    tradeType = "STIRFuture";
+                    break;
+                case OISFuture ois:
+                    tradeType = "OISFuture";
+                    break;
+                case IrSwap irs:
+                    tradeType = "IRSwap";
+                    break;
+                case IrBasisSwap irsb:
+                    tradeType = "IRBasisSwap";
                     break;
                 case CashWrapper wrapper:
                     tradeType = TradeType(wrapper.UnderlyingInstrument);

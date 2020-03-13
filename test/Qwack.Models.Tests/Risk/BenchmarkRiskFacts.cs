@@ -120,7 +120,7 @@ namespace Qwack.Models.Tests.Risk
 
             var riskSum = cube.GetAllRows().Sum(r => r.Value);
 
-            Assert.Equal(-200, System.Math.Round(riskSum / 100, 0) * 100.0);
+            Assert.Equal(200, System.Math.Round(riskSum / 100, 0) * 100.0);
         }
 
      

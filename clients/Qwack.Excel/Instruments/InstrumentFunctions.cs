@@ -918,7 +918,7 @@ namespace Qwack.Excel.Instruments
                     Direction = TradeDirection.Long,
                     ExpiryDate = ExpiryDate,
                     PaymentCurrency = currency,
-                    FxConversionType = currency.Ccy != "USD" ? FxConversionType.ConvertThenAverage : FxConversionType.None,
+                    FxConversionType = currency.Ccy != "USD" & !AssetId.EndsWith(currency.Ccy) ? FxConversionType.ConvertThenAverage : FxConversionType.None,
                     PaymentDate = PaymentOffsetOrDate is double pdd ? DateTime.FromOADate(pdd) : ExpiryDate.AddPeriod(RollType.F, pCal, new Frequency(paymentOffset)),
                     TradeId = ObjectName,
                     DiscountCurve = DiscountCurve,

@@ -130,7 +130,7 @@ namespace Qwack.Models.Risk
                 case FxForward fxf:
                     return 1.0 / (parBump - parFlat);
                 case STIRFuture st:
-                    return -1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
+                    return 1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
                 case ForwardRateAgreement fra:
                     return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().NotionalByYearFraction);
                 case ContangoSwap cs:

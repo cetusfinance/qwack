@@ -404,7 +404,7 @@ namespace Qwack.Core.Instruments
 
         public static double SaCcrAddon(this Portfolio pf, IAssetFxModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
         {
-            if (!pf.Instruments.All(x => x is ISaCcrEnabled))
+            if (!pf.Instruments.All(x => x is ISaCcrEnabled || (x is CashWrapper cw && cw.UnderlyingInstrument is ISaCcrEnabled)))
                 throw new Exception("Portfolio contains non-SACCR enabled instruments");
 
             var assetIds = pf.AssetIds();

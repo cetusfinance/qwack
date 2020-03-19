@@ -25,7 +25,7 @@ namespace Qwack.Utils.Parallel
 
         }
 
-        public bool MultiThreaded { get; set; } = true;
+        public bool MultiThreaded { get; set; } = false;
 
         private BlockingCollection<Task> _taskQueue = new BlockingCollection<Task>();
 

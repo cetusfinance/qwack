@@ -174,7 +174,7 @@ namespace Qwack.Models
                 return Enumerable.Repeat(1.0, fixingDates.Length).ToArray();
             else
             {
-                var pair = FxMatrix.FxPairDefinitions.First(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
+                var pair = FxMatrix.GetFxPair(domesticCcy, foreignCcy);
                 var settleDates = fixingDates.Select(x => x.AddPeriod(RollType.F, pair.SettlementCalendar, pair.SpotLag));
                 var rates = settleDates.Select(d => GetFxRate(d, domesticCcy, foreignCcy)).ToArray();
                 return rates;

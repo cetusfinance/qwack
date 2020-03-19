@@ -36,5 +36,7 @@ namespace Qwack.Excel.Utils
                                                                  });
 
         public bool TryGetObject(string name, out ISessionItem<T> obj) => _store.TryGetValue(name.StripVersion(), out obj);
+
+        public void Clear() => _store.Clear();
     }
 }

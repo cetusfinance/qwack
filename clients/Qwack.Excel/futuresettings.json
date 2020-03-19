@@ -6667,7 +6667,7 @@
     "TickSize": 0.01
   },
   {
-    "Names": [ "RB", "RBOB Gasoline - NYMEX", "HO", "Heating Oil - NYMEX" ],
+    "Names": [ "RB","XB", "RBOB Gasoline - NYMEX", "HO", "Heating Oil - NYMEX" ],
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,

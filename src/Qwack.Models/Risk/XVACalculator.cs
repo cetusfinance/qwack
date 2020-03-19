@@ -62,25 +62,28 @@ namespace Qwack.Models.Risk
 
         public static double[] EPE_Approx(DateTime[] exposureDates, Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
-            if (portfolio.AssetIds().Length != 1 || portfolio.FxPairs(model).Length != 0)
+            var pfu = portfolio.UnWrapWrappers();
+            var pf = pfu.UnStripStrips();
+
+            if (pf.AssetIds().Length != 1 || pf.FxPairs(model).Length != 0)
                 throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
 
-            if (!portfolio.Instruments.All(x => x is AsianSwap))
+            if (!pf.Instruments.All(x => x is AsianSwap))
                 throw new Exception("Approximate CVA only works for Asian Swap instruments");
 
-            if (portfolio.Instruments
+            if (pf.Instruments
                 .Select(x => Sign((x as AsianSwap).Notional))
                 .Distinct()
                 .Count() != 1)
                 throw new Exception("All swaps must be in same direction");
 
-            var cp = (portfolio.Instruments
+            var cp = (pf.Instruments
                 .Select(x => Sign((x as AsianSwap).Notional))
                 .Distinct().First() == 1.0) ? OptionType.C : OptionType.P;
 
             var replicatingPF = new Portfolio
             {
-                Instruments = portfolio.Instruments
+                Instruments = pf.Instruments
                 .Select(s => s as AsianSwap)
                 .Select(s =>
                new AsianOption
@@ -219,9 +222,6 @@ namespace Qwack.Models.Risk
                 throw new Exception("Exposures and dates must be of same length");
 
             var y1Date = originDate.AddYears(1);
-            var y1DateIx = Array.BinarySearch(exposureDates, y1Date);
-            if (y1DateIx < 0)
-                y1DateIx = ~y1DateIx;
 
             var eepe = 0.0;
             var sumDt = 0.0;

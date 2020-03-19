@@ -21,7 +21,7 @@ namespace Qwack.Excel.Capital
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<CapitalFunctions>();
 
-        [ExcelFunction(Description = "Computes SA-CCR EAD", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeEAD), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Computes SA-CCR EAD", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeEAD))]
         public static object ComputeEAD(
              [ExcelArgument(Description = "Portfolio object")] string PortfolioName,
              [ExcelArgument(Description = "AssetFx model")] string VanillaModel,
@@ -39,7 +39,7 @@ namespace Qwack.Excel.Capital
         }
 
 
-        [ExcelFunction(Description = "Computes CVA from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVA), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Computes CVA from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVA))]
         public static object ComputeCVA(
             [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
@@ -76,7 +76,7 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Computes approximate CVA for a portfolio", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVAApprox), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Computes approximate CVA for a portfolio", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVAApprox))]
         public static object ComputeCVAApprox(
            [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
            [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
@@ -99,7 +99,7 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Solves strike for a target RoC", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(SolveStrikeForTargetRoC), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Solves strike for a target RoC", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(SolveStrikeForTargetRoC))]
         public static object SolveStrikeForTargetRoC(
           [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
           [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
@@ -124,7 +124,7 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Computes Basel II CVA risk weighted assets from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCvaRwaBaselII_IMM), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Computes Basel II CVA risk weighted assets from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCvaRwaBaselII_IMM))]
         public static object ComputeCvaRwaBaselII_IMM(
             [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
             [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile,
@@ -158,7 +158,7 @@ namespace Qwack.Excel.Capital
         }
 
 
-        [ExcelFunction(Description = "Computes Basel III CVA capital from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVACapitalBaselIII), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Computes Basel III CVA capital from an EPE profile", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(ComputeCVACapitalBaselIII))]
         public static object ComputeCVACapitalBaselIII(
            [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
            [ExcelArgument(Description = "EPE profile, cube or array")] object EPEProfile,

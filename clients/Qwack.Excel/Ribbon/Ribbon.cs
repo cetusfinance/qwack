@@ -25,6 +25,19 @@ namespace Qwack.Excel.Ribbon
             MessageBox.Show($"Qwack version {versionString} \n © Qwack 2017");
         }
 
+        public void ToggleThreadding(IRibbonControl control1)
+        {
+            var setting = !Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded;
+            Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded = setting;
+            MessageBox.Show($"Multi-threaded execution enabled: {setting}");
+        }
+
+        public void FlushCaches(IRibbonControl control1)
+        {
+            ContainerStores.FlushAllCaches();
+            MessageBox.Show($"Caches are cleared");
+        }
+
         public static void ShowCalendarViewer()
         {
             if (CalViewer == null)

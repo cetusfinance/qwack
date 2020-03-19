@@ -16,7 +16,7 @@ namespace Qwack.Excel.Interpolation
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<InterpolatorFunctions>();
 
-        [ExcelFunction(Description = "Creates a 1-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolator), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a 1-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolator))]
         public static object Create1dInterpolator(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Array of X values")] double[] X,
@@ -38,7 +38,7 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
-        [ExcelFunction(Description = "Creates a 1-dimensional interpolator, tollerant of errors", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolatorSafe), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a 1-dimensional interpolator, tollerant of errors", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolatorSafe))]
         public static object Create1dInterpolatorSafe(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Array of X values")] object[] X,
@@ -75,7 +75,7 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
-        [ExcelFunction(Description = "Creates a 2-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create2dInterpolator), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a 2-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create2dInterpolator))]
         public static object Create2dInterpolator(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Array of X values")] double[] X,
@@ -98,7 +98,7 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
-        [ExcelFunction(Description = "Queries a 1-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate1d), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Queries a 1-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate1d))]
         public static object Interpolate1d(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "X value to interpolate")] double X)
@@ -110,7 +110,7 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
-        [ExcelFunction(Description = "Queries a 2-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate2d), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Queries a 2-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate2d))]
         public static object Interpolate2d(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "X value to interpolate")] double X,
@@ -123,7 +123,7 @@ namespace Qwack.Excel.Interpolation
             });
         }
 
-        [ExcelFunction(Description = "Queries a 1-dimensional interpolator and returns average value", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate1dAverage), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Queries a 1-dimensional interpolator and returns average value", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Interpolate1dAverage))]
         public static object Interpolate1dAverage(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "X values to interpolate")] double[] Xs)

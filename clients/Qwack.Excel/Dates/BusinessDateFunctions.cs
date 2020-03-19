@@ -305,7 +305,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns dates for Good Friday and Easter Monday in the given year", Category = "QDates", IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns dates for Good Friday and Easter Monday in the given year", Category = "QDates")]
         public static object QDates_Easter(
             [ExcelArgument(Description = "Date")] DateTime Date)
         {
@@ -316,7 +316,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Lists holidays for a calendar between two dates", Category = "QDates", IsThreadSafe = true)]
+        [ExcelFunction(Description = "Lists holidays for a calendar between two dates", Category = "QDates")]
         public static object QDates_ListHolidays(
             [ExcelArgument(Description = "Start Date")] DateTime StartDate,
             [ExcelArgument(Description = "End Date")] DateTime EndDate,

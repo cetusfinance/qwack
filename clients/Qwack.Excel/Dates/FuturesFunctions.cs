@@ -29,7 +29,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns roll date for a given futures code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesRollFromCode), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns roll date for a given futures code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesRollFromCode))]
         public static object FuturesRollFromCode(
             [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
         {
@@ -41,7 +41,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns front month code for a given futures root and value date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesGetFrontMonth), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns front month code for a given futures root and value date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesGetFrontMonth))]
         public static object FuturesGetFrontMonth(
             [ExcelArgument(Description = "Value date")] DateTime ValueDate,
             [ExcelArgument(Description = "Futures code root, e.g. CL")] string FuturesCodeRoot,
@@ -57,7 +57,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns next code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesNextCode), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns next code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesNextCode))]
         public static object FuturesNextCode(
         [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
         {
@@ -69,7 +69,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Returns previous code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesPreviousCode), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns previous code in expiry sequence from a given code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesPreviousCode))]
         public static object FuturesPreviousCode(
         [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
         {
@@ -81,7 +81,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Generates next LME curve date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(NextLMECurveDate), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Generates next LME curve date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(NextLMECurveDate))]
         public static object NextLMECurveDate(
             [ExcelArgument(Description = "Previous date")] DateTime PrevDate,
             [ExcelArgument(Description = "3m date")] DateTime ThreeMonthDate,
@@ -123,7 +123,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Generates LME 3m date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetLME3mDate), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Generates LME 3m date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetLME3mDate))]
         public static object GetLME3mDate(
             [ExcelArgument(Description = "Value date")] DateTime ValueDate)
         {
@@ -139,7 +139,7 @@ namespace Qwack.Excel.Dates
             });
         }
 
-        [ExcelFunction(Description = "Gets month code and year for a given date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetMonthCodeAndYear), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Gets month code and year for a given date", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(GetMonthCodeAndYear))]
         public static object GetMonthCodeAndYear(
             [ExcelArgument(Description = "Value date")] DateTime ValueDate,
             [ExcelArgument(Description = "Number of year digits - 1,2 or 4")] int NumYearDigits)

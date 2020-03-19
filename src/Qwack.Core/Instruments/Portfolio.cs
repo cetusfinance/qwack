@@ -402,9 +402,23 @@ namespace Qwack.Core.Instruments
 
         private static double SupFacByHedgeSet(string hedgeSet) => hedgeSet == "Electricity" ? 0.4 : 0.18;
 
-        public static double SaCcrAddon(this Portfolio pf, IAssetFxModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        public static Portfolio UnWrapWrappers(this Portfolio portfolio) => new Portfolio()
         {
-            if (!pf.Instruments.All(x => x is ISaCcrEnabled || (x is CashWrapper cw && cw.UnderlyingInstrument is ISaCcrEnabled)))
+            Instruments = portfolio.Instruments.Select(x => x is CashWrapper cw ? cw.UnderlyingInstrument : x).ToList(),
+            PortfolioName = portfolio.PortfolioName,
+        };
+
+        public static Portfolio UnStripStrips(this Portfolio portfolio) => new Portfolio()
+        {
+            Instruments = portfolio.Instruments.SelectMany(x => x is AsianSwapStrip sw ? sw.Swaplets : new[] { x }).ToList(),
+            PortfolioName = portfolio.PortfolioName,
+        };
+
+        public static double SaCcrAddon(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        {
+            var pf = portfolio.UnWrapWrappers();
+
+            if (!pf.Instruments.All(x => x is ISaCcrEnabled))
                 throw new Exception("Portfolio contains non-SACCR enabled instruments");
 
             var assetIds = pf.AssetIds();
@@ -425,7 +439,6 @@ namespace Qwack.Core.Instruments
                     addOnByAsset[insGroup.Key] += ins.EffectiveNotional(model) * SupFacByHedgeSet(ins.HedgingSet) * fxRate;
                 }
             }
-
 
             var activeHedgeSetNames = addOnByAsset.Select(x => AssetIdToHedgingSetMap[x.Key]).Distinct();
             var activeHedgeSets = activeHedgeSetNames.ToDictionary(x => x, x => addOnByAsset.Where(y => AssetIdToHedgingSetMap[y.Key] == x));

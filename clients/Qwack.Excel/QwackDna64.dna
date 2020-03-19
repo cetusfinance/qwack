@@ -8,6 +8,10 @@
             <group id='Info' label='Info' visible='true'>
               <button id='About' label='About' size='large' imageMso='CustomActionsMenu' onAction='DisplayAbout' visible='true'/>
             </group >
+            <group id='Settings' label='Settings' visible='true'>
+                  <button id='ToggleThreading' label='Toggle MT' size='large' imageMso='CustomActionsMenu' onAction='ToggleThreadding' visible='true'/>
+                  <button id='FlushCaches' label='Flush Caches' size='large' imageMso='CustomActionsMenu' onAction='FlushCaches' visible='true'/>
+            </group >
           </tab>
         </tabs>
       </ribbon>

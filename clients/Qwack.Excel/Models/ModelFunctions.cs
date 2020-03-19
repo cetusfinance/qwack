@@ -28,7 +28,7 @@ namespace Qwack.Excel.Curves
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<ModelFunctions>();
 
 
-        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings))]
         public static object CreateMcSettings(
            [ExcelArgument(Description = "Settings object name")] string ObjectName,
            [ExcelArgument(Description = "Number of paths")] int NumberOfPaths,
@@ -81,7 +81,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a credit settings object for monte-carlo", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateCreditSettings), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a credit settings object for monte-carlo", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateCreditSettings))]
         public static object CreateCreditSettings(
           [ExcelArgument(Description = "Credit settings object name")] string ObjectName,
           [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates,
@@ -131,7 +131,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a monte-carlo model precursor object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a monte-carlo model precursor object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel))]
         public static object CreateMcModel(
            [ExcelArgument(Description = "Output object name")] string ObjectName,
            [ExcelArgument(Description = "Asset-FX vanilla model")]string VanillaModel,

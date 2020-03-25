@@ -219,9 +219,12 @@ namespace Qwack.Paths.Payoffs
             return vec;
         }).StdDev();
 
-        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
+        public CashFlowSchedule ExpectedFlows(IAssetFxModel model, Currency repCcy = null)
         {
-            var ar = AverageResult;
+            var fxRate = repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
+            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(repCcy);
+
+            var ar = AverageResult * fxRate;
             return new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -229,7 +232,7 @@ namespace Qwack.Paths.Payoffs
                     new CashFlow
                     {
                         Fv = ar,
-                        Pv = ar * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Pv = ar * model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate,_payDate),
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
@@ -239,17 +242,19 @@ namespace Qwack.Paths.Payoffs
             };
         }
 
-        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
+        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model, Currency repCcy = null)
         {
-            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
+            var fxRate = repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
+            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(repCcy);
+            var df = model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate, _payDate);
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
                 {
                     new CashFlow
                     {
-                        Fv = x,
-                        Pv = x * df,
+                        Fv = x * fxRate,
+                        Pv = x * fxRate * df,
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,

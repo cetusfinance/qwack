@@ -14,36 +14,25 @@ using Qwack.Paths.Regressors;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class BackPricingOption : IPathProcess, IRequiresFinish, IAssetPathPayoff
+    public class BackPricingOption : PathProductBase
     {
-        private object _locker = new object();
-
         private List<DateTime> _avgDates;
         private readonly DateTime _decisionDate;
         private readonly OptionType _callPut;
-        private readonly string _discountCurve;
-        private readonly Currency _ccy;
         private readonly DateTime _settleFixingDate;
-        private readonly DateTime _payDate;
-        private readonly string _assetName;
-        private int _assetIndex;
         private string _fxName;
         private int _fxIndex;
-        private int[] _dateIndexes;
         private int[] _dateIndexesPast;
         private int[] _dateIndexesFuture;
         private int _nPast;
         private int _nFuture;
         private int _nTotal;
         private int _decisionDateIx;
-        private Vector<double>[] _results;
-        private Vector<double> _notional;
-        private bool _isComplete;
         private double _expiryToSettleCarry;
 
         private readonly Vector<double> _one = new Vector<double>(1.0);
 
-        public string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
+        public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
         public LinearAveragePriceRegressor SettlementRegressor { get; set; }
         public LinearAveragePriceRegressor AverageRegressor { get; set; }
@@ -51,15 +40,12 @@ namespace Qwack.Paths.Payoffs
         public IAssetFxModel VanillaModel { get; set; }
 
         public BackPricingOption(string assetName, List<DateTime> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional)
+            :base(assetName,discountCurve,ccy,payDate,notional)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
             _callPut = callPut;
-            _discountCurve = discountCurve;
-            _ccy = ccy;
             _settleFixingDate = settlementFixingDate;
-            _payDate = payDate;
-            _assetName = assetName;
             _notional = new Vector<double>(notional);
 
             if (_ccy.Ccy != "USD")
@@ -69,12 +55,7 @@ namespace Qwack.Paths.Payoffs
             SettlementRegressor = new LinearAveragePriceRegressor(decisionDate, new[] { _settleFixingDate }, RegressionKey);
         }
 
-        public bool IsComplete => _isComplete;
-
-        public IAssetInstrument AssetInstrument { get; private set; }
-
-
-        public void Finish(IFeatureCollection collection)
+        public override void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
@@ -113,7 +94,7 @@ namespace Qwack.Paths.Payoffs
             _isComplete = true;
         }
 
-        public void Process(IPathBlock block)
+        public override void Process(IPathBlock block)
         {
             var blockBaseIx = block.GlobalPathIndex;
             var nTotalVec = new Vector<double>(_nTotal);
@@ -172,7 +153,7 @@ namespace Qwack.Paths.Payoffs
             }
         }
 
-        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
+        public override void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDates(_avgDates);
@@ -180,76 +161,5 @@ namespace Qwack.Paths.Payoffs
             dates.AddDate(_decisionDate);
         }
 
-        public double AverageResult => _results.Select(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec.Average();
-        }).Average();
-
-        public double[] ResultsByPath
-        {
-            get
-            {
-                var vecLen = Vector<double>.Count;
-                var results = new double[_results.Length * vecLen];
-                for (var i = 0; i < _results.Length; i++)
-                {
-                    for (var j = 0; j < vecLen; j++)
-                    {
-                        results[i * vecLen + j] = _results[i][j];
-                    }
-                }
-                return results;
-            }
-        }
-
-        public double ResultStdError => _results.SelectMany(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec;
-        }).StdDev();
-
-        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
-        {
-            var ar = AverageResult;
-            return new CashFlowSchedule
-            {
-                Flows = new List<CashFlow>
-                {
-                    new CashFlow
-                    {
-                        Fv = ar,
-                        Pv = ar * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
-                        Currency = _ccy,
-                        FlowType =  FlowType.FixedAmount,
-                        SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
-                    }
-                }
-            };
-        }
-
-        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
-        {
-            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
-            return ResultsByPath.Select(x => new CashFlowSchedule
-            {
-                Flows = new List<CashFlow>
-                {
-                    new CashFlow
-                    {
-                        Fv = x,
-                        Pv = x * df,
-                        Currency = _ccy,
-                        FlowType =  FlowType.FixedAmount,
-                        SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
-                    }
-                }
-            }).ToArray();
-
-        }
     }
 }

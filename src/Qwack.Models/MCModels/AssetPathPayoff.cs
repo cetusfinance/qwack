@@ -41,6 +41,10 @@ namespace Qwack.Models.MCModels
         private OptionType _optionType;
         private FxConversionType _fxType;
         private int _rawNumberOfPaths;
+        private bool _requiresConversionToSimCcy;
+        private bool _requiresConversionToSimCcyInverted;
+        private string _conversionToSimCcyName;
+        private int _conversionToSimCcyIx;
 
         private List<IAssetPathPayoff> _subInstruments;
 
@@ -106,6 +110,8 @@ namespace Qwack.Models.MCModels
             AssetInstrument = assetInstrument;
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
+            SimulationCcy = simulationCcy;
+            
             switch (AssetInstrument)
             {
                 case AsianOption ao:
@@ -260,11 +266,17 @@ namespace Qwack.Models.MCModels
             _assetName = AssetInstrument.AssetIds.Any() ? 
                 AssetInstrument.AssetIds.First() :
                 (AssetInstrument is FxVanillaOption fxo ? fxo.PairStr : null);
+            _requiresConversionToSimCcy = SimulationCcy != _ccy;
+            if(_requiresConversionToSimCcy)
+            {
+                _conversionToSimCcyName = $"{SimulationCcy}/{_ccy}";
+            }
         }
 
         public bool IsComplete => _isComplete;
 
         public IAssetInstrument AssetInstrument { get; private set; }
+        public Currency SimulationCcy { get; }
 
         public void Finish(IFeatureCollection collection)
         {
@@ -298,6 +310,20 @@ namespace Qwack.Models.MCModels
                 _dateIndexes[i] = dates.GetDateIndex(_asianDates[i]);
             }
 
+            if (_requiresConversionToSimCcy)
+            {
+                _conversionToSimCcyIx = dims.GetDimension(_conversionToSimCcyName);
+                if (_conversionToSimCcyIx == -1)
+                {
+                    _conversionToSimCcyIx = dims.GetDimension($"{_conversionToSimCcyName.Substring(4, 3)}/{_conversionToSimCcyName.Substring(0, 3)}");
+                    if (_conversionToSimCcyIx == -1)
+                    {
+                        throw new Exception($"Unable to find process to convert currency from {_ccy} to {SimulationCcy}");
+                    }
+                    _requiresConversionToSimCcyInverted = true;
+                }
+            }
+
             if (_isCompo)
                 for (var i = 0; i < _asianDates.Count; i++)
                 {
@@ -306,11 +332,11 @@ namespace Qwack.Models.MCModels
 
             _payDateIx = dates.GetDateIndex(_payDate);
 
-            _isComplete = true;
-
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.RoundedNumberOfPaths / Vector<double>.Count];
             _rawNumberOfPaths = engine.NumberOfPaths;
+
+            _isComplete = true;
         }
 
         public void Process(IPathBlock block)
@@ -379,6 +405,15 @@ namespace Qwack.Models.MCModels
                     finalValues *= stepsfx[_payDateIx];
                 }
 
+                if(_requiresConversionToSimCcy)
+                {
+                    var stepsFxConv = block.GetStepsForFactor(path, _conversionToSimCcyIx);
+                    if(_requiresConversionToSimCcyInverted)
+                        finalValues *= stepsFxConv[_payDateIx];
+                    else
+                        finalValues /= stepsFxConv[_payDateIx];
+                }
+
                 var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                 _results[resultIx] = finalValues;
             }
@@ -425,8 +460,10 @@ namespace Qwack.Models.MCModels
 
         public double ResultStdError => ResultsByPath.StdDev();
 
-        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
+        public CashFlowSchedule ExpectedFlows(IAssetFxModel model, Currency repCcy=null)
         {
+            var fxRate = repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
+
             if (_subInstruments != null)
             {
                 var o = new CashFlowSchedule
@@ -441,7 +478,8 @@ namespace Qwack.Models.MCModels
                 return o;
             }
 
-            var ar = AverageResult;
+            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(repCcy);
+            var ar = AverageResult * fxRate;
             return new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -449,7 +487,7 @@ namespace Qwack.Models.MCModels
                     new CashFlow
                     {
                         Fv = ar,
-                        Pv = ar * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
+                        Pv = ar * model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate,_payDate),
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
@@ -459,8 +497,10 @@ namespace Qwack.Models.MCModels
             };
         }
 
-        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
+        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model, Currency repCcy = null)
         {
+            var fxRate = 1.0;//repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
+            
             if (_subInstruments != null)
             {
                 CashFlowSchedule[] o = null;
@@ -481,7 +521,8 @@ namespace Qwack.Models.MCModels
                 return o;
             }
 
-            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
+            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(SimulationCcy);
+            var df = model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate, _payDate);
 
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
@@ -489,8 +530,8 @@ namespace Qwack.Models.MCModels
                 {
                     new CashFlow
                     {
-                        Fv = x,
-                        Pv = x * df,
+                        Fv = x * fxRate,
+                        Pv = x * fxRate * df,
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,

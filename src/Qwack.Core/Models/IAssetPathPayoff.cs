@@ -1,3 +1,4 @@
+using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 
 namespace Qwack.Core.Models
@@ -9,8 +10,8 @@ namespace Qwack.Core.Models
         bool IsComplete { get; }
         double ResultStdError { get; }
 
-        CashFlowSchedule ExpectedFlows(IAssetFxModel model);
-        CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model);
+        CashFlowSchedule ExpectedFlows(IAssetFxModel model, Currency repCcy = null);
+        CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model, Currency repCcy = null);
         void Finish(IFeatureCollection collection);
         void Process(IPathBlock block);
         void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection);

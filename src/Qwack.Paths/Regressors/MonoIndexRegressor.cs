@@ -117,7 +117,7 @@ namespace Qwack.Paths.Regressors
             var o = new IInterpolator1D[_dateIndexes.Length];
 
             var nPaths = _pathwiseValues.First().Length;
-            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model)).ToArray();
+            var finalSchedules = _portfolio.Select(x => x.ExpectedFlowsByPath(model, _repCcy)).ToArray();
 
             ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {

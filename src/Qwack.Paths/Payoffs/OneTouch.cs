@@ -12,53 +12,33 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class OneTouch : IPathProcess, IRequiresFinish, IAssetPathPayoff
+    public class OneTouch : PathProductBase
     {
         private object _locker = new object();
 
         private readonly DateTime _obsStart;
         private readonly DateTime _obsEnd;
         private readonly double _barrier;
-        private readonly string _discountCurve;
-        private readonly Currency _ccy;
-        private readonly DateTime _payDate;
         private readonly BarrierType _barrierType;
         private readonly BarrierSide _barrierSide;
-        private readonly string _assetName;
-        private int _assetIndex;
-        private int[] _dateIndexes;
-        private Vector<double>[] _results;
-        private Vector<double> _notional;
+
         private Vector<double> _barrierVec;
-        private Vector<double> _zero = new Vector<double>(0.0);
-        private bool _isComplete;
-
-        public string RegressionKey => _assetName;
-
 
         public OneTouch(string assetName, DateTime obsStart, DateTime obsEnd, double barrier, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierSide barrierSide, BarrierType barrierType)
+            : base(assetName, discountCurve, ccy, payDate, notional)
         {
             _obsStart = obsStart;
             _obsEnd = obsEnd;
             _barrier = barrier;
-            _discountCurve = discountCurve;
-            _ccy = ccy;
-            _payDate = payDate;
 
             _barrierType = barrierType;
             _barrierSide = barrierSide;
 
-            _assetName = assetName;
             _notional = new Vector<double>(notional);
             _barrierVec = new Vector<double>(barrier);
         }
 
-        public bool IsComplete => _isComplete;
-
-        public IAssetInstrument AssetInstrument { get; private set; }
-
-
-        public void Finish(IFeatureCollection collection)
+        public override void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
@@ -74,7 +54,7 @@ namespace Qwack.Paths.Payoffs
             _isComplete = true;
         }
 
-        public void Process(IPathBlock block)
+        public override void Process(IPathBlock block)
         {
             var blockBaseIx = block.GlobalPathIndex;
 
@@ -136,70 +116,11 @@ namespace Qwack.Paths.Payoffs
             }
         }
 
-        public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
+        public override void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDate(_obsStart);
             dates.AddDate(_obsEnd);
-        }
-
-        public double AverageResult => _results.Select(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec.Average();
-        }).Average();
-
-        public double[] ResultsByPath => _results.SelectMany(x => x.Values()).ToArray();
-
-        public double ResultStdError => _results.SelectMany(x =>
-        {
-            var vec = new double[Vector<double>.Count];
-            x.CopyTo(vec);
-            return vec;
-        }).StdDev();
-
-
-
-        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
-        {
-            var ar = AverageResult;
-            return new CashFlowSchedule
-            {
-                Flows = new List<CashFlow>
-                {
-                    new CashFlow
-                    {
-                        Fv = ar,
-                        Pv = ar * model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate,_payDate),
-                        Currency = _ccy,
-                        FlowType =  FlowType.FixedAmount,
-                        SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
-                    }
-                }
-            };
-        }
-
-        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
-        {
-            var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
-            return ResultsByPath.Select(x => new CashFlowSchedule
-            {
-                Flows = new List<CashFlow>
-                {
-                    new CashFlow
-                    {
-                        Fv = x,
-                        Pv = x * df,
-                        Currency = _ccy,
-                        FlowType =  FlowType.FixedAmount,
-                        SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
-                    }
-                }
-            }).ToArray();
-
         }
     }
 }

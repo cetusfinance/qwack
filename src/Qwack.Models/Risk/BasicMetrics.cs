@@ -1244,7 +1244,9 @@ namespace Qwack.Models.Risk
             //theta
             for (var i = 0; i < pvRowsFwd.Length; i++)
             {
-                var theta = pvRowsFwd[i].Value - pvRows[i].Value;
+               
+                var theta = (string)cashRows[i].MetaData[tTypeIx] != "Physical" ? pvRowsFwd[i].Value - pvRows[i].Value : 0.0;
+
                 if (theta != 0.0)
                 {
                     var row = new Dictionary<string, object>

@@ -1120,8 +1120,13 @@ namespace Qwack.Models.Models
                 case FixedRateLoanDeposit loanDepo:
                     flow = loanDepo.FlowsT0(model.FundingModel);
                     break;
+                case FloatingRateLoanDepo fld:
+                    flow = fld.FlowsT0(model.FundingModel);
+                    break;
                 case CashBalance cash:
                 case ETC etc:
+                case STIRFuture st:
+                case OISFuture oi:
                     flow = 0;
                     break;
                 case CashWrapper wrapper:

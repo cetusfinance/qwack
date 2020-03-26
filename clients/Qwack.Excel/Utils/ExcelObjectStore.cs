@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace Qwack.Excel.Utils
 {
-    public class ExcelObjectStore <T> : IObjectStore<T>
+    public class ExcelObjectStore<T> : IObjectStore<T>
     {
-        private readonly ConcurrentDictionary<string, ISessionItem<T>> _store;
-        
-        public ExcelObjectStore() => _store = new ConcurrentDictionary<string, ISessionItem<T>>();
+        private ConcurrentDictionary<string, ISessionItem<T>> _store;
+       
+        public ExcelObjectStore()
+        {
+            _store = new ConcurrentDictionary<string, ISessionItem<T>>();
+        }
 
         public bool Exists(string name) => _store.ContainsKey(name.StripVersion());
 

@@ -16,7 +16,7 @@ namespace Qwack.Utils.Parallel
 
         public static ParallelUtils Instance => lazy.Value;
 
-        private static readonly int numThreads = Environment.ProcessorCount * 2;
+        private static readonly int numThreads = Environment.ProcessorCount;
 
         private SemaphoreSlim _slimLock = new SemaphoreSlim(numThreads, numThreads);
 
@@ -25,7 +25,7 @@ namespace Qwack.Utils.Parallel
 
         }
 
-        public bool MultiThreaded { get; set; } = false;
+        public bool MultiThreaded { get; set; } = true;
 
         private BlockingCollection<Task> _taskQueue = new BlockingCollection<Task>();
 
@@ -53,6 +53,7 @@ namespace Qwack.Utils.Parallel
         {
             foreach (var v in values)
                 code.Invoke(v);
+
         }
 
         private async Task RunOptimistically<T>(IList<T> values, Action<T> code)

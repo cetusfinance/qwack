@@ -28,7 +28,7 @@ namespace Qwack.Excel.Curves
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<ModelFunctions>();
 
 
-        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings))]
+        [ExcelFunction(Description = "Creates a monte-carlo settings object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcSettings), IsThreadSafe = true)]
         public static object CreateMcSettings(
            [ExcelArgument(Description = "Settings object name")] string ObjectName,
            [ExcelArgument(Description = "Number of paths")] int NumberOfPaths,
@@ -81,7 +81,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a credit settings object for monte-carlo", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateCreditSettings))]
+        [ExcelFunction(Description = "Creates a credit settings object for monte-carlo", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateCreditSettings), IsThreadSafe = true)]
         public static object CreateCreditSettings(
           [ExcelArgument(Description = "Credit settings object name")] string ObjectName,
           [ExcelArgument(Description = "Forward exposure dates for PFE etc")] object PFEDates,
@@ -131,7 +131,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a monte-carlo model precursor object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel))]
+        [ExcelFunction(Description = "Creates a monte-carlo model precursor object", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(CreateMcModel), IsThreadSafe = true)]
         public static object CreateMcModel(
            [ExcelArgument(Description = "Output object name")] string ObjectName,
            [ExcelArgument(Description = "Asset-FX vanilla model")]string VanillaModel,
@@ -156,7 +156,7 @@ namespace Qwack.Excel.Curves
         }
 
 
-        [ExcelFunction(Description = "Returns PV of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPV))]
+        [ExcelFunction(Description = "Returns PV of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPV), IsThreadSafe = true)]
         public static object McPortfolioPV(
           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -183,7 +183,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPFE))]
+        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioPFE), IsThreadSafe = true)]
         public static object McPortfolioPFE(
           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -207,7 +207,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns CVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioCVA))]
+        [ExcelFunction(Description = "Returns CVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioCVA), IsThreadSafe = true)]
         public static object McPortfolioCVA(
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
@@ -229,7 +229,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns FVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioFVA))]
+        [ExcelFunction(Description = "Returns FVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioFVA), IsThreadSafe = true)]
         public static object McPortfolioFVA(
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
@@ -256,7 +256,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioExpectedEAD))]
+        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioExpectedEAD), IsThreadSafe = true)]
         public static object McPortfolioExpectedEAD(
           [ExcelArgument(Description = "Result object name")] string ResultObjectName,
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -284,7 +284,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by analytic methods given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD))]
+        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by analytic methods given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD), IsThreadSafe = true)]
         public static object PortfolioExpectedEAD(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -313,7 +313,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns KVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioKVA))]
+        [ExcelFunction(Description = "Returns KVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioKVA), IsThreadSafe = true)]
         public static object McPortfolioKVA(
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
           [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
@@ -335,7 +335,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioEPE))]
+        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioEPE), IsThreadSafe = true)]
         public static object McPortfolioEPE(
          [ExcelArgument(Description = "Result object name")] string ResultObjectName,
          [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -358,7 +358,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns composite volatility from a model", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(GetCompoVol))]
+        [ExcelFunction(Description = "Returns composite volatility from a model", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(GetCompoVol), IsThreadSafe = true)]
         public static object GetCompoVol(
         [ExcelArgument(Description = "Model object name")] string ModelName,
         [ExcelArgument(Description = "Asset Id")] string AssetId,

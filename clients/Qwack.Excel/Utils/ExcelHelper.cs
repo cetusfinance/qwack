@@ -23,12 +23,12 @@ namespace Qwack.Excel.Services
             }
             catch (AggregateException agEx)
             {
-                logger?.LogWarning(_eventId, agEx.InnerExceptions.First(), "Unhandled exception");
+                //logger?.LogWarning(_eventId, agEx.InnerExceptions.First(), "Unhandled exception");
                 return agEx.InnerExceptions.First().Message;
             }
             catch (Exception ex)
             {
-                logger?.LogWarning(_eventId, ex, "Unhandled exception");
+                //logger?.LogWarning(_eventId, ex, "Unhandled exception");
                 return ex.Message;
             }
         }

@@ -19,7 +19,7 @@ namespace Qwack.Excel.Dates
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<FuturesFunctions>();
 
-        [ExcelFunction(Description = "Returns expiry date for a given futures code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesExpiryFromCode), IsThreadSafe=true)]
+        [ExcelFunction(Description = "Returns expiry date for a given futures code", Category = CategoryNames.Dates, Name = CategoryNames.Dates + "_" + nameof(FuturesExpiryFromCode))]
         public static object FuturesExpiryFromCode(
              [ExcelArgument(Description = "Futures code, e.g. CLZ3")] string FuturesCode)
         {

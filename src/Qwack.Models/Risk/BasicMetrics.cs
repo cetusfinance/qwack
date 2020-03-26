@@ -473,7 +473,7 @@ namespace Qwack.Models.Risk
                 { "CurveType", typeof(string) },
             };
             cube.Initialize(dataTypes);
-            var model = pvModel.VanillaModel;
+            var model = pvModel.VanillaModel.Clone();
             model.BuildDependencyTree();
 
             foreach (var curveName in model.CurveNames)
@@ -647,7 +647,7 @@ namespace Qwack.Models.Risk
                 { "CurveType", typeof(string) },
             };
             cube.Initialize(dataTypes);
-            var model = pvModel.VanillaModel;
+            var model = pvModel.VanillaModel.Clone();
             model.BuildDependencyTree();
 
             foreach (var curveName in model.CurveNames)

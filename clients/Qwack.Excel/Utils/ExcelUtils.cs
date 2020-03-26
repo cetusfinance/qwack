@@ -14,7 +14,7 @@ namespace Qwack.Excel.Utils
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
-        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils", IsThreadSafe=true)]
+        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils")]
         public static object QUtils_Now()
         {
             return DateTime.Now.ToString("s");
@@ -344,13 +344,32 @@ namespace Qwack.Excel.Utils
             });
         }
 
-        [ExcelFunction(Description = "Sets multi-threading flag for Qwack functions", Category = "QUtils", IsThreadSafe = true)]
+        [ExcelFunction(Description = "Sets multi-threading flag for Qwack functions", Category = "QUtils")]
         public static object QUtils_SetThreadingFlag(
               [ExcelArgument(Description = "Threading enabled, true or false")] bool ThreadingEnabled
             )
         {
             Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded = ThreadingEnabled;
             return $"Threading set to {ThreadingEnabled}";
+        }
+
+        [ExcelFunction(Description = "Prevents lazy-loading", Category = "QUtils")]
+        public static object QUtils_WarmUp()
+        {
+            var z1 = Qwack.Core.Basic.AtmVolType.AtmForward;
+            var z2 = new Qwack.Dates.Calendar();
+            var z3 = new Qwack.Futures.FutureSettings(null);
+            var z4 = Qwack.Math.Distributions.Gaussian.GKern(0, 0, 1);
+            var z5 = new Qwack.Models.Calibrators.NewtonRaphsonMultiCurveSolver();
+            var z6 = new Qwack.Options.Calibrators.AssetSmileSolver();
+            var z7 = new Qwack.Paths.BlockSet(1000, 1, 1);
+            var z8 = new Qwack.Providers.CSV.CMEFileParser();
+            var z9 = new Qwack.Random.Constant.Constant();
+            var z10 = new Qwack.Serialization.SkipSerializationAttribute();
+            var z11 = Qwack.Storage.ObjectCategory.Asset;
+            var z12 = Qwack.Utils.Exceptions.ExceptionType.InvalidDataAlignment;
+
+            return "Qwack is warm";
         }
     }
 }

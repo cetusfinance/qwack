@@ -15,7 +15,7 @@ namespace Qwack.Excel.Cubes
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<CubeFunctions>();
 
-        [ExcelFunction(Description = "Displays a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCube))]
+        [ExcelFunction(Description = "Displays a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCube), IsThreadSafe = true)]
         public static object DisplayCube(
              [ExcelArgument(Description = "Cube name")] string ObjectName,
              [ExcelArgument(Description = "Pad output with whitespace beyond edges of result - defualt false")] object PaddedOutput)
@@ -55,7 +55,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Displays value of a cube object for given row", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCubeValueForRow))]
+        [ExcelFunction(Description = "Displays value of a cube object for given row", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(DisplayCubeValueForRow), IsThreadSafe = true)]
         public static object DisplayCubeValueForRow(
             [ExcelArgument(Description = "Cube name")] string ObjectName,
             [ExcelArgument(Description = "Row index, zero-based")] int RowIndex)
@@ -75,7 +75,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Creates a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CreateCube))]
+        [ExcelFunction(Description = "Creates a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CreateCube), IsThreadSafe = true)]
         public static object CreateCube(
              [ExcelArgument(Description = "Cube name")] string ObjectName,
              [ExcelArgument(Description = "Header range")] object[] Headers,
@@ -109,7 +109,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Creates a new cube object by aggregating another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(AggregateCube))]
+        [ExcelFunction(Description = "Creates a new cube object by aggregating another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(AggregateCube), IsThreadSafe = true)]
         public static object AggregateCube(
             [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
@@ -130,7 +130,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Creates a new cube object by filtering another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FilterCube))]
+        [ExcelFunction(Description = "Creates a new cube object by filtering another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FilterCube), IsThreadSafe = true)]
         public static object FilterCube(
            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
@@ -152,7 +152,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Creates a new cube object by sorting another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(SortCube))]
+        [ExcelFunction(Description = "Creates a new cube object by sorting another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(SortCube), IsThreadSafe = true)]
         public static object SortCube(
            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
@@ -172,7 +172,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Lists distinct values in a specified field for a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FieldValues))]
+        [ExcelFunction(Description = "Lists distinct values in a specified field for a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(FieldValues), IsThreadSafe = true)]
         public static object FieldValues(
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
             [ExcelArgument(Description = "Field name")] string FieldName)
@@ -188,7 +188,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Produces a matrix for two given fields from a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToMatrix))]
+        [ExcelFunction(Description = "Produces a matrix for two given fields from a given cube", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToMatrix), IsThreadSafe = true)]
         public static object CubeToMatrix(
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
             [ExcelArgument(Description = "Field name vertical")] string FieldNameV,
@@ -206,7 +206,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Writes contents of cube object to csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToCSV))]
+        [ExcelFunction(Description = "Writes contents of cube object to csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeToCSV), IsThreadSafe = true)]
         public static object CubeToCSV(
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,
             [ExcelArgument(Description = "Output filename")] string FileName)
@@ -222,7 +222,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Reads contents of cube object from csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeFromCSV))]
+        [ExcelFunction(Description = "Reads contents of cube object from csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeFromCSV), IsThreadSafe = true)]
         public static object CubeFromCSV(
             [ExcelArgument(Description = "Output cube name")] string ObjectName,
             [ExcelArgument(Description = "Input filename")] string FileName)
@@ -234,7 +234,7 @@ namespace Qwack.Excel.Cubes
             });
         }
 
-        [ExcelFunction(Description = "Creates a new cube, adding a bucketed time field", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(BucketTimeAxis))]
+        [ExcelFunction(Description = "Creates a new cube, adding a bucketed time field", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(BucketTimeAxis), IsThreadSafe = true)]
         public static object BucketTimeAxis(
             [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
             [ExcelArgument(Description = "Input cube name")] string InputObjectName,

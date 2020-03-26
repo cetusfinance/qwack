@@ -22,7 +22,7 @@ namespace Qwack.Excel.Curves
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<IRCurveFunctions>();
 
-        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromCCRates))]
+        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromCCRates), IsThreadSafe = true)]
         public static object CreateDiscountCurveFromCCRates(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Curve name")] object CurveName,
@@ -56,7 +56,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromRates))]
+        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromRates), IsThreadSafe = true)]
         public static object CreateDiscountCurveFromRates(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Curve name")] object CurveName,
@@ -93,7 +93,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromDFs))]
+        [ExcelFunction(Description = "Creates a discount curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateDiscountCurveFromDFs), IsThreadSafe = true)]
         public static object CreateDiscountCurveFromDFs(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Curve name")] object CurveName,
@@ -141,7 +141,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Gets a discount factor from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetDF))]
+        [ExcelFunction(Description = "Gets a discount factor from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetDF), IsThreadSafe = true)]
         public static object GetDF(
           [ExcelArgument(Description = "Curve object name")] string ObjectName,
           [ExcelArgument(Description = "Discount factor start date")] DateTime StartDate,
@@ -158,7 +158,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Gets a forward rate from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetForwardRate))]
+        [ExcelFunction(Description = "Gets a forward rate from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetForwardRate), IsThreadSafe = true)]
         public static object GetForwardRate(
             [ExcelArgument(Description = "Curve object name")] string ObjectName,
             [ExcelArgument(Description = "Rate start date")] DateTime StartDate,
@@ -192,7 +192,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Gets a forward fx rate from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetForwardFxRate))]
+        [ExcelFunction(Description = "Gets a forward fx rate from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetForwardFxRate), IsThreadSafe = true)]
         public static object GetForwardFxRate(
             [ExcelArgument(Description = "Funding model object name")] string ObjectName,
             [ExcelArgument(Description = "Settlement date")] DateTime SettleDate,
@@ -210,7 +210,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates and calibrates a funding model to a funding instrument collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModel))]
+        [ExcelFunction(Description = "Creates and calibrates a funding model to a funding instrument collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModel), IsThreadSafe = true)]
         public static object CreateFundingModel(
             [ExcelArgument(Description = "Funding model name")] string ObjectName,
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
@@ -274,7 +274,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModelFromCurves))]
+        [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModelFromCurves), IsThreadSafe = true)]
         public static object CreateFundingModelFromCurves(
            [ExcelArgument(Description = "Output funding model")] string ObjectName,
            [ExcelArgument(Description = "Build date")] DateTime BuildDate,
@@ -310,7 +310,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a new funding model by combining two others", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(MergeFundingModels))]
+        [ExcelFunction(Description = "Creates a new funding model by combining two others", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(MergeFundingModels), IsThreadSafe = true)]
         public static object MergeFundingModels(
            [ExcelArgument(Description = "Output funding model")] string ObjectName,
            [ExcelArgument(Description = "Funding model A")] string FundingModelA,
@@ -368,7 +368,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Lists curves in a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ListCurvesInModel))]
+        [ExcelFunction(Description = "Lists curves in a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ListCurvesInModel), IsThreadSafe = true)]
         public static object ListCurvesInModel(
           [ExcelArgument(Description = "Funding model name")] string FundingModelName)
         {
@@ -381,7 +381,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Extracts a curve from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ExtractCurveFromModel))]
+        [ExcelFunction(Description = "Extracts a curve from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ExtractCurveFromModel), IsThreadSafe = true)]
         public static object ExtractCurveFromModel(
            [ExcelArgument(Description = "Funding model name")] string FundingModelName,
            [ExcelArgument(Description = "Curve name")]  string CurveName,

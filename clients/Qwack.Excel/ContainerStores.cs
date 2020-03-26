@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace Qwack.Excel
         private const string _calendarJSONFile = "Calendars.json";
         private const string _futureSettingsFile = "futuresettings.json";
         private const string _currenciesFile = "currencies.json";
+
+        private static object _lock = new object();
+        private static object _sessionLock = new object();
 
         static ContainerStores()
         {
@@ -49,13 +53,29 @@ namespace Qwack.Excel
         }
 
         public static IServiceProvider GlobalContainer { get; internal set; }
-        public static IServiceProvider SessionContainer { get; set; }
+
+        private static IServiceProvider _sessionContainer;
+        public static IServiceProvider SessionContainer
+        {
+            get
+            {
+                lock (_sessionLock)
+                { return _sessionContainer; }
+            }
+            set
+            {
+                lock (_sessionLock)
+                {
+                    _sessionContainer = value;
+                }
+            }
+        }
         public static ICurrencyProvider CurrencyProvider => GlobalContainer.GetRequiredService<ICurrencyProvider>();
         public static ICalendarProvider CalendarProvider => GlobalContainer.GetRequiredService<ICalendarProvider>();
         public static IFutureSettingsProvider FuturesProvider => GlobalContainer.GetRequiredService<IFutureSettingsProvider>();
         public static ILogger GetLogger<T>() => GlobalContainer.GetRequiredService<ILoggerFactory>().CreateLogger<T>();
 
-        private static Dictionary<Type, IFlushable> _registeredTypes = new Dictionary<Type, IFlushable>();
+        private static ConcurrentDictionary<Type, IFlushable> _registeredTypes = new ConcurrentDictionary<Type, IFlushable>();
 
         public static IPnLAttributor PnLAttributor { get; set; }
 
@@ -74,19 +94,28 @@ namespace Qwack.Excel
 
         public static IObjectStore<T> GetObjectCache<T>()
         {
-            var os = SessionContainer.GetService<IObjectStore<T>>();
-            _registeredTypes[typeof(T)] = os;
-            return os;
+            lock (_lock)
+            {
+                var os = SessionContainer.GetService<IObjectStore<T>>();
+                _registeredTypes.AddOrUpdate(typeof(T), os, (x, y) => os);
+                return os;
+            }
         }
-        public static T GetObjectFromCache<T>(string name) => SessionContainer.GetService<IObjectStore<T>>().GetObject(name).Value;
+        public static T GetObjectFromCache<T>(string name)
+        {
+            lock (_lock)
+            {
+                return SessionContainer.GetService<IObjectStore<T>>().GetObject(name).Value;
+            }
+        }
         public static void PutObjectToCache<T>(string name, T obj) => GetObjectCache<T>().PutObject(name, new SessionItem<T> { Name = name, Value = obj, Version = 1 });
 
         public static void FlushCache<T>() => SessionContainer.GetService<IObjectStore<T>>().Clear();
         public static void FlushAllCaches()
         {
-            foreach (var t in _registeredTypes)
+            foreach (var t in _registeredTypes.Values.ToArray())
             {
-                t.Value.Clear();
+                t.Clear();
             }
         }
     }

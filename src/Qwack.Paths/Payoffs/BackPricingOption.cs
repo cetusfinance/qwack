@@ -39,8 +39,8 @@ namespace Qwack.Paths.Payoffs
 
         public IAssetFxModel VanillaModel { get; set; }
 
-        public BackPricingOption(string assetName, List<DateTime> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional)
-            :base(assetName,discountCurve,ccy,payDate,notional)
+        public BackPricingOption(string assetName, List<DateTime> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, Currency simulationCcy)
+            : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -89,8 +89,9 @@ namespace Qwack.Paths.Payoffs
                 var curve = VanillaModel.GetPriceCurve(_assetName);
                 var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
                 _expiryToSettleCarry = curve.GetPriceForDate(_payDate) - curve.GetPriceForDate(decisionSpotDate);
-            } 
+            }
 
+            SetupForCcyConversion(collection);
             _isComplete = true;
         }
 
@@ -126,7 +127,7 @@ namespace Qwack.Paths.Payoffs
                     var payoff = (_callPut == OptionType.C) ?
                             Vector.Max(new Vector<double>(0), setVec - avgVec) :
                             Vector.Max(new Vector<double>(0), avgVec - setVec);
-
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff * _notional;
                 }
@@ -146,7 +147,7 @@ namespace Qwack.Paths.Payoffs
                     var payoff = (_callPut == OptionType.C) ?
                             Vector.Max(new Vector<double>(0), setVec - avgVec) :
                             Vector.Max(new Vector<double>(0), avgVec - setVec);
-
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff * _notional;
                 }

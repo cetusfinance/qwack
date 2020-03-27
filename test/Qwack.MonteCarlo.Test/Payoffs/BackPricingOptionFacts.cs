@@ -15,7 +15,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
             var fc = GetFeatureCollection();
             var dates = Enumerable.Range(10, 10).Select(i => t.AddDays(i)).ToList();
             var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
-            var sut = new BackPricingOption("Asset", dates, dates[5], t.AddDays(100), t.AddDays(100), Core.Basic.OptionType.C, "boo", usd, 1.0);
+            var sut = new BackPricingOption("Asset", dates, dates[5], t.AddDays(100), t.AddDays(100), Core.Basic.OptionType.C, "boo", usd, 1.0, usd);
             var b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);

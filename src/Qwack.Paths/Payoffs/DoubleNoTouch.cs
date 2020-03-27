@@ -20,8 +20,8 @@ namespace Qwack.Paths.Payoffs
         private Vector<double> _barrierUpVec;
         private Vector<double> _barrierDownVec;
 
-        public DoubleNoTouch(string assetName, DateTime obsStart, DateTime obsEnd, double barrierDown, double barrierUp, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierType barrierType)
-         : base(assetName, discountCurve, ccy, payDate, notional)
+        public DoubleNoTouch(string assetName, DateTime obsStart, DateTime obsEnd, double barrierDown, double barrierUp, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierType barrierType, Currency simulationCcy)
+         : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _obsStart = obsStart;
             _obsEnd = obsEnd;
@@ -45,6 +45,7 @@ namespace Qwack.Paths.Payoffs
 
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
+            SetupForCcyConversion(collection);
             _isComplete = true;
         }
 
@@ -74,6 +75,7 @@ namespace Qwack.Paths.Payoffs
                 {
                     var barrierHit = Vector.BitwiseAnd(barrierDownHit, barrierUpHit);
                     var payoff = barrierHit * _notional;
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
                 }
@@ -81,6 +83,7 @@ namespace Qwack.Paths.Payoffs
                 {
                     var barrierHit = Vector.BitwiseAnd(Vector<double>.One - barrierDownHit, Vector<double>.One - barrierUpHit);
                     var payoff = barrierHit * _notional;
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
                 }

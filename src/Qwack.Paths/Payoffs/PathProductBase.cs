@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -25,10 +26,15 @@ namespace Qwack.Paths.Payoffs
         protected Vector<double> _zero = new Vector<double>(0.0);
         protected bool _isComplete;
 
+        protected bool _requiresConversionToSimCcy;
+        protected bool _requiresConversionToSimCcyInverted;
+        protected string _conversionToSimCcyName;
+        protected int _conversionToSimCcyIx;
+
         public virtual string RegressionKey => _assetName;
 
 
-        public PathProductBase(string assetName, string discountCurve, Currency ccy, DateTime payDate, double notional)
+        public PathProductBase(string assetName, string discountCurve, Currency ccy, DateTime payDate, double notional, Currency simulationCurrency)
         {
             _discountCurve = discountCurve;
             _ccy = ccy;
@@ -36,12 +42,20 @@ namespace Qwack.Paths.Payoffs
 
             _assetName = assetName;
             _notional = new Vector<double>(notional);
+            SimulationCcy = simulationCurrency;
+
+            _requiresConversionToSimCcy = SimulationCcy != _ccy;
+            if (_requiresConversionToSimCcy)
+            {
+                _conversionToSimCcyName = $"{SimulationCcy}/{_ccy}";
+            }
         }
 
         public bool IsComplete => _isComplete;
 
         public IAssetInstrument AssetInstrument { get; private set; }
 
+        public Currency SimulationCcy { get; private set; }
         public abstract void Finish(IFeatureCollection collection);
 
         public abstract void Process(IPathBlock block);
@@ -65,6 +79,36 @@ namespace Qwack.Paths.Payoffs
         }).StdDev();
 
 
+        internal void ConvertToSimCcyIfNeeded(IPathBlock block, int pathId, Vector<double> values, int payDateIndex)
+        {
+            if (_requiresConversionToSimCcy)
+            {
+                var stepsFxConv = block.GetStepsForFactor(pathId, _conversionToSimCcyIx);
+                if (_requiresConversionToSimCcyInverted)
+                    values *= stepsFxConv[payDateIndex];
+                else
+                    values /= stepsFxConv[payDateIndex];
+            }
+        }
+
+        internal void SetupForCcyConversion(IFeatureCollection collection)
+        {
+            if (_requiresConversionToSimCcy)
+            {
+                var dims = collection.GetFeature<IPathMappingFeature>();
+
+                _conversionToSimCcyIx = dims.GetDimension(_conversionToSimCcyName);
+                if (_conversionToSimCcyIx == -1)
+                {
+                    _conversionToSimCcyIx = dims.GetDimension($"{_conversionToSimCcyName.Substring(4, 3)}/{_conversionToSimCcyName.Substring(0, 3)}");
+                    if (_conversionToSimCcyIx == -1)
+                    {
+                        throw new Exception($"Unable to find process to convert currency from {_ccy} to {SimulationCcy}");
+                    }
+                    _requiresConversionToSimCcyInverted = true;
+                }
+            }
+        }
 
         public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
         {

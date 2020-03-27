@@ -15,7 +15,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
             var t = new DateTime(2019, 10, 03);
             var fc = GetFeatureCollection();
             var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
-            var sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 1.0, BarrierSide.Up, BarrierType.In);
+            var sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 1.0, BarrierSide.Up, BarrierType.In, usd);
             var b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);
@@ -27,7 +27,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
 
             Assert.True(sut.ResultsByPath.All(x => x == 0.0));
 
-            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Down, BarrierType.In);
+            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Down, BarrierType.In, usd);
             b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);
@@ -39,7 +39,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
 
             Assert.True(sut.ResultsByPath.All(x => x == 3.0));
 
-            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Down, BarrierType.Out);
+            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Down, BarrierType.Out, usd);
             b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);
@@ -52,7 +52,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
             Assert.True(sut.ResultsByPath.All(x => x == 0.0));
 
 
-            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Up, BarrierType.Out);
+            sut = new OneTouch("Asset", t, t.AddDays(100), 101, "boo", usd, t.AddDays(101), 3.0, BarrierSide.Up, BarrierType.Out, usd);
             b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);

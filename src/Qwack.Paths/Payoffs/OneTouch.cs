@@ -24,8 +24,8 @@ namespace Qwack.Paths.Payoffs
 
         private Vector<double> _barrierVec;
 
-        public OneTouch(string assetName, DateTime obsStart, DateTime obsEnd, double barrier, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierSide barrierSide, BarrierType barrierType)
-            : base(assetName, discountCurve, ccy, payDate, notional)
+        public OneTouch(string assetName, DateTime obsStart, DateTime obsEnd, double barrier, string discountCurve, Currency ccy, DateTime payDate, double notional, BarrierSide barrierSide, BarrierType barrierType, Currency simulationCcy)
+            : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _obsStart = obsStart;
             _obsEnd = obsEnd;
@@ -51,6 +51,7 @@ namespace Qwack.Paths.Payoffs
 
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
+            SetupForCcyConversion(collection);
             _isComplete = true;
         }
 
@@ -75,6 +76,7 @@ namespace Qwack.Paths.Payoffs
                     if (_barrierType == BarrierType.KI)
                     {
                         var payoff = -barrierHit * _notional;
+                        ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                         var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                         _results[resultIx] = payoff;
                     }
@@ -82,6 +84,7 @@ namespace Qwack.Paths.Payoffs
                     {
                         var didntHit = (new Vector<double>(1.0)) + barrierHit;
                         var payoff = didntHit * _notional;
+                        ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                         var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                         _results[resultIx] = payoff;
                     }
@@ -102,6 +105,7 @@ namespace Qwack.Paths.Payoffs
                     if (_barrierType == BarrierType.KI)
                     {
                         var payoff = barrierHit * _notional;
+                        ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                         var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                         _results[resultIx] = payoff;
                     }
@@ -109,6 +113,7 @@ namespace Qwack.Paths.Payoffs
                     {
                         var didntHit = (new Vector<double>(1.0)) + barrierHit;
                         var payoff = didntHit * _notional;
+                        ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
                         var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                         _results[resultIx] = payoff;
                     }

@@ -25,8 +25,8 @@ namespace Qwack.Paths.Payoffs
 
         public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
-        public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional)
-            : base(assetName, discountCurve, ccy, payDate, notional)
+        public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional, Currency simulationCcy)
+            : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _sampleDates = sampleDates;
             _callPut = callPut;
@@ -54,6 +54,8 @@ namespace Qwack.Paths.Payoffs
             var engine = collection.GetFeature<IEngineFeature>();
 
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
+
+            SetupForCcyConversion(collection);
             _isComplete = true;
         }
 
@@ -78,6 +80,8 @@ namespace Qwack.Paths.Payoffs
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
                     var payoff = (lastValue - minValue) * _notional;
 
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
+
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
                 }
@@ -98,6 +102,8 @@ namespace Qwack.Paths.Payoffs
                     }
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
                     var payoff = (maxValue - lastValue) * _notional;
+
+                    ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
 
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;

@@ -156,7 +156,7 @@ namespace Qwack.Models.MCModels
                 case EuropeanBarrierOption ebo:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new Paths.Payoffs.EuropeanBarrierOption(ebo.AssetId,ebo.BarrierObservationStartDate,ebo.BarrierObservationEndDate,ebo.ExpiryDate,ebo.CallPut,ebo.Strike,ebo.Barrier,ebo.DiscountCurve,ebo.Currency,ebo.PaymentDate,ebo.Notional,ebo.BarrierSide,ebo.BarrierType)
+                        new Paths.Payoffs.EuropeanBarrierOption(ebo.AssetId,ebo.BarrierObservationStartDate,ebo.BarrierObservationEndDate,ebo.ExpiryDate,ebo.CallPut,ebo.Strike,ebo.Barrier,ebo.DiscountCurve,ebo.Currency,ebo.PaymentDate,ebo.Notional,ebo.BarrierSide,ebo.BarrierType, SimulationCcy)
                     };
                     break;
                 case EuropeanOption eo:
@@ -175,14 +175,14 @@ namespace Qwack.Models.MCModels
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         new Paths.Payoffs.OneTouch(ot.AssetId,ot.BarrierObservationStartDate,ot.BarrierObservationEndDate
-                        ,ot.Barrier,ot.DiscountCurve,ot.Currency,ot.PaymentDate,ot.Notional,ot.BarrierSide,ot.BarrierType)
+                        ,ot.Barrier,ot.DiscountCurve,ot.Currency,ot.PaymentDate,ot.Notional,ot.BarrierSide,ot.BarrierType, SimulationCcy)
                     };
                     break;
                 case DoubleNoTouchOption dnt:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         new Paths.Payoffs.DoubleNoTouch(dnt.AssetId,dnt.BarrierObservationStartDate,dnt.BarrierObservationEndDate
-                        ,dnt.BarrierDown,dnt.BarrierUp,dnt.DiscountCurve,dnt.Currency,dnt.PaymentDate,dnt.Notional,dnt.BarrierType)
+                        ,dnt.BarrierDown,dnt.BarrierUp,dnt.DiscountCurve,dnt.Currency,dnt.PaymentDate,dnt.Notional,dnt.BarrierType, SimulationCcy)
                     };
                     break;
                 case Forward f:
@@ -218,11 +218,11 @@ namespace Qwack.Models.MCModels
                 case AsianLookbackOption alb:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional)
+                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional, SimulationCcy)
                     };
                     break;
                 case BackPricingOption bpo:
-                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional)
+                    var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional, SimulationCcy)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {

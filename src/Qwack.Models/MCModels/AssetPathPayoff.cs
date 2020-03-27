@@ -121,10 +121,6 @@ namespace Qwack.Models.MCModels
                     _optionType = ao.CallPut;
                     _fxType = ao.FxConversionType;
                     _ccy = ao.PaymentCurrency;
-                    if (_fxType == FxConversionType.None && simulationCcy != _ccy)
-                    {
-                        _fxType = FxConversionType.SettleOtherCurrency;
-                    }
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     _asianFxDates = ao.FxFixingDates?.ToList()??_asianDates;
                     _discountCurve = ao.DiscountCurve;
@@ -137,15 +133,7 @@ namespace Qwack.Models.MCModels
                     _optionType = OptionType.Swap;
                     _fxType = asw.FxConversionType;
                     _ccy = asw.PaymentCurrency;
-                    if (_fxType == FxConversionType.None && simulationCcy != _ccy)
-                    {
-                        _fxType = FxConversionType.SettleOtherCurrency;
-                        _fxName = _fxType == FxConversionType.None ? null : $"{asw.PaymentCurrency.Ccy}/{simulationCcy}";                        
-                    }
-                    else
-                    {
-                        _fxName = _fxType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
-                    }
+                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
                     _asianFxDates = asw.FxFixingDates?.ToList() ?? _asianDates;
                     _discountCurve = asw.DiscountCurve;
                     _payDate = asw.PaymentDate;
@@ -162,7 +150,7 @@ namespace Qwack.Models.MCModels
                     _discountCurve = fxeo.ForeignDiscountCurve;
                     _payDate = fxeo.DeliveryDate;
                     _ccy = fxeo.PaymentCurrency;
-                    _fxType = (simulationCcy != _ccy) ? FxConversionType.SettleOtherCurrency : FxConversionType.None;
+                    _fxType = FxConversionType.None;
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     break;
                 case EuropeanBarrierOption ebo:
@@ -178,10 +166,6 @@ namespace Qwack.Models.MCModels
                     _optionType = eo.CallPut;
                     _fxType = eo.FxConversionType;
                     _ccy = eo.PaymentCurrency;
-                    if (_fxType == FxConversionType.None && simulationCcy != _ccy)
-                    {
-                        _fxType = FxConversionType.SettleOtherCurrency;
-                    }
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     _asianFxDates = _asianDates;
                     _discountCurve = eo.DiscountCurve;
@@ -223,7 +207,7 @@ namespace Qwack.Models.MCModels
                     _discountCurve = fxf.ForeignDiscountCurve;
                     _payDate = fxf.DeliveryDate;
                     _ccy = fxf.PaymentCurrency;
-                    _fxType = (simulationCcy != _ccy) ? FxConversionType.SettleOtherCurrency : FxConversionType.None;
+                    _fxType = FxConversionType.None;
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     break;
                 case AsianBasisSwap abs:
@@ -460,9 +444,8 @@ namespace Qwack.Models.MCModels
 
         public double ResultStdError => ResultsByPath.StdDev();
 
-        public CashFlowSchedule ExpectedFlows(IAssetFxModel model, Currency repCcy=null)
+        public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
         {
-            var fxRate = repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
 
             if (_subInstruments != null)
             {
@@ -478,8 +461,8 @@ namespace Qwack.Models.MCModels
                 return o;
             }
 
-            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(repCcy);
-            var ar = AverageResult * fxRate;
+            var discountCurve = model.FundingModel.FxMatrix.GetDiscountCurve(SimulationCcy);
+            var ar = AverageResult;
             return new CashFlowSchedule
             {
                 Flows = new List<CashFlow>
@@ -488,7 +471,7 @@ namespace Qwack.Models.MCModels
                     {
                         Fv = ar,
                         Pv = ar * model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate,_payDate),
-                        Currency = _ccy,
+                        Currency = SimulationCcy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
                         NotionalByYearFraction = 1.0
@@ -497,10 +480,8 @@ namespace Qwack.Models.MCModels
             };
         }
 
-        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model, Currency repCcy = null)
+        public CashFlowSchedule[] ExpectedFlowsByPath(IAssetFxModel model)
         {
-            var fxRate = 1.0;//repCcy == null ? 1.0 : model.FundingModel.GetFxRate(_payDate, _ccy, repCcy);
-            
             if (_subInstruments != null)
             {
                 CashFlowSchedule[] o = null;
@@ -521,7 +502,7 @@ namespace Qwack.Models.MCModels
                 return o;
             }
 
-            var discountCurve = repCcy == null ? _discountCurve : model.FundingModel.FxMatrix.GetDiscountCurve(SimulationCcy);
+            var discountCurve = model.FundingModel.FxMatrix.GetDiscountCurve(SimulationCcy);
             var df = model.FundingModel.Curves[discountCurve].GetDf(model.BuildDate, _payDate);
 
             return ResultsByPath.Select(x => new CashFlowSchedule
@@ -530,9 +511,9 @@ namespace Qwack.Models.MCModels
                 {
                     new CashFlow
                     {
-                        Fv = x * fxRate,
-                        Pv = x * fxRate * df,
-                        Currency = _ccy,
+                        Fv = x,
+                        Pv = x * df,
+                        Currency = SimulationCcy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
                         NotionalByYearFraction = 1.0

@@ -429,9 +429,8 @@ namespace Qwack.Models.Models
 
 
             var vol = model.FundingModel.GetVolSurface(fxEuOpt.PairStr).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
-            var t = model.BuildDate.CalculateYearFraction(fxEuOpt.DeliveryDate, DayCountBasis.Act365F);
-            var rf = Log(1 / df) / t;
-            return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, rf, t, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity;
+            var tExp = model.BuildDate.CalculateYearFraction(fxEuOpt.ExpiryDate, DayCountBasis.Act365F);
+            return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, 0, tExp, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity * df;
         }
 
         public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model, bool ignoreTodayFlows)

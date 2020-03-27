@@ -170,13 +170,16 @@ namespace Qwack.Excel.Curves
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
                 var settings = ContainerStores.GetObjectCache<McSettings>()
-                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}")
+                    .Value.Clone();
+
+                settings.CreditSettings.Metric = BaseMetric.PV;
 
                 Currency ccy = null;
                 if (!(ReportingCcy is ExcelMissing))
                     ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy as string);
 
-                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings.Value, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, settings, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
 
                 var result = mc.PV(ccy);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);

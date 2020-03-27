@@ -605,22 +605,22 @@ namespace Qwack.Excel.Instruments
                 var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
 
                 BackPricingOption product;
-                if (PeriodCodeOrDates is object[,])
+                if (PeriodCodeOrDates is object[,] dateRange)
                 {
-                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    var dates = dateRange.ObjectRangeToVector<double>().ToDateTimeArray();
                     if (dates.Length == 2)
                         dates = new[] { dates[0], dates[1], dates[1] };
 
-                    if (PaymentOffsetOrDate is double)
-                        product = AssetProductFactory.CreateBackPricingOption(dates[0], dates[1], dates[2], AssetId, oType, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
+                    if (PaymentOffsetOrDate is double dateDouble)
+                        product = AssetProductFactory.CreateBackPricingOption(dates[0], dates[1], dates[2], AssetId, oType, fCal, DateTime.FromOADate(dateDouble), currency, TradeDirection.Long, sLag, Notional, dType);
                     else
                     {
                         product = AssetProductFactory.CreateBackPricingOption(dates[0], dates[1], dates[2], AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                     }
                 }
-                else if (PeriodCodeOrDates is double)
+                else if (PeriodCodeOrDates is double dateDouble)
                 {
-                    PeriodCodeOrDates = DateTime.FromOADate((double)PeriodCodeOrDates).ToString("MMM-yy");
+                    PeriodCodeOrDates = DateTime.FromOADate(dateDouble).ToString("MMM-yy");
                     product = AssetProductFactory.CreateBackPricingOption(PeriodCodeOrDates as string, AssetId, oType, fCal, pCal, pOffset, currency, TradeDirection.Long, sLag, Notional, dType);
                 }
                 else

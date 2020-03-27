@@ -244,6 +244,7 @@ namespace Qwack.Models.MCModels
                 }
             }
 
+            //fx pairs
             var pairsAdded = new List<string>();
             var fxPairs = portfolio.FxPairs(model).Concat(fxAssetsToAdd);
             var payoutCcys = portfolio.Instruments.Select(i => i.Currency);
@@ -595,7 +596,7 @@ namespace Qwack.Models.MCModels
                     case IAssetInstrument aIns:
                         tradeType = aIns.TradeType();
                         if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, aIns.Currency);
+                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, Settings.ReportingCurrency);
                         else
                             ccy = aIns.Currency.ToString();
                         break;

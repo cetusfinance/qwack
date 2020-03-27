@@ -65,8 +65,8 @@ namespace Qwack.Models.Risk
             var pfu = portfolio.UnWrapWrappers();
             var pf = pfu.UnStripStrips();
 
-            if (pf.AssetIds().Length != 1 || pf.FxPairs(model).Length != 0)
-                throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
+            //if (pf.AssetIds().Length != 1 || pf.FxPairs(model).Length != 0)
+            //    throw new Exception("Portfolio can only contain a single asset and no FX indices for approximate CVA");
 
             if (!pf.Instruments.All(x => x is AsianSwap))
                 throw new Exception("Approximate CVA only works for Asian Swap instruments");
@@ -108,7 +108,10 @@ namespace Qwack.Models.Risk
                    SpotLag = s.SpotLag,
                    SpotLagRollType = s.SpotLagRollType,
                    PortfolioName = s.PortfolioName,
-                   TradeId = s.TradeId ?? Guid.NewGuid().ToString()
+                   TradeId = s.TradeId ?? Guid.NewGuid().ToString(),
+                   FxConversionType = s.FxConversionType,
+                   FxFixingDates = s.FxFixingDates,
+                   FxFixingId = s.FxFixingId
                } as IInstrument).ToList()
             };
 

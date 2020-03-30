@@ -46,10 +46,10 @@ namespace Qwack.Paths.Processes
             _adjSurface = fxAdjustSurface;
             _correlation = fxAssetCorrelation;
 
-            if (volSurface is InverseFxSurface || _adjSurface?.AssetId == volSurface.AssetId)
+            if (volSurface is InverseFxSurface || (_adjSurface!=null && _adjSurface?.AssetId == volSurface.AssetId))
                 _siegelInvert = true;
 
-            if (_adjSurface?.AssetId == volSurface.AssetId)
+            if (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId)
                 _adjSurface = null;
         }
 

@@ -98,7 +98,7 @@ namespace Qwack.Models.Tests.MCModels
             
             for(var i=0;i< expiryTimes.Length;i++)
             {
-                Assert.Equal(expectedVols[i], vols[i],2);
+                Assert.Equal(expectedVols[i], vols[i], 1);
             }
         }
 

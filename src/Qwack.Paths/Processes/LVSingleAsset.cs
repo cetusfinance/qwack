@@ -10,6 +10,7 @@ using Qwack.Core.Basic;
 using System.Linq;
 using Qwack.Core.Models;
 using static System.Math;
+using System.ComponentModel.Design;
 
 namespace Qwack.Paths.Processes
 {
@@ -34,6 +35,8 @@ namespace Qwack.Paths.Processes
 
         private readonly Vector<double> _two = new Vector<double>(2.0);
 
+        private bool _siegelInvert;
+
         public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime,double> pastFixings=null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
@@ -46,6 +49,12 @@ namespace Qwack.Paths.Processes
 
             _adjSurface = fxAdjustSurface;
             _correlation = fxAssetCorrelation;
+
+            if (volSurface is InverseFxSurface || (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId))
+                _siegelInvert = true;
+
+            if (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId)
+                _adjSurface = null;
         }
 
         public bool IsComplete => _isComplete;
@@ -120,19 +129,40 @@ namespace Qwack.Paths.Processes
                     c++;
                 }
                 steps[c] = previousStep;
-                for (var step = c+1; step < block.NumberOfSteps; step++)
+
+                if (_siegelInvert)
                 {
-                    var W = steps[step];
-                    var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                    var vols = new double[Vector<double>.Count];
-                    for (var s = 0; s < vols.Length; s++)
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
                     {
-                        vols[s] = Sqrt(Max(0, _lvInterps[step - 1].Interpolate(previousStep[s])));
+                        var W = steps[step];
+                        var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                        var vols = new double[Vector<double>.Count];
+                        for (var s = 0; s < vols.Length; s++)
+                        {
+                            vols[s] = Sqrt(Max(0, _lvInterps[step - 1].Interpolate(previousStep[s])));
+                        }
+                        var volVec = new Vector<double>(vols);
+                        var bm = (_drifts[step] + volVec * volVec / _two) * dt + (volVec * _timesteps.TimeStepsSqrt[step] * W);
+                        previousStep *= bm.Exp();
+                        steps[step] = previousStep;
                     }
-                    var volVec = new Vector<double>(vols); 
-                    var bm = (_drifts[step] - volVec * volVec / _two) * dt + (volVec * _timesteps.TimeStepsSqrt[step] * W);
-                    previousStep *= bm.Exp();
-                    steps[step] = previousStep;
+                }
+                else
+                {
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
+                    {
+                        var W = steps[step];
+                        var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                        var vols = new double[Vector<double>.Count];
+                        for (var s = 0; s < vols.Length; s++)
+                        {
+                            vols[s] = Sqrt(Max(0, _lvInterps[step - 1].Interpolate(previousStep[s])));
+                        }
+                        var volVec = new Vector<double>(vols);
+                        var bm = (_drifts[step] - volVec * volVec / _two) * dt + (volVec * _timesteps.TimeStepsSqrt[step] * W);
+                        previousStep *= bm.Exp();
+                        steps[step] = previousStep;
+                    }
                 }
             }
         }

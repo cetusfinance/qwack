@@ -27,7 +27,7 @@ namespace Qwack.MonteCarlo.Test
             engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
             {
                  UseNormalInverse = true,
-                 UseAnthithetic = true
+                 UseAnthithetic = false
             });
             var volSurface = new ConstantVolSurface(origin, 0.32);
             var fwdCurve = new Func<double, double>(t => { return 900 + 100*t; });
@@ -37,7 +37,7 @@ namespace Qwack.MonteCarlo.Test
                     expiryDate: origin.AddYears(1),
                     volSurface: volSurface,
                     forwardCurve: fwdCurve,
-                    nTimeSteps: IsCoverageOnly ? 1 : 365,
+                    nTimeSteps: IsCoverageOnly ? 1 : 10,
                     name: "TestAsset"
                 );
             engine.AddPathProcess(asset);

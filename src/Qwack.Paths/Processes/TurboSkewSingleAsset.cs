@@ -38,6 +38,8 @@ namespace Qwack.Paths.Processes
 
         private IInterpolator1D[] _invCdfs;
 
+        private bool _siegelInvert;
+
         public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
         {
             _surface = volSurface;
@@ -50,6 +52,12 @@ namespace Qwack.Paths.Processes
 
             _adjSurface = fxAdjustSurface;
             _correlation = fxAssetCorrelation;
+
+            if (volSurface is InverseFxSurface || (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId))
+                _siegelInvert = true;
+
+            if (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId)
+                _adjSurface = null;
         }
 
         public bool IsComplete => _isComplete;
@@ -107,29 +115,60 @@ namespace Qwack.Paths.Processes
                     c++;
                 }
                 steps[c] = previousStep;
-                for (var step = c + 1; step < block.NumberOfSteps; step++)
-                {
-                    var W = steps[step];
-                    var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                    var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
-                    previousStep *= bm.Exp();
-                    steps[step] = previousStep;
-                }
 
-                //transform
-                for (var step = c + 1; step < block.NumberOfSteps; step++)
+                if (_siegelInvert)
                 {
-                    var ws = new double[Vector<double>.Count];
-                    for(var v=0;v< ws.Length; v++)
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
                     {
-                        var t1 = Log(steps[step][v]/ _spot0);
-                        var t2 = (_spotDrifts[step] - _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
-                        t1 -= t2;
-                        t1 /= _spotVols[step] * _spotTimesSqrt[step];
-                        t1 = Statistics.NormSDist(t1);
-                        ws[v] = _invCdfs[step].Interpolate(t1);
+                        var W = steps[step];
+                        var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                        var bm = (_drifts[step] + _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
+                        previousStep *= bm.Exp();
+                        steps[step] = previousStep;
                     }
-                    steps[step] = new Vector<double>(ws);
+
+                    //transform
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
+                    {
+                        var ws = new double[Vector<double>.Count];
+                        for (var v = 0; v < ws.Length; v++)
+                        {
+                            var t1 = Log(steps[step][v] / _spot0);
+                            var t2 = (_spotDrifts[step] + _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
+                            t1 -= t2;
+                            t1 /= _spotVols[step] * _spotTimesSqrt[step];
+                            t1 = Statistics.NormSDist(t1);
+                            ws[v] = _invCdfs[step].Interpolate(t1);
+                        }
+                        steps[step] = new Vector<double>(ws);
+                    }
+                }
+                else
+                {
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
+                    {
+                        var W = steps[step];
+                        var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                        var bm = (_drifts[step] - _vols[step] * _vols[step] / 2.0) * dt + (_vols[step] * _timesteps.TimeStepsSqrt[step] * W);
+                        previousStep *= bm.Exp();
+                        steps[step] = previousStep;
+                    }
+
+                    //transform
+                    for (var step = c + 1; step < block.NumberOfSteps; step++)
+                    {
+                        var ws = new double[Vector<double>.Count];
+                        for (var v = 0; v < ws.Length; v++)
+                        {
+                            var t1 = Log(steps[step][v] / _spot0);
+                            var t2 = (_spotDrifts[step] - _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
+                            t1 -= t2;
+                            t1 /= _spotVols[step] * _spotTimesSqrt[step];
+                            t1 = Statistics.NormSDist(t1);
+                            ws[v] = _invCdfs[step].Interpolate(t1);
+                        }
+                        steps[step] = new Vector<double>(ws);
+                    }
                 }
             }
         }

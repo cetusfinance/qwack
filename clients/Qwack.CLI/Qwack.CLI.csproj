@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Calendars.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Calendars.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="15.0.3" />
+    <PackageReference Include="Utility.CommandLine.Arguments" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
+  </ItemGroup>
+
+</Project>

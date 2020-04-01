@@ -99,7 +99,7 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Solves strike for a target RoC", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(SolveStrikeForTargetRoC))]
+        [ExcelFunction(Description = "Solves strike for a target RoC", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(SolveStrikeForTargetRoC), IsThreadSafe = false)]
         public static object SolveStrikeForTargetRoC(
           [ExcelArgument(Description = "Hazzard curve")] string HazzardCurveName,
           [ExcelArgument(Description = "Discount curve")] string DiscountCurve,

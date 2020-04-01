@@ -550,7 +550,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a new fx pair definition", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxPair))]
+        [ExcelFunction(Description = "Creates a new fx pair definition", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFxPair), IsVolatile = true)]
         public static object CreateFxPair(
               [ExcelArgument(Description = "Fx pair name")] string ObjectName,
               [ExcelArgument(Description = "Domestic currency")] string DomesticCurrency,

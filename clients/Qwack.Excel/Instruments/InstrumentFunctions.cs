@@ -25,7 +25,7 @@ namespace Qwack.Excel.Instruments
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<InstrumentFunctions>();
 
-        [ExcelFunction(Description = "Creates an asian swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an asian swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap), IsThreadSafe = false)]
         public static object CreateAsianSwap(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
@@ -38,7 +38,9 @@ namespace Qwack.Excel.Instruments
             [ExcelArgument(Description = "Payment offset or date")] object PaymentOffsetOrDate,
             [ExcelArgument(Description = "Spot lag")] object SpotLag,
             [ExcelArgument(Description = "Fixing date generation type")] object DateGenerationType,
-            [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Fx conversion type, default ATC")] object FxConversionType)
+
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -47,6 +49,7 @@ namespace Qwack.Excel.Instruments
                 var spotLag = SpotLag.OptionalExcel("0b");
                 var dGenType = DateGenerationType.OptionalExcel("BusinessDays");
                 var paymentOffset = PaymentOffsetOrDate is double ? "0b" : PaymentOffsetOrDate.OptionalExcel("0b");
+                var fxConv = FxConversionType.OptionalExcel("ATC");
 
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCal, out var fCal))
                 {
@@ -65,11 +68,15 @@ namespace Qwack.Excel.Instruments
                     return $"Could not parse date generation type - {dGenType}";
                 }
                 var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+                if (!Enum.TryParse(fxConv, out FxConversionType fxType))
+                {
+                    return $"Could not parse fx conversion type - {fxConv}";
+                }
 
                 AsianSwap product;
-                if (PeriodCodeOrDates is object[,])
+                if (PeriodCodeOrDates is object[,] v)
                 {
-                    var dates = ((object[,])PeriodCodeOrDates).ObjectRangeToVector<double>().ToDateTimeArray();
+                    var dates = v.ObjectRangeToVector<double>().ToDateTimeArray();
                     if (PaymentOffsetOrDate is double)
                         product = AssetProductFactory.CreateTermAsianSwap(dates[0], dates[1], Strike, AssetId, fCal, DateTime.FromOADate((double)PaymentOffsetOrDate), currency, TradeDirection.Long, sLag, Notional, dType);
                     else
@@ -85,12 +92,13 @@ namespace Qwack.Excel.Instruments
 
                 product.TradeId = ObjectName;
                 product.DiscountCurve = DiscountCurve;
+                product.FxConversionType = fxType;
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
 
-        [ExcelFunction(Description = "Creates an asian crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianCrackDiffSwap), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an asian crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianCrackDiffSwap), IsThreadSafe = false)]
         public static object CreateAsianCrackDiffSwap(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Period code")] object PeriodCode,
@@ -159,7 +167,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a futures crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureCrackDiffSwap), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a futures crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureCrackDiffSwap), IsThreadSafe = false)]
         public static object CreateFutureCrackDiffSwap(
          [ExcelArgument(Description = "Object name")] string ObjectName,
          [ExcelArgument(Description = "Pay future code")] string PayFuture,
@@ -190,7 +198,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a commodity future position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFuture), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a commodity future position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFuture), IsThreadSafe = false)]
         public static object CreateFuture(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
@@ -223,7 +231,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a commodity futures option position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a commodity futures option position", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureOption), IsThreadSafe = false)]
         public static object CreateFutureOption(
           [ExcelArgument(Description = "Object name")] string ObjectName,
           [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
@@ -270,7 +278,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a monthly-settled asian swap", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMonthlyAsianSwap), IsThreadSafe = false)]
         public static object CreateMonthlyAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Period code or dates")] object PeriodCodeOrDates,
@@ -335,7 +343,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an asian swap with custom pricing periods", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateCustomAsianSwap), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an asian swap with custom pricing periods", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateCustomAsianSwap), IsThreadSafe = false)]
         public static object CreateCustomAsianSwap(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Period dates")] object PeriodDates,
@@ -413,7 +421,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an asian option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an asian option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianOption), IsThreadSafe = false)]
         public static object CreateAsianOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
@@ -486,7 +494,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an asian lookback option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianLookbackOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an asian lookback option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianLookbackOption), IsThreadSafe = false)]
         public static object CreateAsianLookbackOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
@@ -558,7 +566,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a backpricing option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateBackPricingOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a backpricing option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateBackPricingOption), IsThreadSafe = false)]
         public static object CreateBackPricingOption(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
@@ -633,7 +641,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a multi-period backpricing option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMultiPeriodBackPricingOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a multi-period backpricing option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateMultiPeriodBackPricingOption), IsThreadSafe = false)]
         public static object CreateMultiPeriodBackPricingOption(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Period dates array")] object PeriodDates,
@@ -686,7 +694,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a european option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAmericanBarrierOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a european option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAmericanBarrierOption), IsThreadSafe = false)]
         public static object CreateAmericanBarrierOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -758,7 +766,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a one-touch/no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOneTouchOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a one-touch/no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateOneTouchOption), IsThreadSafe = false)]
         public static object CreateOneTouchOption(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -820,7 +828,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a double-no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateDoubleNoTouchOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a double-no-touch option with a continuous american barrier", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateDoubleNoTouchOption), IsThreadSafe = false)]
         public static object CreateDoubleNoTouchOption(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -877,7 +885,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an european option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an european option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanOption), IsThreadSafe = false)]
         public static object CreateEuropeanOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
@@ -933,7 +941,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates an european fx option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanFxOption), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates an european fx option", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEuropeanFxOption), IsThreadSafe = false)]
         public static object CreateEuropeanFxOption(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Expiry date")] DateTime ExpiryDate,
@@ -983,7 +991,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns par rate of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductParRate), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns par rate of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductParRate), IsThreadSafe = false)]
         public static object ProductParRate(
            [ExcelArgument(Description = "Trade object name")] string TradeName,
            [ExcelArgument(Description = "Asset-FX model name")] string ModelName)
@@ -1007,7 +1015,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns PV of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductPV), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns PV of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductPV), IsThreadSafe = false)]
         public static object ProductPV(
             [ExcelArgument(Description = "Trade object name")] string TradeName,
             [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
@@ -1036,7 +1044,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioPV), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioPV), IsThreadSafe = false)]
         public static object AssetPortfolioPV(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -1060,7 +1068,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns expected cashflows of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioExpectedFlows), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns expected cashflows of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioExpectedFlows), IsThreadSafe = false)]
         public static object AssetPortfolioExpectedFlows(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -1077,7 +1085,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Performs PnL attribution between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Performs PnL attribution between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttribution), IsThreadSafe = false)]
         public static object AssetPnLAttribution(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -1099,7 +1107,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Performs PnL attribution/explain between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttributionExplain), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Performs PnL attribution/explain between two AssetFx models", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttributionExplain), IsThreadSafe = false)]
         public static object AssetPnLAttributionExplain(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
@@ -1124,7 +1132,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Performs PnL attribution/explain between two AssetFx models, computing activity PnL", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttributionExplainWithActivity), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Performs PnL attribution/explain between two AssetFx models, computing activity PnL", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPnLAttributionExplainWithActivity), IsThreadSafe = false)]
         public static object AssetPnLAttributionExplainWithActivity(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Starting portolio object name")] string PortfolioStartName,
@@ -1150,7 +1158,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio), IsThreadSafe = false)]
         public static object CreatePortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Instruments")] object[,] Instruments)
@@ -1165,7 +1173,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolio), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolio), IsThreadSafe = false)]
         public static object FilterPortfolio(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
             [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
@@ -1192,7 +1200,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolioByName), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolioByName), IsThreadSafe = false)]
         public static object FilterPortfolioByName(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
             [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
@@ -1216,7 +1224,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolioByDate), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Returns a subset of trades from a portfolio object", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(FilterPortfolioByDate), IsThreadSafe = false)]
         public static object FilterPortfolioByDate(
             [ExcelArgument(Description = "Output object name")] string ObjectName,
             [ExcelArgument(Description = "Input portfolio object name")] string PortfolioName,
@@ -1233,7 +1241,7 @@ namespace Qwack.Excel.Instruments
             });
         }
 
-        [ExcelFunction(Description = "Displays a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(DisplayPortfolio), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Displays a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(DisplayPortfolio), IsThreadSafe = false)]
         public static object DisplayPortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName)
         {

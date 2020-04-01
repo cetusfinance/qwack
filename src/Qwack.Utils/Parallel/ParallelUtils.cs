@@ -11,10 +11,27 @@ namespace Qwack.Utils.Parallel
 {
     public sealed class ParallelUtils
     {
-        private static readonly Lazy<ParallelUtils> lazy =
-            new Lazy<ParallelUtils>(() => new ParallelUtils());
+        private static object _lock = new object();
+        private static ParallelUtils _instance;
+        public static ParallelUtils Instance
+        {
+            get
+            {
+                if(_instance==null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new ParallelUtils();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
+            
 
-        public static ParallelUtils Instance => lazy.Value;
 
         private static readonly int numThreads = Environment.ProcessorCount;
 

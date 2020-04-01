@@ -14,7 +14,7 @@ namespace Qwack.Excel.Utils
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
-        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils")]
+        [ExcelFunction(Description = "Returns current date and time", Category = "QUtils", IsVolatile = true)]
         public static object QUtils_Now()
         {
             return DateTime.Now.ToString("s");
@@ -367,8 +367,8 @@ namespace Qwack.Excel.Utils
             var z9 = new Qwack.Random.Constant.Constant();
             var z10 = new Qwack.Serialization.SkipSerializationAttribute();
             var z11 = Qwack.Storage.ObjectCategory.Asset;
-            var z12 = Qwack.Utils.Exceptions.ExceptionType.InvalidDataAlignment;
-
+            var z13 = Qwack.Math.Interpolation.Interpolator1DType.CubicSpline;
+            var z14 = Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded;
             return "Qwack is warm";
         }
     }

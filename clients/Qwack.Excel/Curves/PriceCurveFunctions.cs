@@ -25,7 +25,7 @@ namespace Qwack.Excel.Curves
     {
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<PriceCurveFunctions>();
 
-        [ExcelFunction(Description = "Creates a price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreatePriceCurve), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreatePriceCurve), IsThreadSafe = false)]
         public static object CreatePriceCurve(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -75,7 +75,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a contango price curve for precious metals", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateContangoPriceCurve), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a contango price curve for precious metals", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateContangoPriceCurve), IsThreadSafe = false)]
         public static object CreateContangoPriceCurve(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -104,7 +104,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a sparse price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurve), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a sparse price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurve), IsThreadSafe = false)]
         public static object CreateSparsePriceCurve(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -131,7 +131,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a sparse price curve from swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurveFromSwaps), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a sparse price curve from swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateSparsePriceCurveFromSwaps), IsThreadSafe = false)]
         public static object CreateSparsePriceCurveFromSwaps(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -169,7 +169,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a price curve from basis swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreatePriceCurveFromBasisSwaps), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a price curve from basis swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreatePriceCurveFromBasisSwaps), IsThreadSafe = false)]
         public static object CreatePriceCurveFromBasisSwaps(
           [ExcelArgument(Description = "Object name")] string ObjectName,
           [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -216,7 +216,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a price curve from basis swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateBasisPriceCurve), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a price curve from basis swap objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateBasisPriceCurve), IsThreadSafe = false)]
         public static object CreateBasisPriceCurve(
           [ExcelArgument(Description = "Object name")] string ObjectName,
           [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -269,7 +269,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Queries a price curve for a price for a give date", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetPrice), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Queries a price curve for a price for a give date", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetPrice), IsThreadSafe = false)]
         public static object GetPrice(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Price date")] DateTime Date)
@@ -285,7 +285,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Queries a price curve for an average price for give dates", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetAveragePrice), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Queries a price curve for an average price for give dates", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetAveragePrice), IsThreadSafe = false)]
         public static object GetAveragePrice(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Price dates")] double[] Dates)
@@ -301,7 +301,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a new Asset-FX model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateAssetFxModel), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a new Asset-FX model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateAssetFxModel), IsThreadSafe = false)]
         public static object CreateAssetFxModel(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Build date")] DateTime BuildDate,
@@ -337,7 +337,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionary), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionary), IsThreadSafe = false)]
         public static object CreateFixingDictionary(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -368,7 +368,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryFromVectors), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryFromVectors), IsThreadSafe = false)]
         public static object CreateFixingDictionaryFromVectors(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -403,7 +403,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a fixing dictionary for a rolling futures index", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryForRollingFuture), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a fixing dictionary for a rolling futures index", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFixingDictionaryForRollingFuture), IsThreadSafe = false)]
         public static object CreateFixingDictionaryForRollingFuture(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -438,7 +438,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Display contents of a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(DisplayFixingDictionary), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Display contents of a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(DisplayFixingDictionary), IsThreadSafe = false)]
         public static object DisplayFixingDictionary(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Optional - fixing date")] object FixingDate,
@@ -481,7 +481,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a correlation matrix", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrix), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a correlation matrix", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrix), IsThreadSafe = false)]
         public static object CreateCorrelationMatrix(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Labels X")] object[] LabelsX,
@@ -496,7 +496,7 @@ namespace Qwack.Excel.Curves
         }
 
 
-        [ExcelFunction(Description = "Creates a correlation matrix/time vector", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationTimeVecvtor), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Creates a correlation matrix/time vector", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationTimeVecvtor), IsThreadSafe = false)]
         public static object CreateCorrelationTimeVecvtor(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Label A")] string LabelA,
@@ -515,7 +515,7 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Bends a spread curve to a sparse set of updated spreads", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(BendCurve), IsThreadSafe = true)]
+        [ExcelFunction(Description = "Bends a spread curve to a sparse set of updated spreads", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(BendCurve), IsThreadSafe = false)]
         public static object BendCurve(
             [ExcelArgument(Description = "Input spreads")] double[] InputSpreads,
             [ExcelArgument(Description = "Sparse new spreads")] object[] SparseNewSpreads)

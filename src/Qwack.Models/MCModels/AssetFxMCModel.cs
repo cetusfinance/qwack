@@ -139,7 +139,7 @@ namespace Qwack.Models.MCModels
                     fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict.GetFixing(x))
                     : new Dictionary<DateTime, double>();
                 var futuresSim = settings.ExpensiveFuturesSimulation &&
-                   (model.GetPriceCurve(assetId).CurveType == PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == Core.Curves.PriceCurveType.NYMEX);
+                   (model.GetPriceCurve(assetId).CurveType == PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == PriceCurveType.NYMEX);
                 if (futuresSim)
                 {
                     var fwdCurve = new Func<DateTime, double>(t =>

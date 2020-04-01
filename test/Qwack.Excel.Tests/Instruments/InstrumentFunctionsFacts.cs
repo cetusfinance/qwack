@@ -25,22 +25,22 @@ namespace Qwack.Excel.Tests.Instruments
         public void CreateAsianSwapFact()
         {
             Assert.Equal("Calendar xxx not found in cache",
-                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "xxx", "xxx", "2z", "2f", Value, "disco"));
+                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "xxx", "xxx", "2z", "2f", Value, "disco", Value));
 
             Assert.Equal("Calendar xxx not found in cache",
-                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "xxx", "2z", "2f", Value, "disco"));
+                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "xxx", "2z", "2f", Value, "disco", Value));
 
             Assert.Equal("Could not parse date generation type - sqw",
-                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "sqw", "disco"));
+                InstrumentFunctions.CreateAsianSwap("swp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "sqw", "disco", Value));
 
             Assert.Equal("swppp¬0",
-                InstrumentFunctions.CreateAsianSwap("swppp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
+                InstrumentFunctions.CreateAsianSwap("swppp", "Jan-19", "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value));
 
             Assert.Equal("swppq¬0",
-                InstrumentFunctions.CreateAsianSwap("swppq", DateTime.Today.ToOADate(), "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco"));
+                InstrumentFunctions.CreateAsianSwap("swppq", DateTime.Today.ToOADate(), "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value));
 
             Assert.Equal("swppz¬0",
-                InstrumentFunctions.CreateAsianSwap("swppz", new object[,] { { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() } }, "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "BusinessDays", "disco"));
+                InstrumentFunctions.CreateAsianSwap("swppz", new object[,] { { DateTime.Today.ToOADate(), DateTime.Today.AddDays(100).ToOADate() } }, "xx", "ZAR", 0.0, 0.0, "NYC", "NYC", "2b", "2b", "BusinessDays", "disco", Value));
         }
 
         [Fact]
@@ -273,7 +273,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void ProductParRateFact()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var irs = new Mock<IrSwap>();
             ContainerStores.GetObjectCache<IrSwap>().PutObject("prodIRS", new SessionItem<IrSwap>() { Name = "prodIRS", Value = irs.Object });
@@ -302,7 +302,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void ProductPVFact()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var irs = new Mock<IrSwap>();
             ContainerStores.GetObjectCache<IrSwap>().PutObject("prodIRS", new SessionItem<IrSwap>() { Name = "prodIRS", Value = irs.Object });
@@ -331,7 +331,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void PortfolioPVFact()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var model = new Mock<IAssetFxModel>();
             model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
@@ -357,7 +357,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void AssetPnLAttributionFacts()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var model = new Mock<IAssetFxModel>();
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });
@@ -386,7 +386,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void AssetPnLAttributionExplainFacts()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var model = new Mock<IAssetFxModel>();
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });
@@ -420,7 +420,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void AssetPnLAttributionExplainWithActivityFacts()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
 
             var model = new Mock<IAssetFxModel>();
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });
@@ -452,7 +452,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void FilterPortfolioFacts()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
             InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } });
 
             Assert.Equal("Portfolio hhhh not found",
@@ -465,7 +465,7 @@ namespace Qwack.Excel.Tests.Instruments
         [Fact]
         public void FilterPortfolioByNameFacts()
         {
-            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco");
+            InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
             InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } });
 
             Assert.Equal("Portfolio hhhh not found",

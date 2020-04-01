@@ -35,16 +35,49 @@ namespace Qwack.Utils.Parallel
 
         private static readonly int numThreads = Environment.ProcessorCount;
 
-        private SemaphoreSlim _slimLock = new SemaphoreSlim(numThreads, numThreads);
-
         private ParallelUtils()
         {
+            for(var i = 0; i < numThreads;i++)
+            {
+                var thread = new Thread(ThreadStart);
+                thread.IsBackground = true;
+                thread.Name = $"ParallelUtilsThread{i}";
+                thread.Start();
+            }
+        }
 
+        private void ThreadStart()
+        {
+            foreach(var item in _taskQueue.GetConsumingEnumerable())
+            {
+                if (item.TaskCompletion != null)
+                {
+                    try
+                    {
+                        item.Action();
+                        item.TaskCompletion.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        item.TaskCompletion.SetException(ex);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        item.TaskToRun.RunSynchronously();
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
         }
 
         public bool MultiThreaded { get; set; } = true;
 
-        private BlockingCollection<Task> _taskQueue = new BlockingCollection<Task>();
+        private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>(numThreads);
 
         public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
@@ -55,6 +88,13 @@ namespace Qwack.Utils.Parallel
             }
 
             await RunOptimistically(values, code);
+        }
+
+        private struct WorkItem
+        {
+            public Action Action;
+            public TaskCompletionSource<bool> TaskCompletion;
+            public Task TaskToRun;
         }
 
         public async Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
@@ -69,7 +109,7 @@ namespace Qwack.Utils.Parallel
         private static void RunInSeries<T>(IList<T> values, Action<T> code)
         {
             foreach (var v in values)
-                code.Invoke(v);
+                code(v);
 
         }
 
@@ -78,14 +118,18 @@ namespace Qwack.Utils.Parallel
             var taskList = new List<Task>();
             foreach (var v in values)
             {
-                if (_slimLock.Wait(0))
+                var tcs = new TaskCompletionSource<bool>();
+                var task = tcs.Task;
+                Action action = () => code(v);
+                var workItem = new WorkItem() { Action = action, TaskCompletion = tcs };
+                if (_taskQueue.TryAdd(workItem))
                 {
-                    var t = RunOnThread(v, code);
-                    taskList.Add(t);
-                    t.Start();
+                    taskList.Add(tcs.Task);
                 }
                 else
-                    code.Invoke(v);
+                {
+                    action();
+                }
             }
 
             try
@@ -104,33 +148,16 @@ namespace Qwack.Utils.Parallel
             var taskList = new List<Task>();
             foreach (var t in tasks)
             {
-                if (MultiThreaded && _slimLock.Wait(0))
+                var workItem = new WorkItem() { TaskToRun = t };
+                if (MultiThreaded && _taskQueue.TryAdd(workItem))
                 {
-                    taskList.Add(t.ContinueWith((t1) => _slimLock.Release(),TaskContinuationOptions.ExecuteSynchronously));
-                    t.Start();
+                    taskList.Add(t);
                 }
                 else
                     t.RunSynchronously();
             }
 
             await Task.WhenAll(taskList.ToArray());
-        }
-
-        private Task RunOnThread<T>(T value, Action<T> code)
-        {
-            var task = new Task(() =>
-            {
-                try
-                {
-                    code.Invoke(value);
-                }
-                finally
-                {
-                    _slimLock.Release();
-                }
-            });
-
-            return task;
         }
     }
 }

@@ -96,8 +96,8 @@ namespace Qwack.Utils.Parallel
 
         public bool MultiThreaded { get; set; } = true;
 
-        private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>(numThreads);
-        private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>(numThreads);
+        private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>();
+        private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>();
 
         public Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {

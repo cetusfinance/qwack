@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-
-using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 
 namespace Qwack.Utils.Parallel
 {
-    public sealed class ParallelUtils
+    public sealed class ParallelUtils : IDisposable
     {
         private static object _lock = new object();
         private static ParallelUtils _instance;
@@ -79,15 +77,15 @@ namespace Qwack.Utils.Parallel
 
         private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>(numThreads);
 
-        public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
+        public Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
-            if (overrideMTFlag || !MultiThreaded)
+            if (overrideMTFlag || !MultiThreaded  || (!string.IsNullOrEmpty(Thread.CurrentThread.Name) && Thread.CurrentThread.Name.StartsWith("ParallelUtilsThread")))
             {
                 RunInSeries(values, code);
-                return;
+                return Task.CompletedTask;
             }
 
-            await RunOptimistically(values, code);
+            return RunOptimistically(values, code);
         }
 
         private struct WorkItem
@@ -97,13 +95,13 @@ namespace Qwack.Utils.Parallel
             public Task TaskToRun;
         }
 
-        public async Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
+        public Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)
         {
             var sequence = new List<int>();
             for (var v = startInclusive; v < endExclusive; v += step)
                 sequence.Add(v);
 
-            await Foreach(sequence, code, overrideMTFlag);
+            return Foreach(sequence, code, overrideMTFlag);
         }
 
         private static void RunInSeries<T>(IList<T> values, Action<T> code)
@@ -158,6 +156,11 @@ namespace Qwack.Utils.Parallel
             }
 
             await Task.WhenAll(taskList.ToArray());
+        }
+
+        public void Dispose()
+        {
+            _taskQueue.CompleteAdding();
         }
     }
 }

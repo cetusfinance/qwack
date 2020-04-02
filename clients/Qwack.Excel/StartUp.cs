@@ -6,7 +6,7 @@ namespace Qwack.Excel
     {
         public void AutoClose()
         {
-            
+            Qwack.Utils.Parallel.ParallelUtils.Instance.Dispose();
         }
 
         public void AutoOpen()

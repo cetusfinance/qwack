@@ -28,5 +28,7 @@ namespace Qwack.Options
         public double dLogP0dt(double T) => (Log(P0(T + _tBump / 2.0)) - Log(P0(T - _tBump / 2.0))) / _tBump;
         public double B(double t, double T) => (1.0 - Exp(-Alpha * (T - t))) / Alpha;
         public double A(double t, double T) => P0(T) / P0(t) * Exp(-B(t, T) * dLogP0dt(T) - (SigmaR * SigmaR * (Exp(-Alpha * T) - Exp(-Alpha * t)).IntPow(2) * (Exp(2.0 * Alpha * t) - 1.0)) / (4.0 * Alpha * Alpha * Alpha));
+
+        public double SigmaP(double t, double T) => 1.0 / Sqrt(t) * SigmaR / Alpha * (1.0 - Exp(-Alpha * (T - t))) * Sqrt((1.0 - Exp(-2.0 * Alpha * t)) / (2.0 * Alpha));
     }
 }

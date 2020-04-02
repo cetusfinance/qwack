@@ -1009,10 +1009,10 @@ namespace Qwack.Models.Models
                     pv = fxFwd.Pv(model.FundingModel, false, ignoreTodayFlows);
                     break;
                 case FixedRateLoanDeposit loanDepo:
-                    pv = loanDepo.Pv(model.FundingModel, true, ignoreTodayFlows);
+                    pv = (loanDepo.Clone() as FixedRateLoanDeposit).Pv(model.FundingModel, true, ignoreTodayFlows);
                     break;
                 case FloatingRateLoanDepo loanDepoFl:
-                    pv = loanDepoFl.Pv(model.FundingModel, true, ignoreTodayFlows);
+                    pv = (loanDepoFl.Clone() as FloatingRateLoanDepo).Pv(model.FundingModel, true, ignoreTodayFlows);
                     break;
                 case CashBalance cash:
                     pv = cash.Pv(model.FundingModel, false);
@@ -1027,10 +1027,10 @@ namespace Qwack.Models.Models
                     pv = ois.Pv(model.FundingModel, true);
                     break;
                 case IrSwap irs:
-                    pv = irs.Pv(model.FundingModel, true);
+                    pv = (irs.Clone() as IrSwap).Pv(model.FundingModel, true);
                     break;
                 case IrBasisSwap irsb:
-                    pv = irsb.Pv(model.FundingModel, true);
+                    pv = (irsb.Clone() as IrBasisSwap).Pv(model.FundingModel, true);
                     break;
                 case CashWrapper wrapper:
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);

@@ -42,7 +42,7 @@ namespace Qwack.Paths
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
-            var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads * 2);
+            var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads);
 
             if(pathsPerBlock==0)
                 ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");

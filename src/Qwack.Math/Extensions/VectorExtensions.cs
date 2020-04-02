@@ -23,7 +23,7 @@ namespace Qwack.Math.Extensions
         {
             var exp = new Vector<double>(1.0);
             var facTotal = z;
-            for(var i=1;i<4;i++)
+            for (var i = 1; i < 8; i++)
             {
                 var fac = i.Factorial();
                 exp += facTotal / new Vector<double>(fac);

@@ -7,7 +7,8 @@ using Qwack.Math;
 using Qwack.Dates;
 using static System.Math;
 using Qwack.Math.Extensions;
-
+using System.Net.Http;
+using static Qwack.Math.Statistics;
 namespace Qwack.Options
 {
     public class HullWhite
@@ -19,16 +20,23 @@ namespace Qwack.Options
 
         public IIrCurve DiscountCurve { get; private set; }
         public DayCountBasis DayCountBasis { get; set; }
-        //private double A(double t, double T)
-        //{
-
-        //}
-
+        
         public double P0(double T) => DiscountCurve.GetDf(DiscountCurve.BuildDate, DateExtensions.AddYearFraction(DiscountCurve.BuildDate, T, DayCountBasis));
         public double dLogP0dt(double T) => (Log(P0(T + _tBump / 2.0)) - Log(P0(T - _tBump / 2.0))) / _tBump;
         public double B(double t, double T) => (1.0 - Exp(-Alpha * (T - t))) / Alpha;
         public double A(double t, double T) => P0(T) / P0(t) * Exp(-B(t, T) * dLogP0dt(T) - (SigmaR * SigmaR * (Exp(-Alpha * T) - Exp(-Alpha * t)).IntPow(2) * (Exp(2.0 * Alpha * t) - 1.0)) / (4.0 * Alpha * Alpha * Alpha));
 
         public double SigmaP(double t, double T) => 1.0 / Sqrt(t) * SigmaR / Alpha * (1.0 - Exp(-Alpha * (T - t))) * Sqrt((1.0 - Exp(-2.0 * Alpha * t)) / (2.0 * Alpha));
+        public double VarP0(double t, double T) => SigmaR * SigmaR * t * (B(t, T).IntPow(2));
+        public double Caplet(double K, double tFix, double tPay) => (1.0 + K * (tPay - tFix)) * ZBP(tFix, tPay, 1.0 / (1.0 + K * (tPay - tFix)));
+        public double ZBP(double tFix, double tPay, double X)
+        {
+            var d1 = Log(P0(tFix) * X / P0(tPay)) / Sqrt(VarP0(tFix, tPay));
+            var d2 = 0.5*Sqrt(VarP0(tFix, tPay));
+            var dPlus = d1 + d2;
+            var dMinus = d1 - d2;
+
+            return X * P0(tFix) * NormSDist(dPlus) - P0(tPay) * NormSDist(dMinus);
+        }
     }
 }

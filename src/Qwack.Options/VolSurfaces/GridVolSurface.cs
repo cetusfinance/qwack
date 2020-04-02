@@ -250,6 +250,7 @@ namespace Qwack.Options.VolSurfaces
         public DateTime PillarDatesForLabel(string label)
         {
             var labelIx = Array.IndexOf(PillarLabels, label);
+            if (labelIx == -1) return OriginDate;
             return Expiries[labelIx];
         }
 

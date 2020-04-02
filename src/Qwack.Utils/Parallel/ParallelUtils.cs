@@ -28,20 +28,28 @@ namespace Qwack.Utils.Parallel
                 return _instance;
             }
         }
-            
 
 
+        private int _activeThreadCount = 0;
         private static readonly int numThreads = Environment.ProcessorCount;
 
         private ParallelUtils()
         {
             for(var i = 0; i < numThreads;i++)
             {
-                var thread = new Thread(ThreadStart);
-                thread.IsBackground = true;
-                thread.Name = $"ParallelUtilsThread{i}";
-                thread.Start();
+                StartThread();
             }
+        }
+
+        private void StartThread()
+        {
+            var thread = new Thread(ThreadStart)
+            {
+                IsBackground = true,
+                Name = $"ParallelUtilsThread{_activeThreadCount}"
+            };
+            Interlocked.Increment(ref _activeThreadCount);
+            thread.Start();
         }
 
         private void ThreadStart()
@@ -52,6 +60,12 @@ namespace Qwack.Utils.Parallel
                 {
                     try
                     {
+                        if(item.IsExploder)
+                        {
+                            item.ResetEvent.Set();
+                            item.TaskCompletion.SetResult(true);
+                            break;
+                        }
                         item.Action();
                         item.TaskCompletion.SetResult(true);
                     }
@@ -70,16 +84,38 @@ namespace Qwack.Utils.Parallel
                     {
                     }
                 }
+
+                if (_killQueue.TryTake(out var killTask, 0))
+                {
+                    killTask.ResetEvent.Set();
+                    break;
+                }
             }
+            Interlocked.Decrement(ref _activeThreadCount);
         }
 
         public bool MultiThreaded { get; set; } = true;
 
         private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>(numThreads);
+        private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>(numThreads);
 
         public Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
-            if (overrideMTFlag || !MultiThreaded  || (!string.IsNullOrEmpty(Thread.CurrentThread.Name) && Thread.CurrentThread.Name.StartsWith("ParallelUtilsThread")))
+            if (!overrideMTFlag && !string.IsNullOrEmpty(Thread.CurrentThread.Name) && Thread.CurrentThread.Name.StartsWith("ParallelUtilsThread"))
+            {
+                StartThread();
+                RunOptimistically(values, code).Wait();
+                var exploder = new WorkItem()
+                {
+                    IsExploder = true,
+                    ResetEvent = new ManualResetEvent(false)
+                };
+                _killQueue.Add(exploder);
+                exploder.ResetEvent.WaitOne();
+                return Task.CompletedTask;
+            }
+
+            if (overrideMTFlag || !MultiThreaded)
             {
                 RunInSeries(values, code);
                 return Task.CompletedTask;
@@ -93,6 +129,8 @@ namespace Qwack.Utils.Parallel
             public Action Action;
             public TaskCompletionSource<bool> TaskCompletion;
             public Task TaskToRun;
+            public ManualResetEvent ResetEvent;
+            public bool IsExploder;
         }
 
         public Task For(int startInclusive, int endExclusive, int step, Action<int> code, bool overrideMTFlag = false)

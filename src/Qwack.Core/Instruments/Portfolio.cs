@@ -520,6 +520,13 @@ namespace Qwack.Core.Instruments
                                     wrapper.CashBalances.Add(new CashBalance(wl.Currency, -wl.Notional) { TradeId = i.TradeId + "n" });
                                 }
                                 break;
+                            case FloatingRateLoanDepo fl:
+                                foreach (var flow in fl.LoanDepoSchedule.Flows.Where(x => x.SettleDate < rollToDate))
+                                {
+                                    if (((!cashOnDayAlreadyPaid && flow.SettleDate >= rollfromDate) || (cashOnDayAlreadyPaid && flow.SettleDate > rollfromDate)) && flow.SettleDate < rollToDate)
+                                        wrapper.CashBalances.Add(new CashBalance(flow.Currency, flow.Fv) { TradeId = i.TradeId + $"{flow.SettleDate}" });
+                                }
+                                break;
                         }
                         o.Instruments.Add(wrapper);
                         break;

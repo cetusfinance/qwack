@@ -124,7 +124,8 @@ namespace Qwack.Core.Instruments.Funding
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,
             StartDate = StartDate,
-            TradeId = TradeId
+            TradeId = TradeId,
+            PortfolioName = PortfolioName,
         };
 
         public IFundingInstrument SetParRate(double parRate) => new FixedRateLoanDeposit(StartDate, EndDate, parRate, Currency, Basis, Notional, DiscountCurve);

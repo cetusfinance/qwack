@@ -60,12 +60,6 @@ namespace Qwack.Utils.Parallel
                 {
                     try
                     {
-                        if(item.IsExploder)
-                        {
-                            item.ResetEvent.Set();
-                            item.TaskCompletion.SetResult(true);
-                            break;
-                        }
                         item.Action();
                         item.TaskCompletion.SetResult(true);
                     }

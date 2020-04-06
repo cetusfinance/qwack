@@ -107,7 +107,7 @@ namespace Qwack.Models.MCModels
 
         public AssetPathPayoff(IAssetInstrument assetInstrument, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency simulationCcy)
         {
-            AssetInstrument = assetInstrument;
+            AssetInstrument = assetInstrument is CashWrapper cw ? cw.UnderlyingInstrument : assetInstrument;
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
             SimulationCcy = simulationCcy;

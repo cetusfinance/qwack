@@ -51,6 +51,9 @@ namespace Qwack.Core.Instruments.Funding
                 NotionalByYearFraction = dcf,
                 Fv = -Notional * dcf * interestRate
             });
+
+            PillarDate = endDate;
+            SolveCurve = DiscountCurve;
         }
 
         public double Notional { get; set; }

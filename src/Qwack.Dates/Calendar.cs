@@ -36,6 +36,12 @@ namespace Qwack.Dates
 
         public bool IsHoliday(DateTime date)
         {
+            foreach(var c in InheritedCalendarObjects)
+            {
+                if (c.IsHoliday(date))
+                    return true;
+            }
+
             if (CalendarType != CalendarType.Regular)
                 return IsHolidayFromRules(date);
 

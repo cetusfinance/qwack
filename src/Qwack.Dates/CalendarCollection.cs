@@ -31,7 +31,7 @@ namespace Qwack.Dates
                 foreach (var dc in currentCalendar.InheritedCalendar)
                 {
                     MergeCalendar(_mergedCalendars[dc], currentCalendar);
-                    currentCalendar.InheritedCalendarObjects.Add(_mergedCalendars[dc]);
+                    //currentCalendar.InheritedCalendarObjects.Add(_mergedCalendars[dc]);
                 }
                 _mergedCalendars.Add(currentCalendar.Name, currentCalendar);
             }
@@ -87,6 +87,9 @@ namespace Qwack.Dates
 
         private static void MergeCalendar(Calendar calendar, Calendar newCal)
         {
+            if (calendar.Name == newCal.Name)
+                throw new Exception("Should not be attempting to merge a calendar with itself");
+
             foreach (var mtoEx in calendar.MonthsToExclude)
             {
                 if (!newCal.MonthsToExclude.Contains(mtoEx))
@@ -105,6 +108,8 @@ namespace Qwack.Dates
             {
                 newCal.DaysToExclude.Add(dte);
             }
+
+            newCal.InheritedCalendarObjects.Add(calendar);
         }
     }
 }

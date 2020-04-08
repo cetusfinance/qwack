@@ -168,8 +168,9 @@ namespace Qwack.Core.Instruments.Funding
                                 {
                                     AccrualPeriodStart = startDate,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                    AccrualPeriodEnd = lf.Count > 0 ? lf.Last().AccrualPeriodStart : endDate
+                                    AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd!=DateTime.MinValue )? lf.Last().AccrualPeriodStart : endDate
                                 };
+                                
                                 q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);

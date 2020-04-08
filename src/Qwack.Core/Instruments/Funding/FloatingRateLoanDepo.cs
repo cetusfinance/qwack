@@ -29,7 +29,8 @@ namespace Qwack.Core.Instruments.Funding
                 Currency = floatRateIndex.Currency,
                 Direction = SwapPayReceiveType.Pay,
                 NotionalExchange = ExchangeType.Both,
-                LegType = SwapLegType.Float
+                LegType = SwapLegType.Float,
+                FixedRateOrMargin = Convert.ToDecimal(spread)
             };
             var schedule = leg.GenerateSchedule();
 
@@ -145,7 +146,7 @@ namespace Qwack.Core.Instruments.Funding
             Notional = Notional,
         };
 
-        public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();
+        public IAssetInstrument SetStrike(double strike) => (FloatingRateLoanDepo)SetParRate(strike);
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
         {

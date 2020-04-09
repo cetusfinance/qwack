@@ -13,12 +13,12 @@ namespace Qwack.Core.Instruments.Funding
     {
         public FloatingRateLoanDepo() { }
 
-        public FloatingRateLoanDepo(CashFlow[] flows, FloatRateIndex floatRateIndex, string forecastCurve, string discountCurve):base()
+        public FloatingRateLoanDepo(CashFlow[] flows, FloatRateIndex floatRateIndex, string forecastCurve, string discountCurve) : base()
         {
             FloatRateIndex = floatRateIndex;
             ForecastCurve = forecastCurve;
             DiscountCurve = discountCurve;
-            LoanDepoSchedule = new CashFlowSchedule { Flows = flows.ToList() };         
+            LoanDepoSchedule = new CashFlowSchedule { Flows = flows.ToList() };
         }
 
         public FloatingRateLoanDepo(DateTime startDate, Frequency tenor, FloatRateIndex floatRateIndex, double notional, double spread, string forecastCurve, string discountCurve)
@@ -32,6 +32,7 @@ namespace Qwack.Core.Instruments.Funding
                 LegType = SwapLegType.Float,
                 FixedRateOrMargin = Convert.ToDecimal(spread)
             };
+            Spread = spread;
             var schedule = leg.GenerateSchedule();
 
             FloatRateIndex = floatRateIndex;
@@ -41,6 +42,7 @@ namespace Qwack.Core.Instruments.Funding
             Notional = notional;
         }
 
+        public double Spread { get; set; }
         public double Notional { get; set; }
         public string PortfolioName { get; set; }
         public CashFlowSchedule LoanDepoSchedule { get; set; }
@@ -53,14 +55,14 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public DateTime PillarDate { get; set; }
 
-        public DateTime LastSensitivityDate => LoanDepoSchedule.Flows.Max(x=>x.SettleDate);
+        public DateTime LastSensitivityDate => LoanDepoSchedule.Flows.Max(x => x.SettleDate);
 
         public string[] AssetIds => Array.Empty<string>();
         public Currency PaymentCurrency => FloatRateIndex.Currency;
         public Currency Currency => FloatRateIndex.Currency;
 
         public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
-        public double Pv(IFundingModel model, bool updateState, bool ignoreTodayFlows) => 
+        public double Pv(IFundingModel model, bool updateState, bool ignoreTodayFlows) =>
             LoanDepoSchedule.PV(model.Curves[DiscountCurve], model.Curves[ForecastCurve], updateState, true, true, FloatRateIndex.DayCountBasis, ignoreTodayFlows ? model.BuildDate.AddDays(1) : model.BuildDate);
 
         public double FlowsT0(IFundingModel model)
@@ -72,7 +74,7 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => (new [] { DiscountCurve, ForecastCurve } ).Distinct().ToList();
 
         public double CalculateParRate(IFundingModel model)
         {
@@ -153,5 +155,7 @@ namespace Qwack.Core.Instruments.Funding
             Pv(model.FundingModel, true);
             return LoanDepoSchedule.Flows;
         }
+
+        public double SuggestPillarValue(IFundingModel model) => model.GetCurve(ForecastCurve).GetForwardCCRate(model.BuildDate, PillarDate) + Spread;
     }
 }

@@ -178,5 +178,18 @@ namespace Qwack.Core.Instruments.Funding
                     Fv = DomesticQuantity * Strike
                 }
         };
+
+        public double SuggestPillarValue(IFundingModel model)
+        {
+            var pair = model.FxMatrix.GetFxPair(Pair);
+            var spotDate = pair.SpotDate(model.BuildDate);
+            var fxr = Strike / model.GetFxRate(spotDate, Pair);
+            var df1 = model.GetCurve(model.FxMatrix.GetDiscountCurve(DomesticCCY.Ccy)).GetDf(spotDate, PillarDate);
+            var df2 = df1 / fxr;
+            var discountCurve = model.Curves[SolveCurve];
+            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, PillarDate);
+            var rate = -Log(df2) / t;
+            return rate;
+        }
     }
 }

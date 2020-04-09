@@ -32,5 +32,8 @@ namespace Qwack.Core.Models
         double GetDf(Currency ccy, DateTime startDate, DateTime endDate);
 
         Currency GetCurrency(string currency);
+
+        double CalibrationTimeMs { get; set; }
+        Dictionary<int,int> CalibrationItterations { get; set; }
     }
 }

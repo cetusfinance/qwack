@@ -66,7 +66,7 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Throws<NotImplementedException>(() => depo.Sensitivities(fModel));
             Assert.Throws<NotImplementedException>(() => depo.SetStrike(0.0));
 
-            Assert.Empty(depo.Dependencies(fModel.FxMatrix));
+            Assert.Equal("USD.BLAH", depo.Dependencies(fModel.FxMatrix)[0]);
             Assert.Empty(depo.PastFixingDates(maturity));
             Assert.Equal(FxConversionType.None, depo.FxType(null));
             Assert.Equal(string.Empty, depo.FxPair(null));

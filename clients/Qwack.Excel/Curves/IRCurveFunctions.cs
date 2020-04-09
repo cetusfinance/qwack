@@ -223,35 +223,39 @@ namespace Qwack.Excel.Curves
             {
                 ContainerStores.GetObjectCache<FundingInstrumentCollection>().TryGetObject(FundingInstrumentCollection, out var fic);
 
+                IFxMatrix fxMatrix = null;
+                if (!(FxMatrix is ExcelMissing))
+                {
+                    var fxMatrixCache = ContainerStores.GetObjectCache<FxMatrix>();
+                    fxMatrix = fxMatrixCache.GetObject((string)FxMatrix).Value;
+                }
+
                 var emptyCurves = new Dictionary<string, IrCurve>();
                 if (fic != null)
                 {
                     emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap);
-                    if (!(SolveStages is ExcelMissing))
+
+                    var stageDict = !(SolveStages is ExcelMissing)
+                        ? ((object[,])SolveStages).RangeToDictionary<string, int>()
+                        : fic.Value.ImplySolveStages(fxMatrix);
+
+                    foreach (var kv in stageDict)
                     {
-                        var stageDict = ((object[,])SolveStages).RangeToDictionary<string, int>();
-                        foreach (var kv in stageDict)
+                        if (emptyCurves.TryGetValue(kv.Key, out var curve))
                         {
-                            if (emptyCurves.TryGetValue(kv.Key, out var curve))
-                            {
-                                curve.SolveStage = kv.Value;
-                            }
-                            else
-                            {
-                                throw new Exception($"Solve stage specified for curve {kv.Key} but curve not present");
-                            }
+                            curve.SolveStage = kv.Value;
+                        }
+                        else
+                        {
+                            throw new Exception($"Solve stage specified for curve {kv.Key} but curve not present");
                         }
                     }
                 }
 
                 var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
-
-                if(!(FxMatrix is ExcelMissing))
-                {
-                    var fxMatrixCache = ContainerStores.GetObjectCache<FxMatrix>();
-                    var fxMatrix = fxMatrixCache.GetObject((string)FxMatrix);
-                    model.SetupFx(fxMatrix.Value);
-                }
+                
+                if (!(FxMatrix is ExcelMissing))
+                    model.SetupFx(fxMatrix);
 
                 if (!(FxVolSurfaces is ExcelMissing))
                 {
@@ -266,13 +270,69 @@ namespace Qwack.Excel.Curves
 
                 if (fic != null)
                 {
-                    var calibrator = new NewtonRaphsonMultiCurveSolverStaged();
+                    var calibrator = new NewtonRaphsonMultiCurveSolverStaged()
+                    {
+                        InLineCurveGuessing = true
+                    };
                     calibrator.Solve(model, fic.Value);
                 }
 
                 return ExcelHelper.PushToCache<IFundingModel>(model, ObjectName);
             });
         }
+
+        [ExcelFunction(Description = "Creates and calibrates a funding model to a funding instrument collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModelParallel), IsThreadSafe = false)]
+        public static object CreateFundingModelParallel(
+           [ExcelArgument(Description = "Funding model name")] string ObjectName,
+           [ExcelArgument(Description = "Build date")] DateTime BuildDate,
+           [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
+           [ExcelArgument(Description = "Curve to solve stage mappings")] object SolveStages,
+           [ExcelArgument(Description = "Fx matrix object")] object FxMatrix,
+           [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                ContainerStores.GetObjectCache<FundingInstrumentCollection>().TryGetObject(FundingInstrumentCollection, out var fic);
+
+                IFxMatrix fxMatrix = null;
+                if (!(FxMatrix is ExcelMissing))
+                {
+                    var fxMatrixCache = ContainerStores.GetObjectCache<FxMatrix>();
+                    fxMatrix = fxMatrixCache.GetObject((string)FxMatrix).Value;
+                }
+
+                var stageDict = fic.Value.ImplySolveStages2(fxMatrix);
+                var emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap);
+
+                var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
+
+                if (!(FxMatrix is ExcelMissing))
+                    model.SetupFx(fxMatrix);
+
+                if (!(FxVolSurfaces is ExcelMissing))
+                {
+                    IEnumerable<IVolSurface> surfaces = null;
+                    if (FxVolSurfaces is string vsStr)
+                        surfaces = (new object[] { vsStr }).GetAnyFromCache<IVolSurface>();
+                    else
+                        surfaces = ((object[,])FxVolSurfaces).GetAnyFromCache<IVolSurface>();
+                    if (surfaces.Any())
+                        model.VolSurfaces = surfaces.ToDictionary(k => k.Name, v => v);
+                }
+
+                if (fic != null)
+                {
+                    var calibrator = new NewtonRaphsonMultiCurveSolverStaged()
+                    {
+                        InLineCurveGuessing = true
+                    };
+                    calibrator.Solve(model, fic.Value, stageDict);
+                }
+
+                return ExcelHelper.PushToCache<IFundingModel>(model, ObjectName);
+            });
+        }
+
 
         [ExcelFunction(Description = "Creates a funding model from one or more curves", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateFundingModelFromCurves), IsThreadSafe = false)]
         public static object CreateFundingModelFromCurves(
@@ -394,6 +454,42 @@ namespace Qwack.Excel.Curves
                 return model.Curves.TryGetValue(CurveName, out var curve) ?
                     ExcelHelper.PushToCache<IIrCurve>(curve, OutputName) :
                     $"Curve {CurveName} not found in model";
+            });
+        }
+
+        [ExcelFunction(Description = "Extracts a calibration info from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ExtractCalibrationInfoFromModel), IsThreadSafe = false)]
+        public static object ExtractCalibrationInfoFromModel(
+           [ExcelArgument(Description = "Funding model name")] string FundingModelName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var model = ContainerStores.GetObjectCache<IFundingModel>().GetObject(FundingModelName).Value;
+
+                if (model.CalibrationItterations != null)
+                {
+                    var o = new object[model.CalibrationItterations.Count() + 1, 2];
+
+                    o[0, 0] = "Time (ms)";
+                    o[0, 1] = model.CalibrationTimeMs;
+
+
+                    for (var i = 1; i <= model.CalibrationItterations.Count(); i++)
+                    {
+                        o[i, 0] = $"Passes Stage {i - 1}";
+                        o[i, 1] = model.CalibrationItterations[i - 1];
+                    }
+
+                    return o;
+                }
+                else
+                {
+                    var o = new object[1, 2];
+
+                    o[0, 0] = "Time (ms)";
+                    o[0, 1] = model.CalibrationTimeMs;
+
+                    return o;
+                }
             });
         }
     }

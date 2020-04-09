@@ -103,7 +103,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public List<string> Dependencies(IFxMatrix matrix)
         {
-            var curves = new[] { ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec};
+            var curves = new[] { ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec };
             return curves.Distinct().Where(x => x != SolveCurve).ToList();
         }
 
@@ -416,5 +416,11 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument SetParRate(double parRate) => new XccyBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, RateIndexPay, RateIndexRec, NotionalExchange, MtmSwapType, ForecastCurvePay, ForecastCurveRec, DiscountCurvePay, DiscountCurveRec);
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowSchedulePay.Flows.Concat(FlowScheduleRec.Flows).ToList();
+
+        public double SuggestPillarValue(IFundingModel model) => SolveCurve == DiscountCurvePay
+                ? model.GetCurve(ForecastCurvePay).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadPay
+                : model.GetCurve(ForecastCurveRec).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadRec;
+
+
     }
 }

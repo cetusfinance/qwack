@@ -1177,8 +1177,8 @@ namespace Qwack.Models.Risk
 
                 var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
 
-                //ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
-                foreach(var bCurve in bumpedCurves.ToList())
+                ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
+                //foreach(var bCurve in bumpedCurves.ToList())
                 {
                     var newModel = model.Clone();
                     newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
@@ -1205,7 +1205,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, delta);
                         }
                     }
-                }//).Wait();
+                }).Wait();
             }
 
             return cube.Sort();

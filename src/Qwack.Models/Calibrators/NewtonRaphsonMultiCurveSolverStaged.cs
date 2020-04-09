@@ -1,10 +1,14 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Calibrators
 {
@@ -13,13 +17,20 @@ namespace Qwack.Models.Calibrators
         public double Tollerance { get; set; } = 0.0000001;
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
+
+        public bool InLineCurveGuessing { get; set; }
+
         private const double JacobianBump = 0.00001;
 
-        private double[][] _jacobian;
-        double[] _currentPvs;
+        //private double[][] _jacobian;
+        //double[] _currentPvs;
 
         public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+            var itterationsPerStage = new Dictionary<int, int>();
+
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<IIrCurve>();
             var fundingInstruments = new List<IFundingInstrument>();
@@ -27,45 +38,127 @@ namespace Qwack.Models.Calibrators
             {
                 curvesForStage.Clear();
                 fundingInstruments.Clear();
+
                 foreach (var kv in fundingModel.Curves)
                 {
                     if (kv.Value.SolveStage == stage)
                     {
+                        var insForCurve = new List<IFundingInstrument>();
                         curvesForStage.Add(kv.Value);
                         foreach (var inst in instruments)
                         {
                             if (inst.SolveCurve == kv.Value.Name)
                             {
+                                insForCurve.Add(inst);
                                 fundingInstruments.Add(inst);
+                            }
+                        }
+
+                        if(InLineCurveGuessing)
+                        {
+                            var points = insForCurve.ToDictionary(x => x.PillarDate, x => x.SuggestPillarValue(fundingModel));
+                            for(var i=0;i<kv.Value.NumberOfPillars;i++)
+                            {
+                                kv.Value.SetRate(i, points[kv.Value.PillarDates[i]], true);
                             }
                         }
                     }
                 }
                 var currentGuess = new double[fundingInstruments.Count];
-                _currentPvs = new double[fundingInstruments.Count];
+                var currentPvs = new double[fundingInstruments.Count];
                 var bumpedPvs = new double[fundingInstruments.Count];
-                _jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
+                var jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
 
                 for (var i = 0; i < MaxItterations; i++)
                 {
-                    ComputePVs(true, fundingInstruments, fundingModel, _currentPvs);
-                    if (_currentPvs.Max(x => System.Math.Abs(x)) < Tollerance)
+                    ComputePVs(true, fundingInstruments, fundingModel, currentPvs);
+                    if (currentPvs.Max(x => System.Math.Abs(x)) < Tollerance)
                     {
-                        UsedItterations = i + 1;
+                        UsedItterations += i + 1;
+                        itterationsPerStage[stage] = i + 1;
                         break;
                     }
-                    ComputeJacobian(fundingInstruments, fundingModel, curvesForStage, currentGuess, bumpedPvs);
-                    ComputeNextGuess(currentGuess, fundingInstruments.Count, curvesForStage);
+                    ComputeJacobian(fundingInstruments, fundingModel, curvesForStage, currentGuess, bumpedPvs, currentPvs, ref jacobian);
+                    ComputeNextGuess(currentGuess, fundingInstruments.Count, curvesForStage, jacobian, currentPvs);
                 }
             }
+
+            fundingModel.CalibrationItterations = itterationsPerStage;
+            fundingModel.CalibrationTimeMs = sw.ElapsedMilliseconds;
+            sw.Stop();
         }
-        
+
+        public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments, Dictionary<string, SolveStage> stages)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var itterationsPerStage = new Dictionary<SolveStage, int>();
+
+            var maxStage = stages.Values.Max(x => x.Stage);
+
+            for (var stage = 0; stage <= maxStage; stage++)
+            {
+                var inThisStage = stages.Where(x => x.Value.Stage == stage)
+                    .GroupBy(x => x.Value.SubStage)
+                    .ToDictionary(x => x.Key, x => x.Select(y => y.Key).ToArray());
+
+                ParallelUtils.Instance.Foreach(inThisStage.Keys.ToList(), subStage =>
+                {
+
+                    var curvesForStage = inThisStage[subStage].Select(c => (IIrCurve)fundingModel.GetCurve(c)).ToList();
+                    var fundingInstruments = new List<IFundingInstrument>();
+                    var insForCurve = new List<IFundingInstrument>();
+                    foreach (var curve in curvesForStage)
+                    {
+                        foreach (var inst in instruments)
+                        {
+                            if (inst.SolveCurve == curve.Name)
+                            {
+                                insForCurve.Add(inst);
+                                fundingInstruments.Add(inst);
+                            }
+                        }
+
+                        if (InLineCurveGuessing)
+                        {
+                            var points = insForCurve.ToDictionary(x => x.PillarDate, x => x.SuggestPillarValue(fundingModel));
+                            for (var i = 0; i < curve.NumberOfPillars; i++)
+                            {
+                                curve.SetRate(i, points[((IrCurve)curve).PillarDates[i]], true);
+                            }
+                        }
+
+                    }
+                    var currentGuess = new double[fundingInstruments.Count];
+                    var currentPvs = new double[fundingInstruments.Count];
+                    var bumpedPvs = new double[fundingInstruments.Count];
+                    var jacobian = Math.Matrix.DoubleArrayFunctions.MatrixCreate(fundingInstruments.Count, fundingInstruments.Count);
+
+                    for (var i = 0; i < MaxItterations; i++)
+                    {
+                        ComputePVs(true, fundingInstruments, fundingModel, currentPvs);
+                        if (currentPvs.Max(x => System.Math.Abs(x)) < Tollerance)
+                        {
+                            UsedItterations += i + 1;
+                            break;
+                        }
+                        ComputeJacobian(fundingInstruments, fundingModel, curvesForStage, currentGuess, bumpedPvs, currentPvs, ref jacobian);
+                        ComputeNextGuess(currentGuess, fundingInstruments.Count, curvesForStage, jacobian, currentPvs);
+                    }
+                }).Wait();
+            }
+            //fundingModel.CalibrationItterations = itterationsPerStage;
+            fundingModel.CalibrationTimeMs = sw.ElapsedMilliseconds;
+            sw.Stop();
+        }
+
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<IIrCurve> curvesForStage)
+        private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<IIrCurve> curvesForStage, double[][] jacobian, double[] currentPvs)
         {
             // f = f - d/f'
-            var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(_jacobian);
-            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(_currentPvs, jacobianMi);
+            var jacobianMi = Math.Matrix.DoubleArrayFunctions.InvertMatrix(jacobian);
+            var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(currentPvs, jacobianMi);
             var curveIx = 0;
             var pillarIx = 0;
             for (var j = 0; j < numberOfInstruments; j++)
@@ -83,7 +176,7 @@ namespace Qwack.Models.Calibrators
             }
         }
 
-        private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<IIrCurve> curvesForStage, double[] currentGuess, double[] bumpedPvs)
+        private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<IIrCurve> curvesForStage, double[] currentGuess, double[] bumpedPvs, double[] currentPvs, ref double[][] jacobian)
         {
             var curveIx = 0;
             var pillarIx = 0;
@@ -98,7 +191,7 @@ namespace Qwack.Models.Calibrators
 
                 for (var j = 0; j < bumpedPvs.Length; j++)
                 {
-                    _jacobian[i][j] = (bumpedPvs[j] - _currentPvs[j]) / JacobianBump;
+                    jacobian[i][j] = (bumpedPvs[j] - currentPvs[j]) / JacobianBump;
                 }
                 pillarIx++;
                 if (pillarIx == currentCurve.NumberOfPillars)

@@ -66,14 +66,14 @@ namespace Qwack.Core.Instruments.Funding
             {
                 var insForCurve = this.Where(x => x.SolveCurve == curveName);
                 dependencies.Add(curveName, new List<string>());
-                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Distinct();
+                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Where(x=>x!=curveName).Distinct();
                 if (deps.Any())
                     dependencies[curveName].AddRange(deps);
             }
 
             var currentStage = 0;
             //first find any curves depending on no other
-            var noDepCurves = dependencies.Where(x => !x.Value.Any());
+            var noDepCurves = dependencies.Where(x => !x.Value.Any()).ToArray();
             foreach(var curve in noDepCurves)
             {
                 o.Add(curve.Key, currentStage);
@@ -118,5 +118,126 @@ namespace Qwack.Core.Instruments.Funding
             }
             return o;
         }
+
+        public Dictionary<string, SolveStage> ImplySolveStages2(IFxMatrix matrix)
+        {
+            var o = new Dictionary<string, SolveStage>();
+
+            var dependencies = new Dictionary<string, List<string>>();
+            foreach (var curveName in SolveCurves)
+            {
+                var insForCurve = this.Where(x => x.SolveCurve == curveName);
+                dependencies.Add(curveName, new List<string>());
+                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Where(x => x != curveName).Distinct();
+                if (deps.Any())
+                    dependencies[curveName].AddRange(deps);
+            }
+
+            var currentStage = 0;
+            var currentSub = 0;
+            //first find any curves depending on no other
+            var noDepCurves = dependencies.Where(x => !x.Value.Any()).ToArray();
+            foreach (var curve in noDepCurves)
+            {
+                o.Add(curve.Key, new SolveStage { Stage = currentStage, SubStage = currentSub });
+                currentSub++;
+                dependencies.Remove(curve.Key);
+            }
+
+            currentStage++;
+
+            var currentCount = dependencies.Count();
+            while (dependencies.Any())
+            {
+                currentSub = 0;
+                //first do curves which only have resolved dependencies
+                var resolvedCurves = o.Keys.ToList();
+                var canResolveThisTime = dependencies.Where(x => x.Value.All(y => resolvedCurves.Contains(y)));
+                foreach (var curve in canResolveThisTime.ToList())
+                {
+                    o.Add(curve.Key, new SolveStage { Stage = currentStage, SubStage = currentSub });
+                    currentSub++;
+                    dependencies.Remove(curve.Key);
+                }
+
+                //next detect curves which can be co-solved
+                var singleDependencyCurves = dependencies.Where(x => x.Value.Count() == 1).ToDictionary(x => x.Key, x => x.Value);
+                var coCurves = singleDependencyCurves.Where(x => singleDependencyCurves.ContainsKey(x.Value.First())).ToDictionary(x => x.Key, x => x.Value);
+                var coCurveKeys = coCurves.Keys;
+                foreach (var curve in coCurveKeys)
+                {
+                    if (o.ContainsKey(curve))
+                        continue;
+
+                    o.Add(curve, new SolveStage { Stage = currentStage, SubStage = currentSub });
+                    dependencies.Remove(curve);
+                    var sisterCurve = coCurves[curve].First();
+                    o.Add(sisterCurve, new SolveStage { Stage = currentStage, SubStage = currentSub });
+                    dependencies.Remove(sisterCurve);
+                    currentSub++;
+                }
+
+                if (currentCount == dependencies.Count())
+                    throw new Exception($"Failed to make forward progress at stage {currentStage}");
+
+                currentCount = dependencies.Count();
+                currentStage++;
+            }
+            return o;
+        }
+
+
+        public Dictionary<string, List<string>> FindDependencies(IFxMatrix matrix)
+        {
+
+            var dependencies = new Dictionary<string, List<string>>();
+            foreach (var curveName in SolveCurves)
+            {
+                var insForCurve = this.Where(x => x.SolveCurve == curveName);
+                dependencies.Add(curveName, new List<string>());
+                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Distinct();
+                if (deps.Any())
+                    dependencies[curveName].AddRange(deps);
+            }
+
+            var sumAllDeps = -1;
+            var breakout = 0;
+            while (dependencies.Sum(x => x.Value.Count) > sumAllDeps && breakout<20)
+            {
+                sumAllDeps = dependencies.Sum(x => x.Value.Count);
+
+                foreach (var curveName in SolveCurves)
+                {
+                    var depsForCurve = dependencies[curveName];
+                    var newTotalDeps = depsForCurve.SelectMany(d => dependencies[d]).Distinct().ToList();
+                    dependencies[curveName] = newTotalDeps;
+                }
+
+                breakout++;
+            }
+
+            return dependencies;
+           
+        }
+
+        public Dictionary<string, List<string>> FindDependenciesInverse(IFxMatrix matrix)
+        {
+            var deps = FindDependencies(matrix);
+
+            var invDeps = new Dictionary<string, List<string>>();
+
+            foreach(var d in deps.Keys.ToArray())
+            {
+                invDeps[d] = deps.Where(x => x.Value.Contains(d)).Select(x => x.Key).ToList();
+            }
+
+            return invDeps;
+        }
+    }
+
+    public class SolveStage
+    {
+        public int Stage { get; set; }
+        public int SubStage { get; set; }
     }
 }

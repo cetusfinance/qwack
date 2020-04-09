@@ -110,7 +110,7 @@ namespace Qwack.Core.Instruments.Funding
                    DiscountCurve == deposit.DiscountCurve &&
                    TradeId == deposit.TradeId;
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => new List<string>() { DiscountCurve };
 
         public double CalculateParRate(IFundingModel model) => 0.0;
 
@@ -150,5 +150,7 @@ namespace Qwack.Core.Instruments.Funding
             Pv(model.FundingModel, true);
             return LoanDepoSchedule.Flows;
         }
+
+        public double SuggestPillarValue(IFundingModel model) => InterestRate;
     }
 }

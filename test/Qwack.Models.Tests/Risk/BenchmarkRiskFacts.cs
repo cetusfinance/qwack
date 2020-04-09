@@ -86,14 +86,14 @@ namespace Qwack.Models.Tests.Risk
                 ContractSize = 1e6,
                 Currency = usd,
                 DCF = 0.25,
-                Expiry = _originDate,
+                Expiry = _originDate.AddDays(1),
                 Position = 1.0,
                 Index = ix,
                 ForecastCurve = "DISCO-USD",
                 SolveCurve = "DISCO-USD",
                 TradeId = "f1",
                 Price = 95,
-                PillarDate = _originDate
+                PillarDate = _originDate.AddDays(90)
             };
 
             var f2 = new STIRFuture
@@ -108,7 +108,7 @@ namespace Qwack.Models.Tests.Risk
                 SolveCurve = "DISCO-USD",
                 TradeId = "f2",
                 Price = 95,
-                PillarDate = _originDate.AddDays(90),
+                PillarDate = _originDate.AddDays(180),
             };
             var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
             {
@@ -118,9 +118,9 @@ namespace Qwack.Models.Tests.Risk
 
             var cube = model.BenchmarkRisk(fic, TestProviderHelper.CurrencyProvider, usd);
 
-            var riskSum = cube.GetAllRows().Sum(r => r.Value);
+            var riskSum = cube.SumOfAllRows;
 
-            Assert.Equal(200, System.Math.Round(riskSum / 100, 0) * 100.0);
+            Assert.Equal(-13.0, riskSum, 0);
         }
 
      

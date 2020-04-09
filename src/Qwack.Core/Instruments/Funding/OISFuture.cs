@@ -91,5 +91,7 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
+
+        public double SuggestPillarValue(IFundingModel model) => (100.0 - Price) / 100.0;
     }
 }

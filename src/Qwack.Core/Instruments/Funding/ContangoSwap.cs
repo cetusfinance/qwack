@@ -159,5 +159,18 @@ namespace Qwack.Core.Instruments.Funding
                 }
             };
         }
+
+        public double SuggestPillarValue(IFundingModel model)
+        {
+            var discountCurve = model.Curves[CashDiscountCurve];
+            var SpotRate = model.GetFxRate(SpotDate, MetalCCY, CashCCY);
+            var t = SpotDate.CalculateYearFraction(DeliveryDate, Basis);
+            var fwd = SpotRate * (1.0 + ContangoRate * t);
+            var fxr = fwd / SpotRate;
+            var df1 = discountCurve.GetDf(SpotDate, PillarDate);
+            var df2 = df1 / fxr;
+            var rate = -System.Math.Log(df2) / t;
+            return rate;
+        }
     }
 }

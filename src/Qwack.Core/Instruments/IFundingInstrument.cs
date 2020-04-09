@@ -18,5 +18,7 @@ namespace Qwack.Core.Instruments
         IFundingInstrument SetParRate(double parRate);
 
         List<CashFlow> ExpectedCashFlows(IAssetFxModel model);
+
+        double SuggestPillarValue(IFundingModel assetFxModel);
     }
 }

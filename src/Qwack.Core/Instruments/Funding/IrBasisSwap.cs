@@ -168,12 +168,10 @@ namespace Qwack.Core.Instruments.Funding
                     discountDict.Add(flow.SettleDate, -t * flow.Pv);
             }
 
-
             //then forecast
             var forecastDictPay = (ForecastCurvePay == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
             var forecastDictRec = (ForecastCurveRec == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
-            var forecastCurvePay = model.Curves[ForecastCurvePay];
-            var forecastCurveRec = model.Curves[ForecastCurveRec];
+
             foreach (var flow in FlowSchedulePay.Flows)
             {
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
@@ -273,5 +271,9 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument SetParRate(double parRate) => new IrBasisSwap(StartDate, SwapTenor, parRate, ParSpreadPay != 0, PayIndex, RecIndex, ForecastCurvePay, ForecastCurveRec, DiscountCurve, (decimal)Notional);
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowSchedulePay.Flows.Concat(FlowScheduleRec.Flows).ToList();
+
+        public double SuggestPillarValue(IFundingModel model) => SolveCurve == ForecastCurvePay
+                ? model.GetCurve(ForecastCurveRec).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadRec
+                : model.GetCurve(ForecastCurvePay).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadPay;
     }
 }

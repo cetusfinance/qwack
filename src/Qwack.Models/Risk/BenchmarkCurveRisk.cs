@@ -8,6 +8,9 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
+using Qwack.Utils.Parallel;
+using Qwack.Dates;
+using System.ComponentModel.DataAnnotations;
 
 namespace Qwack.Models.Risk
 {
@@ -29,12 +32,52 @@ namespace Qwack.Models.Risk
             };
             cube.Initialize(dataTypes);
 
-            var lastDate = pvModel.Portfolio.LastSensitivityDate;
-
+            //var lastDate = pvModel.Portfolio.LastSensitivityDate;
             var insByCurve = riskCollection.GroupBy(x => x.SolveCurve);
+            var dependencies = riskCollection.FindDependenciesInverse(pvModel.VanillaModel.FundingModel.FxMatrix);
+            var lastDateByCurve = insByCurve.ToDictionary(x => x.Key, x => DateTime.MinValue);
+            foreach (var ins in pvModel.Portfolio.UnWrapWrappers().Instruments)
+            {
+                if(ins is IFundingInstrument fins)
+                {
+                    var cvs = fins.Dependencies(pvModel.VanillaModel.FundingModel.FxMatrix);
+                    foreach(var c in cvs)
+                    {
+                        if (!lastDateByCurve.ContainsKey(c))
+                            lastDateByCurve[c] = DateTime.MinValue;
+
+                        lastDateByCurve[c] = lastDateByCurve[c].Max(ins.LastSensitivityDate);
+                    }
+                }
+                else if(ins is IAssetInstrument ains)
+                {
+                    var cvs = ains.IrCurves(pvModel.VanillaModel);
+                    foreach (var c in cvs)
+                    {
+                        if (!lastDateByCurve.ContainsKey(c))
+                            lastDateByCurve[c] = DateTime.MinValue;
+
+                        lastDateByCurve[c] = lastDateByCurve[c].Max(ins.LastSensitivityDate);
+                    }
+                }
+            }
+
+            foreach(var c in lastDateByCurve.Keys.ToArray())
+            {
+                if (dependencies.ContainsKey(c))
+                {
+                    foreach (var d in dependencies[c])
+                    {
+                        lastDateByCurve[c] = lastDateByCurve[c].Max(lastDateByCurve[d]);
+                    }
+                }
+            }
+
+            
             var insToRisk = new List<IFundingInstrument>();
             foreach(var gp in insByCurve)
             {
+                var lastDate = lastDateByCurve[gp.Key];
                 var sorted = gp.OrderBy(x => x.LastSensitivityDate).ToList();
                 if (sorted.Last().LastSensitivityDate <= lastDate)
                     insToRisk.AddRange(sorted);
@@ -42,7 +85,7 @@ namespace Qwack.Models.Risk
                 {
                     var lastIns = sorted.First(x => x.LastSensitivityDate > lastDate);
                     var lastIx = sorted.IndexOf(lastIns);
-                    lastIx = System.Math.Min(lastIx + 2, sorted.Count);
+                    lastIx = System.Math.Min(lastIx + 1, sorted.Count);
                     insToRisk.AddRange(sorted.Take(lastIx));
                 }
             }
@@ -63,7 +106,8 @@ namespace Qwack.Models.Risk
 
             var basePV = newPvModel.PV(reportingCcy);
 
-            for (var i = 0; i < newIns.Count(); i++)
+            ParallelUtils.Instance.For(0, newIns.Count(), 1, i =>
+            //for (var i = 0; i < newIns.Count(); i++)
             {
                 //if (!basePVbyCurrency.TryGetValue(insToRisk[i].Currency, out var basePV))
                 //{
@@ -118,7 +162,7 @@ namespace Qwack.Models.Risk
                             };
                     cube.AddRow(row, dRow.Value * deltaScale * fxToCurveCcy);
                 }
-            }
+            }).Wait();
 
             return cube.Sort(new List<string> {"Curve","RiskDate","TradeId"});
         }

@@ -211,5 +211,7 @@ namespace Qwack.Core.Instruments.Funding
             Pv(model.FundingModel, true);
             return FlowScheduleFixed.Flows.Concat(FlowScheduleFloat.Flows).ToList();
         }
+
+        public double SuggestPillarValue(IFundingModel model) => ParRate;
     }
 }

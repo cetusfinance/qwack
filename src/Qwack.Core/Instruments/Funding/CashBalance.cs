@@ -79,5 +79,7 @@ namespace Qwack.Core.Instruments.Funding
                     Fv = Notional
                 }
         };
+
+        public double SuggestPillarValue(IFundingModel model) => 0.05;
     }
 }

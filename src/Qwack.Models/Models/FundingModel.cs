@@ -68,6 +68,10 @@ namespace Qwack.Models
         public IFxMatrix FxMatrix { get; private set; }
         public string CurrentSolveCurve { get; set; }
 
+        public double CalibrationTimeMs { get; set; }
+
+        public Dictionary<int,int> CalibrationItterations { get; set; }
+
         public void UpdateCurves(Dictionary<string, IrCurve> updateCurves) => Curves = new Dictionary<string, IrCurve>(updateCurves);
 
         public IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate)

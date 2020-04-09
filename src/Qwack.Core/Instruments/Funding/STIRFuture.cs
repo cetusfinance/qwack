@@ -115,5 +115,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             throw new NotImplementedException();
         }
+
+        public double SuggestPillarValue(IFundingModel model) => (100.0 - Price) / 100.0;
     }
 }

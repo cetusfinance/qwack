@@ -225,5 +225,7 @@ namespace Qwack.Core.Instruments.Funding
 
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFra.Flows;
+
+        public double SuggestPillarValue(IFundingModel model) => ParRate;
     }
 }

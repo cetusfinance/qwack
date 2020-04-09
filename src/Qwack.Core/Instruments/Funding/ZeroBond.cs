@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Karambolo.Extensions.Logging.File;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -88,5 +89,12 @@ namespace Qwack.Core.Instruments.Funding
                     Fv = Notional
                 }
         };
+
+        public double SuggestPillarValue(IFundingModel model)
+        {
+            var discountCurve = model.Curves[SolveCurve];
+            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, MaturityDate);
+            return -System.Math.Log(Price) / t;
+        }
     }
 }

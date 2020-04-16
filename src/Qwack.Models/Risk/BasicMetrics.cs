@@ -632,7 +632,7 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
 
-        public static ICube AssetCashDelta(this IPvModel pvModel)
+        public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -702,6 +702,11 @@ namespace Qwack.Models.Risk
                             var date = bCurve.Value.PillarDatesForLabel(bCurve.Key);
                             var fwd = bCurve.Value.GetPriceForDate(date);
                             delta *= fwd;
+                            if(bCurve.Value.Currency!=reportingCurrency)
+                            {
+                                var fxFwd = model.FundingModel.GetFxRate(date, bCurve.Value.Currency, reportingCurrency);
+                                delta *= fxFwd;
+                            }
                             var row = new Dictionary<string, object>
                                 {
                                 { "TradeId", bumpedRows[i].MetaData[tidIx] },

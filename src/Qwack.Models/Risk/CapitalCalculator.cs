@@ -45,15 +45,55 @@ namespace Qwack.Models.Risk
             return pvCapital;
         }
 
-        public static double PvCvaCapital_BII_SM(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency, IIrCurve discountCurve, double partyWeight, double[] eadProfile=null)
+        public static double PvCvaCapital_BII_SM(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio, 
+            Currency reportingCurrency, IIrCurve discountCurve, double partyWeight, double[] eadProfile=null)
         {
             var eads = eadProfile??EAD_BII_SM(originDate, EADDates, models, portfolio, reportingCurrency);
             var Ms = EADDates.Select(d => portfolio.WeightedMaturity(d)).ToArray();
-            var ks = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e, Ms[ix], partyWeight)).ToArray();
+            var dfs = Ms.Select(m => m == 0 ? 1.0 : (1.0 - Exp(-0.05 * m)) / (0.05 * m)).ToArray();
+            var ks = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e * dfs[ix], Ms[ix], partyWeight)).ToArray();
 
             var pvCapital = PvProfile(originDate, EADDates, ks, discountCurve);
 
             return pvCapital;
+        }
+
+        public static (double CVA, double CCR) PvCapital_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, 
+            Portfolio portfolio, HazzardCurve hazzardCurve, Currency reportingCurrency, IIrCurve discountCurve, double LGD, double partyWeight, 
+            Dictionary<string,string> assetIdToHedgeMap, DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
+        {
+            var pd = hazzardCurve.ConstantPD;
+            if (!B2B3ChangeDate.HasValue)
+                B2B3ChangeDate = DateTime.MaxValue;
+
+            var eads = eadProfile ?? EAD_Split(originDate, EADDates, models, portfolio, reportingCurrency, assetIdToHedgeMap, B2B3ChangeDate.Value);
+
+            var Ms = EADDates.Select(d => portfolio.WeightedMaturity(d)).ToArray();
+            var dfs = Ms.Select(m => m == 0 ? 1.0 : (1.0 - Exp(-0.05 * m)) / (0.05 * m)).ToArray();
+
+            var ksCCR = eads.Select((e, ix) => BaselHelper.K(pd, LGD, Ms[ix]) * e).ToArray();
+            var ksCVA = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e * dfs[ix], Ms[ix], partyWeight)).ToArray();
+
+            var pvCapitalCCR = PvProfile(originDate, EADDates, ksCCR, discountCurve);
+            var pvCapitalCVA = PvProfile(originDate, EADDates, ksCVA, discountCurve);
+
+            return (pvCapitalCVA, pvCapitalCCR);
+        }
+
+        public static double[] EAD_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency, Dictionary<string, string> assetIdToHedgeMap, DateTime changeOverDate)
+        {
+            var changeOverIx = Array.BinarySearch(EADDates, changeOverDate);
+            if (changeOverIx < 0)
+                changeOverIx = ~changeOverIx;
+            changeOverIx = Min(changeOverIx, EADDates.Length);
+
+            var EADb2 = EAD_BII_SM(originDate, EADDates.Take(changeOverIx).ToArray(), models, portfolio, reportingCurrency);
+            if (changeOverIx == EADDates.Length) //all under Basel II / SM
+                return EADb2;
+
+            var EADb3 = EAD_BIII_SACCR(originDate, EADDates.Skip(changeOverIx).ToArray(), models.Skip(changeOverIx).ToArray(), portfolio, reportingCurrency, assetIdToHedgeMap);
+
+            return EADb2.Concat(EADb3).ToArray();
         }
 
         public static double[] EAD_BII_SM(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency)
@@ -65,12 +105,30 @@ namespace Qwack.Models.Risk
             {
                 if (EADDates[i] < originDate)
                     continue;
-                models[i].AttachPortfolio(portfolio);
-                var pv = portfolio.PV(models[i], reportingCurrency).SumOfAllRows;
-                var delta = models[i].AssetCashDelta().SumOfAllRows;
+                var m = models[i].Clone();
+                m.AttachPortfolio(portfolio);
+
+                var pv = portfolio.PV(m, reportingCurrency).SumOfAllRows;
+                var delta = m.AssetCashDelta(reportingCurrency).SumOfAllRows;
                 delta = Abs(delta); //need to consider buckets
 
                 eads[i] = Max(pv, delta * ccf) * 1.4;
+            }
+
+            return eads;
+        }
+
+        public static double[] EAD_BIII_SACCR(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency, Dictionary<string,string> assetIdToHedgeMap)
+        {
+            var eads = new double[EADDates.Length];
+            for (var i = 0; i < EADDates.Length; i++)
+            {
+                if (EADDates[i] < originDate)
+                    continue;
+                var m = models[i].Clone();
+                m.AttachPortfolio(portfolio);
+
+                eads[i] = portfolio.SaCcrEAD(m, reportingCurrency, assetIdToHedgeMap);
             }
 
             return eads;
@@ -97,7 +155,7 @@ namespace Qwack.Models.Risk
             {
                 var exposure = (exposures[i] + exposures[i + 1]) / 2.0;
                 var df = discountCurve.GetDf(originDate, exposureDates[i+1]);
-                var dt = (exposureDates[i+1] - exposureDates[i]).TotalDays / 365.0;
+                var dt = exposureDates[i].CalculateYearFraction(exposureDates[i + 1], DayCountBasis.ACT365F);
                 
                 capital += exposure * dt * df;
                 time += dt;

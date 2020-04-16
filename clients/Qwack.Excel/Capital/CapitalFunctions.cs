@@ -91,9 +91,10 @@ namespace Qwack.Excel.Capital
             {
                 var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurveName, $"Hazzard curve {HazzardCurveName} not found");
                 var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
-                var expDates = ExcelHelper.ToDateTimeArray(ExposureDates);
-                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 return XVACalculator.CVA_Approx(expDates, portfolio, hz.Value, model.Value, disc.Value, LGD, repCcy, ContainerStores.CurrencyProvider);
             });
@@ -229,7 +230,7 @@ namespace Qwack.Excel.Capital
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray();
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.Clone();
                 for (var i=0;i<models.Length;i++)
@@ -257,7 +258,7 @@ namespace Qwack.Excel.Capital
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray();
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.Clone();
                 for (var i = 0; i < models.Length; i++)
@@ -267,6 +268,41 @@ namespace Qwack.Excel.Capital
                 }
                 var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight);
                 return result;
+            });
+        }
+
+        [ExcelFunction(Description = "Returns PV CVA and CCR capital under a blend of B2 and B3, given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioPvCapitalSplit))]
+        public static object PortfolioPvCapitalSplit(
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Hazzard curve")] string HazzardCurve,
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Asset-FX Model")] string Model,
+            [ExcelArgument(Description = "Reporting currency")] string Currency,
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "Loss-Given-Default")] double LGD,
+            [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight,
+            [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
+                var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurve, $"Hazzard curve {HazzardCurve} not found");
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var models = new IAssetFxModel[expDates.Length];
+                var m = model.Value.Clone();
+                for (var i = 0; i < models.Length; i++)
+                {
+                    m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
+                    models[i] = m;
+                }
+                var mappingDict = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, 
+                    LGD, CvaRiskWeight, mappingDict, ChangeOverDate);
+                return new object [,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
             });
         }
 
@@ -282,7 +318,7 @@ namespace Qwack.Excel.Capital
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray();
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.Clone();
                 for (var i = 0; i < models.Length; i++)

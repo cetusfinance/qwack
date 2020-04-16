@@ -34,6 +34,7 @@ namespace Qwack.Excel.Services
         }
 
         public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles) => datesAsDoubles.Select(DateTime.FromOADate).ToArray();
+        public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles, DateTime filterDate) => datesAsDoubles.Select(DateTime.FromOADate).Where(x => x >= filterDate).ToArray();
         public static Tuple<DateTime, DateTime>[] ToDateTimeArray(this IEnumerable<Tuple<double, double>> datesAsDoubles) => datesAsDoubles.Select(x => new Tuple<DateTime, DateTime>(DateTime.FromOADate(x.Item1), DateTime.FromOADate(x.Item2))).ToArray();
 
         public static T[][] SquareToJagged<T>(this T[,] data)

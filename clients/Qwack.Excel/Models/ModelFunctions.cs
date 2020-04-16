@@ -120,7 +120,7 @@ namespace Qwack.Excel.Curves
                     FundingCurve = fCurve?.Value,
                     CreditCurve = cCurve?.Value,
                     BaseDiscountCurve = bCurve?.Value,
-                    ExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() :
+                    ExposureDates = PFEDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray(DateTime.MinValue.AddDays(1)) :
                     (PFEDates is double pdd ? new[] { DateTime.FromOADate(pdd) } : null),
                     PfeRegressorType = regType,
                     ConfidenceInterval = ConfidenceInterval,

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
+using Qwack.Core.Cubes;
 
 namespace Qwack.Excel.Services
 {
@@ -359,6 +360,23 @@ namespace Qwack.Excel.Services
             var resultCache = ContainerStores.GetObjectCache<T>();
             resultCache.PutObject(ResultObjectName, new SessionItem<T> { Name = ResultObjectName, Value = objToPush });
             return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+        }
+
+        public static ICube PackResults(DateTime[] dates, double[] values, string metric)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { "ExposureDate", typeof(DateTime) },
+                { "Metric", typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            for (var i = 0; i < dates.Length; i++)
+            {
+                cube.AddRow(new object[] { dates[i], metric }, values[i]);
+            }
+            return cube;
         }
     }
 }

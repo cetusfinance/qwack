@@ -632,7 +632,7 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
         }
 
-        public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency)
+        public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency=null)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -645,6 +645,7 @@ namespace Qwack.Models.Risk
                 { "PointLabel", typeof(string) },
                 { "Metric", typeof(string) },
                 { "CurveType", typeof(string) },
+                { "Currency", typeof(string) }
             };
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel.Clone();
@@ -702,7 +703,7 @@ namespace Qwack.Models.Risk
                             var date = bCurve.Value.PillarDatesForLabel(bCurve.Key);
                             var fwd = bCurve.Value.GetPriceForDate(date);
                             delta *= fwd;
-                            if(bCurve.Value.Currency!=reportingCurrency)
+                            if(reportingCurrency!=null && bCurve.Value.Currency!=reportingCurrency)
                             {
                                 var fxFwd = model.FundingModel.GetFxRate(date, bCurve.Value.Currency, reportingCurrency);
                                 delta *= fxFwd;
@@ -715,7 +716,8 @@ namespace Qwack.Models.Risk
                                 { "PointDate", date },
                                 { "PointLabel", bCurve.Key },
                                 { "Metric", "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                { "Currency", reportingCurrency?.Ccy??bCurve.Value.Currency.Ccy },
                                 };
                             cube.AddRow(row, delta);
                         }

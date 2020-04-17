@@ -111,7 +111,9 @@ namespace Qwack.Excel.Capital
           [ExcelArgument(Description = "Reporting currency")] string Currency,
           [ExcelArgument(Description = "Target RoC")] double TargetRoC,
           [ExcelArgument(Description = "Weight for CVA Capital")] double CVACapitalWeight,
-          [ExcelArgument(Description = "(Optional) LGD for xVA")] object LGDOverrideXVA)
+          [ExcelArgument(Description = "(Optional) LGD for xVA")] object LGDOverrideXVA,
+          [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+          [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -121,7 +123,10 @@ namespace Qwack.Excel.Capital
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var xvaLgd = LGDOverrideXVA.OptionalExcel(LGD);
-                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, xvaLgd, PartyRiskWeight, CVACapitalWeight, disc.Value, ContainerStores.CurrencyProvider);
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string,string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
+                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, xvaLgd, PartyRiskWeight, 
+                    CVACapitalWeight, disc.Value, ContainerStores.CurrencyProvider, assetIdToCategory, categoryToCCF);
             });
         }
 
@@ -221,7 +226,9 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates)
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -238,7 +245,9 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                var result = CapitalCalculator.PvCcrCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, LGD);
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
+                var result = CapitalCalculator.PvCcrCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, LGD, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
                 return result;
             });
         }
@@ -250,7 +259,9 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
             [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
-            [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight)
+            [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight,
+            [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -266,7 +277,9 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight);
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
+                var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
                 return result;
             });
         }
@@ -280,8 +293,10 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Reporting currency")] string Currency,
             [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
             [ExcelArgument(Description = "Loss-Given-Default")] double LGD,
-            [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight,
+            [ExcelArgument(Description = "Cva risk weight")] double CvaRiskWeight,
+            [ExcelArgument(Description = "Party risk weight")] double PartyRiskWeight,
             [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap,
             [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -299,19 +314,24 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                var mappingDict = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
                 var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, 
-                    LGD, CvaRiskWeight, mappingDict, ChangeOverDate);
+                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider, ChangeOverDate);
                 return new object [,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
             });
         }
 
-        [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEad_B2_SM))]
+        [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, 
+            Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEad_B2_SM))]
         public static object PortfolioExpectedEad_B2_SM(
+            [ExcelArgument(Description = "Output cube name")] string OutputName,
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates)
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -326,8 +346,44 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                var result = CapitalCalculator.EAD_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy);
-                return result;
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
+                var result = CapitalCalculator.EAD_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
+                var cube = ExcelHelper.PackResults(expDates, result, "EAD");
+                return ExcelHelper.PushToCache(cube, OutputName);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns EAD profile under a blend of B2 and B3, given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEadSplit))]
+        public static object PortfolioExpectedEadSplit(
+            [ExcelArgument(Description = "Output cube name")] string OutputName,
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Asset-FX Model")] string Model,
+            [ExcelArgument(Description = "Reporting currency")] string Currency,
+            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
+            [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap,
+            [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
+                var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var models = new IAssetFxModel[expDates.Length];
+                var m = model.Value.Clone();
+                for (var i = 0; i < models.Length; i++)
+                {
+                    m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
+                    models[i] = m;
+                }
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
+                var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
+                var result = CapitalCalculator.EAD_Split(model.Value.BuildDate, expDates, models, portfolio, repCcy, 
+                    assetIdToCategory, categoryToCCF, ChangeOverDate, ContainerStores.CurrencyProvider);
+                var cube = ExcelHelper.PackResults(expDates, result, "EAD");
+                return ExcelHelper.PushToCache(cube, OutputName);
             });
         }
     }

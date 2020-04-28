@@ -15,6 +15,7 @@ namespace Qwack.Providers.CSV
             using var textReader = File.OpenText(fileName);
             using var csv = new CsvReader(textReader);
             csv.Configuration.HasHeaderRecord = true;
+            csv.Configuration.BadDataFound = null;
             csv.Configuration.RegisterClassMap<NYMEXFutureRecordMap>();
 
             return csv.GetRecords<NYMEXFutureRecord>().ToList();
@@ -33,10 +34,10 @@ namespace Qwack.Providers.CSV
         public double? High { get; set; }
         public double? Low { get; set; }
         public double? Last { get; set; }
-        public double Settle { get; set; }
+        public double? Settle { get; set; }
         public string Change { get; set; }
         public int Volume { get; set; }
-        public double PriorSettle { get; set; }
+        public double? PriorSettle { get; set; }
         public int? PriorVolume { get; set; }
         public int? PriorOI { get; set; }
         public string TradeDate { get; set; }

@@ -14,6 +14,7 @@ namespace Qwack.Models.Calibrators
 {
     public class NYMEXModelBuilder
     {
+        private static double MinPrice = 1e-10;
         
         public static PriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
         {
@@ -22,7 +23,7 @@ namespace Qwack.Models.Calibrators
             var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
-            var pricesVec = labelsVec.Select(l => q[l]).ToArray();
+            var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value,MinPrice)).ToArray();
             var origin = DateTime.ParseExact(parsed.First().TradeDate,"MM/dd/yyyy", CultureInfo.InvariantCulture);
             var curve = new PriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
             {

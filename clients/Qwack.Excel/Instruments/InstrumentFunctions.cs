@@ -23,7 +23,7 @@ namespace Qwack.Excel.Instruments
 {
     public class InstrumentFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<InstrumentFunctions>();
 
         [ExcelFunction(Description = "Creates an asian swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianSwap), IsThreadSafe = Parallel)]
@@ -213,19 +213,19 @@ namespace Qwack.Excel.Instruments
             return ExcelHelper.Execute(_logger, () =>
             {
                 var multiplier = PriceMultiplier.OptionalExcel(1.0);
-                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
+                var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(Currency);
 
                 var product = new Future
                 {
                     AssetId = AssetId,
-                     ContractQuantity = Quantity,
-                     LotSize = LotSize,
-                     PriceMultiplier = multiplier,
-                     Currency = currency,
-                     Strike = Strike,
-                     Direction = TradeDirection.Long,
-                     ExpiryDate = ExpiryDate,
-                     TradeId = ObjectName
+                    ContractQuantity = Quantity,
+                    LotSize = LotSize,
+                    PriceMultiplier = multiplier,
+                    Currency = currency,
+                    Strike = Strike,
+                    Direction = TradeDirection.Long,
+                    ExpiryDate = ExpiryDate,
+                    TradeId = ObjectName
                 };
 
                 return ExcelHelper.PushToCache(product, ObjectName);
@@ -1162,15 +1162,37 @@ namespace Qwack.Excel.Instruments
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio), IsThreadSafe = Parallel)]
         public static object CreatePortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName,
-            [ExcelArgument(Description = "Instruments")] object[,] Instruments)
+            [ExcelArgument(Description = "Instruments")] object[,] Instruments)/*,
+            [ExcelArgument(Description = "Instruments")] object Instruments2,
+            [ExcelArgument(Description = "Instruments")] object Instruments3,
+            [ExcelArgument(Description = "Instruments")] object Instruments4,
+            [ExcelArgument(Description = "Instruments")] object Instruments5)*/
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pf = GetPortfolio(Instruments);
-                var pFolioCache = ContainerStores.GetObjectCache<Portfolio>();
+               /* if(!(Instruments2 is ExcelMissing) && Instruments2 is object[,] r2)
+                {
+                    var pf2 = GetPortfolio(r2);
+                    pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf2.Instruments).ToList()};
+                }
+                if (!(Instruments3 is ExcelMissing) && Instruments3 is object[,] r3)
+                {
+                    var pf3 = GetPortfolio(r3);
+                    pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf3.Instruments).ToList() };
+                }
+                if (!(Instruments4 is ExcelMissing) && Instruments4 is object[,] r4)
+                {
+                    var pf4 = GetPortfolio(r4);
+                    pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf4.Instruments).ToList() };
+                }
+                if (!(Instruments5 is ExcelMissing) && Instruments5 is object[,] r5)
+                {
+                    var pf5 = GetPortfolio(r5);
+                    pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf5.Instruments).ToList() };
+                }*/
 
-                pFolioCache.PutObject(ObjectName, new SessionItem<Portfolio> { Name = ObjectName, Value = pf });
-                return ObjectName + '¬' + pFolioCache.GetObject(ObjectName).Version;
+                return ExcelHelper.PushToCache(pf, ObjectName);
             });
         }
 
@@ -1252,6 +1274,20 @@ namespace Qwack.Excel.Instruments
 
                 return pf.Value.Details();
                 
+            });
+        }
+
+        [ExcelFunction(Description = "Computes a set of simulation dates for a portfolio", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ComputeSimDates), IsThreadSafe = Parallel)]
+        public static object ComputeSimDates(
+            [ExcelArgument(Description = "Portfolio name")] string ObjectName,
+            [ExcelArgument(Description = "First/Anchor date")] DateTime AnchorDate
+            )
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pf = ContainerStores.GetObjectCache<Portfolio>().GetObjectOrThrow(ObjectName, $"Portfolio {ObjectName} not found");
+                
+                return ExcelHelper.ReturnExcelRangeVectorFromDate(pf.Value.ComputeSimDates(AnchorDate));
             });
         }
 

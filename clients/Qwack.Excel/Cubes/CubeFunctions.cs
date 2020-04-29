@@ -260,7 +260,10 @@ namespace Qwack.Excel.Cubes
                 var hasHeader = HasHeaderRow.OptionalExcel(true);
                 var hasValue = HasValueColumn.OptionalExcel(true);
 
-                var cube = CubeEx.FromCSVFile(FileName, hasHeader, hasValue);
+
+                var cube = (!hasHeader && !hasValue) ?
+                    CubeEx.FromCSVFileRaw(FileName) :
+                    CubeEx.FromCSVFile(FileName, hasHeader, hasValue);
                 return RiskFunctions.PushCubeToCache(cube, ObjectName);
             });
         }

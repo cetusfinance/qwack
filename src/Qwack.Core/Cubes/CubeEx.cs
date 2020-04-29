@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
+using CsvHelper;
 
 namespace Qwack.Core.Cubes
 {
@@ -662,6 +664,52 @@ namespace Qwack.Core.Cubes
                     rowMeta[j] = Convert.ChangeType(rawRow[j], fieldTypes[j]);
                 }
                 var rowValue = hasValue ? Convert.ToDouble(rawRow.Last()) : 0.0;
+                cube.AddRow(rowMeta, rowValue);
+            }
+
+            return cube;
+        }
+
+        [ExcludeFromCodeCoverage]
+        public static ICube FromCSVFileRaw(string fileName)
+        {
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs);
+            using var csv = new CsvReader(sr);
+
+            csv.Configuration.HasHeaderRecord = false;
+            csv.Configuration.BadDataFound = null;
+
+            var rawSplit = new List<string[]>();
+            while(csv.Read())
+            {
+                var row = new List<string>();
+                var i = 0;
+                while (csv.TryGetField(i, out string val))
+                {
+                    i++;
+                    row.Add(val);
+                }
+                rawSplit.Add(row.ToArray());
+            }
+            
+            var cube = new ResultCube();
+
+            var maxWidth = rawSplit.Max(x => x.Length);
+                var fieldNames = Enumerable.Range(0, maxWidth).Select((x, ix) => ix.ToString()).ToArray();
+                var fieldTypes = fieldNames.Select(x => typeof(string)).ToArray();
+            var types = fieldNames.ToDictionary(x => x, x => typeof(string));
+            
+            cube.Initialize(types);
+            for (var i = 0; i < rawSplit.Count; i++)
+            {
+                var rawRow = rawSplit[i];
+                var rowMeta = new object[fieldNames.Length];
+                for (var j = 0; j < System.Math.Min(rowMeta.Length, rawRow.Length); j++)
+                {
+                    rowMeta[j] = Convert.ChangeType(rawRow[j], fieldTypes[j]);
+                }
+                var rowValue = 0.0;
                 cube.AddRow(rowMeta, rowValue);
             }
 

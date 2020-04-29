@@ -21,6 +21,7 @@ test_script:
   - dotnet test test/Qwack.Models.Tests/Qwack.Models.Tests.csproj
   - dotnet test test/Qwack.MonteCarlo.Test/Qwack.MonteCarlo.Test.csproj
   - dotnet test test/Qwack.Serialization.Test/Qwack.Serialization.Test.csproj
+  - msbuild "clients\qwack.excel\Qwack.Excel.csproj" /p:OutputPath=".\exceloutput" /P:Configuration=Release
   
 after_test:
   # Build and pack source
@@ -39,7 +40,11 @@ after_test:
   - dotnet pack -c Release src/Qwack.Futures
   
 artifacts:
-  path: '**/*.nupkg'
+  - path: '**/*.nupkg'
+
+  - path : ./clients/qwack.excel/exceloutput
+    name : exceloutput
+    type : zip
 
 deploy:  
 - provider: NuGet
@@ -49,3 +54,4 @@ deploy:
   skip_symbols: true
   on:
     branch: master
+

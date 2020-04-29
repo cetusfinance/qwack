@@ -51,7 +51,7 @@ namespace Qwack.MonteCarlo.Test
             var blackPv = BlackFunctions.BlackPV(1000, 900, 0, 1, 0.32, OptionType.P);
             if (!IsCoverageOnly)
             {
-                Assert.Equal(blackPv, pv, 0);
+                Assert.True(System.Math.Abs(blackPv-pv)<1.0);
                 var fwd = payoff2.AverageResult;
                 Assert.True(System.Math.Abs(fwdCurve(1) / fwd - 1.0) < 0.001);
             }            

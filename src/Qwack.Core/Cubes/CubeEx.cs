@@ -172,7 +172,7 @@ namespace Qwack.Core.Cubes
                 var rowIsRelevant = true;
                 foreach (var kv in fieldsToFilterOn)
                 {
-                    if (!IsEqual(row.MetaData[indexes[kv.Key]], kv.Value))
+                    if (!IsEqual(row.MetaData[indexes[kv.Key]], Convert.ChangeType(kv.Value,cube.DataTypes[kv.Key])))
                     {
                         rowIsRelevant = false;
                         break;
@@ -625,31 +625,43 @@ namespace Qwack.Core.Cubes
         }
 
         [ExcludeFromCodeCoverage]
-        public static ICube FromCSVFile(string fileName)
+        public static ICube FromCSVFile(string fileName, bool hasHeaderRow=true, bool hasValue=true)
         {
             var rawData = System.IO.File.ReadAllLines(fileName);
+            var rawSplit = rawData.Select(x => x.Split(',')).ToArray();
 
             var cube = new ResultCube();
             var fieldNames = rawData[0].Split(',');
             var fieldTypesStr = rawData[1].Split(',');
             var fieldTypes = new Type[fieldTypesStr.Length - 1];
             var types = new Dictionary<string, Type>();
-            for (var i = 0; i < fieldNames.Length - 1; i++)
+
+            if (!hasHeaderRow)
             {
-                fieldTypes[i] = Type.GetType(fieldTypesStr[i]);
-                types.Add(fieldNames[i], fieldTypes[i]);
+                var maxWidth = rawSplit.Max(x => x.Length);
+                fieldNames = Enumerable.Range(0,maxWidth).Select((x, ix) => ix.ToString()).ToArray();
+                fieldTypes = fieldNames.Select(x => typeof(string)).ToArray();
+                types = fieldNames.ToDictionary(x => x, x => typeof(string));
+            }
+            else
+            {
+                for (var i = 0; i < fieldNames.Length - 1; i++)
+                {
+                    fieldTypes[i] = Type.GetType(fieldTypesStr[i]);
+                    types.Add(fieldNames[i], fieldTypes[i]);
+                }
             }
 
             cube.Initialize(types);
-            for (var i = 2; i < rawData.Length; i++)
+            for (var i = hasHeaderRow ? 2 : 1; i < rawData.Length; i++)
             {
-                var rawRow = rawData[i].Split(',');
-                var rowMeta = new object[rawRow.Length - 1];
-                for(var j=0;j<rowMeta.Length;j++)
+                var rawRow = rawSplit[i];
+                var rowMeta = hasValue ? new object[fieldNames.Length - 1] : new object[fieldNames.Length];
+                for (var j = 0; j < System.Math.Min(rowMeta.Length, rawRow.Length); j++)
                 {
                     rowMeta[j] = Convert.ChangeType(rawRow[j], fieldTypes[j]);
                 }
-                var rowValue = Convert.ToDouble(rawRow.Last());
+                var rowValue = hasValue ? Convert.ToDouble(rawRow.Last()) : 0.0;
                 cube.AddRow(rowMeta, rowValue);
             }
 

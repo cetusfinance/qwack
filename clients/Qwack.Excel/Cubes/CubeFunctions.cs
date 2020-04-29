@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Core.Cubes;
 using Qwack.Excel.Curves;
+using System.Security.Policy;
 
 namespace Qwack.Excel.Cubes
 {
@@ -153,6 +154,30 @@ namespace Qwack.Excel.Cubes
             });
         }
 
+        [ExcelFunction(Description = "Creates a new cube object by filtering another cube object", Category = CategoryNames.Cubes, 
+            Name = CategoryNames.Cubes + "_" + nameof(FilterCubeSpecific), IsThreadSafe = Parallel)]
+        public static object FilterCubeSpecific(
+            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
+            [ExcelArgument(Description = "Input cube name")] string InputObjectName,
+            [ExcelArgument(Description = "Filter field")] string FilterField,
+            [ExcelArgument(Description = "Filter value")] object FilterValue,
+            [ExcelArgument(Description = "Filter out? default false (i.e. filter in)")] object FilterOut)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var filterOut = FilterOut.OptionalExcel(false);
+                var cubeCache = ContainerStores.GetObjectCache<ICube>();
+                var inCube = cubeCache.GetObjectOrThrow(InputObjectName, $"Could not find cube {InputObjectName}");
+
+                var filterDeets = new Dictionary<string, object>() { { FilterField, FilterValue } };
+
+                var outCube = inCube.Value.Filter(filterDeets, filterOut);
+
+                cubeCache.PutObject(OutputObjectName, new SessionItem<ICube> { Name = OutputObjectName, Value = outCube });
+                return OutputObjectName + '¬' + cubeCache.GetObject(OutputObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a new cube object by sorting another cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(SortCube), IsThreadSafe = Parallel)]
         public static object SortCube(
            [ExcelArgument(Description = "Output cube name")] string OutputObjectName,
@@ -226,11 +251,16 @@ namespace Qwack.Excel.Cubes
         [ExcelFunction(Description = "Reads contents of cube object from csv", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CubeFromCSV), IsThreadSafe = Parallel)]
         public static object CubeFromCSV(
             [ExcelArgument(Description = "Output cube name")] string ObjectName,
-            [ExcelArgument(Description = "Input filename")] string FileName)
+            [ExcelArgument(Description = "Input filename")] string FileName,
+            [ExcelArgument(Description = "Has header row, default true")] object HasHeaderRow,
+            [ExcelArgument(Description = "Has value column, default true")] object HasValueColumn)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var cube = CubeEx.FromCSVFile(FileName);
+                var hasHeader = HasHeaderRow.OptionalExcel(true);
+                var hasValue = HasValueColumn.OptionalExcel(true);
+
+                var cube = CubeEx.FromCSVFile(FileName, hasHeader, hasValue);
                 return RiskFunctions.PushCubeToCache(cube, ObjectName);
             });
         }

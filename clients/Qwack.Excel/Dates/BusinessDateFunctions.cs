@@ -35,12 +35,15 @@ namespace Qwack.Excel.Dates
         public static object QDates_AddPeriod(
             [ExcelArgument(Description = "Starting date")] DateTime StartDate,
             [ExcelArgument(Description = "Period specified as a string e.g. 1w")]string Period,
-            [ExcelArgument(Description = "Roll method")]string RollMethod,
-            [ExcelArgument(Description = "Calendar(s) to check against")]string Calendar)
+            [ExcelArgument(Description = "Roll method, default following")]object RollMethod,
+            [ExcelArgument(Description = "Calendar(s) to check against, default Weekends")] object Calendar)
         {
             return ExcelHelper.Execute(_logger, () =>
              {
-                 if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
+                 var _rollMethod = RollMethod.OptionalExcel("F");
+                 var _calendar = Calendar.OptionalExcel("Weekends");
+
+                 if (!ValidateCalendarAndRoll(_rollMethod, _calendar, out var rollMethod, out var cal, out var errorMessage))
                      return errorMessage;
 
                  if(!Frequency.TryParse(Period, out var period))
@@ -57,12 +60,15 @@ namespace Qwack.Excel.Dates
         public static object QDates_SubtractPeriod(
            [ExcelArgument(Description = "Starting date")] DateTime StartDate,
            [ExcelArgument(Description = "Period specified as a string e.g. 1w")]string Period,
-           [ExcelArgument(Description = "Roll method")]string RollMethod,
-           [ExcelArgument(Description = "Calendar(s) to check against")]string Calendar)
+            [ExcelArgument(Description = "Roll method, default previous")] object RollMethod,
+            [ExcelArgument(Description = "Calendar(s) to check against, default Weekends")] object Calendar)
         {
             return ExcelHelper.Execute(_logger, () =>
              {
-                 if (!ValidateCalendarAndRoll(RollMethod, Calendar, out var rollMethod, out var cal, out var errorMessage))
+                 var _rollMethod = RollMethod.OptionalExcel("P");
+                 var _calendar = Calendar.OptionalExcel("Weekends");
+
+                 if (!ValidateCalendarAndRoll(_rollMethod, _calendar, out var rollMethod, out var cal, out var errorMessage))
                      return errorMessage;
 
                  if (!Frequency.TryParse(Period, out var period))

@@ -12,7 +12,9 @@ before_test:
 
 test_script:
   # Build sample
-  - dotnet test test/Qwack.Excel.Tests/Qwack.Excel.Tests.csproj
+  - msbuild .\clients\qwack.excel\qwack.excel.csproj
+  - msbuild test/qwack.excel.tests/qwack.excel.tests.csproj
+  - dotnet test --no-build test/Qwack.Excel.Tests/Qwack.Excel.Tests.csproj
   - dotnet test test/Qwack.Math.Tests/Qwack.Math.Tests.csproj
   - dotnet test test/Qwack.Dates.Tests/Qwack.Dates.Tests.csproj
   - dotnet test test/Qwack.Core.Tests/Qwack.Core.Tests.csproj

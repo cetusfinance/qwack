@@ -580,5 +580,25 @@ namespace Qwack.Core.Instruments
 
         public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
             => new Portfolio { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
+
+        public static DateTime[] ComputeSimDates(this Portfolio pf, DateTime anchorDate)
+        {
+            var payDates = pf.Instruments
+                .Select(x => x.LastSensitivityDate.AddDays(-1))
+                .Distinct()
+                .OrderBy(x => x);
+
+            var o = new List<DateTime>();
+            o.Add(anchorDate);
+            foreach(var d in payDates)
+            {
+                while(o.Last()<d.AddDays(-35))
+                {
+                    o.Add(o.Last().AddDays(1).LastDayOfMonth());
+                }
+                o.Add(d);
+            }
+            return o.ToArray();
+        }
     }
 }

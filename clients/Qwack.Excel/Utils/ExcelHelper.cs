@@ -237,11 +237,17 @@ namespace Qwack.Excel.Services
         public static IEnumerable<T> GetAnyFromCache<T>(this object[] Names)
         {
             var tCache = ContainerStores.GetObjectCache<T>();
-            var tS = Names
-                .Where(s => !(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) && tCache.Exists(s as string))
-                .Select(s => tCache.GetObject(s as string).Value);
-
-            return tS;
+            var ts = new List<T>();
+            for (var i = 0; i < Names.GetLength(0); i++)
+                {
+                    var s = Names[i];
+                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string)
+                        && tCache.TryGetObject(s as string, out var o))
+                    {
+                        ts.Add(o.Value);
+                    }
+                }
+            return ts;
         }
 
         public static IEnumerable<T> GetAnyFromCache<T>(this object[,] Names)
@@ -252,9 +258,10 @@ namespace Qwack.Excel.Services
                 for (var j = 0; j < Names.GetLength(1); j++)
                 {
                     var s = Names[i, j];
-                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) && tCache.Exists(s as string))
+                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) 
+                        && tCache.TryGetObject(s as string, out var o))
                     {
-                        ts.Add(tCache.GetObject(s as string).Value);
+                        ts.Add(o.Value);
                     }
                 }
             return ts;

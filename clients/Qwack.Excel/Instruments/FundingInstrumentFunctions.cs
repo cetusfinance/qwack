@@ -13,6 +13,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Futures;
 using Qwack.Core.Models;
 using Qwack.Models;
+using System.CodeDom.Compiler;
 
 namespace Qwack.Excel.Instruments
 {
@@ -103,6 +104,75 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve,
                     PillarDate = solvePillarDate,
                     Strike = Strike,
+                    TradeId = ObjectName
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an fx swap object", Category = CategoryNames.Instruments,
+            Name = CategoryNames.Instruments + "_" + nameof(CreateFxSwap), IsThreadSafe = Parallel)]
+        public static object CreateFxSwap(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Value Date")] DateTime ValDate,
+            [ExcelArgument(Description = "Tenor")] string Tenor,
+            [ExcelArgument(Description = "Spot Price")] double SpotPrice,
+            [ExcelArgument(Description = "Domestic Currency")] string DomesticCcy,
+            [ExcelArgument(Description = "Foreign Currency")] string ForeignCcy,
+            [ExcelArgument(Description = "Domestic Notional")] double DomesticNotional,
+            [ExcelArgument(Description = "Swap Points")] double SwapPoints,
+            [ExcelArgument(Description = "Foreign Discount Curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Solve Curve name ")] string SolveCurve,
+            [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate,
+            [ExcelArgument(Description = "Divisor, defualt 10,000")] object Divisor,
+            [ExcelArgument(Description = "Spot lag, defualt 2b")] object SpotLag)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var spotLag = SpotLag.OptionalExcel("2b");
+                var divisor = Divisor.OptionalExcel(10000.0);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(DomesticCcy, out var domesticCal);
+                ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(ForeignCcy, out var foreignCal);
+                var domesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCcy);
+                var foreignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCcy);
+
+                var pair = new FxPair() { Domestic = domesticCCY, Foreign = foreignCCY, SpotLag = new Frequency(spotLag) };
+                var SettleDate = new DateTime();
+                switch(Tenor.ToUpper())
+                {
+                    case "ON":
+                    case "O/N":
+                    case "OVERNIGHT":
+                        SettleDate = ValDate.AddPeriod(RollType.F, domesticCal, 1.Bd());
+                        SettleDate = SettleDate.IfHolidayRollForward(foreignCal);
+                        break;
+                    case "T/N":
+                    case "TN":
+                        SettleDate = pair.SpotDate(ValDate);
+                        break;
+                    default:
+                        SettleDate = pair.SpotDate(ValDate);
+                        var rt = Tenor.EndsWith("M") || Tenor.EndsWith("Y") ? RollType.MF : RollType.F;
+                        SettleDate = SettleDate.AddPeriod(rt, domesticCal, new Frequency(Tenor));
+                        SettleDate = SettleDate.IfHolidayRollForward(foreignCal);
+                        break;
+                }
+                var solvePillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate()));
+
+                var fwd = SpotPrice + SwapPoints / divisor;
+                
+
+                var product = new FxForward
+                {
+                    DomesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCcy),
+                    ForeignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCcy),
+                    DomesticQuantity = DomesticNotional,
+                    DeliveryDate = SettleDate,
+                    ForeignDiscountCurve = DiscountCurve,
+                    SolveCurve = SolveCurve,
+                    PillarDate = solvePillarDate,
+                    Strike = fwd,
                     TradeId = ObjectName
                 };
 

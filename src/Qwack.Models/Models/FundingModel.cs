@@ -71,7 +71,7 @@ namespace Qwack.Models
         public double CalibrationTimeMs { get; set; }
 
         public Dictionary<int,int> CalibrationItterations { get; set; }
-
+        public Dictionary<int, string> CalibrationCurves { get; set; }
         public void UpdateCurves(Dictionary<string, IrCurve> updateCurves) => Curves = new Dictionary<string, IrCurve>(updateCurves);
 
         public IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate)
@@ -144,7 +144,7 @@ namespace Qwack.Models
                 return forToBase / domToBase;
             }
             var fxPair = FxMatrix.GetFxPair(domesticCcy, foreignCcy);
-            var spotDate = BuildDate.AddPeriod(RollType.F, fxPair.SettlementCalendar, fxPair.SpotLag);
+            var spotDate = BuildDate.AddPeriod(RollType.F, fxPair.PrimaryCalendar, fxPair.SpotLag);
             var dfDom = GetDf(domesticCcy, spotDate, settlementDate);
             var dfFor = GetDf(foreignCcy, spotDate, settlementDate);
 
@@ -179,7 +179,7 @@ namespace Qwack.Models
             else
             {
                 var pair = FxMatrix.GetFxPair(domesticCcy, foreignCcy);
-                var settleDates = fixingDates.Select(x => x.AddPeriod(RollType.F, pair.SettlementCalendar, pair.SpotLag));
+                var settleDates = fixingDates.Select(x => x.AddPeriod(RollType.F, pair.PrimaryCalendar, pair.SpotLag));
                 var rates = settleDates.Select(d => GetFxRate(d, domesticCcy, foreignCcy)).ToArray();
                 return rates;
             }

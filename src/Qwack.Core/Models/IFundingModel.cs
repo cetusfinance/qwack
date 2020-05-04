@@ -35,5 +35,6 @@ namespace Qwack.Core.Models
 
         double CalibrationTimeMs { get; set; }
         Dictionary<int,int> CalibrationItterations { get; set; }
+        Dictionary<int, string> CalibrationCurves { get; set; }
     }
 }

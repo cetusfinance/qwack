@@ -14,6 +14,7 @@ using Qwack.Futures;
 using Qwack.Core.Models;
 using Qwack.Models;
 using System.CodeDom.Compiler;
+using System.Windows.Forms;
 
 namespace Qwack.Excel.Instruments
 {
@@ -137,30 +138,42 @@ namespace Qwack.Excel.Instruments
                 var domesticCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCcy);
                 var foreignCCY = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCcy);
 
-                var pair = new FxPair() { Domestic = domesticCCY, Foreign = foreignCCY, SpotLag = new Frequency(spotLag) };
+                var pair = new FxPair() { Domestic = domesticCCY, Foreign = foreignCCY, SpotLag = new Frequency(spotLag), PrimaryCalendar = domesticCal, SecondaryCalendar = foreignCal };
                 var SettleDate = new DateTime();
-                switch(Tenor.ToUpper())
+                var SolveDate = new DateTime();
+                var fwd = SpotPrice;
+                switch (Tenor.ToUpper())
                 {
                     case "ON":
                     case "O/N":
                     case "OVERNIGHT":
                         SettleDate = ValDate.AddPeriod(RollType.F, domesticCal, 1.Bd());
                         SettleDate = SettleDate.IfHolidayRollForward(foreignCal);
-                        break;
+
+                        var swapProduct = new FxSwap(SwapPoints,ValDate,SettleDate, DomesticNotional, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCcy), ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCcy))
+                        {
+                            SolveCurve = SolveCurve,
+                            PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate())),
+                        };
+
+                        return ExcelHelper.PushToCache(swapProduct, ObjectName);
                     case "T/N":
                     case "TN":
-                        SettleDate = pair.SpotDate(ValDate);
+                        SettleDate = pair.SpotDate(ValDate).SubtractPeriod(RollType.P, domesticCal, 1.Bd());
+                        var startDate = SettleDate.IfHolidayRollBack(foreignCal);
+                        SolveDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(pair.SpotDate(ValDate).ToOADate()));
+                        fwd -= SwapPoints / divisor;
                         break;
                     default:
                         SettleDate = pair.SpotDate(ValDate);
                         var rt = Tenor.EndsWith("M") || Tenor.EndsWith("Y") ? RollType.MF : RollType.F;
                         SettleDate = SettleDate.AddPeriod(rt, domesticCal, new Frequency(Tenor));
                         SettleDate = SettleDate.IfHolidayRollForward(foreignCal);
+                        fwd += SwapPoints / divisor;
+                        SolveDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate())); ;
                         break;
                 }
-                var solvePillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(SettleDate.ToOADate()));
 
-                var fwd = SpotPrice + SwapPoints / divisor;
                 
 
                 var product = new FxForward
@@ -171,7 +184,7 @@ namespace Qwack.Excel.Instruments
                     DeliveryDate = SettleDate,
                     ForeignDiscountCurve = DiscountCurve,
                     SolveCurve = SolveCurve,
-                    PillarDate = solvePillarDate,
+                    PillarDate = SolveDate,
                     Strike = fwd,
                     TradeId = ObjectName
                 };
@@ -480,27 +493,27 @@ namespace Qwack.Excel.Instruments
             Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFundingInstrumentCollection), IsThreadSafe = Parallel)]
         public static object CreateFundingInstrumentCollection(
            [ExcelArgument(Description = "Object name")] string ObjectName,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsA,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsB,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsC,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsD,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsE,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsF,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsG,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsH,
-           [ExcelArgument(Description = "Instruments")] object[] InstrumentsI)
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsA,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsB,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsC,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsD,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsE,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsF,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsG,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsH,
+           [ExcelArgument(Description = "Instruments")] object[,] InstrumentsI)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var Instruments = InstrumentsA
-                .Concat(InstrumentsB)
-                .Concat(InstrumentsC)
-                .Concat(InstrumentsD)
-                .Concat(InstrumentsE)
-                .Concat(InstrumentsF)
-                .Concat(InstrumentsG)
-                .Concat(InstrumentsH)
-                .Concat(InstrumentsI)
+                var Instruments = InstrumentsA.Flatten2d<object>()
+                .Concat(InstrumentsB.Flatten2d<object>())
+                .Concat(InstrumentsC.Flatten2d<object>())
+                .Concat(InstrumentsD.Flatten2d<object>())
+                .Concat(InstrumentsE.Flatten2d<object>())
+                .Concat(InstrumentsF.Flatten2d<object>())
+                .Concat(InstrumentsG.Flatten2d<object>())
+                .Concat(InstrumentsH.Flatten2d<object>())
+                .Concat(InstrumentsI.Flatten2d<object>())
                 .ToArray();
 
                 var swaps = Instruments.GetAnyFromCache<IrSwap>();
@@ -508,6 +521,7 @@ namespace Qwack.Excel.Instruments
                 var futures = Instruments.GetAnyFromCache<STIRFuture>();
                 var oisFutures = Instruments.GetAnyFromCache<OISFuture>();
                 var fxFwds = Instruments.GetAnyFromCache<FxForward>();
+                var fxSwaps = Instruments.GetAnyFromCache<FxSwap>();
                 var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
                 var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
                 var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
@@ -524,6 +538,7 @@ namespace Qwack.Excel.Instruments
                 fic.AddRange(futures);
                 fic.AddRange(oisFutures);
                 fic.AddRange(fxFwds);
+                fic.AddRange(fxSwaps);
                 fic.AddRange(xccySwaps);
                 fic.AddRange(basisSwaps);
                 fic.AddRange(ficInstruments);
@@ -657,7 +672,7 @@ namespace Qwack.Excel.Instruments
                 {
                     Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCurrency),
                     Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCurrency),
-                    SettlementCalendar = cal,
+                    PrimaryCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };
 

@@ -55,12 +55,12 @@ namespace Qwack.Core.Basic
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
             if(domesticCcy==foreignCcy)
-                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, SettlementCalendar = new Calendar(), SpotLag = 0.Day() };
+                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = new Calendar(), SpotLag = 0.Day() };
 
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
             return pair ?? 
                 FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy) ?? 
-                new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, SettlementCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
+                new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
         }
 
         public IFxMatrix Clone()

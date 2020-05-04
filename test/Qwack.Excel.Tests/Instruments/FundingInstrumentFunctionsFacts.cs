@@ -72,7 +72,8 @@ namespace Qwack.Excel.Tests.Instruments
         public void CreateFundingInstrumentCollection_Facts()
         {
             var z = FundingInstrumentFunctions.CreateFxForward("mehg", DateTime.Today, "USD", "ZAR", 123, 17, "Z.1", "Z.1", Value);
-            Assert.Equal("zzlagh¬0", FundingInstrumentFunctions.CreateFundingInstrumentCollection("zzlagh", new object[] { z }, Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>(), Array.Empty<object>()));
+            var e = new object[0, 0];
+            Assert.Equal("zzlagh¬0", FundingInstrumentFunctions.CreateFundingInstrumentCollection("zzlagh", new object[,] { { z } }, e, e, e, e, e, e, e, e));
         }
 
         [Fact]

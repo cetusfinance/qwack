@@ -114,7 +114,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             Domestic = DomesticCCY,
             Foreign = ForeignCCY,
-            SettlementCalendar = _calendarProvider.Collection[PairStr.Replace('/', '+')],
+            PrimaryCalendar = _calendarProvider.Collection[PairStr.Replace('/', '+')],
             SpotLag = 2.Bd()
         };
 

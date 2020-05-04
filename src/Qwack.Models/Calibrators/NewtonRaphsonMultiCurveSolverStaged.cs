@@ -30,6 +30,7 @@ namespace Qwack.Models.Calibrators
             var sw = new Stopwatch();
             sw.Start();
             var itterationsPerStage = new Dictionary<int, int>();
+            var curvesPerStange = new Dictionary<int, string>();
 
             var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<IIrCurve>();
@@ -64,6 +65,7 @@ namespace Qwack.Models.Calibrators
                         }
                     }
                 }
+                curvesPerStange[stage] = string.Join(",",curvesForStage.Select(c => c.Name).ToArray());
                 var currentGuess = new double[fundingInstruments.Count];
                 var currentPvs = new double[fundingInstruments.Count];
                 var bumpedPvs = new double[fundingInstruments.Count];
@@ -85,6 +87,7 @@ namespace Qwack.Models.Calibrators
 
             fundingModel.CalibrationItterations = itterationsPerStage;
             fundingModel.CalibrationTimeMs = sw.ElapsedMilliseconds;
+            fundingModel.CalibrationCurves = curvesPerStange;
             sw.Stop();
         }
 

@@ -199,7 +199,7 @@ namespace Qwack.Models.MCModels
                     break;
                 case FxForward fxf:
                     var pair = fxf.Pair.FxPairFromString(_currencyProvider, _calendarProvider);
-                    _asianDates = new List<DateTime> { fxf.DeliveryDate.SubtractPeriod(RollType.P, pair.SettlementCalendar, pair.SpotLag) };
+                    _asianDates = new List<DateTime> { fxf.DeliveryDate.SubtractPeriod(RollType.P, pair.PrimaryCalendar, pair.SpotLag) };
                     _strike = fxf.Strike;
                     _notional = fxf.DomesticQuantity;
                     _optionType = OptionType.Swap;

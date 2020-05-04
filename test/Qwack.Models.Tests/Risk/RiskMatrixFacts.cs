@@ -43,8 +43,8 @@ namespace Qwack.Models.Tests.PnLAttribution
             var discoZar = new FlatIrCurve(0.05, zar, "DISCO-ZAR");
             var fxpairs = new List<FxPair>
             {
-                new FxPair {Domestic = usd, Foreign =zar,SettlementCalendar=nyc,SpotLag=2.Bd() },
-                new FxPair {Domestic = zar, Foreign =usd,SettlementCalendar=nyc,SpotLag=2.Bd() },
+                new FxPair {Domestic = usd, Foreign =zar,PrimaryCalendar=nyc,SpotLag=2.Bd() },
+                new FxPair {Domestic = zar, Foreign =usd,PrimaryCalendar=nyc,SpotLag=2.Bd() },
             };
             var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxMatrix.Init(usd, originDate, new Dictionary<Currency, double> { { zar, 14.0 } }, fxpairs, new Dictionary<Currency, string> { { usd, "DISCO-USD" }, { zar, "DISCO-ZAR" } });

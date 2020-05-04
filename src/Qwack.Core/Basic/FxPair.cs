@@ -8,7 +8,8 @@ namespace Qwack.Core.Basic
         public Currency Foreign { get; set; }
         public Currency Domestic { get; set; }
         public Frequency SpotLag { get; set; }
-        public Calendar SettlementCalendar { get; set; }
+        public Calendar PrimaryCalendar { get; set; }
+        public Calendar SecondaryCalendar { get; set; }
 
         public override bool Equals(object x)
         {
@@ -16,7 +17,7 @@ namespace Qwack.Core.Basic
             {
                 return false;
             }
-            return (x1.Foreign == Foreign && x1.Domestic == Domestic && x1.SettlementCalendar == SettlementCalendar && x1.SpotLag == SpotLag);
+            return (x1.Foreign == Foreign && x1.Domestic == Domestic && x1.PrimaryCalendar == PrimaryCalendar && x1.SecondaryCalendar == SecondaryCalendar && x1.SpotLag == SpotLag);
         }
 
         public override int GetHashCode()
@@ -25,7 +26,8 @@ namespace Qwack.Core.Basic
             {
                 var result = Foreign.GetHashCode();
                 result = (result * 397) ^ Domestic.GetHashCode();
-                result = (result * 397) ^ SettlementCalendar.GetHashCode();
+                result = (result * 397) ^ PrimaryCalendar.GetHashCode();
+                result = (result * 397) ^ SecondaryCalendar.GetHashCode();
                 result = (result * 397) ^ SpotLag.GetHashCode();
                 return result;
             }
@@ -47,8 +49,8 @@ namespace Qwack.Core.Basic
         /// <returns></returns>
         public static DateTime SpotDate(this FxPair fxPair, DateTime valDate)
         {
-            var d = valDate.AddPeriod(RollType.F, fxPair.SettlementCalendar, fxPair.SpotLag);
-            d = d.IfHolidayRollForward(fxPair.SettlementCalendar);
+            var d = valDate.AddPeriod(RollType.F, fxPair.PrimaryCalendar, fxPair.SpotLag);
+            d = d.IfHolidayRollForward(fxPair.SecondaryCalendar);
             return d;
         }
 
@@ -56,7 +58,8 @@ namespace Qwack.Core.Basic
         {
             Domestic = currencyProvider.GetCurrency(pair.Substring(0, 3)),
             Foreign = currencyProvider.GetCurrency(pair.Substring(pair.Length - 3, 3)),
-            SettlementCalendar = calendarProvider.Collection[pair.Substring(0, 3) + "+" + pair.Substring(pair.Length - 3, 3)],
+            PrimaryCalendar = calendarProvider.Collection[pair.Substring(0, 3)],
+            SecondaryCalendar = calendarProvider.Collection[pair.Substring(pair.Length - 3, 3)],
             SpotLag = 2.Bd()
         };
     }

@@ -25,7 +25,7 @@ namespace Qwack.Models.Tests.MCModels
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var zar = TestProviderHelper.CurrencyProvider["ZAR"];
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
-            var pair = new FxPair() { Domestic = zar, Foreign = usd, SettlementCalendar = usdCal, SpotLag = 2.Bd() };
+            var pair = new FxPair() { Domestic = zar, Foreign = usd, PrimaryCalendar = usdCal, SpotLag = 2.Bd() };
 
             var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Math.Interpolation.Interpolator1DType.Linear, usd, "DISCO");
 

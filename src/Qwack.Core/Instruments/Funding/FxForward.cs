@@ -187,8 +187,10 @@ namespace Qwack.Core.Instruments.Funding
             var df1 = model.GetCurve(model.FxMatrix.GetDiscountCurve(DomesticCCY.Ccy)).GetDf(spotDate, PillarDate);
             var df2 = df1 / fxr;
             var discountCurve = model.Curves[SolveCurve];
-            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, PillarDate);
+            var t = discountCurve.Basis.CalculateYearFraction(spotDate, PillarDate);
             var rate = -Log(df2) / t;
+            if (double.IsNaN(rate) || double.IsInfinity(rate))
+                rate = 0.05;
             return rate;
         }
     }

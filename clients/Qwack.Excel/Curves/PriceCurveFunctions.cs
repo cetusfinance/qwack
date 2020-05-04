@@ -525,6 +525,8 @@ namespace Qwack.Excel.Curves
                 var sparseSpreads = SparseNewSpreads
                     .Select(x => x is ExcelEmpty || !(x is double) ? 
                     null : (double?)x).ToArray();
+                if (sparseSpreads.All(x => x is null))
+                    return ExcelHelper.ReturnExcelRangeVectorFromDouble(InputSpreads);
                 var o = CurveBender.Bend(InputSpreads, sparseSpreads);
                 return o.ReturnExcelRangeVectorFromDouble();
             });

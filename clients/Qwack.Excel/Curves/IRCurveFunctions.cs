@@ -467,16 +467,17 @@ namespace Qwack.Excel.Curves
 
                 if (model.CalibrationItterations != null)
                 {
-                    var o = new object[model.CalibrationItterations.Count() + 1, 2];
+                    var o = new object[model.CalibrationItterations.Count() + 1, 3];
 
                     o[0, 0] = "Time (ms)";
                     o[0, 1] = model.CalibrationTimeMs;
-
+                    o[0, 2] = "Curves in stage";
 
                     for (var i = 1; i <= model.CalibrationItterations.Count(); i++)
                     {
                         o[i, 0] = $"Passes Stage {i - 1}";
                         o[i, 1] = model.CalibrationItterations[i - 1];
+                        o[i, 2] = model.CalibrationCurves[i - 1];
                     }
 
                     return o;

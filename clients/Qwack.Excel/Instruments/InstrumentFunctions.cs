@@ -1333,6 +1333,7 @@ namespace Qwack.Excel.Instruments
             var fras = Instruments.GetAnyFromCache<ForwardRateAgreement>();
             var futures = Instruments.GetAnyFromCache<STIRFuture>();
             var fxFwds = Instruments.GetAnyFromCache<FxForward>();
+            var fxSwaps = Instruments.GetAnyFromCache<FxSwap>();
             var xccySwaps = Instruments.GetAnyFromCache<XccyBasisSwap>();
             var basisSwaps = Instruments.GetAnyFromCache<IrBasisSwap>();
             var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
@@ -1371,6 +1372,7 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(fras);
             pf.Instruments.AddRange(futures);
             pf.Instruments.AddRange(fxFwds);
+            pf.Instruments.AddRange(fxSwaps);
             pf.Instruments.AddRange(xccySwaps);
             pf.Instruments.AddRange(basisSwaps);
             pf.Instruments.AddRange(loanDepos);

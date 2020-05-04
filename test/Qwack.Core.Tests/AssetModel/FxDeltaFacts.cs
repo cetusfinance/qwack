@@ -46,7 +46,7 @@ namespace Qwack.Core.Tests.AssetModel
             {
                 Domestic = usd,
                 Foreign = zar,
-                SettlementCalendar = cal,
+                PrimaryCalendar = cal,
                 SpotLag = new Frequency("0b")
             };
             fxMatrix.Init(usd, startDate, rates, new List<FxPair> { fxPair }, discoMap);
@@ -124,7 +124,7 @@ namespace Qwack.Core.Tests.AssetModel
             {
                 Domestic = usd,
                 Foreign = zar,
-                SettlementCalendar = cal,
+                PrimaryCalendar = cal,
                 SpotLag = new Frequency("0b")
             };
             fxMatrix.Init(usd, startDate, rates, new List<FxPair> { fxPair }, discoMap);

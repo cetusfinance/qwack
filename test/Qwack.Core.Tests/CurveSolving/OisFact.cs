@@ -431,7 +431,7 @@ namespace Qwack.Core.Tests.CurveSolving
             };
             var fxPairs = new List<FxPair>
             {
-                new FxPair { Domestic=ccyUsd, Foreign=ccyZar, SettlementCalendar=_usd, SpotLag =new Frequency("2b") }
+                new FxPair { Domestic=ccyUsd, Foreign=ccyZar, PrimaryCalendar=_usd, SpotLag =new Frequency("2b") }
             };
             var discountMap = new Dictionary<Currency, string>
             {

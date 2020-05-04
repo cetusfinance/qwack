@@ -33,7 +33,7 @@ namespace Qwack.Core.Tests.Instruments
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             var xau = TestProviderHelper.CurrencyProvider["XAU"];
             CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
-            var pair = new FxPair() { Domestic = xau, Foreign = usd, SettlementCalendar = cal, SpotLag = 2.Bd() };
+            var pair = new FxPair() { Domestic = xau, Foreign = usd, PrimaryCalendar = cal, SpotLag = 2.Bd() };
 
             var discoCurveUsd = new IrCurve(pillars, ratesUsd, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
             var discoCurveXau = new IrCurve(pillars, ratesXau, bd, "XAU.BLAH", Interpolator1DType.Linear, xau);

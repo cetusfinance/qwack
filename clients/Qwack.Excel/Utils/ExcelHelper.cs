@@ -289,6 +289,18 @@ namespace Qwack.Excel.Services
             }
         }
 
+        public static T[] Flatten2d<T>(this T[,] input)
+        {
+            var o = new List<T>();
+            for (var i = 0; i < input.GetLength(0); i++)
+                for (var j = 0; j < input.GetLength(1); j++)
+                {
+                    if (!(input[i, j] is ExcelEmpty))
+                        o.Add(input[i, j]);
+                }
+            return o.ToArray();
+        }
+
         public static Tuple<T1,T2> [] ObjectRangeToVector<T1,T2>(this object[,] input)
         {
             if (input.GetLength(0) != 2 && input.GetLength(1) != 2)

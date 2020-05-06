@@ -4,6 +4,7 @@ using System.Text;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {

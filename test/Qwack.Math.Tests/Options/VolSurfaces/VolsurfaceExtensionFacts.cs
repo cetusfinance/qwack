@@ -15,6 +15,7 @@ using Qwack.Paths.Processes;
 using Xunit;
 using static System.Math;
 using Microsoft.Extensions.PlatformAbstractions;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
 {
@@ -71,16 +72,16 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var volFx = 0.16;
             var correl = 0.25;
 
-            var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme=true};
-            var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015,0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.GaussianKernel, Math.Interpolation.Interpolator1DType.Linear) { FlatDeltaSmileInExtreme = true };
+            var surfaceAsset = new RiskyFlySurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.GaussianKernel, Interpolator1DType.Linear) { FlatDeltaSmileInExtreme=true};
+            var surfaceFx = new RiskyFlySurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015,0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.GaussianKernel, Interpolator1DType.Linear) { FlatDeltaSmileInExtreme = true };
 
 
 
-            //var surfaceAsset = new SabrVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
-            //var surfaceFx = new SabrVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            //var surfaceAsset = new SabrVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear);
+            //var surfaceFx = new SabrVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear);
 
-            //var surfaceAsset = new SVIVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
-            //var surfaceFx = new SVIVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
+            //var surfaceAsset = new SVIVolSurface(origin, new[] { volAsset }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.02, 0.03 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear);
+            //var surfaceFx = new SVIVolSurface(origin, new[] { volFx }, new[] { expiry }, new[] { 0.25, 0.1 }, new[] { new[] { 0.015, 0.025 } }, new[] { new[] { 0.005, 0.007 } }, new[] { 0.1 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear);
 
             var invFx = new InverseFxSurface("inv", surfaceFx, TestProviderHelper.CurrencyProvider);
             var surfaceCompo = surfaceAsset.GenerateCompositeSmile(invFx, 200, expiry, 100, 1.0/15, correl);

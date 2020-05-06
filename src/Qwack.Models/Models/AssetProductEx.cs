@@ -15,6 +15,7 @@ using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 using static System.Math;
 

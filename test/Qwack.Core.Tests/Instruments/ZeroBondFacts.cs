@@ -7,6 +7,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Models;
 using Qwack.Dates;
 using static System.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Instruments
 {

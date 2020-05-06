@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Models;
 using Qwack.Core.Cubes;
-using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options.VolSurfaces
 {

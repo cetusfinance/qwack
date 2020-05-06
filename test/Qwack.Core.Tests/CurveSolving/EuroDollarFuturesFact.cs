@@ -12,6 +12,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
 using Qwack.Models;
 using Qwack.Models.Calibrators;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving

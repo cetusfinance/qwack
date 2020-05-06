@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Asset
 {

@@ -7,6 +7,7 @@ using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Curves
 {

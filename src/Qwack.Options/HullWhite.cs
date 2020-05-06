@@ -9,6 +9,8 @@ using static System.Math;
 using Qwack.Math.Extensions;
 using System.Net.Http;
 using static Qwack.Math.Statistics;
+using Qwack.Transport.BasicTypes;
+
 namespace Qwack.Options
 {
     public class HullWhite

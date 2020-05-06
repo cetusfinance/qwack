@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Qwack.Core.Curves
+namespace Qwack.Transport.BasicTypes
 {
     public enum PriceCurveType
     {

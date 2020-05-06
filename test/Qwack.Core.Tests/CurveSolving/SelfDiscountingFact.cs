@@ -10,6 +10,7 @@ using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Models;
 using Xunit;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.CurveSolving
 {

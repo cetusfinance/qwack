@@ -18,6 +18,7 @@ using Qwack.Models.Models;
 using Qwack.Core.Cubes;
 using Qwack.Models.Risk;
 using Qwack.Models.MCModels;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Instruments
 {

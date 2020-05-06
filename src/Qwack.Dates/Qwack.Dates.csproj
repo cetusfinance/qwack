@@ -10,4 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qwack.Transport\Qwack.Transport.csproj" />
+  </ItemGroup>
 </Project>

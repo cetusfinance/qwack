@@ -5,6 +5,7 @@ using System.Linq;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 using Qwack.Core.Basic;
 
 namespace Qwack.Core.Curves
@@ -91,11 +92,11 @@ namespace Qwack.Core.Curves
 
             var lastBumpIx = _pillarDates.Length;
 
-            if(LastDateToBump.HasValue)
+            if (LastDateToBump.HasValue)
             {
                 var ix = Array.BinarySearch(_pillarDates, LastDateToBump.Value);
                 ix = (ix < 0) ? ~ix : ix;
-                ix+=2;
+                ix += 2;
                 lastBumpIx = System.Math.Min(ix, lastBumpIx); //cap at last pillar
             }
 

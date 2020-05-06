@@ -15,6 +15,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Curves;
 using Qwack.Core.Cubes;
 using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Tests.Capital
 {
@@ -51,7 +52,7 @@ namespace Qwack.Excel.Tests.Capital
         [Fact]
         public void ComputeCVAFacts()
         {
-            var hz = new HazzardCurve(DateTime.Today, Qwack.Dates.DayCountBasis.Act365F, new DummyPointInterpolator(0.0));
+            var hz = new HazzardCurve(DateTime.Today, DayCountBasis.Act365F, new DummyPointInterpolator(0.0));
             var disco = new FlatIrCurve(0.0, ContainerStores.CurrencyProvider.GetCurrency("ZAR"), "disco");
 
             ContainerStores.GetObjectCache<HazzardCurve>().PutObject("hz", new SessionItem<HazzardCurve>() { Name = "hz", Value = hz });

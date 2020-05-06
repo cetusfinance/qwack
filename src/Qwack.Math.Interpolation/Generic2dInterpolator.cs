@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Qwack.Math;
 using Qwack.Math.Extensions;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {

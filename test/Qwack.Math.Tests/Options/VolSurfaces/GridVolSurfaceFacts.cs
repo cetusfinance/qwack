@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Options;
 using Xunit;
 using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
 {
@@ -25,9 +26,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
                 StrikeType.Absolute,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
+                Interpolator1DType.Linear,
+                Interpolator1DType.Linear,
+                DayCountBasis.Act_365F);
 
             var fwd = 1.5;
             Func<double, double> fwdCurve = (t => { return fwd; });
@@ -47,9 +48,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
                 StrikeType.Absolute,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
+                Interpolator1DType.Linear,
+                Interpolator1DType.Linear,
+                DayCountBasis.Act_365F);
 
             Assert.Equal(vols[0].Average(), surface.GetVolForAbsoluteStrike(1.5, maturities[0], fwd), 12);
             var midPoint = maturities[0].AddDays(((maturities[1] - maturities[0]).TotalDays / 2.0));
@@ -66,9 +67,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
                 StrikeType.Absolute,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F,
+                Interpolator1DType.Linear,
+                Interpolator1DType.Linear,
+                DayCountBasis.Act_365F,
                 new[] { "A", "B" });
 
             Assert.Equal(maturities[1], surface.PillarDatesForLabel("B"));
@@ -89,9 +90,9 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
             var surface = new Qwack.Options.VolSurfaces.GridVolSurface(
                 origin, strikes, maturities, vols,
                 StrikeType.ForwardDelta,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
+                Interpolator1DType.Linear,
+                Interpolator1DType.Linear,
+                DayCountBasis.Act_365F);
 
             var fwd = 1.5;
             Func<double, double> fwdCurve = (t => { return fwd; });

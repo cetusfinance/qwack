@@ -12,6 +12,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Futures;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Dates
 {

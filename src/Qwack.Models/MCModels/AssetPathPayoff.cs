@@ -14,6 +14,7 @@ using Qwack.Math.Extensions;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.MCModels
 {

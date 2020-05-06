@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.CLI
 {

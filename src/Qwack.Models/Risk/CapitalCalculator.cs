@@ -13,6 +13,7 @@ using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
+using Qwack.Transport.BasicTypes;
 using static System.Math;
 
 namespace Qwack.Models.Risk

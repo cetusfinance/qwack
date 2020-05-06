@@ -6,7 +6,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Models.Calibrators;
-
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving

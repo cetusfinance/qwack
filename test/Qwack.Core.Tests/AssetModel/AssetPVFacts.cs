@@ -14,6 +14,7 @@ using Qwack.Providers.Json;
 using Xunit;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.AssetModel
 {

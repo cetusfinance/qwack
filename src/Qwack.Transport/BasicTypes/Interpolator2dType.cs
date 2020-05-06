@@ -1,4 +1,4 @@
-namespace Qwack.Math.Interpolation
+namespace Qwack.Transport.BasicTypes
 {
     public enum Interpolator2DType
     {

@@ -6,6 +6,8 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 using static System.Math;
 
 namespace Qwack.Core.Curves
@@ -20,6 +22,7 @@ namespace Qwack.Core.Curves
         private readonly RateType _rateStorageType;
         internal readonly Interpolator1DType _interpKind;
         private readonly string _name;
+
 
         public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null, RateType rateStorageType = RateType.Exponential)
         {
@@ -43,6 +46,13 @@ namespace Qwack.Core.Curves
             Currency = ccy;
             CollateralSpec = collateralSpec ?? (string.IsNullOrWhiteSpace(_name) ? null :
                 (_name.Contains("[")) ? _name.Split('[').Last().Trim("[]".ToCharArray()) : _name.Split('.').Last());
+        }
+
+        public IrCurve(TO_IrCurve transportObject, ICurrencyProvider currencyProvider)
+            :this(transportObject.Pillars, transportObject.Rates, transportObject.BuildDate, transportObject.Name, transportObject.InterpKind, 
+                 currencyProvider.GetCurrency(transportObject.Ccy), transportObject.CollateralSpec, transportObject.RateStorageType)
+        {
+            _basis = transportObject.Basis;
         }
 
         public DateTime BuildDate => _buildDate;

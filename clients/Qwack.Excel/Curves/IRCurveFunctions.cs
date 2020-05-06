@@ -8,7 +8,7 @@ using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Core.Models;

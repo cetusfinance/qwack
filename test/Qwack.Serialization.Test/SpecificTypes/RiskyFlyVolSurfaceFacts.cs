@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Serialization.Test.SpecificTypes
@@ -23,8 +24,8 @@ namespace Qwack.Serialization.Test.SpecificTypes
             var flies = new[] { new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 }, new[] { 0.0025, 0.0015 } };
             var surface = new RiskyFlySurface(
                 origin, atms, maturities, wingDeltas, riskies, flies, fwds, WingQuoteType.Simple,
-                AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear,
-                Math.Interpolation.Interpolator1DType.LinearInVariance);
+                AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear,
+                Interpolator1DType.LinearInVariance);
 
             Assert.Equal(atms[1], surface.GetVolForDeltaStrike(0.5, maturities[1], fwds[1]));
 

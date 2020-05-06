@@ -1,4 +1,4 @@
-namespace Qwack.Dates
+namespace Qwack.Transport.BasicTypes
 {
     /// <summary>
     /// A list of methods for rolling dates when holidays occur

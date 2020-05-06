@@ -5,6 +5,7 @@ using System.Text;
 using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Basic
 {

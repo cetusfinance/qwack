@@ -11,6 +11,7 @@ using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Xunit;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.MonteCarlo.Test
 {

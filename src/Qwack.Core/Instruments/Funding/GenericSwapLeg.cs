@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {

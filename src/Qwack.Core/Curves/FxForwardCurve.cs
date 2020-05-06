@@ -6,6 +6,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Models;
 using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {

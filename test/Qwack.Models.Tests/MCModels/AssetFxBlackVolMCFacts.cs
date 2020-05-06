@@ -11,6 +11,7 @@ using Qwack.Options.VolSurfaces;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.Tests.MCModels
 {
@@ -21,7 +22,7 @@ namespace Qwack.Models.Tests.MCModels
             var buildDate = DateTime.Parse("2018-10-04");
             var usd = TestProviderHelper.CurrencyProvider["USD"];
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
-            var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Math.Interpolation.Interpolator1DType.Linear, usd, "DISCO");
+            var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Interpolator1DType.Linear, usd, "DISCO");
 
             var comCurve = new PriceCurve(buildDate, new[] { buildDate, buildDate.AddDays(15), buildDate.AddDays(100) }, new[] { 100.0, 100.0, 100.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider)
             {

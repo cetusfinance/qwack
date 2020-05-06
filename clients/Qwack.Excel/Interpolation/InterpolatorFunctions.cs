@@ -9,6 +9,7 @@ using Qwack.Excel.Services;
 using Qwack.Excel.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Interpolation
 {

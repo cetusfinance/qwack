@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
+    <ProjectReference Include="..\Qwack.Transport\Qwack.Transport.csproj" />
     <ProjectReference Include="..\Qwack.Utils\Qwack.Utils.csproj" />
   </ItemGroup>
   

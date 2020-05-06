@@ -9,6 +9,7 @@ using Qwack.Dates;
 using static System.Math;
 using Qwack.Core.Basic;
 using System.Collections.Generic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Instruments
 {

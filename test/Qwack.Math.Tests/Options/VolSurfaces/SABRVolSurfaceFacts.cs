@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Options;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Math.Tests.Options.VolSurfaces
@@ -28,8 +29,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
                 };
             var surface = new SabrVolSurface(
                 origin, strikes, maturities, vols, fwdCurve,
-                Math.Interpolation.Interpolator1DType.Linear,
-                Dates.DayCountBasis.Act_365F);
+                Interpolator1DType.Linear,
+                DayCountBasis.Act_365F);
 
             Assert.Equal(vols[0][0], surface.GetVolForAbsoluteStrike(1.5, origin.AddDays(33), fwd), 2);
             Assert.Equal(vols[0][0], surface.GetVolForDeltaStrike(-0.3, origin.AddDays(303), fwd), 2);
@@ -51,8 +52,8 @@ namespace Qwack.Math.Tests.Options.VolSurfaces
 
             Func<double, double> fwdCurve = (tt => { return fwd; });
 
-            var surface = new SabrVolSurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear);
-            var gSurface = new RiskyFlySurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Math.Interpolation.Interpolator1DType.Linear, Math.Interpolation.Interpolator1DType.Linear);
+            var surface = new SabrVolSurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear);
+            var gSurface = new RiskyFlySurface(origin, new[] { vol }, new[] { expiry }, new[] { 0.25, 0.1 }, rr, bf, new[] { 100.0 }, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear, Interpolator1DType.Linear);
 
             var atmK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, 0.5, 0.0, t, vol);
             Assert.Equal(vol, surface.GetVolForAbsoluteStrike(atmK, expiry, fwd), 2);

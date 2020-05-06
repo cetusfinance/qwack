@@ -1,4 +1,4 @@
-﻿namespace Qwack.Dates
+namespace Qwack.Transport.BasicTypes
 {
     /// <summary>
     /// List of period types

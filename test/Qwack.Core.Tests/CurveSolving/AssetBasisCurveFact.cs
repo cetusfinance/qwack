@@ -14,6 +14,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Math.Utils;
 using Qwack.Providers.Json;
 using Xunit;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.CurveSolving
 {

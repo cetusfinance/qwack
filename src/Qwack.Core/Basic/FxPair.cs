@@ -1,5 +1,6 @@
 using System;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Basic
 {

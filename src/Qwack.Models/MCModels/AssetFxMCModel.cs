@@ -17,6 +17,7 @@ using Qwack.Futures;
 using Qwack.Models.Models;
 using Qwack.Core.Curves;
 using Qwack.Models.Risk;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.MCModels
 {

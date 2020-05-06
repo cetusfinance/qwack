@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects;
 
 namespace Qwack.Math.Interpolation
 {
@@ -55,6 +57,10 @@ namespace Qwack.Math.Interpolation
             }
         }
 
+        public static IInterpolator1D GetInterpolator(TO_Interpolator1d transportObject) => 
+            GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Type, transportObject.NoCopy, transportObject.IsSorted);
+
+
         public static IInterpolator2D GetInterpolator(double[] x, double[] y, double[,] z, Interpolator2DType kind)
         {
             switch (kind)
@@ -70,6 +76,10 @@ namespace Qwack.Math.Interpolation
             }
         }
 
+        public static IInterpolator2D GetInterpolator(TO_Interpolator2d_Square transportObject) =>
+            GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Zs, transportObject.Type);
+
+
         public static IInterpolator2D GetInterpolator(double[][] x, double[] y, double[][] z, Interpolator2DType kind)
         {
             switch (kind)
@@ -84,5 +94,8 @@ namespace Qwack.Math.Interpolation
                     throw new InvalidOperationException($"We don't have a way of making a {kind} interpolator");
             }
         }
+
+        public static IInterpolator2D GetInterpolator(TO_Interpolator2d_Jagged transportObject) =>
+            GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Zs, transportObject.Type);
     }
 }

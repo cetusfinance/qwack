@@ -5,7 +5,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Xunit;
-using Qwack.Models.Tests;
+using Qwack.Transport.BasicTypes;
 using Qwack.Core.Curves;
 using Qwack.Core.Basic;
 using Qwack.Dates;
@@ -41,8 +41,8 @@ namespace Qwack.Models.Tests.Risk
             var pf = new Portfolio { Instruments = new List<IInstrument> { ins } };
             var pillars = new[] { _originDate.AddDays(90), _originDate.AddDays(180) };
 
-            var discoUsd = new IrCurve(pillars, pillars.Select(p => 0.02).ToArray(), _originDate, "DISCO-USD", Math.Interpolation.Interpolator1DType.Linear, usd);
-            var discoZar = new IrCurve(pillars, pillars.Select(p => 0.02).ToArray(), _originDate, "DISCO-ZAR", Math.Interpolation.Interpolator1DType.Linear, zar);
+            var discoUsd = new IrCurve(pillars, pillars.Select(p => 0.02).ToArray(), _originDate, "DISCO-USD", Interpolator1DType.Linear, usd);
+            var discoZar = new IrCurve(pillars, pillars.Select(p => 0.02).ToArray(), _originDate, "DISCO-ZAR", Interpolator1DType.Linear, zar);
 
             var fxpairs = new List<FxPair>
             {

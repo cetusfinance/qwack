@@ -17,7 +17,8 @@ using Qwack.Futures;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Core.Instruments;
-using Qwack.Math.Interpolation;
+using Qwack.Transport.BasicTypes;
+
 
 namespace Qwack.Excel.Curves
 {

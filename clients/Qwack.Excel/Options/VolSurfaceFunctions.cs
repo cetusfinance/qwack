@@ -17,6 +17,7 @@ using Qwack.Dates;
 using Qwack.Core.Models;
 using Qwack.Excel.Curves;
 using Qwack.Core.Cubes;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Options
 {

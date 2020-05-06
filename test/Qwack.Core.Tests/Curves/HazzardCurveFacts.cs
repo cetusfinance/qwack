@@ -4,6 +4,7 @@ using System.Text;
 using Xunit;
 using Qwack.Core.Curves;
 using System.Linq;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Curves
 {
@@ -14,7 +15,7 @@ namespace Qwack.Core.Tests.Curves
         {
             var hzi = new Math.Interpolation.ConstantHazzardInterpolator(0.1);
             var origin = new DateTime(2019, 05, 28);
-            var hz = new HazzardCurve(origin, Dates.DayCountBasis.Act365F, hzi);
+            var hz = new HazzardCurve(origin, DayCountBasis.Act365F, hzi);
 
             Assert.Equal(1.0, hz.GetSurvivalProbability(origin, origin));
             Assert.Equal(1.0, hz.GetSurvivalProbability(origin));

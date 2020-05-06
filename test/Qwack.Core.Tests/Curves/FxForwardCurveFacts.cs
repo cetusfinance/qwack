@@ -5,6 +5,7 @@ using Xunit;
 using Qwack.Core.Curves;
 using Qwack.Models;
 using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Curves
 {

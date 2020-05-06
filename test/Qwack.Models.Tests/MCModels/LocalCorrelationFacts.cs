@@ -12,6 +12,7 @@ using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Math.Extensions;
 using Qwack.Options;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.Tests.MCModels
 {
@@ -27,7 +28,7 @@ namespace Qwack.Models.Tests.MCModels
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
             var pair = new FxPair() { Domestic = zar, Foreign = usd, PrimaryCalendar = usdCal, SpotLag = 2.Bd() };
 
-            var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Math.Interpolation.Interpolator1DType.Linear, usd, "DISCO");
+            var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Interpolator1DType.Linear, usd, "DISCO");
 
             var dates = new[] { buildDate, buildDate.AddDays(32), buildDate.AddDays(60), buildDate.AddDays(90) };
             var times = dates.Select(d => buildDate.CalculateYearFraction(d, DayCountBasis.Act365F)).ToArray();
@@ -37,7 +38,7 @@ namespace Qwack.Models.Tests.MCModels
                 Name = "CL",
                 AssetId = "CL"
             };
-            var comSurface = new GridVolSurface(buildDate, new[] { 0.5 }, dates, vols.Select(x => new double[] { x }).ToArray(), StrikeType.ForwardDelta, Math.Interpolation.Interpolator1DType.Linear, Math.Interpolation.Interpolator1DType.LinearInVariance, DayCountBasis.Act365F) { AssetId = "CL" };
+            var comSurface = new GridVolSurface(buildDate, new[] { 0.5 }, dates, vols.Select(x => new double[] { x }).ToArray(), StrikeType.ForwardDelta, Interpolator1DType.Linear, Interpolator1DType.LinearInVariance, DayCountBasis.Act365F) { AssetId = "CL" };
             var fxSurface = new ConstantVolSurface(buildDate, 0.16) { AssetId = "USD/ZAR" }; 
             var correlVector = new CorrelationTimeVector("CL", "USD/ZAR", _correls, times);
             var fModel = new FundingModel(buildDate, new Dictionary<string, IrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);

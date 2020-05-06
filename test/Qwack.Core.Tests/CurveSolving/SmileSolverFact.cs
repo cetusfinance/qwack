@@ -9,6 +9,7 @@ using Qwack.Options;
 using Qwack.Options.Calibrators;
 using Qwack.Options.VolSurfaces;
 using Qwack.Providers.Json;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Core.Tests.CurveSolving

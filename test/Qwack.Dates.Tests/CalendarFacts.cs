@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Providers.Json;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Dates.Tests

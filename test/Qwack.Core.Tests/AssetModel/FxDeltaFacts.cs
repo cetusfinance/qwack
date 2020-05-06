@@ -13,6 +13,7 @@ using Qwack.Models.Models;
 using Qwack.Providers.Json;
 using Xunit;
 using Qwack.Utils.Parallel;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.AssetModel
 {

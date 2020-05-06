@@ -7,6 +7,7 @@ using Qwack.Core.Models;
 using System.Linq;
 using Qwack.Core.Instruments;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {

@@ -15,6 +15,7 @@ using Qwack.Core.Models;
 using Qwack.Models;
 using System.CodeDom.Compiler;
 using System.Windows.Forms;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Instruments
 {

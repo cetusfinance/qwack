@@ -11,6 +11,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Futures;
 using Qwack.Providers.CSV;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.Calibrators
 {
@@ -25,7 +26,7 @@ namespace Qwack.Models.Calibrators
             var pillars = instruments.Select(x => x.PillarDate).OrderBy(x => x).ToArray();
             var fic = new FundingInstrumentCollection(currencyProvider);
             fic.AddRange(instruments);
-            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Math.Interpolation.Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"));
+            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"));
             var fm = new FundingModel(origin, new[] { curve }, currencyProvider, calendarProvider);
 
             var solver = new NewtonRaphsonMultiCurveSolverStaged();

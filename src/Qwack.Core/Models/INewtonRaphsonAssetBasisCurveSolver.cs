@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Models
 {

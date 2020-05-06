@@ -367,7 +367,7 @@ namespace Qwack.Excel.Utils
             var z9 = new Qwack.Random.Constant.Constant();
             var z10 = new Qwack.Serialization.SkipSerializationAttribute();
             var z11 = Qwack.Storage.ObjectCategory.Asset;
-            var z13 = Qwack.Math.Interpolation.Interpolator1DType.CubicSpline;
+            var z13 = Qwack.Transport.BasicTypes.Interpolator1DType.CubicSpline;
             var z14 = Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded;
             return "Qwack is warm";
         }

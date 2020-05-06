@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
 using static System.Math;
 using System.Linq;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options.Asians
 {

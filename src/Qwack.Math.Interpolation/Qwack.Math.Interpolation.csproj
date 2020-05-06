@@ -14,6 +14,6 @@
     <ProjectReference Include="..\Qwack.Math\Qwack.Math.csproj" />
   </ItemGroup>
   <ItemGroup>
-
+    <ProjectReference Include="..\Qwack.Transport\Qwack.Transport.csproj" />
   </ItemGroup>
  </Project>

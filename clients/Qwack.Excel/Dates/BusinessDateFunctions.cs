@@ -7,6 +7,7 @@ using Qwack.Dates;
 using Qwack.Excel.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Dates
 {

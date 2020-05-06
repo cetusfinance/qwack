@@ -4,6 +4,7 @@ using System.Text;
 using Xunit;
 using Qwack.Core.Curves;
 using System.Linq;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Tests.Curves
 {

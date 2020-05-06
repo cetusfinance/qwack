@@ -1,4 +1,4 @@
-namespace Qwack.Dates
+namespace Qwack.Transport.BasicTypes
 {
     /// <summary>
     /// A list of methods for calculating a year fraction from a pair of dates

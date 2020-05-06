@@ -5,12 +5,22 @@ using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Core.Basic
 {
     public class FxMatrix : IFxMatrix
     {
         private ICurrencyProvider _currencyProvider;
+
+        public FxMatrix(TO_FxMatrix transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider):this(currencyProvider) 
+        {
+            BaseCurrency = currencyProvider.GetCurrency(transportObject.BaseCurrency);
+            BuildDate = transportObject.BuildDate;
+            SpotRates = transportObject.SpotRates.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
+            DiscountCurveMap = transportObject.DiscountCurveMap.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
+            FxPairDefinitions = transportObject.FxPairDefinitions.Select(x => new FxPair(x, currencyProvider, calendarProvider)).ToList();
+        }
 
         public FxMatrix(ICurrencyProvider currencyProvider)
         {
@@ -78,5 +88,15 @@ namespace Qwack.Core.Basic
         }
 
         public string GetDiscountCurve(string currency) => DiscountCurveMap.TryGetValue(_currencyProvider.GetCurrency(currency), out var curve) ? curve : null;
+
+        public TO_FxMatrix GetTransportObject() =>
+            new TO_FxMatrix
+            {
+                BaseCurrency = BaseCurrency.Ccy,
+                BuildDate = BuildDate,
+                DiscountCurveMap = DiscountCurveMap.ToDictionary(x => x.Key.Ccy, x => x.Value),
+                SpotRates = SpotRates.ToDictionary(x => x.Key.Ccy, x => x.Value),
+                FxPairDefinitions = FxPairDefinitions.Select(x=>x.GetTransportObject()).ToList()
+            };
     }
 }

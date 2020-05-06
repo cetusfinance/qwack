@@ -5,12 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using static System.Math;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {
     public class GaussianKernelInterpolator : IInterpolator1D
     {
-        const double xBump = 1e-10;
+        public Interpolator1DType Type => Interpolator1DType.GaussianKernel;
 
         private readonly double[] _x;
         private readonly double[] _y;
@@ -18,6 +19,9 @@ namespace Qwack.Math.Interpolation
         private readonly double _minX;
         private readonly double _maxX;
         private readonly double _bandwidth = 0.25;
+
+        public double[] Xs => _x;
+        public double[] Ys => _y;
 
         public GaussianKernelInterpolator()
         {

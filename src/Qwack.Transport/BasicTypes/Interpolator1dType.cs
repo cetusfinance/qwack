@@ -6,12 +6,15 @@ namespace Qwack.Transport.BasicTypes
         MonotoneCubicSpline,
         Linear,
         LinearFlatExtrap,
+        LinearFlatExtrapNoBinSearch,
         LinearInVariance,
         FloaterHormannRational,
         LogLinear,
         GaussianKernel,
         DummyPoint,
         NextValue,
-        PreviousValue
+        PreviousValue,
+        ConstantHazzard,
+        Other
     }
 }

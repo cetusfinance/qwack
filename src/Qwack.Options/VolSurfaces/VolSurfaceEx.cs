@@ -341,7 +341,6 @@ namespace Qwack.Options.VolSurfaces
             return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
         }
 
-
         public static IInterpolator1D GenerateCompositeSmileBasic(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool deltaStrikeOutput=false)
         {
             var deltaKa = fwdAsset * 0.00001;
@@ -484,7 +483,6 @@ namespace Qwack.Options.VolSurfaces
             return InterpolatorFactory.GetInterpolator(ks, vols, Interpolator1DType.CubicSpline);
         }
 
-
         public static IInterpolator1D GenerateCompositeSmileB(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool strikesInDeltaSpace = false)
         {
             var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
@@ -606,5 +604,6 @@ namespace Qwack.Options.VolSurfaces
 
             return outSurface;
         }
+
     }
 }

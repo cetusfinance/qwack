@@ -1,6 +1,7 @@
 using System;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Core.Basic
 {
@@ -11,6 +12,17 @@ namespace Qwack.Core.Basic
         public Frequency SpotLag { get; set; }
         public Calendar PrimaryCalendar { get; set; }
         public Calendar SecondaryCalendar { get; set; }
+
+        public FxPair() { }
+
+        public FxPair(TO_FxPair transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
+            Foreign = currencyProvider.GetCurrency(transportObject.Foreign);
+            Domestic = currencyProvider.GetCurrency(transportObject.Domestic);
+            SpotLag = new Frequency(transportObject.SpotLag);
+            PrimaryCalendar = calendarProvider.Collection[transportObject.PrimaryCalendar];
+            SecondaryCalendar = calendarProvider.Collection[transportObject.SecondaryCalendar];
+        }
 
         public override bool Equals(object x)
         {
@@ -35,6 +47,16 @@ namespace Qwack.Core.Basic
         }
 
         public override string ToString() => $"{Domestic}/{Foreign}";
+
+        public TO_FxPair GetTransportObject() =>
+            new TO_FxPair
+            {
+                Domestic = Domestic.Ccy,
+                Foreign = Foreign.Ccy,
+                PrimaryCalendar = PrimaryCalendar.Name,
+                SecondaryCalendar = SecondaryCalendar.Name,
+                SpotLag = SpotLag.ToString()
+            };
     }
 
     public static class FxPairEx

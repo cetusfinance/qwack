@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
+using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -118,6 +120,16 @@ namespace Qwack.Options.VolSurfaces
             AtmVolType = atmVolType;
 
             base.Build(originDate, strikes, expiries, vols);
+        }
+
+        public RiskyFlySurface(TO_RiskyFlySurface transportObject, ICurrencyProvider currencyProvider)
+            :this(transportObject.OriginDate,transportObject.ATMs, transportObject.Expiries, transportObject.WingDeltas,transportObject.Riskies,
+                 transportObject.Flies,transportObject.Forwards, transportObject.WingQuoteType, transportObject.AtmVolType, transportObject.StrikeInterpolatorType, 
+                 transportObject.TimeInterpolatorType, transportObject.PillarLabels)
+        {
+            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            AssetId = transportObject.AssetId;
+            Name = transportObject.Name;  
         }
 
         private int LastIx(DateTime? LastSensitivityDate)
@@ -414,5 +426,30 @@ namespace Qwack.Options.VolSurfaces
                 Name = Name,
             };
         }
+
+        public TO_RiskyFlySurface GetTransportObject() => new TO_RiskyFlySurface
+        {
+            AssetId = AssetId,
+            Name = Name,
+            OriginDate = OriginDate,
+            ATMs = ATMs,
+            AtmVolType = AtmVolType,
+            Currency = Currency.Ccy,
+            Expiries = Expiries,
+            FlatDeltaPoint = FlatDeltaPoint,
+            FlatDeltaSmileInExtreme = FlatDeltaSmileInExtreme,
+            OverrideSpotLag = OverrideSpotLag.ToString(),
+            Riskies = Riskies,
+            Flies = Flies,
+            Forwards = Forwards,
+            Interpolators = _interpolators.Select(x => x.ToTransportObject()).ToArray(),
+            PillarLabels = PillarLabels,
+            StrikeInterpolatorType = StrikeInterpolatorType,
+            StrikeType = StrikeType,
+            TimeBasis = TimeBasis,
+            TimeInterpolatorType = TimeInterpolatorType,
+            WingDeltas = WingDeltas,
+            WingQuoteType = WingQuoteType
+        };
     }
 }

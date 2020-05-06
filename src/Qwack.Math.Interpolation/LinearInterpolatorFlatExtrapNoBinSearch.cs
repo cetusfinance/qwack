@@ -5,11 +5,14 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using static System.Math;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {
     public class LinearInterpolatorFlatExtrapNoBinSearch : IInterpolator1D
     {
+        public Interpolator1DType Type => Interpolator1DType.LinearFlatExtrapNoBinSearch;
+
         const double xBump = 1e-10;
 
         private double[] _x;
@@ -17,6 +20,9 @@ namespace Qwack.Math.Interpolation
         private double[] _slope;
         private readonly double _minX;
         private readonly double _maxX;
+
+        public double[] Xs => _x;
+        public double[] Ys => _y;
 
         public LinearInterpolatorFlatExtrapNoBinSearch(double[] x, double[] y)
         {

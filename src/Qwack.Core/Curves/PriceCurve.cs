@@ -7,6 +7,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Core.Basic;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
 {
@@ -56,6 +57,12 @@ namespace Qwack.Core.Curves
                 _pillarLabels = pillarLabels;
 
             Initialize();
+        }
+
+        public PriceCurve(TO_PriceCurve transportObject, ICurrencyProvider currencyProvider) : this(transportObject.BuildDate, transportObject.PillarDates, transportObject.Prices, transportObject.CurveType, currencyProvider, transportObject.PillarLabels)
+        {
+            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            CollateralSpec = transportObject.CollateralSpec;
         }
 
         private void Initialize()

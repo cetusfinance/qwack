@@ -4,14 +4,20 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
     public class DummyPointInterpolator:IInterpolator1D,IInterpolator2D
     {
+        public Interpolator1DType Type => Interpolator1DType.DummyPoint;
+
         private readonly double _point;
-     
+
+        public double Point => _point;
+
+
         public DummyPointInterpolator()
         {
 

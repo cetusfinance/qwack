@@ -5,7 +5,9 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Dates;
 using Qwack.Core.Models;
+using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Models
 {
@@ -39,6 +41,14 @@ namespace Qwack.Models
             VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
+
+        public FundingModel(TO_FundingModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
+            this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
+        {
+            VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
+            SetupFx(new FxMatrix(transportObject.FxMatrix, currencyProvider, calendarProvider));
+        }
+
 
         private void SetupMappings()
         {
@@ -215,6 +225,15 @@ namespace Qwack.Models
 
             return mf;
         }
+
+        public TO_FundingModel GetTransportObject =>
+            new TO_FundingModel
+            {
+                BuildDate = BuildDate,
+                VolSurfaces = VolSurfaces.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
+                Curves = Curves.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
+                FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject()
+            };
     }
 
     

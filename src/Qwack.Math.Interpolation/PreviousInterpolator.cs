@@ -1,20 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+using Qwack.Transport.BasicTypes;
 using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
     public class PreviousInterpolator:IInterpolator1D
     {
+        public Interpolator1DType Type => Interpolator1DType.PreviousValue; 
+
         const double xBump = 1e-10;
 
         private double[] _x;
         private double[] _y;
         private double _minX;
         private double _maxX;
+
+        public double[] Xs => _x;
+        public double[] Ys => _y;
 
         public PreviousInterpolator()
         {

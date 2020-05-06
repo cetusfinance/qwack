@@ -6,6 +6,7 @@ using Qwack.Math;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -25,9 +26,17 @@ namespace Qwack.Options.VolSurfaces
 
         public DateTime[] Expiries => new[] { OriginDate };
         public Frequency OverrideSpotLag { get; set; }
-        public ConstantVolSurface()         {        }
+        public ConstantVolSurface() { }
 
-        public ConstantVolSurface(DateTime originDate, double volatility):base() => Build(originDate, volatility);
+        public ConstantVolSurface(DateTime originDate, double volatility) : base() => Build(originDate, volatility);
+
+        public ConstantVolSurface(TO_ConstantVolSurface transportObject, ICurrencyProvider currencyProvider)
+            : this(transportObject.OriginDate, transportObject.Volatility)
+        {
+            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            AssetId = transportObject.AssetId;
+            Name = transportObject.Name;
+        }
 
         public void Build(DateTime originDate, double volatility)
         {
@@ -59,5 +68,14 @@ namespace Qwack.Options.VolSurfaces
 
         public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
         public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
+
+        public TO_ConstantVolSurface GetTransportObject() => new TO_ConstantVolSurface
+        {
+            AssetId = AssetId,
+            Name = Name,
+            OriginDate = OriginDate,
+            Currency = Currency.Ccy,
+            Volatility = Volatility
+        };
     }
 }

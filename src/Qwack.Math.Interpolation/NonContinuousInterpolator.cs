@@ -1,15 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {
     public class NonContinuousInterpolator : IInterpolator1D
     {
+        public Interpolator1DType Type => Interpolator1DType.Other;
+
         const double xBump = 1e-10;
 
         private readonly double[] _upperBounds;

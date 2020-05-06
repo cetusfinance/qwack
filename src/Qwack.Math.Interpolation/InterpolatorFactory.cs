@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects;
+using Qwack.Transport.TransportObjects.Interpolators;
 
 namespace Qwack.Math.Interpolation
 {
@@ -97,5 +97,8 @@ namespace Qwack.Math.Interpolation
 
         public static IInterpolator2D GetInterpolator(TO_Interpolator2d_Jagged transportObject) =>
             GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Zs, transportObject.Type);
+
+        public static IInterpolator2D GetInterpolator(TO_Interpolator2d transportObject) => 
+            transportObject.IsJagged ? GetInterpolator(transportObject.Jagged) : GetInterpolator(transportObject.Square);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Qwack.Core.Basic
+namespace Qwack.Transport.BasicTypes
 {
     /// <summary>
     /// The type of at the money volatility

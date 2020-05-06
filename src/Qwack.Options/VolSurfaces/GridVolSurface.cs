@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -43,7 +44,7 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
 
-        private IInterpolator1D[] _interpolators;
+        internal IInterpolator1D[] _interpolators;
 
         public GridVolSurface()         {        }
 
@@ -62,6 +63,15 @@ namespace Qwack.Options.VolSurfaces
                 PillarLabels = pillarLabels;
 
             Build(originDate, strikes, expiries, vols);
+        }
+
+        public GridVolSurface(TO_GridVolSurface transportObject, ICurrencyProvider currencyProvider)
+            :this(transportObject.OriginDate,transportObject.Strikes,transportObject.Expiries,transportObject.Volatilities,transportObject.StrikeType, 
+                 transportObject.StrikeInterpolatorType, transportObject.TimeInterpolatorType, transportObject.TimeBasis, transportObject.PillarLabels)
+        {
+            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            AssetId = transportObject.AssetId;
+            Name = transportObject.Name;
         }
 
         public void Build(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols)
@@ -389,5 +399,25 @@ namespace Qwack.Options.VolSurfaces
             if (b == minK || b == maxK) throw new Exception("Solution outside of solving bounds");
             return b;
         }
+
+        public TO_GridVolSurface GetTransportObject() => new TO_GridVolSurface
+        {
+            AssetId = AssetId,
+            Name = Name,
+            OriginDate = OriginDate,
+            Currency = Currency.Ccy,
+            Expiries = Expiries,
+            FlatDeltaPoint = FlatDeltaPoint,
+            FlatDeltaSmileInExtreme = FlatDeltaSmileInExtreme,
+            OverrideSpotLag = OverrideSpotLag.ToString(),
+            Interpolators = _interpolators.Select(x => x.ToTransportObject()).ToArray(),
+            PillarLabels = PillarLabels,
+            StrikeInterpolatorType = StrikeInterpolatorType,
+            StrikeType = StrikeType,
+            TimeBasis = TimeBasis,
+            TimeInterpolatorType = TimeInterpolatorType,
+            Strikes = Strikes,
+            Volatilities = Volatilities
+        };
     }
 }

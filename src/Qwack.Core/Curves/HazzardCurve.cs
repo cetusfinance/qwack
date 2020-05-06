@@ -5,11 +5,25 @@ using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
 {
     public class HazzardCurve
     {
+        public HazzardCurve(DateTime originDate, DayCountBasis basis, IInterpolator1D hazzardRateInterpolator)
+        {
+            OriginDate = originDate;
+            Basis = basis;
+            _hazzardCurve = hazzardRateInterpolator;
+        }
+
+        public HazzardCurve(TO_HazzardCurve transportObject):this(transportObject.OriginDate, transportObject.Basis, InterpolatorFactory.GetInterpolator(transportObject.HazzardCurve))
+        {
+            if(transportObject.ConstantPD.HasValue)
+                ConstantPD = transportObject.ConstantPD.Value;
+        }
+
         private double? _constPD = null;
         public double ConstantPD
         {
@@ -47,13 +61,6 @@ namespace Qwack.Core.Curves
         public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetSurvivalProbability(startDate, endDate);
 
         private IInterpolator1D _hazzardCurve;
-
-        public HazzardCurve(DateTime originDate, DayCountBasis basis, IInterpolator1D hazzardRateInterpolator)
-        {
-            OriginDate = originDate;
-            Basis = basis;
-            _hazzardCurve = hazzardRateInterpolator;
-        }
 
         public double RiskyDiscountFactor(DateTime startDate, DateTime endDate, IIrCurve discountCurve, double LGD)
         {

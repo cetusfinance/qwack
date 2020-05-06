@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Transport.BasicTypes;
 
-namespace Qwack.Transport.TransportObjects
+namespace Qwack.Transport.TransportObjects.Interpolators
 {
     public class TO_Interpolator2d_Square
     {

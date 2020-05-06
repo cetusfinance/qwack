@@ -4,16 +4,21 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Qwack.Math;
+using Qwack.Transport.BasicTypes;
 using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
     public class CubicHermiteSplineInterpolator : IIntegrableInterpolator
     {
+        public Interpolator1DType Type => Interpolator1DType.CubicSpline;
+
         const double xBump = 1e-10;
 
         private double[] _x;
         private double[] _y;
+        public double[] Xs => _x;
+        public double[] Ys => _y;
 
         private double[] _tangents;
 

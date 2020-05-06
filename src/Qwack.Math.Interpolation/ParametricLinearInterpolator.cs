@@ -1,14 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {
     public class ParametricLinearInterpolator : IInterpolator1D
     {
+        public Interpolator1DType Type => Interpolator1DType.Other;
+
         private readonly double _alpha;
         private readonly double _beta;
 

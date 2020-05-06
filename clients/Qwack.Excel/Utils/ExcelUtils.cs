@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Qwack.Serialization;
 using System.Diagnostics.CodeAnalysis;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Utils
 {
@@ -356,7 +357,7 @@ namespace Qwack.Excel.Utils
         [ExcelFunction(Description = "Prevents lazy-loading", Category = "QUtils")]
         public static object QUtils_WarmUp()
         {
-            var z1 = Qwack.Core.Basic.AtmVolType.AtmForward;
+            var z1 = AtmVolType.AtmForward;
             var z2 = new Qwack.Dates.Calendar();
             var z3 = new Qwack.Futures.FutureSettings(null);
             var z4 = Qwack.Math.Distributions.Gaussian.GKern(0, 0, 1);
@@ -369,6 +370,7 @@ namespace Qwack.Excel.Utils
             var z11 = Qwack.Storage.ObjectCategory.Asset;
             var z13 = Qwack.Transport.BasicTypes.Interpolator1DType.CubicSpline;
             var z14 = Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded;
+            var z15 = new Qwack.Core.Basic.FxPair();
             return "Qwack is warm";
         }
     }

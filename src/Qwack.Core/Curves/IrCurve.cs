@@ -65,6 +65,7 @@ namespace Qwack.Core.Curves
 
         public int SolveStage { get; set; }
         public DayCountBasis Basis => _basis;
+
         public Currency Currency;
 
         public string CollateralSpec { get; private set; }
@@ -272,5 +273,19 @@ namespace Qwack.Core.Curves
         {
             SolveStage = SolveStage
         };
+
+        public TO_IrCurve GetTransportObject() =>
+            new TO_IrCurve 
+            { 
+                Basis = Basis,
+                BuildDate = BuildDate,
+                Ccy = Currency.Ccy,
+                CollateralSpec = CollateralSpec,
+                InterpKind = InterpolatorType,
+                Name = Name,
+                Pillars = PillarDates,
+                Rates = _rates,
+                RateStorageType = RateStorageType
+            };
     }
 }

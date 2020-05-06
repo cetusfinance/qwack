@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
 using Xunit;

@@ -16,7 +16,8 @@ namespace Qwack.Core.Tests.Basic
             {
                 Domestic = TestProviderHelper.CurrencyProvider.GetCurrency("USD"),
                 Foreign = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR"),
-                PrimaryCalendar = TestProviderHelper.CalendarProvider.Collection["NYC"],
+                PrimaryCalendar = TestProviderHelper.CalendarProvider.Collection["ZAR"],
+                SecondaryCalendar = TestProviderHelper.CalendarProvider.Collection["NYC"],
                 SpotLag = new Dates.Frequency("2d")
             };
 
@@ -24,7 +25,8 @@ namespace Qwack.Core.Tests.Basic
             {
                 Domestic = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR"),
                 Foreign = TestProviderHelper.CurrencyProvider.GetCurrency("USD"),
-                PrimaryCalendar = TestProviderHelper.CalendarProvider.Collection["NYC"],
+                PrimaryCalendar = TestProviderHelper.CalendarProvider.Collection["ZAR"],
+                SecondaryCalendar = TestProviderHelper.CalendarProvider.Collection["NYC"],
                 SpotLag = new Dates.Frequency("2d")
             };
 

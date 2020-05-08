@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Qwack.Options;
 using Xunit;
 using Qwack.Dates;
-using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Tests.Options

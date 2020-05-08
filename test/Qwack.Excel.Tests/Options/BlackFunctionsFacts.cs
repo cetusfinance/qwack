@@ -7,6 +7,7 @@ using Xunit;
 using Qwack.Dates;
 using Qwack.Excel.Options;
 using Qwack.Providers.Json;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Tests.Options
 {
@@ -48,7 +49,7 @@ namespace Qwack.Excel.Tests.Options
             var fwd = 100.0;
             var k = 115.0;
             var t = 1.5;
-            var deltaK = Qwack.Options.BlackFunctions.BlackDelta(fwd, k, 0, t, vol, Core.Basic.OptionType.C);
+            var deltaK = Qwack.Options.BlackFunctions.BlackDelta(fwd, k, 0, t, vol, OptionType.C);
             Assert.Equal(k,(double)BlackFunctions.AbsoluteStrikeFromDelta(t,deltaK,fwd,vol,0), 12);
         }
     }

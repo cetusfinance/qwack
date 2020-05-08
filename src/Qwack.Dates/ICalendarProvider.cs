@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Qwack.Dates
 {
@@ -6,5 +6,6 @@ namespace Qwack.Dates
     {
         CalendarCollection Collection { get; }
         Dictionary<string, Calendar> OriginalCalendars { get; }
+        Calendar GetCalendar(string Name);
     }
 }

@@ -8,6 +8,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using System.Linq;
 using Qwack.Models.Models;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Options
 {

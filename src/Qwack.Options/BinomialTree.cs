@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math.Extensions;
-using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options
 {

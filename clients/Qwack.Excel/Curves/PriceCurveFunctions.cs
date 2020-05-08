@@ -18,7 +18,7 @@ using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Core.Instruments;
 using Qwack.Transport.BasicTypes;
-
+using Qwack.Core.Basic.Correlation;
 
 namespace Qwack.Excel.Curves
 {

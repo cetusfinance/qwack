@@ -8,6 +8,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
 
 namespace Qwack.Core.Instruments
 {
@@ -49,6 +50,13 @@ namespace Qwack.Core.Instruments
             Instruments = new List<IInstrument>(Instruments),
             PortfolioName = PortfolioName
         };
+
+        public TO_Portfolio ToTransportObject() =>
+            new TO_Portfolio
+            {
+                PortfolioName = PortfolioName,
+                Instruments = Instruments.Select(x=>x.GetTransportObject()).ToList()
+            };
     }
 
     public static class PortfolioEx

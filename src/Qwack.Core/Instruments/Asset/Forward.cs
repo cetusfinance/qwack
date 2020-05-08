@@ -6,6 +6,9 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -144,5 +147,32 @@ namespace Qwack.Core.Instruments.Asset
         public double SupervisoryDelta(IAssetFxModel model) => 1.0;
         public double MaturityFactor(DateTime today) => AsBulletSwap().MaturityFactor(today);
         public string HedgingSet { get; set; }
+
+        public TO_Instrument ToTransportObject() =>
+           new TO_Instrument
+           {
+               AssetInstrumentType = AssetInstrumentType.Forward,
+               Forward = new TO_Forward
+               {
+                   TradeId = TradeId,
+                   Notional = Notional,
+                   Direction = Direction,
+                   ExpiryDate = ExpiryDate,
+                   FixingCalendar = FixingCalendar.Name,
+                   PaymentCalendar = PaymentCalendar.Name,
+                   SpotLag = SpotLag.ToString(),
+                   PaymentLag = PaymentLag.ToString(),
+                   Strike = Strike,
+                   AssetId = AssetId,
+                   PaymentCurrency = PaymentCurrency,
+                   FxFixingId = FxFixingId,
+                   DiscountCurve = DiscountCurve,
+                   PaymentDate = PaymentDate,
+                   Counterparty = Counterparty,
+                   FxConversionType = FxConversionType,
+                   HedgingSet = HedgingSet,
+                   PortfolioName = PortfolioName,
+               }
+           };
     }
 }

@@ -6,6 +6,7 @@ using Qwack.Options;
 using Xunit;
 using Qwack.Core.Basic;
 using static System.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Tests.Options
 {

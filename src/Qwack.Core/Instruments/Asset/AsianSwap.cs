@@ -7,6 +7,8 @@ using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
@@ -18,7 +20,6 @@ namespace Qwack.Core.Instruments.Asset
         public string PortfolioName { get; set; }
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
-
         public DateTime AverageStartDate { get; set; }
         public DateTime AverageEndDate { get; set; }
         public DateTime[] FixingDates { get; set; }
@@ -37,11 +38,14 @@ namespace Qwack.Core.Instruments.Asset
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
+        public string HedgingSet { get; set; }
+
+        public AsianSwap() { }
 
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
         {
-            if (FxConversionType == FxConversionType.None && model.GetPriceCurve(AssetId).Currency== PaymentCurrency)
+            if (FxConversionType == FxConversionType.None && model.GetPriceCurve(AssetId).Currency == PaymentCurrency)
                 return new[] { DiscountCurve };
             else
             {
@@ -70,7 +74,7 @@ namespace Qwack.Core.Instruments.Asset
         private bool IsFx => AssetId.Length == 7 && AssetId[3] == '/';
 
         public DateTime LastSensitivityDate => PaymentDate.Max(AverageEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
-               
+
         public IAssetInstrument Clone() => new AsianSwap
         {
             TradeId = TradeId,
@@ -118,7 +122,7 @@ namespace Qwack.Core.Instruments.Asset
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
         public double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        private double M(DateTime today) => Max(0,today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
+        private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
         internal double Fwd(IAssetFxModel model)
         {
             var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?
@@ -155,6 +159,38 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Currency>.Default.Equals(Currency, swap.Currency) &&
                    HedgingSet == swap.HedgingSet;
 
-        public string HedgingSet { get; set; }
+        public TO_Instrument ToTransportObject() =>
+            new TO_Instrument
+            {
+                AssetInstrumentType = AssetInstrumentType.AsianSwap,
+                AsianSwap = new TO_AsianSwap
+                {
+                    TradeId = TradeId,
+                    Notional = Notional,
+                    Direction = Direction,
+                    AverageStartDate = AverageStartDate,
+                    AverageEndDate = AverageEndDate,
+                    FixingDates = (DateTime[])FixingDates.Clone(),
+                    FixingCalendar = FixingCalendar.Name,
+                    PaymentCalendar = PaymentCalendar.Name,
+                    SpotLag = SpotLag.ToString(),
+                    SpotLagRollType = SpotLagRollType,
+                    PaymentLag = PaymentLag.ToString(),
+                    PaymentLagRollType = PaymentLagRollType,
+                    PaymentDate = PaymentDate,
+                    PaymentCurrency = PaymentCurrency,
+                    AssetFixingId = AssetFixingId,
+                    AssetId = AssetId,
+                    DiscountCurve = DiscountCurve,
+                    FxConversionType = FxConversionType,
+                    FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+                    FxFixingId = FxFixingId,
+                    Strike = Strike,
+                    Counterparty = Counterparty,
+                    HedgingSet = HedgingSet,
+                    PortfolioName = PortfolioName
+                }
+            };
     }
 }
+

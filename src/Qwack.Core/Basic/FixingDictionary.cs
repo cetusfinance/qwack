@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Models;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Core.Basic
 {
@@ -22,6 +24,13 @@ namespace Qwack.Core.Basic
             base(source)
         {
         }
+        public FixingDictionary(TO_FixingDictionary transportObject) : base(transportObject.Fixings)
+        {
+            Name = transportObject.Name;
+            AssetId = transportObject.AssetId;
+            FxPair = transportObject.FxPair;
+            FixingDictionaryType = transportObject.FixingDictionaryType;
+        }
 
         public IFixingDictionary Clone()
         {
@@ -39,5 +48,15 @@ namespace Qwack.Core.Basic
         }
 
         public bool TryGetFixing(DateTime d, out double fixing) => TryGetValue(d, out fixing);
+
+        public TO_FixingDictionary GetTransportObject() =>
+            new TO_FixingDictionary
+            {
+                AssetId = AssetId,
+                Name = Name,
+                FxPair = FxPair,
+                FixingDictionaryType = FixingDictionaryType,
+                Fixings = this
+            };
     }
 }

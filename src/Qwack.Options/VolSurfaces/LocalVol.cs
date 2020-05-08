@@ -8,6 +8,8 @@ using System.Linq;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Models;
 using Qwack.Math.Extensions;
+using Qwack.Core.Basic.Correlation;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options
 {

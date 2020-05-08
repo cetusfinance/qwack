@@ -9,6 +9,7 @@ using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Paths.Payoffs
 {

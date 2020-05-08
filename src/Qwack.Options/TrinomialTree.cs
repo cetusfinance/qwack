@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Math.Extensions;
-using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options
 {

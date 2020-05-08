@@ -20,7 +20,7 @@ namespace Qwack.Providers.Json
         private readonly ILogger _logger;
 
         public CurrenciesFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
-            :this(calendarProvider, fileName, loggerFactory.CreateLogger<CurrenciesFromJson>())
+            : this(calendarProvider, fileName, loggerFactory.CreateLogger<CurrenciesFromJson>())
         {
         }
 
@@ -40,7 +40,7 @@ namespace Qwack.Providers.Json
                 _allCurrencies = JsonConvert.DeserializeObject<List<Currency>>(System.IO.File.ReadAllText(fileName), _jsonSettings);
                 _currenciesByName = _allCurrencies.ToDictionary(c => c.Ccy, c => c, StringComparer.OrdinalIgnoreCase);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load currencies from Json");
             }
@@ -50,6 +50,12 @@ namespace Qwack.Providers.Json
 
         public Currency GetCurrency(string ccy) => TryGetCurrency(ccy, out var C) ? C : throw new Exception($"Currency {ccy} not found in cache");
 
-        public bool TryGetCurrency(string ccy, out Currency output) => _currenciesByName.TryGetValue(ccy, out output);
+        public Currency GetCurrencySafe(string ccy) => TryGetCurrency(ccy, out var C) ? C : null;
+
+        public bool TryGetCurrency(string ccy, out Currency output)
+        {
+            output = null;
+            return ccy != null && _currenciesByName.TryGetValue(ccy, out output);
+        }
     }
 }

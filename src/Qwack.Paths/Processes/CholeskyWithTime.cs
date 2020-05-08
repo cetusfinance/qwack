@@ -6,7 +6,7 @@ using Qwack.Math.Matrix;
 using Qwack.Core.Models;
 using Qwack.Options;
 using System.Linq;
-using Qwack.Core.Basic;
+using Qwack.Core.Basic.Correlation;
 
 namespace Qwack.Paths.Processes
 {

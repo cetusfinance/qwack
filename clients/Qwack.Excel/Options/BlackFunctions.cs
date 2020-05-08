@@ -1,9 +1,9 @@
 using System;
 using ExcelDna.Integration;
 using Qwack.Excel.Services;
-using Qwack.Core.Basic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Options
 {

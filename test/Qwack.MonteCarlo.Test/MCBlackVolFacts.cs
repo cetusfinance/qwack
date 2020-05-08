@@ -10,8 +10,7 @@ using Qwack.Options.VolSurfaces;
 using Qwack.Math.Extensions;
 using Qwack.Options;
 using Xunit;
-using Qwack.Core.Basic;
-
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.MonteCarlo.Test
 {

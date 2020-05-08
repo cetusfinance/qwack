@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Moq;
-using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
+using Qwack.Transport.BasicTypes;
 using Xunit;
 
 namespace Qwack.Core.Tests.Instruments

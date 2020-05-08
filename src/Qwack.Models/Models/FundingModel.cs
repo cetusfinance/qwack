@@ -226,7 +226,7 @@ namespace Qwack.Models
             return mf;
         }
 
-        public TO_FundingModel GetTransportObject =>
+        public TO_FundingModel GetTransportObject() =>
             new TO_FundingModel
             {
                 BuildDate = BuildDate,

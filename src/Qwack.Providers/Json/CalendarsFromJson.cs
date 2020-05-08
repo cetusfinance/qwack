@@ -31,5 +31,8 @@ namespace Qwack.Providers.Json
         }
 
         public static CalendarsFromJson Load(string filename) => Parse(System.IO.File.ReadAllText(filename));
+
+        public Calendar GetCalendar(string Name) => _calendarCollection.TryGetCalendar(Name, out var cal) ? cal : throw new Exception($"Unable to find calendar {Name}");
+        
     }
 }

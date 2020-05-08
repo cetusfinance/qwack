@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Qwack.Core.Basic;
+using System.Threading;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
@@ -88,5 +90,18 @@ namespace Qwack.Core.Instruments.Asset
 
             return (CP == OptionType.Put) ? DF * (Math.Statistics.NormSDist(d1) - 1) : DF * Math.Statistics.NormSDist(d1);
         }
+
+        public new TO_Instrument ToTransportObject()
+        {
+            var swapTO = base.ToTransportObject().AsianSwap;
+            var aoTO = (TO_AsianOption)swapTO;
+            aoTO.CallPut = CallPut;
+            return new TO_Instrument
+            {
+                AssetInstrumentType = AssetInstrumentType.AsianOption,
+                AsianOption = aoTO
+            };
+        }
+           
     }
 }

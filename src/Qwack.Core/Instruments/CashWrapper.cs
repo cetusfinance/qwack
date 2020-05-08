@@ -6,6 +6,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments
 {

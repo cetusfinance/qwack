@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -25,12 +28,16 @@ namespace Qwack.Core.Instruments.Asset
         public IAssetInstrument Clone() => new AsianSwapStrip
         {
             TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName,
             Swaplets = Swaplets.Select(x => (AsianSwap)x.Clone()).ToArray()
         };
 
         public IAssetInstrument SetStrike(double strike) => new AsianSwapStrip
         {
             TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName,
             Swaplets = Swaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray()
         };
 
@@ -50,5 +57,19 @@ namespace Qwack.Core.Instruments.Asset
         public double AdjustedNotional(IAssetFxModel model) => Swaplets.Sum(x => x.AdjustedNotional(model));
         public double SupervisoryDelta(IAssetFxModel model) => Swaplets.Average(x => x.SupervisoryDelta(model));
         public double MaturityFactor(DateTime today) => Swaplets.Max(x => x.MaturityFactor(today));
+
+        public TO_Instrument ToTransportObject() =>
+            new TO_Instrument
+            {
+                AssetInstrumentType = AssetInstrumentType.AsianSwapStrip,
+                AsianSwapStrip = new TO_AsianSwapStrip
+                {
+                    TradeId = TradeId,
+                    Counterparty = Counterparty,
+                    PortfolioName = PortfolioName,
+                    Swaplets = Swaplets.Select(x => x.ToTransportObject().AsianSwap).ToArray(),
+                    HedgingSet = HedgingSet,
+                }
+            };
     }
 }

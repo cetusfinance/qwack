@@ -18,7 +18,7 @@ namespace Qwack.Excel.Curves
 {
     public class RiskFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<ModelFunctions>();
 
         [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", 

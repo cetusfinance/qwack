@@ -11,7 +11,6 @@ using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Options;
 using Qwack.Dates;
-using Qwack.Core.Basic;
 using Xunit;
 using Qwack.Transport.BasicTypes;
 

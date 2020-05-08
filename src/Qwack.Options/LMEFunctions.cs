@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Math;
-using Qwack.Core.Basic;
 using static System.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options
 {
@@ -14,7 +14,7 @@ namespace Qwack.Options
     /// Risk is given in terms of LME traded forward (rather than spot or future) instruments
     /// Two time inputs are used - one for the expiry date of the option and another for the delivery date (which is two weeks later for LME listed contracts)
     /// </summary>
-    
+
     public class LMEFunctions
     {
         public static double LMEBlackPV(double forward, double strike, double discountingRate, double expiryTime, double deliveryTime, double volatility, OptionType CP)

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Moq;
-using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;

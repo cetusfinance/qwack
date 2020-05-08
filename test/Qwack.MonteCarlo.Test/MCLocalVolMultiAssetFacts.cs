@@ -60,7 +60,7 @@ namespace Qwack.MonteCarlo.Test
             var vols = Enumerable.Repeat(smileVols, expiries.Length).ToArray();
 
             var volSurface = new GridVolSurface(origin, deltaKs, expiries, vols, 
-                Core.Basic.StrikeType.ForwardDelta, Interpolator1DType.GaussianKernel, 
+                StrikeType.ForwardDelta, Interpolator1DType.GaussianKernel, 
                 Interpolator1DType.LinearInVariance, DayCountBasis.Act365F);
 
             var fwdCurve1 = new Func<double, double>(t => { return 1000; });

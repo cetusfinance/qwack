@@ -6,7 +6,7 @@ using Qwack.Options;
 using Xunit;
 using Qwack.Options.VolSurfaces;
 using Qwack.Models;
-using Qwack.Core.Basic;
+using Qwack.Core.Basic.Correlation;
 
 namespace Qwack.Math.Tests.Options
 {

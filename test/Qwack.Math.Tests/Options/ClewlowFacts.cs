@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Options.Asians;
 using Xunit;
-using Qwack.Core.Basic;
 using Qwack.Options.VolSurfaces;
 using Qwack.Dates;
 using Qwack.Options;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Tests.Options
 {

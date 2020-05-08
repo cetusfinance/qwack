@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Qwack.Math;
 using Qwack.Core.Basic;
 using static System.Math;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options
 {

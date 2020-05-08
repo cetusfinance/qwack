@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Core.Models
 {
@@ -36,5 +37,7 @@ namespace Qwack.Core.Models
         double CalibrationTimeMs { get; set; }
         Dictionary<int,int> CalibrationItterations { get; set; }
         Dictionary<int, string> CalibrationCurves { get; set; }
+
+        TO_FundingModel GetTransportObject();
     }
 }

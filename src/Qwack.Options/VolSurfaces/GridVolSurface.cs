@@ -410,7 +410,6 @@ namespace Qwack.Options.VolSurfaces
             FlatDeltaPoint = FlatDeltaPoint,
             FlatDeltaSmileInExtreme = FlatDeltaSmileInExtreme,
             OverrideSpotLag = OverrideSpotLag.ToString(),
-            Interpolators = _interpolators.Select(x => x.ToTransportObject()).ToArray(),
             PillarLabels = PillarLabels,
             StrikeInterpolatorType = StrikeInterpolatorType,
             StrikeType = StrikeType,

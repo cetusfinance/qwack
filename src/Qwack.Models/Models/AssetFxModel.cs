@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
+using Qwack.Core.Basic.Correlation;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
@@ -12,6 +13,7 @@ using Qwack.Dates;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Models
 {
@@ -37,6 +39,15 @@ namespace Qwack.Models
             _fixings = new Dictionary<string, IFixingDictionary>();
             _buildDate = buildDate;
             _fundingModel = fundingModel;
+        }
+
+        public AssetFxModel(TO_AssetFxModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+            : this(transportObject.BuildDate, new FundingModel(transportObject.FundingModel, currencyProvider, calendarProvider))
+        {
+            _assetCurves = transportObject.AssetCurves.ToDictionary(x => x.Key, x => (IPriceCurve)new PriceCurve(x.Value, currencyProvider));
+            _assetVols = transportObject.AssetVols.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider));
+            _fixings = transportObject.Fixings.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value));
+            CorrelationMatrix = CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
         }
 
         public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
@@ -298,5 +309,17 @@ namespace Qwack.Models
         {
             _buildDate = buildDate;
         }
+
+        public TO_AssetFxModel ToTransportObject() =>
+            new TO_AssetFxModel
+            {
+                AssetCurves = _assetCurves?.ToDictionary(x=>x.Key,x=>((PriceCurve)x.Value).ToTransportObject()),
+                AssetVols = _assetVols?.ToDictionary(x=>x.Key.GetTransportObject(),x=>x.Value.GetTransportObject()),
+                BuildDate = BuildDate,
+                CorrelationMatrix = CorrelationMatrix?.GetTransportObject(),
+                Fixings = _fixings?.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
+                FundingModel = _fundingModel.GetTransportObject(),
+                Portfolio = _portfolio?.ToTransportObject(),
+            };
     }
 }

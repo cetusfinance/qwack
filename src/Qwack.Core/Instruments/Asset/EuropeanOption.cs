@@ -4,6 +4,9 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -43,21 +46,18 @@ namespace Qwack.Core.Instruments.Asset
 
         public override bool Equals(object obj) => obj is EuropeanOption euroOpt &&
                    CallPut == euroOpt.CallPut &&
-                   TradeId == euroOpt.TradeId &&
-                   Notional == euroOpt.Notional &&
-                   Direction == euroOpt.Direction &&
-                   ExpiryDate == euroOpt.ExpiryDate &&
-                   EqualityComparer<Calendar>.Default.Equals(FixingCalendar, euroOpt.FixingCalendar) &&
-                   EqualityComparer<Calendar>.Default.Equals(PaymentCalendar, euroOpt.PaymentCalendar) &&
-                   EqualityComparer<Frequency>.Default.Equals(SpotLag, euroOpt.SpotLag) &&
-                   EqualityComparer<Frequency>.Default.Equals(PaymentLag, euroOpt.PaymentLag) &&
-                   PaymentDate == euroOpt.PaymentDate &&
-                   Strike == euroOpt.Strike &&
-                   AssetId == euroOpt.AssetId &&
-                   EqualityComparer<Currency>.Default.Equals(PaymentCurrency, euroOpt.PaymentCurrency) &&
-                   FxFixingId == euroOpt.FxFixingId &&
-                   DiscountCurve == euroOpt.DiscountCurve &&
-                   FxConversionType == euroOpt.FxConversionType &&
-                   EqualityComparer<Currency>.Default.Equals(Currency, euroOpt.Currency);
+                   base.Equals(euroOpt);
+
+        public new TO_Instrument ToTransportObject()
+        {
+            var fwdTO = base.ToTransportObject().Forward;
+            var eoTO = (TO_EuropeanOption)fwdTO;
+            eoTO.CallPut = CallPut;
+            return new TO_Instrument
+            {
+                AssetInstrumentType = AssetInstrumentType.EuropeanOption,
+                EuropeanOption = eoTO
+            };
+        }
     }
 }

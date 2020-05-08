@@ -13,6 +13,7 @@ using Qwack.Dates;
 using Qwack.Math.Extensions;
 using Qwack.Options;
 using Qwack.Transport.BasicTypes;
+using Qwack.Core.Basic.Correlation;
 
 namespace Qwack.Models.Tests.MCModels
 {

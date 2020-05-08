@@ -442,7 +442,6 @@ namespace Qwack.Options.VolSurfaces
             Riskies = Riskies,
             Flies = Flies,
             Forwards = Forwards,
-            Interpolators = _interpolators.Select(x => x.ToTransportObject()).ToArray(),
             PillarLabels = PillarLabels,
             StrikeInterpolatorType = StrikeInterpolatorType,
             StrikeType = StrikeType,

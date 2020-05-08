@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Core.Basic
 {
@@ -12,6 +14,12 @@ namespace Qwack.Core.Basic
             AssetId = assetId;
             Currency = currency;
         }
+
+        public VolSurfaceKey(TO_VolSurfaceKey transportObject, ICurrencyProvider currencyProvider) 
+            : this(transportObject.AssetId, currencyProvider.GetCurrencySafe(transportObject.Currency))
+        { 
+        }
+
 
         public string AssetId { get; set; }
 
@@ -30,5 +38,12 @@ namespace Qwack.Core.Basic
             hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(Currency);
             return hashCode;
         }
+
+        public TO_VolSurfaceKey GetTransportObject() =>
+            new TO_VolSurfaceKey
+            {
+                AssetId = AssetId,
+                Currency = Currency?.Ccy
+            };
     }
 }

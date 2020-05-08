@@ -33,7 +33,8 @@ namespace Qwack.Options.VolSurfaces
         public ConstantVolSurface(TO_ConstantVolSurface transportObject, ICurrencyProvider currencyProvider)
             : this(transportObject.OriginDate, transportObject.Volatility)
         {
-            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            if (transportObject.Currency != null)
+                Currency = currencyProvider.GetCurrency(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
         }
@@ -74,7 +75,7 @@ namespace Qwack.Options.VolSurfaces
             AssetId = AssetId,
             Name = Name,
             OriginDate = OriginDate,
-            Currency = Currency.Ccy,
+            Currency = Currency?.Ccy,
             Volatility = Volatility
         };
     }

@@ -4,7 +4,7 @@ using Qwack.Options;
 using Qwack.Excel.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Qwack.Core.Basic;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Options
 {

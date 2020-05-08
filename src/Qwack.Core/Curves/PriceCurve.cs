@@ -59,10 +59,13 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
-        public PriceCurve(TO_PriceCurve transportObject, ICurrencyProvider currencyProvider) : this(transportObject.BuildDate, transportObject.PillarDates, transportObject.Prices, transportObject.CurveType, currencyProvider, transportObject.PillarLabels)
+        public PriceCurve(TO_PriceCurve transportObject, ICurrencyProvider currencyProvider) : 
+            this(transportObject.BuildDate, transportObject.PillarDates, transportObject.Prices, transportObject.CurveType, currencyProvider, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrency(transportObject.Currency);
             CollateralSpec = transportObject.CollateralSpec;
+            Name = transportObject.Name;
+            AssetId = transportObject.AssetId;
         }
 
         private void Initialize()
@@ -169,5 +172,21 @@ namespace Qwack.Core.Curves
                 throw new Exception($"Could not find pillar matching label {label}");
             return _pillarDates[labelIx];
         }
+
+        public TO_PriceCurve ToTransportObject() =>
+            new TO_PriceCurve
+            {
+                AssetId = AssetId,
+                BuildDate = BuildDate,
+                CollateralSpec = CollateralSpec,
+                Currency = Currency?.Ccy,
+                CurveType = CurveType,
+                Name = Name,
+                PillarDates = PillarDates,
+                PillarLabels = PillarLabels,
+                Prices = Prices,
+                SpotCalendar = SpotCalendar?.Name,
+                SpotLag = SpotLag.ToString()
+            };
     }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Correlation;
 using Qwack.Core.Curves;
 using Qwack.Dates;
 using Qwack.Models;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 using Xunit;
 
 namespace Qwack.Transport.Tests
@@ -48,7 +50,7 @@ namespace Qwack.Transport.Tests
             var aModel = new AssetFxModel(ValDate, fModel);
             aModel.AddPriceCurve("OIL", crudeCurve);
             aModel.AddVolSurface("OIL", crudeSurface);
-            aModel.CorrelationMatrix = new CorrelationMatrix(new[] { "OIL" }, new[] { "USD/ZAR" }, new[,] { { 0.5 } });
+            aModel.CorrelationMatrix = new CorrelationMatrix(new[] { "OIL" }, new[] { "USD/ZAR" }, new double[][] {  new [] { 0.5 } });
             return aModel;
         }
         [Fact]
@@ -59,6 +61,20 @@ namespace Qwack.Transport.Tests
             var aModel2 = new AssetFxModel(to, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             Assert.Equal(aModel.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)));
             Assert.Equal(aModel.GetPriceCurve("OIL",zar).GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL",zar).GetPriceForDate(ValDate.AddDays(100)));
+            Assert.Equal(aModel.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar), aModel2.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar));
+        }
+
+        [Fact]
+        public void RoundTripViaProtoBuf()
+        {
+            var aModel = GetModel();
+            var to = aModel.ToTransportObject();
+            var ms = new MemoryStream();
+            ProtoBuf.Serializer.Serialize(ms, to);
+            var to2 = ProtoBuf.Serializer.Deserialize<TO_AssetFxModel>(ms);
+            var aModel2 = new AssetFxModel(to2, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            Assert.Equal(aModel.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)));
+            Assert.Equal(aModel.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)));
             Assert.Equal(aModel.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar), aModel2.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar));
         }
     }

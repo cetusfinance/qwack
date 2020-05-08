@@ -14,10 +14,9 @@ namespace Qwack.Core.Basic.Correlation
     {
         public string[] LabelsX { get; set; }
         public string[] LabelsY { get; set; }
-        public double[,] Correlations { get; set; }
+        public double[][] Correlations { get; set; }
 
         private IInterpolator1D[] _interps;
-        private double[][] _correls;
         private double[] _times;
         private Interpolator1DType _interpType;
 
@@ -33,8 +32,7 @@ namespace Qwack.Core.Basic.Correlation
         {
             LabelsX = new[] { labelX };
             LabelsY = labelsY;
-            Correlations = new double[1, 1];
-            _correls = correlations;
+            Correlations = correlations;
             _times = times;
             _interpType = interpKind;
             _interps = correlations.Select(c => InterpolatorFactory.GetInterpolator(times, c, interpKind)).ToArray();
@@ -81,17 +79,17 @@ namespace Qwack.Core.Basic.Correlation
             return false;
         }
 
-        public ICorrelationMatrix Clone() => new CorrelationTimeVector(LabelsX[0], LabelsY, _correls, _times, _interpType);
+        public ICorrelationMatrix Clone() => new CorrelationTimeVector(LabelsX[0], LabelsY, Correlations, _times, _interpType);
 
         public ICorrelationMatrix Bump(double epsilon)
         {
-            var bumpedCorrels = new double[_correls.Length][];
+            var bumpedCorrels = new double[Correlations.Length][];
 
             for (var a = 0; a < bumpedCorrels.Length; a++)
             {
-                bumpedCorrels[a] = new double[_correls[a].Length];
+                bumpedCorrels[a] = new double[Correlations[a].Length];
                 for (var i = 0; i < bumpedCorrels.Length; i++)
-                    bumpedCorrels[a][i] = _correls[a][i] + epsilon * (1 - _correls[a][i]);
+                    bumpedCorrels[a][i] = Correlations[a][i] + epsilon * (1 - Correlations[a][i]);
             }
             return new CorrelationTimeVector(LabelsX[0], LabelsY, bumpedCorrels, _times, _interpType);
         }
@@ -99,7 +97,7 @@ namespace Qwack.Core.Basic.Correlation
         public TO_CorrelationMatrix GetTransportObject() =>
             new TO_CorrelationMatrix
             {
-                CorrelationsTime = _correls,
+                CorrelationsTime = Correlations,
                 LabelsX = LabelsX,
                 LabelsY = LabelsY,
                 InterpolatorType = _interpType,

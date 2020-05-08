@@ -12,7 +12,7 @@ namespace Qwack.Core.Tests.Basic
         public void CorrelMatrixFacts()
         {
             var z = new CorrelationMatrix();
-            z = new CorrelationMatrix(new[] { "x" }, new[] { "y" }, new[,] { { 0.9999 } });
+            z = new CorrelationMatrix(new[] { "x" }, new[] { "y" }, new[] {new [] { 0.9999 } });
             Assert.Throws<Exception>(() => z.GetCorrelation("x", "z"));
             Assert.False(z.TryGetCorrelation("x", "z", out var c));
             var zz = z.Clone();

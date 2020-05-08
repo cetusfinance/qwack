@@ -180,12 +180,12 @@ namespace Qwack.Options
 
         public static List<CorrelationMatrix> LocalCorrelationObjects(this IAssetFxModel model, double[] times)
         {
-            var o = new List<double[,]>();
+            var o = new List<double[][]>();
             var matrix = model.CorrelationMatrix;
 
             for (var it = 0; it < times.Length; it++)
             {
-                o.Add(new double[matrix.LabelsX.Length, matrix.LabelsY.Length]);  
+                o.Add(new double[matrix.LabelsX.Length][]);  
             }
 
             for (var ix = 0; ix < matrix.LabelsX.Length; ix++)
@@ -198,6 +198,8 @@ namespace Qwack.Options
                     var tLast = 0.0;
                     for (var it = 0; it < times.Length; it++)
                     {
+                        if (it == 0)
+                            o[it][ix] = new double[matrix.LabelsY.Length];
                         var t = times[it];
                         var dt = t - tLast;
                         var termCorrel = matrix.GetCorrelation(labelX, labelY, t);
@@ -208,7 +210,7 @@ namespace Qwack.Options
                         var volXfwd = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(tLast, t);
                         var volYfwd = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(tLast, t);
                         var localCorrel = (incrementalVar - volXfwd * volXfwd - volYfwd * volYfwd) / (2 * volXfwd * volYfwd);
-                        o[it][ix,iy] = (t == 0) ? termCorrel : localCorrel;
+                        o[it][ix][iy] = (t == 0) ? termCorrel : localCorrel;
                         tLast = t;
                         lastVarBasket = termVar;
                     }

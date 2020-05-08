@@ -14,7 +14,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Correlations
         [ProtoMember(2)]
         public string[] LabelsY { get; set; }
         [ProtoMember(3)]
-        public double[,] Correlations { get; set; }
+        public double[][] Correlations { get; set; }
         [ProtoMember(4)]
         public bool IsTimeVector { get; set; }
         [ProtoMember(5)]

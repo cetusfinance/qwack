@@ -10,9 +10,9 @@ namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
     public class TO_RiskyFlySurface : TO_GridVolSurface
     {
         [ProtoMember(5)]
-        public double[][] Riskies { get; set; }
+        public MultiDimArray<double> Riskies { get; set; }
         [ProtoMember(6)]
-        public double[][] Flies { get; set; }
+        public MultiDimArray<double> Flies { get; set; }
         [ProtoMember(7)]
         public double[] ATMs { get; set; }
         [ProtoMember(8)]

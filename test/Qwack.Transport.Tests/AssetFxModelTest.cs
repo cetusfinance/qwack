@@ -71,6 +71,7 @@ namespace Qwack.Transport.Tests
             var to = aModel.ToTransportObject();
             var ms = new MemoryStream();
             ProtoBuf.Serializer.Serialize(ms, to);
+            ms.Flush();
             var to2 = ProtoBuf.Serializer.Deserialize<TO_AssetFxModel>(ms);
             var aModel2 = new AssetFxModel(to2, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             Assert.Equal(aModel.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)));

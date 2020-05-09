@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Qwack.Core.Models;
+using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Correlations;
 
 namespace Qwack.Core.Basic.Correlation
@@ -69,7 +70,7 @@ namespace Qwack.Core.Basic.Correlation
         public TO_CorrelationMatrix GetTransportObject() =>
            new TO_CorrelationMatrix
            {
-               Correlations = Correlations,
+               Correlations = new MultiDimArrayDouble(Correlations),
                LabelsX = LabelsX,
                LabelsY = LabelsY,
                IsTimeVector = false,

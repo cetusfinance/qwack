@@ -7,7 +7,7 @@ using Qwack.Transport.BasicTypes;
 namespace Qwack.Transport.TransportObjects.MarketData.Correlations
 {
     [ProtoContract]
-    [ProtoInclude(8,typeof(MultiDimArray<double>))]
+    [ProtoInclude(8,typeof(MultiDimArrayDouble))]
     public class TO_CorrelationMatrix
     {
         [ProtoMember(1)]
@@ -19,7 +19,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Correlations
         [ProtoMember(4)]
         public bool IsTimeVector { get; set; }
         [ProtoMember(5)]
-        public MultiDimArray<double> CorrelationsTime { get; set; }
+        public MultiDimArrayDouble CorrelationsTime { get; set; }
         [ProtoMember(6)]
         public double[] Times { get; set; }
         [ProtoMember(7)]

@@ -97,7 +97,7 @@ namespace Qwack.Core.Basic.Correlation
         public TO_CorrelationMatrix GetTransportObject() =>
             new TO_CorrelationMatrix
             {
-                CorrelationsTime = new MultiDimArrayDouble(Correlations),
+                CorrelationsTime = Correlations,
                 LabelsX = LabelsX,
                 LabelsY = LabelsY,
                 InterpolatorType = _interpType,

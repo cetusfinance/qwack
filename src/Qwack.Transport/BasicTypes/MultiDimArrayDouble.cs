@@ -20,6 +20,10 @@ namespace Qwack.Transport.BasicTypes
 
         public static implicit operator double[,](MultiDimArrayDouble m) => AsSquareArray(m);
         public static implicit operator double[][](MultiDimArrayDouble m) => AsJaggedArray(m);
+        public static implicit operator MultiDimArrayDouble(double[,] m) => new MultiDimArrayDouble(m);
+        public static implicit operator MultiDimArrayDouble(double[][] m) => new MultiDimArrayDouble(m);
+
+        public MultiDimArrayDouble() { }
 
         public MultiDimArrayDouble(double[,] squareInput)
         {

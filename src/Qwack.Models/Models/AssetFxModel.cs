@@ -46,8 +46,8 @@ namespace Qwack.Models
         {
             _assetCurves = transportObject.AssetCurves.ToDictionary(x => x.Key, x => (IPriceCurve)new PriceCurve(x.Value, currencyProvider));
             _assetVols = transportObject.AssetVols.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider));
-            _fixings = transportObject.Fixings.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value));
-            CorrelationMatrix = CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
+            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>(); 
+            CorrelationMatrix = transportObject.CorrelationMatrix==null?null:CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
         }
 
         public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;

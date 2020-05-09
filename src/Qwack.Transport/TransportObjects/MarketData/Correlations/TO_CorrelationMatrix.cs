@@ -15,11 +15,11 @@ namespace Qwack.Transport.TransportObjects.MarketData.Correlations
         [ProtoMember(2)]
         public string[] LabelsY { get; set; }
         [ProtoMember(3)]
-        public MultiDimArrayDouble Correlations { get; set; }
+        public MultiDimArray<double> Correlations { get; set; }
         [ProtoMember(4)]
         public bool IsTimeVector { get; set; }
         [ProtoMember(5)]
-        public MultiDimArrayDouble CorrelationsTime { get; set; }
+        public MultiDimArray<double> CorrelationsTime { get; set; }
         [ProtoMember(6)]
         public double[] Times { get; set; }
         [ProtoMember(7)]

@@ -71,14 +71,14 @@ namespace Qwack.Transport.Tests
             var aModel = GetModel();
             var to = aModel.ToTransportObject();
             var ms = new MemoryStream();
-            ProtoBuf.Serializer.Serialize(ms, to.CorrelationMatrix.Correlations);
+            ProtoBuf.Serializer.Serialize(ms, to);
             //ms.Flush();
             ms.Seek(0,SeekOrigin.Begin);
-            var to2 = ProtoBuf.Serializer.Deserialize<TO_CorrelationMatrix>(ms);
-            //var aModel2 = new AssetFxModel(to2, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
-            //Assert.Equal(aModel.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)));
-            //Assert.Equal(aModel.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)));
-            //Assert.Equal(aModel.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar), aModel2.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar));
+            var to2 = ProtoBuf.Serializer.Deserialize<TO_AssetFxModel>(ms);
+            var aModel2 = new AssetFxModel(to2, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            Assert.Equal(aModel.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL").GetPriceForDate(ValDate.AddDays(100)));
+            Assert.Equal(aModel.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)), aModel2.GetPriceCurve("OIL", zar).GetPriceForDate(ValDate.AddDays(100)));
+            Assert.Equal(aModel.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar), aModel2.GetCompositeVolForStrikeAndDate("OIL", ValDate.AddDays(100), 1000, zar));
         }
     }
 }

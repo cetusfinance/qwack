@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Qwack.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using Qwack.Transport.BasicTypes;
+using System.Collections.Generic;
+using Qwack.Dates;
 
 namespace Qwack.Excel.Utils
 {
@@ -52,6 +54,56 @@ namespace Qwack.Excel.Utils
 
                 return unique.ToArray().ReturnExcelRangeVector();
             });
+        }
+
+
+        [ExcelFunction(Description = "Returns combination of multiple ranges", Category = "QUtils")]
+        public static object QUtils_Join(
+            [ExcelArgument(Description = "The first excel range")] object DataRange1,
+            [ExcelArgument(Description = "The second excel range")] object DataRange2,
+            [ExcelArgument(Description = "The third excel range")] object DataRange3,
+            [ExcelArgument(Description = "The fourth excel range")] object DataRange4)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var o = new List<object>();
+
+                if (!(DataRange1 is ExcelMissing) && (DataRange1 is object[,] d1))
+                {
+                    o.AddRange(To1DArray(d1).Where(x => !(x is ExcelEmpty)));
+                }
+                if (!(DataRange2 is ExcelMissing) && (DataRange2 is object[,] d2))
+                {
+                    o.AddRange(To1DArray(d2).Where(x => !(x is ExcelEmpty)));
+                }
+                if (!(DataRange3 is ExcelMissing) && (DataRange3 is object[,] d3))
+                {
+                    o.AddRange(To1DArray(d3).Where(x=>!(x is ExcelEmpty)));
+                }
+                if (!(DataRange4 is ExcelMissing) && (DataRange4 is object[,] d4))
+                {
+                    o.AddRange(To1DArray(d4).Where(x => !(x is ExcelEmpty)));
+                }
+
+                return o.ToArray().ReturnExcelRangeVector();
+            });
+        }
+
+        private static object[] To1DArray(object[,] input)
+        {
+            var size = input.Length;
+            var result = new object[size];
+
+            var write = 0;
+            for (var i = 0; i <= input.GetUpperBound(0); i++)
+            {
+                for (var z = 0; z <= input.GetUpperBound(1); z++)
+                {
+                    result[write++] = input[i, z];
+                }
+            }
+
+            return result;
         }
 
         [ExcelFunction(Description = "Returns sorted entries from a range", Category = "QUtils")]
@@ -373,5 +425,10 @@ namespace Qwack.Excel.Utils
             var z15 = new Qwack.Core.Basic.FxPair();
             return "Qwack is warm";
         }
+
+        [ExcludeFromCodeCoverage]
+        [ExcelFunction(Description = "Determines whether cell contains a tenor", Category = "QUtils")]
+        public static object QUtils_IsTenor(
+            [ExcelArgument(Description = "Value")] string Value) => ExcelHelper.Execute(_logger, () => Frequency.TryParse(Value,out var throwAway));
     }
 }

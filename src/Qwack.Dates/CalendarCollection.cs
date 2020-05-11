@@ -54,6 +54,12 @@ namespace Qwack.Dates
 
         public bool TryGetCalendar(string calendarName, out Calendar calendar)
         {
+            if(calendarName==null)
+            {
+                calendar = default;
+                return false;
+            }
+
             if (calendarName.Contains("+"))
             {
                 if (_mergedCalendars.TryGetValue(calendarName, out calendar))

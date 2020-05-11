@@ -19,6 +19,8 @@ using Qwack.Core.Cubes;
 using Qwack.Models.Risk;
 using Qwack.Models.MCModels;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
+using Qwack.Transport.TransportObjects.Instruments;
 
 namespace Qwack.Excel.Instruments
 {
@@ -100,10 +102,60 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates a forward", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateForward), IsThreadSafe = Parallel)]
+        public static object CreateForward(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Expiry Date")] DateTime ExpiryDate,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Strike")] double Strike,
+            [ExcelArgument(Description = "Notional")] double Notional,
+            [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
+            [ExcelArgument(Description = "Payment offset or date")] object PaymentOffsetOrDate,
+            [ExcelArgument(Description = "Spot lag")] object SpotLag,
+            [ExcelArgument(Description = "Discount curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Fx conversion type, default ATC")] object FxConversionType)
+
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fxConv = FxConversionType.OptionalExcel("ATC");
+                if (!Enum.TryParse(fxConv, out FxConversionType fxType))
+                {
+                    return $"Could not parse fx conversion type - {fxConv}";
+                }
+
+                var dto = new TO_Forward
+                {
+                    AssetId = AssetId,
+                    Direction = TradeDirection.Long,
+                    DiscountCurve = DiscountCurve,
+                    ExpiryDate = ExpiryDate,
+                    FxConversionType = fxType,
+                    Notional = Notional,
+                    PaymentCalendar = PaymentCalendar.OptionalExcel("WeekendsOnly"),
+                    PaymentCurrency = Currency,
+                    PaymentLag = PaymentOffsetOrDate is double ? null : PaymentOffsetOrDate.OptionalExcel("0b"),
+                    PaymentDate = PaymentOffsetOrDate is double pd ? DateTime.FromOADate(pd) : default,
+                    SpotLag = SpotLag.OptionalExcel("0b"),
+                    Strike = Strike,
+                    TradeId = ObjectName,
+                };
+
+                var product = InstrumentFactory.GetInstrument(
+                    new TO_Instrument { Forward = dto, AssetInstrumentType = AssetInstrumentType.Forward }, 
+                    ContainerStores.CurrencyProvider, 
+                    ContainerStores.CalendarProvider) as Forward;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+
         [ExcelFunction(Description = "Creates an asian crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAsianCrackDiffSwap), IsThreadSafe = Parallel)]
         public static object CreateAsianCrackDiffSwap(
            [ExcelArgument(Description = "Object name")] string ObjectName,
-           [ExcelArgument(Description = "Period code")] object PeriodCode,
+           [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
            [ExcelArgument(Description = "Asset Id pay")] string AssetIdPay,
            [ExcelArgument(Description = "Asset Id receive")] string AssetIdRec,
            [ExcelArgument(Description = "Currency")] string Currency,
@@ -150,14 +202,19 @@ namespace Qwack.Excel.Instruments
 
                 var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
-                AsianBasisSwap product;
-                if (PeriodCode is double)
+                AsianBasisSwap product = null;
+                if (PeriodCodeOrDates is double dateDbl)
                 {
-                    PeriodCode = DateTime.FromOADate((double)PeriodCode).ToString("MMM-yy");
-                    
+                    PeriodCodeOrDates = DateTime.FromOADate(dateDbl).ToString("MMM-yy");
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCodeOrDates as string, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                }
+                else if (PeriodCodeOrDates is object[,] v)
+                {
+                    var dates = v.ObjectRangeToVector<double>().ToDateTimeArray();
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(dates[0], dates[1], Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
                 }
 
-                product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCode as string, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                
 
                 product.TradeId = ObjectName;
                 foreach (var ps in product.PaySwaplets)

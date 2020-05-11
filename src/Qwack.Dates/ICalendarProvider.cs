@@ -7,5 +7,6 @@ namespace Qwack.Dates
         CalendarCollection Collection { get; }
         Dictionary<string, Calendar> OriginalCalendars { get; }
         Calendar GetCalendar(string Name);
+        Calendar GetCalendarSafe(string Name);
     }
 }

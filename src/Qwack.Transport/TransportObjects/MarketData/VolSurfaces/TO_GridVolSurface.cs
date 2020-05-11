@@ -21,7 +21,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
         [ProtoMember(9)]
         public Interpolator1DType TimeInterpolatorType { get; set; }
         [ProtoMember(10)]
-        public double[][] Volatilities { get; set; }
+        public MultiDimArray<double> Volatilities { get; set; }
         [ProtoMember(11)]
         public DateTime[] Expiries { get; set; }
         [ProtoMember(12)]

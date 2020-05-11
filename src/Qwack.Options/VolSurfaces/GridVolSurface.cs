@@ -416,7 +416,7 @@ namespace Qwack.Options.VolSurfaces
             TimeBasis = TimeBasis,
             TimeInterpolatorType = TimeInterpolatorType,
             Strikes = Strikes,
-            Volatilities = Volatilities
+            Volatilities = new MultiDimArray<double>(Volatilities)
         };
     }
 }

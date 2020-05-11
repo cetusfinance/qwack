@@ -18,7 +18,7 @@ namespace Qwack.Excel.Dates
 {
     public class FuturesFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<FuturesFunctions>();
 
         [ExcelFunction(Description = "Returns expiry date for a given futures code", Category = CategoryNames.Dates, 

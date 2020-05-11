@@ -8,6 +8,7 @@ using Qwack.Excel.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Qwack.Transport.BasicTypes;
+using Qwack.Core.Basic;
 
 namespace Qwack.Excel.Dates
 {
@@ -310,6 +311,24 @@ namespace Qwack.Excel.Dates
                     return $"Calendar {SecondaryCalendar} not found in cache";
 
                 return ValDate.SpotDate(lag, cal1, cal2);
+            });
+        }
+
+        [ExcelFunction(Description = "Returns the option expiry date given an Fx pair and a tenor", Category = "QDates", IsThreadSafe = Parallel)]
+        public static object QDates_FxOptionExpiryFromTenor(
+            [ExcelArgument(Description = "Value Date")] DateTime ValDate,
+            [ExcelArgument(Description = "Fx Pair")] string FxPair,
+            [ExcelArgument(Description = "Tenor")] string Tenor)
+        {
+
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Frequency.TryParse(Tenor, out var tenor))
+                    return $"Could not parse tenor string {Tenor}";
+
+                var pair = ContainerStores.GetObjectCache<FxPair>().GetObjectOrThrow(FxPair, $"Unable to find fx pair object {FxPair}");
+
+                return pair.Value.OptionExpiry(ValDate, tenor);
             });
         }
 

@@ -153,7 +153,11 @@ namespace Qwack.Excel.Options
                     return $"Could not parse time interpolator type - {timeInterpType}";
 
                 double[] fwds = null;
-                if (FwdsOrCurve is double)
+                if(FwdsOrCurve is ExcelMissing)
+                {
+                    fwds = expiries.Select(x => 100.0).ToArray();
+                }
+                else if (FwdsOrCurve is double)
                 {
                     fwds = new double[] { (double)FwdsOrCurve };
                 }

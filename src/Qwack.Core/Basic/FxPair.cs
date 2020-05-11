@@ -85,6 +85,16 @@ namespace Qwack.Core.Basic
             SecondaryCalendar = calendarProvider.Collection[pair.Substring(pair.Length - 3, 3)],
             SpotLag = 2.Bd()
         };
+
+        public static DateTime OptionExpiry(this FxPair pair, DateTime valDate, Frequency tenor)
+        {
+            var spot = pair.SpotDate(valDate);
+            var roll = tenor.PeriodType == DatePeriodType.M || tenor.PeriodType == DatePeriodType.Y ? RollType.MF : RollType.F;
+            var delivery = spot.AddPeriod(roll, pair.PrimaryCalendar, tenor);
+            delivery = delivery.IfHolidayRoll(roll, pair.SecondaryCalendar);
+            var expiry = delivery.SubtractPeriod(RollType.P, pair.PrimaryCalendar, pair.SpotLag);
+            return expiry;
+        }
     }
 
 }

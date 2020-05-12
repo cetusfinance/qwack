@@ -57,13 +57,15 @@ namespace Qwack.Core.Basic.Correlation
         {
             var bumpedCorrels = new double[Correlations.Length][];
 
-            for (var i = 0; i < bumpedCorrels.GetLength(0); i++)
-                for (var j = 0; j < bumpedCorrels.GetLength(1); j++)
+            for (var i = 0; i < bumpedCorrels.Length; i++)
+            {
+                bumpedCorrels[i] = new double[Correlations[i].Length];
+                for (var j = 0; j < bumpedCorrels[i].Length; j++)
                 {
-                    bumpedCorrels[i] = new double [Correlations[i].Length];
+                    bumpedCorrels[i] = new double[Correlations[i].Length];
                     bumpedCorrels[i][j] = Correlations[i][j] + epsilon * (1 - Correlations[i][j]);
                 }
-
+            }
             return new CorrelationMatrix((string[])LabelsX.Clone(), (string[])LabelsY.Clone(), bumpedCorrels);
         }
 

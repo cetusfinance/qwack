@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Correlation;
@@ -170,6 +172,9 @@ namespace Qwack.Models
         {
             var curve = GetPriceCurve(assetId);
 
+            if (curve.Currency == ccy)
+                return GetVolForStrikeAndDate(assetId, expiry, strike);
+
             var fxId = $"{curve.Currency.Ccy}/{ccy.Ccy}";
             var fxPair = FundingModel.FxMatrix.GetFxPair(fxId);
 
@@ -177,7 +182,7 @@ namespace Qwack.Models
             var fxFwd = FundingModel.GetFxRate(fxSpotDate, fxId);
             var fxVol = FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, expiry, fxFwd);
             var tExpC = BuildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
-            var correl = CorrelationMatrix.GetCorrelation(fxId, assetId, tExpC);
+            var correl = CorrelationMatrix?.GetCorrelation(fxId, assetId, tExpC) ?? 0.0;
             var sigma = GetVolForStrikeAndDate(assetId, expiry, strike / fxFwd);
             sigma = System.Math.Sqrt(sigma  * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
             return sigma;
@@ -321,5 +326,45 @@ namespace Qwack.Models
                 FundingModel = _fundingModel.GetTransportObject(),
                 Portfolio = _portfolio?.ToTransportObject(),
             };
+
+        public void RemovePriceCurve(IPriceCurve curve)
+        {
+            _assetCurves.Remove(curve.Name);
+        }
+
+        public void RemoveVolSurface(IVolSurface surface)
+        {
+            var key = new VolSurfaceKey(surface.AssetId, surface.Currency);
+            _assetVols.Remove(key);
+        }
+
+        public void RemoveFixingDictionary(string name)
+        {
+            _fixings.Remove(name);
+        }
+
+        public IAssetFxModel TrimModel(Portfolio portfolio)
+        {
+            var o = Clone();
+            var assetIds = portfolio.AssetIds();
+            var pairs = portfolio.FxPairs(o);
+            var surplusCurves = o.CurveNames.Where(x => !assetIds.Contains(x));
+            var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x));
+            var surplusFixings = o.FixingDictionaryNames.Where(x => (!assetIds.Contains(x) && !pairs.Contains(x)));
+            foreach (var s in surplusCurves)
+            {
+                o.RemovePriceCurve(o.GetPriceCurve(s));
+            }
+            foreach (var s in surplusVols)
+            {
+                o.RemoveVolSurface(o.GetVolSurface(s));
+            }
+            foreach (var s in surplusFixings)
+            {
+                o.RemoveFixingDictionary(s);
+            }
+            return o;
+        }
+
     }
 }

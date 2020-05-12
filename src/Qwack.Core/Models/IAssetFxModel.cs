@@ -17,6 +17,10 @@ namespace Qwack.Core.Models
         void AddVolSurface(string name, IVolSurface surface);
         void AddFixingDictionary(string name, IFixingDictionary fixings);
 
+        void RemovePriceCurve(IPriceCurve curve);
+        void RemoveVolSurface(IVolSurface surface);
+        void RemoveFixingDictionary(string name);
+
         void AddPriceCurves(Dictionary<string, IPriceCurve> curves);
         void AddVolSurfaces(Dictionary<string, IVolSurface> surfaces);
         void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings);
@@ -35,7 +39,7 @@ namespace Qwack.Core.Models
 
         IAssetFxModel Clone();
         IAssetFxModel Clone(IFundingModel fundingModel);
-
+        IAssetFxModel TrimModel(Portfolio portfolio);
         string[] CurveNames { get; }
         string[] VolSurfaceNames { get; }
         string[] FixingDictionaryNames { get; }

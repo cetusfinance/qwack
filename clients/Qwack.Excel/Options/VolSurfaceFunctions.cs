@@ -23,9 +23,11 @@ namespace Qwack.Excel.Options
 {
     public class VolSurfaceFunctions
     {
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<AmericanFunctions>();
 
-        [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface))]
+        [ExcelFunction(Description = "Creates a constant vol surface object", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(CreateConstantVolSurface), IsThreadSafe = Parallel)]
         public static object CreateConstantVolSurface(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -48,7 +50,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface))]
+        [ExcelFunction(Description = "Creates a grid vol surface object", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(CreateGridVolSurface), IsThreadSafe = Parallel)]
         public static object CreateGridVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -106,7 +109,8 @@ namespace Qwack.Excel.Options
         }
 
 
-        [ExcelFunction(Description = "Creates a grid vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateRiskyFlyVolSurface))]
+        [ExcelFunction(Description = "Creates a grid vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(CreateRiskyFlyVolSurface), IsThreadSafe = Parallel)]
         public static object CreateRiskyFlyVolSurface(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -119,7 +123,7 @@ namespace Qwack.Excel.Options
               [ExcelArgument(Description = "Forwards or price curve object")] object FwdsOrCurve,
               [ExcelArgument(Description = "ATM vol type - default zero-delta straddle")] object ATMType,
               [ExcelArgument(Description = "Wing quote type - Simple or Market")] object WingType,
-              [ExcelArgument(Description = "Stike Interpolation - default GaussianKernel")] object StrikeInterpolation,
+              [ExcelArgument(Description = "Stike Interpolation - default CubicSpline")] object StrikeInterpolation,
               [ExcelArgument(Description = "Time Interpolation - default LinearInVariance")] object TimeInterpolation,
               [ExcelArgument(Description = "Pillar labels (optional)")] object PillarLabels,
               [ExcelArgument(Description = "Currency - default USD")] object Currency,
@@ -134,7 +138,7 @@ namespace Qwack.Excel.Options
 
                 var atmType = ATMType.OptionalExcel("ZeroDeltaStraddle");
                 var wingType = WingType.OptionalExcel("Simple");
-                var strikeInterpType = StrikeInterpolation.OptionalExcel("GaussianKernel");
+                var strikeInterpType = StrikeInterpolation.OptionalExcel("CubicSpline");
                 var timeInterpType = TimeInterpolation.OptionalExcel("LinearInVariance");
                 var expiries = ExcelHelper.ToDateTimeArray(Expiries);
                 var rr = Riskies.SquareToJagged<double>();
@@ -188,7 +192,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a SABR vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateSABRVolSurfaceFromRiskyFly))]
+        [ExcelFunction(Description = "Creates a SABR vol surface object from RR/BF qoutes", Category = CategoryNames.Volatility,
+            Name = CategoryNames.Volatility + "_" + nameof(CreateSABRVolSurfaceFromRiskyFly), IsThreadSafe = Parallel)]
         public static object CreateSABRVolSurfaceFromRiskyFly(
               [ExcelArgument(Description = "Object name")] string ObjectName,
               [ExcelArgument(Description = "Asset Id")] string AssetId,
@@ -256,7 +261,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates an inverse pair fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(CreateInvertedFxSurface))]
+        [ExcelFunction(Description = "Creates an inverse pair fx vol surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(CreateInvertedFxSurface), IsThreadSafe = Parallel)]
         public static object CreateInvertedFxSurface(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Input surface name")] string InputSurface)
@@ -274,7 +280,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Gets a volatility for a delta strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForDeltaStrike))]
+        [ExcelFunction(Description = "Gets a volatility for a delta strike from a vol surface object", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GetVolForDeltaStrike), IsThreadSafe = Parallel)]
         public static object GetVolForDeltaStrike(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Delta Strike")] double DeltaStrike,
@@ -294,7 +301,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Gets a volatility for an absolute strike from a vol surface object", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GetVolForAbsoluteStrike))]
+        [ExcelFunction(Description = "Gets a volatility for an absolute strike from a vol surface object", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GetVolForAbsoluteStrike), IsThreadSafe = Parallel)]
         public static object GetVolForAbsoluteStrike(
              [ExcelArgument(Description = "Object name")] string ObjectName,
              [ExcelArgument(Description = "Absolute Strike")] double Strike,
@@ -314,7 +322,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a CDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDF))]
+        [ExcelFunction(Description = "Creates a CDF from a vol surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GenerateCDF), IsThreadSafe = Parallel)]
         public static object GenerateCDF(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -335,7 +344,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a PDF from a vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDF))]
+        [ExcelFunction(Description = "Creates a PDF from a vol surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GeneratePDF), IsThreadSafe = Parallel)]
         public static object GeneratePDF(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -356,7 +366,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a PDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GeneratePDFFromInterpolator))]
+        [ExcelFunction(Description = "Creates a PDF from a smile interpolator", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GeneratePDFFromInterpolator), IsThreadSafe = Parallel)]
         public static object GeneratePDFFromInterpolator(
             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
             [ExcelArgument(Description = "Input interpolator name")] string VolInterpolator,
@@ -377,7 +388,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a CDF from a smile interpolator", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCDFFromInterpolator))]
+        [ExcelFunction(Description = "Creates a CDF from a smile interpolator", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GenerateCDFFromInterpolator), IsThreadSafe = Parallel)]
         public static object GenerateCDFFromInterpolator(
             [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
             [ExcelArgument(Description = "Input interpolator name")] string VolInterpolator,
@@ -398,7 +410,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a composite smile from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSmile))]
+        [ExcelFunction(Description = "Creates a composite smile from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSmile), IsThreadSafe = Parallel)]
         public static object GenerateCompoSmile(
              [ExcelArgument(Description = "Output interpolator name")] string ObjectName,
              [ExcelArgument(Description = "Volsurface name")] string VolSurface,
@@ -427,7 +440,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Creates a composite surface from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSurface))]
+        [ExcelFunction(Description = "Creates a composite surface from a vol surface and an fx vol surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(GenerateCompoSurface), IsThreadSafe = Parallel)]
         public static object GenerateCompoSurface(
              [ExcelArgument(Description = "Output surface name")] string ObjectName,
              [ExcelArgument(Description = "Asset-fx model name")] string AssetFxModel,
@@ -453,7 +467,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Turns a risky/fly surface into a cube of quotes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceToCube))]
+        [ExcelFunction(Description = "Turns a risky/fly surface into a cube of quotes", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(SurfaceToCube), IsThreadSafe = Parallel)]
         public static object SurfaceToCube(
             [ExcelArgument(Description = "Surface name")] string SurfaceName,
             [ExcelArgument(Description = "Output cube name")] string CubeName)
@@ -467,7 +482,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Reconstructs a risky/fly surface from a cube of quotes", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceFromCube))]
+        [ExcelFunction(Description = "Reconstructs a risky/fly surface from a cube of quotes", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(SurfaceFromCube), IsThreadSafe = Parallel)]
         public static object SurfaceFromCube(
             [ExcelArgument(Description = "Output Surface name")] string SurfaceName,
             [ExcelArgument(Description = "Cube name")] string CubeName,
@@ -498,7 +514,8 @@ namespace Qwack.Excel.Options
             });
         }
 
-        [ExcelFunction(Description = "Extracts quotes from a risky/fly surface", Category = CategoryNames.Volatility, Name = CategoryNames.Volatility + "_" + nameof(SurfaceToQuotes))]
+        [ExcelFunction(Description = "Extracts quotes from a risky/fly surface", Category = CategoryNames.Volatility, 
+            Name = CategoryNames.Volatility + "_" + nameof(SurfaceToQuotes), IsThreadSafe = Parallel)]
         public static object SurfaceToQuotes(
             [ExcelArgument(Description = "Surface name")] string SurfaceName)
         {

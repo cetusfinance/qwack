@@ -77,6 +77,17 @@ namespace Qwack.Excel.Cubes
             });
         }
 
+        [ExcelFunction(Description = "Displays value sum of all rows for a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(SumAllRows), IsThreadSafe = Parallel)]
+        public static object SumAllRows(
+            [ExcelArgument(Description = "Cube name")] string ObjectName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(ObjectName, $"Could not find cube {ObjectName}");
+                return cube.Value.SumOfAllRows ;
+            });
+        }
+
         [ExcelFunction(Description = "Creates a cube object", Category = CategoryNames.Cubes, Name = CategoryNames.Cubes + "_" + nameof(CreateCube), IsThreadSafe = Parallel)]
         public static object CreateCube(
              [ExcelArgument(Description = "Cube name")] string ObjectName,

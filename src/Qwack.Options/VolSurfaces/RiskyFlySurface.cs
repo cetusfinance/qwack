@@ -419,6 +419,14 @@ namespace Qwack.Options.VolSurfaces
                 newBFs[i] = Flies[i + numDropped];
             }
 
+            if (newATMs.Length == 0)
+                return new ConstantVolSurface(OriginDate, 0.32)
+                {
+                    Name = Name,
+                    AssetId = AssetId,
+                    Currency = Currency,
+                };
+
             return new RiskyFlySurface(newOrigin, newATMs, newMaturities, WingDeltas, newRRs, newBFs, newFwds, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, newLabels)
             {
                 AssetId = AssetId,

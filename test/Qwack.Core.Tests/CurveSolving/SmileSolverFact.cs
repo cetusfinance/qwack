@@ -86,7 +86,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var smile = s.Solve(atmConstraint, new[] { smile25d }, valDate, expDate, fwd, strikes, Interpolator1DType.Linear);
 
             if (!IsCoverageOnly)
-                Assert.Equal(atmConstraint.MarketVol, smile[1], 8);
+                Assert.Equal(atmConstraint.MarketVol, smile[1], 5);
 
             var surface = new GridVolSurface(valDate, strikes, new[] { expDate }, new[] { smile }, StrikeType.ForwardDelta, Interpolator1DType.Linear, Interpolator1DType.Linear, DayCountBasis.Act365F);
 
@@ -106,7 +106,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var smileRR = call25FV - put25FV;
 
             if (!IsCoverageOnly)
-                Assert.Equal(marketRR, smileRR, 8);
+                Assert.Equal(marketRR, smileRR, 5);
 
             //reprice market BF structrure off smile, premium must match
             var marketVolBF = atmConstraint.MarketVol + smile25d.FlyVol;
@@ -123,7 +123,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var smileBF = callBF25FV + putBF25FV;
 
             if (!IsCoverageOnly)
-                Assert.Equal(marketBF, smileBF, 8);
+                Assert.Equal(marketBF, smileBF, 5);
 
         }
     }

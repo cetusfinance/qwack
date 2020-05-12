@@ -454,7 +454,7 @@ namespace Qwack.Excel.Tests.Instruments
         public void FilterPortfolioFacts()
         {
             InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
-            InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } });//, Value, Value, Value, Value);
+            InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } }, Value, Value, Value, Value);
 
             Assert.Equal("Portfolio hhhh not found",
                 InstrumentFunctions.FilterPortfolio("filterPfOutK", "hhhh", new object[] { "swpFake" }, false));
@@ -467,7 +467,7 @@ namespace Qwack.Excel.Tests.Instruments
         public void FilterPortfolioByNameFacts()
         {
             InstrumentFunctions.CreateAsianSwap("swpFake", "Jan-19", "xx", "USD", 0.0, 0.0, "NYC", "NYC", "2b", "2b", Value, "disco", Value);
-            InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } });//, Value, Value, Value, Value);
+            InstrumentFunctions.CreatePortfolio("pfOutK", new object[,] { { "swpFake" } }, Value, Value, Value, Value);
 
             Assert.Equal("Portfolio hhhh not found",
                 InstrumentFunctions.FilterPortfolioByName("filterPfOutKk", "hhhh", new object[] { "swpFake" }));

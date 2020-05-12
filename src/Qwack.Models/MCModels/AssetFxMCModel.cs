@@ -346,7 +346,7 @@ namespace Qwack.Models.MCModels
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != settings.ReportingCurrency)
                     {//needs to be drift-adjusted
                         var fxAdjPair = settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
-                        if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
+                        if (!(model.FundingModel.GetVolSurface(fxAdjPair) is IATMVolSurface adjSurface))
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
                         if (correlation != -1.0 && model.CorrelationMatrix != null)

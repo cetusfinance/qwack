@@ -14,7 +14,7 @@ namespace Qwack.Excel.Dates
 {
     public class BusinessDateFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<BusinessDateFunctions>();
 
         [ExcelFunction(Description = "Checks if the given date is a holiday according to the specified calendars", Category = "QDates", IsThreadSafe = Parallel)]

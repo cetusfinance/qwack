@@ -208,6 +208,10 @@ namespace Qwack.Excel.Instruments
                     PeriodCodeOrDates = DateTime.FromOADate(dateDbl).ToString("MMM-yy");
                     product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCodeOrDates as string, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
                 }
+                else if (PeriodCodeOrDates is string dateStr)
+                {
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(dateStr, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                }
                 else if (PeriodCodeOrDates is object[,] v)
                 {
                     var dates = v.ObjectRangeToVector<double>().ToDateTimeArray();
@@ -1220,16 +1224,16 @@ namespace Qwack.Excel.Instruments
         [ExcelFunction(Description = "Creates a portfolio of instruments", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreatePortfolio), IsThreadSafe = Parallel)]
         public static object CreatePortfolio(
             [ExcelArgument(Description = "Object name")] string ObjectName,
-            [ExcelArgument(Description = "Instruments")] object[,] Instruments)/*,
+            [ExcelArgument(Description = "Instruments")] object[,] Instruments,
             [ExcelArgument(Description = "Instruments")] object Instruments2,
             [ExcelArgument(Description = "Instruments")] object Instruments3,
             [ExcelArgument(Description = "Instruments")] object Instruments4,
-            [ExcelArgument(Description = "Instruments")] object Instruments5)*/
+            [ExcelArgument(Description = "Instruments")] object Instruments5)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pf = GetPortfolio(Instruments);
-               /* if(!(Instruments2 is ExcelMissing) && Instruments2 is object[,] r2)
+                if(!(Instruments2 is ExcelMissing) && Instruments2 is object[,] r2)
                 {
                     var pf2 = GetPortfolio(r2);
                     pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf2.Instruments).ToList()};
@@ -1248,7 +1252,7 @@ namespace Qwack.Excel.Instruments
                 {
                     var pf5 = GetPortfolio(r5);
                     pf = new Portfolio() { Instruments = pf.Instruments.Concat(pf5.Instruments).ToList() };
-                }*/
+                }
 
                 return ExcelHelper.PushToCache(pf, ObjectName);
             });

@@ -21,7 +21,7 @@ namespace Qwack.Excel.Instruments
 {
     public class FundingInstrumentFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<FundingInstrumentFunctions>();
 
 

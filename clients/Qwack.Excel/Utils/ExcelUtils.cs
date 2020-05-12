@@ -148,11 +148,26 @@ namespace Qwack.Excel.Utils
         [ExcelFunction(Description = "Returns values from a range, filtered on another range", Category = "QUtils")]
         public static object QUtils_Filter(
             [ExcelArgument(Description = "The excel range to extract values from (1d)")] object[] DataRange,
-            [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange)
+            [ExcelArgument(Description = "The excel range to filter on (1d)")] object[] FilterRange,
+            [ExcelArgument(Description = "Value to filter on (optional)")] object FilterValue,
+            [ExcelArgument(Description = "Filter on exact match? (optional)")] object ExactMatch)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i as string) == "") ? -1 : ix).Where(ix => ix >= 0);
+                var validIx = new int[0];
+                if (FilterValue is ExcelMissing || FilterValue is ExcelEmpty)
+                {
+                    validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i as string) == "") ? -1 : ix).Where(ix => ix >= 0).ToArray();
+                }
+                else
+                {
+                    var exact = ExactMatch.OptionalExcel(false);
+                    var filter = FilterValue as string;
+                    if(exact)
+                        validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i is string st) && st!= filter) ? -1 : ix).Where(ix => ix >= 0).ToArray();
+                    else
+                        validIx = FilterRange.Select((i, ix) => (i is ExcelEmpty) || ((i is string st) && !st.Contains(filter)) ? -1 : ix).Where(ix => ix >= 0).ToArray();
+                }
                 var filtered = DataRange.Where((x, ix) => validIx.Contains(ix)).ToArray();
                 return filtered.ReturnExcelRangeVector();
             });
@@ -420,7 +435,7 @@ namespace Qwack.Excel.Utils
             var z9 = new Qwack.Random.Constant.Constant();
             var z10 = new Qwack.Serialization.SkipSerializationAttribute();
             var z11 = Qwack.Storage.ObjectCategory.Asset;
-            var z13 = Qwack.Transport.BasicTypes.Interpolator1DType.CubicSpline;
+            var z13 = new Qwack.Math.Interpolation.ConstantHazzardInterpolator();
             var z14 = Qwack.Utils.Parallel.ParallelUtils.Instance.MultiThreaded;
             var z15 = new Qwack.Core.Basic.FxPair();
             return "Qwack is warm";
@@ -429,6 +444,15 @@ namespace Qwack.Excel.Utils
         [ExcludeFromCodeCoverage]
         [ExcelFunction(Description = "Determines whether cell contains a tenor", Category = "QUtils")]
         public static object QUtils_IsTenor(
-            [ExcelArgument(Description = "Value")] string Value) => ExcelHelper.Execute(_logger, () => Frequency.TryParse(Value,out var throwAway));
+            [ExcelArgument(Description = "Value")] object Value) => 
+            ExcelHelper.Execute(_logger, () => 
+            {
+                if (Value is double)
+                    return false;
+                if (Value is string st)
+                    return Frequency.TryParse(st, out var throwAway);
+                else
+                    return false;
+            });
     }
 }

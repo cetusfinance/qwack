@@ -516,6 +516,19 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates a correlation matrix collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrixCollection), IsThreadSafe = false)]
+        public static object CreateCorrelationMatrixCollection(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Matrix names")] object[,] Matrices)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var matrices = ExcelHelper.GetAnyFromCache<ICorrelationMatrix>(Matrices);
+                var matrix = new CorrelationMatrixCollection(matrices.ToArray());
+                return ExcelHelper.PushToCache<ICorrelationMatrix>(matrix, ObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Bends a spread curve to a sparse set of updated spreads", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(BendCurve), IsThreadSafe = false)]
         public static object BendCurve(
             [ExcelArgument(Description = "Input spreads")] double[] InputSpreads,

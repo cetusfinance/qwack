@@ -19,7 +19,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Correlations
         [ProtoMember(4)]
         public bool IsTimeVector { get; set; }
         [ProtoMember(5)]
-        public MultiDimArray<double> CorrelationsTime { get; set; }
+        public TO_CorrelationMatrix[] Children { get; set; }
         [ProtoMember(6)]
         public double[] Times { get; set; }
         [ProtoMember(7)]

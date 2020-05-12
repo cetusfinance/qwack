@@ -29,15 +29,19 @@ namespace Qwack.Utils.Parallel
             }
         }
 
+        public bool MultiThreaded { get; set; } = true;
 
         private int _activeThreadCount = 0;
         private static readonly int numThreads = Environment.ProcessorCount;
 
         private ParallelUtils()
         {
-            for(var i = 0; i < numThreads;i++)
+            if (MultiThreaded)
             {
-                StartThread();
+                for (var i = 0; i < numThreads; i++)
+                {
+                    StartThread();
+                }
             }
         }
 
@@ -88,7 +92,7 @@ namespace Qwack.Utils.Parallel
             Interlocked.Decrement(ref _activeThreadCount);
         }
 
-        public bool MultiThreaded { get; set; } = true;
+
 
         private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>();
         private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>();

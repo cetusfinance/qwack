@@ -239,7 +239,8 @@ namespace Qwack.Excel.Capital
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.Clone();
+                var m = model.Value.TrimModel(portfolio);
+
                 for (var i=0;i<models.Length;i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -271,7 +272,7 @@ namespace Qwack.Excel.Capital
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.Clone();
+                var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -308,7 +309,7 @@ namespace Qwack.Excel.Capital
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.Clone();
+                var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -340,7 +341,7 @@ namespace Qwack.Excel.Capital
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.Clone();
+                var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -372,7 +373,7 @@ namespace Qwack.Excel.Capital
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.Clone();
+                var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);

@@ -15,7 +15,7 @@ namespace Qwack.Excel.Interpolation
 {
     public class InterpolatorFunctions
     {
-        private const bool Parallel = true;
+        private const bool Parallel = false;
         private static readonly ILogger _logger = ContainerStores.GlobalContainer.GetService<ILoggerFactory>()?.CreateLogger<InterpolatorFunctions>();
 
         [ExcelFunction(Description = "Creates a 1-dimensional interpolator", Category = CategoryNames.Interpolation, Name = CategoryNames.Interpolation + "_" + nameof(Create1dInterpolator), IsThreadSafe = Parallel)]

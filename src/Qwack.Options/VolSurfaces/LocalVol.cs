@@ -198,7 +198,9 @@ namespace Qwack.Options
                     var tLast = 0.0;
                     for (var it = 0; it < times.Length; it++)
                     {
-                        if (it == 0)
+                        if (o[it] == null)
+                            o[it] = new double[matrix.LabelsX.Length][];
+                        if (o[it][ix] == null)
                             o[it][ix] = new double[matrix.LabelsY.Length];
                         var t = times[it];
                         var dt = t - tLast;

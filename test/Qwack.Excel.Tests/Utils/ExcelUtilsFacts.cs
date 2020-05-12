@@ -60,7 +60,7 @@ namespace Qwack.Excel.Tests.Utils
         {
             var data = new object[] { 2, ExcelDna.Integration.ExcelEmpty.Value, 3, "" };
             var data2 = new object[] { 1, 2, 3, 4 };
-            var result = ((object[])ExcelUtils.QUtils_Filter(data2, data)).Select(x => (int)x).ToArray();
+            var result = ((object[])ExcelUtils.QUtils_Filter(data2, data, ExcelDna.Integration.ExcelMissing.Value, false)).Select(x => (int)x).ToArray();
             Assert.True(Enumerable.SequenceEqual(new[] { 1, 3 }, result));
         }
 

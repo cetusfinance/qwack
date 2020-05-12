@@ -406,7 +406,7 @@ namespace Qwack.Models.Models
                 var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
                 var tExpC = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate, DayCountBasis.Act365F);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euOpt.AssetId, tExpC);
+                var correl = model.CorrelationMatrix?.GetCorrelation(fxId, euOpt.AssetId, tExpC)??0.0;
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 

@@ -7,6 +7,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
 {
@@ -53,6 +54,15 @@ namespace Qwack.Core.Curves
             PillarLabels = pillarLabels ?? PillarDates.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
             
             Initialize();
+        }
+
+        public ContangoPriceCurve(TO_ContangoPriceCurve transportObject, ICurrencyProvider currencyProvider)
+            :this(transportObject.BuildDate,transportObject.Spot,transportObject.SpotDate,transportObject.PillarDates,transportObject.Contangos,
+                 currencyProvider,transportObject.Basis,transportObject.PillarLabels)
+        {
+            AssetId = transportObject.AssetId;
+            Name = transportObject.Name;
+            Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
         }
 
         private void Initialize()

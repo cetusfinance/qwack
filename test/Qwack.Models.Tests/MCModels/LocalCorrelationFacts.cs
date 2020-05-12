@@ -34,7 +34,7 @@ namespace Qwack.Models.Tests.MCModels
             var dates = new[] { buildDate, buildDate.AddDays(32), buildDate.AddDays(60), buildDate.AddDays(90) };
             var times = dates.Select(d => buildDate.CalculateYearFraction(d, DayCountBasis.Act365F)).ToArray();
             var vols = new[] { 0.32, 0.30, 0.29, 0.28 };
-            var comCurve = new PriceCurve(buildDate, dates, new[] { 100.0, 100.0, 100.0, 100.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider)
+            var comCurve = new BasicPriceCurve(buildDate, dates, new[] { 100.0, 100.0, 100.0, 100.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider)
             {
                 Name = "CL",
                 AssetId = "CL"

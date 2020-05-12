@@ -35,7 +35,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var bPillars = futures.Select(x => FutureCode.GetExpiryFromCode(x, TestProviderHelper.FutureSettingsProvider)).ToArray();
-            var brentCurve = new PriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider, futures)
+            var brentCurve = new BasicPriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider, futures)
             {
                 AssetId = "Brent"
             };
@@ -75,7 +75,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var bPillars = new[] { buildDate, buildDate.AddDays(100) };
-            var brentCurve = new PriceCurve(buildDate, bPillars, new[] { 100.0, 100.0 }, PriceCurveType.Linear, TestProviderHelper.CurrencyProvider)
+            var brentCurve = new BasicPriceCurve(buildDate, bPillars, new[] { 100.0, 100.0 }, PriceCurveType.Linear, TestProviderHelper.CurrencyProvider)
             {
                 AssetId = "Brent"
             };
@@ -109,7 +109,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var usd = TestProviderHelper.CurrencyProvider["USD"];
 
             var bPillars = futures.Select(x => FutureCode.GetExpiryFromCode(x, TestProviderHelper.FutureSettingsProvider)).ToArray();
-            var brentCurve = new PriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider, futures)
+            var brentCurve = new BasicPriceCurve(buildDate, bPillars, futuresPrices, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider, futures)
             {
                 AssetId = "Brent"
             };

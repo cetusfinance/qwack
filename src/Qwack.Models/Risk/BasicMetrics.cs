@@ -396,7 +396,7 @@ namespace Qwack.Models.Risk
                         if (Abs(delta) > 1e-8)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -414,7 +414,7 @@ namespace Qwack.Models.Risk
                         if (Abs(gamma) > 1e-8)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
-                                    gamma /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -436,7 +436,7 @@ namespace Qwack.Models.Risk
                         if (delta != 0.0)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -571,7 +571,7 @@ namespace Qwack.Models.Risk
                             if (Abs(delta) > 1e-8)
                             {
                                 if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                                 var row = new Dictionary<string, object>
                                 {
@@ -589,7 +589,7 @@ namespace Qwack.Models.Risk
                             if (Abs(gamma) > 1e-8)
                             {
                                 if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
-                                    gamma /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                                 var row = new Dictionary<string, object>
                                 {
@@ -611,7 +611,7 @@ namespace Qwack.Models.Risk
                             if (delta != 0.0)
                             {
                                 if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                                 var row = new Dictionary<string, object>
                                 {
@@ -698,7 +698,7 @@ namespace Qwack.Models.Risk
                         if (delta != 0.0)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                delta /= GetUsdDF(model, (PriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var date = bCurve.Value.PillarDatesForLabel(bCurve.Key);
                             var fwd = bCurve.Value.GetPriceForDate(date);
@@ -777,8 +777,8 @@ namespace Qwack.Models.Risk
                     case ContangoPriceCurve cpc:
                         bumpedCurve = new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels);
                         break;
-                    case PriceCurve pc:
-                        bumpedCurve = new PriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels);
+                    case BasicPriceCurve pc:
+                        bumpedCurve = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels);
                         break;
                     default:
                         throw new Exception("Unable to handle curve type for flat shift");
@@ -1598,7 +1598,7 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        private static double GetUsdDF(IAssetFxModel model, PriceCurve priceCurve, DateTime fwdDate)
+        private static double GetUsdDF(IAssetFxModel model, BasicPriceCurve priceCurve, DateTime fwdDate)
         {
             var colSpec = priceCurve.CollateralSpec;
             var ccy = priceCurve.Currency;

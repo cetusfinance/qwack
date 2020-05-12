@@ -74,7 +74,7 @@ namespace Qwack.Models.Calibrators
             return (SparsePriceCurve)_currentCurve;
         }
 
-        public PriceCurve SolveCurve(IEnumerable<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
+        public BasicPriceCurve SolveCurve(IEnumerable<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType)
         {
             _curveInstruments = instruments.OrderBy(x => x.LastSensitivityDate).ToList();
             _pillars = pillars.ToArray();
@@ -87,7 +87,7 @@ namespace Qwack.Models.Calibrators
 
             _currentGuess = _curveInstruments.Select(x => InitialGuess(x)).ToArray();
             //Enumerable.Repeat(0.0, _numberOfPillars).ToArray();
-            _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
+            _currentCurve = new BasicPriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
             _currentPVs = ComputePVs(_currentCurve);
 
             ComputeJacobian();
@@ -98,7 +98,7 @@ namespace Qwack.Models.Calibrators
                 if (_currentGuess.Any(x => double.IsNaN(x)))
                     throw new Exception($"NaNs detected in solution at step {i}");
 
-                _currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
+                _currentCurve = new BasicPriceCurve(_buildDate, _pillars, _currentGuess, curveType, _currencyProvider);
 
                 _currentPVs = ComputePVs(_currentCurve);
                 if (_currentPVs.Max(x => System.Math.Abs(x)) < Tollerance)
@@ -109,7 +109,7 @@ namespace Qwack.Models.Calibrators
                 ComputeJacobian();
             }
 
-            return (PriceCurve)_currentCurve;
+            return (BasicPriceCurve)_currentCurve;
         }
 
         private void ComputeNextGuess()
@@ -145,7 +145,7 @@ namespace Qwack.Models.Calibrators
             ParallelUtils.Instance.For(0, _numberOfPillars, 1, i =>
             //for (var i = 0; i < _numberOfPillars; i++)
             {
-                var currentCurve = new PriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType, _currencyProvider);
+                var currentCurve = new BasicPriceCurve(_buildDate, _pillars, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray(), _curveType, _currencyProvider);
                 var bumpedPVs = ComputePVs(currentCurve);
 
                 for (var j = 0; j < bumpedPVs.Length; j++)

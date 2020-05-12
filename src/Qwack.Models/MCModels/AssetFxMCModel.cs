@@ -166,7 +166,7 @@ namespace Qwack.Models.MCModels
                     {
                         var c = model.GetPriceCurve(assetId);
                         var d = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
-                        if (c is PriceCurve pc)
+                        if (c is BasicPriceCurve pc)
                             d = d.AddPeriod(RollType.F, pc.SpotCalendar, pc.SpotLag);
                         else if (c is ContangoPriceCurve cc)
                             d = d.AddPeriod(RollType.F, cc.SpotCalendar, cc.SpotLag);

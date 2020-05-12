@@ -33,7 +33,7 @@ namespace Qwack.Core.Tests.AssetModel
             var curvePillars = new[] { "1W", "1M", "3M", "6M", "1Y" };
             var curvePillarDates = curvePillars.Select(l => startDate.AddPeriod(RollType.F, cal, new Frequency(l))).ToArray();
             var curvePoints = new[] { 100.0, 100, 100, 100, 100 };
-            var curve = new PriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, TestProviderHelper.CurrencyProvider, curvePillars)
+            var curve = new BasicPriceCurve(startDate, curvePillarDates, curvePoints, PriceCurveType.LME, TestProviderHelper.CurrencyProvider, curvePillars)
             {
                 Currency = usd,
                 CollateralSpec = "CURVE",

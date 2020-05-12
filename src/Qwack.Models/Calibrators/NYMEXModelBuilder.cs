@@ -17,7 +17,7 @@ namespace Qwack.Models.Calibrators
     {
         private static double MinPrice = 1e-10;
         
-        public static PriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
+        public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
         {
             var parsed = NYMEXFutureParser.Parse(nymexFutureFilename).Where(r=>r.Symbol==nymexSymbol);
             var q = parsed.ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
@@ -26,7 +26,7 @@ namespace Qwack.Models.Calibrators
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
             var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value,MinPrice)).ToArray();
             var origin = DateTime.ParseExact(parsed.First().TradeDate,"MM/dd/yyyy", CultureInfo.InvariantCulture);
-            var curve = new PriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
+            var curve = new BasicPriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
             {
                 AssetId = qwackCode,
                 Name = qwackCode,
@@ -35,7 +35,7 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
-        public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, PriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency)
+        public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency)
         {
             var parsed = NYMEXOptionParser.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);
             var (optionExerciseType, optionMarginingType) = OptionTypeFromCode(nymexSymbol);

@@ -16,8 +16,8 @@ namespace Qwack.Models.Risk.Mutators
             var curve = model.GetPriceCurve(assetId);
             switch(curve)
             {
-                case PriceCurve pc:
-                    var npc = new PriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p + shiftSize).ToArray(), pc.CurveType, pc.CurrencyProvider, pc.PillarLabels)
+                case BasicPriceCurve pc:
+                    var npc = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p + shiftSize).ToArray(), pc.CurveType, pc.CurrencyProvider, pc.PillarLabels)
                     {
                         AssetId = pc.AssetId,
                         Name = pc.Name,

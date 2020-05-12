@@ -24,7 +24,7 @@ namespace Qwack.Excel.Tests.Capital
         [Fact]
         public void ComputeEADFacts()
         {
-            var curve = new PriceCurve(DateTime.MinValue, new[] { DateTime.MinValue }, new[] { 0.0 }, PriceCurveType.Flat, ContainerStores.CurrencyProvider)
+            var curve = new BasicPriceCurve(DateTime.MinValue, new[] { DateTime.MinValue }, new[] { 0.0 }, PriceCurveType.Flat, ContainerStores.CurrencyProvider)
             { Currency = ContainerStores.CurrencyProvider.GetCurrency("ZAR") };
             var moqModel = new Mock<IAssetFxModel>();
             moqModel.Setup(m => m.GetPriceCurve("fakeAsset",null)).Returns(curve);

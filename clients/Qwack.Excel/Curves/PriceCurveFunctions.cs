@@ -60,7 +60,7 @@ namespace Qwack.Excel.Curves
                 var labels = (PillarLabels is ExcelMissing) ? null : ((object[,])PillarLabels).ObjectRangeToVector<string>();
 
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new PriceCurve(BuildDate, pDates, Prices, cType, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>(), labels)
+                var cObj = new BasicPriceCurve(BuildDate, pDates, Prices, cType, ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>(), labels)
                 {
                     Name = AssetId ?? ObjectName,
                     AssetId = AssetId ?? ObjectName,
@@ -208,7 +208,7 @@ namespace Qwack.Excel.Curves
 
                 var pDates = Pillars.ToDateTimeArray();
                 var fitter = new Models.Calibrators.NewtonRaphsonAssetBasisCurveSolver(ContainerStores.CurrencyProvider);
-                var cObj = (PriceCurve)fitter.SolveCurve(swaps.ToList(), pDates.ToList(), irCurve, baseCurve, BuildDate, cType);
+                var cObj = (BasicPriceCurve)fitter.SolveCurve(swaps.ToList(), pDates.ToList(), irCurve, baseCurve, BuildDate, cType);
                 cObj.Name = AssetId ?? ObjectName;
                 cObj.AssetId = AssetId ?? ObjectName;
 

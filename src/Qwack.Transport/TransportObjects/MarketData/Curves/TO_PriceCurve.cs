@@ -1,34 +1,24 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using ProtoBuf;
-using Qwack.Transport.BasicTypes;
 
-namespace Qwack.Transport.TransportObjects.MarketData.Curves 
+namespace Qwack.Transport.TransportObjects.MarketData.Curves
 {
     [ProtoContract]
+    [ProtoInclude(10, typeof(TO_BasicPriceCurve))]
+    [ProtoInclude(11, typeof(TO_ContangoPriceCurve))]
+    [ProtoInclude(12, typeof(TO_BasisPriceCurve))]
+    [ProtoInclude(13, typeof(TO_ConstantPriceCurve))]
     public class TO_PriceCurve
     {
         [ProtoMember(1)]
-        public PriceCurveType CurveType { get; set; }
+        public TO_BasicPriceCurve BasicPriceCurve { get; set; }
         [ProtoMember(2)]
-        public DateTime BuildDate { get; set; }
+        public TO_ContangoPriceCurve ContangoPriceCurve { get; set; }
         [ProtoMember(3)]
-        public string Name { get; set; }
+        public TO_BasisPriceCurve BasisPriceCurve { get; set; }
         [ProtoMember(4)]
-        public string AssetId { get; set; }
-        [ProtoMember(5)]
-        public string SpotLag { get; set; }
-        [ProtoMember(6)]
-        public string SpotCalendar { get; set; }
-        [ProtoMember(7)]
-        public DateTime[] PillarDates { get; set; }
-        [ProtoMember(8)]
-        public double[] Prices { get; set; }
-        [ProtoMember(9)]
-        public string[] PillarLabels { get; set; }
-        [ProtoMember(10)]
-        public string Currency { get; set; }
-        [ProtoMember(11)]
-        public string CollateralSpec { get; set; }
+        public TO_ConstantPriceCurve ConstantPriceCurve { get; set; }
     }
-
 }

@@ -46,7 +46,7 @@ namespace Qwack.Models
         public AssetFxModel(TO_AssetFxModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
             : this(transportObject.BuildDate, new FundingModel(transportObject.FundingModel, currencyProvider, calendarProvider))
         {
-            _assetCurves = transportObject.AssetCurves.ToDictionary(x => x.Key, x => (IPriceCurve)new PriceCurve(x.Value, currencyProvider));
+            _assetCurves = transportObject.AssetCurves.ToDictionary(x => x.Key, x => x.Value.GetPriceCurve(currencyProvider,calendarProvider));
             _assetVols = transportObject.AssetVols.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider));
             _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>(); 
             CorrelationMatrix = transportObject.CorrelationMatrix==null?null:CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
@@ -318,7 +318,7 @@ namespace Qwack.Models
         public TO_AssetFxModel ToTransportObject() =>
             new TO_AssetFxModel
             {
-                AssetCurves = _assetCurves?.ToDictionary(x=>x.Key,x=>((PriceCurve)x.Value).ToTransportObject()),
+                AssetCurves = _assetCurves?.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
                 AssetVols = _assetVols?.ToDictionary(x=>x.Key.GetTransportObject(),x=>x.Value.GetTransportObject()),
                 BuildDate = BuildDate,
                 CorrelationMatrix = CorrelationMatrix?.GetTransportObject(),

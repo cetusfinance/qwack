@@ -24,7 +24,7 @@ namespace Qwack.Models.Tests.MCModels
             TestProviderHelper.CalendarProvider.Collection.TryGetCalendar("NYC", out var usdCal);
             var dfCurve = new IrCurve(new[] { buildDate, buildDate.AddDays(1000) }, new[] { 0.0, 0.0 }, buildDate, "disco", Interpolator1DType.Linear, usd, "DISCO");
 
-            var comCurve = new PriceCurve(buildDate, new[] { buildDate, buildDate.AddDays(15), buildDate.AddDays(100) }, new[] { 100.0, 100.0, 100.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider)
+            var comCurve = new BasicPriceCurve(buildDate, new[] { buildDate, buildDate.AddDays(15), buildDate.AddDays(100) }, new[] { 100.0, 100.0, 100.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider)
             {
                 Name = "CL",
                 AssetId = "CL"

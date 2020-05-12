@@ -12,7 +12,7 @@ namespace Qwack.Core.Models
         double Tollerance { get; set; }
         int UsedItterations { get; set; }
 
-        PriceCurve SolveCurve(IEnumerable<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType);
+        BasicPriceCurve SolveCurve(IEnumerable<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType);
         SparsePriceCurve SolveSparseCurve(List<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, SparsePriceCurveType curveType);
     }
 }

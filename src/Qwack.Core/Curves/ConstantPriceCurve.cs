@@ -6,7 +6,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {
-    public class ConstantPriceCurve:PriceCurve
+    public class ConstantPriceCurve:BasicPriceCurve
     {
 
         public ConstantPriceCurve(double price, DateTime originDate, ICurrencyProvider ccyProvider)

@@ -8,6 +8,7 @@ using System.Linq;
 using Qwack.Core.Instruments;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
 {
@@ -29,6 +30,28 @@ namespace Qwack.Core.Curves
             PillarLabels = pillarLabels ?? pillars.Select(x => x.ToString("yyyy-MM-dd")).ToList();
 
             Curve = solver.SolveCurve(Instruments, Pillars, DiscountCurve, BaseCurve, BuildDate, CurveType);
+        }
+
+        public BasisPriceCurve(TO_BasisPriceCurve transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
+            Instruments = transportObject.Instruments
+                .Select(x => (IAssetInstrument)InstrumentFactory.GetInstrument(x, currencyProvider, calendarProvider))
+                .ToList();
+
+            Pillars = transportObject.Pillars;
+            DiscountCurve = new IrCurve(transportObject.DiscountCurve, currencyProvider);
+            //need to re-link via the active model
+            Curve = PriceCurveFactory.GetPriceCurve(transportObject.Curve, currencyProvider, calendarProvider);
+            BaseCurve = PriceCurveFactory.GetPriceCurve(transportObject.BaseCurve, currencyProvider, calendarProvider);
+            Name = transportObject.Name;
+            AssetId = transportObject.AssetId;
+            BuildDate = transportObject.BuildDate;
+            PillarLabels = transportObject.PillarLabels;
+            Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
+            SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
+            if (transportObject.SpotLag != null)
+                SpotLag = new Frequency(transportObject.SpotLag);
+            CurveType = transportObject.CurveType;
         }
 
         public DateTime BuildDate { get; }

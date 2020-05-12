@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Collections.Concurrent;
+using Qwack.Transport.TransportObjects.Cubes;
 
 namespace Qwack.Core.Cubes
 {
@@ -19,6 +20,12 @@ namespace Qwack.Core.Cubes
             Value = value;
         }
 
+        public ResultCubeRow(TO_ResultCubeRow transportObject, Type[] types)
+        {
+            MetaData = transportObject.MetaData.Select((x, ix) => Convert.ChangeType(x, types[ix])).ToArray();
+            Value = transportObject.Value;
+        }
+
         public Dictionary<string, object> ToDictionary(string[] fieldNames)
         {
             if (fieldNames.Length != MetaData.Length)
@@ -28,6 +35,13 @@ namespace Qwack.Core.Cubes
                 .Select((x, ix) => new KeyValuePair<string, object>(x, MetaData[ix]))
                 .ToDictionary(x => x.Key, x => x.Value);
         }
+
+        public TO_ResultCubeRow ToTransportObject() =>
+            new TO_ResultCubeRow
+            {
+                MetaData = MetaData.Select(x=>(string)Convert.ChangeType(x,typeof(string))).ToArray(),
+                Value = Value
+            };
     }
 
     public class ResultCube : ICube
@@ -38,6 +52,16 @@ namespace Qwack.Core.Cubes
         private List<ResultCubeRow> _rows;
         private Dictionary<string, Type> _types;
         private List<string> _fieldNames;
+
+        public ResultCube() { }
+
+        public ResultCube(TO_ResultCube transportObject)
+        {
+            _fieldNames = transportObject.FieldNames;
+            _types = transportObject.Types.ToDictionary(x => x.Key, x => Type.GetType(x.Value));
+            var types = _fieldNames.Select(x => _types[x]).ToArray();
+            _rows = transportObject.Rows.Select(x => new ResultCubeRow(x, types)).ToList();
+        }
 
         public void Initialize(Dictionary<string, Type> dataTypes)
         {
@@ -102,7 +126,13 @@ namespace Qwack.Core.Cubes
                 return _rows.ToArray();
             }
         }
-        
 
+        public TO_ResultCube ToTransportObject() =>
+            new TO_ResultCube
+            {
+                FieldNames = _fieldNames,
+                Rows = _rows.Select(x=>x.ToTransportObject()).ToList(),
+                Types = _types.ToDictionary(x=>x.Key,x=>x.Value.AssemblyQualifiedName)
+            };
     }
 }

@@ -18,18 +18,18 @@ namespace Qwack.Core.Tests.Curves
         {
             var origin = new DateTime(2019, 05, 28);
 
-            var z1 = new PriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider);
+            var z1 = new BasicPriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.NYMEX, TestProviderHelper.CurrencyProvider);
             Assert.Equal(2, z1.NumberOfPillars);
             var z1r = z1.RebaseDate(origin.AddDays(10));
             Assert.Single(z1r.PillarDates);
             Assert.Equal(1, z1r.NumberOfPillars);
             Assert.Equal(110, z1r.GetPriceForFixingDate(origin));
 
-            var z2 = new PriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider);
+            var z2 = new BasicPriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.ICE, TestProviderHelper.CurrencyProvider);
             var z2r = z2.RebaseDate(origin.AddDays(10));
             Assert.Single(z1r.PillarDates);
 
-            var z3 = new PriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.LME, TestProviderHelper.CurrencyProvider);
+            var z3 = new BasicPriceCurve(origin, new[] { new DateTime(2019, 05, 31), new DateTime(2019, 06, 30) }, new[] { 100.0, 110.0 }, PriceCurveType.LME, TestProviderHelper.CurrencyProvider);
             var z3r = z3.RebaseDate(origin.AddDays(10));
             Assert.Single(z1r.PillarDates);
         }

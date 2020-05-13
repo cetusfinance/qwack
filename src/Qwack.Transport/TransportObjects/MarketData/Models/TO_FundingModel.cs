@@ -8,9 +8,6 @@ using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 namespace Qwack.Transport.TransportObjects.MarketData.Models
 {
     [ProtoContract]
-    [ProtoInclude(1, typeof(TO_IrCurve))]
-    [ProtoInclude(2, typeof(TO_VolSurface))]
-    [ProtoInclude(3, typeof(TO_FxMatrix))]
     public class TO_FundingModel
     {
         [ProtoMember(4)]

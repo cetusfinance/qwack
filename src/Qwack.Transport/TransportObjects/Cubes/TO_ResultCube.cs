@@ -6,7 +6,6 @@ using ProtoBuf;
 namespace Qwack.Transport.TransportObjects.Cubes
 {
     [ProtoContract]
-    [ProtoInclude(10,typeof(TO_ResultCubeRow))]
     public class TO_ResultCube
     {
         [ProtoMember(1)]

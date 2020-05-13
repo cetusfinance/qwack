@@ -7,7 +7,6 @@ using Qwack.Transport.BasicTypes;
 namespace Qwack.Transport.TransportObjects.Instruments.Asset
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_AsianSwap))]
     public class TO_AsianSwapStrip
     {
         [ProtoMember(2)]

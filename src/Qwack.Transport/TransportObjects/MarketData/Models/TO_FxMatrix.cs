@@ -6,7 +6,6 @@ using ProtoBuf;
 namespace Qwack.Transport.TransportObjects.MarketData.Models
 {
     [ProtoContract]
-    [ProtoInclude(1, typeof(TO_FxPair))]
     public class TO_FxMatrix
     {
         [ProtoMember(2)]

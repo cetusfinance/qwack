@@ -6,7 +6,6 @@ using ProtoBuf;
 namespace Qwack.Transport.TransportObjects.Instruments
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_Instrument))]
     public class TO_Portfolio
     {
         [ProtoMember(2)]

@@ -10,13 +10,6 @@ using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 namespace Qwack.Transport.TransportObjects.MarketData.Models
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_VolSurfaceKey))]
-    [ProtoInclude(2, typeof(TO_VolSurface))]
-    [ProtoInclude(3, typeof(TO_PriceCurve))]
-    [ProtoInclude(4, typeof(TO_FixingDictionary))]
-    [ProtoInclude(5, typeof(TO_FundingModel))]
-    [ProtoInclude(6, typeof(TO_CorrelationMatrix))]
-    [ProtoInclude(7, typeof(TO_Portfolio))]
     public class TO_AssetFxModel
     {
         [ProtoMember(8)]

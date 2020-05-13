@@ -7,7 +7,6 @@ using Qwack.Transport.BasicTypes;
 namespace Qwack.Transport.TransportObjects.MarketData.Correlations
 {
     [ProtoContract]
-    [ProtoInclude(8,typeof(MultiDimArrayDouble))]
     public class TO_CorrelationMatrix
     {
         [ProtoMember(1)]

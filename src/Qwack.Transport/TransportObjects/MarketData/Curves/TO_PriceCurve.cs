@@ -6,10 +6,6 @@ using ProtoBuf;
 namespace Qwack.Transport.TransportObjects.MarketData.Curves
 {
     [ProtoContract]
-    [ProtoInclude(10, typeof(TO_BasicPriceCurve))]
-    [ProtoInclude(11, typeof(TO_ContangoPriceCurve))]
-    [ProtoInclude(12, typeof(TO_BasisPriceCurve))]
-    [ProtoInclude(13, typeof(TO_ConstantPriceCurve))]
     public class TO_PriceCurve
     {
         [ProtoMember(1)]

@@ -6,9 +6,6 @@ using ProtoBuf;
 namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_ConstantVolSurface))]
-    [ProtoInclude(2, typeof(TO_GridVolSurface))]
-    [ProtoInclude(3, typeof(TO_RiskyFlySurface))]
     public class TO_VolSurface
     {
         [ProtoMember(4)]

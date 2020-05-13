@@ -7,8 +7,6 @@ using Qwack.Transport.BasicTypes;
 namespace Qwack.Transport.TransportObjects.Interpolators
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_Interpolator2d_Jagged))]
-    [ProtoInclude(2, typeof(TO_Interpolator2d_Jagged))]
     public class TO_Interpolator2d
     {
         [ProtoMember(3)] 

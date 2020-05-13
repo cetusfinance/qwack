@@ -8,7 +8,6 @@ using Qwack.Transport.TransportObjects.Interpolators;
 namespace Qwack.Transport.TransportObjects.MarketData.Curves
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_Interpolator1d))]
     public class TO_HazzardCurve
     {
         [ProtoMember(2)]

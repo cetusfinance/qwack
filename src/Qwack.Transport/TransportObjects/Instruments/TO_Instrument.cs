@@ -8,11 +8,6 @@ using Qwack.Transport.TransportObjects.Instruments.Asset;
 namespace Qwack.Transport.TransportObjects.Instruments
 {
     [ProtoContract]
-    [ProtoInclude(1,typeof(TO_AsianSwap))]
-    [ProtoInclude(2, typeof(TO_AsianSwapStrip))]
-    [ProtoInclude(3, typeof(TO_AsianOption))]
-    [ProtoInclude(4, typeof(TO_Forward))]
-    [ProtoInclude(5, typeof(TO_EuropeanOption))]
     public class TO_Instrument
     {
         [ProtoMember(100)]

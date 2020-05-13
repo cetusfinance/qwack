@@ -44,6 +44,6 @@ namespace Qwack.Core.Basic
 
         public override string ToString() => Ccy;
 
-        public static implicit operator string(Currency c) => c.Ccy;
+        public static implicit operator string(Currency c) => c?.Ccy;
     }
 }

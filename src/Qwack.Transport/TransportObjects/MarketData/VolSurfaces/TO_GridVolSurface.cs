@@ -8,8 +8,16 @@ using Qwack.Transport.TransportObjects.Interpolators;
 namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
 {
     [ProtoContract]
-    public class TO_GridVolSurface : TO_VolSurface_Base
+    public class TO_GridVolSurface
     {
+        [ProtoMember(1)]
+        public DateTime OriginDate { get; set; }
+        [ProtoMember(2)]
+        public string Name { get; set; }
+        [ProtoMember(3)]
+        public string Currency { get; set; }
+        [ProtoMember(4)]
+        public string AssetId { get; set; }
         [ProtoMember(5)]
         public string OverrideSpotLag { get; set; }
         [ProtoMember(6)]

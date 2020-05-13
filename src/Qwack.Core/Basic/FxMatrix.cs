@@ -17,9 +17,12 @@ namespace Qwack.Core.Basic
         {
             BaseCurrency = currencyProvider.GetCurrency(transportObject.BaseCurrency);
             BuildDate = transportObject.BuildDate;
-            SpotRates = transportObject.SpotRates.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
-            DiscountCurveMap = transportObject.DiscountCurveMap.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
-            FxPairDefinitions = transportObject.FxPairDefinitions.Select(x => new FxPair(x, currencyProvider, calendarProvider)).ToList();
+            if (transportObject.SpotRates != null)
+                SpotRates = transportObject.SpotRates.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
+            if (transportObject.DiscountCurveMap != null)
+                DiscountCurveMap = transportObject.DiscountCurveMap.ToDictionary(x => currencyProvider.GetCurrency(x.Key), y => y.Value);
+            if (transportObject.FxPairDefinitions != null)
+                FxPairDefinitions = transportObject.FxPairDefinitions.Select(x => new FxPair(x, currencyProvider, calendarProvider)).ToList();
         }
 
         public FxMatrix(ICurrencyProvider currencyProvider)

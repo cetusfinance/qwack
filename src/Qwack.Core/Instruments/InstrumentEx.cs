@@ -14,15 +14,15 @@ namespace Qwack.Core.Instruments
             switch(instrument)
             {
                 case AsianOption asianOption:
-                    return asianOption.GetTransportObject();
+                    return asianOption.ToTransportObject();
                 case AsianSwap asianSwap:
-                    return asianSwap.GetTransportObject();
+                    return asianSwap.ToTransportObject();
                 case AsianSwapStrip asianSwapStrip:
-                    return asianSwapStrip.GetTransportObject();
+                    return asianSwapStrip.ToTransportObject();
                 case EuropeanOption europeanOption:
-                    return europeanOption.GetTransportObject();
+                    return europeanOption.ToTransportObject();
                 case Forward forward:
-                    return forward.GetTransportObject();
+                    return forward.ToTransportObject();
                 default:
                     throw new Exception("Unable to serialize instrument");
             }

@@ -11,9 +11,9 @@ namespace Qwack.Transport.TransportObjects.Instruments
     public class TO_Instrument
     {
         [ProtoMember(100)]
-        public FundingInstrumentType FundingInstrumentType { get; set; } = FundingInstrumentType.None;
+        public FundingInstrumentType FundingInstrumentType { get; set; } 
         [ProtoMember(101)]
-        public AssetInstrumentType AssetInstrumentType { get; set; } = AssetInstrumentType.None;
+        public AssetInstrumentType AssetInstrumentType { get; set; }
         [ProtoMember(102)]
         public TO_AsianSwap AsianSwap { get; set; }
         [ProtoMember(103)]

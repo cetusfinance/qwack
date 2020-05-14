@@ -127,7 +127,7 @@ namespace Qwack.Options.VolSurfaces
                  transportObject.Flies,transportObject.Forwards, transportObject.WingQuoteType, transportObject.AtmVolType, transportObject.StrikeInterpolatorType, 
                  transportObject.TimeInterpolatorType, transportObject.PillarLabels)
         {
-            Currency = currencyProvider.GetCurrency(transportObject.Currency);
+            Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;  
         }
@@ -435,14 +435,14 @@ namespace Qwack.Options.VolSurfaces
             };
         }
 
-        public TO_RiskyFlySurface GetTransportObject() => new TO_RiskyFlySurface
+        public new TO_RiskyFlySurface GetTransportObject() => new TO_RiskyFlySurface
         {
             AssetId = AssetId,
             Name = Name,
             OriginDate = OriginDate,
             ATMs = ATMs,
             AtmVolType = AtmVolType,
-            Currency = Currency.Ccy,
+            Currency = Currency,
             Expiries = Expiries,
             FlatDeltaPoint = FlatDeltaPoint,
             FlatDeltaSmileInExtreme = FlatDeltaSmileInExtreme,

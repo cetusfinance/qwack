@@ -6,6 +6,8 @@ namespace Qwack.Transport.BasicTypes
 {
     public enum AssetInstrumentType
     {
+        None,
+
         AsianSwap,
         AsianSwapStrip,
         AsianOption,
@@ -22,11 +24,12 @@ namespace Qwack.Transport.BasicTypes
         MultiPeriodBackpricingOption,
         OneTouchOption,
 
-        None
     }
 
     public enum FundingInstrumentType
     {
+        None,
+
         CashBalance,
         ContangoSwap,
         FixedRateLoanDeposit,
@@ -42,7 +45,5 @@ namespace Qwack.Transport.BasicTypes
         STIRFuture,
         XccyBasisSwap,
         ZeroBond,
-
-        None
     }
 }

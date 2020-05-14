@@ -45,7 +45,8 @@ namespace Qwack.Models
         public FundingModel(TO_FundingModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
             this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
         {
-            VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
+            if(transportObject.VolSurfaces!=null)
+                VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
             SetupFx(new FxMatrix(transportObject.FxMatrix, currencyProvider, calendarProvider));
         }
 

@@ -45,7 +45,7 @@ namespace Qwack.Core.Curves
                         {
                             AssetId = cons.AssetId,
                             BuildDate = cons.BuildDate,
-                            Currency = cons.Currency.Ccy,
+                            Currency = cons.Currency,
                             Name = cons.Name,
                             Price = cons.Price,
                         }
@@ -58,9 +58,9 @@ namespace Qwack.Core.Curves
                             AssetId = basic.AssetId,
                             BuildDate = basic.BuildDate,
                             CollateralSpec = basic.CollateralSpec,
-                            Currency = basic.Currency.Ccy,
-                            CurveType =basic.CurveType,
-                            Name = basic.Name ,
+                            Currency = basic.Currency,
+                            CurveType = basic.CurveType,
+                            Name = basic.Name,
                             PillarDates = basic.PillarDates,
                             PillarLabels = basic.PillarLabels,
                             Prices = basic.Prices,
@@ -76,7 +76,7 @@ namespace Qwack.Core.Curves
                             AssetId = basis.AssetId,
                             Currency = basis.Currency.Ccy,
                             Name = basis.Name,
-                            SpotCalendar = basis.SpotCalendar.Name,
+                            SpotCalendar = basis.SpotCalendar?.Name,
                             SpotLag = basis.SpotLag.ToString(),
                             BaseCurve = basis.BaseCurve.GetTransportObject(),
                             BuildDate = basis.BuildDate,
@@ -94,9 +94,9 @@ namespace Qwack.Core.Curves
                         ContangoPriceCurve = new TO_ContangoPriceCurve
                         {
                             AssetId = c.AssetId,
-                            Currency = c.Currency.Ccy,
+                            Currency = c.Currency,
                             Name = c.Name,
-                            SpotCalendar = c.SpotCalendar.Name,
+                            SpotCalendar = c.SpotCalendar?.Name,
                             SpotLag = c.SpotLag.ToString(),
                             BuildDate = c.BuildDate,
                             PillarLabels = c.PillarLabels,

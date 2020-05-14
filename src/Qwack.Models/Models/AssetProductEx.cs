@@ -1529,7 +1529,8 @@ namespace Qwack.Models.Models
             return rolledModel;
         }
 
-        public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval, ICurrencyProvider currencyProvider)
+        public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval, 
+            ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             if (model.BuildDate == fwdValDate)
                 return model.Clone();
@@ -1571,6 +1572,12 @@ namespace Qwack.Models.Models
                 var v = volsToRollAsset[curveName];
                 switch (curve)
                 {
+                    case ConstantPriceCurve cpc:
+                        var newPrice = cpc.Price * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI);
+                        var tocpc = cpc.GetTransportObject();
+                        tocpc.ConstantPriceCurve.Price = newPrice;
+                        m.AddPriceCurve(curveName, PriceCurveFactory.GetPriceCurve(tocpc, currencyProvider, calendarProvider));
+                        break;
                     case BasicPriceCurve b:
                         var rv = b.PillarDates.Select((p, ix) => (volsSurfacesAsset[curveName] as IATMVolSurface).GetVolForDeltaStrike(0.5, p, b.Prices[ix])).ToArray();
                         var newfwds = b.Prices.Select((p, ix) => p * Exp(-(rv[ix] * rv[ix]) * t / 2.0 + rv[ix] * sqrt * nCI)).ToArray();

@@ -379,7 +379,8 @@ namespace Qwack.Excel.Curves
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCurrency);
 
-                var result = QuickPFECalculator.Calculate(model.Value, pfolio, ConfidenceLevel, ccy, ContainerStores.CurrencyProvider, correlationCorrection: correlCorrect);
+                var result = QuickPFECalculator.Calculate(model.Value, pfolio, ConfidenceLevel, ccy, 
+                    ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider, correlationCorrection: correlCorrect);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
             });
         }

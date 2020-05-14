@@ -17,8 +17,8 @@ namespace Qwack.Models.Risk
     public static class QuickPFECalculator
     {
         private static Type[] AllowedTypes = { typeof(AsianSwap), typeof(AsianSwapStrip), typeof(AsianOption), typeof(Forward), typeof(EuropeanOption) };
-        public static ICube Calculate(IAssetFxModel model, Portfolio portfolio, double confidenceInterval, Currency reportingCcy, ICurrencyProvider currencyProvider,
-            DateTime[] exposureDates = null, DatePeriodType sampleFreq = DatePeriodType.Month, bool correlationCorrection = true)
+        public static ICube Calculate(IAssetFxModel model, Portfolio portfolio, double confidenceInterval, Currency reportingCcy, ICurrencyProvider currencyProvider, 
+            ICalendarProvider calendarProvider, DateTime[] exposureDates = null, DatePeriodType sampleFreq = DatePeriodType.Month, bool correlationCorrection = true)
         {
             var types = portfolio.Instruments.Select(x => x.GetType()).Distinct();
 
@@ -63,7 +63,7 @@ namespace Qwack.Models.Risk
             var o = new double[exposureDates.Length];
             for(var i=0;i<exposureDates.Length;i++)
             {
-                var mm = m.RollModelPfe(exposureDates[i], ci, currencyProvider);
+                var mm = m.RollModelPfe(exposureDates[i], ci, currencyProvider, calendarProvider);
                 o[i] = Max(0,pf.PV(mm, reportingCcy, true).SumOfAllRows);
             }
 

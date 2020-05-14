@@ -209,7 +209,8 @@ namespace Qwack.Core.Instruments.Asset
         public static AsianOption CreateAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
 
-            var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
+            var fixingDates = start==end?new List<DateTime> { start } :
+                fixingDateType == DateGenerationType.BusinessDays ?
                     start.BusinessDaysInPeriod(end, fixingCalendar) :
                     start.FridaysInPeriod(end, fixingCalendar);
             return new AsianOption

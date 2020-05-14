@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
@@ -322,7 +324,7 @@ namespace Qwack.Models.Models
                 }
                 else
                 {
-                    return (fwds.Select((f, ix) => f * fxRates[ix]).ToArray(), fixingForToday); 
+                    return (fwds.Select((f, ix) => f * fxRates[ix]).ToArray(), fixingForToday);
                 }
             }
         }
@@ -408,7 +410,7 @@ namespace Qwack.Models.Models
                 var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
                 var tExpC = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate, DayCountBasis.Act365F);
-                var correl = model.CorrelationMatrix?.GetCorrelation(fxId, euOpt.AssetId, tExpC)??0.0;
+                var correl = model.CorrelationMatrix?.GetCorrelation(fxId, euOpt.AssetId, tExpC) ?? 0.0;
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 
@@ -427,8 +429,8 @@ namespace Qwack.Models.Models
 
             if (fxEuOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
                 return fxEuOpt.DomesticQuantity * df * (fxEuOpt.CallPut == OptionType.Call ?
-                    Max(fwd  - fxEuOpt.Strike, 0) :
-                    Max(fxEuOpt.Strike - fwd , 0));
+                    Max(fwd - fxEuOpt.Strike, 0) :
+                    Max(fxEuOpt.Strike - fwd, 0));
 
 
             var vol = model.FundingModel.GetVolSurface(fxEuOpt.PairStr).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
@@ -561,7 +563,7 @@ namespace Qwack.Models.Models
 
         public static List<CashFlow> ExpectedCashFlows(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.SelectMany(x => x.ExpectedCashFlows(model)).ToList();
 
-        public static List<CashFlow> ExpectedCashFlows(this AsianBasisSwap asianBasisSwap, IAssetFxModel model) => 
+        public static List<CashFlow> ExpectedCashFlows(this AsianBasisSwap asianBasisSwap, IAssetFxModel model) =>
             asianBasisSwap.PaySwaplets.SelectMany(x => x.ExpectedCashFlows(model)).Concat(
                     asianBasisSwap.RecSwaplets.SelectMany(x => x.ExpectedCashFlows(model))).ToList();
 
@@ -572,11 +574,11 @@ namespace Qwack.Models.Models
                 model.GetFixingDictionary(euOpt.AssetId).GetFixing(euOpt.ExpiryDate) :
                 model.GetPriceCurve(euOpt.AssetId).GetPriceForFixingDate(euOpt.ExpiryDate);
 
-            if(euOpt.Currency!= model.GetPriceCurve(euOpt.AssetId).Currency)
+            if (euOpt.Currency != model.GetPriceCurve(euOpt.AssetId).Currency)
             {
                 var fxRate = euOpt.PaymentDate < model.BuildDate ?
                     model.GetFixingDictionary(euOpt.FxFixingId).GetFixing(euOpt.ExpiryDate) :
-                    model.FundingModel.GetFxRate(euOpt.ExpiryDate,euOpt.FxPair(model));
+                    model.FundingModel.GetFxRate(euOpt.ExpiryDate, euOpt.FxPair(model));
                 fixing *= fxRate;
             }
 
@@ -880,7 +882,7 @@ namespace Qwack.Models.Models
             return (finTheta, 0.0);
         }
 
-        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows=false)
+        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -918,7 +920,7 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, Dictionary<string,double> hedgeSetToCCF, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models=null)
+        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
             var calcDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
 
@@ -933,18 +935,18 @@ namespace Qwack.Models.Models
 
             var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates.ToArray(), currencyProvider);
 
-            if (models==null)
+            if (models == null)
                 calculator.Process();
             else
                 calculator.Process(models);
 
             var ead = calculator.ResultCube();
 
-            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d=>models[d]).ToArray(), portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider);
+            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d => models[d]).ToArray(), portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider);
             return pvCapital;
         }
 
-        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF)
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF)
         {
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
             var modelsForDates = exposureDates.Select(d => models[d]).ToArray();
@@ -952,7 +954,7 @@ namespace Qwack.Models.Models
             var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, xVA_LGD, reportingCurrency, currencyProvider, models);
             var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, assetToGroupMap, hedgeSetToCCF, currencyProvider);
             eads = eads.Select(x => x * partyRiskWeight).ToArray();
-            var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);            
+            var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);
             var cvaCapital = CapitalCalculator.PvCvaCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, discountCurve, cvaCapitalWeight, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);
             return (pv + cva) / (ccrCapital + cvaCapital);
         }
@@ -969,7 +971,7 @@ namespace Qwack.Models.Models
             return calcDates.Distinct().OrderBy(x => x).ToArray();
         }
 
-        private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows=false)
+        private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
         {
             var pv = 0.0;
             var fxRate = 1.0;
@@ -1025,7 +1027,7 @@ namespace Qwack.Models.Models
                     pv = etc.PV(model);
                     break;
                 case STIRFuture stir:
-                    pv = stir.Pv(model.FundingModel,true);
+                    pv = stir.Pv(model.FundingModel, true);
                     break;
                 case OISFuture ois:
                     pv = ois.Pv(model.FundingModel, true);
@@ -1040,7 +1042,7 @@ namespace Qwack.Models.Models
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
                     if (reportingCurrency != null)
                         ccy = reportingCurrency.Ccy;
-                    foreach(var cb in wrapper.CashBalances)
+                    foreach (var cb in wrapper.CashBalances)
                     {
                         var p = ComputePV(cb, model, pvCcy);
                         pv += p.pv;
@@ -1060,7 +1062,7 @@ namespace Qwack.Models.Models
 
         private static Currency GetCurrency(this IInstrument ins)
         {
-            switch(ins)
+            switch (ins)
             {
                 case CashWrapper wrapper:
                     return wrapper.UnderlyingInstrument.GetCurrency();
@@ -1076,7 +1078,7 @@ namespace Qwack.Models.Models
                     return aIns.PaymentCurrency;
                 default:
                     throw new Exception("Unable to determine instrument currency");
-                
+
             }
         }
 
@@ -1147,7 +1149,7 @@ namespace Qwack.Models.Models
             if (reportingCurrency != null)
                 fxRate = model.FundingModel.GetFxRate(model.BuildDate, reportingCurrency, flowCcy);
             else
-                ccy = flowCcy.ToString();            
+                ccy = flowCcy.ToString();
 
             return (flow / fxRate, tradeId, tradeType, ccy);
         }
@@ -1188,7 +1190,7 @@ namespace Qwack.Models.Models
                     (flows, tradeId, tradeType) = ComputeExpectedCashFlows(wrapper.UnderlyingInstrument, model);
                     flows = flows.Concat(wrapper.CashBalances.SelectMany(cb => cb.ExpectedCashFlows(model))).ToList();
                     break;
-                    
+
                 default:
                     //do nothing
                     break;
@@ -1297,7 +1299,7 @@ namespace Qwack.Models.Models
             foreach (var ins in portfolio.Instruments)
             {
                 var (flow, tradeId, tradeType, ccy) = ComputeFlowsT0(ins, model, reportingCurrency);
-                
+
                 var row = new Dictionary<string, object>
                 {
                     { "TradeId", tradeId },
@@ -1350,7 +1352,7 @@ namespace Qwack.Models.Models
             return m.AssetDelta(false);
         }
 
-        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse=true)
+        public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
@@ -1544,7 +1546,7 @@ namespace Qwack.Models.Models
             var pairsByCcy = ccys.ToDictionary(c => c, c => matrix.GetFxPair(matrix.BaseCurrency, c));
             var volsSurfacesFx = pairsByCcy
                 .ToDictionary(
-                x => x.Key, 
+                x => x.Key,
                 x => model.FundingModel.TryGetVolSurface(x.Value.ToString(), out var volSurface) ? volSurface : null);
             var volsToRollFx = volsSurfacesFx.ToDictionary(
                 x => x.Key,
@@ -1563,14 +1565,16 @@ namespace Qwack.Models.Models
                 x => x.Key,
                 x => x.Value == null ? 0.0 : (x.Value as IATMVolSurface).GetForwardATMVol(model.BuildDate, fwdValDate));
 
-            foreach(var curveName in m.CurveNames)
+            foreach (var curveName in m.CurveNames)
             {
                 var curve = m.GetPriceCurve(curveName);
                 var v = volsToRollAsset[curveName];
-                switch(curve)
+                switch (curve)
                 {
                     case BasicPriceCurve b:
-                        var newfwds = b.Prices.Select(p => p * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI)).ToArray();
+                        var rv = b.PillarDates.Select((p, ix) => (volsSurfacesAsset[curveName] as IATMVolSurface).GetVolForDeltaStrike(0.5, p, b.Prices[ix])).ToArray();
+                        var newfwds = b.Prices.Select((p, ix) => p * Exp(-(rv[ix] * rv[ix]) * t / 2.0 + rv[ix] * sqrt * nCI)).ToArray();
+                        //var newfwds = b.Prices.Select((p, ix) => p * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI)).ToArray();
                         var tob = b.GetTransportObject();
                         tob.BasicPriceCurve.Prices = newfwds;
                         m.AddPriceCurve(curveName, new BasicPriceCurve(tob.BasicPriceCurve, currencyProvider));
@@ -1586,7 +1590,73 @@ namespace Qwack.Models.Models
                 }
             }
 
+
+            //re-do fixing assuming linear
+            var rolledFixings = new Dictionary<string, IFixingDictionary>();
+            foreach (var fixingName in model.FixingDictionaryNames)
+            {
+                var rolledDictionary = model.GetFixingDictionary(fixingName);
+                var newDict = rolledDictionary.Clone();
+                var date = model.BuildDate;
+                var curve = m.GetPriceCurve(newDict.AssetId);
+                var lastFixingDate = rolledDictionary.Keys.Max();
+                var interp = InterpolatorFactory.GetInterpolator(
+                    x: (new[] { lastFixingDate, fwdValDate }).Select(x => x.ToOADate()).ToArray(),
+                    y: new[] { rolledDictionary[lastFixingDate], curve.GetPriceForDate(date.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)) },
+                    kind: Interpolator1DType.Linear);
+
+                while (date < fwdValDate)
+                {
+                    if (!newDict.ContainsKey(date))
+                    {
+                        var estFixing = interp.Interpolate(date.ToOADate());
+                        newDict.Add(date, estFixing);
+                    }
+                    date = date.AddDays(1);
+                }
+                rolledFixings.Add(fixingName, newDict);
+            }
+
+            m.AddFixingDictionaries(rolledFixings);
+
             return m;
+        }
+
+        public static IVolSurface ImplySurfaceToCorrelation(this IAssetFxModel model, string assetId, string fxPair, Currency ccy, ICurrencyProvider currencyProvider)
+        {
+            var minVol = 0.0001;
+            var fxSurface = model.GetVolSurface(fxPair);
+            var expiries = fxSurface.Expiries;
+            var discoCurve = model.FundingModel.FxMatrix.DiscountCurveMap[ccy];
+            var shiftedVols = new List<double>();
+            foreach(var e in expiries)
+            {
+                var t = model.BuildDate.CalculateYearFraction(e, DayCountBasis.Act365F);
+                var fwdA = model.GetPriceCurve(assetId).GetPriceForDate(e);
+                var fwdC = fwdA * model.FundingModel.GetFxRate(e, fxPair);
+                var opt = AssetProductFactory.CreateAsianOption(e, e, fwdC, assetId, OptionType.C, null, e, ccy);
+                opt.DiscountCurve = discoCurve;
+                var exactFwd = ((AsianSwap)opt).ParRate(model);
+                opt =(AsianOption)opt.SetStrike(exactFwd);
+                var optPv = opt.PV(model, false);
+                var optFv = optPv / model.FundingModel.GetDf(discoCurve, model.BuildDate, e) / opt.Notional;
+                var iv = BlackFunctions.BlackImpliedVol(exactFwd, opt.Strike, 0, t, optFv, opt.CallPut);
+                var assetVol = model.GetVolForDeltaStrikeAndDate(assetId, e, 0.5);
+                var fxVol = Max(minVol, iv - assetVol);
+                shiftedVols.Add(fxVol);
+            }
+
+            switch(fxSurface)
+            {
+                case RiskyFlySurface rf:
+                    var to = rf.GetTransportObject();
+                    to.ATMs = shiftedVols.ToArray();
+                    to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    return new RiskyFlySurface(to, currencyProvider);
+                default:
+                    throw new Exception("Currently only works for risky/fly fx surfaces");
+            }
         }
 
 
@@ -1597,7 +1667,7 @@ namespace Qwack.Models.Models
                 .SelectMany(a => ((IAssetInstrument)a).AssetIds)
                 .Distinct();
             return curves.ToArray();
-        }      
+        }
 
         public static double ParRate(this IAssetInstrument instrument, IAssetFxModel model)
         {
@@ -1615,9 +1685,9 @@ namespace Qwack.Models.Models
         public static double QuickPFE(this AsianSwap swap, double confidenceInterval, IAssetFxModel model)
         {
             var ci = (
-                (swap.Direction==TradeDirection.Long && Sign(swap.Notional)==1)|| 
-                (swap.Direction == TradeDirection.Short && Sign(swap.Notional) == -1))?
-            confidenceInterval:
+                (swap.Direction == TradeDirection.Long && Sign(swap.Notional) == 1) ||
+                (swap.Direction == TradeDirection.Short && Sign(swap.Notional) == -1)) ?
+            confidenceInterval :
             1.0 - confidenceInterval;
 
             var par = swap.ParRate(model);
@@ -1645,8 +1715,8 @@ namespace Qwack.Models.Models
                 PaymentLag = swap.PaymentLag,
                 PaymentLagRollType = swap.PaymentLagRollType,
             };
-            
-            var optPv = optObj.PV(model,true);
+
+            var optPv = optObj.PV(model, true) / swap.Notional;
             if (optPv == 0)
                 return 0;
             var optFv = optPv / model.FundingModel.GetDf(swap.DiscountCurve, model.BuildDate, swap.PaymentDate);
@@ -1655,6 +1725,35 @@ namespace Qwack.Models.Models
             var fwdPfe = par * Exp(-impVol * impVol / 2.0 * t + Sqrt(t) * impVol * Statistics.NormInv(ci));
             var fv = (fwdPfe - swap.Strike) * swap.Notional;
             return fv;
+        }
+
+        public static bool IsLongDeltaPosition(this IAssetInstrument ins)
+        {
+            switch(ins)
+            {
+                case AsianOption opt:
+                    if(opt.CallPut==OptionType.Call)
+                        return  (opt.Direction == TradeDirection.Long && Sign(opt.Notional) == 1) ||
+                                (opt.Direction == TradeDirection.Short && Sign(opt.Notional) == -1);
+                    else
+                        return (opt.Direction == TradeDirection.Long && Sign(opt.Notional) == -1) ||
+                               (opt.Direction == TradeDirection.Short && Sign(opt.Notional) == 1);
+                case AsianSwap swap:
+                    return (swap.Direction == TradeDirection.Long && Sign(swap.Notional) == 1) ||
+                            (swap.Direction == TradeDirection.Short && Sign(swap.Notional) == -1);
+                case EuropeanOption euOpt:
+                    if (euOpt.CallPut == OptionType.Call)
+                        return (euOpt.Direction == TradeDirection.Long && Sign(euOpt.Notional) == 1) ||
+                                (euOpt.Direction == TradeDirection.Short && Sign(euOpt.Notional) == -1);
+                    else
+                        return (euOpt.Direction == TradeDirection.Long && Sign(euOpt.Notional) == -1) ||
+                               (euOpt.Direction == TradeDirection.Short && Sign(euOpt.Notional) == 1);
+                case Forward fwd:
+                    return (fwd.Direction == TradeDirection.Long && Sign(fwd.Notional) == 1) ||
+                            (fwd.Direction == TradeDirection.Short && Sign(fwd.Notional) == -1);
+                default:
+                    throw new Exception("Instrument type unsupported");
+            }
         }
     }
 }

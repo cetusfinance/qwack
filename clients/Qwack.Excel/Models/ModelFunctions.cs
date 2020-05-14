@@ -368,16 +368,18 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
             [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
             [ExcelArgument(Description = "Confidence level, e.g. 0.95")] double ConfidenceLevel,
-            [ExcelArgument(Description = "Reporting Currency")] string ReportingCurrency)
+            [ExcelArgument(Description = "Reporting Currency")] string ReportingCurrency,
+            [ExcelArgument(Description = "Attempt to correct for correlation? (true)")] object AttemptCorrelCorrection)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var correlCorrect = AttemptCorrelCorrection.OptionalExcel(true);
                 var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCurrency);
 
-                var result = QuickPFECalculator.Calculate(model.Value, pfolio, ConfidenceLevel, ccy, ContainerStores.CurrencyProvider);
+                var result = QuickPFECalculator.Calculate(model.Value, pfolio, ConfidenceLevel, ccy, ContainerStores.CurrencyProvider, correlationCorrection: correlCorrect);
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);
             });
         }

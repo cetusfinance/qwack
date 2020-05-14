@@ -296,7 +296,7 @@ namespace Qwack.Options.VolSurfaces
             throw new Exception("Only Forward-Delta type supported for fwd vol calcs");
         }
 
-        private bool _suppressVarianceErrors;
+        internal bool _suppressVarianceErrors;
 
         public virtual IVolSurface RollSurface(DateTime newOrigin)
         {

@@ -9,6 +9,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
+using static System.Math;
 
 namespace Qwack.Core.Instruments
 {
@@ -578,7 +579,7 @@ namespace Qwack.Core.Instruments
         public static double WeightedMaturity(this Portfolio portfolio, DateTime originDate)
         {
             var d = portfolio.Instruments
-                .Select(x => new Tuple<double, double>(originDate.CalculateYearFraction(x.LastSensitivityDate, DayCountBasis.Act365F), x.Notional()))
+                .Select(x => new Tuple<double, double>(originDate.CalculateYearFraction(x.LastSensitivityDate, DayCountBasis.Act365F), Abs(x.Notional())))
                 .Where(t => t.Item1 >= 0);
             if (!d.Any())
                 return 0.0;

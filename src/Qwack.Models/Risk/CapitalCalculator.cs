@@ -14,6 +14,7 @@ using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
+using Qwack.Utils.Parallel;
 using static System.Math;
 
 namespace Qwack.Models.Risk
@@ -111,34 +112,36 @@ namespace Qwack.Models.Risk
 
             var eads = new double[EADDates.Length];
 
-            for (var i = 0; i < EADDates.Length; i++)
+            ParallelUtils.Instance.For(0, EADDates.Length, 1, i =>
+            //for (var i = 0; i < EADDates.Length; i++)
             {
-                if (EADDates[i] < originDate)
-                    continue;
-                var m = models[i].Clone();
-                m.AttachPortfolio(portfolio);
+                if (EADDates[i] >= originDate)
+                {
+                    var m = models[i].Clone();
+                    m.AttachPortfolio(portfolio);
 
-                var pv = portfolio.PV(m, reportingCurrency).SumOfAllRows;
-                var deltaSum = 0.0;
-                var assetDeltaCube = m.AssetCashDelta(reportingCurrency).Pivot("AssetId", AggregationAction.Sum);
-                foreach(var row in assetDeltaCube.GetAllRows())
-                {
-                    var asset = (string)row.MetaData[0];
-                    var hedgeSet = assetIdToHedgeMap[asset];
-                    var ccf = hedgeGroupCCFs[hedgeSet];
-                    var delta = Abs(row.Value); //need to consider buckets
-                    deltaSum += ccf * delta;
+                    var pv = portfolio.PV(m, reportingCurrency).SumOfAllRows;
+                    var deltaSum = 0.0;
+                    var assetDeltaCube = m.AssetCashDelta(reportingCurrency).Pivot("AssetId", AggregationAction.Sum);
+                    foreach (var row in assetDeltaCube.GetAllRows())
+                    {
+                        var asset = (string)row.MetaData[0];
+                        var hedgeSet = assetIdToHedgeMap[asset];
+                        var ccf = hedgeGroupCCFs[hedgeSet];
+                        var delta = Abs(row.Value); //need to consider buckets
+                        deltaSum += ccf * delta;
+                    }
+                    var fxDeltaCube = m.FxDelta(reportingCurrency, currencyProvider, false, true).Pivot("AssetId", AggregationAction.Sum);
+                    foreach (var row in fxDeltaCube.GetAllRows())
+                    {
+                        var pair = (string)row.MetaData[0];
+                        var rate = m.FundingModel.GetFxRate(m.BuildDate, pair);
+                        deltaSum += Abs(row.Value) / rate * ccfFx;
+                    }
+
+                    eads[i] = Max(pv, deltaSum) * beta;
                 }
-                var fxDeltaCube = m.FxDelta(reportingCurrency, currencyProvider,false,true).Pivot("AssetId", AggregationAction.Sum);
-                foreach (var row in fxDeltaCube.GetAllRows())
-                {
-                    var pair = (string)row.MetaData[0];
-                    var rate = m.FundingModel.GetFxRate(m.BuildDate, pair);
-                    deltaSum += Abs(row.Value) / rate * ccfFx;
-                }
-                    
-                eads[i] = Max(pv, deltaSum) * beta;
-            }
+            }).Wait();
 
             return eads;
         }

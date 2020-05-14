@@ -59,11 +59,14 @@ namespace Qwack.Models.Risk
                 m.FundingModel.VolSurfaces[pair] = shiftedFxSurface;
             }
 
+            var fxPairsToRoll = assetIns.SelectMany(x => x.AssetIds).Where(x => x.Length == 7 && x.Substring(3, 1) == "/")
+                .Concat(assetIns.Select(x=>x.FxPair(model)))
+                .Distinct().ToList();
 
             var o = new double[exposureDates.Length];
             for(var i=0;i<exposureDates.Length;i++)
             {
-                var mm = m.RollModelPfe(exposureDates[i], ci, currencyProvider, calendarProvider);
+                var mm = m.RollModelPfe(exposureDates[i], ci, currencyProvider, calendarProvider, fxPairsToRoll);
                 o[i] = Max(0,pf.PV(mm, reportingCcy, true).SumOfAllRows);
             }
 

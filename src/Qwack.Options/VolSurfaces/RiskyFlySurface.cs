@@ -36,71 +36,87 @@ namespace Qwack.Options.VolSurfaces
             if (wingDeltas.Length != riskies[0].Length || riskies[0].Length != flies[0].Length)
                 throw new Exception("Inputs do not have consistent strike dimensions");
 
-            var atmConstraints = ATMVols.Select(a => new ATMStraddleConstraint
-            {
-                ATMVolType = atmVolType,
-                MarketVol = a
-            }).ToArray();
-
-            var needsFlip = wingDeltas.First() > wingDeltas.Last();
             var strikes = new double[2 * wingDeltas.Length + 1];
-            if (needsFlip)
+            var vols = new double[expiries.Length][];
+            if (riskies.SelectMany(x => x).All(x => x == 0) && flies.SelectMany(x => x).All(x => x == 0))
             {
                 for (var s = 0; s < wingDeltas.Length; s++)
                 {
                     strikes[s] = wingDeltas[wingDeltas.Length - 1 - s];
                     strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[wingDeltas.Length - 1 - s];
                 }
-            }
-            else
-            {
-                for (var s = 0; s < wingDeltas.Length; s++)
-                {
-                    strikes[s] = wingDeltas[s];
-                    strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[s];
-                }
-            }
-            strikes[wingDeltas.Length] = 0.5;
 
-            var wingConstraints = new RRBFConstraint[expiries.Length][];
-            var vols = new double[expiries.Length][];
-            var f = new AssetSmileSolver();
-
-            if (needsFlip)
-            {
-                for (var i = 0; i < wingConstraints.Length; i++)
+                for (var t =0;t<expiries.Length;t++)
                 {
-                    var offset = wingDeltas.Length - 1;
-                    wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
-                    for (var j = 0; j < wingConstraints[i].Length; j++)
-                    {
-                        wingConstraints[i][j] = new RRBFConstraint
-                        {
-                            Delta = wingDeltas[offset - j],
-                            FlyVol = flies[i][offset - j],
-                            RisykVol = riskies[i][offset - j],
-                            WingQuoteType = wingQuoteType,
-                        };
-                    }
-                    vols[i] = f.Solve(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], strikes, strikeInterpType);
+                    vols[t] = Enumerable.Repeat(ATMVols[t], strikes.Length).ToArray();
                 }
             }
             else
             {
-                for (var i = 0; i < wingConstraints.Length; i++)
+                var atmConstraints = ATMVols.Select(a => new ATMStraddleConstraint
                 {
-                    wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
-                    for (var j = 0; j < wingConstraints[i].Length; j++)
+                    ATMVolType = atmVolType,
+                    MarketVol = a
+                }).ToArray();
+
+                var needsFlip = wingDeltas.First() > wingDeltas.Last();
+                if (needsFlip)
+                {
+                    for (var s = 0; s < wingDeltas.Length; s++)
                     {
-                        wingConstraints[i][j] = new RRBFConstraint
-                        {
-                            Delta = wingDeltas[j],
-                            FlyVol = flies[i][j],
-                            RisykVol = riskies[i][j],
-                            WingQuoteType = wingQuoteType,
-                        };
+                        strikes[s] = wingDeltas[wingDeltas.Length - 1 - s];
+                        strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[wingDeltas.Length - 1 - s];
                     }
-                    vols[i] = f.Solve(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], strikes, strikeInterpType);
+                }
+                else
+                {
+                    for (var s = 0; s < wingDeltas.Length; s++)
+                    {
+                        strikes[s] = wingDeltas[s];
+                        strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[s];
+                    }
+                }
+                strikes[wingDeltas.Length] = 0.5;
+
+                var wingConstraints = new RRBFConstraint[expiries.Length][];
+                var f = new AssetSmileSolver();
+
+                if (needsFlip)
+                {
+                    for (var i = 0; i < wingConstraints.Length; i++)
+                    {
+                        var offset = wingDeltas.Length - 1;
+                        wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
+                        for (var j = 0; j < wingConstraints[i].Length; j++)
+                        {
+                            wingConstraints[i][j] = new RRBFConstraint
+                            {
+                                Delta = wingDeltas[offset - j],
+                                FlyVol = flies[i][offset - j],
+                                RisykVol = riskies[i][offset - j],
+                                WingQuoteType = wingQuoteType,
+                            };
+                        }
+                        vols[i] = f.Solve(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], strikes, strikeInterpType);
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < wingConstraints.Length; i++)
+                    {
+                        wingConstraints[i] = new RRBFConstraint[wingDeltas.Length];
+                        for (var j = 0; j < wingConstraints[i].Length; j++)
+                        {
+                            wingConstraints[i][j] = new RRBFConstraint
+                            {
+                                Delta = wingDeltas[j],
+                                FlyVol = flies[i][j],
+                                RisykVol = riskies[i][j],
+                                WingQuoteType = wingQuoteType,
+                            };
+                        }
+                        vols[i] = f.Solve(atmConstraints[i], wingConstraints[i], originDate, expiries[i], fwds[i], strikes, strikeInterpType);
+                    }
                 }
             }
 
@@ -403,6 +419,8 @@ namespace Qwack.Options.VolSurfaces
 
         public override IVolSurface RollSurface(DateTime newOrigin)
         {
+            _suppressVarianceErrors = true;
+
             var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
             var newVols = new double[newMaturities.Length][];       
             var newATMs = newMaturities.Select(m => GetForwardATMVol(newOrigin, m)).ToArray();

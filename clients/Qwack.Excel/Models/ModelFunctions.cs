@@ -210,6 +210,31 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns credit metrics of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models,
+            Name = CategoryNames.Models + "_" + nameof(McPortfolioCreditPack), IsThreadSafe = false)]
+        public static object McPortfolioCreditPack(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "MC settings name")] string SettingsName,
+            [ExcelArgument(Description = "Confidence level, e.g. 0.95")] double ConfidenceLevel)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var settings = ContainerStores.GetObjectCache<McSettings>()
+                    .GetObjectOrThrow(SettingsName, $"Could not find MC settings with name {SettingsName}");
+                var sett = settings.Value.Clone();
+                sett.CreditSettings.Metric = BaseMetric.PFE;
+                var mc = new AssetFxMCModel(model.Value.BuildDate, pfolio, model.Value, sett, ContainerStores.CurrencyProvider, ContainerStores.FuturesProvider, ContainerStores.CalendarProvider);
+
+                var result = mc.FullPack(ConfidenceLevel);
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns CVA of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(McPortfolioCVA), IsThreadSafe = false)]
         public static object McPortfolioCVA(
           [ExcelArgument(Description = "Portolio object name")] string PortfolioName,

@@ -37,8 +37,13 @@ namespace Qwack.Paths
         public bool Parallelize { get; set; } = false;
         public bool CompactMemoryMode { get; set; } = false;
 
+        public bool HasBeenRun { get; set; }
+
         public void RunProcess()
         {
+            if (HasBeenRun)
+                return;
+
             _blockset = new BlockSet(_numberOfPaths, _dimensions, _steps, CompactMemoryMode);
 
             if (Parallelize)
@@ -115,6 +120,8 @@ namespace Qwack.Paths
                     }
                 }
             }
+
+            HasBeenRun = true;
         }
 
         public FeatureCollection Features => _featureCollection;

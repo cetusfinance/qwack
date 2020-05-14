@@ -1427,7 +1427,7 @@ namespace Qwack.Models.Models
             return m.AssetAnalyticTheta(fwdValDate, reportingCcy, currencyProvider, false);
         }
 
-        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider)
+        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider, bool fillFixings=true)
         {
             if (model.BuildDate == fwdValDate)
                 return model.Clone();
@@ -1487,37 +1487,43 @@ namespace Qwack.Models.Models
             }
 
             var rolledFixings = new Dictionary<string, IFixingDictionary>();
-            foreach (var fixingName in model.FixingDictionaryNames)
+            if (fillFixings)
             {
-                var rolledDictionary = model.GetFixingDictionary(fixingName);
-                var newDict = rolledDictionary.Clone();
-                var date = model.BuildDate;
-                while (date < fwdValDate)
+                foreach (var fixingName in model.FixingDictionaryNames)
                 {
-                    if (!newDict.ContainsKey(date))
+                    var rolledDictionary = model.GetFixingDictionary(fixingName);
+                    var newDict = rolledDictionary.Clone();
+                    var date = model.BuildDate;
+                    while (date < fwdValDate)
                     {
-                        if (newDict.FixingDictionaryType == FixingDictionaryType.Asset)
+                        if (!newDict.ContainsKey(date))
                         {
-                            var curve = model.GetPriceCurve(newDict.AssetId);
-                            var estFixing = curve.GetPriceForDate(date.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag));
-                            newDict.Add(date, estFixing);
+                            if (newDict.FixingDictionaryType == FixingDictionaryType.Asset)
+                            {
+                                var curve = model.GetPriceCurve(newDict.AssetId);
+                                var estFixing = curve.GetPriceForDate(date.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag));
+                                newDict.Add(date, estFixing);
+                            }
+                            else //its FX
+                            {
+                                var id = newDict.FxPair ?? newDict.AssetId;
+                                var ccyLeft = currencyProvider[id.Substring(0, 3)];
+                                var ccyRight = currencyProvider[id.Substring(id.Length - 3, 3)];
+                                var pair = model.FundingModel.FxMatrix.GetFxPair(ccyLeft, ccyRight);
+                                var spotDate = pair.SpotDate(date);
+                                var estFixing = model.FundingModel.GetFxRate(spotDate, ccyLeft, ccyRight);
+                                newDict.Add(date, estFixing);
+                            }
                         }
-                        else //its FX
-                        {
-                            var id = newDict.FxPair ?? newDict.AssetId;
-                            var ccyLeft = currencyProvider[id.Substring(0, 3)];
-                            var ccyRight = currencyProvider[id.Substring(id.Length - 3, 3)];
-                            var pair = model.FundingModel.FxMatrix.GetFxPair(ccyLeft, ccyRight);
-                            var spotDate = pair.SpotDate(date);
-                            var estFixing = model.FundingModel.GetFxRate(spotDate, ccyLeft, ccyRight);
-                            newDict.Add(date, estFixing);
-                        }
+
+                        date = date.AddDays(1);
                     }
-
-                    date = date.AddDays(1);
+                    rolledFixings.Add(fixingName, newDict);
                 }
-                rolledFixings.Add(fixingName, newDict);
-
+            }
+            else
+            {
+                rolledFixings = model.FixingDictionaryNames.ToDictionary(x => x, x => model.GetFixingDictionary(x));
             }
 
             var rolledModel = new AssetFxModel(fwdValDate, rolledFundingModel);
@@ -1530,15 +1536,16 @@ namespace Qwack.Models.Models
         }
 
         public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval, 
-            ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+            ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, List<string> fxPairsToRoll)
         {
             if (model.BuildDate == fwdValDate)
                 return model.Clone();
 
-            var m = model.RollModel(fwdValDate, currencyProvider);
+            var m = model.RollModel(fwdValDate, currencyProvider, false);
             var t = model.BuildDate.CalculateYearFraction(fwdValDate, DayCountBasis.ACT365F);
             var sqrt = Sqrt(t);
             var nCI = Statistics.NormInv(confidenceInterval);
+            var nCIInv = Statistics.NormInv(1.0-confidenceInterval);
 
             //fx spots
             var matrix = m.FundingModel.FxMatrix;
@@ -1552,9 +1559,31 @@ namespace Qwack.Models.Models
             var volsToRollFx = volsSurfacesFx.ToDictionary(
                 x => x.Key,
                 x => x.Value == null ? 0.0 : (x.Value as IATMVolSurface).GetForwardATMVol(model.BuildDate, fwdValDate));
-            var newSpotRates = volsToRollFx.ToDictionary(
-                kv => kv.Key,
-                kv => matrix.SpotRates[kv.Key] * Exp(-(kv.Value * kv.Value) * t / 2.0 + kv.Value * sqrt * nCI));
+            var newSpotRates = new Dictionary<Currency, double>();
+
+            foreach(var pair in fxPairsToRoll)
+            {
+                var p = matrix.GetFxPair(pair);
+
+                if(p.Domestic==matrix.BaseCurrency)
+                {
+                    var ccy = p.Foreign;
+                    var vol = volsToRollFx[ccy];
+                    var newSpot = matrix.SpotRates[ccy] * Exp(-(vol * vol) * t / 2.0 + vol * sqrt * nCI);
+                    newSpotRates.Add(ccy, newSpot);
+                }
+                else
+                {
+                    var ccy = p.Domestic;
+                    var vol = volsToRollFx[ccy];
+                    var newSpot = matrix.SpotRates[ccy] * Exp(-(vol * vol) * t / 2.0 + vol * sqrt * nCIInv);
+                    newSpotRates.Add(ccy, newSpot);
+                }
+                
+            }
+            //newSpotRates = volsToRollFx.ToDictionary(
+            //    kv => kv.Key,
+            //    kv => matrix.SpotRates[kv.Key] * Exp(-(kv.Value * kv.Value) * t / 2.0 + kv.Value * sqrt * nCI));
             matrix.Init(matrix.BaseCurrency, matrix.BuildDate, newSpotRates, matrix.FxPairDefinitions, matrix.DiscountCurveMap);
 
             //asset curves

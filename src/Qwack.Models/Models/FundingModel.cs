@@ -199,14 +199,25 @@ namespace Qwack.Models
         public void SetupFx(IFxMatrix fxMatrix) => FxMatrix = fxMatrix;
 
         public IrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
-        public IVolSurface GetVolSurface(string name) => VolSurfaces.TryGetValue(name, out var curve) ? curve : GetInverseSurface(name);
-        private IVolSurface GetInverseSurface(string name)
+        public IVolSurface GetVolSurface(string name) => TryGetVolSurface(name, out var surface) ? surface : throw new Exception($"Surface named {name} not found");
+
+        public bool TryGetVolSurface(string name, out IVolSurface volSurface)
+        {
+            if (VolSurfaces.TryGetValue(name, out volSurface))
+                return true;
+
+            if (TryGetInverseSurface(name, out volSurface))
+                return true;
+
+            volSurface = null;
+            return false;
+        }
+        private bool TryGetInverseSurface(string name, out IVolSurface volSurface)
         {
             var inverseName = name.Substring(name.Length - 3, 3) + "/" + name.Substring(0, 3);
-            return VolSurfaces.TryGetValue(inverseName, out var curve) 
-                ? new InverseFxSurface(inverseName, curve as IATMVolSurface, _currencyProvider) 
-                : throw new Exception($"Surface named {name} not found");
+            return VolSurfaces.TryGetValue(inverseName, out volSurface);
         }
+
         public static IFundingModel RemapBaseCurrency(IFundingModel input, Currency newBaseCurrency, ICurrencyProvider currencyProvider)
         {
             if (newBaseCurrency == input.FxMatrix.BaseCurrency)

@@ -1107,6 +1107,31 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Returns quick PFE of a trade asian swap and AssetFx model", Category = CategoryNames.Instruments,
+            Name = CategoryNames.Instruments + "_" + nameof(QuickPFE), IsThreadSafe = Parallel)]
+        public static object QuickPFE(
+            [ExcelArgument(Description = "Trade object name")] string TradeName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Confidence interval, e.g. 0.95")] double ConfidenceInterval,
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCcy)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<IAssetFxModel>().TryGetObject(ModelName, out var model))
+                    throw new Exception($"Could not find model with name {ModelName}");
+
+                if (!ContainerStores.GetObjectCache<AsianSwap>().TryGetObject(TradeName, out var swap))
+                    throw new Exception($"Could not find asian swap with name {TradeName}");
+
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
+
+                var result = swap.Value.QuickPFE(ConfidenceInterval, model.Value);
+
+                return result;
+            });
+        }
+
+
         [ExcelFunction(Description = "Returns PV of a portfolio given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(AssetPortfolioPV), IsThreadSafe = Parallel)]
         public static object AssetPortfolioPV(
            [ExcelArgument(Description = "Result object name")] string ResultObjectName,

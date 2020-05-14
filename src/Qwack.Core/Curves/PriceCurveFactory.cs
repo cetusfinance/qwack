@@ -64,7 +64,7 @@ namespace Qwack.Core.Curves
                             PillarDates = basic.PillarDates,
                             PillarLabels = basic.PillarLabels,
                             Prices = basic.Prices,
-                            SpotCalendar = basic.SpotCalendar.Name,
+                            SpotCalendar = basic.SpotCalendar?.Name,
                             SpotLag = basic.SpotLag.ToString()
                         }
                     };

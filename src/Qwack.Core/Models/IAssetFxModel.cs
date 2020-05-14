@@ -21,6 +21,7 @@ namespace Qwack.Core.Models
         void RemoveVolSurface(IVolSurface surface);
         void RemoveFixingDictionary(string name);
 
+
         void AddPriceCurves(Dictionary<string, IPriceCurve> curves);
         void AddVolSurfaces(Dictionary<string, IVolSurface> surfaces);
         void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings);
@@ -34,6 +35,7 @@ namespace Qwack.Core.Models
 
         IPriceCurve GetPriceCurve(string name, Currency ccy = null);
         IVolSurface GetVolSurface(string name, Currency ccy = null);
+        bool TryGetVolSurface(string name, out IVolSurface surface, Currency currency = null);
         IFixingDictionary GetFixingDictionary(string name);
         bool TryGetFixingDictionary(string name, out IFixingDictionary fixings);
 

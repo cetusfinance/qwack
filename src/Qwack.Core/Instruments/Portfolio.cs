@@ -590,22 +590,49 @@ namespace Qwack.Core.Instruments
         public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
             => new Portfolio { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
 
-        public static DateTime[] ComputeSimDates(this Portfolio pf, DateTime anchorDate)
+        public static DateTime[] ComputeSimDates(this Portfolio pf, DateTime anchorDate, DatePeriodType frequency = DatePeriodType.Month)
         {
+            var removeDateWhenCloserThan = 7;
+
+            var gridDates = new List<DateTime>();
+            var finalDate = pf.LastSensitivityDate;
+
+            if (frequency == DatePeriodType.Month)
+            {
+                var nMonths = (finalDate.Year * 12 + finalDate.Month) - (anchorDate.Year * 12 + anchorDate.Month);
+                if (nMonths > 0)
+                    gridDates = Enumerable.Range(1, nMonths)
+                        .Select(x => anchorDate.LastDayOfMonth().AddMonths(x))
+                        .ToList();
+            }
+            else if (frequency == DatePeriodType.Week)
+            {
+                var nWeeks = (int)((finalDate - anchorDate).TotalDays / 7) + 1 ;
+                if (nWeeks > 0)
+                    gridDates = Enumerable.Range(1, nWeeks)
+                        .Select(x => anchorDate.AddDays(x*7))
+                        .ToList();
+            }
+            else
+                throw new Exception("Only support weekly or monthly date generation");
+
             var payDates = pf.Instruments
                 .Select(x => x.LastSensitivityDate.AddDays(-1))
-                .Distinct()
-                .OrderBy(x => x);
+                .Where(x => x != anchorDate);
+            gridDates.Add(anchorDate);
+            gridDates.Add(finalDate);
+            var combinedDates = payDates.Concat(gridDates).Distinct().OrderBy(x => x).ToList();
 
-            var o = new List<DateTime>();
-            o.Add(anchorDate);
-            foreach(var d in payDates)
+            var o = new List<DateTime>
             {
-                while(o.Last()<d.AddDays(-35))
+                anchorDate
+            };
+            foreach (var d in combinedDates)
+            {
+                if(d.Subtract(o.Last()).TotalDays>removeDateWhenCloserThan)
                 {
-                    o.Add(o.Last().AddDays(1).LastDayOfMonth());
+                    o.Add(d);
                 }
-                o.Add(d);
             }
             return o.ToArray();
         }

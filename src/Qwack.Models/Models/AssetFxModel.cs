@@ -93,6 +93,19 @@ namespace Qwack.Models
             return surfaces.First().Value;
         }
 
+        public bool TryGetVolSurface(string name, out IVolSurface surface, Currency currency = null)
+        {
+            surface = null;
+            if (IsFx(name))
+                return FundingModel.TryGetVolSurface(name, out surface);
+
+            if (currency != null)
+                return _assetVols.TryGetValue(new VolSurfaceKey(name, currency), out surface);
+
+            surface = _assetVols.Where(x => name.Contains("~") ? x.Key.ToString() == name : x.Key.AssetId == name).FirstOrDefault().Value;
+            return surface != default(IVolSurface);
+        }
+
         public void AddFixingDictionary(string name, IFixingDictionary fixings) => _fixings[name] = fixings;
 
         public IFixingDictionary GetFixingDictionary(string name)

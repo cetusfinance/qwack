@@ -13,7 +13,7 @@ namespace Qwack.Core.Models
         Dictionary<string, IrCurve> Curves { get; }
         Dictionary<string, IVolSurface> VolSurfaces { get; set; }
         IFxMatrix FxMatrix { get; }
-
+        
         IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate);
         IFundingModel Clone();
         IFundingModel DeepClone(DateTime? newBuildDate);
@@ -28,7 +28,7 @@ namespace Qwack.Core.Models
         IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
         IrCurve GetCurve(string name);
         IVolSurface GetVolSurface(string name);
-
+        bool TryGetVolSurface(string name, out IVolSurface volSurface);
         double GetDf(string curveName, DateTime startDate, DateTime endDate);
         double GetDf(Currency ccy, DateTime startDate, DateTime endDate);
 

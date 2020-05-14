@@ -361,13 +361,34 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Returns PFE of a portfolio by monte-carlo given an AssetFx model and MC settings", Category = CategoryNames.Models, 
+            Name = CategoryNames.Models + "_" + nameof(AnalyticPortfolioPFE), IsThreadSafe = false)]
+        public static object AnalyticPortfolioPFE(
+            [ExcelArgument(Description = "Result object name")] string ResultObjectName,
+            [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
+            [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "Confidence level, e.g. 0.95")] double ConfidenceLevel,
+            [ExcelArgument(Description = "Reporting Currency")] string ReportingCurrency)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
+                var model = ContainerStores.GetObjectCache<IAssetFxModel>()
+                    .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCurrency);
+
+                var result = QuickPFECalculator.Calculate(model.Value, pfolio, ConfidenceLevel, ccy, ContainerStores.CurrencyProvider);
+                return RiskFunctions.PushCubeToCache(result, ResultObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns composite volatility from a model", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(GetCompoVol), IsThreadSafe = false)]
         public static object GetCompoVol(
-        [ExcelArgument(Description = "Model object name")] string ModelName,
-        [ExcelArgument(Description = "Asset Id")] string AssetId,
-        [ExcelArgument(Description = "Currency")] string Currency,
-        [ExcelArgument(Description = "Strike")] double Strike,
-        [ExcelArgument(Description = "Expiry")] DateTime Expiry)
+            [ExcelArgument(Description = "Model object name")] string ModelName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Strike")] double Strike,
+            [ExcelArgument(Description = "Expiry")] DateTime Expiry)
         {
             return ExcelHelper.Execute(_logger, () =>
             {

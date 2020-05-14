@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
@@ -11,6 +12,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Math;
 using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
@@ -1525,6 +1527,69 @@ namespace Qwack.Models.Models
             return rolledModel;
         }
 
+        public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval, ICurrencyProvider currencyProvider)
+        {
+            if (model.BuildDate == fwdValDate)
+                return model.Clone();
+
+            var m = model.RollModel(fwdValDate, currencyProvider);
+            var t = model.BuildDate.CalculateYearFraction(fwdValDate, DayCountBasis.ACT365F);
+            var sqrt = Sqrt(t);
+            var nCI = Statistics.NormInv(confidenceInterval);
+
+            //fx spots
+            var matrix = m.FundingModel.FxMatrix;
+            var pairs = matrix.FxPairDefinitions;
+            var ccys = matrix.SpotRates.Keys;
+            var pairsByCcy = ccys.ToDictionary(c => c, c => matrix.GetFxPair(matrix.BaseCurrency, c));
+            var volsSurfacesFx = pairsByCcy
+                .ToDictionary(
+                x => x.Key, 
+                x => model.FundingModel.TryGetVolSurface(x.Value.ToString(), out var volSurface) ? volSurface : null);
+            var volsToRollFx = volsSurfacesFx.ToDictionary(
+                x => x.Key,
+                x => x.Value == null ? 0.0 : (x.Value as IATMVolSurface).GetForwardATMVol(model.BuildDate, fwdValDate));
+            var newSpotRates = volsToRollFx.ToDictionary(
+                kv => kv.Key,
+                kv => matrix.SpotRates[kv.Key] * Exp(-(kv.Value * kv.Value) * t / 2.0 + kv.Value * sqrt * nCI));
+            matrix.Init(matrix.BaseCurrency, matrix.BuildDate, newSpotRates, matrix.FxPairDefinitions, matrix.DiscountCurveMap);
+
+            //asset curves
+            var volsSurfacesAsset = m.CurveNames
+                .ToDictionary(
+                x => x,
+                x => model.TryGetVolSurface(x, out var volSurface) ? volSurface : null);
+            var volsToRollAsset = volsSurfacesAsset.ToDictionary(
+                x => x.Key,
+                x => x.Value == null ? 0.0 : (x.Value as IATMVolSurface).GetForwardATMVol(model.BuildDate, fwdValDate));
+
+            foreach(var curveName in m.CurveNames)
+            {
+                var curve = m.GetPriceCurve(curveName);
+                var v = volsToRollAsset[curveName];
+                switch(curve)
+                {
+                    case BasicPriceCurve b:
+                        var newfwds = b.Prices.Select(p => p * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI)).ToArray();
+                        var tob = b.GetTransportObject();
+                        tob.BasicPriceCurve.Prices = newfwds;
+                        m.AddPriceCurve(curveName, new BasicPriceCurve(tob.BasicPriceCurve, currencyProvider));
+                        break;
+                    case ContangoPriceCurve c:
+                        var newSpot = c.Spot * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI);
+                        var toc = c.GetTransportObject();
+                        toc.ContangoPriceCurve.Spot = newSpot;
+                        m.AddPriceCurve(curveName, new ContangoPriceCurve(toc.ContangoPriceCurve, currencyProvider));
+                        break;
+                    default:
+                        throw new Exception("PFE roll unable to handle price curve type");
+                }
+            }
+
+            return m;
+        }
+
+
         public static string[] GetRequiredPriceCurves(this Portfolio portfolio)
         {
             var curves = portfolio.Instruments
@@ -1532,9 +1597,7 @@ namespace Qwack.Models.Models
                 .SelectMany(a => ((IAssetInstrument)a).AssetIds)
                 .Distinct();
             return curves.ToArray();
-        }
-
-      
+        }      
 
         public static double ParRate(this IAssetInstrument instrument, IAssetFxModel model)
         {
@@ -1547,6 +1610,51 @@ namespace Qwack.Models.Models
 
             var fairK = Math.Solvers.Brent.BrentsMethodSolve(objectiveFunc, -1e6, 1e6, 1e-10);
             return fairK;
+        }
+
+        public static double QuickPFE(this AsianSwap swap, double confidenceInterval, IAssetFxModel model)
+        {
+            var ci = (
+                (swap.Direction==TradeDirection.Long && Sign(swap.Notional)==1)|| 
+                (swap.Direction == TradeDirection.Short && Sign(swap.Notional) == -1))?
+            confidenceInterval:
+            1.0 - confidenceInterval;
+
+            var par = swap.ParRate(model);
+            var optObj = new AsianOption
+            {
+                AssetFixingId = swap.AssetFixingId,
+                AssetId = swap.AssetId,
+                AverageStartDate = swap.AverageStartDate,
+                AverageEndDate = swap.AverageEndDate,
+                CallPut = OptionType.C,
+                PaymentCurrency = swap.PaymentCurrency,
+                Direction = swap.Direction,
+                DiscountCurve = swap.DiscountCurve,
+                FixingCalendar = swap.FixingCalendar,
+                FixingDates = swap.FixingDates,
+                FxConversionType = swap.FxConversionType,
+                FxFixingDates = swap.FxFixingDates,
+                FxFixingId = swap.FxFixingId,
+                Notional = swap.Notional,
+                PaymentDate = swap.PaymentDate,
+                Strike = par,
+                SpotLag = swap.SpotLag,
+                SpotLagRollType = swap.SpotLagRollType,
+                PaymentCalendar = swap.PaymentCalendar,
+                PaymentLag = swap.PaymentLag,
+                PaymentLagRollType = swap.PaymentLagRollType,
+            };
+            
+            var optPv = optObj.PV(model,true);
+            if (optPv == 0)
+                return 0;
+            var optFv = optPv / model.FundingModel.GetDf(swap.DiscountCurve, model.BuildDate, swap.PaymentDate);
+            var t = model.BuildDate.CalculateYearFraction(swap.AverageEndDate, DayCountBasis.ACT365F);
+            var impVol = BlackFunctions.BlackImpliedVol(par, par, 0.0, t, optFv, optObj.CallPut);
+            var fwdPfe = par * Exp(-impVol * impVol / 2.0 * t + Sqrt(t) * impVol * Statistics.NormInv(ci));
+            var fv = (fwdPfe - swap.Strike) * swap.Notional;
+            return fv;
         }
     }
 }

@@ -66,6 +66,7 @@ namespace Qwack.Models.Risk
 
             var fxPairsToRoll = assetIns.SelectMany(x => x.AssetIds).Where(x => x.Length == 7 && x.Substring(3, 1) == "/")
                 .Concat(assetIns.Select(x=>x.FxPair(model)))
+                .Where(x=>!string.IsNullOrWhiteSpace(x))
                 .Distinct().ToList();
 
             var o = new double[exposureDates.Length];

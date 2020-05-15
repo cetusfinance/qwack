@@ -1658,13 +1658,14 @@ namespace Qwack.Models.Models
             return m;
         }
 
-        public static IVolSurface ImplySurfaceToCorrelation(this IAssetFxModel model, string assetId, string fxPair, Currency ccy, ICurrencyProvider currencyProvider)
+        public static (IVolSurface fxSurface, IVolSurface assetSurface) ImplySurfaceToCorrelation(this IAssetFxModel model, string assetId, string fxPair, Currency ccy, ICurrencyProvider currencyProvider)
         {
-            var minVol = 0.0001;
+
             var fxSurface = model.GetVolSurface(fxPair);
-            var expiries = fxSurface.Expiries;
+            var assetSurface = model.GetVolSurface(assetId);
+            var expiries = fxSurface.Expiries.Concat(assetSurface.Expiries).Distinct().OrderBy(x=>x);
             var discoCurve = model.FundingModel.FxMatrix.DiscountCurveMap[ccy];
-            var shiftedVols = new List<double>();
+            var shifFactors = new Dictionary<DateTime, double>();
             foreach(var e in expiries)
             {
                 var t = model.BuildDate.CalculateYearFraction(e, DayCountBasis.Act365F);
@@ -1678,21 +1679,46 @@ namespace Qwack.Models.Models
                 var optFv = optPv / model.FundingModel.GetDf(discoCurve, model.BuildDate, e) / opt.Notional;
                 var iv = BlackFunctions.BlackImpliedVol(exactFwd, opt.Strike, 0, t, optFv, opt.CallPut);
                 var assetVol = model.GetVolForDeltaStrikeAndDate(assetId, e, 0.5);
-                var fxVol = Max(minVol, iv - assetVol);
-                shiftedVols.Add(fxVol);
+                var fxVol = model.GetVolForDeltaStrikeAndDate(fxPair, e, 0.5);
+                var c1VolSqr = assetVol * assetVol + fxVol * fxVol + 2 * fxVol * assetVol;
+                var k = Sqrt(iv * iv / c1VolSqr);
+                shifFactors.Add(e, k);
             }
 
+
+            IVolSurface shiftedFxSurface;
             switch(fxSurface)
             {
                 case RiskyFlySurface rf:
                     var to = rf.GetTransportObject();
-                    to.ATMs = shiftedVols.ToArray();
-                    to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
-                    to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
-                    return new RiskyFlySurface(to, currencyProvider);
+                    to.ATMs = to.ATMs.Select((v,ix)=>v*shifFactors[to.Expiries[ix]]).ToArray();
+                    to.Riskies = rf.Riskies.Select((x, ix) => x.Select(r => r * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
+                    to.Flies = rf.Flies.Select((x, ix) => x.Select(f => f * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
+                    //to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    //to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    shiftedFxSurface = new RiskyFlySurface(to, currencyProvider);
+                    break;
                 default:
                     throw new Exception("Currently only works for risky/fly fx surfaces");
             }
+
+            IVolSurface shiftedAssetSurface;
+            switch (assetSurface)
+            {
+                case RiskyFlySurface rf:
+                    var to = rf.GetTransportObject();
+                    to.ATMs = to.ATMs.Select((v, ix) => v * shifFactors[to.Expiries[ix]]).ToArray();
+                    to.Riskies = rf.Riskies.Select((x, ix) => x.Select(r => r * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
+                    to.Flies = rf.Flies.Select((x, ix) => x.Select(f => f * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
+                    //to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    //to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
+                    shiftedAssetSurface = new RiskyFlySurface(to, currencyProvider);
+                    break;
+                default:
+                    throw new Exception("Currently only works for risky/fly fx surfaces");
+            }
+
+            return (shiftedFxSurface, shiftedAssetSurface);
         }
 
 

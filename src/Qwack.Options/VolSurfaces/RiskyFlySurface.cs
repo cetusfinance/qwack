@@ -419,11 +419,12 @@ namespace Qwack.Options.VolSurfaces
 
         public override IVolSurface RollSurface(DateTime newOrigin)
         {
-            _suppressVarianceErrors = true;
+            //_suppressVarianceErrors = true;
 
             var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
-            var newVols = new double[newMaturities.Length][];       
+            var newVols = new double[newMaturities.Length][];
             var newATMs = newMaturities.Select(m => GetForwardATMVol(newOrigin, m)).ToArray();
+            //var newATMs = new double[newMaturities.Length];
             var newRRs = new double[newMaturities.Length][];
             var newBFs = new double[newMaturities.Length][];
             var numDropped = Expiries.Length - newMaturities.Length;
@@ -435,6 +436,7 @@ namespace Qwack.Options.VolSurfaces
             {
                 newRRs[i] = Riskies[i + numDropped];
                 newBFs[i] = Flies[i + numDropped];
+                //newATMs[i] = GetVolForDeltaStrike(0.5, newMaturities[i], newFwds[i]);
             }
 
             if (newATMs.Length == 0)

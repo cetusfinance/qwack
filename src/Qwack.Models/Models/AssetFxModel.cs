@@ -54,7 +54,14 @@ namespace Qwack.Models
 
         public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
 
-        public void AddVolSurface(string name, IVolSurface surface) => _assetVols[new VolSurfaceKey(surface.AssetId,surface.Currency)] = surface;
+        public void AddVolSurface(string name, IVolSurface surface)
+        {
+            if (IsFx(name))
+                FundingModel.VolSurfaces[name] = surface;
+            else
+                _assetVols[new VolSurfaceKey(surface.AssetId, surface.Currency)] = surface;
+
+        }
         public void AddVolSurface(VolSurfaceKey key, IVolSurface surface) => _assetVols[key] = surface;
 
         public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';

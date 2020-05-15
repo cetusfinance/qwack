@@ -465,8 +465,18 @@ namespace Qwack.Models.MCModels
 
             Engine.SetupFeatures();
         }
-        public ICube PFE(double confidenceLevel) => 
-            PackResults(() => _regressor.PFE(Model, confidenceLevel),"PFE");
+        public ICube PFE(double confidenceLevel) => PackResults(() => FudgePFE(confidenceLevel),"PFE");
+
+        private double[] FudgePFE(double confidenceLevel)
+        {
+            var pfe = _regressor.PFE(Model, confidenceLevel);
+            if (Settings.CreditSettings.ExposureDates.First() == Model.BuildDate)
+            {
+                var pv = CleanPV(Settings.ReportingCurrency, null);
+                pfe[0] = pv.SumOfAllRows;
+            }
+            return pfe;
+        }
 
         public ICube EPE() => PackResults(() => _regressor.EPE(Model),"EPE");
         public ICube ENE() => PackResults(() => _regressor.ENE(Model),"ENE");
@@ -542,7 +552,7 @@ namespace Qwack.Models.MCModels
         public ICube PV(Currency reportingCurrency)
         {
             var ccy = reportingCurrency?.ToString();
-            var cube = new ResultCube();
+            ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
                 { "TradeId", typeof(string) },
@@ -579,6 +589,30 @@ namespace Qwack.Models.MCModels
                     break;
             }
 
+            cube = CleanPV(reportingCurrency, cube);
+
+            return cube;
+        }
+
+        private ICube CleanPV(Currency reportingCurrency, ICube cube)
+        {
+            var ccy = reportingCurrency?.ToString();
+
+
+            if (cube == null)
+            {
+                cube = new ResultCube();
+                var dataTypes = new Dictionary<string, Type>
+                {
+                { "TradeId", typeof(string) },
+                { "Currency", typeof(string) },
+                { "TradeType", typeof(string) },
+                { "Portfolio", typeof(string) }
+                };
+                cube.Initialize(dataTypes);
+            }
+            Engine.RunProcess();
+            
             foreach (var kv in _payoffs)
             {
                 var insQuery = Portfolio.Instruments.Where(x => x.TradeId == kv.Key);

@@ -45,7 +45,11 @@ namespace Qwack.Models.Risk
 
             var m = model.TrimModel(portfolio);
 
-
+            var day0Pv = 0.0;
+            if(exposureDates.Contains(model.BuildDate))
+            {
+                day0Pv = Max(0, pf.PV(m, reportingCcy, true).SumOfAllRows);
+            }
             //adjust fx surface for correlation if needed
             var pairs = assetIns.Select(x => x.FxPair(model)).Where(x => !string.IsNullOrEmpty(x));
             if (correlationCorrection && pairs.Any())
@@ -55,8 +59,9 @@ namespace Qwack.Models.Risk
                     throw new Exception("Expecting a single Fx pair, if any");
                 var pair = pd.Single();
                 var assetId = assetIns.SelectMany(x => x.AssetIds).Distinct().Single();
-                var shiftedFxSurface = model.ImplySurfaceToCorrelation(assetId, pair, assetIns.First().Currency, currencyProvider);
-                m.FundingModel.VolSurfaces[pair] = shiftedFxSurface;
+                var (fxSurface, assetSurface) = model.ImplySurfaceToCorrelation(assetId, pair, assetIns.First().Currency, currencyProvider);
+                m.FundingModel.VolSurfaces[pair] = fxSurface;
+                m.AddVolSurface(assetId, assetSurface);
             }
 
             var fxPairsToRoll = assetIns.SelectMany(x => x.AssetIds).Where(x => x.Length == 7 && x.Substring(3, 1) == "/")
@@ -67,7 +72,7 @@ namespace Qwack.Models.Risk
             for(var i=0;i<exposureDates.Length;i++)
             {
                 var mm = m.RollModelPfe(exposureDates[i], ci, currencyProvider, calendarProvider, fxPairsToRoll);
-                o[i] = Max(0,pf.PV(mm, reportingCcy, true).SumOfAllRows);
+                o[i] = exposureDates[i] == model.BuildDate ? day0Pv : Max(0, pf.PV(mm, reportingCcy, true).SumOfAllRows);
             }
 
             return PackToCube(exposureDates, o, "PFE");

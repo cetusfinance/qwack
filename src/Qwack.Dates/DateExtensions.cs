@@ -703,7 +703,7 @@ namespace Qwack.Dates
                 case string p when p.Length == 3 && int.TryParse(p.Substring(1, 2), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X18
                     var m2 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2000 + yr, m2, 1), End: (new DateTime(2000 + yr, m2, 1)).LastDayOfMonth(), valid:true); ;
-                case string p when p.StartsWith("Q"):
+                case string p when p.StartsWith("Q") && p.Length > 2:
                     if (!int.TryParse(p.Substring(1, 1), out var q))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     if (!int.TryParse(p.Substring(2).Trim('-', ' '), out var yq))

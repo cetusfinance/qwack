@@ -91,7 +91,7 @@ namespace Qwack.Models.Models
                         var fxFwd = model.FundingModel.GetFxRate(fxSpotDate, fxId);
                         var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, asianOption.FixingDates[i], fxFwd);
                         var tExpC = model.BuildDate.CalculateYearFraction(asianOption.FixingDates[i], DayCountBasis.Act365F);
-                        var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId, tExpC);
+                        var correl = model.GetCorrelation(fxId, asianOption.AssetId, tExpC);
                         sigmas[i] = Sqrt(sigmas[i] * sigmas[i] + fxVol * fxVol + 2 * correl * fxVol * sigmas[i]);
                     }
                 }
@@ -110,7 +110,7 @@ namespace Qwack.Models.Models
                 var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(volDate, curve.Currency, asianOption.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, volDate, fxVolFwd);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
+                var correl = model.GetCorrelation(fxId, asianOption.AssetId);
                 sigma = Sqrt(sigma * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
             }
 
@@ -410,7 +410,7 @@ namespace Qwack.Models.Models
                 var fxVolFwd = model.FundingModel.GetFxRate(euOpt.ExpiryDate, curve.Currency, euOpt.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euOpt.ExpiryDate, fxVolFwd);
                 var tExpC = model.BuildDate.CalculateYearFraction(euOpt.ExpiryDate, DayCountBasis.Act365F);
-                var correl = model.CorrelationMatrix?.GetCorrelation(fxId, euOpt.AssetId, tExpC) ?? 0.0;
+                var correl = model.GetCorrelation(fxId, euOpt.AssetId, tExpC);
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 
@@ -657,7 +657,7 @@ namespace Qwack.Models.Models
             {
                 var fxId = $"{curve.Currency.Ccy}/{asianOption.PaymentCurrency.Ccy}";
                 var fxPair = model.FundingModel.FxMatrix.GetFxPair(fxId);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, asianOption.AssetId);
+                var correl = model.GetCorrelation(fxId, asianOption.AssetId);
                 for (var i = 0; i < sigmas.Length; i++)
                 {
                     var fxSpotDate = fxPair.SpotDate(asianOption.FixingDates[i]);
@@ -709,7 +709,7 @@ namespace Qwack.Models.Models
                 var fxId = $"{curve.Currency.Ccy}/{euroOption.PaymentCurrency.Ccy}";
                 var fxVolFwd = model.FundingModel.GetFxRate(fDate, curve.Currency, euroOption.PaymentCurrency);
                 var fxVol = model.FundingModel.GetVolSurface(fxId).GetVolForDeltaStrike(0.5, euroOption.ExpiryDate, fxVolFwd);
-                var correl = model.CorrelationMatrix.GetCorrelation(fxId, euroOption.AssetId);
+                var correl = model.GetCorrelation(fxId, euroOption.AssetId);
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 

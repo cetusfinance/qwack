@@ -55,5 +55,7 @@ namespace Qwack.Core.Models
         string[] GetAllDependentCurves(string curve);
 
         void OverrideBuildDate(DateTime buildDate);
+
+        double GetCorrelation(string label1, string label2, double t = 0);
     }
 }

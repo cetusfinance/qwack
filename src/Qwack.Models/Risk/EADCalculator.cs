@@ -12,7 +12,8 @@ namespace Qwack.Models.Risk
 {
     public class EADCalculator
     {
-        public EADCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string,string> assetIdToGroupMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates, ICurrencyProvider currencyProvider)
+        public EADCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string,string> assetIdToGroupMap, Currency reportingCurrency, 
+            IAssetFxModel assetFxModel, DateTime[] calculationDates, double[] epeValues, ICurrencyProvider currencyProvider)
         {
             _portfolio = portfolio;
             _counterpartyRiskWeight = counterpartyRiskWeight;
@@ -20,6 +21,7 @@ namespace Qwack.Models.Risk
             _reportingCurrency = reportingCurrency;
             _assetFxModel = assetFxModel;
             _calculationDates = calculationDates;
+            _epeValues = epeValues;
             _currencyProvider = currencyProvider;
             _endDate = portfolio.LastSensitivityDate;
         }
@@ -49,6 +51,7 @@ namespace Qwack.Models.Risk
         private readonly Currency _reportingCurrency;
         private IAssetFxModel _assetFxModel;
         private readonly DateTime[] _calculationDates;
+        private readonly double[] _epeValues;
         private readonly ICurrencyProvider _currencyProvider;
         private readonly DateTime _endDate;
 
@@ -64,13 +67,14 @@ namespace Qwack.Models.Risk
                 _assetFxModel = _assetFxModel.RollModel(currentFixingDate, _currencyProvider);
             }
 
-            ParallelUtils.Instance.Foreach(_calculationDates, d =>
+            ParallelUtils.Instance.For(0,_calculationDates.Length,1,i=> 
             {
+                var d = _calculationDates[i];
+                var epe = _epeValues[i];
                 var newModel = _assetFxModel.Clone();
                 newModel.OverrideBuildDate(d);
 
-
-                var ead = _portfolio.SaCcrEAD(newModel, _reportingCurrency, _assetIdToGroupMap);
+                var ead = _portfolio.SaCcrEAD(epe, newModel, _reportingCurrency, _assetIdToGroupMap);
                 var capital = _counterpartyRiskWeight * ead;
                 if (!_ead.ContainsKey(d))
                     lock (_threadLock)
@@ -91,11 +95,13 @@ namespace Qwack.Models.Risk
 
         public void Process(Dictionary<DateTime,IAssetFxModel> models)
         {
-            ParallelUtils.Instance.Foreach(_calculationDates, d =>
+            ParallelUtils.Instance.For(0, _calculationDates.Length, 1, i =>
             {
+                var d = _calculationDates[i];
+                var epe = _epeValues[i];
                 var newModel = models[d];
 
-                var ead = _portfolio.SaCcrEAD(newModel, _reportingCurrency, _assetIdToGroupMap);
+                var ead = _portfolio.SaCcrEAD(epe, newModel, _reportingCurrency, _assetIdToGroupMap);
                 var capital = _counterpartyRiskWeight * ead;
                 if (!_ead.ContainsKey(d))
                     lock (_threadLock)

@@ -920,9 +920,10 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
+        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, ICube epeCube, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
-            var calcDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
+            var calcDates = epeCube.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+            var epeValues = epeCube.GetAllRows().Select(r => r.Value).ToArray();
 
             if (assetToGroupMap == null && portfolio.AssetIds().Length == 1)
             {
@@ -933,7 +934,7 @@ namespace Qwack.Models.Models
                 };
             }
 
-            var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates.ToArray(), currencyProvider);
+            var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates, epeValues, currencyProvider);
 
             if (models == null)
                 calculator.Process();
@@ -942,7 +943,8 @@ namespace Qwack.Models.Models
 
             var ead = calculator.ResultCube();
 
-            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d => models[d]).ToArray(), portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider);
+            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d => models[d]).ToArray(), portfolio, hazzardCurve, 
+                reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, epeValues);
             return pvCapital;
         }
 
@@ -951,8 +953,9 @@ namespace Qwack.Models.Models
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
             var modelsForDates = exposureDates.Select(d => models[d]).ToArray();
             var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
-            var cva = XVACalculator.CVA_Approx(exposureDates, portfolio, hazzardCurve, model, discountCurve, xVA_LGD, reportingCurrency, currencyProvider, models);
-            var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, assetToGroupMap, hedgeSetToCCF, currencyProvider);
+            var epes = XVACalculator.EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
+            var cva = XVACalculator.CVA(model.BuildDate, exposureDates, epes, hazzardCurve, discountCurve, xVA_LGD);
+            var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, epes, modelsForDates, portfolio, reportingCurrency, assetToGroupMap, hedgeSetToCCF, currencyProvider);
             eads = eads.Select(x => x * partyRiskWeight).ToArray();
             var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);
             var cvaCapital = CapitalCalculator.PvCvaCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, discountCurve, cvaCapitalWeight, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);

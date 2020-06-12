@@ -312,29 +312,32 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio by analytic methods given an AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD), IsThreadSafe = false)]
+        [ExcelFunction(Description = "Returns expected SA-CCR EAD profile of a portfolio given an EPE profile, AssetFx model and MC settings", Category = CategoryNames.Models, Name = CategoryNames.Models + "_" + nameof(PortfolioExpectedEAD), IsThreadSafe = false)]
         public static object PortfolioExpectedEAD(
             [ExcelArgument(Description = "Result object name")] string ResultObjectName,
             [ExcelArgument(Description = "Portolio object name")] string PortfolioName,
             [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
+            [ExcelArgument(Description = "EPE cube name")] string EPECube,
             [ExcelArgument(Description = "Counterparty risk weight")] double CounterpartyRiskWeight,
             [ExcelArgument(Description = "Map for assetIds to hedge sets")] object[,] AssetIdToHedgeSetMap,
-            [ExcelArgument(Description = "Reporting currency")] string ReportingCurrency,
-            [ExcelArgument(Description = "Calculation dates")] object CalculationDates)
+            [ExcelArgument(Description = "Reporting currency")] string ReportingCurrency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pfolio = InstrumentFunctions.GetPortfolioOrTradeFromCache(PortfolioName);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>()
                     .GetObjectOrThrow(ModelName, $"Could not find model with name {ModelName}");
+                var epeCube = ContainerStores.GetObjectCache<ICube>()
+                    .GetObjectOrThrow(EPECube, $"Could not find epe cube with name {EPECube}");
 
                 if (!ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().TryGetCurrency(ReportingCurrency.OptionalExcel("USD"), out var repCcy))
                     return $"Could not find currency {ReportingCurrency} in cache";
 
-                var calcDates = CalculationDates is object[,] pd ? pd.ObjectRangeToVector<double>().ToDateTimeArray() :
-                    (CalculationDates is double pdd ? new[] { DateTime.FromOADate(pdd) } : null);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
 
-                var calc = new EADCalculator(pfolio, CounterpartyRiskWeight, AssetIdToHedgeSetMap.RangeToDictionary<string, string>(), repCcy, model.Value, calcDates, ContainerStores.CurrencyProvider);
+                var calc = new EADCalculator(pfolio, CounterpartyRiskWeight, AssetIdToHedgeSetMap.RangeToDictionary<string, string>(), repCcy, model.Value, 
+                    expDates, epeValues, ContainerStores.CurrencyProvider);
                 calc.Process();
                 var result = calc.ResultCube();
                 return RiskFunctions.PushCubeToCache(result, ResultObjectName);

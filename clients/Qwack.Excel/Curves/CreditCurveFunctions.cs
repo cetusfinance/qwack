@@ -75,6 +75,8 @@ namespace Qwack.Excel.Curves
                     Spread = Spread,
                     ScheduleType = shed
                 };
+
+                cdsObj.Init();
                 
                 return ExcelHelper.PushToCache(cdsObj, ObjectName);
             });

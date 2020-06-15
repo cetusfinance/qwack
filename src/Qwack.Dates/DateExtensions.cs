@@ -804,5 +804,18 @@ namespace Qwack.Dates
             }
             return o.ToArray();
         }
+
+        public static DateTime[] GenerateDateSchedule(this DatePeriodType period, DateTime start, DateTime end)
+        {
+            var o = new List<DateTime>();
+            var d = start;
+            while (d < end)
+            {
+                o.Add(d);
+                d = d.AddPeriod(RollType.F, null, new Frequency(1, period));
+            }
+            o.Add(end);
+            return o.ToArray();
+        }
     }
 }

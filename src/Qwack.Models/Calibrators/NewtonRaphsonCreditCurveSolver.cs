@@ -22,6 +22,8 @@ namespace Qwack.Models.Calibrators
         public int UsedItterations { get; set; }
         public Interpolator1DType InterpolatorType { get; set; } = Interpolator1DType.LinearFlatExtrap;
 
+        public bool UseSmallSteps { get; set; } = true;
+
         private const double JacobianBump = 0.0001;
 
         private DateTime _buildDate;
@@ -109,7 +111,9 @@ namespace Qwack.Models.Calibrators
             var hzCurve = new HazzardCurve(_buildDate, _basis, _currentCurve);
             for (var i = 0; i < o.Length; i++)
             {
-                o[i] = _curveInstruments[i].PV_PiecewiseFlat(hzCurve, _discountCurve, _recoveryRate, false);
+                o[i] = UseSmallSteps ? 
+                    _curveInstruments[i].PV_SmallSteps(hzCurve, _discountCurve, _recoveryRate, false) :
+                    _curveInstruments[i].PV_PiecewiseFlat(hzCurve, _discountCurve, _recoveryRate, false);
             }
             return o;
         }

@@ -40,6 +40,31 @@ namespace Qwack.Core.Tests.Credit
         }
 
         [Fact]
+        public void CDSBasicFacts_LinearApprox()
+        {
+            var origin = new DateTime(2020, 06, 15);
+            var hzi = new ConstantHazzardInterpolator(0.0);
+            var hz = new HazzardCurve(origin, DayCountBasis.ACT365F, hzi);
+            var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
+            var df = new ConstantRateIrCurve(0.00, origin, "LIBOR", usd);
+
+            var sut = new CDS()
+            {
+                Basis = DayCountBasis.ACT365F,
+                Currency = usd,
+                OriginDate = origin,
+                Tenor = new Frequency("1y"),
+                Spread = 0.01,
+                Notional = 1e6
+            };
+            sut.Init();
+
+            var pv = sut.PV_LinearApprox(hz, df, 0.4, false);
+
+            Assert.Equal(-sut.Notional * sut.Spread, pv);
+        }
+
+        [Fact]
         public void CDSStripperFacts()
         {
             var origin = new DateTime(2020, 06, 15);
@@ -70,8 +95,13 @@ namespace Qwack.Core.Tests.Credit
                 cds.Init();
             }
 
-            var sut = new NewtonRaphsonCreditCurveSolver();
+            var sut = new NewtonRaphsonCreditCurveSolver
+            {
+                UseSmallSteps = true
+            };
+
             var hz = sut.Solve(cdses, 0.4, df, origin);
+           
             var pz = cdses.Select(c => hz.GetSurvivalProbability(c.FinalSensitivityDate));
             foreach(var p in pz)
                 Assert.True(!double.IsNaN(p));

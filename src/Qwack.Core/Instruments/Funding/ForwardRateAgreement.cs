@@ -117,7 +117,7 @@ namespace Qwack.Core.Instruments.Funding
             {
                 var RateFix = flow.FixedRateOrMargin;
                 var RateFloat = forecastCurve.GetForwardRate(s, e, RateType.Linear, Basis);
-                var YF = flow.NotionalByYearFraction;
+                var YF = flow.YearFraction;
                 FV = ((RateFloat - RateFix) * YF) / (1 + RateFloat * YF) * flow.Notional;
 
                 FV *= (PayRec == SwapPayReceiveType.Payer) ? 1.0 : -1.0;
@@ -162,14 +162,14 @@ namespace Qwack.Core.Instruments.Funding
             var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
 
             //https://www.mathsisfun.com/calculus/derivatives-rules.html quotient rule
-            var f = (RateFloat - RateFix) * flow.NotionalByYearFraction * flow.Notional * df;
-            var g = (1 + RateFloat * flow.NotionalByYearFraction);
-            var fd = flow.NotionalByYearFraction * flow.Notional * df;
-            var gd = flow.NotionalByYearFraction;
+            var f = (RateFloat - RateFix) * flow.YearFraction * flow.Notional * df;
+            var g = (1 + RateFloat * flow.YearFraction);
+            var fd = flow.YearFraction * flow.Notional * df;
+            var gd = flow.YearFraction;
 
             var dPVdR = (fd * g - gd * f) / (g * g);
-            var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-            var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+            var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+            var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
             if (forecastDict.ContainsKey(flow.AccrualPeriodStart))
                 forecastDict[flow.AccrualPeriodStart] += dPVdS;

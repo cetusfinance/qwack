@@ -47,7 +47,7 @@ namespace Qwack.Core.Instruments
                             if (updateState)
                             {
                                 var rateLin = flow.FixedRateOrMargin;
-                                var yf = flow.NotionalByYearFraction;
+                                var yf = flow.YearFraction;
                                 fv = rateLin * yf * flow.Notional;
                             }
                             else
@@ -83,7 +83,7 @@ namespace Qwack.Core.Instruments
                                 var e = flow.AccrualPeriodEnd;
                                 var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, basisFloat);
                                 rateLin += flow.FixedRateOrMargin;
-                                var yf = flow.NotionalByYearFraction;
+                                var yf = flow.YearFraction;
                                 fv = rateLin * yf * flow.Notional;
                             }
                             else
@@ -152,7 +152,7 @@ namespace Qwack.Core.Instruments
                     case FlowType.FixedRate:
                         {
                             var rateLin = flow.FixedRateOrMargin;
-                            var yf = flow.NotionalByYearFraction;
+                            var yf = flow.YearFraction;
                             fv = rateLin * yf * flow.Notional;
                             fv *= fwdFxRate;
                             pv = fv * df;
@@ -165,7 +165,7 @@ namespace Qwack.Core.Instruments
                             var e = flow.AccrualPeriodEnd;
                             var rateLin = model.GetCurve(forecastCurve).GetForwardRate(s, e, RateType.Linear, basisFloat);
                             rateLin += flow.FixedRateOrMargin;
-                            var yf = flow.NotionalByYearFraction;
+                            var yf = flow.YearFraction;
                             fv = rateLin * yf * flow.Notional;
                             fv *= fwdFxRate;
                             pv = fv * df;

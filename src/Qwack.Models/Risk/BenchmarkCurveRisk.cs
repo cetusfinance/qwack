@@ -176,7 +176,7 @@ namespace Qwack.Models.Risk
                 case STIRFuture st:
                     return 1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
                 case ForwardRateAgreement fra:
-                    return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().NotionalByYearFraction);
+                    return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().YearFraction);
                 case ContangoSwap cs:
                     var t360 = (cs.PillarDate - model.BuildDate).TotalDays / 360.0;
                     var spot = model.GetFxRate(model.BuildDate,cs.MetalCCY,cs.CashCCY);

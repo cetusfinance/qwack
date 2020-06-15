@@ -234,7 +234,7 @@ namespace Qwack.Paths.Payoffs
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
+                        YearFraction = 1.0
                     }
                 }
             };
@@ -254,7 +254,7 @@ namespace Qwack.Paths.Payoffs
                         Currency = _ccy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
+                        YearFraction = 1.0
                     }
                 }
             }).ToArray();

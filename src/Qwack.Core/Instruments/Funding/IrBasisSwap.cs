@@ -178,10 +178,10 @@ namespace Qwack.Core.Instruments.Funding
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
                 var ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
                 var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
-                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
-                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
-                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdR = df * flow.YearFraction * flow.Notional;
+                var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
                 if (forecastDictPay.ContainsKey(flow.AccrualPeriodStart))
                     forecastDictPay[flow.AccrualPeriodStart] += dPVdS;
@@ -198,10 +198,10 @@ namespace Qwack.Core.Instruments.Funding
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
                 var ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
                 var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
-                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
-                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
-                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdR = df * flow.YearFraction * flow.Notional;
+                var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
                 if (forecastDictRec.ContainsKey(flow.AccrualPeriodStart))
                     forecastDictRec[flow.AccrualPeriodStart] += dPVdS;

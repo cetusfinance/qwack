@@ -91,6 +91,10 @@ namespace Qwack.Core.Instruments.Credit
             foreach (var f in FixedSchedule.Flows)
             {
                 pv -= f.Notional * f.YearFraction * Spread * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate) * hazzardCurve.GetSurvivalProbability(f.SettleDate);
+                if (payAccruedOnDefault)
+                    pv -= 0.5 * f.Notional * f.YearFraction * Spread
+                        * hazzardCurve.GetDefaultProbability(f.AccrualPeriodStart, f.AccrualPeriodEnd)
+                        * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate);
             }
 
             return pv;
@@ -111,6 +115,10 @@ namespace Qwack.Core.Instruments.Credit
             foreach (var f in FixedSchedule.Flows)
             {
                 pv -= f.Notional * f.YearFraction * Spread * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate) * hazzardCurve.GetSurvivalProbability(f.SettleDate);
+                if (payAccruedOnDefault)
+                    pv -= 0.5 * f.Notional * f.YearFraction * Spread
+                        * hazzardCurve.GetDefaultProbability(f.AccrualPeriodStart, f.AccrualPeriodEnd)
+                        * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate);
             }
 
             return pv;
@@ -135,7 +143,12 @@ namespace Qwack.Core.Instruments.Credit
             foreach (var f in FixedSchedule.Flows)
             {
                 pv -= f.Notional * f.YearFraction * Spread * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate) * hazzardCurve.GetSurvivalProbability(f.SettleDate);
+                if (payAccruedOnDefault)
+                    pv -= 0.5 * f.Notional * f.YearFraction * Spread
+                        * hazzardCurve.GetDefaultProbability(f.AccrualPeriodStart, f.AccrualPeriodEnd)
+                        * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate);
             }
+
 
             return pv;
         }

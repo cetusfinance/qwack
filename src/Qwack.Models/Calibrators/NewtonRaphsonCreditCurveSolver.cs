@@ -112,8 +112,8 @@ namespace Qwack.Models.Calibrators
             for (var i = 0; i < o.Length; i++)
             {
                 o[i] = UseSmallSteps ? 
-                    _curveInstruments[i].PV_SmallSteps(hzCurve, _discountCurve, _recoveryRate, false) :
-                    _curveInstruments[i].PV_PiecewiseFlat(hzCurve, _discountCurve, _recoveryRate, false);
+                    _curveInstruments[i].PV_SmallSteps(hzCurve, _discountCurve, _recoveryRate, true) :
+                    _curveInstruments[i].PV_PiecewiseFlat(hzCurve, _discountCurve, _recoveryRate, true);
             }
             return o;
         }

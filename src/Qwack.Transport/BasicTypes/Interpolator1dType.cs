@@ -15,6 +15,7 @@ namespace Qwack.Transport.BasicTypes
         NextValue,
         PreviousValue,
         ConstantHazzard,
+        LinearHazzard,
         Other
     }
 }

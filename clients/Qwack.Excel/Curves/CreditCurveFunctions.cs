@@ -11,6 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Core.Basic;
+using Qwack.Core.Instruments.Credit;
+using Qwack.Models.Calibrators;
 
 namespace Qwack.Excel.Curves
 {
@@ -35,9 +38,63 @@ namespace Qwack.Excel.Curves
                 {
                     ConstantPD = HazzardRate
                 };
-                var cache = ContainerStores.GetObjectCache<HazzardCurve>();
-                cache.PutObject(ObjectName, new SessionItem<HazzardCurve> { Name = ObjectName, Value = cObj });
-                return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
+
+                return ExcelHelper.PushToCache(cObj, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a CDS object", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCDS))]
+        public static object CreateCDS(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Tenor rate")] string Tenor,
+            [ExcelArgument(Description = "Spread")] double Spread,
+            [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Notional, default 1,000,000")] object Notional,
+            [ExcelArgument(Description = "Schedule type, default Basic")] object ScheduleType,
+            [ExcelArgument(Description = "Basis, default Act365F")] object Basis)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var basis = Basis.OptionalExcel("Act365F");
+                var scheduleType = ScheduleType.OptionalExcel("Basic");
+                var notional = Notional.OptionalExcel(1.0e6);
+                if (!Enum.TryParse(basis, out DayCountBasis dayCountBasis))
+                    throw new Exception($"Could not parse basis type - {basis}");
+                if (!Enum.TryParse(scheduleType, out CdsScheduleType shed))
+                    throw new Exception($"Could not parse cds schedule type - {scheduleType}");
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+
+                var cdsObj = new CDS()
+                {
+                    Basis = dayCountBasis,
+                    Currency = ccy,
+                    Notional = notional,
+                    Tenor = new Frequency(Tenor),
+                    OriginDate = OriginDate,
+                    Spread = Spread,
+                    ScheduleType = shed
+                };
+                
+                return ExcelHelper.PushToCache(cdsObj, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a Hazzard curve from CDS objects", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateHazzardCurveFromCDSs))]
+        public static object CreateHazzardCurveFromCDSs(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Origin date")] DateTime OriginDate,
+            [ExcelArgument(Description = "CDSs")] object[,] CDSs,
+            [ExcelArgument(Description = "Recovery Rate")] double RecoveryRate,
+            [ExcelArgument(Description = "Discount Curve")] string DiscountCurve)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var cdsObjects = ExcelHelper.GetAnyFromCache<CDS>(CDSs);
+                var disco = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Could not find discount curve {DiscountCurve}");
+                var solver = new NewtonRaphsonCreditCurveSolver();
+                var hzCurve = solver.Solve(cdsObjects.ToList(), RecoveryRate, disco.Value, OriginDate);
+                return ExcelHelper.PushToCache(hzCurve, ObjectName);
             });
         }
 

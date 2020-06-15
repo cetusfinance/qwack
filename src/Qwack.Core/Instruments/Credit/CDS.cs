@@ -24,6 +24,9 @@ namespace Qwack.Core.Instruments.Credit
 
         public GenericSwapLeg FixedLeg { get; set; }
         public CashFlowSchedule FixedSchedule { get; set; }
+
+        public DateTime FinalSensitivityDate => FixedSchedule.Flows.Max(f => f.AccrualPeriodEnd);
+
         public CDS()
         {
             
@@ -80,12 +83,12 @@ namespace Qwack.Core.Instruments.Credit
                 d = nd;
             }
 
-            pv *= 1.0 - recoveryRate;
+            pv *= (1.0 - recoveryRate) * Notional;
 
             //fixed leg
             foreach (var f in FixedSchedule.Flows)
             {
-                pv += f.Notional * f.YearFraction * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate) * hazzardCurve.GetSurvivalProbability(f.SettleDate);
+                pv -= f.Notional * f.YearFraction * Spread * discountCurve.GetDf(discountCurve.BuildDate, f.SettleDate) * hazzardCurve.GetSurvivalProbability(f.SettleDate);
             }
 
             return pv;

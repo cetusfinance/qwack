@@ -56,7 +56,7 @@ namespace Qwack.Models.Calibrators
             var priceDict = priceCurve.PillarLabels.ToDictionary(x => x, x => priceCurve.GetPriceForDate(priceCurve.PillarDatesForLabel(x)));
             ListedSurfaceHelper.ImplyVols(q, priceDict, new ConstantRateIrCurve(0.0, origin, "dummy", currency.GetCurrency("USD")));
             var smiles = ListedSurfaceHelper.ToDeltaSmiles(q, priceDict);
-            var surface = ListedSurfaceHelper.ToRiskyFlySurface(smiles, origin, smiles.Keys.Select(x => priceCurve.GetPriceForDate(x)).ToArray());
+            var surface = ListedSurfaceHelper.ToRiskyFlySurface(smiles, origin, smiles.Keys.Select(x => priceCurve.GetPriceForDate(x)).ToArray(), currency);
 
             return surface;
         }

@@ -9,6 +9,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Options.VolSurfaces;
 using Qwack.Options;
 using Qwack.Transport.BasicTypes;
+using Qwack.Core.Basic;
 
 namespace Qwack.Models.Calibrators
 {
@@ -109,7 +110,7 @@ namespace Qwack.Models.Calibrators
             return output;
         }
 
-        public static RiskyFlySurface ToRiskyFlySurface(this Dictionary<DateTime, IInterpolator1D> smiles, DateTime valDate, double[] fwds)
+        public static RiskyFlySurface ToRiskyFlySurface(this Dictionary<DateTime, IInterpolator1D> smiles, DateTime valDate, double[] fwds, ICurrencyProvider currencyProvider)
         {
             var wingDeltas = new[] { 0.25, 0.1 };
             var expiries = smiles.Keys.ToArray();
@@ -123,7 +124,11 @@ namespace Qwack.Models.Calibrators
                     .ToArray())
                 .ToArray();
 
-            var o = new RiskyFlySurface(valDate, atmVols, expiries, wingDeltas, riskies, flies, fwds, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.CubicSpline, Interpolator1DType.LinearInVariance);
+            var o = new RiskyFlySurface(valDate, atmVols, expiries, wingDeltas, riskies, flies, fwds, WingQuoteType.Arithmatic,
+                AtmVolType.ZeroDeltaStraddle, Interpolator1DType.CubicSpline, Interpolator1DType.LinearInVariance)
+            {
+                Currency = currencyProvider.GetCurrency("USD")
+            };
             return o;
         }
     }

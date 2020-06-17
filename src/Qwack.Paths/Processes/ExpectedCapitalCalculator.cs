@@ -100,7 +100,7 @@ namespace Qwack.Paths.Processes
                                 newModel.AddPriceCurve(assetId, newCurve);
                             }
 
-                            var ead = _portfolio.SaCcrEAD(newModel, _reportingCurrency, _assetIdToGroupMap);
+                            var ead = 0.0;// _portfolio.SaCcrEAD(newModel, _reportingCurrency, _assetIdToGroupMap);
                             var capital = _counterpartyRiskWeight * ead;
                             if (!_expectedCapital.ContainsKey(currentDate))
                                 lock (_threadLock)

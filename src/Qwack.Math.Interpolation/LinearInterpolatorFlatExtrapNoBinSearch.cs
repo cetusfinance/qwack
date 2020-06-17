@@ -9,7 +9,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
 {
-    public class LinearInterpolatorFlatExtrapNoBinSearch : IInterpolator1D
+    public class LinearInterpolatorFlatExtrapNoBinSearch : IInterpolator1D, IIntegrableInterpolator
     {
         public Interpolator1DType Type => Interpolator1DType.LinearFlatExtrapNoBinSearch;
 
@@ -20,6 +20,8 @@ namespace Qwack.Math.Interpolation
         private double[] _slope;
         private readonly double _minX;
         private readonly double _maxX;
+        private readonly double _minY;
+        private readonly double _maxY;
 
         public double[] Xs => _x;
         public double[] Ys => _y;
@@ -30,6 +32,8 @@ namespace Qwack.Math.Interpolation
             _y = y;
             _minX = _x[0];
             _maxX = _x[x.Length - 1];
+            _minY = _y[0];
+            _maxY = _y[y.Length - 1];
             CalculateSlope();
         }
                 
@@ -153,6 +157,45 @@ namespace Qwack.Math.Interpolation
                 o[k] = (1.0 - prop);
             }
             return o;
+        }
+
+        public double DefiniteIntegral(double a, double b)
+        {
+            if (b < a) throw new Exception("b must be strictly greater than a");
+            if (b == a) return 0;
+
+            var iSum = 0.0;
+
+            if (a < _minX) //flat extrap on the left
+            {
+                iSum += (_minX - a) * _minY;
+                a = _minX;
+            }
+            if (b > _maxX) //flat extrap on the right
+            {
+                iSum += (b - _maxX) * _maxY;
+                b = _maxX;
+            }
+
+            var ka = FindFloorPoint(a);
+            var kb = FindFloorPoint(b);
+
+            double vA, vU;
+            while (kb > ka)
+            {
+                var u = _x[ka + 1]; //upper bound of segment
+                vA = Interpolate(a);
+                vU = Interpolate(u);
+                iSum += 0.5 * (vU + vA) * (u - a);
+
+                a = u;
+                ka++;
+            }
+
+            vA = Interpolate(a);
+            vU = Interpolate(b);
+            iSum += 0.5 * (vU + vA) * (b - a);
+            return iSum;
         }
     }
 }

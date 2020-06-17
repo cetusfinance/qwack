@@ -116,13 +116,13 @@ namespace Qwack.Core.Instruments.Funding
             foreach (var flow in FlowScheduleFloat.Flows)
             {
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
-                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
+                var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
 
                 var ts = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodStart);
                 var te = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.AccrualPeriodEnd);
-                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
-                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdR = df * flow.YearFraction * flow.Notional;
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
                 if (forecastDict.ContainsKey(flow.AccrualPeriodStart))
                     forecastDict[flow.AccrualPeriodStart] += dPVdS;

@@ -13,15 +13,19 @@ namespace Qwack.Core.Basic
         public Calendar PrimaryCalendar { get; set; }
         public Calendar SecondaryCalendar { get; set; }
 
-        public FxPair() { }
+        public FxPair() 
+        {
+            PrimaryCalendar = new Calendar() { Name = "Empty" };
+            SecondaryCalendar = new Calendar() { Name = "Empty" };
+        }
 
-        public FxPair(TO_FxPair transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public FxPair(TO_FxPair transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider):base()
         {
             Foreign = currencyProvider.GetCurrency(transportObject.Foreign);
             Domestic = currencyProvider.GetCurrency(transportObject.Domestic);
             SpotLag = new Frequency(transportObject.SpotLag);
-            PrimaryCalendar = calendarProvider.Collection[transportObject.PrimaryCalendar];
-            SecondaryCalendar = calendarProvider.Collection[transportObject.SecondaryCalendar];
+            PrimaryCalendar = calendarProvider.GetCalendarSafe(transportObject.PrimaryCalendar);
+            SecondaryCalendar = calendarProvider.GetCalendarSafe(transportObject.SecondaryCalendar);
         }
 
         public override bool Equals(object x)

@@ -46,7 +46,7 @@ namespace Qwack.Core.Instruments.Funding
                 AccrualPeriodStart = StartDate,
                 AccrualPeriodEnd = EndDate,
                 FixedRateOrMargin = InterestRate,
-                NotionalByYearFraction = dcf,
+                YearFraction = dcf,
                 Fv = -Notional * dcf * interestRate
             });
 

@@ -25,7 +25,7 @@ namespace Qwack.Core.Instruments
         public double Fv { get; set; }
         public double Pv { get; set; }
         public double Notional { get; set; }
-        public double NotionalByYearFraction { get; set; }
+        public double YearFraction { get; set; }
         public double Dcf { get; set; }
         public Currency Currency { get; set; }
         public double FixedRateOrMargin { get; set; }
@@ -47,7 +47,7 @@ namespace Qwack.Core.Instruments
             Fv = Fv,
             Pv = Pv,
             Notional = Notional,
-            NotionalByYearFraction = NotionalByYearFraction,
+            YearFraction = YearFraction,
             Currency = Currency,
             FixedRateOrMargin = FixedRateOrMargin,
             FlowType = FlowType,

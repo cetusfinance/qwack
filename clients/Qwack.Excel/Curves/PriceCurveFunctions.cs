@@ -482,7 +482,8 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a correlation matrix", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrix), IsThreadSafe = false)]
+        [ExcelFunction(Description = "Creates a correlation matrix", Category = CategoryNames.Curves, 
+            Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrix), IsThreadSafe = false, IsVolatile = true)]
         public static object CreateCorrelationMatrix(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Labels X")] object[] LabelsX,
@@ -497,7 +498,8 @@ namespace Qwack.Excel.Curves
         }
 
 
-        [ExcelFunction(Description = "Creates a correlation matrix/time vector", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationTimeVecvtor), IsThreadSafe = false)]
+        [ExcelFunction(Description = "Creates a correlation matrix/time vector", Category = CategoryNames.Curves, 
+            Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationTimeVecvtor), IsThreadSafe = false, IsVolatile = true)]
         public static object CreateCorrelationTimeVecvtor(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Label A")] string LabelA,
@@ -516,7 +518,8 @@ namespace Qwack.Excel.Curves
             });
         }
 
-        [ExcelFunction(Description = "Creates a correlation matrix collection", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrixCollection), IsThreadSafe = false)]
+        [ExcelFunction(Description = "Creates a correlation matrix collection", Category = CategoryNames.Curves, 
+            Name = CategoryNames.Curves + "_" + nameof(CreateCorrelationMatrixCollection), IsThreadSafe = false, IsVolatile = true)]
         public static object CreateCorrelationMatrixCollection(
             [ExcelArgument(Description = "Object name")] string ObjectName,
             [ExcelArgument(Description = "Matrix names")] object[,] Matrices)

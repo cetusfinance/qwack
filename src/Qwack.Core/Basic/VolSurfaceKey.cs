@@ -8,6 +8,8 @@ namespace Qwack.Core.Basic
 {
     public class VolSurfaceKey
     {
+        const char MagicChar = '¬';
+
         public VolSurfaceKey() { }
         public VolSurfaceKey(string assetId, Currency currency):base()
         {
@@ -18,6 +20,11 @@ namespace Qwack.Core.Basic
         public VolSurfaceKey(TO_VolSurfaceKey transportObject, ICurrencyProvider currencyProvider) 
             : this(transportObject.AssetId, currencyProvider.GetCurrencySafe(transportObject.Currency))
         { 
+        }
+
+        public VolSurfaceKey(string keyAsString, ICurrencyProvider currencyProvider)
+            : this(keyAsString.Split(MagicChar)[0], keyAsString.Split(MagicChar).Length>1?currencyProvider.GetCurrencySafe(keyAsString.Split(MagicChar)[1]):null)
+        {
         }
 
 
@@ -39,11 +46,6 @@ namespace Qwack.Core.Basic
             return hashCode;
         }
 
-        public TO_VolSurfaceKey GetTransportObject() =>
-            new TO_VolSurfaceKey
-            {
-                AssetId = AssetId,
-                Currency = Currency?.Ccy
-            };
+        public string GetTransportObject() => AssetId + MagicChar + Currency?.Ccy;
     }
 }

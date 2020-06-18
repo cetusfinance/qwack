@@ -58,6 +58,13 @@ namespace Qwack.Core.Curves
             return p;
         }
 
+        public double GetSurvivalProbabilitySlope(DateTime endDate)
+        {
+            var t = Basis.CalculateYearFraction(OriginDate, endDate);
+            var p = _hazzardCurve.FirstDerivative(t);
+            return p;
+        }
+
         public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetSurvivalProbability(startDate, endDate);
 
         private IInterpolator1D _hazzardCurve;

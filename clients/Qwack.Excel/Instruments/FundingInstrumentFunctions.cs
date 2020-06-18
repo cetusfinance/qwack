@@ -674,6 +674,7 @@ namespace Qwack.Excel.Instruments
                     Domestic = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(DomesticCurrency),
                     Foreign = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>().GetCurrency(ForeignCurrency),
                     PrimaryCalendar = cal,
+                    SecondaryCalendar = cal,
                     SpotLag = new Frequency(SpotLag)
                 };
 

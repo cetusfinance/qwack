@@ -467,12 +467,10 @@ namespace Qwack.Core.Instruments
             return addOn;
         }
 
-        public static double SaCcrEAD(this Portfolio pf, IPvModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        public static double SaCcrEAD(this Portfolio pf, double EPE, IPvModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
         {
             var pfe = SaCcrAddon(pf, model.VanillaModel, reportingCcy, AssetIdToHedgingSetMap);
-            var pvModel = model.Rebuild(model.VanillaModel, pf);
-            var rcCube = pvModel.PV(reportingCcy);
-            var rc = System.Math.Max(0.0, rcCube.GetAllRows().Sum(x => x.Value));
+            var rc = EPE;
             var alpha = 1.4;
 
             return alpha * (rc + pfe);

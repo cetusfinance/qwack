@@ -34,7 +34,9 @@ namespace Qwack.Excel.Capital
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(VanillaModel, $"Model {VanillaModel} not found");
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCurrency);
                 var mappingDict = AssetIdToCategoryMap.RangeToDictionary<string, string>();
-                return pf.SaCcrEAD(model.Value, ccy, mappingDict);
+                var pv = pf.PV(model.Value, ccy).SumOfAllRows;
+                var epe = System.Math.Max(pv, 0);
+                return pf.SaCcrEAD(epe, model.Value, ccy, mappingDict);
             });
         }
 
@@ -226,18 +228,20 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Loss-given-default, e.g. 0.4")] double LGD,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "EPE cube")] string EPECube,
             [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
             [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var epeCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EPECube, $"EPE cube {EPECube} not found");
                 var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurveName, $"Hazzard curve {HazzardCurveName} not found");
                 var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio);
 
@@ -248,7 +252,8 @@ namespace Qwack.Excel.Capital
                 }
                 var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
-                var result = CapitalCalculator.PvCcrCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, LGD, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
+                var result = CapitalCalculator.PvCcrCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, LGD, 
+                    assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider, epeValues);
                 return result;
             });
         }
@@ -259,18 +264,20 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "EPE cube")] string EPECube,
             [ExcelArgument(Description = "Party risk weight")] double CvaRiskWeight,
             [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
             [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var epeCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EPECube, $"EPE cube {EPECube} not found");
                 var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
@@ -280,7 +287,8 @@ namespace Qwack.Excel.Capital
                 }
                 var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
-                var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
+                var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight, 
+                    assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider, epeValues);
                 return result;
             });
         }
@@ -292,7 +300,7 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "EPE cube")] string EPECube,
             [ExcelArgument(Description = "Loss-Given-Default")] double LGD,
             [ExcelArgument(Description = "Cva risk weight")] double CvaRiskWeight,
             [ExcelArgument(Description = "Party risk weight")] double PartyRiskWeight,
@@ -302,12 +310,14 @@ namespace Qwack.Excel.Capital
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var epeCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EPECube, $"EPE cube {EPECube} not found");
                 var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
                 var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurve, $"Hazzard curve {HazzardCurve} not found");
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r =>  r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
@@ -318,7 +328,7 @@ namespace Qwack.Excel.Capital
                 var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
                 var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, 
-                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider, ChangeOverDate);
+                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider, epeValues, ChangeOverDate);
                 return new object [,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
             });
         }
@@ -330,16 +340,18 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "EPE cube")] string EPECube,
             [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
             [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var epeCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EPECube, $"EPE cube {EPECube} not found");
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
@@ -349,7 +361,7 @@ namespace Qwack.Excel.Capital
                 }
                 var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
-                var result = CapitalCalculator.EAD_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
+                var result = CapitalCalculator.EAD_BII_SM(model.Value.BuildDate, expDates, epeValues, models, portfolio, repCcy, assetIdToCategory, categoryToCCF, ContainerStores.CurrencyProvider);
                 var cube = ExcelHelper.PackResults(expDates, result, "EAD");
                 return ExcelHelper.PushToCache(cube, OutputName);
             });
@@ -361,17 +373,19 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
             [ExcelArgument(Description = "Asset-FX Model")] string Model,
             [ExcelArgument(Description = "Reporting currency")] string Currency,
-            [ExcelArgument(Description = "Exposure dates")] double[] ExposureDates,
+            [ExcelArgument(Description = "EPE cube")] string EPECube,
             [ExcelArgument(Description = "AssetId to Category map")] object[,] AssetIdToCategoryMap,
             [ExcelArgument(Description = "Category to CCF map")] object[,] CategoryToCCFMap,
             [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
+                var epeCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EPECube, $"EPE cube {EPECube} not found");
                 var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var expDates = ExposureDates.ToDateTimeArray(model.Value.BuildDate);
+                var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio);
                 for (var i = 0; i < models.Length; i++)
@@ -381,7 +395,7 @@ namespace Qwack.Excel.Capital
                 }
                 var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
-                var result = CapitalCalculator.EAD_Split(model.Value.BuildDate, expDates, models, portfolio, repCcy, 
+                var result = CapitalCalculator.EAD_Split(model.Value.BuildDate, expDates, epeValues, models, portfolio, repCcy, 
                     assetIdToCategory, categoryToCCF, ChangeOverDate, ContainerStores.CurrencyProvider);
                 var cube = ExcelHelper.PackResults(expDates, result, "EAD");
                 return ExcelHelper.PushToCache(cube, OutputName);

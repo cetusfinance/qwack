@@ -386,5 +386,12 @@ namespace Qwack.Models
             return o;
         }
 
+        public double GetCorrelation(string label1, string label2, double t = 0)
+        {
+            if (CorrelationMatrix == null)
+                throw new Exception("No correlation matrix attached to model");
+
+            return CorrelationMatrix.GetCorrelation(label1, label2, t);
+        }
     }
 }

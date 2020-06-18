@@ -22,34 +22,6 @@ namespace Qwack.Excel.Tests.Capital
     public class CapitalFunctionsFacts
     {
         [Fact]
-        public void ComputeEADFacts()
-        {
-            var curve = new BasicPriceCurve(DateTime.MinValue, new[] { DateTime.MinValue }, new[] { 0.0 }, PriceCurveType.Flat, ContainerStores.CurrencyProvider)
-            { Currency = ContainerStores.CurrencyProvider.GetCurrency("ZAR") };
-            var moqModel = new Mock<IAssetFxModel>();
-            moqModel.Setup(m => m.GetPriceCurve("fakeAsset",null)).Returns(curve);
-            moqModel.Setup(m => m.VanillaModel).Returns(moqModel.Object);
-            moqModel.Setup(m => m.Rebuild(It.IsAny<IAssetFxModel>(),It.IsAny<Portfolio>())).Returns(moqModel.Object);
-            var cube = new ResultCube();
-            cube.Initialize(new Dictionary<string, Type>() { { "xxx", typeof(string) } });
-            moqModel.Setup(m => m.PV(It.IsAny<Currency>())).Returns(cube);
-            var swap = new AsianSwap()
-            {
-                AssetId = "fakeAsset",
-                PaymentCurrency = ContainerStores.CurrencyProvider.GetCurrency("ZAR"),
-                FixingDates = new[] { DateTime.MinValue }
-            };
-            var pf = new Portfolio { Instruments = new List<IInstrument>() { swap } };
-
-            ContainerStores.GetObjectCache<Portfolio>().PutObject("moqPf", new SessionItem<Portfolio>() { Name = "moqPf", Value = pf });
-            ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("moqModel", new SessionItem<IAssetFxModel>() { Name = "moqModel", Value = moqModel.Object });
-
-            Assert.Equal("Could not find portfolio or trade with name blash", CapitalFunctions.ComputeEAD("blash", "frah", "ZAR", null));
-            Assert.Equal("Model frah not found", CapitalFunctions.ComputeEAD("moqPf", "frah", "ZAR", null));
-            Assert.Equal(0.0, CapitalFunctions.ComputeEAD("moqPf", "moqModel", "ZAR", new object[,] { { "fakeAsset", "woooh"} }));
-        }
-
-        [Fact]
         public void ComputeCVAFacts()
         {
             var hz = new HazzardCurve(DateTime.Today, DayCountBasis.Act365F, new DummyPointInterpolator(0.0));

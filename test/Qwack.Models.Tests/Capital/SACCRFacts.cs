@@ -80,8 +80,8 @@ namespace Qwack.Models.Tests.Capital
             var pf = new Portfolio() { Instruments = new List<IInstrument> { tradeA, tradeB, tradeC } };
             var pvPf = pf.PV(model);
             Assert.Equal(20000.0, pvPf.GetAllRows().Sum(x=>x.Value), 8);
-
-            var ead = pf.SaCcrEAD(model, usd, assetToSetMap);
+            var epe = System.Math.Max(0, pvPf.SumOfAllRows);
+            var ead = pf.SaCcrEAD(epe, model, usd, assetToSetMap);
             Assert.Equal(5408608, ead, 0);
         }
 

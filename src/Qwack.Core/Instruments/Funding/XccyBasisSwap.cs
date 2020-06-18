@@ -150,7 +150,7 @@ namespace Qwack.Core.Instruments.Funding
                     var e = flow.AccrualPeriodEnd;
                     var rateLin = forecastCurvePay.GetForwardRate(s, e, RateType.Linear, BasisPay)
                                   + flow.FixedRateOrMargin;
-                    var YF = flow.NotionalByYearFraction;
+                    var YF = flow.YearFraction;
                     fv = rateLin * YF *
                          (MtmSwapType == MTMSwapType.ReceiveNotionalFixed ? fixedNotional : flow.Notional);
                     fv *= -1.0;
@@ -192,7 +192,7 @@ namespace Qwack.Core.Instruments.Funding
                     var e = flow.AccrualPeriodEnd;
                     var rateLin = forecastCurveRec.GetForwardRate(s, e, RateType.Linear, BasisRec)
                                      + flow.FixedRateOrMargin;
-                    var YF = flow.NotionalByYearFraction;
+                    var YF = flow.YearFraction;
                     FV = rateLin * YF * (MtmSwapType == MTMSwapType.PayNotionalFixed ? fixedNotional : flow.Notional);
                 }
                 else
@@ -258,10 +258,10 @@ namespace Qwack.Core.Instruments.Funding
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
                 var ts = discountCurvePay.Basis.CalculateYearFraction(discountCurvePay.BuildDate, flow.AccrualPeriodStart);
                 var te = discountCurvePay.Basis.CalculateYearFraction(discountCurvePay.BuildDate, flow.AccrualPeriodEnd);
-                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
-                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
-                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdR = df * flow.YearFraction * flow.Notional;
+                var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
                 if (forecastDictPay.ContainsKey(flow.AccrualPeriodStart))
                     forecastDictPay[flow.AccrualPeriodStart] += dPVdS;
@@ -278,10 +278,10 @@ namespace Qwack.Core.Instruments.Funding
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
                 var ts = discountCurveRec.Basis.CalculateYearFraction(discountCurveRec.BuildDate, flow.AccrualPeriodStart);
                 var te = discountCurveRec.Basis.CalculateYearFraction(discountCurveRec.BuildDate, flow.AccrualPeriodEnd);
-                var dPVdR = df * flow.NotionalByYearFraction * flow.Notional;
-                var RateFloat = flow.Fv / (flow.Notional * flow.NotionalByYearFraction);
-                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.NotionalByYearFraction));
-                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.NotionalByYearFraction));
+                var dPVdR = df * flow.YearFraction * flow.Notional;
+                var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
+                var dPVdS = dPVdR * (-ts * (RateFloat + 1.0 / flow.YearFraction));
+                var dPVdE = dPVdR * (te * (RateFloat + 1.0 / flow.YearFraction));
 
                 if (forecastDictRec.ContainsKey(flow.AccrualPeriodStart))
                     forecastDictRec[flow.AccrualPeriodStart] += dPVdS;

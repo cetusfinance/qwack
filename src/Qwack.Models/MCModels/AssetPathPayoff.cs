@@ -475,7 +475,7 @@ namespace Qwack.Models.MCModels
                         Currency = SimulationCcy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
+                        YearFraction = 1.0
                     }
                 }
             };
@@ -517,7 +517,7 @@ namespace Qwack.Models.MCModels
                         Currency = SimulationCcy,
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
-                        NotionalByYearFraction = 1.0
+                        YearFraction = 1.0
                     }
                 }
             }).ToArray(); 

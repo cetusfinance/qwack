@@ -20,6 +20,6 @@ namespace Qwack.Transport.BasicTypes
         Annual=5,
         Yearly=5,
         DiscountFactor=6,
-        DF=7
+        DF=6
     }
 }

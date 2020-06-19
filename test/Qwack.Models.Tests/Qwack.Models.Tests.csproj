@@ -62,6 +62,9 @@
     <None Update="Calendars.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="cme.settle.fwd.s_test.xml.gz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Currencies.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

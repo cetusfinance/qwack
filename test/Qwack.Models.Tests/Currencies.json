@@ -22,6 +22,26 @@
   {
     "Ccy": "ZAR",
     "DayCount": "Act365F",
-    "HolidayCalendars" :  "JHB"
+    "HolidayCalendars": "JHB"
+  },
+  {
+    "Ccy": "JPY",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "JPY"
+  },
+  {
+    "Ccy": "AUD",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "AUD"
+  },
+  {
+    "Ccy": "NZD",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "NZD"
+  },
+  {
+    "Ccy": "CAD",
+    "DayCount": "Act360",
+    "HolidayCalendars": "CAD"
   }
 ]

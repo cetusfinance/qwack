@@ -51,7 +51,7 @@ namespace Qwack.Models.Calibrators
                 UnderlyingFuturesCode = Year2to1(x.Contract.Split(' ')[0].Replace(nymexSymbol, qwackCode)),
                 ExpiryDate = OptionExpiryFromNymexRecord(x, calendarProvider),
                 ValDate = origin
-            }).ToList();
+            }).Where(z=>z.ExpiryDate> origin).ToList();
 
             var priceDict = priceCurve.PillarLabels.ToDictionary(x => x, x => priceCurve.GetPriceForDate(priceCurve.PillarDatesForLabel(x)));
             ListedSurfaceHelper.ImplyVols(q, priceDict, new ConstantRateIrCurve(0.0, origin, "dummy", currency.GetCurrency("USD")));

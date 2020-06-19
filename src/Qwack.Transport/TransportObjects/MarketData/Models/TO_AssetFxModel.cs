@@ -13,7 +13,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
     public class TO_AssetFxModel
     {
         [ProtoMember(8)]
-        public Dictionary<TO_VolSurfaceKey, TO_VolSurface> AssetVols{ get; set; }
+        public Dictionary<string, TO_VolSurface> AssetVols{ get; set; }
         [ProtoMember(9)]
         public Dictionary<string, TO_PriceCurve> AssetCurves { get; set; }
         [ProtoMember(10)]

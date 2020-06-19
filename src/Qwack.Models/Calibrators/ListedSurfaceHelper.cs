@@ -131,6 +131,18 @@ namespace Qwack.Models.Calibrators
             };
             return o;
         }
+
+        public static RiskyFlySurface ToATMSurface(this Dictionary<DateTime, IInterpolator1D> smiles, DateTime valDate, double[] fwds)
+        {
+            var wingDeltas = new[] { 0.25 };
+            var expiries = smiles.Keys.ToArray();
+            var atmVols = smiles.Select(x => x.Value.Interpolate(0.5)).ToArray();
+            var riskies = smiles.Select(x => new[] { 0.0 }).ToArray();
+            var flies = smiles.Select(x => new[] { 0.0 }).ToArray();
+
+            var o = new RiskyFlySurface(valDate, atmVols, expiries, wingDeltas, riskies, flies, fwds, WingQuoteType.Arithmatic, AtmVolType.ZeroDeltaStraddle, Interpolator1DType.Linear, Interpolator1DType.LinearInVariance);
+            return o;
+        }
     }
 
     public class ListedOptionSettlementRecord

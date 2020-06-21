@@ -8,8 +8,4 @@
     <PackageReference Include="protobuf-net" Version="2.4.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="TransportObjects\Instruments\Funding\" />
-  </ItemGroup>
-
 </Project>

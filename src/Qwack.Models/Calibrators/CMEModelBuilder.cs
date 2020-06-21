@@ -14,6 +14,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Futures;
+using Qwack.Paths.Processes;
 using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.CmeXml;
@@ -46,10 +47,21 @@ namespace Qwack.Models.Calibrators
             return q;
         }
 
-        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
         {
             var fwds = GetFwdFxRatesFromFwdFile(cmeFwdFileName, ccyPair);
             var dfs = fwds.ToDictionary(f => f.Key, f =>  fwds[valDate] / f.Value * baseCurve.GetDf(valDate, f.Key));
+            var pillars = dfs.Keys.OrderBy(k => k).ToArray();
+            var dfsValues = pillars.Select(p => dfs[p]).ToArray();
+            var curve = new IrCurve(pillars, dfsValues, valDate, curveName, Interpolator1DType.Linear, curveCcy, null, RateType.DF);
+            return curve;
+        }
+
+        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            var fwdsDict = GetFwdFxRatesFromFwdFile(cmeFwdFileName, new Dictionary<string, string> { { ccyPair, cmePair } });
+            var fwds = fwdsDict[ccyPair];
+            var dfs = fwds.ToDictionary(f => f.Key, f => fwds[valDate] / f.Value * baseCurve.GetDf(valDate, f.Key));
             var pillars = dfs.Keys.OrderBy(k => k).ToArray();
             var dfsValues = pillars.Select(p => dfs[p]).ToArray();
             var curve = new IrCurve(pillars, dfsValues, valDate, curveName, Interpolator1DType.Linear, curveCcy, null, RateType.DF);
@@ -152,11 +164,13 @@ namespace Qwack.Models.Calibrators
             return o;
         }
 
-        public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string ccyPair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string ccyPair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) 
+            => GetSpotFxRateFromFwdFile(filename, valDate, _cmeCcyMap[ccyPair], ccyPair, currencyProvider, calendarProvider);
+
+        public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string cmeSymbol, string ccyPair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var blob = GetBlob(filename);
 
-            var cmeSymbol = _cmeCcyMap[ccyPair];
             var pair = ccyPair.FxPairFromString(currencyProvider, calendarProvider);
             var spotDate = pair.SpotDate(valDate);
             var instruments = blob.Batch.Where(b => b.Instrmt.Sym == cmeSymbol && b.Instrmt.MatDt == spotDate);
@@ -169,14 +183,26 @@ namespace Qwack.Models.Calibrators
 
         public static Dictionary<DateTime,double> GetFwdFxRatesFromFwdFile(string filename, string ccyPair)
         {
+            var fwds = GetFwdFxRatesFromFwdFile(filename,new Dictionary<string, string> { { ccyPair, _cmeCcyMap[ccyPair] } });
+            return fwds[ccyPair];
+        }
+
+        public static Dictionary<string,Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(string filename, Dictionary<string,string> ccyPairMap)
+        {
             var blob = GetBlob(filename);
-            var cmeSymbol = _cmeCcyMap[ccyPair];
-            var instruments = blob.Batch.Where(b => b.Instrmt.Sym == cmeSymbol);
-            var dates = instruments.Select(x => x.Instrmt.MatDt).Distinct();
-            var filteresIns = dates.Select(x => instruments.First(y => y.Instrmt.MatDt == x));
-            if (!filteresIns.Any())
-                throw new Exception();
-            return filteresIns.ToDictionary(x=>x.Instrmt.MatDt,x=>Convert.ToDouble(x.Full.Single(f => f.Typ == "6").Px));
+            var o = new Dictionary<string, Dictionary<DateTime, double>>();
+            foreach (var kv in ccyPairMap)
+            {
+                var cmeSymbol = kv.Value;
+                var instruments = blob.Batch.Where(b => b.Instrmt.Sym == cmeSymbol);
+                var dates = instruments.Select(x => x.Instrmt.MatDt).Distinct();
+                var filteresIns = dates.Select(x => instruments.First(y => y.Instrmt.MatDt == x));
+                if (!filteresIns.Any())
+                    throw new Exception();
+                var fwds = filteresIns.ToDictionary(x => x.Instrmt.MatDt, x => Convert.ToDouble(x.Full.Single(f => f.Typ == "6").Px));
+                o.Add(kv.Key, fwds);
+            }
+            return o;
         }
 
         private static FIXML GetBlob(string filename)

@@ -19,6 +19,7 @@ using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.CmeXml;
 using Calendar = Qwack.Dates.Calendar;
+using static Qwack.Models.Calibrators.CMECommon;
 
 namespace Qwack.Models.Calibrators
 {
@@ -39,6 +40,28 @@ namespace Qwack.Models.Calibrators
             var solver = new NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(fm, fic);
             return curve;
+        }
+
+        public static BasicPriceCurve GetFuturesCurveForCode(string cmeSymbol, string cmeFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
+        {
+            var parsed = CMEFileParser.Parse(cmeFutureFilename).Where(r => r.Sym == cmeSymbol);
+            var q = parsed.Where(x => x.SettlePrice.HasValue).ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
+            var datesVec = q.Keys.Distinct().OrderBy(x => x).ToArray();
+            var labelsVec = datesVec.Select(d => d.ToString("yyyyMM")).ToArray();
+            var pricesVec = datesVec.Select(l => System.Math.Max(q[l].Value, MinPrice)).ToArray();
+            var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var curve = new BasicPriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
+            {
+                AssetId = qwackCode,
+                Name = qwackCode,
+                SpotLag = 0.Bd()
+            };
+            return curve;
+        }
+
+        private static object Year2to1(object p)
+        {
+            throw new NotImplementedException();
         }
 
         public static Dictionary<DateTime,double?> GetFuturesCurve(string cmeId, string cmeFilename)
@@ -101,10 +124,10 @@ namespace Qwack.Models.Calibrators
 
         private static Dictionary<DateTime,double> Downsample(Dictionary<DateTime, double> curvePoints, DateTime valDate, Calendar calendar)
         {
-            var tenors = new[] {"1b", "1w", "2w", "1m", "2m", "3m", "6m", "9m", "12m" };
+            var tenors = new[] {"1b", "1w", "2w", "3w", "1m", "2m", "3m","4m","5m", "6m", "9m", "12m", "15m","18m","24m","36m" };
             var dates = tenors.Select(t => valDate.AddPeriod(t.EndsWith("m") ? RollType.MF : RollType.F, calendar, new Frequency(t)));
             var p = curvePoints.Keys.OrderBy(x => x).ToList();
-            var ixs = dates.Select(d => p.BinarySearch(d)).Select(x => x < 0 ? ~x : x).Distinct().ToArray();
+            var ixs = dates.Select(d => p.BinarySearch(d)).Select(x => x < 0 ? ~x : x).Where(x => x < p.Count()).Distinct().ToArray();
             var smaller = ixs.ToDictionary(x => p[x], x => curvePoints[p[x]]);
             return smaller;
         }

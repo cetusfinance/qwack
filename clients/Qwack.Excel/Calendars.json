@@ -382,7 +382,7 @@
     "MonthsToExclude": []
   },
   "JHB": {
-    "InheritedCalendar": [ "EASTER", "ZA_WORKERS", "ZA_HUMANRIGHTS","ZA_FREEDOM", "ZA_HERITAGE", "ZA_NEWYEAR", "ZA_RECONCILLIATION", "ZA_WOMENS", "ZA_BOXING","ZA_XMAS", "ZA_YOUTH" ],
+    "InheritedCalendar": [ "EASTER", "ZA_WORKERS", "ZA_HUMANRIGHTS", "ZA_FREEDOM", "ZA_HERITAGE", "ZA_NEWYEAR", "ZA_RECONCILLIATION", "ZA_WOMENS", "ZA_BOXING", "ZA_XMAS", "ZA_YOUTH" ],
     "Name": "JHB",
     "DaysToAlwaysExclude": [ 6, 0 ],
     "DaysToExclude": [ "19990602", "19991231", "20000102", "20040414", "20060301", "20080502", "20090422", "20110518", "20111227", "20140507", "20160803", "20161227", "20190508" ],
@@ -1070,6 +1070,34 @@
   "JPY": {
     "InheritedCalendar": [ "TOK" ],
     "Name": "JPY",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "RUB": {
+    "InheritedCalendar": [ "MOS" ],
+    "Name": "RUB",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "CNY": {
+    "InheritedCalendar": [ "BEB" ],
+    "Name": "CNY",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "PHP": {
+    "InheritedCalendar": [ "MAN" ],
+    "Name": "PHP",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "TWD": {
+    "InheritedCalendar": [ "TAI" ],
+    "Name": "TWD",
     "DaysToAlwaysExclude": [ 6, 0 ],
     "DaysToExclude": [],
     "MonthsToExclude": []

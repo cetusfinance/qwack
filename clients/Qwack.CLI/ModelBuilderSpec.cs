@@ -13,6 +13,7 @@ namespace Qwack.CLI
         public List<ModelBuilderSpecNymex> NymexSpecs { get; set; }
         public List<ModelBuilderSpecCmeBaseCurve> CmeBaseCurveSpecs { get; set; }
         public List<ModelBuilderSpecCmeBasisCurve> CmeBasisCurveSpecs { get; set; }
+        public List<ModelBuilderSpecFxFuture> CmeFxFutureSpecs { get; set; }
         public List<TO_FxPair> FxPairs { get; set; }
     }
 
@@ -25,7 +26,7 @@ namespace Qwack.CLI
 
     public class ModelBuilderSpecCmeBaseCurve
     {
-        public string CMECode { get; set; }
+        public string CmeCode { get; set; }
         public string QwackCode { get; set; }
         public string CurveName { get; set; }
         public string FloatRateIndex { get; set; }
@@ -39,6 +40,14 @@ namespace Qwack.CLI
         public string Currency { get; set; }
         public string CurveName { get; set; }
         public string BaseCurveName { get; set; }
+    }
+
+    public class ModelBuilderSpecFxFuture
+    {
+        public string FxPair { get; set; }
+        public string CmeCodeFut { get; set; }
+        public string CmeCodeOpt { get; set; }
+        public string Currency { get; set; }
     }
 
 }

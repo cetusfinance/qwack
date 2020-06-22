@@ -79,7 +79,7 @@ namespace Qwack.Models.Tests.Calibrators
             var curves = new Dictionary<string, string> { { "ED", "USD.LIBOR.3M" } };
             var usdCurve = CMEModelBuilder.GetCurveForCode("ED", FilenameCME, "ED", "USD.LIBOR.3M", indices, curves, TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             var zar = TestProviderHelper.CurrencyProvider.GetCurrency("ZAR");
-            var zarCurve = CMEModelBuilder.StripFxBasisCurve(FilenameCMEFwdsXml, "USDZAR",zar, "ZAR.BASIS", new DateTime(2020, 06, 18), usdCurve, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider);
+            var zarCurve = CMEModelBuilder.StripFxBasisCurve(FilenameCMEFwdsXml, "USDZAR",zar, "ZAR.BASIS", new DateTime(2020, 06, 18), usdCurve);
 
             Assert.Equal(1.0, zarCurve.GetDf(new DateTime(2020, 12, 18), new DateTime(2020, 12, 18)));
         }

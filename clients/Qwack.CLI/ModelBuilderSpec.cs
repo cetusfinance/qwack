@@ -29,6 +29,7 @@ namespace Qwack.CLI
         public string QwackCode { get; set; }
         public string CurveName { get; set; }
         public string FloatRateIndex { get; set; }
+        public bool IsCbot { get; set; }
     }
 
     public class ModelBuilderSpecCmeBasisCurve

@@ -47,21 +47,29 @@ namespace Qwack.Models.Calibrators
             return q;
         }
 
-        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve)
         {
             var fwds = GetFwdFxRatesFromFwdFile(cmeFwdFileName, ccyPair);
             var dfs = fwds.ToDictionary(f => f.Key, f =>  fwds[valDate] / f.Value * baseCurve.GetDf(valDate, f.Key));
+            if (ccyPair.EndsWith("USD")) //flip dfs
+            {
+                dfs = dfs.ToDictionary(x => x.Key, x => 1.0 / x.Value);
+            }
             var pillars = dfs.Keys.OrderBy(k => k).ToArray();
             var dfsValues = pillars.Select(p => dfs[p]).ToArray();
             var curve = new IrCurve(pillars, dfsValues, valDate, curveName, Interpolator1DType.Linear, curveCcy, null, RateType.DF);
             return curve;
         }
 
-        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve)
         {
             var fwdsDict = GetFwdFxRatesFromFwdFile(cmeFwdFileName, new Dictionary<string, string> { { ccyPair, cmePair } });
             var fwds = fwdsDict[ccyPair];
             var dfs = fwds.ToDictionary(f => f.Key, f => fwds[valDate] / f.Value * baseCurve.GetDf(valDate, f.Key));
+            if(ccyPair.EndsWith("USD")) //flip dfs
+            {
+                dfs = dfs.ToDictionary(x => x.Key, x => 1.0 / x.Value);
+            }
             var pillars = dfs.Keys.OrderBy(k => k).ToArray();
             var dfsValues = pillars.Select(p => dfs[p]).ToArray();
             var curve = new IrCurve(pillars, dfsValues, valDate, curveName, Interpolator1DType.Linear, curveCcy, null, RateType.DF);

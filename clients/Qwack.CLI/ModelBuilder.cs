@@ -72,13 +72,14 @@ namespace Qwack.CLI
             var irCurves = new Dictionary<string, IrCurve>();
             foreach(var c in spec.CmeBaseCurveSpecs)
             {
-                var curve = CMEModelBuilder.GetCurveForCode(c.CMECode, Path.Combine(_filepath, FilenameCME), c.QwackCode, c.CurveName, indices, 
+                var ixForThis = new Dictionary<string, FloatRateIndex> { { c.QwackCode, indices[c.FloatRateIndex] } };
+                var curve = CMEModelBuilder.GetCurveForCode(c.CMECode, Path.Combine(_filepath, c.IsCbot? FilenameCBOT:FilenameCME), c.QwackCode, c.CurveName, ixForThis, 
                     new Dictionary<string, string>() { { c.QwackCode, c.CurveName } }, futureSettingsProvider, currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach(var c in spec.CmeBasisCurveSpecs)
             {
-                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), c.FxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], calendarProvider, currencyProvider);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), c.FxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName]);
                 irCurves.Add(c.CurveName, curve);
             }
             var fm = new FundingModel(valDate, irCurves, currencyProvider, calendarProvider);
@@ -87,7 +88,7 @@ namespace Qwack.CLI
             var pairCcyMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => currencyProvider.GetCurrency(x.Currency));
             var spotRates = CMEModelBuilder.GetSpotFxRatesFromFwdFile(Path.Combine(_filepath, FilenameCMEFwdsXml), valDate, pairMap, currencyProvider, calendarProvider);
             var spotRatesByCcy = spotRates.ToDictionary(x => pairCcyMap[x.Key], x => x.Value);
-            var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.Currency], x => x.CurveName);
+            var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.FxPair], x => x.CurveName);
             var fxMatrix = new FxMatrix(currencyProvider);
             fxMatrix.Init(
                 baseCurrency: currencyProvider.GetCurrency("USD"),
@@ -133,20 +134,20 @@ namespace Qwack.CLI
                 NymexSpecs = new List<ModelBuilderSpecNymex>
                 {
                     new ModelBuilderSpecNymex {QwackCode="CL",NymexCodeFuture="CL",NymexCodeOption="LO"},
-                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="ODB"},
+                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="BZO"},
                     new ModelBuilderSpecNymex {QwackCode="NG",NymexCodeFuture="NG",NymexCodeOption="ON"},
                 },
                 CmeBaseCurveSpecs = new List<ModelBuilderSpecCmeBaseCurve>
                 {
-                    new ModelBuilderSpecCmeBaseCurve { CMECode="ED", QwackCode="ED", CurveName="USD.LIBOR.3M", FloatRateIndex="USD.LIBOR.3M"},
-                    new ModelBuilderSpecCmeBaseCurve { CMECode="41", QwackCode="FF", CurveName="USD.OIS.1B", FloatRateIndex="USD.OIS.1B"},
+                    new ModelBuilderSpecCmeBaseCurve { CMECode="ED", QwackCode="ED", CurveName="USD.LIBOR.3M", FloatRateIndex="USD.LIBOR.3M", IsCbot=false},
+                    new ModelBuilderSpecCmeBaseCurve { CMECode="41", QwackCode="FF", CurveName="USD.OIS.1B", FloatRateIndex="USD.OIS.1B", IsCbot=true},
                 },
                 CmeBasisCurveSpecs = new List<ModelBuilderSpecCmeBasisCurve>
                 { 
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDZRC", Currency="ZAR", CurveName = "ZAR.DISC.[USD.LIBOR.3M]", FxPair="USDZAR", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDJYC", Currency="JPY", CurveName = "JPY.DISC.[USD.LIBOR.3M]", FxPair="USDJPY", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="EURUSN", Currency="EUR", CurveName = "EUR.DISC.[USD.LIBOR.3M]", FxPair="EURUSD", BaseCurveName="USD.LIBOR.3M"},
-                    new ModelBuilderSpecCmeBasisCurve {CmeFxPair="GBPUSN", Currency="GPB", CurveName = "GPB.DISC.[USD.LIBOR.3M]", FxPair="GBPUSD", BaseCurveName="USD.LIBOR.3M"},
+                    new ModelBuilderSpecCmeBasisCurve {CmeFxPair="GBPUSN", Currency="GBP", CurveName = "GPB.DISC.[USD.LIBOR.3M]", FxPair="GBPUSD", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDCAC", Currency="CAD", CurveName = "CAD.DISC.[USD.LIBOR.3M]", FxPair="USDCAD", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="AUDUSN", Currency="AUD", CurveName = "AUD.DISC.[USD.LIBOR.3M]", FxPair="AUDUSD", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="NZDUSC", Currency="NZD", CurveName = "NZD.DISC.[USD.LIBOR.3M]", FxPair="NZDUSD", BaseCurveName="USD.LIBOR.3M"}
@@ -182,7 +183,8 @@ namespace Qwack.CLI
         {
             var tw = new StringWriter();
             var js = JsonSerializer.Create();
-            js.Serialize(tw, model);
+            var to = model.ToTransportObject();
+            js.Serialize(tw, to);
             File.WriteAllText(fileName, tw.ToString());
         }
     }

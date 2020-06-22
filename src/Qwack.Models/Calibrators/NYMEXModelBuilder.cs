@@ -82,7 +82,6 @@ namespace Qwack.Models.Calibrators
                     return (OptionExerciseType.American, OptionMarginingType.Regular);
                 case "CO":
                 case "BZO":
-                case "ODB":
                     return (OptionExerciseType.American, OptionMarginingType.FuturesStyle);
                 case "AO":
                 case "BA":
@@ -96,11 +95,14 @@ namespace Qwack.Models.Calibrators
         {
             switch(record.Symbol)
             {
-                case "LO":
+                case "LO": //WTI American
                     return new DateTime(record.ContractYear, record.ContractMonth, 26)
                         .AddMonths(-1)
                         .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 7.Bd());
-                case "BZO":
+                case "ON": //HH Natgas
+                    return new DateTime(record.ContractYear, record.ContractMonth, 1)
+                        .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 4.Bd());
+                case "BZO": //NYMEX Brent
                     return new DateTime(record.ContractYear, record.ContractMonth, 1)
                         .AddMonths(-2)
                         .SubtractPeriod(RollType.P, calendarProvider.Collection["LON"], 4.Bd());

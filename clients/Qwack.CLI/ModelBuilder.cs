@@ -16,6 +16,7 @@ using Qwack.Futures;
 using Qwack.Dates;
 using System.Linq;
 using Qwack.Models;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.CLI
 {
@@ -52,40 +53,54 @@ namespace Qwack.CLI
             }
         }
 
-        public IAssetFxModel BuildModel(DateTime valDate, ModelBuilderSpec spec, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public AssetFxModel BuildModel(DateTime valDate, ModelBuilderSpec spec, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var indices = spec.RateIndices.ToDictionary(x => x.Key, x => new FloatRateIndex(x.Value, calendarProvider, currencyProvider));
+            var fxPairs = spec.FxPairs.Select(x => new FxPair(x, currencyProvider, calendarProvider)).ToList();
             var priceCurves = new List<IPriceCurve>();
             var surfaces = new List<IVolSurface>();
             foreach(var c in spec.NymexSpecs)
             {
-                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, FilenameNymexFuture, c.QwackCode, futureSettingsProvider, currencyProvider);
+                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath,FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
                 priceCurves.Add(curve);
                 if(!string.IsNullOrWhiteSpace(c.NymexCodeOption))
                 {
-                    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, FilenameNymexOption, c.QwackCode, curve, calendarProvider, currencyProvider);
+                    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider);
                     surfaces.Add(surface);
                 }
             }
             var irCurves = new Dictionary<string, IrCurve>();
             foreach(var c in spec.CmeBaseCurveSpecs)
             {
-                var curve = CMEModelBuilder.GetCurveForCode(c.CMECode, FilenameCME, c.QwackCode, c.CurveName, indices, 
+                var curve = CMEModelBuilder.GetCurveForCode(c.CMECode, Path.Combine(_filepath, FilenameCME), c.QwackCode, c.CurveName, indices, 
                     new Dictionary<string, string>() { { c.QwackCode, c.CurveName } }, futureSettingsProvider, currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach(var c in spec.CmeBasisCurveSpecs)
             {
-                var curve = CMEModelBuilder.StripFxBasisCurve(FilenameCMEFwdsXml, c.FxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], calendarProvider, currencyProvider);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), c.FxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], calendarProvider, currencyProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             var fm = new FundingModel(valDate, irCurves, currencyProvider, calendarProvider);
             //setup fx
+            var pairMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => x.CmeFxPair);
+            var pairCcyMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => currencyProvider.GetCurrency(x.Currency));
+            var spotRates = CMEModelBuilder.GetSpotFxRatesFromFwdFile(Path.Combine(_filepath, FilenameCMEFwdsXml), valDate, pairMap, currencyProvider, calendarProvider);
+            var spotRatesByCcy = spotRates.ToDictionary(x => pairCcyMap[x.Key], x => x.Value);
+            var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.Currency], x => x.CurveName);
+            var fxMatrix = new FxMatrix(currencyProvider);
+            fxMatrix.Init(
+                baseCurrency: currencyProvider.GetCurrency("USD"),
+                buildDate: valDate,
+                spotRates: spotRatesByCcy,
+                fXPairDefinitions: fxPairs,
+                discountCurveMap: discountMap);
+            fm.SetupFx(fxMatrix);
             var o = new AssetFxModel(valDate, fm);
             return o;
         }
 
-        public void BuildSampleSpec(string outputFileName, ICurrencyProvider currencyProvider)
+        public static void BuildSampleSpec(string outputFileName)
         {
             var floatRate_Libor3m = new TO_FloatRateIndex()
             {
@@ -95,6 +110,7 @@ namespace Qwack.CLI
                 HolidayCalendars = "NYC+LON",
                 ResetTenor = "3m",
                 RollConvention = RollType.MF,
+                ResetTenorFixed = "3m"
             };
             var floatRate_FedFunds = new TO_FloatRateIndex()
             {
@@ -103,6 +119,7 @@ namespace Qwack.CLI
                 FixingOffset = "0b",
                 HolidayCalendars = "NYC",
                 ResetTenor = "1m",
+                ResetTenorFixed = "1m",
                 RollConvention = RollType.MF,
             };
 
@@ -133,6 +150,16 @@ namespace Qwack.CLI
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDCAC", Currency="CAD", CurveName = "CAD.DISC.[USD.LIBOR.3M]", FxPair="USDCAD", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="AUDUSN", Currency="AUD", CurveName = "AUD.DISC.[USD.LIBOR.3M]", FxPair="AUDUSD", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="NZDUSC", Currency="NZD", CurveName = "NZD.DISC.[USD.LIBOR.3M]", FxPair="NZDUSD", BaseCurveName="USD.LIBOR.3M"}
+                },
+                FxPairs = new List<TO_FxPair>
+                {
+                    new TO_FxPair {Domestic="USD", Foreign="ZAR", PrimaryCalendar="ZAR", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="USD", Foreign="JPY", PrimaryCalendar="JPY", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="EUR", Foreign="USD", PrimaryCalendar="EUR", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="GBP", Foreign="USD", PrimaryCalendar="GBP", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="USD", Foreign="CAD", PrimaryCalendar="CAD", SecondaryCalendar = "USD", SpotLag="1b"},
+                    new TO_FxPair {Domestic="AUD", Foreign="USD", PrimaryCalendar="AUD", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="NZD", Foreign="USD", PrimaryCalendar="NZD", SecondaryCalendar = "USD", SpotLag="2b"},
                 }
             };
 
@@ -140,6 +167,23 @@ namespace Qwack.CLI
             var js = JsonSerializer.Create();
             js.Serialize(tw, o);
             File.WriteAllText(outputFileName, tw.ToString());
+        }
+
+        public static ModelBuilderSpec SpecFromFile(string fileName)
+        {
+            var rawData = File.ReadAllText(fileName);
+            var tr = new StringReader(rawData);
+            var js = JsonSerializer.Create();
+            var o = (ModelBuilderSpec)js.Deserialize(tr, typeof(ModelBuilderSpec));
+            return o;
+        }
+
+        public static void WriteModelToFile(AssetFxModel model, string fileName)
+        {
+            var tw = new StringWriter();
+            var js = JsonSerializer.Create();
+            js.Serialize(tw, model);
+            File.WriteAllText(fileName, tw.ToString());
         }
     }
 }

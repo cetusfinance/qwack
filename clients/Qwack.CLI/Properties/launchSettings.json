@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Qwack.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "-f c:\\temp\\modelCreate.txt -c ZAR"
+    }
+  }
+}

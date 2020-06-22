@@ -7,6 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Models;
 
 namespace Qwack.CLI
 {
@@ -27,14 +28,14 @@ namespace Qwack.CLI
         static void Main(string[] args)
         {
             Arguments.Populate();
-
-            var config = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture);
             var commandRows = new List<CommandFileRow>();
             using var textReader = File.OpenText(FileName);
             {
-                using var csv = new CsvReader(textReader, config);
+                using var csv = new CsvReader(textReader);
                 {
                     csv.Configuration.HasHeaderRecord = false;
+                    csv.Configuration.CultureInfo = System.Globalization.CultureInfo.InvariantCulture;
+                    csv.Configuration.MissingFieldFound = null;
                     commandRows = csv.GetRecords<CommandFileRow>().ToList();
                 }
             }
@@ -76,6 +77,24 @@ namespace Qwack.CLI
                             .Replace("{tomorrow}", tomorrow.ToString(Format));
                         Console.WriteLine($"Creating folder {p1md}");
                         Directory.CreateDirectory(p1md);
+                        break;
+                    case "modelcreatefile":
+                    case "mdc":
+                        var fileNameA = row.Param1;
+                        Console.WriteLine($"Writing sample model spec to file {fileNameA}");
+                        ModelBuilder.BuildSampleSpec(fileNameA);
+                        break;
+                    case "modelBuild":
+                    case "mb":
+                        var fileNameB = row.Param1;
+                        var valDateB = DateTime.Parse(row.Param2);
+                        var filePathB = row.Param3;
+                        var outputFileNameB = row.Param4;
+                        Console.WriteLine($"Building model from spec {fileNameB} / value date {valDateB:s} / input folder {filePathB} to file {outputFileNameB} ");
+                        var m = new ModelBuilder(filePathB, valDateB);
+                        var spec = ModelBuilder.SpecFromFile(fileNameB);
+                        var model = m.BuildModel(valDateB, spec, ContainerStores.FuturesProvider, ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
+                        ModelBuilder.WriteModelToFile(model, outputFileNameB);
                         break;
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.CLI
 {
@@ -12,6 +13,7 @@ namespace Qwack.CLI
         public List<ModelBuilderSpecNymex> NymexSpecs { get; set; }
         public List<ModelBuilderSpecCmeBaseCurve> CmeBaseCurveSpecs { get; set; }
         public List<ModelBuilderSpecCmeBasisCurve> CmeBasisCurveSpecs { get; set; }
+        public List<TO_FxPair> FxPairs { get; set; }
     }
 
     public class ModelBuilderSpecNymex

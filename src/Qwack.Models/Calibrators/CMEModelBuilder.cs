@@ -142,18 +142,23 @@ namespace Qwack.Models.Calibrators
             //{"KRW","USDKRW" },
         };
 
-        public static Dictionary<string, double> GetSpotFxRatesFromFwdFile(string filename, DateTime valDate, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static Dictionary<string, double> GetSpotFxRatesFromFwdFile(string filename, DateTime valDate, ICurrencyProvider currencyProvider, 
+            ICalendarProvider calendarProvider) 
+            => GetSpotFxRatesFromFwdFile(filename, valDate, _cmeCcyMap, currencyProvider, calendarProvider);
+
+        public static Dictionary<string, double> GetSpotFxRatesFromFwdFile(string filename, DateTime valDate, Dictionary<string,string> pairMap, 
+            ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var blob = GetBlob(filename);
 
-            var supported = _cmeCcyMap.Values.ToArray();
-            var spotDates = _cmeCcyMap.ToDictionary(x => x.Value, x => x.Key.FxPairFromString(currencyProvider,calendarProvider).SpotDate(valDate));
+            var supported = pairMap.Values.ToArray();
+            var spotDates = pairMap.ToDictionary(x => x.Value, x => x.Key.FxPairFromString(currencyProvider, calendarProvider).SpotDate(valDate));
             var instruments = blob.Batch
-                .Where(b=>supported.Contains(b.Instrmt.Sym) && b.Instrmt.MatDt==spotDates[b.Instrmt.Sym]);
+                .Where(b => supported.Contains(b.Instrmt.Sym) && b.Instrmt.MatDt == spotDates[b.Instrmt.Sym]);
 
             var o = new Dictionary<string, double>();
 
-            foreach(var kv in _cmeCcyMap)
+            foreach (var kv in pairMap)
             {
                 var ins = instruments.Where(i => i.Instrmt.Sym == kv.Value);
                 if (ins.Count() > 1)
@@ -167,7 +172,8 @@ namespace Qwack.Models.Calibrators
         public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string ccyPair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) 
             => GetSpotFxRateFromFwdFile(filename, valDate, _cmeCcyMap[ccyPair], ccyPair, currencyProvider, calendarProvider);
 
-        public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string cmeSymbol, string ccyPair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string cmeSymbol, string ccyPair, 
+            ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var blob = GetBlob(filename);
 

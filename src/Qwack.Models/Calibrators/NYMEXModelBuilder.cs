@@ -78,9 +78,11 @@ namespace Qwack.Models.Calibrators
                 case "PO":
                 case "PAO":
                 case "ON":
+                case "NG":
                     return (OptionExerciseType.American, OptionMarginingType.Regular);
                 case "CO":
                 case "BZO":
+                case "ODB":
                     return (OptionExerciseType.American, OptionMarginingType.FuturesStyle);
                 case "AO":
                 case "BA":

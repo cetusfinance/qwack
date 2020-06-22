@@ -7,16 +7,20 @@
 
   <ItemGroup>
     <None Remove="Calendars.json" />
+    <None Remove="futuresettings.json" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Calendars.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="futuresettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="15.0.3" />
+    <PackageReference Include="CsvHelper" Version="12.2.2" />
     <PackageReference Include="Utility.CommandLine.Arguments" Version="4.0.0" />
   </ItemGroup>
 
@@ -25,6 +29,12 @@
     <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Models\Qwack.Models.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Currencies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

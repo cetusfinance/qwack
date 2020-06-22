@@ -39,7 +39,7 @@ namespace Qwack.Transport.BasicTypes
         {
             Length0 = jaggedInput.GetLength(0);
             JaggedLengths = jaggedInput.Select(x => x.Length).ToArray();
-            BackingArray = new T[Length0 * JaggedLengths.Sum()];
+            BackingArray = new T[Length0 * JaggedLengths.Max()];
             for (var i = 0; i < Length0; i++)
             {
                 var lengthsSoFar = i == 0 ? 0 : JaggedLengths.Take(i).Sum();

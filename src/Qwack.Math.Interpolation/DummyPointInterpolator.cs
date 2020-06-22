@@ -17,6 +17,8 @@ namespace Qwack.Math.Interpolation
 
         public double Point => _point;
 
+        public double MinX => double.MinValue;
+        public double MaxX => double.MaxValue;
 
         public DummyPointInterpolator()
         {

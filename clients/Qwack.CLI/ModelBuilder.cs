@@ -65,7 +65,8 @@ namespace Qwack.CLI
                 priceCurves.Add(curve);
                 if(!string.IsNullOrWhiteSpace(c.NymexCodeOption))
                 {
-                    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider);
+                    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider, futureSettingsProvider);
+                    surface.AssetId = c.QwackCode;
                     surfaces.Add(surface);
                 }
             }
@@ -79,7 +80,8 @@ namespace Qwack.CLI
             }
             foreach(var c in spec.CmeBasisCurveSpecs)
             {
-                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), c.FxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName]);
+                var fxPair = fxPairs.Single(x => $"{x.Domestic}{x.Foreign}" == c.FxPair);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             var fm = new FundingModel(valDate, irCurves, currencyProvider, calendarProvider);
@@ -98,6 +100,8 @@ namespace Qwack.CLI
                 discountCurveMap: discountMap);
             fm.SetupFx(fxMatrix);
             var o = new AssetFxModel(valDate, fm);
+            o.AddVolSurfaces(surfaces.ToDictionary(s=>s.AssetId,s=>s));
+            o.AddPriceCurves(priceCurves.ToDictionary(c => c.AssetId, c => c));
             return o;
         }
 
@@ -133,9 +137,28 @@ namespace Qwack.CLI
                 },
                 NymexSpecs = new List<ModelBuilderSpecNymex>
                 {
-                    new ModelBuilderSpecNymex {QwackCode="CL",NymexCodeFuture="CL",NymexCodeOption="LO"},
-                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="BZO"},
-                    new ModelBuilderSpecNymex {QwackCode="NG",NymexCodeFuture="NG",NymexCodeOption="ON"},
+                    new ModelBuilderSpecNymex {QwackCode="CL",NymexCodeFuture="CL",NymexCodeOption="LO"}, //WTI
+                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="BZO"},//Brent
+                    //new ModelBuilderSpecNymex {QwackCode="Dated",NymexCodeFuture="UB"},//Dated Brent
+
+                    new ModelBuilderSpecNymex {QwackCode="NG",NymexCodeFuture="NG",NymexCodeOption="ON"}, //HH
+                    new ModelBuilderSpecNymex {QwackCode="UkNbp",NymexCodeFuture="UKG"}, //UK Gas
+
+                    new ModelBuilderSpecNymex {QwackCode="HO",NymexCodeFuture="HO",NymexCodeOption="OH"}, //Heat
+                    new ModelBuilderSpecNymex {QwackCode="XB",NymexCodeFuture="RB",NymexCodeOption="OB"}, //RBOB
+                    new ModelBuilderSpecNymex {QwackCode="QS",NymexCodeFuture="7F"},                      //ICE Gasoil
+
+                    new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="UA"},//Sing180
+                    new ModelBuilderSpecNymex {QwackCode="Sing380",NymexCodeFuture="SE"},//Sing380
+                    new ModelBuilderSpecNymex {QwackCode="NWE3.5",NymexCodeFuture="0D"},//3.5% NWE
+                    new ModelBuilderSpecNymex {QwackCode="NWE1.0",NymexCodeFuture="0B"},//1.0% NWE
+                    new ModelBuilderSpecNymex {QwackCode="NWE0.5",NymexCodeFuture="R5M"},//0.5% NWE
+                    new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M"},//0.5% Sing
+
+                    new ModelBuilderSpecNymex {QwackCode="XO",NymexCodeFuture="MFF"},//API4
+                    new ModelBuilderSpecNymex {QwackCode="XA",NymexCodeFuture="MTF"},//API2
+                    new ModelBuilderSpecNymex {QwackCode="IronOre62",NymexCodeFuture="TIO"},//62% Iron Ore TSI
+
                 },
                 CmeBaseCurveSpecs = new List<ModelBuilderSpecCmeBaseCurve>
                 {

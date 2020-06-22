@@ -18,6 +18,7 @@ using Qwack.Paths.Processes;
 using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.CmeXml;
+using Calendar = Qwack.Dates.Calendar;
 
 namespace Qwack.Models.Calibrators
 {
@@ -61,19 +62,51 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
-        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, string ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IIrCurve baseCurve)
+        public static IrCurve StripFxBasisCurve(string cmeFwdFileName, FxPair ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
-            var fwdsDict = GetFwdFxRatesFromFwdFile(cmeFwdFileName, new Dictionary<string, string> { { ccyPair, cmePair } });
-            var fwds = fwdsDict[ccyPair];
-            var dfs = fwds.ToDictionary(f => f.Key, f => fwds[valDate] / f.Value * baseCurve.GetDf(valDate, f.Key));
-            if(ccyPair.EndsWith("USD")) //flip dfs
+            var fwdsDict = GetFwdFxRatesFromFwdFile(cmeFwdFileName, new Dictionary<string, string> { { ccyPair.ToString(), cmePair } });
+            var bc = baseCurve.Clone();
+            bc.SolveStage = -1;
+            var fwds = fwdsDict[ccyPair.ToString()];
+            var spotDate = ccyPair.SpotDate(valDate);
+            var spotRate = fwds[spotDate];
+            fwds = Downsample(fwds, spotDate, ccyPair.PrimaryCalendar);
+
+            var fwdObjects = fwds.Select(x => new FxForward
             {
-                dfs = dfs.ToDictionary(x => x.Key, x => 1.0 / x.Value);
-            }
-            var pillars = dfs.Keys.OrderBy(k => k).ToArray();
-            var dfsValues = pillars.Select(p => dfs[p]).ToArray();
-            var curve = new IrCurve(pillars, dfsValues, valDate, curveName, Interpolator1DType.Linear, curveCcy, null, RateType.DF);
+                DomesticCCY = ccyPair.Domestic,
+                DeliveryDate = x.Key,
+                DomesticQuantity = 1e6,
+                ForeignCCY = ccyPair.Foreign,
+                PillarDate = x.Key,
+                SolveCurve = curveName,
+                Strike = x.Value,
+                ForeignDiscountCurve = ccyPair.Foreign == curveCcy ? curveName : baseCurve.Name,
+            });
+
+            var fic = new FundingInstrumentCollection(currencyProvider);
+            fic.AddRange(fwdObjects);
+            var pillars = fwds.Keys.OrderBy(x => x).ToArray();
+            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);
+            var fm = new FundingModel(valDate, new[] { curve, bc }, currencyProvider, calendarProvider);
+            var matrix = new FxMatrix(currencyProvider);
+            var discoMap = new Dictionary<Currency, string> { { curveCcy, curveName }, { baseCurve.Currency, baseCurve.Name } };
+            matrix.Init(ccyPair.Domestic, valDate, new Dictionary<Currency, double> { { ccyPair.Foreign, spotRate } }, new List<FxPair> { ccyPair }, discoMap);
+            fm.SetupFx(matrix);
+            var solver = new NewtonRaphsonMultiCurveSolverStaged() { InLineCurveGuessing = true };
+            solver.Solve(fm, fic);
+
             return curve;
+        }
+
+        private static Dictionary<DateTime,double> Downsample(Dictionary<DateTime, double> curvePoints, DateTime valDate, Calendar calendar)
+        {
+            var tenors = new[] {"1b", "1w", "2w", "1m", "2m", "3m", "6m", "9m", "12m" };
+            var dates = tenors.Select(t => valDate.AddPeriod(t.EndsWith("m") ? RollType.MF : RollType.F, calendar, new Frequency(t)));
+            var p = curvePoints.Keys.OrderBy(x => x).ToList();
+            var ixs = dates.Select(d => p.BinarySearch(d)).Select(x => x < 0 ? ~x : x).Distinct().ToArray();
+            var smaller = ixs.ToDictionary(x => p[x], x => curvePoints[p[x]]);
+            return smaller;
         }
 
         private static IFundingInstrument ToQwackIns(this CMEFileRecord record, string qwackCode, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, Dictionary<string, FloatRateIndex> indices,Dictionary<string,string> forecastCurves)

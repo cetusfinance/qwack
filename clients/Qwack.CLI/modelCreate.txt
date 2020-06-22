@@ -1,0 +1,2 @@
+mdc,c:\temp\sampleModel.json
+mb,c:\temp\sampleModel.json,2020-06-19,C:\temp\marketDataCache\2020-06-19,c:\temp\model20200619.json

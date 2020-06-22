@@ -92,7 +92,7 @@ namespace Qwack.Models.Calibrators
                                 else
                                     r = strikeGrp.Where(sg => sg.CallPut == OptionType.C).SingleOrDefault();
 
-                                if (r != null)
+                                if (r != null && r.ImpliedVol>1e-8)
                                     filtered.Add(
                                         new SmilePoint
                                         {
@@ -105,7 +105,8 @@ namespace Qwack.Models.Calibrators
                 }
 
                 //now we have filtered to a single vol per-strike...
-                output[expiry] = InterpolatorFactory.GetInterpolator(filtered.Select(f => f.Strike).ToArray(), filtered.Select(f => f.ImpliedVol).ToArray(), Interpolator1DType.CubicSpline);
+                if (filtered.Any())
+                    output[expiry] = InterpolatorFactory.GetInterpolator(filtered.Select(f => f.Strike).ToArray(), filtered.Select(f => f.ImpliedVol).ToArray(), Interpolator1DType.CubicSpline);
             }
             return output;
         }
@@ -124,12 +125,92 @@ namespace Qwack.Models.Calibrators
                     .ToArray())
                 .ToArray();
 
+            SmoothSmiles(wingDeltas, smiles, ref riskies, ref flies);
+
             var o = new RiskyFlySurface(valDate, atmVols, expiries, wingDeltas, riskies, flies, fwds, WingQuoteType.Arithmatic,
                 AtmVolType.ZeroDeltaStraddle, Interpolator1DType.CubicSpline, Interpolator1DType.LinearInVariance)
             {
                 Currency = currencyProvider.GetCurrency("USD")
             };
             return o;
+        }
+
+        public static RiskyFlySurface ToRiskyFlySurfaceStepFlat(this Dictionary<DateTime, IInterpolator1D> smiles, DateTime valDate, IPriceCurve priceCurve, List<DateTime> allExpiries, ICurrencyProvider currencyProvider)
+        {
+            var wingDeltas = new[] { 0.25, 0.1 };
+            var expiries = smiles.Keys.ToArray();
+            var expiriesDouble = expiries.Select(e=>e.ToOADate()).ToArray();
+            var atmVols = smiles.Select(x => x.Value.Interpolate(0.5)).ToArray();
+            var riskies = smiles.Select(x =>
+                    wingDeltas.Select(w => x.Value.Interpolate(1.0 - w) - x.Value.Interpolate(w))
+                    .ToArray())
+                .ToArray();
+            var flies = smiles.Select((x, ix) =>
+                    wingDeltas.Select(w => (x.Value.Interpolate(1.0 - w) + x.Value.Interpolate(w)) / 2.0 - atmVols[ix])
+                    .ToArray())
+                .ToArray();
+
+            SmoothSmiles(wingDeltas, smiles, ref riskies, ref flies);
+
+            var fwds = allExpiries.Select(x => priceCurve.GetPriceForDate(x)).ToArray();
+
+            var atmInterp = InterpolatorFactory.GetInterpolator(expiriesDouble, atmVols, Interpolator1DType.LinearInVariance);
+            var riskyInterps = wingDeltas.Select((w, ixw) => InterpolatorFactory.GetInterpolator(expiriesDouble, riskies.Select(r => r[ixw]).ToArray(), Interpolator1DType.LinearFlatExtrap)).ToArray();
+            var flyInterps = wingDeltas.Select((w, ixw) => InterpolatorFactory.GetInterpolator(expiriesDouble, flies.Select(f => f[ixw]).ToArray(), Interpolator1DType.LinearFlatExtrap)).ToArray();
+
+            var expandedRiskies = allExpiries.Select(e => wingDeltas.Select((w, ixw) => riskyInterps[ixw].Interpolate(e.ToOADate())).ToArray()).ToArray();
+            var expandedFlies = allExpiries.Select(e => wingDeltas.Select((w, ixw) => flyInterps[ixw].Interpolate(e.ToOADate())).ToArray()).ToArray();
+            var expandedAtms = allExpiries.Select(e => atmInterp.Interpolate(e.ToOADate())).ToArray();
+            var expandedFwds = allExpiries.Select(e => priceCurve.GetPriceForDate(e)).ToArray();
+            var o = new RiskyFlySurface(valDate, expandedAtms, allExpiries.ToArray(), wingDeltas, expandedRiskies, expandedFlies, expandedFwds, WingQuoteType.Arithmatic,
+                AtmVolType.ZeroDeltaStraddle, Interpolator1DType.CubicSpline, Interpolator1DType.NextValue)
+            {
+                Currency = currencyProvider.GetCurrency("USD")
+            };
+            return o;
+        }
+
+        public static void SmoothSmiles(double[] wingDeltas, Dictionary<DateTime, IInterpolator1D> smiles, ref double[][] riskies, ref double[][] flies)
+        {
+            var expiries = smiles.Keys.OrderBy(x => x).ToArray();
+            for (var w = 0; w < wingDeltas.Length; w++)
+            {
+                var goodSmilesAhead = true;
+                for (var i = 1; i < expiries.Length; i++) //assume first smile is complete
+                {
+                    var smile = smiles[expiries[i]];
+                    if (smile.MinX > wingDeltas[w] || smile.MaxX < (1 - wingDeltas[w]))
+                    {
+                        if (!goodSmilesAhead)
+                        {
+                            riskies[i][w] = riskies[i - 1][w];
+                            flies[i][w] = flies[i - 1][w];
+                        }
+                        else
+                        {
+                            var t = 1;
+                            while (i + t < riskies.Length)
+                            {
+                                if (smile.MinX <= wingDeltas[w] && smile.MaxX >= (1 - wingDeltas[w]))
+                                {
+                                    var slopeRR = (riskies[i + t][w] - riskies[i - 1][w]) / (1.0 + t);
+                                    riskies[i][w] = riskies[i - 1][w] + slopeRR;
+                                    var slopeBF = (flies[i + t][w] - flies[i - 1][w]) / (1.0 + t);
+                                    flies[i][w] = flies[i - 1][w] + slopeBF;
+                                    break;
+                                }
+                                t++;
+                            }
+                            if (i + t >= riskies.Length)
+                            {
+                                goodSmilesAhead = false;
+                                riskies[i][w] = riskies[i - 1][w];
+                                flies[i][w] = flies[i - 1][w];
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public static RiskyFlySurface ToATMSurface(this Dictionary<DateTime, IInterpolator1D> smiles, DateTime valDate, double[] fwds)

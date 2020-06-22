@@ -10,6 +10,9 @@ namespace Qwack.Math.Interpolation
         private readonly double _alpha;
         private readonly double _beta;
 
+        public double MinX => double.MinValue;
+        public double MaxX => double.MaxValue;
+
         public ParametricLinearInterpolator() {}
 
         public ParametricLinearInterpolator(double alpha, double beta)

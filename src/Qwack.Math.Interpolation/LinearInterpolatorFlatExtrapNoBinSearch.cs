@@ -23,6 +23,8 @@ namespace Qwack.Math.Interpolation
         private readonly double _minY;
         private readonly double _maxY;
 
+        public double MinX => _minX;
+        public double MaxX => _maxX;
         public double[] Xs => _x;
         public double[] Ys => _y;
 

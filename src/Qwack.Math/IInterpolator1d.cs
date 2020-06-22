@@ -11,5 +11,8 @@ namespace Qwack.Math
         double FirstDerivative(double x);
         double SecondDerivative(double x);
         double[] Sensitivity(double x);
+
+        double MinX { get; }
+        double MaxX { get; }
     }
 }

@@ -18,7 +18,8 @@ namespace Qwack.Math.Interpolation
         private double[] _slope;
         private double _minX;
         private double _maxX;
-
+        public double MinX => _minX;
+        public double MaxX => _maxX;
         public double[] Xs => _x;
         public double[] Ys => _y;
 

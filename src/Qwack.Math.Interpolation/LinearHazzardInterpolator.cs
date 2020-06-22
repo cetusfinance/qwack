@@ -15,6 +15,9 @@ namespace Qwack.Math.Interpolation
         private readonly IInterpolator1D _linearInterp;
         public Interpolator1DType Type => Interpolator1DType.LinearHazzard;
 
+        public double MinX => _xs.Min();
+        public double MaxX => _xs.Max();
+
         public LinearHazzardInterpolator() {}
 
         public LinearHazzardInterpolator(double[] xs, double[] hs)

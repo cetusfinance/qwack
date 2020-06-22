@@ -18,6 +18,9 @@ namespace Qwack.Math.Interpolation
         public double[] Xs => _x;
         public double[] Ys => _y;
 
+        public double MinX => _minX;
+        public double MaxX => _maxX;
+
         public PreviousInterpolator()
         {
 

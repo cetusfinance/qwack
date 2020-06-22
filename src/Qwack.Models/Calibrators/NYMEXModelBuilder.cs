@@ -10,6 +10,7 @@ using Qwack.Dates;
 using Qwack.Options.VolSurfaces;
 using System.Globalization;
 using Qwack.Transport.BasicTypes;
+using System.Runtime.CompilerServices;
 
 namespace Qwack.Models.Calibrators
 {
@@ -20,7 +21,7 @@ namespace Qwack.Models.Calibrators
         public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
         {
             var parsed = NYMEXFutureParser.Parse(nymexFutureFilename).Where(r=>r.Symbol==nymexSymbol);
-            var q = parsed.ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
+            var q = parsed.Where(x=>x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
             var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
@@ -35,13 +36,13 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
-        public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency)
+        public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency, IFutureSettingsProvider futureSettingsProvider)
         {
             var parsed = NYMEXOptionParser.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);
             var (optionExerciseType, optionMarginingType) = OptionTypeFromCode(nymexSymbol);
             var origin = DateTime.ParseExact(parsed.First().TradeDate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
 
-            var q = parsed.Select(x => new ListedOptionSettlementRecord
+            var q = parsed.Where(x=>x.Settle>0).Select(x => new ListedOptionSettlementRecord
             {
                 CallPut = x.PutCall=="C"?OptionType.C:OptionType.P,
                 ExerciseType = optionExerciseType,
@@ -56,7 +57,34 @@ namespace Qwack.Models.Calibrators
             var priceDict = priceCurve.PillarLabels.ToDictionary(x => x, x => priceCurve.GetPriceForDate(priceCurve.PillarDatesForLabel(x)));
             ListedSurfaceHelper.ImplyVols(q, priceDict, new ConstantRateIrCurve(0.0, origin, "dummy", currency.GetCurrency("USD")));
             var smiles = ListedSurfaceHelper.ToDeltaSmiles(q, priceDict);
-            var surface = ListedSurfaceHelper.ToRiskyFlySurface(smiles, origin, smiles.Keys.Select(x => priceCurve.GetPriceForDate(x)).ToArray(), currency);
+            
+            var allOptionExpiries = new List<DateTime>();
+            var lastDate = q.Max(x => x.ExpiryDate);
+
+            var dummyFutureCode = $"{qwackCode}Z{DateExtensions.SingleDigitYear(DateTime.Today.Year + 2)}";
+            var c = new FutureCode(dummyFutureCode, DateTime.Today.Year - 2, futureSettingsProvider);
+
+            var contract = c.GetFrontMonth(origin, false);
+            var lastContract = c.GetFrontMonth(lastDate, false);
+
+            while(contract != lastContract)
+            {
+                var cc = new FutureCode(contract, origin.Year, futureSettingsProvider);
+                var exp = ListedUtils.FuturesCodeToDateTime(contract);
+                var record = new NYMEXOptionRecord
+                {
+                    ContractMonth = exp.Month,
+                    ContractYear = exp.Year,
+                    Symbol = nymexSymbol
+                };
+                var optExpiry = OptionExpiryFromNymexRecord(record, calendarProvider);
+                if (optExpiry > origin)
+                    allOptionExpiries.Add(optExpiry);
+
+                contract = cc.GetNextCode(false);
+            }
+
+            var surface = ListedSurfaceHelper.ToRiskyFlySurfaceStepFlat(smiles, origin, priceCurve, allOptionExpiries, currency);
 
             return surface;
         }
@@ -78,6 +106,8 @@ namespace Qwack.Models.Calibrators
                 case "PO":
                 case "PAO":
                 case "ON":
+                case "OH":
+                case "OB":
                 case "NG":
                     return (OptionExerciseType.American, OptionMarginingType.Regular);
                 case "CO":
@@ -100,11 +130,13 @@ namespace Qwack.Models.Calibrators
                         .AddMonths(-1)
                         .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 7.Bd());
                 case "ON": //HH Natgas
+                case "OH": //Heat
+                case "OB": //Heat
                     return new DateTime(record.ContractYear, record.ContractMonth, 1)
                         .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 4.Bd());
                 case "BZO": //NYMEX Brent
                     return new DateTime(record.ContractYear, record.ContractMonth, 1)
-                        .AddMonths(-2)
+                        .AddMonths(-1)
                         .SubtractPeriod(RollType.P, calendarProvider.Collection["LON"], 4.Bd());
                 default:
                     throw new Exception($"No option expiry mapping found for {record.Symbol}");

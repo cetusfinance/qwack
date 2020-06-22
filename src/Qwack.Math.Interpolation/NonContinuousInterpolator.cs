@@ -12,6 +12,9 @@ namespace Qwack.Math.Interpolation
         private readonly double[] _upperBounds;
         private readonly IInterpolator1D[] _interpolatorSegments;
 
+        public double MinX => double.MinValue;
+        public double MaxX => double.MaxValue;
+
         public NonContinuousInterpolator()
         {
 

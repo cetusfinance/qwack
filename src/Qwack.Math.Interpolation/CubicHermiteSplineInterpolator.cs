@@ -15,6 +15,9 @@ namespace Qwack.Math.Interpolation
 
         const double xBump = 1e-10;
 
+        public double MinX => _minX;
+        public double MaxX => _maxX;
+
         private double[] _x;
         private double[] _y;
         public double[] Xs => _x;

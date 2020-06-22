@@ -12,9 +12,14 @@ namespace Qwack.Math.Interpolation
     {
         private readonly double _h;
 
+
+
         public double H => _h;
 
         public Interpolator1DType Type => Interpolator1DType.ConstantHazzard;
+
+        public double MinX => double.MinValue;
+        public double MaxX => double.MaxValue;
 
         public ConstantHazzardInterpolator() {}
 

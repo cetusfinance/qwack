@@ -20,6 +20,9 @@ namespace Qwack.Math.Interpolation
         private readonly double _maxX;
         private readonly double _bandwidth = 0.25;
 
+        public double MinX => _minX;
+        public double MaxX => _maxX;
+
         public double[] Xs => _x;
         public double[] Ys => _y;
 

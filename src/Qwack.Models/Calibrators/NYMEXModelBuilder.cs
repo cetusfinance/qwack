@@ -21,7 +21,7 @@ namespace Qwack.Models.Calibrators
         
         public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
         {
-            var parsed = NYMEXFutureParser.Parse(nymexFutureFilename).Where(r=>r.Symbol==nymexSymbol);
+            var parsed = NYMEXFutureParser.Instance.Parse(nymexFutureFilename).Where(r=>r.Symbol==nymexSymbol);
             var q = parsed.Where(x=>x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
             var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
@@ -39,7 +39,7 @@ namespace Qwack.Models.Calibrators
 
         public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency, IFutureSettingsProvider futureSettingsProvider)
         {
-            var parsed = NYMEXOptionParser.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);
+            var parsed = NYMEXOptionParser.Instance.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);
             var (optionExerciseType, optionMarginingType) = OptionTypeFromCode(nymexSymbol);
             var origin = DateTime.ParseExact(parsed.First().TradeDate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
 

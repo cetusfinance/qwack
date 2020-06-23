@@ -20,6 +20,7 @@ using Qwack.Transport.BasicTypes;
 using Qwack.Transport.CmeXml;
 using Calendar = Qwack.Dates.Calendar;
 using static Qwack.Models.Calibrators.CMECommon;
+using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Models.Calibrators
 {
@@ -27,7 +28,7 @@ namespace Qwack.Models.Calibrators
     {
         public static IrCurve GetCurveForCode(string cmeId, string cmeFilename, string qwackCode, string curveName, Dictionary<string,FloatRateIndex> indices, Dictionary<string,string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
-            var parsed = CMEFileParser.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp=="FUT");
+            var parsed = CMEFileParser.Instance.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp=="FUT");
             var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
             var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var instruments = parsed.Select(p => ToQwackIns(p, qwackCode, futureSettingsProvider, currencyProvider, indices, curves)).ToList();
@@ -42,31 +43,59 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
-        public static BasicPriceCurve GetFuturesCurveForCode(string cmeSymbol, string cmeFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
+        public static BasicPriceCurve GetFuturesCurveForCode(string cmeSymbol, string cmeFutureFilename, ICurrencyProvider currency)
         {
-            var parsed = CMEFileParser.Parse(cmeFutureFilename).Where(r => r.Sym == cmeSymbol);
+            var parsed = CMEFileParser.Instance.Parse(cmeFutureFilename).Where(r => r.Sym == cmeSymbol && r.SecTyp=="FUT");
             var q = parsed.Where(x => x.SettlePrice.HasValue).ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
             var datesVec = q.Keys.Distinct().OrderBy(x => x).ToArray();
-            var labelsVec = datesVec.Select(d => d.ToString("yyyyMM")).ToArray();
+            var labelsVec = parsed.Select(x => new Tuple<DateTime, string>(DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x.MMY))
+                .Distinct()
+                .OrderBy(x => x.Item1)
+                .Select(x => x.Item2)
+                .ToArray();
             var pricesVec = datesVec.Select(l => System.Math.Max(q[l].Value, MinPrice)).ToArray();
             var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var curve = new BasicPriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
             {
-                AssetId = qwackCode,
-                Name = qwackCode,
                 SpotLag = 0.Bd()
             };
             return curve;
         }
 
-        private static object Year2to1(object p)
+        public static RiskyFlySurface GetFxSurfaceForCode(string cmeSymbol, string cmeFutureFilename, BasicPriceCurve priceCurve, ICurrencyProvider currency)
         {
-            throw new NotImplementedException();
+            var parsed = CMEFileParser.Instance.Parse(cmeFutureFilename).Where(r => r.Sym == cmeSymbol && r.SecTyp=="OOF" && r.SettlePrice.HasValue);
+            var (optionExerciseType, optionMarginingType) = OptionTypeFromCode(cmeSymbol);
+            var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            var q = parsed.Where(x => x.SettlePrice > 0).Select(x => new ListedOptionSettlementRecord
+            {
+                CallPut = x.PutCall == 1 ? OptionType.C : OptionType.P,
+                ExerciseType = optionExerciseType,
+                MarginType = optionMarginingType,
+                PV = x.SettlePrice.Value,
+                Strike = x.StrkPx.Value,
+                UnderlyingFuturesCode = x.UndlyMMY,
+                ExpiryDate = DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                ValDate = origin
+            }).Where(z => z.ExpiryDate > origin).ToList();
+
+            var priceDict = priceCurve.PillarLabels.ToDictionary(x => x, x => priceCurve.GetPriceForDate(priceCurve.PillarDatesForLabel(x)));
+            ListedSurfaceHelper.ImplyVols(q, priceDict, new ConstantRateIrCurve(0.0, origin, "dummy", currency.GetCurrency("USD")));
+            var smiles = ListedSurfaceHelper.ToDeltaSmiles(q, priceDict);
+
+            var expiries = smiles.Keys.OrderBy(x => x).ToArray();
+            var ulByExpiry = expiries.ToDictionary(x => x, x => q.Where(qq => qq.ExpiryDate == x).First().UnderlyingFuturesCode);
+            var fwdByExpiry = ulByExpiry.ToDictionary(x => x.Key, x => priceCurve.GetPriceForDate(priceCurve.PillarDatesForLabel(x.Value)));
+            var fwds = expiries.Select(e => fwdByExpiry[e]).ToArray();
+            var surface = ListedSurfaceHelper.ToRiskyFlySurface(smiles, origin, fwds, currency);
+
+            return surface;
         }
 
         public static Dictionary<DateTime,double?> GetFuturesCurve(string cmeId, string cmeFilename)
         {
-            var parsed = CMEFileParser.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp == "FUT");
+            var parsed = CMEFileParser.Instance.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp == "FUT");
             var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
             return q;
         }
@@ -120,16 +149,6 @@ namespace Qwack.Models.Calibrators
             solver.Solve(fm, fic);
 
             return curve;
-        }
-
-        private static Dictionary<DateTime,double> Downsample(Dictionary<DateTime, double> curvePoints, DateTime valDate, Calendar calendar)
-        {
-            var tenors = new[] {"1b", "1w", "2w", "3w", "1m", "2m", "3m","4m","5m", "6m", "9m", "12m", "15m","18m","24m","36m" };
-            var dates = tenors.Select(t => valDate.AddPeriod(t.EndsWith("m") ? RollType.MF : RollType.F, calendar, new Frequency(t)));
-            var p = curvePoints.Keys.OrderBy(x => x).ToList();
-            var ixs = dates.Select(d => p.BinarySearch(d)).Select(x => x < 0 ? ~x : x).Where(x => x < p.Count()).Distinct().ToArray();
-            var smaller = ixs.ToDictionary(x => p[x], x => curvePoints[p[x]]);
-            return smaller;
         }
 
         private static IFundingInstrument ToQwackIns(this CMEFileRecord record, string qwackCode, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, Dictionary<string, FloatRateIndex> indices,Dictionary<string,string> forecastCurves)
@@ -213,7 +232,7 @@ namespace Qwack.Models.Calibrators
         public static Dictionary<string, double> GetSpotFxRatesFromFwdFile(string filename, DateTime valDate, Dictionary<string,string> pairMap, 
             ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
-            var blob = GetBlob(filename);
+            var blob = CMEFileParser.Instance.GetBlob(filename);
 
             var supported = pairMap.Values.ToArray();
             var spotDates = pairMap.ToDictionary(x => x.Value, x => x.Key.FxPairFromString(currencyProvider, calendarProvider).SpotDate(valDate));
@@ -239,7 +258,7 @@ namespace Qwack.Models.Calibrators
         public static double GetSpotFxRateFromFwdFile(string filename, DateTime valDate, string cmeSymbol, string ccyPair, 
             ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
-            var blob = GetBlob(filename);
+            var blob = CMEFileParser.Instance.GetBlob(filename);
 
             var pair = ccyPair.FxPairFromString(currencyProvider, calendarProvider);
             var spotDate = pair.SpotDate(valDate);
@@ -259,7 +278,7 @@ namespace Qwack.Models.Calibrators
 
         public static Dictionary<string,Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(string filename, Dictionary<string,string> ccyPairMap)
         {
-            var blob = GetBlob(filename);
+            var blob = CMEFileParser.Instance.GetBlob(filename);
             var o = new Dictionary<string, Dictionary<DateTime, double>>();
             foreach (var kv in ccyPairMap)
             {
@@ -275,22 +294,5 @@ namespace Qwack.Models.Calibrators
             return o;
         }
 
-        private static FIXML GetBlob(string filename)
-        {
-            var reader = new XmlSerializer(typeof(FIXML));
-            var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            FIXML blob;
-            if (filename.EndsWith(".gz"))
-            {
-                var gs = new GZipStream(fs, CompressionMode.Decompress);
-                blob = (FIXML)reader.Deserialize(gs);
-            }
-            else
-            {
-                blob = (FIXML)reader.Deserialize(fs);
-            }
-
-            return blob;
-        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,16 +11,44 @@ namespace Qwack.Providers.CSV
 {
     public class NYMEXFutureParser
     {
-        public static List<NYMEXFutureRecord> Parse(string fileName)
+        public List<NYMEXFutureRecord> Parse(string fileName)
         {
-            using var textReader = File.OpenText(fileName);
-            using var csv = new CsvReader(textReader);
+            if (_cache.TryGetValue(fileName, out var record))
+                return record;
+
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs);
+            using var csv = new CsvReader(sr);
             csv.Configuration.HasHeaderRecord = true;
             csv.Configuration.BadDataFound = null;
             csv.Configuration.RegisterClassMap<NYMEXFutureRecordMap>();
 
-            return csv.GetRecords<NYMEXFutureRecord>().ToList();
+            var list = csv.GetRecords<NYMEXFutureRecord>().ToList();
+            _cache.TryAdd(fileName, list);
+
+            return list;
         }
+
+        private static readonly NYMEXFutureParser instance = new NYMEXFutureParser();
+
+        static NYMEXFutureParser()
+        {
+        }
+
+        private NYMEXFutureParser()
+        {
+        }
+
+        public static NYMEXFutureParser Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+
+
+        private ConcurrentDictionary<string, List<NYMEXFutureRecord>> _cache = new ConcurrentDictionary<string, List<NYMEXFutureRecord>>();
     }
 
     public class NYMEXFutureRecord

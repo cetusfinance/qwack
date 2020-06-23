@@ -22,12 +22,14 @@ namespace Qwack.CLI
 {
     public class ModelBuilder
     {
-        private const string FilenameCME = "cme.settle.s.csv";
-        private const string FilenameCMEFwdsXml = "cme.settle.fwd.s.xml";
-        private const string FilenameCBOT = "cbt.settle.s.csv";
+        private const string FilenameCme = "cme.settle.s.csv";
+        private const string FilenameCmeFwdsXml = "cme.settle.fwd.s.xml";
+        private const string FilenameCbot = "cbt.settle.s.csv";
         private const string FilenameNymexFuture = "nymex_future.csv";
         private const string FilenameNymexOption = "nymex_option.csv";
-        
+        private const string FilenameCmxFwdsXml= "comex.settle.fwd.s.xml";
+        private const string FilenameCmxXml = "comex.settle.s.xml";
+
         private readonly string _filepath;
         private readonly DateTime _valDate;
 
@@ -36,11 +38,13 @@ namespace Qwack.CLI
             _filepath = filepath;
             _valDate = valDate;
 
-            UnzipIfNeeded(FilenameCME);
-            UnzipIfNeeded(FilenameCMEFwdsXml);
-            UnzipIfNeeded(FilenameCBOT);
+            UnzipIfNeeded(FilenameCme);
+            UnzipIfNeeded(FilenameCmeFwdsXml);
+            UnzipIfNeeded(FilenameCbot);
             UnzipIfNeeded(FilenameNymexFuture);
             UnzipIfNeeded(FilenameNymexOption);
+            UnzipIfNeeded(FilenameCmxFwdsXml);
+            UnzipIfNeeded(FilenameCmxXml);
         }
 
         public void UnzipIfNeeded(string filename)
@@ -59,7 +63,9 @@ namespace Qwack.CLI
             var fxPairs = spec.FxPairs.Select(x => new FxPair(x, currencyProvider, calendarProvider)).ToList();
             var priceCurves = new List<IPriceCurve>();
             var surfaces = new List<IVolSurface>();
-            foreach(var c in spec.NymexSpecs)
+            var fxSurfaces = new List<IVolSurface>();
+
+            foreach (var c in spec.NymexSpecs)
             {
                 var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath,FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
                 priceCurves.Add(curve);
@@ -74,35 +80,49 @@ namespace Qwack.CLI
             foreach(var c in spec.CmeBaseCurveSpecs)
             {
                 var ixForThis = new Dictionary<string, FloatRateIndex> { { c.QwackCode, indices[c.FloatRateIndex] } };
-                var curve = CMEModelBuilder.GetCurveForCode(c.CmeCode, Path.Combine(_filepath, c.IsCbot? FilenameCBOT:FilenameCME), c.QwackCode, c.CurveName, ixForThis, 
+                var curve = CMEModelBuilder.GetCurveForCode(c.CmeCode, Path.Combine(_filepath, c.IsCbot? FilenameCbot:FilenameCme), c.QwackCode, c.CurveName, ixForThis, 
                     new Dictionary<string, string>() { { c.QwackCode, c.CurveName } }, futureSettingsProvider, currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach(var c in spec.CmeBasisCurveSpecs)
             {
                 var fxPair = fxPairs.Single(x => $"{x.Domestic}{x.Foreign}" == c.FxPair);
-                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCMEFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCmeFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach (var c in spec.CmeFxFutureSpecs)
             {
-                //var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
-                //priceCurves.Add(curve);
-                //if (!string.IsNullOrWhiteSpace(c.NymexCodeOption))
-                //{
-                //    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider, futureSettingsProvider);
-                //    surface.AssetId = c.QwackCode;
-                //    surfaces.Add(surface);
-                //}
+                var curve = CMEModelBuilder.GetFuturesCurveForCode(c.CmeCodeFut, Path.Combine(_filepath, FilenameCme), currencyProvider);
+                var surface = CMEModelBuilder.GetFxSurfaceForCode(c.CmeCodeOpt, Path.Combine(_filepath, FilenameCme), curve, currencyProvider);
+                surface.AssetId = c.FxPair;
+                fxSurfaces.Add(surface);
+            }
+
+            var pairMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => x.CmeFxPair);
+            var pairCcyMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => currencyProvider.GetCurrency(x.Currency));
+            var spotRates = CMEModelBuilder.GetSpotFxRatesFromFwdFile(Path.Combine(_filepath, FilenameCmeFwdsXml), valDate, pairMap, currencyProvider, calendarProvider);
+            var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.FxPair], x => x.CurveName);
+
+            foreach (var c in spec.CmxMetalCurves)
+            {
+                var fxPair = fxPairs.Single(x => $"{x.Domestic}{x.Foreign}" == c.MetalPair);
+                var (curve, spotPrice) = COMEXModelBuilder.GetMetalCurveForCode(Path.Combine(_filepath, FilenameCmxFwdsXml), c.CmxSymbol, fxPair, c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
+                irCurves.Add(c.CurveName, curve);
+                spotRates.Add(c.MetalPair, spotPrice);
+                discountMap.Add(currencyProvider.GetCurrency(c.Currency), c.CurveName);
+                pairCcyMap.Add(c.MetalPair, currencyProvider.GetCurrency(c.Currency));
+                if (!string.IsNullOrWhiteSpace(c.CmxOptCode))
+                {
+                    var surface = COMEXModelBuilder.GetMetalSurfaceForCode(c.CmxOptCode, Path.Combine(_filepath, FilenameCmxXml), currencyProvider);
+                    surface.AssetId = c.MetalPair;
+                    fxSurfaces.Add(surface);
+                }
             }
 
             var fm = new FundingModel(valDate, irCurves, currencyProvider, calendarProvider);
-            //setup fx
-            var pairMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => x.CmeFxPair);
-            var pairCcyMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => currencyProvider.GetCurrency(x.Currency));
-            var spotRates = CMEModelBuilder.GetSpotFxRatesFromFwdFile(Path.Combine(_filepath, FilenameCMEFwdsXml), valDate, pairMap, currencyProvider, calendarProvider);
+
             var spotRatesByCcy = spotRates.ToDictionary(x => pairCcyMap[x.Key], x => x.Key.StartsWith("USD") ? x.Value : 1.0 / x.Value);
-            var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.FxPair], x => x.CurveName);
+
             var fxMatrix = new FxMatrix(currencyProvider);
             fxMatrix.Init(
                 baseCurrency: currencyProvider.GetCurrency("USD"),
@@ -111,6 +131,10 @@ namespace Qwack.CLI
                 fXPairDefinitions: fxPairs,
                 discountCurveMap: discountMap);
             fm.SetupFx(fxMatrix);
+            foreach (var fxs in fxSurfaces)
+            {
+                fm.VolSurfaces.Add(fxs.AssetId, fxs);
+            }
             var o = new AssetFxModel(valDate, fm);
             o.AddVolSurfaces(surfaces.ToDictionary(s=>s.AssetId,s=>s));
             o.AddPriceCurves(priceCurves.ToDictionary(c => c.AssetId, c => c));
@@ -160,12 +184,12 @@ namespace Qwack.CLI
                     new ModelBuilderSpecNymex {QwackCode="XB",NymexCodeFuture="RB",NymexCodeOption="OB"}, //RBOB
                     new ModelBuilderSpecNymex {QwackCode="QS",NymexCodeFuture="7F"},                      //ICE Gasoil
 
+                    new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M"},//0.5% Sing
                     new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="UA"},//Sing180
                     new ModelBuilderSpecNymex {QwackCode="Sing380",NymexCodeFuture="SE"},//Sing380
                     new ModelBuilderSpecNymex {QwackCode="NWE3.5",NymexCodeFuture="0D"},//3.5% NWE
                     new ModelBuilderSpecNymex {QwackCode="NWE1.0",NymexCodeFuture="0B"},//1.0% NWE
                     new ModelBuilderSpecNymex {QwackCode="NWE0.5",NymexCodeFuture="R5M"},//0.5% NWE
-                    new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M"},//0.5% Sing
 
                     new ModelBuilderSpecNymex {QwackCode="XO",NymexCodeFuture="MFF"},//API4
                     new ModelBuilderSpecNymex {QwackCode="XA",NymexCodeFuture="MTF"},//API2
@@ -178,7 +202,7 @@ namespace Qwack.CLI
                     new ModelBuilderSpecCmeBaseCurve { CmeCode="41", QwackCode="FF", CurveName="USD.OIS.1B", FloatRateIndex="USD.OIS.1B", IsCbot=true},
                 },
                 CmeBasisCurveSpecs = new List<ModelBuilderSpecCmeBasisCurve>
-                { 
+                {
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDZRC", Currency="ZAR", CurveName = "ZAR.DISC.[USD.LIBOR.3M]", FxPair="USDZAR", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="USDJYC", Currency="JPY", CurveName = "JPY.DISC.[USD.LIBOR.3M]", FxPair="USDJPY", BaseCurveName="USD.LIBOR.3M"},
                     new ModelBuilderSpecCmeBasisCurve {CmeFxPair="EURUSN", Currency="EUR", CurveName = "EUR.DISC.[USD.LIBOR.3M]", FxPair="EURUSD", BaseCurveName="USD.LIBOR.3M"},
@@ -216,10 +240,26 @@ namespace Qwack.CLI
                     new TO_FxPair {Domestic="USD", Foreign="INR", PrimaryCalendar="INR", SecondaryCalendar = "USD", SpotLag="2b"},
                     new TO_FxPair {Domestic="USD", Foreign="PHP", PrimaryCalendar="PHP", SecondaryCalendar = "USD", SpotLag="2b"},
                     new TO_FxPair {Domestic="USD", Foreign="TWD", PrimaryCalendar="TWD", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="BTC", Foreign="USD", PrimaryCalendar="USD", SecondaryCalendar = "USD", SpotLag="0b"},
+                    new TO_FxPair {Domestic="XAU", Foreign="USD", PrimaryCalendar="LON", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="XAG", Foreign="USD", PrimaryCalendar="LON", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="XPT", Foreign="USD", PrimaryCalendar="LON", SecondaryCalendar = "USD", SpotLag="2b"},
+                    new TO_FxPair {Domestic="XPD", Foreign="USD", PrimaryCalendar="LON", SecondaryCalendar = "USD", SpotLag="2b"},
                 },
                 CmeFxFutureSpecs = new List<ModelBuilderSpecFxFuture>
                 {
-                    new ModelBuilderSpecFxFuture {CmeCodeFut="6E",CmeCodeOpt="EUU",Currency="USD",FxPair="EURUSD"}
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6E",CmeCodeOpt="EUU",Currency="USD",FxPair="EURUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6B",CmeCodeOpt="GBU",Currency="USD",FxPair="GBPUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6J",CmeCodeOpt="JPU",Currency="USD",FxPair="JPYUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6A",CmeCodeOpt="ADU",Currency="USD",FxPair="AUDUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6C",CmeCodeOpt="CAU",Currency="USD",FxPair="CADUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="6L",CmeCodeOpt="BR",Currency="USD",FxPair="BRLUSD"},
+                    new ModelBuilderSpecFxFuture {CmeCodeFut="BTC",CmeCodeOpt="BTC",Currency="USD",FxPair="BTCUSD"},
+                },
+                CmxMetalCurves = new List<ModelBuilderSpecCmxMetalCurve>
+                {
+                    new ModelBuilderSpecCmxMetalCurve { Currency="XAU", MetalPair="XAUUSD", CmxSymbol="GB", CurveName="XAU.DISC.[USD.LIBOR.3M]", BaseCurveName = "USD.LIBOR.3M", CmxFutCode="GC", CmxOptCode="OG" },
+                    new ModelBuilderSpecCmxMetalCurve { Currency="XAG", MetalPair="XAGUSD", CmxSymbol="LSF", CurveName="XAG.DISC.[USD.LIBOR.3M]", BaseCurveName = "USD.LIBOR.3M", CmxFutCode="SI", CmxOptCode="SO" },
                 }
             };
 

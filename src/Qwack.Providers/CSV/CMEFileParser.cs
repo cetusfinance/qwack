@@ -1,22 +1,74 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Qwack.Transport.CmeXml;
 
 namespace Qwack.Providers.CSV
 {
     public class CMEFileParser
     {
-        public static List<CMEFileRecord> Parse(string fileName)
+        public List<CMEFileRecord> Parse(string fileName)
         {
-            using var textReader = File.OpenText(fileName);
-            using var csv = new CsvReader(textReader);
+            if (_cache.TryGetValue(fileName, out var record))
+                return record;
+            var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var sr = new StreamReader(fs);
+            using var csv = new CsvReader(sr);
             csv.Configuration.HasHeaderRecord = true;
-            return csv.GetRecords<CMEFileRecord>().ToList();
+            var list = csv.GetRecords<CMEFileRecord>().ToList();
+            _cache.TryAdd(fileName, list);
+
+            return list;
         }
+
+        public FIXML GetBlob(string filename)
+        {
+            if (_blobCache.TryGetValue(filename, out var record))
+                return record;
+
+            var reader = new XmlSerializer(typeof(FIXML));
+            var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            FIXML blob;
+            if (filename.EndsWith(".gz"))
+            {
+                var gs = new GZipStream(fs, CompressionMode.Decompress);
+                blob = (FIXML)reader.Deserialize(gs);
+            }
+            else
+            {
+                blob = (FIXML)reader.Deserialize(fs);
+            }
+            _blobCache.TryAdd(filename, blob);
+            return blob;
+        }
+
+        private static readonly CMEFileParser instance = new CMEFileParser();
+
+        static CMEFileParser()
+        {
+        }
+
+        private CMEFileParser()
+        {
+        }
+
+        public static CMEFileParser Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+
+        private ConcurrentDictionary<string, List<CMEFileRecord>> _cache = new ConcurrentDictionary<string, List<CMEFileRecord>>();
+        private ConcurrentDictionary<string, FIXML> _blobCache = new ConcurrentDictionary<string, FIXML>();
     }
 
     public class CMEFileRecord

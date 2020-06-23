@@ -15,14 +15,8 @@ namespace Qwack.Transport.CmeXml
         [System.Xml.Serialization.XmlArrayItemAttribute("MktDataFull", IsNullable = false)]
         public FIXMLMktDataFull[] Batch
         {
-            get
-            {
-                return batchField;
-            }
-            set
-            {
-                batchField = value;
-            }
+            get => batchField;
+            set => batchField = value;
         }
     }
 
@@ -41,59 +35,45 @@ namespace Qwack.Transport.CmeXml
 
         private System.DateTime bizDtField;
 
+        private FIXMLMktDataFullUndly undlyField;
+
         /// <remarks/>
         public FIXMLMktDataFullInstrmt Instrmt
         {
-            get
-            {
-                return instrmtField;
-            }
-            set
-            {
-                instrmtField = value;
-            }
+            get => instrmtField;
+            set => instrmtField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("Full")]
         public FIXMLMktDataFullFull[] Full
         {
-            get
-            {
-                return fullField;
-            }
-            set
-            {
-                fullField = value;
-            }
+            get => fullField;
+            set => fullField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlElementAttribute("Undly")]
+        public FIXMLMktDataFullUndly Undly
+        {
+            get => undlyField;
+            set => undlyField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute("Attrb", IsNullable = false)]
         public FIXMLMktDataFullAttrb[] InstrmtExt
         {
-            get
-            {
-                return instrmtExtField;
-            }
-            set
-            {
-                instrmtExtField = value;
-            }
+            get => instrmtExtField;
+            set => instrmtExtField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
         public System.DateTime BizDt
         {
-            get
-            {
-                return bizDtField;
-            }
-            set
-            {
-                bizDtField = value;
-            }
+            get => bizDtField;
+            set => bizDtField = value;
         }
     }
 
@@ -116,7 +96,7 @@ namespace Qwack.Transport.CmeXml
 
         private string srcField;
 
-        private uint mMYField;
+        private string mMYField;
 
         private System.DateTime matDtField;
 
@@ -124,146 +104,221 @@ namespace Qwack.Transport.CmeXml
 
         private string fnlSettlCcyField;
 
+        private decimal strkPxField;
+
+        private bool putCallField;
+
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("Evnt")]
         public FIXMLMktDataFullInstrmtEvnt[] Evnt
         {
-            get
-            {
-                return evntField;
-            }
-            set
-            {
-                evntField = value;
-            }
+            get => evntField;
+            set => evntField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Sym
         {
-            get
-            {
-                return symField;
-            }
-            set
-            {
-                symField = value;
-            }
+            get => symField;
+            set => symField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string ID
         {
-            get
-            {
-                return idField;
-            }
-            set
-            {
-                idField = value;
-            }
+            get => idField;
+            set => idField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string CFI
         {
-            get
-            {
-                return cFIField;
-            }
-            set
-            {
-                cFIField = value;
-            }
+            get => cFIField;
+            set => cFIField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string SecTyp
         {
-            get
-            {
-                return secTypField;
-            }
-            set
-            {
-                secTypField = value;
-            }
+            get => secTypField;
+            set => secTypField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Src
         {
-            get
-            {
-                return srcField;
-            }
-            set
-            {
-                srcField = value;
-            }
+            get => srcField;
+            set => srcField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public uint MMY
+        public string MMY
         {
-            get
-            {
-                return mMYField;
-            }
-            set
-            {
-                mMYField = value;
-            }
+            get => mMYField;
+            set => mMYField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
         public System.DateTime MatDt
         {
-            get
-            {
-                return matDtField;
-            }
-            set
-            {
-                matDtField = value;
-            }
+            get => matDtField;
+            set => matDtField = value;
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public decimal StrkPx
+        {
+            get => strkPxField;
+            set => strkPxField = value;
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool PutCall
+        {
+            get => putCallField;
+            set => putCallField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Exch
         {
-            get
-            {
-                return exchField;
-            }
-            set
-            {
-                exchField = value;
-            }
+            get => exchField;
+            set => exchField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string FnlSettlCcy
         {
-            get
-            {
-                return fnlSettlCcyField;
-            }
-            set
-            {
-                fnlSettlCcyField = value;
-            }
+            get => fnlSettlCcyField;
+            set => fnlSettlCcyField = value;
         }
     }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    public partial class FIXMLMktDataFullUndly
+    {
+        private string symField;
+
+        private string idField;
+
+        private string cFIField; 
+
+        private string secTypField;
+
+        private string srcField;
+
+        private string mMYField;
+
+        private System.DateTime matDtField;
+
+        private string exchField;
+
+        private string fnlSettlCcyField;
+
+        private decimal strkPxField;
+
+        private bool putCallField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Sym
+        {
+            get => symField;
+            set => symField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string ID
+        {
+            get => idField;
+            set => idField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string CFI
+        {
+            get => cFIField;
+            set => cFIField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string SecTyp
+        {
+            get => secTypField;
+            set => secTypField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Src
+        {
+            get => srcField;
+            set => srcField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string MMY
+        {
+            get => mMYField;
+            set => mMYField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
+        public System.DateTime MatDt
+        {
+            get => matDtField;
+            set => matDtField = value;
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public decimal StrkPx
+        {
+            get => strkPxField;
+            set => strkPxField = value;
+        }
+
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool PutCall
+        {
+            get => putCallField;
+            set => putCallField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Exch
+        {
+            get => exchField;
+            set => exchField = value;
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string FnlSettlCcy
+        {
+            get => fnlSettlCcyField;
+            set => fnlSettlCcyField = value;
+        }
+    }
+
+
 
     /// <remarks/>
     [System.SerializableAttribute()]
@@ -284,56 +339,32 @@ namespace Qwack.Transport.CmeXml
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public byte EventTyp
         {
-            get
-            {
-                return eventTypField;
-            }
-            set
-            {
-                eventTypField = value;
-            }
+            get => eventTypField;
+            set => eventTypField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute(DataType = "date")]
         public System.DateTime Dt
         {
-            get
-            {
-                return dtField;
-            }
-            set
-            {
-                dtField = value;
-            }
+            get => dtField;
+            set => dtField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public uint Txt
         {
-            get
-            {
-                return txtField;
-            }
-            set
-            {
-                txtField = value;
-            }
+            get => txtField;
+            set => txtField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool TxtSpecified
         {
-            get
-            {
-                return txtFieldSpecified;
-            }
-            set
-            {
-                txtFieldSpecified = value;
-            }
+            get => txtFieldSpecified;
+            set => txtFieldSpecified = value;
         }
     }
 
@@ -360,7 +391,7 @@ namespace Qwack.Transport.CmeXml
 
         private bool openClsSettlFlagFieldSpecified;
 
-        private byte szField;
+        private uint szField;
 
         private bool szFieldSpecified;
 
@@ -372,168 +403,96 @@ namespace Qwack.Transport.CmeXml
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Typ
         {
-            get
-            {
-                return typField;
-            }
-            set
-            {
-                typField = value;
-            }
+            get => typField;
+            set => typField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public decimal Px
         {
-            get
-            {
-                return pxField;
-            }
-            set
-            {
-                pxField = value;
-            }
+            get => pxField;
+            set => pxField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool PxSpecified
         {
-            get
-            {
-                return pxFieldSpecified;
-            }
-            set
-            {
-                pxFieldSpecified = value;
-            }
+            get => pxFieldSpecified;
+            set => pxFieldSpecified = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Mkt
         {
-            get
-            {
-                return mktField;
-            }
-            set
-            {
-                mktField = value;
-            }
+            get => mktField;
+            set => mktField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public decimal DiscntFctr
         {
-            get
-            {
-                return discntFctrField;
-            }
-            set
-            {
-                discntFctrField = value;
-            }
+            get => discntFctrField;
+            set => discntFctrField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool DiscntFctrSpecified
         {
-            get
-            {
-                return discntFctrFieldSpecified;
-            }
-            set
-            {
-                discntFctrFieldSpecified = value;
-            }
+            get => discntFctrFieldSpecified;
+            set => discntFctrFieldSpecified = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public byte OpenClsSettlFlag
         {
-            get
-            {
-                return openClsSettlFlagField;
-            }
-            set
-            {
-                openClsSettlFlagField = value;
-            }
+            get => openClsSettlFlagField;
+            set => openClsSettlFlagField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool OpenClsSettlFlagSpecified
         {
-            get
-            {
-                return openClsSettlFlagFieldSpecified;
-            }
-            set
-            {
-                openClsSettlFlagFieldSpecified = value;
-            }
+            get => openClsSettlFlagFieldSpecified;
+            set => openClsSettlFlagFieldSpecified = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public byte Sz
+        public uint Sz
         {
-            get
-            {
-                return szField;
-            }
-            set
-            {
-                szField = value;
-            }
+            get => szField;
+            set => szField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool SzSpecified
         {
-            get
-            {
-                return szFieldSpecified;
-            }
-            set
-            {
-                szFieldSpecified = value;
-            }
+            get => szFieldSpecified;
+            set => szFieldSpecified = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public byte PxTyp
         {
-            get
-            {
-                return pxTypField;
-            }
-            set
-            {
-                pxTypField = value;
-            }
+            get => pxTypField;
+            set => pxTypField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         public bool PxTypSpecified
         {
-            get
-            {
-                return pxTypFieldSpecified;
-            }
-            set
-            {
-                pxTypFieldSpecified = value;
-            }
+            get => pxTypFieldSpecified;
+            set => pxTypFieldSpecified = value;
         }
     }
 
@@ -552,28 +511,16 @@ namespace Qwack.Transport.CmeXml
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public byte Typ
         {
-            get
-            {
-                return typField;
-            }
-            set
-            {
-                typField = value;
-            }
+            get => typField;
+            set => typField = value;
         }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Val
         {
-            get
-            {
-                return valField;
-            }
-            set
-            {
-                valField = value;
-            }
+            get => valField;
+            set => valField = value;
         }
     }
 }

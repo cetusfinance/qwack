@@ -123,6 +123,11 @@
     "Ccy": "TWD",
     "DayCount": "Act365",
     "SettlementCalendarName": "TWD"
+  },
+  {
+    "Ccy": "BTC",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "NYC"
   }
 
 ]

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Models;
+using Qwack.Models.Calibrators;
 
 namespace Qwack.CLI
 {
@@ -82,7 +83,7 @@ namespace Qwack.CLI
                     case "mdc":
                         var fileNameA = row.Param1;
                         Console.WriteLine($"Writing sample model spec to file {fileNameA}");
-                        ModelBuilder.BuildSampleSpec(fileNameA);
+                        ModelBuilder.SaveSampleSpec(fileNameA);
                         break;
                     case "modelBuild":
                     case "mb":

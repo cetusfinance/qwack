@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Qwack.Core.Instruments.Funding;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Transport.TransportObjects.MarketData.Models;
 
-namespace Qwack.CLI
+namespace Qwack.Models.Calibrators
 {
     public class ModelBuilderSpec
     {

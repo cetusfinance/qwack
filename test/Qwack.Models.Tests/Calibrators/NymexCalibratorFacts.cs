@@ -26,7 +26,7 @@ namespace Qwack.Models.Tests.Calibrators
         public void CanStripSurface()
         {
             var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider);
-            var surface = NYMEXModelBuilder.GetSurfaceForCode("LO", OptionsFilename, "CL", curve, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider);
+            var surface = NYMEXModelBuilder.GetSurfaceForCode("LO", OptionsFilename, "CL", curve, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
 
             Assert.Equal(0.237771169117785, surface.GetVolForAbsoluteStrike(60.0, new DateTime(2020, 01, 15), 60.85),4);
         }

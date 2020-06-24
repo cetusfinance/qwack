@@ -431,7 +431,7 @@ namespace Qwack.Excel.Utils
             var z5 = new Qwack.Models.Calibrators.NewtonRaphsonMultiCurveSolver();
             var z6 = new Qwack.Options.Calibrators.AssetSmileSolver();
             var z7 = new Qwack.Paths.BlockSet(1000, 1, 1);
-            var z8 = new Qwack.Providers.CSV.CMEFileParser();
+            var z8 = new Qwack.Providers.CSV.NYMEXFutureRecord();
             var z9 = new Qwack.Random.Constant.Constant();
             var z10 = new Qwack.Serialization.SkipSerializationAttribute();
             var z11 = Qwack.Storage.ObjectCategory.Asset;

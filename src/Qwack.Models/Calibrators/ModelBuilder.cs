@@ -11,14 +11,13 @@ using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Core.Curves;
-using Qwack.Models.Calibrators;
 using Qwack.Futures;
 using Qwack.Dates;
 using System.Linq;
 using Qwack.Models;
 using Qwack.Transport.TransportObjects.MarketData.Models;
 
-namespace Qwack.CLI
+namespace Qwack.Models.Calibrators
 {
     public class ModelBuilder
     {
@@ -27,7 +26,7 @@ namespace Qwack.CLI
         private const string FilenameCbot = "cbt.settle.s.csv";
         private const string FilenameNymexFuture = "nymex_future.csv";
         private const string FilenameNymexOption = "nymex_option.csv";
-        private const string FilenameCmxFwdsXml= "comex.settle.fwd.s.xml";
+        private const string FilenameCmxFwdsXml = "comex.settle.fwd.s.xml";
         private const string FilenameCmxXml = "comex.settle.s.xml";
 
         private readonly string _filepath;
@@ -50,7 +49,7 @@ namespace Qwack.CLI
         public void UnzipIfNeeded(string filename)
         {
             var fullpath = Path.Combine(_filepath, filename);
-            var fullpathZip = Path.Combine(_filepath, filename+".zip");
+            var fullpathZip = Path.Combine(_filepath, filename + ".zip");
             if (!File.Exists(fullpath) && File.Exists(fullpathZip))
             {
                 ZipFile.ExtractToDirectory(fullpathZip, _filepath);
@@ -67,9 +66,9 @@ namespace Qwack.CLI
 
             foreach (var c in spec.NymexSpecs)
             {
-                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath,FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
+                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
                 priceCurves.Add(curve);
-                if(!string.IsNullOrWhiteSpace(c.NymexCodeOption))
+                if (!string.IsNullOrWhiteSpace(c.NymexCodeOption))
                 {
                     var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider, futureSettingsProvider);
                     surface.AssetId = c.QwackCode;
@@ -77,17 +76,17 @@ namespace Qwack.CLI
                 }
             }
             var irCurves = new Dictionary<string, IrCurve>();
-            foreach(var c in spec.CmeBaseCurveSpecs)
+            foreach (var c in spec.CmeBaseCurveSpecs)
             {
                 var ixForThis = new Dictionary<string, FloatRateIndex> { { c.QwackCode, indices[c.FloatRateIndex] } };
-                var curve = CMEModelBuilder.GetCurveForCode(c.CmeCode, Path.Combine(_filepath, c.IsCbot? FilenameCbot:FilenameCme), c.QwackCode, c.CurveName, ixForThis, 
+                var curve = CMEModelBuilder.GetCurveForCode(c.CmeCode, Path.Combine(_filepath, c.IsCbot ? FilenameCbot : FilenameCme), c.QwackCode, c.CurveName, ixForThis,
                     new Dictionary<string, string>() { { c.QwackCode, c.CurveName } }, futureSettingsProvider, currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
-            foreach(var c in spec.CmeBasisCurveSpecs)
+            foreach (var c in spec.CmeBasisCurveSpecs)
             {
                 var fxPair = fxPairs.Single(x => $"{x.Domestic}{x.Foreign}" == c.FxPair);
-                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCmeFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency),c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCmeFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency), c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach (var c in spec.CmeFxFutureSpecs)
@@ -136,12 +135,21 @@ namespace Qwack.CLI
                 fm.VolSurfaces.Add(fxs.AssetId, fxs);
             }
             var o = new AssetFxModel(valDate, fm);
-            o.AddVolSurfaces(surfaces.ToDictionary(s=>s.AssetId,s=>s));
+            o.AddVolSurfaces(surfaces.ToDictionary(s => s.AssetId, s => s));
             o.AddPriceCurves(priceCurves.ToDictionary(c => c.AssetId, c => c));
             return o;
         }
 
-        public static void BuildSampleSpec(string outputFileName)
+        public static void SaveSampleSpec(string outputFileName)
+        {
+            var spec = BuildSampleSpec();
+            var tw = new StringWriter();
+            var js = JsonSerializer.Create();
+            js.Serialize(tw, spec);
+            File.WriteAllText(outputFileName, tw.ToString());
+        }
+
+        public static ModelBuilderSpec BuildSampleSpec()
         {
             var floatRate_Libor3m = new TO_FloatRateIndex()
             {
@@ -263,10 +271,7 @@ namespace Qwack.CLI
                 }
             };
 
-            var tw = new StringWriter();
-            var js = JsonSerializer.Create();
-            js.Serialize(tw, o);
-            File.WriteAllText(outputFileName, tw.ToString());
+            return o;
         }
 
         public static ModelBuilderSpec SpecFromFile(string fileName)

@@ -368,9 +368,13 @@ namespace Qwack.Models
             var o = Clone();
             var assetIds = portfolio.AssetIds();
             var pairs = portfolio.FxPairs(o);
+            var ccys = pairs.SelectMany(x => x.Split('/')).Distinct().ToArray();
+            var irCurves = portfolio.Instruments.Where(x => x is IAssetInstrument).SelectMany(x => (x as IAssetInstrument).IrCurves(o)).Distinct().ToArray();
             var surplusCurves = o.CurveNames.Where(x => !assetIds.Contains(x));
             var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x));
-            var surplusFixings = o.FixingDictionaryNames.Where(x => (!assetIds.Contains(x) && !pairs.Contains(x)));
+            var surplusFixings = o.FixingDictionaryNames.Where(x => !assetIds.Contains(x) && !pairs.Contains(x));
+            var surplusIrCurves = o.FundingModel.Curves.Keys.Where(x => !irCurves.Contains(x));
+            var surplusFxRates = o.FundingModel.FxMatrix.SpotRates.Keys.Where(x => !ccys.Contains(x.Ccy));
             foreach (var s in surplusCurves)
             {
                 o.RemovePriceCurve(o.GetPriceCurve(s));
@@ -382,6 +386,14 @@ namespace Qwack.Models
             foreach (var s in surplusFixings)
             {
                 o.RemoveFixingDictionary(s);
+            }
+            foreach (var s in surplusIrCurves)
+            {
+                o.FundingModel.Curves.Remove(s);
+            }
+            foreach (var s in surplusFxRates)
+            {
+                o.FundingModel.FxMatrix.SpotRates.Remove(s);
             }
             return o;
         }

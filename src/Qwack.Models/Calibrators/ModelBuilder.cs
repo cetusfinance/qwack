@@ -101,6 +101,7 @@ namespace Qwack.Models.Calibrators
             var pairCcyMap = spec.CmeBasisCurveSpecs.ToDictionary(x => x.FxPair, x => currencyProvider.GetCurrency(x.Currency));
             var spotRates = CMEModelBuilder.GetSpotFxRatesFromFwdFile(Path.Combine(_filepath, FilenameCmeFwdsXml), valDate, pairMap, currencyProvider, calendarProvider);
             var discountMap = spec.CmeBasisCurveSpecs.ToDictionary(x => pairCcyMap[x.FxPair], x => x.CurveName);
+            discountMap.Add(currencyProvider.GetCurrency("USD"), "USD.LIBOR.3M");
 
             foreach (var c in spec.CmxMetalCurves)
             {

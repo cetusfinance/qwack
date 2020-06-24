@@ -48,5 +48,86 @@
     "Ccy": "NGN",
     "DayCount": "Act365F",
     "SettlementCalendarName": "JHB"
+  },
+  {
+    "Ccy": "XAU",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XAG",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPD",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPT",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "JPY",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "JPY"
+  },
+  {
+    "Ccy": "NOK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "NOK"
+  },
+  {
+    "Ccy": "SEK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "SEK"
+  },
+  {
+    "Ccy": "DKK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "DKK"
+  },
+  {
+    "Ccy": "BRL",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "BRL"
+  },
+  {
+    "Ccy": "RUB",
+    "DayCount": "Act_Act",
+    "SettlementCalendarName": "RUB"
+  },
+  {
+    "Ccy": "CNY",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "CNY"
+  },
+  {
+    "Ccy": "KRW",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "KRW"
+  },
+  {
+    "Ccy": "INR",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "INR"
+  },
+  {
+    "Ccy": "PHP",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "PHP"
+  },
+  {
+    "Ccy": "TWD",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "TWD"
+  },
+  {
+    "Ccy": "BTC",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "NYC"
   }
+
 ]

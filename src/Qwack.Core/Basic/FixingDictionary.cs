@@ -26,7 +26,7 @@ namespace Qwack.Core.Basic
         {
         }
         public FixingDictionary(TO_FixingDictionary transportObject) 
-            : base(transportObject.Fixings.ToDictionary(x=>DateTime.ParseExact(x.Key, "s",CultureInfo.InvariantCulture), x=>x.Value))
+            : base(transportObject.Fixings==null?new Dictionary<DateTime, double>():transportObject.Fixings.ToDictionary(x=>DateTime.ParseExact(x.Key, "s",CultureInfo.InvariantCulture), x=>x.Value))
         {
             Name = transportObject.Name;
             AssetId = transportObject.AssetId;

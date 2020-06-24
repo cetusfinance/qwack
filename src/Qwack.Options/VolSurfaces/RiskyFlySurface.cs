@@ -417,13 +417,14 @@ namespace Qwack.Options.VolSurfaces
             return o;
         }
 
+        private bool rollUpATM = false;
         public override IVolSurface RollSurface(DateTime newOrigin)
         {
             //_suppressVarianceErrors = true;
 
             var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
             var newVols = new double[newMaturities.Length][];
-            var newATMs = newMaturities.Select(m => GetForwardATMVol(newOrigin, m)).ToArray();
+            var newATMs = newMaturities.Select(m => rollUpATM ? GetForwardATMVol(newOrigin, m) : GetVolForDeltaStrike(0.5,m,1.0)).ToArray();
             //var newATMs = new double[newMaturities.Length];
             var newRRs = new double[newMaturities.Length][];
             var newBFs = new double[newMaturities.Length][];

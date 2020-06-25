@@ -33,7 +33,17 @@ namespace Qwack.Providers.CSV
             if (_blobCache.TryGetValue(filename, out var record))
                 return record;
 
-            var reader = new XmlSerializer(typeof(FIXML));
+            XmlSerializer reader = null;
+
+            try
+            {
+                reader = new XmlSerializer(typeof(FIXML));
+            }
+            catch (FileNotFoundException)
+            {
+
+            }
+
             var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             FIXML blob;
             if (filename.EndsWith(".gz"))

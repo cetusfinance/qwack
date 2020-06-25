@@ -38,5 +38,7 @@ namespace Qwack.Core.Curves
 
         Frequency SpotLag { get; set; } 
         Calendar SpotCalendar { get; set; }
+
+        CommodityUnits Units { get; set; }
     }
 }

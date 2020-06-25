@@ -23,6 +23,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public TO_IrCurve DiscountCurve { get; set; }
         public string SpotLag { get; set; }
         public string SpotCalendar { get; set; }
+        public CommodityUnits Units { get; set; }
 
     }
 }

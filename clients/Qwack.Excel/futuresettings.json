@@ -10500,7 +10500,7 @@
     "TickSize": 1.0
   },
   {
-    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman","NWE3.5","NWE1.0","Sing0.5","NWE0.5","UkNbp","IronOre62"],
+    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman","NWE3.5","NWE1.0","Sing0.5","NWE0.5","UkNbp","IronOre62","DCO","GO.1FOB","SingGo"],
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,

@@ -17,6 +17,8 @@ namespace Qwack.Core.Curves
         public IPriceCurve BaseCurve { get; private set; }
         public IPriceCurve Curve { get; private set; }
 
+        public CommodityUnits Units { get; set; }
+
         public BasisPriceCurve(List<IAssetInstrument> instruments, List<DateTime> pillars, IIrCurve discountCurve, IPriceCurve baseCurve, DateTime buildDate, PriceCurveType curveType, INewtonRaphsonAssetBasisCurveSolver solver, List<string> pillarLabels = null)
         {
             Instruments = instruments;

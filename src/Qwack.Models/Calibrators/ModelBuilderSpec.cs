@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Transport.TransportObjects.MarketData.Models;
 
@@ -22,6 +23,7 @@ namespace Qwack.Models.Calibrators
         public string NymexCodeFuture { get; set; }
         public string NymexCodeOption { get; set; }
         public string QwackCode { get; set; }
+        public CommodityUnits Units { get; set; }
     }
 
     public class ModelBuilderSpecCmeBaseCurve
@@ -59,5 +61,6 @@ namespace Qwack.Models.Calibrators
         public string BaseCurveName { get; set; }
         public string CmxFutCode { get; set; }
         public string CmxOptCode { get; set; }
+        public CommodityUnits Units { get; set; }
     }
 }

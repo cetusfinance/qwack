@@ -17,6 +17,7 @@ namespace Qwack.Core.Curves
         private ICurrencyProvider _currencyProvider;
 
         public PriceCurveType CurveType => PriceCurveType.Linear;
+        public CommodityUnits Units { get; set; } = CommodityUnits.troyOunce;
 
         public bool UnderlyingsAreForwards => false; //false as we only show spot delta
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Transport.TransportObjects.MarketData.Curves
 {
@@ -18,5 +19,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public string AssetId { get; set; }
         [ProtoMember(5)]
         public string Name { get; set; }
+        [ProtoMember(6)]
+        public CommodityUnits Units { get; set; }
     }
 }

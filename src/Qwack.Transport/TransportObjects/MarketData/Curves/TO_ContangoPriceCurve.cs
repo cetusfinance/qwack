@@ -33,5 +33,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public DateTime[] PillarDates { get; set; }
         [ProtoMember(12)]
         public string Currency { get; set; }
+        [ProtoMember(13)]
+        public CommodityUnits Units { get; set; }
     }
 }

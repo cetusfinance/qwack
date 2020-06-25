@@ -16,7 +16,7 @@ namespace Qwack.Core.Curves
         public Currency DomesticCurrency { get; }
         public Currency ForeignCurrency { get; }
         public string Name { get; set; }
-
+        public CommodityUnits Units { get; set; }
         public int NumberOfPillars => 0;
 
         public PriceCurveType CurveType => PriceCurveType.Linear;

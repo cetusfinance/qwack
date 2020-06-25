@@ -23,6 +23,8 @@ namespace Qwack.Core.Curves
 
         public PriceCurveType CurveType => _curveType;
 
+        public CommodityUnits Units { get; set; }
+
         private readonly string[] _pillarLabels;
 
         public DateTime BuildDate { get; private set; }
@@ -66,6 +68,7 @@ namespace Qwack.Core.Curves
             CollateralSpec = transportObject.CollateralSpec;
             Name = transportObject.Name;
             AssetId = transportObject.AssetId;
+            Units = transportObject.Units;
         }
 
         private void Initialize()

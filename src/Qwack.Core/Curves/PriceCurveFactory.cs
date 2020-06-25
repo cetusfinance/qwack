@@ -19,6 +19,7 @@ namespace Qwack.Core.Curves
                     Currency = currencyProvider.GetCurrencySafe(transportObject.ConstantPriceCurve.Currency),
                     AssetId = transportObject.ConstantPriceCurve.AssetId,
                     Name = transportObject.ConstantPriceCurve.Name,
+                    Units = transportObject.ConstantPriceCurve.Units,
                 }; 
 
             if (transportObject.BasicPriceCurve != null)

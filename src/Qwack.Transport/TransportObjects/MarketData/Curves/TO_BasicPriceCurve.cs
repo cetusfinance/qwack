@@ -29,6 +29,8 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public string Currency { get; set; }
         [ProtoMember(11)]
         public string CollateralSpec { get; set; }
+        [ProtoMember(12)]
+        public CommodityUnits Units { get; set; }
     }
 
 }

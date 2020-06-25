@@ -36,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{E7E258E0-9
 		data\Calendars.json = data\Calendars.json
 		Currencies.json = Currencies.json
 		data\futuresettings.json = data\futuresettings.json
+		clients\Qwack.CLI\futuresettings.json = clients\Qwack.CLI\futuresettings.json
 		data\mt19937-64-Ints.txt = data\mt19937-64-Ints.txt
 		data\SobolDirectionNumbers.txt = data\SobolDirectionNumbers.txt
 		data\SobolTestOutput50x512.txt = data\SobolTestOutput50x512.txt
@@ -95,7 +96,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Excel.Host", "clients
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.CLI", "clients\Qwack.CLI\Qwack.CLI.csproj", "{A38D741C-56D9-40D9-AD3E-C045F4D79637}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.Transport.Tests", "test\Qwack.Transport.Tests\Qwack.Transport.Tests.csproj", "{395E9B68-21B2-42CB-AE13-868726760EC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Transport.Tests", "test\Qwack.Transport.Tests\Qwack.Transport.Tests.csproj", "{395E9B68-21B2-42CB-AE13-868726760EC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

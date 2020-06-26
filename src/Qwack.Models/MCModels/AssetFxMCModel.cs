@@ -263,7 +263,7 @@ namespace Qwack.Models.MCModels
                 if (pairsAdded.Contains(pair.ToString()))
                     continue;
 
-                if (!(model.FundingModel.VolSurfaces[fxPairName] is IATMVolSurface surface))
+                if (!(model.FundingModel.GetVolSurface(fxPairName) is IATMVolSurface surface))
                     throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
 
                 var fwdCurve = new Func<double, double>(t =>

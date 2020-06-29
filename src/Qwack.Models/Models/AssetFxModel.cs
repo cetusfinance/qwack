@@ -152,7 +152,7 @@ namespace Qwack.Models
         {
             var pair = FundingModel.FxMatrix.GetFxPair(name);
             var fwd = FundingModel.GetFxRate(expiry.SpotDate(pair.SpotLag, pair.PrimaryCalendar, pair.PrimaryCalendar), pair.Domestic, pair.Foreign); //needs to account for spot/fwd offset
-            var vol = FundingModel.VolSurfaces[name].GetVolForAbsoluteStrike(strike, expiry, fwd);
+            var vol = FundingModel.GetVolSurface(name).GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
         }
 
@@ -160,7 +160,7 @@ namespace Qwack.Models
         {
             var pair = FundingModel.FxMatrix.GetFxPair(name);
             var fwd = FundingModel.GetFxRate(expiry.SpotDate(pair.SpotLag, pair.PrimaryCalendar, pair.PrimaryCalendar), pair.Domestic, pair.Foreign); //needs to account for spot/fwd offset
-            var vol = FundingModel.VolSurfaces[name].GetVolForDeltaStrike(strike, expiry, fwd);
+            var vol = FundingModel.GetVolSurface(name).GetVolForDeltaStrike(strike, expiry, fwd);
             return vol;
         }
 

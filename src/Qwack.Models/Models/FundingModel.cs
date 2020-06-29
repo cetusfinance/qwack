@@ -215,7 +215,7 @@ namespace Qwack.Models
         }
         private bool TryGetInverseSurface(string name, out IVolSurface volSurface)
         {
-            var inverseName = name.Substring(name.Length - 3, 3) + "/" + name.Substring(0, 3);
+            var inverseName = name.Substring(name.Length - 3, 3) + (name.Length == 6 ? "" : "/") + name.Substring(0, 3);
             return VolSurfaces.TryGetValue(inverseName, out volSurface);
         }
 

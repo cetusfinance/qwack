@@ -45,7 +45,7 @@ namespace Qwack.Core.Instruments.Asset
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
         {
-            if (FxConversionType == FxConversionType.None && model.GetPriceCurve(AssetId).Currency == PaymentCurrency)
+            if (!IsFx && FxConversionType == FxConversionType.None && model.GetPriceCurve(AssetId).Currency == PaymentCurrency)
                 return new[] { DiscountCurve };
             else
             {

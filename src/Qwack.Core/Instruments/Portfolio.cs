@@ -76,6 +76,8 @@ namespace Qwack.Core.Instruments
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
         }
 
+        public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';
+
         public static string[] FxPairs(this Portfolio portfolio, IAssetFxModel model)
         {
             if (portfolio.Instruments.Count == 0)
@@ -105,9 +107,15 @@ namespace Qwack.Core.Instruments
             {
                 var compoTrades = assetTrades.Select(x=>x as IAssetInstrument)
                     .Where(x => x.FxType(model) != FxConversionType.None);
-                if(compoTrades.Any())
+                var assetIsFxTrades = assetTrades.Select(x => x as IAssetInstrument)
+                    .Where(x => IsFx(x.AssetIds.First()));
+                if (compoTrades.Any())
                 {
                     o.AddRange(compoTrades.Select(x => x.FxPair(model)));
+                }
+                if (assetIsFxTrades.Any())
+                {
+                    o.AddRange(assetIsFxTrades.Select(x => x.AssetIds.First()));
                 }
             }
 

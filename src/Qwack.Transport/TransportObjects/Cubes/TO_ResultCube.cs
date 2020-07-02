@@ -16,13 +16,4 @@ namespace Qwack.Transport.TransportObjects.Cubes
         public List<string> FieldNames { get; set; }
 
     }
-
-    [ProtoContract]
-    public class TO_ResultCubeRow
-    {
-        [ProtoMember(1)]
-        public double Value { get; set; }
-        [ProtoMember(2)]
-        public string[] MetaData { get; set; }
-    }
 }

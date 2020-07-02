@@ -8,4 +8,244 @@
     <PackageReference Include="protobuf-net" Version="2.4.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="CalendarType.ts">
+      <CustomToolNamespace>BasicTypes\CalendarType.cs</CustomToolNamespace>
+    </None>
+    <None Update="CommodityUnits.ts">
+      <CustomToolNamespace>BasicTypes\CommodityUnits.cs</CustomToolNamespace>
+    </None>
+    <None Update="DayCountBasis.ts">
+      <CustomToolNamespace>BasicTypes\DayCountBasis.cs</CustomToolNamespace>
+    </None>
+    <None Update="FxConversionType.ts">
+      <CustomToolNamespace>BasicTypes\FxConversionType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\AssetInstrumentType.ts">
+      <CustomToolNamespace>BasicTypes\AssetInstrumentType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\AtmVolType.ts">
+      <CustomToolNamespace>BasicTypes\AtmVolType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\CalendarType.ts">
+      <CustomToolNamespace>BasicTypes\CalendarType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\CommodityUnits.ts">
+      <CustomToolNamespace>BasicTypes\CommodityUnits.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\DatePeriodType.ts">
+      <CustomToolNamespace>BasicTypes\DatePeriodType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\DayCountBasis.ts">
+      <CustomToolNamespace>BasicTypes\DayCountBasis.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\FixingDictionaryType.ts">
+      <CustomToolNamespace>BasicTypes\FixingDictionaryType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\FIXML.ts">
+      <CustomToolNamespace>CmeXml\cme_settle_fwd_e.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\FundingInstrumentType.ts">
+      <CustomToolNamespace>BasicTypes\FundingInstrumentType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\FxConversionType.ts">
+      <CustomToolNamespace>BasicTypes\FxConversionType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\Interpolator1DType.ts">
+      <CustomToolNamespace>BasicTypes\Interpolator1dType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\Interpolator2DType.ts">
+      <CustomToolNamespace>BasicTypes\Interpolator2dType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\MultiDimArray.ts">
+      <CustomToolNamespace>BasicTypes\MultiDimArray.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\MultiDimArrayDouble.ts">
+      <CustomToolNamespace>BasicTypes\MultiDimArrayDouble.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\OptionType.ts">
+      <CustomToolNamespace>BasicTypes\OptionType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\PriceCurveType.ts">
+      <CustomToolNamespace>BasicTypes\PriceCurveType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\RateType.ts">
+      <CustomToolNamespace>BasicTypes\RateType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\RollType.ts">
+      <CustomToolNamespace>BasicTypes\RollType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\StrikeType.ts">
+      <CustomToolNamespace>BasicTypes\StrikeType.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_AsianOption.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_AsianOption.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_AsianSwap.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_AsianSwap.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_AsianSwapStrip.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_AsianSwapStrip.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_AssetFxModel.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_AssetFxModel.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_BasicPriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_BasicPriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_BasisPriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_BasisPriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_ConstantPriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_ConstantPriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_ConstantVolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_ConstantVolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_ContangoPriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_ContangoPriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_CorrelationMatrix.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Correlations\TO_CorrelationMatrix.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_EuropeanOption.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_EuropeanOption.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_FixingDictionary.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FixingDictionary.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_FloatRateIndex.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Funding\TO_FloatRateIndex.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Forward.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_Forward.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_FundingModel.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FundingModel.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_FxMatrix.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FxMatrix.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_FxPair.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FxPair.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_GridVolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_GridVolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_HazzardCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_HazzardCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Instrument.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\TO_Instrument.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Interpolator1d.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator1d.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Interpolator2d.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator2d.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Interpolator2d_Jagged.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator2d_Jagged.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Interpolator2d_Square.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator2d_Square.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_IrCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_IrCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_Portfolio.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\TO_Portfolio.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_PriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_PriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_ResultCube.ts">
+      <CustomToolNamespace>TransportObjects\Cubes\TO_ResultCube.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_ResultCubeRow.ts">
+      <CustomToolNamespace>TransportObjects\Cubes\TO_ResultCubeRow.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_RiskyFlySurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_RiskyFlySurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_VolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_VolSurfaceKey.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurfaceKey.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TO_VolSurface_Base.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurface_Base.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\TradeDirection.ts">
+      <CustomToolNamespace>BasicTypes\TradeDirection.cs</CustomToolNamespace>
+    </None>
+    <None Update="GeneratedTypeScript\WingQuoteType.ts">
+      <CustomToolNamespace>BasicTypes\WingQuoteType.cs</CustomToolNamespace>
+    </None>
+    <None Update="Interpolator1dType.ts">
+      <CustomToolNamespace>BasicTypes\Interpolator1dType.cs</CustomToolNamespace>
+    </None>
+    <None Update="MultiDimArray.ts">
+      <CustomToolNamespace>BasicTypes\MultiDimArray.cs</CustomToolNamespace>
+    </None>
+    <None Update="OptionType.ts">
+      <CustomToolNamespace>BasicTypes\OptionType.cs</CustomToolNamespace>
+    </None>
+    <None Update="RateType.ts">
+      <CustomToolNamespace>BasicTypes\RateType.cs</CustomToolNamespace>
+    </None>
+    <None Update="StrikeType.ts">
+      <CustomToolNamespace>BasicTypes\StrikeType.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_AsianSwap.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_AsianSwap.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_AssetFxModel.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_AssetFxModel.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_BasisPriceCurve.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Curves\TO_BasisPriceCurve.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_ConstantVolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_ConstantVolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_CorrelationMatrix.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Correlations\TO_CorrelationMatrix.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_FixingDictionary.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FixingDictionary.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_Forward.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\Asset\TO_Forward.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_FxMatrix.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\Models\TO_FxMatrix.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_GridVolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_GridVolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_Instrument.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\TO_Instrument.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_Interpolator2d.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator2d.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_Interpolator2d_Square.ts">
+      <CustomToolNamespace>TransportObjects\Interpolators\TO_Interpolator2d_Square.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_Portfolio.ts">
+      <CustomToolNamespace>TransportObjects\Instruments\TO_Portfolio.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_ResultCube.ts">
+      <CustomToolNamespace>TransportObjects\Cubes\TO_ResultCube.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_VolSurface.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurface.cs</CustomToolNamespace>
+    </None>
+    <None Update="TO_VolSurfaceKey.ts">
+      <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurfaceKey.cs</CustomToolNamespace>
+    </None>
+  </ItemGroup>
+
 </Project>

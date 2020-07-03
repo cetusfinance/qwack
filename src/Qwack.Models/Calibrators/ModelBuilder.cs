@@ -66,7 +66,7 @@ namespace Qwack.Models.Calibrators
 
             foreach (var c in spec.NymexSpecs)
             {
-                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider);
+                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider, c.PriceCurveType);
                 curve.Units = c.Units;
                 priceCurves.Add(curve);
                 if (!string.IsNullOrWhiteSpace(c.NymexCodeOption))
@@ -183,30 +183,30 @@ namespace Qwack.Models.Calibrators
                 },
                 NymexSpecs = new List<ModelBuilderSpecNymex>
                 {
-                    new ModelBuilderSpecNymex {QwackCode="CL",NymexCodeFuture="CL",NymexCodeOption="LO", Units=CommodityUnits.bbl}, //WTI
-                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="BZO", Units=CommodityUnits.bbl},//Brent
-                    new ModelBuilderSpecNymex {QwackCode="DCO",NymexCodeFuture="DC", Units=CommodityUnits.bbl},//Dubai Crude
+                    new ModelBuilderSpecNymex {QwackCode="CL",NymexCodeFuture="CL",NymexCodeOption="LO", Units=CommodityUnits.bbl, PriceCurveType=PriceCurveType.NYMEX}, //WTI
+                    new ModelBuilderSpecNymex {QwackCode="CO",NymexCodeFuture="BB",NymexCodeOption="BZO", Units=CommodityUnits.bbl, PriceCurveType=PriceCurveType.ICE},//Brent
+                    new ModelBuilderSpecNymex {QwackCode="DCO",NymexCodeFuture="DC", Units=CommodityUnits.bbl, PriceCurveType=PriceCurveType.NYMEX},//Dubai Crude
                     //new ModelBuilderSpecNymex {QwackCode="Dated",NymexCodeFuture="UB"},//Dated Brent
 
-                    new ModelBuilderSpecNymex {QwackCode="NG",NymexCodeFuture="NG",NymexCodeOption="ON", Units=CommodityUnits.mmbtu}, //HH
-                    new ModelBuilderSpecNymex {QwackCode="UkNbp",NymexCodeFuture="UKG", Units=CommodityUnits.mmbtu}, //UK Gas
+                    new ModelBuilderSpecNymex {QwackCode="NG",NymexCodeFuture="NG",NymexCodeOption="ON", Units=CommodityUnits.mmbtu, PriceCurveType=PriceCurveType.NYMEX}, //HH
+                    new ModelBuilderSpecNymex {QwackCode="UkNbp",NymexCodeFuture="UKG", Units=CommodityUnits.mmbtu, PriceCurveType=PriceCurveType.NYMEX}, //UK Gas
 
-                    new ModelBuilderSpecNymex {QwackCode="HO",NymexCodeFuture="HO",NymexCodeOption="OH", Units=CommodityUnits.gal}, //Heat
-                    new ModelBuilderSpecNymex {QwackCode="XB",NymexCodeFuture="RB",NymexCodeOption="OB", Units=CommodityUnits.gal}, //RBOB
-                    new ModelBuilderSpecNymex {QwackCode="QS",NymexCodeFuture="7F", Units=CommodityUnits.mt},                       //ICE Gasoil
-                    new ModelBuilderSpecNymex {QwackCode="GO.1FOB",NymexCodeFuture="M1B", Units=CommodityUnits.mt},                 //Gasoil 0.1% FOB ARA
-                    new ModelBuilderSpecNymex {QwackCode="SingGO",NymexCodeFuture="SG", Units=CommodityUnits.bbl},                  //Singapore Gasoil
+                    new ModelBuilderSpecNymex {QwackCode="HO",NymexCodeFuture="HO",NymexCodeOption="OH", Units=CommodityUnits.gal, PriceCurveType=PriceCurveType.NYMEX}, //Heat
+                    new ModelBuilderSpecNymex {QwackCode="XB",NymexCodeFuture="RB",NymexCodeOption="OB", Units=CommodityUnits.gal, PriceCurveType=PriceCurveType.NYMEX}, //RBOB
+                    new ModelBuilderSpecNymex {QwackCode="QS",NymexCodeFuture="7F", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.ICE},                       //ICE Gasoil
+                    new ModelBuilderSpecNymex {QwackCode="GO.1FOB",NymexCodeFuture="M1B", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},                 //Gasoil 0.1% FOB ARA
+                    new ModelBuilderSpecNymex {QwackCode="SingGO",NymexCodeFuture="SG", Units=CommodityUnits.bbl, PriceCurveType=PriceCurveType.NYMEX},                  //Singapore Gasoil
 
-                    new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M", Units=CommodityUnits.mt},//0.5% Sing
-                    new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="UA", Units=CommodityUnits.mt},//Sing180
-                    new ModelBuilderSpecNymex {QwackCode="Sing380",NymexCodeFuture="SE", Units=CommodityUnits.mt},//Sing380
-                    new ModelBuilderSpecNymex {QwackCode="NWE3.5",NymexCodeFuture="0D", Units=CommodityUnits.mt},//3.5% NWE
-                    new ModelBuilderSpecNymex {QwackCode="NWE1.0",NymexCodeFuture="0B", Units=CommodityUnits.mt},//1.0% NWE
-                    new ModelBuilderSpecNymex {QwackCode="NWE0.5",NymexCodeFuture="R5M", Units=CommodityUnits.mt},//0.5% NWE
+                    new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//0.5% Sing
+                    new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="UA", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//Sing180
+                    new ModelBuilderSpecNymex {QwackCode="Sing380",NymexCodeFuture="SE", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//Sing380
+                    new ModelBuilderSpecNymex {QwackCode="NWE3.5",NymexCodeFuture="0D", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//3.5% NWE
+                    new ModelBuilderSpecNymex {QwackCode="NWE1.0",NymexCodeFuture="0B", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//1.0% NWE
+                    new ModelBuilderSpecNymex {QwackCode="NWE0.5",NymexCodeFuture="R5M", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//0.5% NWE
 
-                    new ModelBuilderSpecNymex {QwackCode="XO",NymexCodeFuture="MFF", Units=CommodityUnits.mt},//API4
-                    new ModelBuilderSpecNymex {QwackCode="XA",NymexCodeFuture="MTF", Units=CommodityUnits.mt},//API2
-                    new ModelBuilderSpecNymex {QwackCode="IronOre62",NymexCodeFuture="TIO", Units=CommodityUnits.mt},//62% Iron Ore TSI
+                    new ModelBuilderSpecNymex {QwackCode="XO",NymexCodeFuture="MFF", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//API4
+                    new ModelBuilderSpecNymex {QwackCode="XA",NymexCodeFuture="MTF", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//API2
+                    new ModelBuilderSpecNymex {QwackCode="IronOre62",NymexCodeFuture="TIO", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//62% Iron Ore TSI
 
                 },
                 CmeBaseCurveSpecs = new List<ModelBuilderSpecCmeBaseCurve>

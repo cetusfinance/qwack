@@ -19,7 +19,7 @@ namespace Qwack.Models.Calibrators
     {
 
         
-        public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency)
+        public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency, PriceCurveType curveType)
         {
             var parsed = NYMEXFutureParser.Instance.Parse(nymexFutureFilename).Where(r=>r.Symbol==nymexSymbol);
             var q = parsed.Where(x=>x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
@@ -28,7 +28,7 @@ namespace Qwack.Models.Calibrators
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
             var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value,MinPrice)).ToArray();
             var origin = DateTime.ParseExact(parsed.First().TradeDate,"MM/dd/yyyy", CultureInfo.InvariantCulture);
-            var curve = new BasicPriceCurve(origin, datesVec, pricesVec, PriceCurveType.NYMEX, currency, labelsVec)
+            var curve = new BasicPriceCurve(origin, datesVec, pricesVec, curveType, currency, labelsVec)
             {
                 AssetId = qwackCode,
                 Name = qwackCode,

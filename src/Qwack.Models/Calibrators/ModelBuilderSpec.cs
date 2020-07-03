@@ -24,6 +24,7 @@ namespace Qwack.Models.Calibrators
         public string NymexCodeOption { get; set; }
         public string QwackCode { get; set; }
         public CommodityUnits Units { get; set; }
+        public PriceCurveType PriceCurveType { get; set; }
     }
 
     public class ModelBuilderSpecCmeBaseCurve

@@ -12,6 +12,8 @@ namespace Qwack.Core.Basic
         AssetCurveDelta,
         AssetCurveDeltaGamma,
         AssetVega,
-        Theta
+        Theta,
+        PV01,
+        BenchmarkIrDelta,
     }
 }

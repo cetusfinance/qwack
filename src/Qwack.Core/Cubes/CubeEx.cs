@@ -419,9 +419,9 @@ namespace Qwack.Core.Cubes
                 var br = otherRows[i];
                 var row = new object[cleanRow.Length];
                 Array.Copy(cleanRow, row, row.Length);
-                for (var j = 0; j < baseIx.Length; j++)
+                for (var j = 0; j < otherIx.Length; j++)
                 {
-                    row[baseIx[j]] = br.MetaData[j];
+                    row[otherIx[j]] = br.MetaData[j];
                 }
                 o.AddRow(row, br.Value);
             }

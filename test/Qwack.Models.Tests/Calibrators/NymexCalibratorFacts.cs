@@ -17,7 +17,7 @@ namespace Qwack.Models.Tests.Calibrators
         [Fact]
         public void CanStripCurve()
         {
-            var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider);
+            var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, Transport.BasicTypes.PriceCurveType.NYMEX);
 
             Assert.Equal(60.93, curve.GetPriceForDate(new DateTime(2019, 12, 18)));
         }
@@ -25,7 +25,7 @@ namespace Qwack.Models.Tests.Calibrators
         [Fact]
         public void CanStripSurface()
         {
-            var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider);
+            var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, Transport.BasicTypes.PriceCurveType.NYMEX);
             var surface = NYMEXModelBuilder.GetSurfaceForCode("LO", OptionsFilename, "CL", curve, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
 
             Assert.Equal(0.237771169117785, surface.GetVolForAbsoluteStrike(60.0, new DateTime(2020, 01, 15), 60.85),4);

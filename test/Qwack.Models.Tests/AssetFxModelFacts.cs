@@ -30,6 +30,8 @@ namespace Qwack.Models.Tests
             fModel.Setup(f => f.GetFxRate(It.IsAny<DateTime>(), It.IsAny<Currency>(), It.IsAny<Currency>())).Returns(77.0);
             fModel.Setup(f => f.FxMatrix).Returns(matrix.Object);
             fModel.Setup(f => f.VolSurfaces).Returns(new Dictionary<string, IVolSurface> { { "bla/haa", surfaceFx.Object } });
+            fModel.Setup(f => f.GetVolSurface(It.IsAny<string>())).Returns(surfaceFx.Object);
+
             var sut = new AssetFxModel(DateTime.Today, fModel.Object);
 
             sut.AddPriceCurve("blah", curve.Object);

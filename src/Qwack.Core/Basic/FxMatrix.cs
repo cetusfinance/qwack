@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
@@ -71,9 +72,14 @@ namespace Qwack.Core.Basic
                 return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = new Calendar(), SpotLag = 0.Day() };
 
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
-            return pair ?? 
-                FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy) ?? 
-                new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
+            if (pair != null)
+                return pair;
+
+            pair = FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy);
+            if (pair != null)
+                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = pair.PrimaryCalendar, SecondaryCalendar = pair.SecondaryCalendar, SpotLag = pair.SpotLag }; 
+            
+            return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
         }
 
         public IFxMatrix Clone()

@@ -201,10 +201,13 @@ namespace Qwack.Models
 
         public IrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
         public IVolSurface GetVolSurface(string name) => TryGetVolSurface(name, out var surface) ? surface : throw new Exception($"Surface named {name} not found");
-
+        private static string Shorten(string name) => name.Length == 7 && name[3] == '/' ? name.Substring(0, 3) + name.Substring(4, 3) : name;
         public bool TryGetVolSurface(string name, out IVolSurface volSurface)
         {
             if (VolSurfaces.TryGetValue(name, out volSurface))
+                return true;
+
+            if (VolSurfaces.TryGetValue(Shorten(name), out volSurface))
                 return true;
 
             if (TryGetInverseSurface(name, out volSurface))
@@ -216,7 +219,12 @@ namespace Qwack.Models
         private bool TryGetInverseSurface(string name, out IVolSurface volSurface)
         {
             var inverseName = name.Substring(name.Length - 3, 3) + (name.Length == 6 ? "" : "/") + name.Substring(0, 3);
-            return VolSurfaces.TryGetValue(inverseName, out volSurface);
+            if (VolSurfaces.TryGetValue(inverseName, out volSurface))
+                return true;
+            if (VolSurfaces.TryGetValue(Shorten(inverseName), out volSurface))
+                return true;
+
+            return false;
         }
 
         public static IFundingModel RemapBaseCurrency(IFundingModel input, Currency newBaseCurrency, ICurrencyProvider currencyProvider)

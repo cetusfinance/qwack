@@ -363,7 +363,7 @@ namespace Qwack.Models
             _fixings.Remove(name);
         }
 
-        public IAssetFxModel TrimModel(Portfolio portfolio)
+        public IAssetFxModel TrimModel(Portfolio portfolio, string[] additionalIrCurves = null)
         {
             var o = Clone();
             var assetIds = portfolio.AssetIds();
@@ -374,6 +374,10 @@ namespace Qwack.Models
             var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x));
             var surplusFixings = o.FixingDictionaryNames.Where(x => !assetIds.Contains(x) && !pairs.Contains(x));
             var surplusIrCurves = o.FundingModel.Curves.Keys.Where(x => !irCurves.Contains(x));
+            if(additionalIrCurves!=null)
+            {
+                surplusIrCurves = surplusIrCurves.Where(ir => !additionalIrCurves.Contains(ir));
+            }
             var surplusFxRates = o.FundingModel.FxMatrix.SpotRates.Keys.Where(x => !ccys.Contains(x.Ccy));
             foreach (var s in surplusCurves)
             {

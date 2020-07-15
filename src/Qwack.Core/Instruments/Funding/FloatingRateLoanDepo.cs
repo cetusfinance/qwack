@@ -43,6 +43,27 @@ namespace Qwack.Core.Instruments.Funding
             Notional = notional;
         }
 
+        public FloatingRateLoanDepo(DateTime startDate, DateTime endDate, FloatRateIndex floatRateIndex, double notional, double spread, string forecastCurve, string discountCurve)
+        {
+            var leg = new GenericSwapLeg(startDate, endDate, floatRateIndex.HolidayCalendars, floatRateIndex.Currency, floatRateIndex.ResetTenor, floatRateIndex.DayCountBasis)
+            {
+                Nominal = Convert.ToDecimal(notional),
+                Currency = floatRateIndex.Currency,
+                Direction = SwapPayReceiveType.Pay,
+                NotionalExchange = ExchangeType.Both,
+                LegType = SwapLegType.Float,
+                FixedRateOrMargin = Convert.ToDecimal(spread)
+            };
+            Spread = spread;
+            var schedule = leg.GenerateSchedule();
+
+            FloatRateIndex = floatRateIndex;
+            ForecastCurve = forecastCurve;
+            DiscountCurve = discountCurve;
+            LoanDepoSchedule = schedule;
+            Notional = notional;
+        }
+
         public double Spread { get; set; }
         public double Notional { get; set; }
         public string PortfolioName { get; set; }

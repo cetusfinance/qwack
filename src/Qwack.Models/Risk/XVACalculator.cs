@@ -159,8 +159,8 @@ namespace Qwack.Models.Risk
                 var pSurvival = hazzardCurve.GetSurvivalProbability(lastDate, ExEDates[i]);
                 var fwdDf = discountCurve.GetDf(lastDate, ExEDates[i]) / fundingCurve.GetDf(lastDate, ExEDates[i]) - 1.0;
                 var df = fundingCurve.GetDf(originDate, ExEDates[i]);
-                fba += ENEExposures[i] * pSurvival / fwdDf * df;
-                fca += EPEExposures[i] * pSurvival / fwdDf * df;
+                fba += -ENEExposures[i] * pSurvival * fwdDf * df;
+                fca += -EPEExposures[i] * pSurvival * fwdDf * df;
 
                 lastDate = ExEDates[i];
             }

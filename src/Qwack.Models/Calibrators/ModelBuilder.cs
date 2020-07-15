@@ -120,6 +120,15 @@ namespace Qwack.Models.Calibrators
                 }
             }
 
+            foreach(var c in spec.FundingCurves)
+            {
+                var baseCurve = irCurves[c.BaseCurve].Clone();
+                baseCurve.SolveStage = -1;
+                var floatIx = indices[c.FloatRateIndex];
+                var fCurve = QuickFundingCurveStripper.StripFlatSpread(c.Name, c.Spread, floatIx, baseCurve, currencyProvider, calendarProvider);
+                irCurves.Add(c.Name, fCurve);
+            }
+
             var fm = new FundingModel(valDate, irCurves, currencyProvider, calendarProvider);
 
             var spotRatesByCcy = spotRates.ToDictionary(x => pairCcyMap[x.Key], x => x.Key.StartsWith("USD") ? x.Value : 1.0 / x.Value);
@@ -273,6 +282,10 @@ namespace Qwack.Models.Calibrators
                 {
                     new ModelBuilderSpecCmxMetalCurve { Currency="XAU", MetalPair="XAUUSD", CmxSymbol="GB", CurveName="XAU.DISC.[USD.LIBOR.3M]", BaseCurveName = "USD.LIBOR.3M", CmxFutCode="GC", CmxOptCode="OG" },
                     new ModelBuilderSpecCmxMetalCurve { Currency="XAG", MetalPair="XAGUSD", CmxSymbol="LSF", CurveName="XAG.DISC.[USD.LIBOR.3M]", BaseCurveName = "USD.LIBOR.3M", CmxFutCode="SI", CmxOptCode="SO" },
+                },
+                FundingCurves = new List<ModelBuilderSpecFundingCurve>
+                {
+                    new ModelBuilderSpecFundingCurve {Name="USD.FUNDING.3M", BaseCurve="USD.LIBOR.3M", FloatRateIndex="USD.LIBOR.3M", Spread=0.01}
                 }
             };
 

@@ -16,6 +16,7 @@ namespace Qwack.Models.Calibrators
         public List<ModelBuilderSpecFxFuture> CmeFxFutureSpecs { get; set; }
         public List<TO_FxPair> FxPairs { get; set; }
         public List<ModelBuilderSpecCmxMetalCurve> CmxMetalCurves { get; set; }
+        public List<ModelBuilderSpecFundingCurve> FundingCurves { get; set; }
     }
 
     public class ModelBuilderSpecNymex
@@ -63,5 +64,13 @@ namespace Qwack.Models.Calibrators
         public string CmxFutCode { get; set; }
         public string CmxOptCode { get; set; }
         public CommodityUnits Units { get; set; }
+    }
+
+    public class ModelBuilderSpecFundingCurve
+    {
+        public string Name { get; set; }
+        public string BaseCurve { get; set; }
+        public double Spread { get; set; }
+        public string FloatRateIndex { get; set; }
     }
 }

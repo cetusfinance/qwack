@@ -41,7 +41,7 @@ namespace Qwack.Core.Models
 
         IAssetFxModel Clone();
         IAssetFxModel Clone(IFundingModel fundingModel);
-        IAssetFxModel TrimModel(Portfolio portfolio);
+        IAssetFxModel TrimModel(Portfolio portfolio, string[] additionalIrCurves = null);
         string[] CurveNames { get; }
         string[] VolSurfaceNames { get; }
         string[] FixingDictionaryNames { get; }

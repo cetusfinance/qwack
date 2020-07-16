@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
@@ -122,7 +123,7 @@ namespace Qwack.Core.Instruments.Asset
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
         public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
+        private double M(DateTime today) => Max(10.0 / 365.0, Min(1.0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F)));
         internal double Fwd(IAssetFxModel model)
         {
             var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?

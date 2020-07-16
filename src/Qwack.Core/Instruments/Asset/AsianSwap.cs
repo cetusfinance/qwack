@@ -121,7 +121,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
-        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
         private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
         internal double Fwd(IAssetFxModel model)
         {

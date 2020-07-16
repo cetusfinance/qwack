@@ -144,9 +144,17 @@ namespace Qwack.Core.Instruments.Asset
 
         public double EffectiveNotional(IAssetFxModel model) => AsBulletSwap().EffectiveNotional(model);
         public double AdjustedNotional(IAssetFxModel model) => AsBulletSwap().AdjustedNotional(model);
-        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
         public double MaturityFactor(DateTime today) => AsBulletSwap().MaturityFactor(today);
         public string HedgingSet { get; set; }
+
+        internal double Fwd(IAssetFxModel model)
+        {
+            var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?
+                1.0 :
+                model.FundingModel.GetFxRate(ExpiryDate, model.GetPriceCurve(AssetId).Currency, Currency);
+            return model.GetPriceCurve(AssetId).GetPriceForFixingDate(ExpiryDate) * fxRate;
+        }
 
         public TO_Instrument ToTransportObject() =>
            new TO_Instrument

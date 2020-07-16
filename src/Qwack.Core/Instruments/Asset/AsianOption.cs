@@ -13,7 +13,7 @@ using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianOption : AsianSwap, IHasVega
+    public class AsianOption : AsianSwap, IHasVega, ISaCcrEnabled
     {
         public OptionType CallPut { get; set; }
 
@@ -77,19 +77,9 @@ namespace Qwack.Core.Instruments.Asset
                    Strike == option.Strike &&
                    TradeId == option.TradeId;
 
-        private double SupervisoryVol => HedgingSet == "Electricity" ? 1.5 : 0.7;
-        public new double SupervisoryDelta(IAssetFxModel model) =>
-          BlackDelta(Fwd(model), Strike, 0.0, model.BuildDate.CalculateYearFraction(FixingDates.Last(), DayCountBasis.Act365F), SupervisoryVol, CallPut);
-
-        private static double BlackDelta(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
-        {
-            double d1, d2, DF;
-            DF = Exp(-riskFreeRate * expTime);
-            d1 = (Log(forward / strike) + (expTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expTime));
-            d2 = d1 - volatility * Sqrt(expTime);
-
-            return (CP == OptionType.Put) ? DF * (Math.Statistics.NormSDist(d1) - 1) : DF * Math.Statistics.NormSDist(d1);
-        }
+        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model), CallPut, SupervisoryVol, Notional);
+        private double SupervisoryVol => HedgingSet == "Electricity" ? 1.50 : 0.70;
+        private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(AverageEndDate, DayCountBasis.Act365F);
 
         public new TO_Instrument ToTransportObject()
         {

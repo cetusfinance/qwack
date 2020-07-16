@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
@@ -10,7 +11,7 @@ using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class EuropeanOption : Forward, IHasVega
+    public class EuropeanOption : Forward, IHasVega, ISaCcrEnabled
     {
         public OptionType CallPut { get; set; }
 
@@ -48,6 +49,11 @@ namespace Qwack.Core.Instruments.Asset
                    CallPut == euroOpt.CallPut &&
                    base.Equals(euroOpt);
 
+
+        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model), CallPut, SupervisoryVol, Notional);
+
+        private double SupervisoryVol => HedgingSet == "Electricity" ? 1.50 : 0.70;
+        private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F);
         public new TO_Instrument ToTransportObject()
         {
             var fwdTO = base.ToTransportObject().Forward;

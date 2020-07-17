@@ -51,7 +51,7 @@ namespace Qwack.Core.Instruments.Asset
 
 
         public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model), CallPut, SupervisoryVol, Notional);
-
+        public override double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         private double SupervisoryVol => HedgingSet == "Electricity" ? 1.50 : 0.70;
         private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F);
         public new TO_Instrument ToTransportObject()

@@ -142,7 +142,7 @@ namespace Qwack.Core.Instruments.Asset
                    FxConversionType == forward.FxConversionType &&
                    EqualityComparer<Currency>.Default.Equals(Currency, forward.Currency);
 
-        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public virtual double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
         public double AdjustedNotional(IAssetFxModel model) => System.Math.Abs(Notional) * Fwd(model);
         public virtual double SupervisoryDelta(IAssetFxModel model) => System.Math.Sign(Notional);
         public double MaturityFactor(DateTime today) => System.Math.Max(10.0/365.0, System.Math.Min(1.0,today.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F)));

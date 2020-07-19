@@ -11,6 +11,7 @@ namespace Qwack.Models.Calibrators
     {
         public Dictionary<string, TO_FloatRateIndex> RateIndices { get; set; }
         public List<ModelBuilderSpecNymex> NymexSpecs { get; set; }
+        public List<ModelBuilderSpecProxyAssetVolSurface> ProxyVols { get; set; }
         public List<ModelBuilderSpecCmeBaseCurve> CmeBaseCurveSpecs { get; set; }
         public List<ModelBuilderSpecCmeBasisCurve> CmeBasisCurveSpecs { get; set; }
         public List<ModelBuilderSpecFxFuture> CmeFxFutureSpecs { get; set; }
@@ -26,6 +27,12 @@ namespace Qwack.Models.Calibrators
         public string QwackCode { get; set; }
         public CommodityUnits Units { get; set; }
         public PriceCurveType PriceCurveType { get; set; }
+    }
+
+    public class ModelBuilderSpecProxyAssetVolSurface
+    {
+        public string QwackCode { get; set; }
+        public string QwackCodeProxy { get; set; }
     }
 
     public class ModelBuilderSpecCmeBaseCurve

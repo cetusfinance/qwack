@@ -16,6 +16,7 @@ using Qwack.Dates;
 using System.Linq;
 using Qwack.Models;
 using Qwack.Transport.TransportObjects.MarketData.Models;
+using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Models.Calibrators
 {
@@ -75,6 +76,13 @@ namespace Qwack.Models.Calibrators
                     surface.AssetId = c.QwackCode;
                     surfaces.Add(surface);
                 }
+            }
+            foreach (var c in spec.ProxyVols)
+            {
+                var surfaceTo = (surfaces.Where(s => s.AssetId == c.QwackCodeProxy).First() as RiskyFlySurface).GetTransportObject();
+                surfaceTo.AssetId = c.QwackCode;
+                var surface = new RiskyFlySurface(surfaceTo, currencyProvider);
+                surfaces.Add(surface);
             }
             var irCurves = new Dictionary<string, IrCurve>();
             foreach (var c in spec.CmeBaseCurveSpecs)
@@ -217,6 +225,23 @@ namespace Qwack.Models.Calibrators
                     new ModelBuilderSpecNymex {QwackCode="XA",NymexCodeFuture="MTF", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//API2
                     new ModelBuilderSpecNymex {QwackCode="IronOre62",NymexCodeFuture="TIO", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//62% Iron Ore TSI
 
+                },
+                ProxyVols = new List<ModelBuilderSpecProxyAssetVolSurface>
+                {
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="UkNbp", QwackCodeProxy="NG"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="DCO", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="QS", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="GO.1FOB", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="SingGO", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="Sing0.5", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="Sing180", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="Sing380", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="NWE3.5", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="NWE1.0", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="NWE0.5", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="XO", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="XA", QwackCodeProxy="CO"},
+                    new ModelBuilderSpecProxyAssetVolSurface {QwackCode="IronOre62", QwackCodeProxy="CO"},
                 },
                 CmeBaseCurveSpecs = new List<ModelBuilderSpecCmeBaseCurve>
                 {

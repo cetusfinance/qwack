@@ -243,7 +243,7 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio);
+                var m = model.Value.TrimModel(portfolio,null, new[] { Currency });
 
                 for (var i=0;i<models.Length;i++)
                 {
@@ -279,7 +279,7 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio);
+                var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -319,7 +319,7 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r =>  r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio);
+                var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -353,7 +353,7 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio);
+                var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
@@ -387,7 +387,7 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio);
+                var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
                 for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);

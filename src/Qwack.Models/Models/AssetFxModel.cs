@@ -363,22 +363,31 @@ namespace Qwack.Models
             _fixings.Remove(name);
         }
 
-        public IAssetFxModel TrimModel(Portfolio portfolio, string[] additionalIrCurves = null)
+        public IAssetFxModel TrimModel(Portfolio portfolio, string[] additionalIrCurves = null, string[] additionalCcys = null)
         {
             var o = Clone();
             var assetIds = portfolio.AssetIds();
             var pairs = portfolio.FxPairs(o);
             var ccys = pairs.SelectMany(x => x.Split('/')).Distinct().ToArray();
-            var irCurves = portfolio.Instruments.Where(x => x is IAssetInstrument).SelectMany(x => (x as IAssetInstrument).IrCurves(o)).Distinct().ToArray();
-            var surplusCurves = o.CurveNames.Where(x => !assetIds.Contains(x));
-            var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x));
-            var surplusFixings = o.FixingDictionaryNames.Where(x => !assetIds.Contains(x) && !pairs.Contains(x));
-            var surplusIrCurves = o.FundingModel.Curves.Keys.Where(x => !irCurves.Contains(x));
+            if(additionalCcys!=null)
+            {
+                ccys = ccys.Concat(additionalCcys).Distinct().ToArray();
+            }
+            var irCurves = portfolio.Instruments
+                .Where(x => x is IAssetInstrument).SelectMany(x => (x as IAssetInstrument).IrCurves(o))
+                .Concat(ccys.Select(c=>o.FundingModel.FxMatrix.DiscountCurveMap.Single(dc=>dc.Key.Ccy==c).Value))
+                .Distinct()
+                .ToArray();
+            
+            var surplusCurves = o.CurveNames.Where(x => !assetIds.Contains(x)).ToArray();
+            var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x)).ToArray();
+            var surplusFixings = o.FixingDictionaryNames.Where(x => !assetIds.Contains(x) && !pairs.Contains(x)).ToArray();
+            var surplusIrCurves = o.FundingModel.Curves.Keys.Where(x => !irCurves.Contains(x)).ToArray();
             if(additionalIrCurves!=null)
             {
-                surplusIrCurves = surplusIrCurves.Where(ir => !additionalIrCurves.Contains(ir));
+                surplusIrCurves = surplusIrCurves.Where(ir => !additionalIrCurves.Contains(ir)).ToArray();
             }
-            var surplusFxRates = o.FundingModel.FxMatrix.SpotRates.Keys.Where(x => !ccys.Contains(x.Ccy));
+            var surplusFxRates = o.FundingModel.FxMatrix.SpotRates.Keys.Where(x => !ccys.Contains(x.Ccy)).ToArray();
             foreach (var s in surplusCurves)
             {
                 o.RemovePriceCurve(o.GetPriceCurve(s));

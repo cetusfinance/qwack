@@ -64,8 +64,20 @@ namespace Qwack.Models.Risk
             return pvCapital;
         }
 
+        public static double PvCvaCapital_BIII_Basic(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, Portfolio portfolio,
+            Currency reportingCurrency, IIrCurve discountCurve, double supervisoryRiskWeight, Dictionary<string, string> assetIdToHedgeMap,
+            Dictionary<string, double> hedgeGroupCCFs, ICurrencyProvider currencyProvider, double[] epeProfile, double[] eadProfile = null)
+        {
+            var eads = eadProfile ?? EAD_BIII_SACCR(originDate, EADDates, epeProfile, models, portfolio, reportingCurrency, assetIdToHedgeMap);
+            var Ms = EADDates.Select(d => Max(10.0/365, portfolio.WeightedMaturity(d))).ToArray();
+            var ks = eads.Select((e, ix) => BaselHelper.BasicCvaB3.cvaCapitalCharge(supervisoryRiskWeight, Ms[ix], e)).ToArray();
+            var pvCapital = PvProfile(originDate, EADDates, ks, discountCurve);
+
+            return pvCapital;
+        }
+
         public static (double CVA, double CCR) PvCapital_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, 
-            Portfolio portfolio, HazzardCurve hazzardCurve, Currency reportingCurrency, IIrCurve discountCurve, double LGD, double partyCVAWeight, double riskWeight, 
+            Portfolio portfolio, HazzardCurve hazzardCurve, Currency reportingCurrency, IIrCurve discountCurve, double LGD, double supervisoryRiskWeight, double riskWeight, 
             Dictionary<string,string> assetIdToHedgeMap, Dictionary<string, double> hedgeGroupCCFs, ICurrencyProvider currencyProvider, double[] epeProfile,
             DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
         {
@@ -76,12 +88,12 @@ namespace Qwack.Models.Risk
             var eads = eadProfile ?? EAD_Split(originDate, EADDates, epeProfile, models, portfolio, reportingCurrency, assetIdToHedgeMap, hedgeGroupCCFs, B2B3ChangeDate.Value, currencyProvider);
             eads = eads.Select(e => e * riskWeight).ToArray();
 
-            var Ms = EADDates.Select(d => Max(1.0,portfolio.WeightedMaturity(d))).ToArray();
+            var Ms = EADDates.Select(d => Max(10.0/365,portfolio.WeightedMaturity(d))).ToArray();
             var dfs = Ms.Select(m => m == 0 ? 1.0 : (1.0 - Exp(-0.05 * m)) / (0.05 * m)).ToArray();
 
             var ksCCR = eads.Select((e, ix) => BaselHelper.K(pd, LGD, Ms[ix]) * e).ToArray();
-            var ksCVA = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e * dfs[ix], Ms[ix], partyCVAWeight)).ToArray();
-
+            //var ksCVA = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e * dfs[ix], Ms[ix], partyCVAWeight)).ToArray();
+            var ksCVA = eads.Select((e, ix) => BaselHelper.BasicCvaB3.cvaCapitalCharge(supervisoryRiskWeight, Ms[ix], e)).ToArray();
             var pvCapitalCCR = PvProfile(originDate, EADDates, ksCCR, discountCurve);
             var pvCapitalCVA = PvProfile(originDate, EADDates, ksCVA, discountCurve);
 

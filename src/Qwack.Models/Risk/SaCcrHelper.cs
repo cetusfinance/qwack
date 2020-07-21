@@ -45,7 +45,7 @@ namespace Qwack.Models.Risk
         public static double Pfe(Portfolio portfolio, IAssetFxModel model, double? pv=null, double? MPOR = null, double? collateral=null)
         {
             var addon = AggregateAddOn(portfolio, model, MPOR);
-            return Multipler(portfolio, model, pv, addon, collateral) * addon;
+            return addon == 0 ? 0.0 : Multipler(portfolio, model, pv, addon, collateral) * addon;
         }
 
         public static double Multipler(Portfolio portfolio, IAssetFxModel model, double? pv = null, double? addOn = null, double? collateral = null)

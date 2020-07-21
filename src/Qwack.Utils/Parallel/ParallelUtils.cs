@@ -32,7 +32,7 @@ namespace Qwack.Utils.Parallel
         public bool MultiThreaded { get; set; } = true;
 
         private int _activeThreadCount = 0;
-        private static readonly int numThreads = Environment.ProcessorCount;
+        private static readonly int numThreads = Environment.ProcessorCount / 2;
 
         private ParallelUtils()
         {
@@ -85,7 +85,7 @@ namespace Qwack.Utils.Parallel
 
                 if (_killQueue.TryTake(out var killTask, 0))
                 {
-                    killTask.ResetEvent.Set();
+                    killTask.ResetEvent.Release();
                     break;
                 }
             }
@@ -97,29 +97,31 @@ namespace Qwack.Utils.Parallel
         private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>();
         private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>();
 
-        public Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
+        public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
             if (!overrideMTFlag && !string.IsNullOrEmpty(Thread.CurrentThread.Name) && Thread.CurrentThread.Name.StartsWith("ParallelUtilsThread"))
             {
                 StartThread();
-                RunOptimistically(values, code).Wait();
+                await RunOptimistically(values, code);
                 var exploder = new WorkItem()
                 {
                     IsExploder = true,
-                    ResetEvent = new ManualResetEvent(false)
+                    ResetEvent = new SemaphoreSlim(1)
                 };
+                var waitTask = exploder.ResetEvent.WaitAsync();
                 _killQueue.Add(exploder);
-                exploder.ResetEvent.WaitOne();
-                return Task.CompletedTask;
+                await waitTask;
+                return;
             }
 
             if (overrideMTFlag || !MultiThreaded)
             {
                 RunInSeries(values, code);
-                return Task.CompletedTask;
+                return;
             }
 
-            return RunOptimistically(values, code);
+            await RunOptimistically(values, code);
+            return;
         }
 
         private struct WorkItem
@@ -127,7 +129,7 @@ namespace Qwack.Utils.Parallel
             public Action Action;
             public TaskCompletionSource<bool> TaskCompletion;
             public Task TaskToRun;
-            public ManualResetEvent ResetEvent;
+            public SemaphoreSlim ResetEvent;
             public bool IsExploder;
         }
 

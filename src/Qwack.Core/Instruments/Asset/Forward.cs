@@ -12,7 +12,7 @@ using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class Forward : IAssetInstrument, ISaCcrEnabled
+    public class Forward : IAssetInstrument, ISaCcrEnabledCommodity
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
@@ -142,11 +142,16 @@ namespace Qwack.Core.Instruments.Asset
                    FxConversionType == forward.FxConversionType &&
                    EqualityComparer<Currency>.Default.Equals(Currency, forward.Currency);
 
-        public virtual double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public virtual double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => System.Math.Abs(Notional) * Fwd(model);
         public virtual double SupervisoryDelta(IAssetFxModel model) => System.Math.Sign(Notional);
-        public double MaturityFactor(DateTime today) => System.Math.Max(10.0/365.0, System.Math.Min(1.0,today.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F)));
+        public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
+        private double T(DateTime today) => today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F);
         public string HedgingSet { get; set; }
+        public double TradeNotional(IAssetFxModel model) => System.Math.Abs(Notional) * Fwd(model);
+
+        public SaCcrAssetClass AssetClass { get; set; }
+        public string CommodityType { get; set; }
 
         internal double Fwd(IAssetFxModel model)
         {

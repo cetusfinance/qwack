@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Qwack.Core.Basic.Capital;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -13,7 +14,7 @@ using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianOption : AsianSwap, IHasVega, ISaCcrEnabled
+    public class AsianOption : AsianSwap, IHasVega, ISaCcrEnabledCommodity
     {
         public OptionType CallPut { get; set; }
 
@@ -77,9 +78,8 @@ namespace Qwack.Core.Instruments.Asset
                    Strike == option.Strike &&
                    TradeId == option.TradeId;
 
-        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model), CallPut, SupervisoryVol, Notional);
-        private double SupervisoryVol => HedgingSet == "Electricity" ? 1.50 : 0.70;
-        private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(AverageEndDate, DayCountBasis.Act365F);
+        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model.BuildDate), CallPut, SupervisoryVol, Notional);
+        private double SupervisoryVol => SaCcrParameters.SupervisoryOptionVols[AssetClass];
 
         public new TO_Instrument ToTransportObject()
         {

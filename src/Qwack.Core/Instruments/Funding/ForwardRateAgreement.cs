@@ -10,7 +10,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class ForwardRateAgreement : IFundingInstrument
+    public class ForwardRateAgreement : IFundingInstrument, ISaCcrEnabledIR
     {
         public ForwardRateAgreement() { }
 
@@ -228,5 +228,17 @@ namespace Qwack.Core.Instruments.Funding
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowScheduleFra.Flows;
 
         public double SuggestPillarValue(IFundingModel model) => ParRate;
+
+
+        public double TradeNotional => System.Math.Abs(Notional);
+        public double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
+        public double AdjustedNotional(IAssetFxModel model) => TradeNotional * SupervisoryDuration(model.BuildDate);
+        private double tStart(DateTime today) => today.CalculateYearFraction(StartDate, DayCountBasis.Act365F);
+        private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate.Date(today,RateIndex.RollConvention,RateIndex.HolidayCalendars), DayCountBasis.Act365F);
+        public double SupervisoryDuration(DateTime today) => SaCcrUtils.SupervisoryDuration(tStart(today), tEnd(today));
+        public double SupervisoryDelta(IAssetFxModel model) => (PayRec == SwapPayReceiveType.Pay ? 1.0 : -1.0) * System.Math.Sign(Notional);
+        public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(tEnd(today));
+        public string HedgingSet { get; set; }
+        public int MaturityBucket(DateTime today) => tEnd(today) <= 1.0 ? 1 : tEnd(today) <= 5.0 ? 2 : 3;
     }
 }

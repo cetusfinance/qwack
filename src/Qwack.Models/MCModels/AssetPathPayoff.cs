@@ -250,7 +250,7 @@ namespace Qwack.Models.MCModels
             _isCompo = _fxType == FxConversionType.ConvertThenAverage || _fxType == FxConversionType.AverageThenConvert;
             _assetName = AssetInstrument.AssetIds.Any() ? 
                 AssetInstrument.AssetIds.First() :
-                (AssetInstrument is FxVanillaOption fxo ? fxo.PairStr : null);
+                (AssetInstrument is FxVanillaOption fxo ? fxo.Pair : null);
             _requiresConversionToSimCcy = SimulationCcy != _ccy;
             if(_requiresConversionToSimCcy)
             {

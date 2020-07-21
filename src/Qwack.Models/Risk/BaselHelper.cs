@@ -4,6 +4,8 @@ using System.Text;
 using Qwack.Math.Extensions;
 using static Qwack.Math.Statistics; 
 using static System.Math;
+using Qwack.Core.Instruments;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Qwack.Models.Risk
 {

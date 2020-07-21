@@ -14,7 +14,7 @@ using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class AsianSwap : IAssetInstrument, ISaCcrEnabled
+    public class AsianSwap : IAssetInstrument, ISaCcrEnabledCommodity
     {
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
@@ -120,10 +120,10 @@ namespace Qwack.Core.Instruments.Asset
                 new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
 
-        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public double EffectiveNotional(IAssetFxModel model, double? MPOR) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);
         public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        private double M(DateTime today) => Max(10.0 / 365.0, Min(1.0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F)));
+        internal double T(DateTime today) => today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F);
         internal double Fwd(IAssetFxModel model)
         {
             var fxRate = model.GetPriceCurve(AssetId).Currency == Currency ?
@@ -131,8 +131,10 @@ namespace Qwack.Core.Instruments.Asset
                 model.FundingModel.GetFxAverage(FixingDates, model.GetPriceCurve(AssetId).Currency, Currency);
             return model.GetPriceCurve(AssetId).GetAveragePriceForDates(FixingDates) * fxRate;
         }
-        public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
-
+        public double MaturityFactor(DateTime today, double? MPOR) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
+        public double TradeNotional(IAssetFxModel model) => Notional * Fwd(model);
+        public SaCcrAssetClass AssetClass { get; set; }
+        public string CommodityType { get; set; }
         public override bool Equals(object obj) => obj is AsianSwap swap &&
                    TradeId == swap.TradeId &&
                    Counterparty == swap.Counterparty &&

@@ -424,8 +424,8 @@ namespace Qwack.Models.Models
             if (fxEuOpt.DeliveryDate < model.BuildDate || (ignoreTodayFlows && fxEuOpt.DeliveryDate == model.BuildDate))
                 return 0.0;
             var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
-            var fwdDate = fxEuOpt.Pair.SpotDate(fxEuOpt.ExpiryDate);
-            var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.PairStr);
+            var fwdDate = model.FundingModel.FxMatrix.GetFxPair(fxEuOpt.Pair).SpotDate(fxEuOpt.ExpiryDate);
+            var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.Pair);
 
             if (fxEuOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
                 return fxEuOpt.DomesticQuantity * df * (fxEuOpt.CallPut == OptionType.Call ?
@@ -433,7 +433,7 @@ namespace Qwack.Models.Models
                     Max(fxEuOpt.Strike - fwd, 0));
 
 
-            var vol = model.FundingModel.GetVolSurface(fxEuOpt.PairStr).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
+            var vol = model.FundingModel.GetVolSurface(fxEuOpt.Pair).GetVolForAbsoluteStrike(fxEuOpt.Strike, fxEuOpt.ExpiryDate, fwd);
             var tExp = model.BuildDate.CalculateYearFraction(fxEuOpt.ExpiryDate, DayCountBasis.Act365F);
             return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, 0, tExp, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity * df;
         }
@@ -920,45 +920,40 @@ namespace Qwack.Models.Models
             return cube;
         }
 
-        public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, ICube epeCube, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double partyRiskWeight, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
-        {
-            var calcDates = epeCube.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
-            var epeValues = epeCube.GetAllRows().Select(r => r.Value).ToArray();
+        //public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, ICube epeCube, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, 
+        //    double partyRiskWeight, Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Dictionary<string, double> hedgeSetToCCF,
+        //    IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
+        //{
+        //    var calcDates = epeCube.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
+        //    var epeValues = epeCube.GetAllRows().Select(r => r.Value).ToArray();
 
-            if (assetToGroupMap == null && portfolio.AssetIds().Length == 1)
-            {
-                var aid = portfolio.AssetIds().First();
-                assetToGroupMap = new Dictionary<string, string>()
-                {
-                    { aid,aid }
-                };
-            }
+        //    var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates, epeValues, currencyProvider);
 
-            var calculator = new EADCalculator(portfolio, partyRiskWeight, assetToGroupMap, reportingCurrency, model, calcDates, epeValues, currencyProvider);
+        //    if (models == null)
+        //        calculator.Process();
+        //    else
+        //        calculator.Process(models);
 
-            if (models == null)
-                calculator.Process();
-            else
-                calculator.Process(models);
+        //    var ead = calculator.ResultCube();
 
-            var ead = calculator.ResultCube();
+        //    var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d => models[d]).ToArray(), portfolio, hazzardCurve, 
+        //        reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, epeValues);
+        //    return pvCapital;
+        //}
 
-            var pvCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, calcDates, calcDates.Select(d => models[d]).ToArray(), portfolio, hazzardCurve, 
-                reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, epeValues);
-            return pvCapital;
-        }
-
-        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models, Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF)
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, 
+            double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models, 
+            Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF)
         {
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
             var modelsForDates = exposureDates.Select(d => models[d]).ToArray();
             var pv = portfolio.PV(model, reportingCurrency).GetAllRows().Sum(r => r.Value);
             var epes = XVACalculator.EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
             var cva = XVACalculator.CVA(model.BuildDate, exposureDates, epes, hazzardCurve, discountCurve, xVA_LGD);
-            var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, epes, modelsForDates, portfolio, reportingCurrency, assetToGroupMap, hedgeSetToCCF, currencyProvider);
+            var eads = CapitalCalculator.EAD_BII_SM(model.BuildDate, exposureDates, epes, modelsForDates, portfolio, reportingCurrency, hedgeSetToCCF, currencyProvider);
             eads = eads.Select(x => x * partyRiskWeight).ToArray();
-            var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);
-            var cvaCapital = CapitalCalculator.PvCvaCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, discountCurve, cvaCapitalWeight, assetToGroupMap, hedgeSetToCCF, currencyProvider, eads);
+            var ccrCapital = CapitalCalculator.PvCcrCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, hazzardCurve, reportingCurrency, discountCurve, LGD, hedgeSetToCCF, currencyProvider, eads);
+            var cvaCapital = CapitalCalculator.PvCvaCapital_BII_SM(model.BuildDate, exposureDates, modelsForDates, portfolio, reportingCurrency, discountCurve, cvaCapitalWeight, hedgeSetToCCF, currencyProvider, eads);
             return (pv + cva) / (ccrCapital + cvaCapital);
         }
 

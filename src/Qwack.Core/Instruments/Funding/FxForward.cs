@@ -10,7 +10,7 @@ using static System.Math;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class FxForward : IFundingInstrument, IAssetInstrument, ISaCcrEnabled
+    public class FxForward : IFundingInstrument, IAssetInstrument, ISaccrEnabledFx
     {
         public double Strike { get; set; }
         public double DomesticQuantity { get; set; }
@@ -36,6 +36,8 @@ namespace Qwack.Core.Instruments.Funding
         public Currency PaymentCurrency => DomesticCCY;
 
         public string HedgingSet { get; set; }
+
+        public double ForeignNotional => DomesticQuantity * Strike;
 
         public List<string> Dependencies(IFxMatrix matrix)
         {
@@ -106,7 +108,7 @@ namespace Qwack.Core.Instruments.Funding
             }
         }
 
-        public IAssetInstrument Clone() => (IAssetInstrument)(FxForward)((IFundingInstrument)this).Clone();
+        public virtual IAssetInstrument Clone() => (IAssetInstrument)(FxForward)((IFundingInstrument)this).Clone();
 
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
@@ -155,14 +157,14 @@ namespace Qwack.Core.Instruments.Funding
 
         public string FxPair(IAssetFxModel model) => Pair;
 
-        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
+        public virtual double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => DomesticQuantity * model.FundingModel.GetFxRate(model.BuildDate, DomesticCCY, model.FundingModel.FxMatrix.BaseCurrency);
-        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        public double MaturityFactor(DateTime today) => Sqrt(Min(M(today), 1.0));
-        private double M(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
+        public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
+        public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
+        private double T(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
 
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
+        public virtual List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
             {
                 new CashFlow()
                 {

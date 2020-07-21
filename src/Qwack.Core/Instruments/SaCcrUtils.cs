@@ -19,5 +19,9 @@ namespace Qwack.Core.Instruments
                 _ => Sign(position),
             };
         }
+
+        public static double SupervisoryDuration(double start, double end) => (Exp(-0.05 * start) - Exp(-0.05 * end)) / 0.05;
+        public static double MfUnmargined(double m) => Sqrt(Min(Max(m, 10 / 252), 1.0) / 1.0); //floored at 10 business days
+        public static double MfMargined(double marginPeriodRiskBusinessDays) => 3.0 / 2.0 * Sqrt(marginPeriodRiskBusinessDays / 252);
     }
 }

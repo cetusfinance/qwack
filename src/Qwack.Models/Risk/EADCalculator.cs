@@ -7,17 +7,20 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Basic;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Cubes;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Models.Risk
 {
     public class EADCalculator
     {
-        public EADCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string,string> assetIdToGroupMap, Currency reportingCurrency, 
-            IAssetFxModel assetFxModel, DateTime[] calculationDates, double[] epeValues, ICurrencyProvider currencyProvider)
+        public EADCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string, string> assetIdToTypeMap,
+            Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates, 
+            double[] epeValues, ICurrencyProvider currencyProvider)
         {
             _portfolio = portfolio;
             _counterpartyRiskWeight = counterpartyRiskWeight;
-            _assetIdToGroupMap = assetIdToGroupMap;
+            _assetIdToTypeMap = assetIdToTypeMap;
+            _typeToAssetClassMap = typeToAssetClassMap;
             _reportingCurrency = reportingCurrency;
             _assetFxModel = assetFxModel;
             _calculationDates = calculationDates;
@@ -47,7 +50,8 @@ namespace Qwack.Models.Risk
         private object _threadLock = new object();
         private readonly Portfolio _portfolio;
         private readonly double _counterpartyRiskWeight;
-        private readonly Dictionary<string, string> _assetIdToGroupMap;
+        private readonly Dictionary<string, string> _assetIdToTypeMap;
+        private readonly Dictionary<string, SaCcrAssetClass> _typeToAssetClassMap;
         private readonly Currency _reportingCurrency;
         private IAssetFxModel _assetFxModel;
         private readonly DateTime[] _calculationDates;
@@ -60,11 +64,28 @@ namespace Qwack.Models.Risk
 
         public void Process()
         {
+            IAssetFxModel model;
+            if(_assetFxModel.FundingModel.FxMatrix.BaseCurrency!=_reportingCurrency)
+            {
+                var newFm = FundingModel.RemapBaseCurrency(_assetFxModel.FundingModel, _reportingCurrency, _currencyProvider);
+                model = _assetFxModel.Clone(newFm);
+            }
+            else
+            {
+                model = _assetFxModel.Clone();
+            }
+
             var currentFixingDate = _assetFxModel.BuildDate;
             while (currentFixingDate <= _endDate)
             {
                 currentFixingDate = currentFixingDate.AddDays(1);
                 _assetFxModel = _assetFxModel.RollModel(currentFixingDate, _currencyProvider);
+            }
+
+            foreach (ISaCcrEnabledCommodity ins in _portfolio.Instruments)
+            {
+                ins.CommodityType = _assetIdToTypeMap[(ins as IAssetInstrument).AssetIds.First()];
+                ins.AssetClass = _typeToAssetClassMap[ins.CommodityType];
             }
 
             ParallelUtils.Instance.For(0,_calculationDates.Length,1,i=> 
@@ -74,7 +95,7 @@ namespace Qwack.Models.Risk
                 var newModel = _assetFxModel.Clone();
                 newModel.OverrideBuildDate(d);
 
-                var ead = _portfolio.SaCcrEAD(epe, newModel, _reportingCurrency, _assetIdToGroupMap);
+                var ead = SaCcrHelper.SaCcrEad(_portfolio, newModel, epe);
                 var capital = _counterpartyRiskWeight * ead;
                 if (!_ead.ContainsKey(d))
                     lock (_threadLock)
@@ -101,7 +122,7 @@ namespace Qwack.Models.Risk
                 var epe = _epeValues[i];
                 var newModel = models[d];
 
-                var ead = _portfolio.SaCcrEAD(epe, newModel, _reportingCurrency, _assetIdToGroupMap);
+                var ead = SaCcrHelper.SaCcrEad(_portfolio, newModel, epe);
                 var capital = _counterpartyRiskWeight * ead;
                 if (!_ead.ContainsKey(d))
                     lock (_threadLock)

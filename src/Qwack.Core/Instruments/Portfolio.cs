@@ -101,7 +101,7 @@ namespace Qwack.Core.Instruments
             }
             if (fxOptionTrades.Any())
             {
-                o.AddRange(fxOptionTrades.Select(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxVanillaOption).PairStr : ((FxVanillaOption)x).PairStr));
+                o.AddRange(fxOptionTrades.Select(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxVanillaOption).Pair : ((FxVanillaOption)x).Pair));
             }
             if (assetTrades.Any())
             {
@@ -436,7 +436,7 @@ namespace Qwack.Core.Instruments
         {
             var pf = portfolio.UnWrapWrappers();
 
-            if (!pf.Instruments.All(x => x is ISaCcrEnabled))
+            if (!pf.Instruments.All(x => x is ISaccrEnabled))
                 throw new Exception("Portfolio contains non-SACCR enabled instruments");
 
             var assetIds = pf.AssetIds();
@@ -449,7 +449,7 @@ namespace Qwack.Core.Instruments
             foreach (var insGroup in insByAssetId)
             {
                 addOnByAsset.Add(insGroup.Key, 0.0);
-                foreach (ISaCcrEnabled ins in insGroup)
+                foreach (ISaccrEnabled ins in insGroup)
                 {
                     var aIns = (IAssetInstrument)ins;
                     ins.HedgingSet = AssetIdToHedgingSetMap[aIns.AssetIds.First()];
@@ -475,7 +475,7 @@ namespace Qwack.Core.Instruments
             return addOn;
         }
 
-        public static double SaCcrEAD(this Portfolio pf, double EPE, IPvModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
+        public static double SaCcrEAD_old(this Portfolio pf, double EPE, IPvModel model, Currency reportingCcy, Dictionary<string, string> AssetIdToHedgingSetMap)
         {
             var pfe = SaCcrAddon(pf, model.VanillaModel, reportingCcy, AssetIdToHedgingSetMap);
             var rc = EPE;

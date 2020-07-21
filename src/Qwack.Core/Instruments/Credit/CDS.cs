@@ -5,6 +5,7 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Funding;
+using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -12,7 +13,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Credit
 {
-    public class CDS
+    public class CDS : ISaccrEnabledCredit, IInstrument
     {
         public DateTime OriginDate { get; set; }
         public CdsScheduleType ScheduleType { get; set; }
@@ -28,6 +29,24 @@ namespace Qwack.Core.Instruments.Credit
         public CashFlowSchedule FixedSchedule { get; set; }
 
         public DateTime FinalSensitivityDate => FixedSchedule.Flows.Max(f => f.AccrualPeriodEnd);
+
+        public DateTime StartDate => FixedSchedule.Flows.Min(x => x.AccrualPeriodStart);
+        public DateTime EndDate => FixedSchedule.Flows.Max(x => x.AccrualPeriodEnd);
+
+        public string ReferenceName { get; set; }
+
+        public string ReferenceRating { get; set; }
+
+        public double TradeNotional => System.Math.Abs(Notional);
+
+        public string HedgingSet { get; set; }
+
+        public string TradeId { get; set; }
+
+        public string Counterparty { get; set; }
+        public string PortfolioName { get; set; }
+
+        public DateTime LastSensitivityDate => EndDate;
 
         public CDS()
         {
@@ -153,6 +172,12 @@ namespace Qwack.Core.Instruments.Credit
             return pv;
         }
 
-        
+        public double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
+        public double AdjustedNotional(IAssetFxModel model) => TradeNotional * SupervisoryDuration(model.BuildDate);
+        private double tStart(DateTime today) => today.CalculateYearFraction(StartDate, DayCountBasis.Act365F);
+        private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate, DayCountBasis.Act365F);
+        public double SupervisoryDuration(DateTime today) => SaCcrUtils.SupervisoryDuration(tStart(today), tEnd(today));
+        public double SupervisoryDelta(IAssetFxModel model) => System.Math.Sign(Notional);
+        public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(tEnd(today));
     }
 }

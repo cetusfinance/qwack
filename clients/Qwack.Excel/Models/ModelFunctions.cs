@@ -20,6 +20,7 @@ using Qwack.Models.MCModels;
 using Qwack.Excel.Instruments;
 using Qwack.Models;
 using Qwack.Models.Risk;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Excel.Curves
 {
@@ -319,7 +320,8 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Asset-FX model name")] string ModelName,
             [ExcelArgument(Description = "EPE cube name")] string EPECube,
             [ExcelArgument(Description = "Counterparty risk weight")] double CounterpartyRiskWeight,
-            [ExcelArgument(Description = "Map for assetIds to hedge sets")] object[,] AssetIdToHedgeSetMap,
+            [ExcelArgument(Description = "Map for assetIds to commodity types")] object[,] AssetIdToTypeMap,
+            [ExcelArgument(Description = "Map for types to commodity hedge sets")] object[,] TypeToHedgeSetMap,
             [ExcelArgument(Description = "Reporting currency")] string ReportingCurrency)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -335,8 +337,9 @@ namespace Qwack.Excel.Curves
 
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
-
-                var calc = new EADCalculator(pfolio, CounterpartyRiskWeight, AssetIdToHedgeSetMap.RangeToDictionary<string, string>(), repCcy, model.Value, 
+                var assetIdToTypeMap = AssetIdToTypeMap.RangeToDictionary<string, string>();
+                var typeToHedgeSetMap = TypeToHedgeSetMap.RangeToDictionary<string, SaCcrAssetClass>();
+                var calc = new EADCalculator(pfolio, CounterpartyRiskWeight,assetIdToTypeMap,typeToHedgeSetMap, repCcy, model.Value, 
                     expDates, epeValues, ContainerStores.CurrencyProvider);
                 calc.Process();
                 var result = calc.ResultCube();

@@ -9,7 +9,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class IrSwap : IFundingInstrument, ISaCcrEnabledIRD
+    public class IrSwap : IFundingInstrument, ISaCcrEnabledIR
     {
         public IrSwap() { }
 
@@ -197,13 +197,14 @@ namespace Qwack.Core.Instruments.Funding
             HedgingSet = HedgingSet
         };
 
-        public double EffectiveNotional(IAssetFxModel model) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate);
-        public double AdjustedNotional(IAssetFxModel model) => Notional * SupervisoryDuration(model.BuildDate);
+        public double TradeNotional => System.Math.Abs(Notional);
+        public virtual double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
+        public double AdjustedNotional(IAssetFxModel model) => TradeNotional * SupervisoryDuration(model.BuildDate);
         private double tStart(DateTime today) => today.CalculateYearFraction(StartDate, DayCountBasis.Act365F);
         private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate, DayCountBasis.Act365F);
-        public double SupervisoryDuration(DateTime today) => System.Math.Max(10.0, (System.Math.Exp(-0.05 * tStart(today)) - System.Math.Exp(-0.05 * tEnd(today))) / 0.05);
-        public double SupervisoryDelta(IAssetFxModel model) => 1.0;
-        public double MaturityFactor(DateTime today) => System.Math.Sqrt(System.Math.Min(tEnd(today), 1.0));
+        public double SupervisoryDuration(DateTime today) => SaCcrUtils.SupervisoryDuration(tStart(today), tEnd(today));
+        public virtual double SupervisoryDelta(IAssetFxModel model) => (SwapType == SwapPayReceiveType.Pay ? 1.0 : -1.0) * System.Math.Sign(Notional);
+        public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(tEnd(today));
         public string HedgingSet { get; set; }
         public int MaturityBucket(DateTime today) => tEnd(today) <= 1.0 ? 1 : tEnd(today) <= 5.0 ? 2 : 3;
 

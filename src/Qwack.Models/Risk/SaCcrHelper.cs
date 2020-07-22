@@ -45,7 +45,7 @@ namespace Qwack.Models.Risk
         public static double Pfe(Portfolio portfolio, IAssetFxModel model, double? pv=null, double? MPOR = null, double? collateral=null)
         {
             var addon = AggregateAddOn(portfolio, model, MPOR);
-            return addon == 0 ? 0.0 : Multipler(portfolio, model, pv, addon, collateral) * addon;
+            return addon==0?0.0:Multipler(portfolio, model, pv, addon, collateral) * addon;
         }
 
         public static double Multipler(Portfolio portfolio, IAssetFxModel model, double? pv = null, double? addOn = null, double? collateral = null)
@@ -63,7 +63,7 @@ namespace Qwack.Models.Risk
             var addOnIr = 0.0;
             foreach (var ccyGroup in population)
             {
-                var fxToBase = model.FundingModel.GetFxRate(model.BuildDate, $"{baseCcy.Ccy}/{ccyGroup.Key}");
+                var fxToBase = baseCcy == null ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, $"{ccyGroup.Key}/{baseCcy.Ccy}");
                 var irTrades = ccyGroup.Select(ir => ir as ISaCcrEnabledIR).ToArray();
                 var irTradeBuckets = irTrades.GroupBy(x => x.MaturityBucket(model.BuildDate));
                 var buckets = new[] { 1, 2, 3 };
@@ -91,7 +91,7 @@ namespace Qwack.Models.Risk
             {
                 var pair = pairGroup.Key;
                 var fCccy = pair.Substring(pair.Length - 3, 3);
-                var fxToBase = model.FundingModel.GetFxRate(model.BuildDate, $"{baseCcy.Ccy}/{fCccy}");
+                var fxToBase = baseCcy == null ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, $"{fCccy}/{baseCcy.Ccy}");
                 var effNotional = pairGroup.Sum(t => t.SupervisoryDelta(model) * t.ForeignNotional * fxToBase * t.MaturityFactor(model.BuildDate, MPOR));
                 var addOnForPair = Abs(effNotional) * SupervisoryFactors[SaCcrAssetClass.Fx];
                 addOnFx += addOnForPair;
@@ -114,7 +114,7 @@ namespace Qwack.Models.Risk
                 foreach (var ccyGroup in ccyGroups)
                 {
                     var fCccy = ccyGroup.Key.Ccy;
-                    var fxToBase = model.FundingModel.GetFxRate(model.BuildDate, $"{baseCcy.Ccy}/{fCccy}");
+                    var fxToBase = baseCcy == null ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, $"{fCccy}/{baseCcy.Ccy}");
                     var effNotional = ccyGroup.Sum(t => t.SupervisoryDelta(model) * t.TradeNotional * fxToBase * t.SupervisoryDuration(model.BuildDate) * t.MaturityFactor(model.BuildDate, MPOR));
                     var ratingGroup = ccyGroup.Select(e => e.ReferenceRating).Distinct();
                     if (ratingGroup.Count() > 1)
@@ -175,7 +175,7 @@ namespace Qwack.Models.Risk
                     foreach (var ccyGroup in ccyGroups)
                     {
                         var fCccy = ccyGroup.Key.Ccy;
-                        var fxToBase = baseCcy == null ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, $"{baseCcy.Ccy}/{fCccy}");
+                        var fxToBase = baseCcy == null ? 1.0 : model.FundingModel.GetFxRate(model.BuildDate, $"{fCccy}/{baseCcy.Ccy}");
                         var effNotional = ccyGroup.Sum(t => t.SupervisoryDelta(model) * t.TradeNotional(model) * fxToBase * t.MaturityFactor(model.BuildDate, MPOR));
                         addOnForType += effNotional * SupervisoryFactors[aClass];
                     }

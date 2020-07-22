@@ -32,7 +32,7 @@ namespace Qwack.Core.Models
         double GetAverageVolForMoneynessAndDates(string name, DateTime[] expiries, double moneyness);
         double GetFxVolForStrikeAndDate(string name, DateTime expiry, double strike);
         double GetFxVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike);
-
+        double GetCompositeVolForStrikeAndDate(string assetId, DateTime expiry, double strike, Currency ccy);
         IPriceCurve GetPriceCurve(string name, Currency ccy = null);
         IVolSurface GetVolSurface(string name, Currency ccy = null);
         bool TryGetVolSurface(string name, out IVolSurface surface, Currency currency = null);

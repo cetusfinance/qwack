@@ -56,15 +56,15 @@ namespace Qwack.Excel.Capital
             {
                 var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazzardCurveName, $"Hazzard curve {HazzardCurveName} not found");
                 var disc = ContainerStores.GetObjectCache<IIrCurve>().GetObjectOrThrow(DiscountCurve, $"Discount curve {DiscountCurve} not found");
-                
-                if(EPEProfile is object[,] arr)
+
+                if (EPEProfile is object[,] arr)
                 {
                     if (arr.GetLength(1) != 2)
                         throw new Exception("Expected Nx2 array for EPE");
 
                     var epeDates = new DateTime[arr.GetLength(0)];
                     var epeValues = new double[arr.GetLength(0)];
-                    for (var i=0;i<arr.GetLength(0);i++)
+                    for (var i = 0; i < arr.GetLength(0); i++)
                     {
                         epeDates[i] = (DateTime)arr[i, 0];
                         epeValues[i] = (double)arr[i, 1];
@@ -128,9 +128,9 @@ namespace Qwack.Excel.Capital
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var xvaLgd = LGDOverrideXVA.OptionalExcel(LGD);
-                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string,string>();
+                var assetIdToCategory = AssetIdToCategoryMap.RangeToDictionary<string, string>();
                 var categoryToCCF = CategoryToCCFMap.RangeToDictionary<string, double>();
-                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, xvaLgd, PartyRiskWeight, 
+                return SimplePortfolioSolver.SolveStrikeForGrossRoC(portfolio, model.Value, TargetRoC, repCcy, hz.Value, LGD, xvaLgd, PartyRiskWeight,
                     CVACapitalWeight, disc.Value, ContainerStores.CurrencyProvider, assetIdToCategory, categoryToCCF);
             });
         }
@@ -245,9 +245,9 @@ namespace Qwack.Excel.Capital
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
                 var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
-                var m = model.Value.TrimModel(portfolio,null, new[] { Currency });
+                var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
 
-                for (var i=0;i<models.Length;i++)
+                for (var i = 0; i < models.Length; i++)
                 {
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
@@ -285,7 +285,7 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                
+
                 var assetIdToCCFMap = AssetIdToCCFMap.RangeToDictionary<string, double>();
                 var result = CapitalCalculator.PvCvaCapital_BII_SM(model.Value.BuildDate, expDates, models, portfolio, repCcy, disc.Value, CvaRiskWeight,
                     assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues);
@@ -318,7 +318,7 @@ namespace Qwack.Excel.Capital
                 var model = ContainerStores.GetObjectCache<IAssetFxModel>().GetObjectOrThrow(Model, $"Asset-FX model {Model} not found");
                 var repCcy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
                 var expDates = epeCube.Value.GetAllRows().Select(r => (DateTime)r.MetaData[0]).ToArray();
-                var epeValues = epeCube.Value.GetAllRows().Select(r =>  r.Value).ToArray();
+                var epeValues = epeCube.Value.GetAllRows().Select(r => r.Value).ToArray();
                 var models = new IAssetFxModel[expDates.Length];
                 var m = model.Value.TrimModel(portfolio, null, new[] { Currency });
                 for (var i = 0; i < models.Length; i++)
@@ -326,17 +326,17 @@ namespace Qwack.Excel.Capital
                     m = m.RollModel(expDates[i], ContainerStores.CurrencyProvider);
                     models[i] = m;
                 }
-                
+
                 var assetIdToCCFMap = AssetIdToCCFMap.RangeToDictionary<string, double>();
                 var assetIdToTypeMap = AssetIdToTypeMap.RangeToDictionary<string, string>();
                 var typeToHedgeSetMap = TypeToHedgeSetMap.RangeToDictionary<string, SaCcrAssetClass>();
-                var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value, 
-                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToTypeMap,typeToHedgeSetMap, assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues, ChangeOverDate);
-                return new object [,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
+                var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value,
+                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToTypeMap, typeToHedgeSetMap, assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues, ChangeOverDate);
+                return new object[,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
             });
         }
 
-        [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital, 
+        [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital,
             Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEad_B2_SM))]
         public static object PortfolioExpectedEad_B2_SM(
             [ExcelArgument(Description = "Output cube name")] string OutputName,
@@ -398,11 +398,28 @@ namespace Qwack.Excel.Capital
                 var assetIdToCCFMap = AssetIdToCCFMap.RangeToDictionary<string, double>();
                 var assetIdToTypeMap = AssetIdToTypeMap.RangeToDictionary<string, string>();
                 var typeToHedgeSetMap = TypeToHedgeSetMap.RangeToDictionary<string, SaCcrAssetClass>();
-                var result = CapitalCalculator.EAD_Split(model.Value.BuildDate, expDates, epeValues, models, portfolio, repCcy, assetIdToTypeMap, typeToHedgeSetMap, 
+                var result = CapitalCalculator.EAD_Split(model.Value.BuildDate, expDates, epeValues, models, portfolio, repCcy, assetIdToTypeMap, typeToHedgeSetMap,
                     assetIdToCCFMap, ChangeOverDate, ContainerStores.CurrencyProvider);
                 var cube = ExcelHelper.PackResults(expDates, result, "EAD");
-                return ExcelHelper.PushToCache(cube, OutputName);
+                return ExcelHelper.PushToCache(cube, OutputName); 
             });
         }
+
+        [ExcelFunction(Description = "Computes basel K factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselK))]
+        public static object BaselK(
+            [ExcelArgument(Description = "Probability-of-default")] double PD,
+            [ExcelArgument(Description = "Loss-given-default")] double LGD,
+            [ExcelArgument(Description = "Weighted maturity")] double M)
+            => ExcelHelper.Execute(_logger, () => BaselHelper.K(PD, LGD, M));
+
+        [ExcelFunction(Description = "Computes basel B factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselB))]
+        public static object BaselB(
+            [ExcelArgument(Description = "Probability-of-default")] double PD)
+            => ExcelHelper.Execute(_logger, () => BaselHelper.b(PD));
+
+        [ExcelFunction(Description = "Computes basel R factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselR))]
+        public static object BaselR(
+            [ExcelArgument(Description = "Probability-of-default")] double PD)
+            => ExcelHelper.Execute(_logger, () => BaselHelper.R(PD));
     }
 }

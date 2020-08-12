@@ -368,7 +368,8 @@ namespace Qwack.Excel.Capital
             });
         }
 
-        [ExcelFunction(Description = "Returns EAD profile under a blend of B2 and B3, given portfolio, model and credit info", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEadSplit))]
+        [ExcelFunction(Description = "Returns EAD profile under a blend of B2 and B3, given portfolio, model and credit info", Category = CategoryNames.Capital, 
+            Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedEadSplit))]
         public static object PortfolioExpectedEadSplit(
             [ExcelArgument(Description = "Output cube name")] string OutputName,
             [ExcelArgument(Description = "Portfolio")] string Portfolio,
@@ -404,6 +405,13 @@ namespace Qwack.Excel.Capital
                 return ExcelHelper.PushToCache(cube, OutputName); 
             });
         }
+
+        [ExcelFunction(Description = "Returns notional-weighted maturity of a portfolio, given a value date", Category = CategoryNames.Capital,
+            Name = CategoryNames.Capital + "_" + nameof(PortfolioWeightedMaturity))]
+        public static object PortfolioWeightedMaturity(
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "Value date")] DateTime ValueDate) => 
+            ExcelHelper.Execute(_logger, () => Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio).WeightedMaturity(ValueDate));
 
         [ExcelFunction(Description = "Computes basel K factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselK))]
         public static object BaselK(

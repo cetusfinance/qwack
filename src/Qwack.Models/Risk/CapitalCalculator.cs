@@ -16,6 +16,8 @@ using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 using static System.Math;
+using static Qwack.Core.Basic.Consts.Cubes;
+using Qwack.Models.MCModels;
 
 namespace Qwack.Models.Risk
 {
@@ -75,10 +77,10 @@ namespace Qwack.Models.Risk
             return pvCapital;
         }
 
-        public static (double CVA, double CCR) PvCapital_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, 
+        public static (double CVA_t1, double CVA_t2, double CCR_t1, double CCR_t2) PvCapital_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, 
             Portfolio portfolio, HazzardCurve hazzardCurve, Currency reportingCurrency, IIrCurve discountCurve, double LGD, double supervisoryRiskWeight, double riskWeight,
-            Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Dictionary<string, double> assetIdToCCFMap, ICurrencyProvider currencyProvider, double[] epeProfile,
-            DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
+            Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Dictionary<string, double> assetIdToCCFMap, 
+            ICurrencyProvider currencyProvider, double[] epeProfile, double tier1Ratio, double tier2Ratio, DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
         {
             
             if (!B2B3ChangeDate.HasValue)
@@ -92,13 +94,19 @@ namespace Qwack.Models.Risk
             var MsCcr = EADDates.Select(d => d < B2B3ChangeDate ? 2.5 : SaCcrUtils.MfUnmargined(portfolio.WeightedMaturity(d))).ToArray();
             var MsCva = EADDates.Select(d => d < B2B3ChangeDate ? portfolio.WeightedMaturity(d) : SaCcrUtils.MfUnmargined(portfolio.WeightedMaturity(d))).ToArray();
 
-            var ksCCR = eads.Select((e, ix) => BaselHelper.K(pds[ix], LGD, MsCcr[ix]) * e).ToArray();
-            //var ksCVA = eads.Select((e, ix) => XVACalculator.Capital_BaselII_CVA_SM(e * dfs[ix], Ms[ix], partyCVAWeight)).ToArray();
-            var ksCVA = eads.Select((e, ix) => BaselHelper.StandardCvaB3.CvaCapitalCharge(supervisoryRiskWeight, MsCva[ix], e)).ToArray();
-            var pvCapitalCCR = PvProfile(originDate, EADDates, ksCCR, discountCurve);
-            var pvCapitalCVA = PvProfile(originDate, EADDates, ksCVA, discountCurve);
+            var rwasCcr = RwaCalculator(eads, pds, MsCcr, LGD);
+            var t1Ccr = rwasCcr.Select(r => r * tier1Ratio).ToArray();
+            var t2Ccr = rwasCcr.Select(r => r * tier2Ratio).ToArray();
+            var ts = EADDates.Select((x, ix) => ix < EADDates.Length - 1 ? (EADDates[ix + 1] - x).TotalDays / 365.0 : 0).ToArray();
+            var t1CcrPv = t1Ccr.Select((x, ix) => ts[ix] * x).Sum();
+            var t2CcrPv = t2Ccr.Select((x, ix) => ts[ix] * x).Sum();
 
-            return (pvCapitalCVA, pvCapitalCCR);
+            var ksCVA = eads.Select((e, ix) => BaselHelper.StandardCvaB3.CvaCapitalCharge(supervisoryRiskWeight, MsCva[ix], e)).ToArray();
+
+            var pvCapitalCVA = PvProfile(originDate, EADDates, ksCVA, discountCurve);
+            var pvRwaCVA = pvCapitalCVA *= 12.5;
+            var t1CvaPv = pvRwaCVA * tier1Ratio;
+            return (t1CvaPv, 0, t1CcrPv, t2CcrPv);
         }
 
         public static double[] EAD_Split(DateTime originDate, DateTime[] EADDates, double[] EPEs, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency,
@@ -187,7 +195,7 @@ namespace Qwack.Models.Risk
 
                     var pv = EPEs[i];
                     var deltaSum = 0.0;
-                    var assetDeltaCube = m.AssetCashDelta(reportingCurrency).Pivot("AssetId", AggregationAction.Sum);
+                    var assetDeltaCube = m.AssetCashDelta(reportingCurrency).Pivot(AssetId, AggregationAction.Sum);
                     foreach (var row in assetDeltaCube.GetAllRows())
                     {
                         var asset = (string)row.MetaData[0];
@@ -195,7 +203,7 @@ namespace Qwack.Models.Risk
                         var delta = Abs(row.Value); //need to consider buckets
                         deltaSum += ccf * delta;
                     }
-                    var fxDeltaCube = m.FxDelta(reportingCurrency, currencyProvider, false, true).Pivot("AssetId", AggregationAction.Sum);
+                    var fxDeltaCube = m.FxDelta(reportingCurrency, currencyProvider, false, true).Pivot(AssetId, AggregationAction.Sum);
                     foreach (var row in fxDeltaCube.GetAllRows())
                     {
                         var pair = (string)row.MetaData[0];
@@ -290,5 +298,28 @@ namespace Qwack.Models.Risk
             //return capital / time;
         }
 
+        public static ICube RwaCalculator(ICube eads, HazzardCurve hazzardCurve, Portfolio portfolio, double lgd)
+        {
+            var dateIx = eads.GetColumnIndex(ExposureDate);
+            var eadVec = eads.GetAllRows().Select(e => e.Value).ToArray();
+            var exposureDates = eads.GetAllRows().Select(x => (DateTime)x.MetaData[dateIx]).ToArray();
+            var pds = exposureDates.Select(d => hazzardCurve.GetDefaultProbability(d, d.AddYears(1))).ToArray();
+            var weightedMaturities = exposureDates.Select(d => portfolio.WeightedMaturity(d)).ToArray();
+            var rwas = RwaCalculator(eadVec, pds, weightedMaturities, lgd);
+            var result = new Dictionary<DateTime, double>();
+            for(var i=0;i<rwas.Length;i++)
+            {
+                result.Add(exposureDates[i], rwas[i]);
+            }
+            var cube = AssetFxMCModel.PackResults(result, "RWA");
+            return cube;
+        }
+
+        public static double[] RwaCalculator(double[] eads, double[] pds, double[] weightedMaturities, double lgd )
+        {
+            var ks = pds.Select((pd, ix) => BaselHelper.K(pd, lgd, weightedMaturities[ix])).ToArray();
+            var rwas = eads.Select((ead, ix) => ead * ks[ix] * 12.5).ToArray();
+            return rwas;
+        }
     }
 }

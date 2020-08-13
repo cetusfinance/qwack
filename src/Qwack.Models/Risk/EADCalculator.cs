@@ -8,6 +8,7 @@ using Qwack.Core.Basic;
 using Qwack.Utils.Parallel;
 using Qwack.Core.Cubes;
 using Qwack.Transport.BasicTypes;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
 {
@@ -36,7 +37,7 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) }
+                { ExposureDate, typeof(DateTime) }
             };
             cube.Initialize(dataTypes);
 

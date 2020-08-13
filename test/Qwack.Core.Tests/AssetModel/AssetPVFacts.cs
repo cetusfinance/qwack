@@ -15,6 +15,7 @@ using Xunit;
 using Qwack.Futures;
 using Qwack.Utils.Parallel;
 using Qwack.Transport.BasicTypes;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Core.Tests.AssetModel
 {
@@ -90,14 +91,14 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(0.0, pfPv, 8); 
 
             var deltaCube = portfolio.AssetDelta(aModel);
-            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
+            var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);
             var df = xafCurve.GetDf(startDate, settleDate);
             Assert.Equal(995.361065482776, delta,7);
 
             var fxDeltaCube = portfolio.FxDelta(aModel,usd, TestProviderHelper.CurrencyProvider);
-            var dfxAgg = fxDeltaCube.Pivot("TradeId", AggregationAction.Sum);
+            var dfxAgg = fxDeltaCube.Pivot(TradeId, AggregationAction.Sum);
             var fxDelta = (double)dfxAgg.GetAllRows().First().Value;
             Assert.Equal(-1000 * df * fxFwd * 100 / (t0Spot / fxSpot) / usdCurve.GetDf(startDate, fxPair.SpotDate(startDate)), fxDelta, 4);
         }

@@ -10,7 +10,7 @@ using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Utils.Parallel;
 using Qwack.Dates;
-using System.ComponentModel.DataAnnotations;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
 {
@@ -21,12 +21,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
                 { "Curve", typeof(string) },
                 { "RiskDate", typeof(DateTime) },
                 { "Benchmark", typeof(string) },
-                { "Metric", typeof(string) },
+                { Metric, typeof(string) },
                 { "Units", typeof(string) },
                 { "BumpSize", typeof(double) },
             };
@@ -115,8 +115,8 @@ namespace Qwack.Models.Risk
                 //    basePVbyCurrency[insToRisk[i].Currency] = basePV;
                 //}
 
-                var tIdIx = basePV.GetColumnIndex("TradeId");
-                var tTypeIx = basePV.GetColumnIndex("TradeType");
+                var tIdIx = basePV.GetColumnIndex(TradeId);
+                var tTypeIx = basePV.GetColumnIndex(TradeType);
 
                 var bumpSize = GetBumpSize(insToRisk[i]);
 
@@ -151,12 +151,12 @@ namespace Qwack.Models.Risk
 
                     var row = new Dictionary<string, object>
                             {
-                                { "TradeId", dRow.MetaData[tIdIx] },
-                                { "TradeType", dRow.MetaData[tTypeIx] },
+                                { TradeId, dRow.MetaData[tIdIx] },
+                                { TradeType, dRow.MetaData[tTypeIx] },
                                 { "Benchmark", bumpName },
                                 { "RiskDate", riskDate },
                                 { "Curve", riskCurve },
-                                { "Metric", "IrBenchmarkDelta" },
+                                { Metric, "IrBenchmarkDelta" },
                                 { "Units", riskUnits },
                                 { "BumpSize", bumpSize},
                             };
@@ -164,7 +164,7 @@ namespace Qwack.Models.Risk
                 }
             }).Wait();
 
-            return cube.Sort(new List<string> {"Curve","RiskDate","TradeId"});
+            return cube.Sort(new List<string> {"Curve","RiskDate",TradeId});
         }
 
         private static double GetScaleFactor(IFundingInstrument ins, double parFlat, double parBump, IFundingModel model)

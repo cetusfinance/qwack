@@ -18,6 +18,7 @@ using Qwack.Models.Models;
 using Qwack.Core.Curves;
 using Qwack.Models.Risk;
 using Qwack.Transport.BasicTypes;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.MCModels
 {
@@ -496,14 +497,14 @@ namespace Qwack.Models.MCModels
 
             cube.AddRow(new Dictionary<string, object>
             {
-                {"ExposureDate", DateTime.Today},
-                {"Metric", "CVA"},
+                {ExposureDate, DateTime.Today},
+                {Metric, "CVA"},
             }, cvaDouble);
 
             cube.AddRow(new Dictionary<string, object>
             {
-                {"ExposureDate", DateTime.Today},
-                {"Metric", "FVA"},
+                {ExposureDate, DateTime.Today},
+                {Metric, "FVA"},
             }, FBA + FCA);
 
             return cube;
@@ -514,8 +515,8 @@ namespace Qwack.Models.MCModels
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) },
-                { "Metric", typeof(string) }
+                { ExposureDate, typeof(DateTime) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
@@ -531,18 +532,21 @@ namespace Qwack.Models.MCModels
 
         private ICube PackResults(Func<Dictionary<DateTime,double>> method, string metric)
         {
+            Engine.RunProcess();
+            var e = method.Invoke();
+            return PackResults(e, metric);
+        }
+
+        public static ICube PackResults(Dictionary<DateTime, double> data, string metric)
+        {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) },
-                { "Metric", typeof(string) }
+                { ExposureDate, typeof(DateTime) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
-            Engine.RunProcess();
-
-            var e = method.Invoke();
-
-            foreach(var kv in e)
+            foreach (var kv in data)
             {
                 cube.AddRow(new object[] { kv.Key, metric }, kv.Value);
             }
@@ -555,10 +559,10 @@ namespace Qwack.Models.MCModels
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "Currency", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "Portfolio", typeof(string) }
+                { TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { TradeType, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) }
             };
             cube.Initialize(dataTypes);
             Engine.RunProcess();
@@ -567,20 +571,20 @@ namespace Qwack.Models.MCModels
                 case BaseMetric.CVA:
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", null },
-                        { "Currency", ccy },
-                        { "TradeType", null },
-                        { "Portfolio", null },
+                        { TradeId, null },
+                        { Consts.Cubes.Currency, ccy },
+                        { TradeType, null },
+                        { Consts.Cubes.Portfolio, null },
                     };
                     cube.AddRow(row, CVA());
                     return cube;
                 case BaseMetric.FVA:
                     var rowFVA = new Dictionary<string, object>
                     {
-                        { "TradeId", null },
-                        { "Currency", ccy },
-                        { "TradeType", null },
-                        { "Portfolio", null },
+                        { TradeId, null },
+                        { Consts.Cubes.Currency, ccy },
+                        { TradeType, null },
+                        { Consts.Cubes.Portfolio, null },
                     };
                     var (FBA, FCA) = FVA();
                     cube.AddRow(rowFVA, FBA + FCA);
@@ -604,10 +608,10 @@ namespace Qwack.Models.MCModels
                 cube = new ResultCube();
                 var dataTypes = new Dictionary<string, Type>
                 {
-                { "TradeId", typeof(string) },
-                { "Currency", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "Portfolio", typeof(string) }
+                { TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { TradeType, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) }
                 };
                 cube.Initialize(dataTypes);
             }
@@ -640,10 +644,10 @@ namespace Qwack.Models.MCModels
                 }
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", tradeId },
-                    { "Currency", ccy },
-                    { "TradeType", tradeType },
-                    { "Portfolio", ins.PortfolioName??string.Empty  },
+                    { TradeId, tradeId },
+                    { Consts.Cubes.Currency, ccy },
+                    { TradeType, tradeType },
+                    { Consts.Cubes.Portfolio, ins.PortfolioName??string.Empty  },
                 };
                 cube.AddRow(row, pv / fxRate);
             }

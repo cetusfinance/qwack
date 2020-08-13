@@ -22,6 +22,7 @@ using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 using static System.Math;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Models
 {
@@ -887,10 +888,10 @@ namespace Qwack.Models.Models
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "Currency", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "Portfolio", typeof(string) },
+                { Consts.Cubes.TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { Consts.Cubes.TradeType, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) },
             };
             cube.Initialize(dataTypes);
 
@@ -903,10 +904,10 @@ namespace Qwack.Models.Models
 
                 var row = new Dictionary<string, object>
                   {
-                        { "TradeId", tradeId },
-                        { "Currency", ccy },
-                        { "TradeType", tradeType },
-                        { "Portfolio", portfolio.Instruments[i].PortfolioName??string.Empty },
+                        { TradeId, tradeId },
+                        { Consts.Cubes.Currency, ccy },
+                        { Consts.Cubes.TradeType, tradeType },
+                        { Consts.Cubes.Portfolio, portfolio.Instruments[i].PortfolioName??string.Empty },
                   };
 
                 pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv);
@@ -1288,9 +1289,9 @@ namespace Qwack.Models.Models
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "Currency", typeof(string) },
-                { "TradeType", typeof(string) },
+                { TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { Consts.Cubes.TradeType, typeof(string) },
             };
             cube.Initialize(dataTypes);
 
@@ -1300,9 +1301,9 @@ namespace Qwack.Models.Models
 
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", tradeId },
-                    { "Currency", ccy },
-                    { "TradeType", tradeType }
+                    { TradeId, tradeId },
+                    { Consts.Cubes.Currency, ccy },
+                    { Consts.Cubes.TradeType, tradeType }
                 };
                 cube.AddRow(row, flow);
             }
@@ -1315,10 +1316,10 @@ namespace Qwack.Models.Models
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "Currency", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "PayDate", typeof(DateTime) },
+                { TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { Consts.Cubes.TradeType, typeof(string) },
+                { PayDate, typeof(DateTime) },
             };
             cube.Initialize(dataTypes);
 
@@ -1330,10 +1331,10 @@ namespace Qwack.Models.Models
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", tradeId },
-                        { "Currency", flow.Currency.Ccy },
-                        { "TradeType", tradeType },
-                        { "PayDate", flow.SettleDate }
+                        { TradeId, tradeId },
+                        { Consts.Cubes.Currency, flow.Currency.Ccy },
+                        { Consts.Cubes.TradeType, tradeType },
+                        { PayDate, flow.SettleDate }
                     };
                     cube.AddRow(row, flow.Fv);
                 }

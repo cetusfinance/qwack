@@ -14,6 +14,7 @@ using Qwack.Providers.Json;
 using Xunit;
 using Qwack.Utils.Parallel;
 using Qwack.Transport.BasicTypes;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Core.Tests.AssetModel
 {
@@ -92,7 +93,7 @@ namespace Qwack.Core.Tests.AssetModel
 
             //expected fx delta is just PV in USD
             var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
-            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
+            var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(expectedPV, delta, 4);
 
@@ -170,7 +171,7 @@ namespace Qwack.Core.Tests.AssetModel
 
             //expected fx delta is just asset delta in ZAR
             var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
-            var dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
+            var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(nominal * assetFwd, delta, 4);
 
@@ -189,7 +190,7 @@ namespace Qwack.Core.Tests.AssetModel
             Assert.Equal(expectedPV, pv, 8);
 
             deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
-            dAgg = deltaCube.Pivot("TradeId", AggregationAction.Sum);
+            dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             delta = (double)dAgg.GetAllRows().First().Value;
             Assert.Equal(nominal * assetFwd, delta, 4);
         }

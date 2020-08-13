@@ -15,6 +15,7 @@ using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
 {
@@ -169,10 +170,10 @@ namespace Qwack.Models.Risk
 
         public static (double FBA, double FCA) FVA(DateTime originDate, ICube EPE, ICube ENE, HazzardCurve hazzardCurve, IIrCurve discountCurve, IIrCurve fundingCurve)
         {
-            if (!EPE.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
+            if (!EPE.DataTypes.TryGetValue(ExposureDate, out var type) || type != typeof(DateTime))
                 throw new Exception("EPE cube input not valid");
 
-            if (!ENE.DataTypes.TryGetValue("ExposureDate", out var type2) || type2 != typeof(DateTime))
+            if (!ENE.DataTypes.TryGetValue(ExposureDate, out var type2) || type2 != typeof(DateTime))
                 throw new Exception("ENE cube input not valid");
 
             var rowsEPE = EPE.GetAllRows();
@@ -180,7 +181,7 @@ namespace Qwack.Models.Risk
             if (rowsEPE.Length != rowsENE.Length)
                 throw new Exception("EPE and ENE curves not of same size");
 
-            var dateIx = EPE.GetColumnIndex("ExposureDate");
+            var dateIx = EPE.GetColumnIndex(ExposureDate);
             var epeDates = new DateTime[rowsEPE.Length];
             var epeValues = new double[rowsEPE.Length];
             var eneValues = new double[rowsENE.Length];
@@ -290,11 +291,11 @@ namespace Qwack.Models.Risk
 
         public static (DateTime[] dates, double[] exposures) CubeToExposures(ICube EPE)
         {
-            if (!EPE.DataTypes.TryGetValue("ExposureDate", out var type) || type != typeof(DateTime))
+            if (!EPE.DataTypes.TryGetValue(ExposureDate, out var type) || type != typeof(DateTime))
                 throw new Exception("EPE cube input not valid");
 
             var rows = EPE.GetAllRows();
-            var dateIx = EPE.GetColumnIndex("ExposureDate");
+            var dateIx = EPE.GetColumnIndex(ExposureDate);
             var epeDates = new DateTime[rows.Length];
             var epeValues = new double[rows.Length];
             for (var i = 0; i < rows.Length; i++)

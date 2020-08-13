@@ -11,6 +11,7 @@ using Qwack.Dates;
 using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
 {
@@ -87,8 +88,8 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) },
-                { "Metric", typeof(string) }
+                { ExposureDate, typeof(DateTime) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 

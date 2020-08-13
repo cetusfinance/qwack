@@ -307,7 +307,9 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Map for assetIds to commodity types")] object[,] AssetIdToTypeMap,
             [ExcelArgument(Description = "Map for types to commodity hedge sets")] object[,] TypeToHedgeSetMap,
             [ExcelArgument(Description = "Asset Id to CCF map")] object[,] AssetIdToCCFMap,
-            [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate)
+            [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate,
+            [ExcelArgument(Description = "Tier 1 capital, i.e. 0.10")] double Tier1CapitalRatio,
+            [ExcelArgument(Description = "Tier 2 capital, i.e. 0.015")] double Tier2CapitalRatio)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -330,10 +332,16 @@ namespace Qwack.Excel.Capital
                 var assetIdToCCFMap = AssetIdToCCFMap.RangeToDictionary<string, double>();
                 var assetIdToTypeMap = AssetIdToTypeMap.RangeToDictionary<string, string>();
                 var typeToHedgeSetMap = TypeToHedgeSetMap.RangeToDictionary<string, SaCcrAssetClass>();
-                var result = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value,
-                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToTypeMap, typeToHedgeSetMap, assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues, ChangeOverDate);
-                return new object[,] { { "CCR PV", result.CCR }, { "CVA PV", result.CVA } };
-            });
+                var (CVA_t1, CVA_t2, CCR_t1, CCR_t2) = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value,
+                    LGD, CvaRiskWeight, PartyRiskWeight, assetIdToTypeMap, typeToHedgeSetMap, assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues,
+                    Tier1CapitalRatio, Tier2CapitalRatio, ChangeOverDate);
+                
+                return new object[,]
+                {
+                    { "Type","Tier1","Tier2" },
+                    { "CCR", CCR_t1, CCR_t2 },
+                    { "CVA", CVA_t1, CVA_t2 } };
+                });
         }
 
         [ExcelFunction(Description = "Returns EAD profile / BaselII / SM given portfolio, model and credit info", Category = CategoryNames.Capital,
@@ -403,6 +411,25 @@ namespace Qwack.Excel.Capital
                     assetIdToCCFMap, ChangeOverDate, ContainerStores.CurrencyProvider);
                 var cube = ExcelHelper.PackResults(expDates, result, "EAD");
                 return ExcelHelper.PushToCache(cube, OutputName); 
+            });
+        }
+
+        [ExcelFunction(Description = "Returns RAW profile given portfolio, ead cube and credit info", Category = CategoryNames.Capital,
+            Name = CategoryNames.Capital + "_" + nameof(PortfolioExpectedRwa))]
+        public static object PortfolioExpectedRwa(
+            [ExcelArgument(Description = "Output cube name")] string OutputName,
+            [ExcelArgument(Description = "Portfolio")] string Portfolio,
+            [ExcelArgument(Description = "EAD cube")] string EADCube,
+            [ExcelArgument(Description = "Hazzard curve")] string HazardCurve,
+            [ExcelArgument(Description = "Loss-given-default, e.g 0.45")] double LGD)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var eadCube = ContainerStores.GetObjectCache<ICube>().GetObjectOrThrow(EADCube, $"EAD cube {EADCube} not found");
+                var portfolio = Instruments.InstrumentFunctions.GetPortfolioOrTradeFromCache(Portfolio);
+                var hz = ContainerStores.GetObjectCache<HazzardCurve>().GetObjectOrThrow(HazardCurve, $"Hazzard curve {HazardCurve} not found");
+                var result = CapitalCalculator.RwaCalculator(eadCube.Value, hz.Value, portfolio, LGD);
+                return ExcelHelper.PushToCache(result, OutputName);
             });
         }
 

@@ -13,6 +13,7 @@ using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;
 using static System.Math;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
 {
@@ -38,12 +39,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -66,8 +67,8 @@ namespace Qwack.Models.Risk
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
 
@@ -89,12 +90,12 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surfaceName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Vega" }
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Vega" }
                             };
                             cube.AddRow(row, vega);
                         }
@@ -102,7 +103,7 @@ namespace Qwack.Models.Risk
                 }, !(parallelize)).Wait();
             }
 
-            return cube.Sort(new List<string> {"AssetId","PointDate","TradeType"});
+            return cube.Sort(new List<string> {AssetId,"PointDate",TradeType});
         }
 
         public static ICube AssetSegaRega(this IPvModel pvModel, Currency reportingCcy)
@@ -111,12 +112,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -140,8 +141,8 @@ namespace Qwack.Models.Risk
                 var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 var bumpedSurfacesSega = volObj.GetSegaScenarios(bumpSize, lastDateInBook);
                 var bumpedSurfacesRega = volObj.GetRegaScenarios(bumpSize, lastDateInBook);
@@ -164,12 +165,12 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surfaceName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Sega" }
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Sega" }
                             };
                             cube.AddRow(row, vega);
                         }
@@ -194,12 +195,12 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surfaceName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Rega" }
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Rega" }
                             };
                             cube.AddRow(row, vega);
                         }
@@ -219,12 +220,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -242,8 +243,8 @@ namespace Qwack.Models.Risk
             var basePvModel = pvModel.Rebuild(model, subPortfolio);
             var pvCube = basePvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+            var tidIx = pvCube.GetColumnIndex(TradeId);
+            var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             foreach (var surface in model.FundingModel.VolSurfaces)
             {
@@ -268,12 +269,12 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", surface.Key },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surface.Key },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Vega" }
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Vega" }
                             };
                             cube.AddRow(row, vega);
                         }
@@ -290,12 +291,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
             };
             cube.Initialize(dataTypes);
@@ -324,8 +325,8 @@ namespace Qwack.Models.Risk
             var pvCube = subPortfolio.PV(model, curveObj.Currency);
             var pvRows = pvCube.GetAllRows();
 
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+            var tidIx = pvCube.GetColumnIndex(TradeId);
+            var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
             var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
@@ -400,12 +401,12 @@ namespace Qwack.Models.Risk
 
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
                             cube.AddRow(row, delta);
@@ -418,12 +419,12 @@ namespace Qwack.Models.Risk
 
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Gamma" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Gamma" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
                             cube.AddRow(row, gamma);
@@ -440,12 +441,12 @@ namespace Qwack.Models.Risk
 
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
                             cube.AddRow(row, delta);
@@ -454,7 +455,7 @@ namespace Qwack.Models.Risk
                 }
             }).Wait();
 
-            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+            return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
 
@@ -464,12 +465,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
             };
             cube.Initialize(dataTypes);
@@ -499,8 +500,8 @@ namespace Qwack.Models.Risk
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
                 var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
@@ -575,12 +576,12 @@ namespace Qwack.Models.Risk
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
                                 cube.AddRow(row, delta);
@@ -593,12 +594,12 @@ namespace Qwack.Models.Risk
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Gamma" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Gamma" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
                                 cube.AddRow(row, gamma);
@@ -615,12 +616,12 @@ namespace Qwack.Models.Risk
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
                                 cube.AddRow(row, delta);
@@ -629,7 +630,7 @@ namespace Qwack.Models.Risk
                     }
                 },!(parallelize)).Wait();
             }
-            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+            return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
         public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency=null)
@@ -638,12 +639,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
                 { "Currency", typeof(string) }
             };
@@ -674,8 +675,8 @@ namespace Qwack.Models.Risk
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
 
@@ -710,12 +711,12 @@ namespace Qwack.Models.Risk
                             }
                             var row = new Dictionary<string, object>
                                 {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
                                 { "PointDate", date },
-                                { "PointLabel", bCurve.Key },
-                                { "Metric", "Delta" },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "Currency", reportingCurrency?.Ccy??bCurve.Value.Currency.Ccy },
                                 };
@@ -724,7 +725,7 @@ namespace Qwack.Models.Risk
                     }
                 }, false).Wait();
             }
-            return cube.Sort(new List<string> { "AssetId", "CurveType", "PointDate", "TradeId" });
+            return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
 
@@ -733,10 +734,10 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType",  typeof(string) },
-                { "AssetId", typeof(string) },
-                { "Metric", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
             };
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
@@ -764,8 +765,8 @@ namespace Qwack.Models.Risk
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 IPriceCurve bumpedCurve;
 
@@ -802,17 +803,17 @@ namespace Qwack.Models.Risk
                     {
                         var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curveName },
-                                { "Metric", "ParallelDelta" },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
+                                { Metric, "ParallelDelta" },
                             };
                         cube.AddRow(row, delta);
                     }
                 }
             }
 
-            return cube.Sort(new List<string> { "AssetId", "TradeId" });
+            return cube.Sort(new List<string> { AssetId, TradeId });
         }
 
         public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta=false)
@@ -821,10 +822,10 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "Metric", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
             cube.Initialize(dataTypes);
@@ -847,8 +848,8 @@ namespace Qwack.Models.Risk
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
                 var pfIx = pvCube.GetColumnIndex("Portfolio");
 
                 var fxPair = $"{domCcy}/{currency}";
@@ -891,10 +892,10 @@ namespace Qwack.Models.Risk
                     {
                         var row = new Dictionary<string, object>
                         {
-                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                            { "AssetId", fxPair },
-                            { "Metric", "FxSpotDelta" },
+                            { TradeId, bumpedRows[i].MetaData[tidIx] },
+                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                            { AssetId, fxPair },
+                            { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
                         cube.AddRow(row, delta);
@@ -908,10 +909,10 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", fxPair },
-                                { "Metric", "FxSpotGamma" },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, fxPair },
+                                { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
                             cube.AddRow(row, gamma);
@@ -928,10 +929,10 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "Metric", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
             cube.Initialize(dataTypes);
@@ -949,8 +950,8 @@ namespace Qwack.Models.Risk
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
                 var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
                 var pfIx = pvCube.GetColumnIndex("Portfolio");
 
                 //var fxPair = $"{domCcy}/{currency}";
@@ -993,10 +994,10 @@ namespace Qwack.Models.Risk
                     {
                         var row = new Dictionary<string, object>
                         {
-                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                            { "AssetId", fxPair },
-                            { "Metric", "FxSpotDelta" },
+                            { TradeId, bumpedRows[i].MetaData[tidIx] },
+                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                            { AssetId, fxPair },
+                            { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
                         cube.AddRow(row, delta);
@@ -1010,10 +1011,10 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", fxPair },
-                                { "Metric", "FxSpotGamma" },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, fxPair },
+                                { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
                             cube.AddRow(row, gamma);
@@ -1030,10 +1031,10 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "Metric", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
             cube.Initialize(dataTypes);
@@ -1070,8 +1071,8 @@ namespace Qwack.Models.Risk
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
                 var pvRows = pvCube.GetAllRows();
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
                 var pfIx = pvCube.GetColumnIndex("Portfolio");
 
                 var newModel = m.Clone();
@@ -1113,10 +1114,10 @@ namespace Qwack.Models.Risk
                     {
                         var row = new Dictionary<string, object>
                         {
-                            { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                            { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                            { "AssetId", pair.ToString() },
-                            { "Metric", "FxSpotDelta" },
+                            { TradeId, bumpedRows[i].MetaData[tidIx] },
+                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                            { AssetId, pair.ToString() },
+                            { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
                         cube.AddRow(row, delta);
@@ -1130,10 +1131,10 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", pair.ToString() },
-                                { "Metric", "FxSpotGamma" },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, pair.ToString() },
+                                { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
                             cube.AddRow(row, gamma);
@@ -1150,12 +1151,12 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
@@ -1179,8 +1180,8 @@ namespace Qwack.Models.Risk
                 var pvCube = subModel.PV(reportingCcy ?? curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
-                var tidIx = pvCube.GetColumnIndex("TradeId");
-                var tTypeIx = pvCube.GetColumnIndex("TradeType");
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
                 var bumpedCurves = curveObj.BumpScenarios(bumpSize, lastDateInBook);
 
@@ -1202,12 +1203,12 @@ namespace Qwack.Models.Risk
                         {
                             var row = new Dictionary<string, object>
                             {
-                                { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                                { "TradeType", bumpedRows[i].MetaData[tTypeIx] },
-                                { "AssetId", curve.Key },
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, curve.Key },
                                 { "PointDate", bCurve.Key},
-                                { "PointLabel", bCurve.Key.ToString("yyyy-MM-dd") },
-                                { "Metric", "IrDelta" }
+                                { PointLabel, bCurve.Key.ToString("yyyy-MM-dd") },
+                                { Metric, "IrDelta" }
                             };
                             cube.AddRow(row, delta);
                         }
@@ -1223,11 +1224,11 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -1239,8 +1240,8 @@ namespace Qwack.Models.Risk
             var cashCube = pvModel.Portfolio.FlowsT0(model, reportingCcy);
             var cashRows = cashCube.GetAllRows();
 
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+            var tidIx = pvCube.GetColumnIndex(TradeId);
+            var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
             var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
@@ -1258,11 +1259,11 @@ namespace Qwack.Models.Risk
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", pvRowsFwd[i].MetaData[tidIx] },
-                        { "TradeType", pvRowsFwd[i].MetaData[tTypeIx] },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", string.Empty },
-                        { "Metric", "Theta" }
+                        { TradeId, pvRowsFwd[i].MetaData[tidIx] },
+                        { TradeType, pvRowsFwd[i].MetaData[tTypeIx] },
+                        { AssetId, string.Empty },
+                        { PointLabel, string.Empty },
+                        { Metric, "Theta" }
                     };
                     cube.AddRow(row, theta);
                 }
@@ -1276,11 +1277,11 @@ namespace Qwack.Models.Risk
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", cashRows[i].MetaData[tidIx] },
-                        { "TradeType", cashRows[i].MetaData[tTypeIx] },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", "CashMove" },
-                        { "Metric", "Theta" }
+                        { TradeId, cashRows[i].MetaData[tidIx] },
+                        { TradeType, cashRows[i].MetaData[tTypeIx] },
+                        { AssetId, string.Empty },
+                        { PointLabel, "CashMove" },
+                        { Metric, "Theta" }
                     };
                     cube.AddRow(row, cash);
                 }
@@ -1292,18 +1293,18 @@ namespace Qwack.Models.Risk
                 var baseDeltaCube = pvModel.AssetDelta();
                 var rolledDeltaCube = rolledPvModel.AssetDelta();
                 var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-                var plId = charmCube.GetColumnIndex("PointLabel");
-                var aId = charmCube.GetColumnIndex("AssetId");
-                var ttId = charmCube.GetColumnIndex("TradeType");
+                var plId = charmCube.GetColumnIndex(PointLabel);
+                var aId = charmCube.GetColumnIndex(AssetId);
+                var ttId = charmCube.GetColumnIndex(TradeType);
                 foreach (var charmRow in charmCube.GetAllRows())
                 {
                     var row = new Dictionary<string, object>
                     {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "TradeType", charmRow.MetaData[ttId] },
-                    { "AssetId", charmRow.MetaData[aId] },
-                    { "PointLabel", charmRow.MetaData[plId] },
-                    { "Metric", "Charm" }
+                    { TradeId, charmRow.MetaData[tidIx] },
+                    { TradeType, charmRow.MetaData[ttId] },
+                    { AssetId, charmRow.MetaData[aId] },
+                    { PointLabel, charmRow.MetaData[plId] },
+                    { Metric, "Charm" }
                     };
                     cube.AddRow(row, charmRow.Value);
                 }
@@ -1312,16 +1313,16 @@ namespace Qwack.Models.Risk
                 baseDeltaCube = FxPairsToRisk == null ? pvModel.FxDeltaRaw(reportingCcy, currencyProvider) : pvModel.FxDeltaSpecific(reportingCcy, FxPairsToRisk, currencyProvider);
                 rolledDeltaCube = FxPairsToRisk == null ? rolledPvModel.FxDeltaRaw(reportingCcy, currencyProvider) : rolledPvModel.FxDeltaSpecific(reportingCcy, FxPairsToRisk, currencyProvider);
                 charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-                var fId = charmCube.GetColumnIndex("AssetId");
+                var fId = charmCube.GetColumnIndex(AssetId);
                 foreach (var charmRow in charmCube.GetAllRows())
                 {
                     var row = new Dictionary<string, object>
                     {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "AssetId", charmRow.MetaData[fId] },
-                    { "TradeType", charmRow.MetaData[ttId] },
-                    { "PointLabel", string.Empty },
-                    { "Metric", "Charm" }
+                    { TradeId, charmRow.MetaData[tidIx] },
+                    { AssetId, charmRow.MetaData[fId] },
+                    { TradeType, charmRow.MetaData[ttId] },
+                    { PointLabel, string.Empty },
+                    { Metric, "Charm" }
                     };
                     cube.AddRow(row, charmRow.Value);
                 }
@@ -1334,11 +1335,11 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
-                { "Metric", typeof(string) }
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 
@@ -1355,11 +1356,11 @@ namespace Qwack.Models.Risk
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", t.Key.TradeId},
-                        { "TradeType", (t.Key as IAssetInstrument)?.TradeType()  },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", "Financing" },
-                        { "Metric", "Theta" }
+                        { TradeId, t.Key.TradeId},
+                        { TradeType, (t.Key as IAssetInstrument)?.TradeType()  },
+                        { AssetId, string.Empty },
+                        { PointLabel, "Financing" },
+                        { Metric, "Theta" }
                     };
                     cube.AddRow(row, finTheta);
                 }
@@ -1369,11 +1370,11 @@ namespace Qwack.Models.Risk
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", t.Key.TradeId},
-                        { "TradeType", (t.Key as IAssetInstrument)?.TradeType()  },
-                        { "AssetId", string.Empty },
-                        { "PointLabel", "Option" },
-                        { "Metric", "Theta" }
+                        { TradeId, t.Key.TradeId},
+                        { TradeType, (t.Key as IAssetInstrument)?.TradeType()  },
+                        { AssetId, string.Empty },
+                        { PointLabel, "Option" },
+                        { Metric, "Theta" }
                     };
                     cube.AddRow(row, optTheta);
                 }
@@ -1388,14 +1389,14 @@ namespace Qwack.Models.Risk
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "Metric", typeof(string) }
+                { TradeId, typeof(string) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
             
             var pvCube = pvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
-            var tidIx = pvCube.GetColumnIndex("TradeId");
+            var tidIx = pvCube.GetColumnIndex(TradeId);
 
             var bumpedCorrelMatrix = pvModel.VanillaModel.CorrelationMatrix.Bump(epsilon);
 
@@ -1415,8 +1416,8 @@ namespace Qwack.Models.Risk
                 {
                     var row = new Dictionary<string, object>
                     {
-                        { "TradeId", bumpedRows[i].MetaData[tidIx] },
-                        { "Metric", "CorrelDelta" }
+                        { TradeId, bumpedRows[i].MetaData[tidIx] },
+                        { Metric, "CorrelDelta" }
                     };
                     cube.AddRow(row, cDelta);
                 }
@@ -1430,12 +1431,12 @@ namespace Qwack.Models.Risk
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "TradeId", typeof(string) },
-                { "TradeType", typeof(string) },
-                { "AssetId", typeof(string) },
-                { "PointLabel", typeof(string) },
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { PointLabel, typeof(string) },
                 { "PointDate", typeof(DateTime) },
-                { "Metric", typeof(string) },
+                { Metric, typeof(string) },
                 { "Currency", typeof(string) },
                 { "Portfolio", typeof(string) }
             };
@@ -1447,8 +1448,8 @@ namespace Qwack.Models.Risk
             var cashCube = pvModel.Portfolio.FlowsT0(pvModel.VanillaModel, reportingCcy);
             var cashRows = cashCube.GetAllRows();
 
-            var tidIx = pvCube.GetColumnIndex("TradeId");
-            var tTypeIx = pvCube.GetColumnIndex("TradeType");
+            var tidIx = pvCube.GetColumnIndex(TradeId);
+            var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var rolledVanillaModel = pvModel.VanillaModel.RollModel(fwdValDate, currencyProvider);
             var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
@@ -1460,20 +1461,20 @@ namespace Qwack.Models.Risk
             var thetaCube = pvCubeFwd.QuickDifference(pvCube);
             cube = cube.Merge(thetaCube, new Dictionary<string, object>
             {
-                 { "AssetId", string.Empty },
-                 { "PointLabel", string.Empty },
+                 { AssetId, string.Empty },
+                 { PointLabel, string.Empty },
                  { "PointDate", fwdValDate },
-                 { "Metric", "Theta" }
+                 { Metric, "Theta" }
             });
 
 
             //cash move
             cube = cube.Merge(cashCube, new Dictionary<string, object>
             {
-                 { "AssetId", string.Empty },
-                 { "PointLabel", "CashMove"  },
+                 { AssetId, string.Empty },
+                 { PointLabel, "CashMove"  },
                  { "PointDate", fwdValDate },
-                 { "Metric", "Theta" }
+                 { Metric, "Theta" }
             });
 
             //setup to run in parallel
@@ -1515,28 +1516,28 @@ namespace Qwack.Models.Risk
             //var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
             var rolledDeltaGammaCube = tasks["RolledDeltaGamma"].Result;
 
-            var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
-            var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Delta" } });
-            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "Gamma" } });
+            var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Delta" } });
+            var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Delta" } });
+            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Gamma" } });
             var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
             cube = cube.Merge(charmCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
-                 { "Metric", "Charm"},
+                 { Metric, "Charm"},
             });
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
-                 { "Metric", "AssetDeltaT1" },
+                 { Metric, "AssetDeltaT1" },
             });
             cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
-                 { "Metric", "AssetGammaT1" },
+                 { Metric, "AssetGammaT1" },
             });
 
             //charm-fx
@@ -1544,46 +1545,46 @@ namespace Qwack.Models.Risk
             cube = cube.Merge(baseDeltaCube, new Dictionary<string, object>
             {
                 { "PointDate", DateTime.MinValue },
-                { "PointLabel", string.Empty },
+                { PointLabel, string.Empty },
                 { "Currency", string.Empty },
             });
             rolledDeltaGammaCube = tasks["RolledFxDeltaGamma"].Result;
-            rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotDelta" } });
-            rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { "Metric", "FxSpotGamma" } });
+            rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "FxSpotDelta" } });
+            rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "FxSpotGamma" } });
 
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
-                 { "PointLabel", string.Empty },
+                 { PointLabel, string.Empty },
                  { "PointDate", DateTime.MinValue },
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
-                 { "Metric", "FxSpotDeltaT1" },
+                 { Metric, "FxSpotDeltaT1" },
             });
 
             cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
             {
-                 { "PointLabel", string.Empty },
+                 { PointLabel, string.Empty },
                  { "PointDate", DateTime.MinValue },
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
-                 { "Metric", "FxSpotGammaT1" },
+                 { Metric, "FxSpotGammaT1" },
             });
 
             charmCube = rolledDeltaCube.Difference(baseDeltaCube);
-            var fId = charmCube.GetColumnIndex("AssetId");
+            var fId = charmCube.GetColumnIndex(AssetId);
             foreach (var charmRow in charmCube.GetAllRows())
             {
                 var row = new Dictionary<string, object>
                 {
-                    { "TradeId", charmRow.MetaData[tidIx] },
-                    { "TradeType", charmRow.MetaData[tTypeIx] },
-                    { "AssetId", charmRow.MetaData[fId] },
-                    { "PointLabel", string.Empty },
+                    { TradeId, charmRow.MetaData[tidIx] },
+                    { TradeType, charmRow.MetaData[tTypeIx] },
+                    { AssetId, charmRow.MetaData[fId] },
+                    { PointLabel, string.Empty },
                     { "PointDate", DateTime.MinValue },
                     { "Currency", string.Empty },
-                    { "Metric", "Charm" }
+                    { Metric, "Charm" }
                 };
                 cube.AddRow(row, charmRow.Value);
             }

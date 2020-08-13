@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Qwack.Dates;
 using Qwack.Excel.Utils;
 using Qwack.Core.Cubes;
+using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Excel.Services
 {
@@ -386,8 +387,8 @@ namespace Qwack.Excel.Services
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
-                { "ExposureDate", typeof(DateTime) },
-                { "Metric", typeof(string) }
+                { ExposureDate, typeof(DateTime) },
+                { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
 

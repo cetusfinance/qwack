@@ -57,8 +57,7 @@ deploy:
   on:
     branch: master
 
- deploy:  
-  provider: GitHub
+- provider: GitHub
   auth_token:
     secure: YOYE50pquLdOtf6OYKgV8oL8w567cQXav4cmHxqBQXcC77HbPwj7KmRsqduqpQ/F
   artifact: /.*\.zip/            

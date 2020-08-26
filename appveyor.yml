@@ -57,3 +57,11 @@ deploy:
   on:
     branch: master
 
+- provider: GitHub
+  auth_token:
+    secure: fMKvIzPFcIxiGqcMaGJeAj9IbdVoFER6s0j6R8Af9J/jdnWamgmA7DWvZJezIaJQ
+  artifact: /.*\.zip/            
+  draft: false
+  prerelease: false
+  on:
+    branch: master                 # release from master branch only

@@ -10,6 +10,7 @@ using Qwack.Math.Extensions;
 using System.Net.Http;
 using static Qwack.Math.Statistics;
 using Qwack.Transport.BasicTypes;
+using Qwack.Core.Models;
 
 namespace Qwack.Options
 {
@@ -40,5 +41,14 @@ namespace Qwack.Options
 
             return X * P0(tFix) * NormSDist(dPlus) - P0(tPay) * NormSDist(dMinus);
         }
+    }
+
+    public class HullWhite2
+    {
+        private const double tBump = 1e-6;
+        public static double F0(double T, IIrCurve curve) => -(curve.GetDf(0, T) - curve.GetDf(0, T + tBump)) / tBump;
+        public static double F0dt(double T, IIrCurve curve) => (F0(T,curve) - F0(T + tBump,curve)) / tBump;
+        public static double Theta(double T, double sigma, double alpha, IIrCurve curve) =>
+            alpha * F0(T, curve) + F0dt(T, curve) + sigma * sigma / (2.0 * alpha) * (1.0 - Exp(-2 * alpha * T));
     }
 }

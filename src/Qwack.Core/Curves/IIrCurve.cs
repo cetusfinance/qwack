@@ -10,6 +10,7 @@ namespace Qwack.Core.Curves
     {
         DateTime BuildDate { get; }
         double GetDf(DateTime startDate, DateTime endDate);
+        double GetDf(double tStart, double tEnd);
         double GetForwardRate(DateTime startDate, DateTime endDate, RateType rateType, DayCountBasis basis);
         double GetForwardRate(DateTime startDate, DateTime endDate, RateType rateType, double tbasis);
         string Name { get; }

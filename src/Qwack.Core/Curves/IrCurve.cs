@@ -80,10 +80,15 @@ namespace Qwack.Core.Curves
         {
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
             var te = _buildDate.CalculateYearFraction(endDate, _basis);
-            var rateS = GetRate(ts);
-            var rateE = GetRate(te);
-            var dfS = DFFromRate(ts, rateS, RateStorageType);
-            var dfE = DFFromRate(te, rateE, RateStorageType);
+            return GetDf(ts, te);
+        }
+
+        public double GetDf(double tStart, double tEnd)
+        {
+            var rateS = GetRate(tStart);
+            var rateE = GetRate(tEnd);
+            var dfS = DFFromRate(tStart, rateS, RateStorageType);
+            var dfE = DFFromRate(tEnd, rateE, RateStorageType);
             return dfE / dfS;
         }
 

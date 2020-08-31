@@ -657,6 +657,9 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-',' '), out var y))
                         throw new Exception($"Could not parse year from {period}");
                     return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31));
+                case string p when p.StartsWith("M") && p.Split('M').Length == 2 && int.TryParse(p.Split('M')[1], out var mm):
+                    var dm = DateTime.Today.AddMonths(mm);
+                    return (Start: new DateTime(dm.Year, dm.Month, 1), End: new DateTime(dm.Year, dm.Month, 1).LastDayOfMonth());
                 case string p when p.Length == 2 && int.TryParse(p.Substring(1,1), out var yr) && FutureMonths.Contains(p.Substring(0,1)): //X8
                     var m1 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) +1;
                     return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth()); ;
@@ -697,6 +700,9 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var y))
                         return (Start: default(DateTime), End: default(DateTime), valid: false);
                     return (Start: new DateTime(y + 2000, 1, 1), End: new DateTime(y + 2000, 12, 31), valid:true);
+                case string p when p.StartsWith("M") && p.Split('M').Length == 2 && int.TryParse(p.Split('M')[1], out var mm):
+                     var dm = DateTime.Today.AddMonths(mm);
+                     return (Start: new DateTime(dm.Year, dm.Month, 1), End: new DateTime(dm.Year, dm.Month, 1).LastDayOfMonth(), valid: true);
                 case string p when p.Length == 2 && int.TryParse(p.Substring(1, 1), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X8
                     var m1 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth(), valid:true); ;

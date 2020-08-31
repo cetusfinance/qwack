@@ -156,7 +156,47 @@ namespace Qwack.Models.Calibrators
             var o = new AssetFxModel(valDate, fm);
             o.AddVolSurfaces(surfaces.ToDictionary(s => s.AssetId, s => s));
             o.AddPriceCurves(priceCurves.ToDictionary(c => c.AssetId, c => c));
+            InjectFakeLme(o, currencyProvider, calendarProvider, valDate);
             return o;
+        }
+
+        private static void InjectFakeLme(AssetFxModel model, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, DateTime valDate)
+        {
+            var periods = new[] { "2b", "3m", "12m", "36m" };
+            var dates = periods.Select(p => valDate.AddPeriod(RollType.LME, calendarProvider.GetCalendar("LON"), new Frequency(p))).ToArray();
+
+            var prices = new Dictionary<string, double[]>()
+            {
+                {"CA", new double [] {6000,6100,6200,6300} },
+                {"AH", new double [] {1700,1750,1800,1850} },
+                {"NI", new double [] {14000,14250,14500,14700} },
+                {"ZS", new double [] {2300,2325,2350,2375} },
+                {"PB", new double [] {1920,1930,1940,1950} },
+                {"SN", new double [] {17500,18000,18250,18500} }
+            };
+
+            var nContracts = dates.Length;
+
+            var vols = dates.Select(x => new[] { 0.32 }).ToArray();
+
+            foreach (var p in prices)
+            {
+                var codes = periods.Select(x => p.Key + "-" + x).ToArray();
+                var curve = new BasicPriceCurve(valDate, dates, p.Value, PriceCurveType.LME, currencyProvider, periods)
+                {
+                    AssetId = p.Key,
+                    Currency = currencyProvider.GetCurrency("USD"),
+                    Name = p.Key
+                };
+                var volSurface = new GridVolSurface(valDate, new[] { 0.5 }, dates, vols, StrikeType.ForwardDelta, Interpolator1DType.DummyPoint, Interpolator1DType.LinearInVariance, DayCountBasis.Act365F)
+                {
+                    AssetId = p.Key,
+                    Currency = currencyProvider.GetCurrency("USD"),
+                    Name = p.Key
+                };
+                model.AddPriceCurve(p.Key, curve);
+                model.AddVolSurface(p.Key, volSurface);
+            }
         }
 
         public static void SaveSampleSpec(string outputFileName)

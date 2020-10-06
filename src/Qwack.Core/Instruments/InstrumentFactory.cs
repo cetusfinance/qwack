@@ -31,8 +31,7 @@ namespace Qwack.Core.Instruments
                             HedgingSet = transportObject.AsianSwapStrip.HedgingSet,
                         };
                     case AssetInstrumentType.AsianOption:
-                        var ao = (AsianOption)GetAsianSwap(transportObject.AsianOption, currencyProvider, calendarProvider);
-                        ao.CallPut = transportObject.AsianOption.CallPut;
+                        var ao = GetAsianOption(transportObject.AsianOption, currencyProvider, calendarProvider);
                         return ao;
                     case AssetInstrumentType.Forward:
                         return transportObject.Forward.GetForward(currencyProvider, calendarProvider);
@@ -80,6 +79,35 @@ namespace Qwack.Core.Instruments
             Counterparty = transportObject.Counterparty,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
+        };
+
+        private static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new AsianOption
+        {
+            TradeId = transportObject.TradeId,
+            Notional = transportObject.Notional,
+            Direction = transportObject.Direction,
+            AverageStartDate = transportObject.AverageStartDate,
+            AverageEndDate = transportObject.AverageEndDate,
+            FixingDates = transportObject.FixingDates,
+            FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
+            PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
+            SpotLag = new Frequency(transportObject.SpotLag),
+            SpotLagRollType = transportObject.SpotLagRollType,
+            PaymentLag = new Frequency(transportObject.PaymentLag),
+            PaymentLagRollType = transportObject.PaymentLagRollType,
+            PaymentDate = transportObject.PaymentDate,
+            PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),
+            AssetFixingId = transportObject.AssetFixingId,
+            AssetId = transportObject.AssetId,
+            DiscountCurve = transportObject.DiscountCurve,
+            FxConversionType = transportObject.FxConversionType,
+            FxFixingDates = transportObject.FxFixingDates,
+            FxFixingId = transportObject.FxFixingId,
+            Strike = transportObject.Strike,
+            Counterparty = transportObject.Counterparty,
+            HedgingSet = transportObject.HedgingSet,
+            PortfolioName = transportObject.PortfolioName,
+            CallPut = transportObject.CallPut
         };
 
         private static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new Forward

@@ -81,17 +81,39 @@ namespace Qwack.Core.Instruments.Asset
         public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model.BuildDate), CallPut, SupervisoryVol, Notional);
         private double SupervisoryVol => SaCcrParameters.SupervisoryOptionVols[AssetClass];
 
-        public new TO_Instrument ToTransportObject()
-        {
-            var swapTO = base.ToTransportObject().AsianSwap;
-            var aoTO = (TO_AsianOption)swapTO;
-            aoTO.CallPut = CallPut;
-            return new TO_Instrument
+        public override TO_Instrument ToTransportObject() =>
+            new TO_Instrument
             {
                 AssetInstrumentType = AssetInstrumentType.AsianOption,
-                AsianOption = aoTO
+                AsianOption = new TO_AsianOption
+                {
+                    TradeId = TradeId,
+                    Notional = Notional,
+                    Direction = Direction,
+                    AverageStartDate = AverageStartDate,
+                    AverageEndDate = AverageEndDate,
+                    FixingDates = (DateTime[])FixingDates.Clone(),
+                    FixingCalendar = FixingCalendar?.Name,
+                    PaymentCalendar = PaymentCalendar?.Name,
+                    SpotLag = SpotLag.ToString(),
+                    SpotLagRollType = SpotLagRollType,
+                    PaymentLag = PaymentLag.ToString(),
+                    PaymentLagRollType = PaymentLagRollType,
+                    PaymentDate = PaymentDate,
+                    PaymentCurrency = PaymentCurrency,
+                    AssetFixingId = AssetFixingId,
+                    AssetId = AssetId,
+                    DiscountCurve = DiscountCurve,
+                    FxConversionType = FxConversionType,
+                    FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+                    FxFixingId = FxFixingId,
+                    Strike = Strike,
+                    Counterparty = Counterparty,
+                    HedgingSet = HedgingSet,
+                    PortfolioName = PortfolioName,
+                    CallPut = CallPut
+                }
             };
-        }
-           
+
     }
 }

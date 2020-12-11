@@ -162,7 +162,7 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Currency>.Default.Equals(Currency, swap.Currency) &&
                    HedgingSet == swap.HedgingSet;
 
-        public TO_Instrument ToTransportObject() =>
+        public virtual TO_Instrument ToTransportObject() =>
             new TO_Instrument
             {
                 AssetInstrumentType = AssetInstrumentType.AsianSwap,

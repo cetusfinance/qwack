@@ -492,7 +492,7 @@ namespace Qwack.Models.MCModels
             var epe = EPE();
             var cvaDouble = CVA();
             var (FBA, FCA) = FVA();
-
+            var pv = PV(Settings.ReportingCurrency);
             var cube = pfe.Merge(epe);
 
             cube.AddRow(new Dictionary<string, object>
@@ -506,6 +506,12 @@ namespace Qwack.Models.MCModels
                 {ExposureDate, DateTime.Today},
                 {Metric, "FVA"},
             }, FBA + FCA);
+
+            cube.AddRow(new Dictionary<string, object>
+            {
+                {ExposureDate, DateTime.Today},
+                {Metric, "PV"},
+            }, pv.SumOfAllRows);
 
             return cube;
         }

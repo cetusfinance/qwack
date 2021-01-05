@@ -27,6 +27,10 @@ namespace Qwack.Models.Calibrators
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
             var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value,MinPrice)).ToArray();
+            
+            if (pricesVec.Length == 0)
+                return null;
+
             var origin = DateTime.ParseExact(parsed.First().TradeDate,"MM/dd/yyyy", CultureInfo.InvariantCulture);
             var curve = new BasicPriceCurve(origin, datesVec, pricesVec, curveType, currency, labelsVec)
             {

@@ -245,7 +245,7 @@ namespace Qwack.Models.Calibrators
             {
                 var ins = instruments.Where(i => i.Instrmt.Sym == kv.Value);
                 if (ins.Count() > 1)
-                    throw new Exception();
+                    ins = new List<FIXMLMktDataFull>() { ins.First() };
                 o.Add(kv.Key, Convert.ToDouble(ins.Single().Full.Single(f => f.Typ == "6").Px));
             }
 

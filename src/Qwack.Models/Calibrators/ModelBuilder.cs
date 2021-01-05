@@ -67,14 +67,33 @@ namespace Qwack.Models.Calibrators
 
             foreach (var c in spec.NymexSpecs)
             {
-                var curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider, c.PriceCurveType);
-                curve.Units = c.Units;
-                priceCurves.Add(curve);
+                BasicPriceCurve curve;
+                try
+                {
+                    curve = NYMEXModelBuilder.GetCurveForCode(c.NymexCodeFuture, Path.Combine(_filepath, FilenameNymexFuture), c.QwackCode, futureSettingsProvider, currencyProvider, c.PriceCurveType);
+                    if (curve != null)
+                    {
+                        curve.Units = c.Units;
+                        priceCurves.Add(curve);
+                    }
+                }
+                catch
+                {
+                    throw new Exception($"Error building NYMEX curve for {c.QwackCode}");
+                }
+                
                 if (!string.IsNullOrWhiteSpace(c.NymexCodeOption))
                 {
-                    var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider, futureSettingsProvider);
-                    surface.AssetId = c.QwackCode;
-                    surfaces.Add(surface);
+                    try
+                    {
+                        var surface = NYMEXModelBuilder.GetSurfaceForCode(c.NymexCodeOption, Path.Combine(_filepath, FilenameNymexOption), c.QwackCode, curve, calendarProvider, currencyProvider, futureSettingsProvider);
+                        surface.AssetId = c.QwackCode;
+                        surfaces.Add(surface);
+                    }
+                    catch
+                    {
+                        throw new Exception($"Error building NYMEX vol surface for {c.QwackCode}");
+                    }
                 }
             }
             foreach (var c in spec.ProxyVols)
@@ -255,7 +274,7 @@ namespace Qwack.Models.Calibrators
                     new ModelBuilderSpecNymex {QwackCode="SingGO",NymexCodeFuture="SG", Units=CommodityUnits.bbl, PriceCurveType=PriceCurveType.NYMEX},                  //Singapore Gasoil
 
                     new ModelBuilderSpecNymex {QwackCode="Sing0.5",NymexCodeFuture="S5M", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//0.5% Sing
-                    new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="UA", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//Sing180
+                    new ModelBuilderSpecNymex {QwackCode="Sing180",NymexCodeFuture="0F", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//Sing180
                     new ModelBuilderSpecNymex {QwackCode="Sing380",NymexCodeFuture="SE", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//Sing380
                     new ModelBuilderSpecNymex {QwackCode="NWE3.5",NymexCodeFuture="0D", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//3.5% NWE
                     new ModelBuilderSpecNymex {QwackCode="NWE1.0",NymexCodeFuture="0B", Units=CommodityUnits.mt, PriceCurveType=PriceCurveType.NYMEX},//1.0% NWE

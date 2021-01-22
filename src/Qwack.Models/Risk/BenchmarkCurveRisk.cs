@@ -171,7 +171,7 @@ namespace Qwack.Models.Risk
         {
             switch (ins)
             {
-                case FxForward fxf:
+                case FxForward:
                     return 1.0 / (parBump - parFlat);
                 case STIRFuture st:
                     return 1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
@@ -189,6 +189,9 @@ namespace Qwack.Models.Risk
                 case FloatingRateLoanDepo fld:
                     var pvF = fld.SetParRate(parBump).Pv(model, true);
                     return 1.0 / pvF * fld.Notional;
+                case FixedRateLoanDeposit fxd:
+                    var pvFxd = fxd.SetParRate(parBump).Pv(model, true);
+                    return 1.0 / pvFxd * fxd.Notional;
                 default:
                     return 1.0;
             }
@@ -197,8 +200,8 @@ namespace Qwack.Models.Risk
         {
             switch (ins)
             {
-                case STIRFuture st:
-                case OISFuture oi:
+                case STIRFuture:
+                case OISFuture:
                     return 0.01;
                 default:
                     return 0.0001;
@@ -208,15 +211,16 @@ namespace Qwack.Models.Risk
         {
             switch (ins)
             {
-                case STIRFuture st:
-                case OISFuture oi:
+                case STIRFuture:
+                case OISFuture:
                     return "Contracts";
-                case ForwardRateAgreement fra:
-                case FxForward fxf:
-                case IrSwap irs:
-                case FloatingRateLoanDepo fld:
+                case ForwardRateAgreement:
+                case FxForward:
+                case IrSwap:
+                case FloatingRateLoanDepo:
+                case FixedRateLoanDeposit:
                     return "Nominal";
-                case ContangoSwap cs:
+                case ContangoSwap:
                     return "Oz";
                 default:
                     return "PnL";

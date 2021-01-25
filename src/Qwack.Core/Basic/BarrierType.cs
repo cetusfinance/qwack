@@ -13,7 +13,8 @@ namespace Qwack.Core.Basic
     public enum BarrierObservationType
     {
         Continuous,
-        Daily
+        Daily,
+        European
     }
 
     public enum BarrierSide

@@ -9,6 +9,7 @@ namespace Qwack.Core.Basic
     /// </summary>
     public enum BasketType
     {
+        SingleAsset,
         EquallyWeightedBasket,
         WeightedBasket,
         BestOf,

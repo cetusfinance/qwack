@@ -194,6 +194,19 @@ namespace Qwack.Core.Instruments.Asset
                     PortfolioName = PortfolioName
                 }
             };
+
+        public override int GetHashCode()
+        {
+            var hc = TradeId.GetHashCode() ^ Counterparty.GetHashCode() ^ PortfolioName.GetHashCode()
+                ^ Notional.GetHashCode() ^ Direction.GetHashCode() ^ AverageStartDate.GetHashCode()
+                ^ AverageEndDate.GetHashCode() ^ (FixingDates ?? Array.Empty<DateTime>()).GetHashCode()
+                ^ FixingCalendar.GetHashCode() ^ PaymentCalendar.GetHashCode() ^ SpotLag.GetHashCode()
+                ^ SpotLagRollType.GetHashCode() ^ PaymentLag.GetHashCode() ^ PaymentLagRollType.GetHashCode()
+                ^ PaymentDate.GetHashCode() ^ Strike.GetHashCode() ^ AssetId.GetHashCode() ^ AssetFixingId.GetHashCode()
+                ^ FxFixingId.GetHashCode() ^ (FxFixingDates ?? Array.Empty<DateTime>()).GetHashCode() ^ PaymentCurrency.GetHashCode()
+                ^ FxConversionType.GetHashCode() ^ DiscountCurve.GetHashCode() ^ Currency.GetHashCode() ^ HedgingSet.GetHashCode();
+            return hc;
+        }
     }
 }
 

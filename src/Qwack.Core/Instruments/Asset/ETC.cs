@@ -109,5 +109,9 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Frequency>.Default.Equals(SettleLag, eTC.SettleLag) &&
                    EqualityComparer<Calendar>.Default.Equals(SettleCalendar, eTC.SettleCalendar) &&
                    DiscountCurve == eTC.DiscountCurve;
+
+        public override int GetHashCode() => Currency.GetHashCode() ^ TradeId.GetHashCode() ^ Counterparty.GetHashCode()
+            ^ PortfolioName.GetHashCode() ^ Notional.GetHashCode() ^ AssetId.GetHashCode() ^ ScalingFactor.GetHashCode()
+            ^ SettleLag.GetHashCode() ^ SettleCalendar.GetHashCode() ^ DiscountCurve.GetHashCode();
     }
 }

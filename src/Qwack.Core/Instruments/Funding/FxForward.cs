@@ -121,6 +121,9 @@ namespace Qwack.Core.Instruments.Funding
                    ForeignDiscountCurve == forward.ForeignDiscountCurve &&
                    TradeId == forward.TradeId;
 
+        public override int GetHashCode() => Strike.GetHashCode() ^ DomesticQuantity.GetHashCode() ^ DeliveryDate.GetHashCode() 
+            ^ DomesticCCY.GetHashCode() ^ ForeignCCY.GetHashCode() ^ ForeignDiscountCurve.GetHashCode() ^ TradeId.GetHashCode();
+
         IFundingInstrument IFundingInstrument.Clone() => new FxForward
         {
             Counterparty = Counterparty,
@@ -162,7 +165,6 @@ namespace Qwack.Core.Instruments.Funding
         public virtual double SupervisoryDelta(IAssetFxModel model) => 1.0;
         public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
         private double T(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
-
 
         public virtual List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
             {

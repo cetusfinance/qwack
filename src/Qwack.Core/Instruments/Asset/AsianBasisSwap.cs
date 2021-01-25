@@ -53,5 +53,7 @@ namespace Qwack.Core.Instruments.Asset
             TradeId == basisSwap.TradeId &&
             Enumerable.SequenceEqual(PaySwaplets, basisSwap.PaySwaplets) &&
             Enumerable.SequenceEqual(RecSwaplets, basisSwap.RecSwaplets);
+
+        public override int GetHashCode() => TradeId.GetHashCode() ^ PaySwaplets.GetHashCode() ^ RecSwaplets.GetHashCode();
     }
 }

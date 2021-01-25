@@ -11,7 +11,6 @@ namespace Qwack.Core.Instruments
     {
         string[] AssetIds { get; }
         string[] IrCurves(IAssetFxModel model);
-        Currency Currency { get; }
         
         Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate);
         FxConversionType FxType(IAssetFxModel model);

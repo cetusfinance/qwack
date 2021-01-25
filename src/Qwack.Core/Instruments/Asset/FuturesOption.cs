@@ -61,6 +61,10 @@ namespace Qwack.Core.Instruments.Asset
                    DiscountCurve == futOpt.DiscountCurve &&
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
 
+        public override int GetHashCode() => TradeId.GetHashCode() ^ ContractQuantity.GetHashCode() ^ LotSize.GetHashCode() ^ PriceMultiplier.GetHashCode() 
+            ^ Direction.GetHashCode() ^ ExpiryDate.GetHashCode() ^ Strike.GetHashCode() ^ AssetId.GetHashCode() ^ CallPut.GetHashCode()
+            ^ ExerciseType.GetHashCode() ^ MarginingType.GetHashCode() ^ DiscountCurve.GetHashCode() ^ Currency.GetHashCode();
+
         public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? Array.Empty<string>() : new[] { DiscountCurve };
     }
 }

@@ -39,9 +39,9 @@ namespace Qwack.Core.Instruments
             }
             else
             {
-                switch (transportObject.FundingInstrumentType)
-                {
-                }
+                //switch (transportObject.FundingInstrumentType)
+                //{
+                //}
             }
 
             throw new Exception("Unable to re-constitute object");

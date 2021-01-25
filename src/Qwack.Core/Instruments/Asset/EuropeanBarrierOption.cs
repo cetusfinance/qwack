@@ -62,5 +62,8 @@ namespace Qwack.Core.Instruments.Asset
                   BarrierObservationStartDate == option.BarrierObservationStartDate &&
                   BarrierObservationEndDate == option.BarrierObservationEndDate &&
                   BarrierSide == option.BarrierSide;
+
+        public override int GetHashCode() => Barrier.GetHashCode() ^ BarrierType.GetHashCode() ^ BarrierObservationType.GetHashCode()
+                ^ BarrierObservationStartDate.GetHashCode() ^ BarrierObservationEndDate.GetHashCode() ^ BarrierSide.GetHashCode();
     }
 }

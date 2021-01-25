@@ -142,6 +142,11 @@ namespace Qwack.Core.Instruments.Asset
                    FxConversionType == forward.FxConversionType &&
                    EqualityComparer<Currency>.Default.Equals(Currency, forward.Currency);
 
+        public override int GetHashCode() => TradeId.GetHashCode() ^ Notional.GetHashCode() ^ Direction.GetHashCode()
+            ^ ExpiryDate.GetHashCode() ^ FixingCalendar.GetHashCode() ^ PaymentCalendar.GetHashCode() ^ SpotLag.GetHashCode()
+            ^ PaymentLag.GetHashCode() ^ PaymentDate.GetHashCode() ^ Strike.GetHashCode() ^ AssetId.GetHashCode() ^ PaymentCurrency.GetHashCode()
+            ^ FxFixingId.GetHashCode() ^ DiscountCurve.GetHashCode() ^ FxConversionType.GetHashCode() ^ Currency.GetHashCode();
+
         public virtual double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => System.Math.Abs(Notional) * Fwd(model);
         public virtual double SupervisoryDelta(IAssetFxModel model) => System.Math.Sign(Notional);

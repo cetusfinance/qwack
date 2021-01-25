@@ -37,7 +37,7 @@ namespace Qwack.Core.Instruments
                 return obj.Equals(UnderlyingInstrument);
             else
             {
-                switch(wrapper.UnderlyingInstrument)
+                switch (wrapper.UnderlyingInstrument)
                 {
                     case AsianOption ao:
                         return ao.Equals(UnderlyingInstrument);
@@ -70,15 +70,14 @@ namespace Qwack.Core.Instruments
                 }
                 return wrapper.UnderlyingInstrument.Equals(UnderlyingInstrument);
             }
-                
-        }       
+        }
+
+        public override int GetHashCode() => UnderlyingInstrument.GetHashCode();
 
         public string FxPair(IAssetFxModel model) => UnderlyingInstrument.FxPair(model);
         public FxConversionType FxType(IAssetFxModel model) => UnderlyingInstrument.FxType(model);
         public string[] IrCurves(IAssetFxModel model) => UnderlyingInstrument.IrCurves(model);
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => UnderlyingInstrument.PastFixingDates(valDate);
-        public IAssetInstrument SetStrike(double strike)=> UnderlyingInstrument.SetStrike(strike);
-
-        
+        public IAssetInstrument SetStrike(double strike) => UnderlyingInstrument.SetStrike(strike);
     }
 }

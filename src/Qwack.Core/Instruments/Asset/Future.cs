@@ -70,5 +70,9 @@ namespace Qwack.Core.Instruments.Asset
                    Strike == future.Strike &&
                    AssetId == future.AssetId &&
                    EqualityComparer<Currency>.Default.Equals(Currency, future.Currency);
+
+        public override int GetHashCode() => TradeId.GetHashCode() ^ ContractQuantity.GetHashCode() ^ LotSize.GetHashCode()
+            ^ PriceMultiplier.GetHashCode() ^ Direction.GetHashCode() ^ ExpiryDate.GetHashCode() ^ Strike.GetHashCode()
+            ^ AssetId.GetHashCode() ^ Currency.GetHashCode();
     }
 }

@@ -50,6 +50,7 @@ namespace Qwack.Core.Instruments.Asset
                    CallPut == euroOpt.CallPut &&
                    base.Equals(euroOpt);
 
+        public override int GetHashCode() => CallPut.GetHashCode() ^ base.GetHashCode();
 
         public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(Fwd(model), Strike, T(model), CallPut, SupervisoryVol, Notional);
         public override double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);

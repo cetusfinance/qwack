@@ -37,38 +37,24 @@ namespace Qwack.Core.Instruments
                 return obj.Equals(UnderlyingInstrument);
             else
             {
-                switch (wrapper.UnderlyingInstrument)
+                return wrapper.UnderlyingInstrument switch
                 {
-                    case AsianOption ao:
-                        return ao.Equals(UnderlyingInstrument);
-                    case AsianSwap asw:
-                        return asw.Equals(UnderlyingInstrument);
-                    case AsianSwapStrip ass:
-                        return ass.Equals(UnderlyingInstrument);
-                    case AsianBasisSwap abs:
-                        return abs.Equals(UnderlyingInstrument);
-                    case EuropeanBarrierOption bo:
-                        return bo.Equals(UnderlyingInstrument);
-                    case EuropeanOption eu:
-                        return eu.Equals(UnderlyingInstrument);
-                    case Forward f:
-                        return f.Equals(UnderlyingInstrument);
-                    case FxVanillaOption feu:
-                        return feu.Equals(UnderlyingInstrument);
-                    case FxForward fxf:
-                        return fxf.Equals(UnderlyingInstrument);
-                    case FuturesOption futo:
-                        return futo.Equals(UnderlyingInstrument);
-                    case Future fut:
-                        return fut.Equals(UnderlyingInstrument);
-                    case BackPricingOption bpo:
-                        return bpo.Equals(UnderlyingInstrument);
-                    case MultiPeriodBackpricingOption mbpo:
-                        return mbpo.Equals(UnderlyingInstrument);
-                    case AsianLookbackOption lbo:
-                        return lbo.Equals(UnderlyingInstrument);
-                }
-                return wrapper.UnderlyingInstrument.Equals(UnderlyingInstrument);
+                    AsianOption ao => ao.Equals(UnderlyingInstrument),
+                    AsianSwap asw => asw.Equals(UnderlyingInstrument),
+                    AsianSwapStrip ass => ass.Equals(UnderlyingInstrument),
+                    AsianBasisSwap abs => abs.Equals(UnderlyingInstrument),
+                    EuropeanBarrierOption bo => bo.Equals(UnderlyingInstrument),
+                    EuropeanOption eu => eu.Equals(UnderlyingInstrument),
+                    Forward f => f.Equals(UnderlyingInstrument),
+                    FxVanillaOption feu => feu.Equals(UnderlyingInstrument),
+                    FxForward fxf => fxf.Equals(UnderlyingInstrument),
+                    FuturesOption futo => futo.Equals(UnderlyingInstrument),
+                    Future fut => fut.Equals(UnderlyingInstrument),
+                    BackPricingOption bpo => bpo.Equals(UnderlyingInstrument),
+                    MultiPeriodBackpricingOption mbpo => mbpo.Equals(UnderlyingInstrument),
+                    AsianLookbackOption lbo => lbo.Equals(UnderlyingInstrument),
+                    _ => wrapper.UnderlyingInstrument.Equals(UnderlyingInstrument),
+                };
             }
         }
 

@@ -11,5 +11,6 @@ namespace Qwack.Core.Basic
         bool TryGetCurrency(string ccy, out Currency output);
         Currency GetCurrency(string ccy);
         Currency GetCurrencySafe(string ccy);
+        Currency[] GetAllCurrencies();
     }
 }

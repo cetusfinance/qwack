@@ -16,5 +16,6 @@ namespace Qwack.Dates
         public Frequency RelativeTenor { get; set; }
 
         public DateTime Date(DateTime refDate, RollType rollType, Calendar calendars) => refDate.AddPeriod(rollType, calendars, RelativeTenor);
+        public override bool Equals(object obj) => obj is TenorDateRelative relative && EqualityComparer<Frequency>.Default.Equals(RelativeTenor, relative.RelativeTenor);
     }
 }

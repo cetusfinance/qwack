@@ -921,11 +921,11 @@ namespace Qwack.Models.Models
             r_tidIx = fxGreeks.GetColumnIndex(TradeId);
             r_tTypeIx = fxGreeks.GetColumnIndex(TradeType);
 
-            var baseToRep = endModel.FundingModel.GetFxRate(endModel.BuildDate, endModel.FundingModel.FxMatrix.BaseCurrency, reportingCcy);
+           
             foreach (var fxSpot in endModel.FundingModel.FxMatrix.SpotRates)
             {
                 var fxPair = $"{fxSpot.Key.Ccy}/{endModel.FundingModel.FxMatrix.BaseCurrency}";
-
+                var ccyToRep = endModel.FundingModel.GetFxRate(endModel.BuildDate, fxSpot.Key, reportingCcy);
                 //delta
                 var riskForCurve = fxGreeks.Filter(
                     new Dictionary<string, object> {
@@ -939,7 +939,7 @@ namespace Qwack.Models.Models
                     var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate);
-                    explained *= baseToRep;
+                    explained *= ccyToRep;
 
                     var row = new Dictionary<string, object>
                     {
@@ -971,7 +971,7 @@ namespace Qwack.Models.Models
                     var startRate = model.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
                     var endRate = fxSpot.Value;
                     var explained = r.Value * (endRate - startRate) * (endRate - startRate) * 0.5;
-                    explained *= baseToRep;
+                    explained *= ccyToRep;
 
                     var row = new Dictionary<string, object>
                     {

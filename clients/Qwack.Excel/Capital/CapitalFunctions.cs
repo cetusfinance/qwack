@@ -309,7 +309,9 @@ namespace Qwack.Excel.Capital
             [ExcelArgument(Description = "Asset Id to CCF map")] object[,] AssetIdToCCFMap,
             [ExcelArgument(Description = "Basel II / Basel II cutover date")] DateTime ChangeOverDate,
             [ExcelArgument(Description = "Tier 1 capital, i.e. 0.10")] double Tier1CapitalRatio,
-            [ExcelArgument(Description = "Tier 2 capital, i.e. 0.015")] double Tier2CapitalRatio)
+            [ExcelArgument(Description = "Tier 2 capital, i.e. 0.015")] double Tier2CapitalRatio,
+            [ExcelArgument(Description = "Tier 1 capital cost, i.e. 0.15")] double Tier1CapitalCost,
+            [ExcelArgument(Description = "Tier 2 capital cost, i.e. 0.03")] double Tier2CapitalCost)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -334,7 +336,7 @@ namespace Qwack.Excel.Capital
                 var typeToHedgeSetMap = TypeToHedgeSetMap.RangeToDictionary<string, SaCcrAssetClass>();
                 var (CVA_t1, CVA_t2, CCR_t1, CCR_t2) = CapitalCalculator.PvCapital_Split(model.Value.BuildDate, expDates, models, portfolio, hz.Value, repCcy, disc.Value,
                     LGD, CvaRiskWeight, PartyRiskWeight, assetIdToTypeMap, typeToHedgeSetMap, assetIdToCCFMap, ContainerStores.CurrencyProvider, epeValues,
-                    Tier1CapitalRatio, Tier2CapitalRatio, ChangeOverDate);
+                    Tier1CapitalRatio, Tier2CapitalRatio, Tier1CapitalCost, Tier2CapitalCost, ChangeOverDate);
                 
                 return new object[,]
                 {

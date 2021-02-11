@@ -144,6 +144,9 @@ namespace Qwack.Models.Models
         public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
         {
             var fxDates = swap.FxFixingDates ?? swap.FixingDates;
+            
+            var firstFix = swap.FxFixingDates?.First() ?? swap.FixingDates.First();
+
             var sampleDates = swap.FixingDates.AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag);
             var priceCurve = model.GetPriceCurve(swap.AssetId);
             var fxFixingId = swap.GetFxFixingId(priceCurve.Currency.Ccy);
@@ -153,7 +156,7 @@ namespace Qwack.Models.Models
             {
                 var fxAverage = 1.0;
 
-                if (model.BuildDate < swap.FixingDates.First())
+                if (model.BuildDate < firstFix)
                 {
                     var fwds = sampleDates.Select(x => priceCurve.GetPriceForDate(x)).ToArray();
                     var avg = fwds.Average();

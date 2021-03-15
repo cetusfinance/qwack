@@ -310,7 +310,7 @@ namespace Qwack.Models.MCModels
             }
 
             if (_isCompo)
-                for (var i = 0; i < _asianDates.Count; i++)
+                for (var i = 0; i < _asianFxDates.Count; i++)
                 {
                     _fxDateIndexes[i] = dates.GetDateIndex(_asianFxDates[i]);
                 }

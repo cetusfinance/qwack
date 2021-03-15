@@ -33,7 +33,7 @@ namespace Qwack.Dates
             }
             catch
             {
-                output = new Frequency(0,DatePeriodType.D);
+                output = new Frequency(0, DatePeriodType.D);
                 return false;
             }
         }
@@ -96,6 +96,32 @@ namespace Qwack.Dates
                 return false;
             }
             return (Frequency)obj == this;
+        }
+
+        public static Frequency operator +(Frequency x, Frequency y)
+        {
+            if (x.PeriodType == y.PeriodType)
+                return new Frequency(x.PeriodCount + y.PeriodCount, x.PeriodType);
+
+            if (x.PeriodType == DatePeriodType.M && y.PeriodType == DatePeriodType.Y)
+            {
+                var totalMonths = x.PeriodCount + y.PeriodCount * 12;
+                if (totalMonths % 12 == 0)
+                    return new Frequency(totalMonths / 12, DatePeriodType.Y);
+                else
+                    return new Frequency(totalMonths, DatePeriodType.M);
+            }
+            else if (x.PeriodType == DatePeriodType.Y && y.PeriodType == DatePeriodType.M)
+            {
+                return y + x;
+            }
+
+            throw new NotImplementedException("Can only add months/years and frequencies of same period type");
+        }
+
+        public static Frequency operator -(Frequency x, Frequency y)
+        {
+            return x + new Frequency(-y.PeriodCount, y.PeriodType);
         }
     }
 }

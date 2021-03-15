@@ -942,11 +942,11 @@ namespace Qwack.Models.Risk
             var baseCcy = model.FundingModel.FxMatrix.BaseCurrency;
             var m = model.Clone(mf);
 
-            var homeBasePair = mf.FxMatrix.GetFxPair(homeCcy, baseCcy);
-            var homeToBase = mf.GetFxRate(homeBasePair.SpotDate(model.BuildDate), homeCcy, baseCcy);
-
             foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
             {
+                var homeBasePair = mf.FxMatrix.GetFxPair(homeCcy, currency);
+                var homeToBase = mf.GetFxRate(homeBasePair.SpotDate(model.BuildDate), homeCcy, currency);
+
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
                 var pvRows = pvCube.GetAllRows();

@@ -1367,14 +1367,16 @@ namespace Qwack.Excel.Instruments
         [ExcelFunction(Description = "Computes a set of simulation dates for a portfolio", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ComputeSimDates), IsThreadSafe = Parallel)]
         public static object ComputeSimDates(
             [ExcelArgument(Description = "Portfolio name")] string ObjectName,
-            [ExcelArgument(Description = "First/Anchor date")] DateTime AnchorDate
-            )
+            [ExcelArgument(Description = "First/Anchor date")] DateTime AnchorDate,
+            [ExcelArgument(Description = "Frequency (Month)")] object Frequency)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var pf = ContainerStores.GetObjectCache<Portfolio>().GetObjectOrThrow(ObjectName, $"Portfolio {ObjectName} not found");
-                
-                return ExcelHelper.ReturnExcelRangeVectorFromDate(pf.Value.ComputeSimDates(AnchorDate));
+                var freq = Frequency.OptionalExcel("Month");
+                if (!Enum.TryParse<DatePeriodType>(freq, out var freqEnum))
+                    throw new Exception($"Unable to parse frequency {freq}");
+                return ExcelHelper.ReturnExcelRangeVectorFromDate(pf.Value.ComputeSimDates(AnchorDate, freqEnum));
             });
         }
 

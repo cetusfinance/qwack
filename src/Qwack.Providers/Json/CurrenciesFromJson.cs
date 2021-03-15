@@ -57,5 +57,7 @@ namespace Qwack.Providers.Json
             output = null;
             return ccy != null && _currenciesByName.TryGetValue(ccy, out output);
         }
+
+        public Currency[] GetAllCurrencies() => _currenciesByName.Values.ToArray();
     }
 }

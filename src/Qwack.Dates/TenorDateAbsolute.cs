@@ -13,5 +13,6 @@ namespace Qwack.Dates
         public DateTime AbsoluteDate { get; set; }
 
         public DateTime Date(DateTime refDate, RollType rollType, Calendar calendars) => AbsoluteDate;
+        public override bool Equals(object obj) => obj is TenorDateAbsolute absolute && AbsoluteDate == absolute.AbsoluteDate;
     }
 }

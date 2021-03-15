@@ -80,7 +80,7 @@ namespace Qwack.Models.Risk
         public static (double CVA_t1, double CVA_t2, double CCR_t1, double CCR_t2) PvCapital_Split(DateTime originDate, DateTime[] EADDates, IAssetFxModel[] models, 
             Portfolio portfolio, HazzardCurve hazzardCurve, Currency reportingCurrency, IIrCurve discountCurve, double LGD, double supervisoryRiskWeight, double riskWeight,
             Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Dictionary<string, double> assetIdToCCFMap, 
-            ICurrencyProvider currencyProvider, double[] epeProfile, double tier1Ratio, double tier2Ratio, DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
+            ICurrencyProvider currencyProvider, double[] epeProfile, double tier1Ratio, double tier2Ratio, double tier1Cost, double tier2Cost, DateTime? B2B3ChangeDate=null, double[] eadProfile = null)
         {
             
             if (!B2B3ChangeDate.HasValue)
@@ -92,21 +92,22 @@ namespace Qwack.Models.Risk
             var pds = EADDates.Select(d => hazzardCurve.GetDefaultProbability(d, d.AddYears(1))).ToArray();
 
             var MsCcr = EADDates.Select(d => d < B2B3ChangeDate ? 2.5 : SaCcrUtils.MfUnmargined(portfolio.WeightedMaturity(d))).ToArray();
-            var MsCva = EADDates.Select(d => d < B2B3ChangeDate ? portfolio.WeightedMaturity(d) : SaCcrUtils.MfUnmargined(portfolio.WeightedMaturity(d))).ToArray();
+            //var MsCva = EADDates.Select(d => d < B2B3ChangeDate ? portfolio.WeightedMaturity(d) : SaCcrUtils.MfUnmargined(portfolio.WeightedMaturity(d))).ToArray();
+            var MsCva = EADDates.Select(d =>  Max(1.0,portfolio.WeightedMaturity(d))).ToArray();
 
             var rwasCcr = RwaCalculator(eads, pds, MsCcr, LGD);
             var t1Ccr = rwasCcr.Select(r => r * tier1Ratio).ToArray();
             var t2Ccr = rwasCcr.Select(r => r * tier2Ratio).ToArray();
             var ts = EADDates.Select((x, ix) => ix < EADDates.Length - 1 ? (EADDates[ix + 1] - x).TotalDays / 365.0 : 0).ToArray();
-            var t1CcrPv = t1Ccr.Select((x, ix) => ts[ix] * x).Sum();
-            var t2CcrPv = t2Ccr.Select((x, ix) => ts[ix] * x).Sum();
+            var t1CcrPv = t1Ccr.Select((x, ix) => ts[ix] * x * tier1Cost).Sum();
+            var t2CcrPv = t2Ccr.Select((x, ix) => ts[ix] * x * tier2Cost).Sum();
 
             var ksCVA = eads.Select((e, ix) => BaselHelper.StandardCvaB3.CvaCapitalCharge(supervisoryRiskWeight, MsCva[ix], e)).ToArray();
 
-            var pvCapitalCVA = PvProfile(originDate, EADDates, ksCVA, discountCurve);
-            var pvRwaCVA = pvCapitalCVA *= 12.5;
-            var t1CvaPv = pvRwaCVA * tier1Ratio;
-            return (t1CvaPv, 0, t1CcrPv, t2CcrPv);
+            var pvCapitalCVA = PvProfileWithCost(originDate, EADDates, ksCVA, discountCurve, tier1Cost);
+            //var pvRwaCVA = pvCapitalCVA *= 12.5;
+            //var t1CvaPv = pvRwaCVA * tier1Ratio;
+            return (pvCapitalCVA, 0, t1CcrPv, t2CcrPv);
         }
 
         public static double[] EAD_Split(DateTime originDate, DateTime[] EADDates, double[] EPEs, IAssetFxModel[] models, Portfolio portfolio, Currency reportingCurrency,
@@ -296,6 +297,28 @@ namespace Qwack.Models.Risk
             //}
 
             //return capital / time;
+        }
+
+        public static double PvProfileWithCost(DateTime originDate, DateTime[] exposureDates, double[] exposures, IIrCurve discountCurve, double cost)
+        {
+            var capital = 0.0;
+
+            if (exposureDates.Length != exposures.Length || exposures.Length < 1)
+                throw new DataMisalignedException();
+
+            if (exposureDates.Length == 1)
+                return discountCurve.GetDf(originDate, exposureDates[0]) * exposures[0];
+
+            for (var i = 0; i < exposureDates.Length - 1; i++)
+            {
+                var exposure = exposures[i];
+                var df = discountCurve.GetDf(originDate, exposureDates[i + 1]);
+                var dt = exposureDates[i].CalculateYearFraction(exposureDates[i + 1], DayCountBasis.ACT365F);
+
+                capital += exposure * dt * df * cost;
+            }
+
+            return capital;
         }
 
         public static ICube RwaCalculator(ICube eads, HazzardCurve hazzardCurve, Portfolio portfolio, double lgd)

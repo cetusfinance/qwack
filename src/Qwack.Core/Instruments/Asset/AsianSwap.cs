@@ -132,7 +132,7 @@ namespace Qwack.Core.Instruments.Asset
             return model.GetPriceCurve(AssetId).GetAveragePriceForDates(FixingDates) * fxRate;
         }
         public double MaturityFactor(DateTime today, double? MPOR) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
-        public double TradeNotional(IAssetFxModel model) => Notional * Fwd(model);
+        public double TradeNotional(IAssetFxModel model) => System.Math.Abs(Notional) * Fwd(model);
         public SaCcrAssetClass AssetClass { get; set; }
         public string CommodityType { get; set; }
         public override bool Equals(object obj) => obj is AsianSwap swap &&
@@ -162,7 +162,7 @@ namespace Qwack.Core.Instruments.Asset
                    EqualityComparer<Currency>.Default.Equals(Currency, swap.Currency) &&
                    HedgingSet == swap.HedgingSet;
 
-        public virtual TO_Instrument ToTransportObject() =>
+        public TO_Instrument ToTransportObject() =>
             new TO_Instrument
             {
                 AssetInstrumentType = AssetInstrumentType.AsianSwap,
@@ -194,19 +194,6 @@ namespace Qwack.Core.Instruments.Asset
                     PortfolioName = PortfolioName
                 }
             };
-
-        public override int GetHashCode()
-        {
-            var hc = TradeId.GetHashCode() ^ Counterparty.GetHashCode() ^ PortfolioName.GetHashCode()
-                ^ Notional.GetHashCode() ^ Direction.GetHashCode() ^ AverageStartDate.GetHashCode()
-                ^ AverageEndDate.GetHashCode() ^ (FixingDates ?? Array.Empty<DateTime>()).GetHashCode()
-                ^ FixingCalendar.GetHashCode() ^ PaymentCalendar.GetHashCode() ^ SpotLag.GetHashCode()
-                ^ SpotLagRollType.GetHashCode() ^ PaymentLag.GetHashCode() ^ PaymentLagRollType.GetHashCode()
-                ^ PaymentDate.GetHashCode() ^ Strike.GetHashCode() ^ AssetId.GetHashCode() ^ AssetFixingId.GetHashCode()
-                ^ FxFixingId.GetHashCode() ^ (FxFixingDates ?? Array.Empty<DateTime>()).GetHashCode() ^ PaymentCurrency.GetHashCode()
-                ^ FxConversionType.GetHashCode() ^ DiscountCurve.GetHashCode() ^ Currency.GetHashCode() ^ HedgingSet.GetHashCode();
-            return hc;
-        }
     }
 }
 

@@ -1749,6 +1749,10 @@
   },
   {
     "Names": [ "W", "KW", "C", "Corn - CBOT", "Wheat - CBOT", "Kansas Wheat - KCBOT" ],
+		"CodeConversions": {
+		"IB": { "W":"ZW", "C":"ZC","KW":"KE" },
+		"BBG": { "W":"W ", "C":"C ","KW":"KW" },
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 0,
@@ -2216,6 +2220,10 @@
   },
   {
     "Names": [ "S", "Soybeans - CBOT" ],
+	"CodeConversions": {
+		"IB": { "S":"ZS" },
+		"BBG": { "S":"S " },
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 0,
@@ -2683,6 +2691,10 @@
   },
   {
     "Names": [ "SM", "Soybean Meal - CBOT" ],
+		"CodeConversions": {
+		"IB": { "SM":"ZM" },
+		"BBG": { "SM":"SM" },
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 0,
@@ -3010,6 +3022,10 @@
   },
   {
     "Names": [ "BO", "Soybean Oil - CBOT" ],
+	"CodeConversions": {
+		"IB": { "BO":"ZL" },
+		"BBG": { "BO":"BO" },
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 0,
@@ -4161,6 +4177,10 @@
   },
   {
     "Names": [ "QC", "Cocoa - LIFFE" ],
+	"CodeConversions": {
+		"IB": { "QC":"C" },
+		"BBG": { "QC":"QC" },
+	},
     "ExpiryGen": {
       "Calendar": "LON",
       "MonthModifier": 1,
@@ -4230,6 +4250,10 @@
   },
   {
     "Names": [ "CC", "Cocoa - NYBOT" ],
+	"CodeConversions": {
+		"IB": { "CC":"CC" },
+		"BBG": { "CC":"CC" },
+	},
     "ExpiryGen": {
       "Calendar": "NYBOT",
       "MonthModifier": 1,
@@ -4388,6 +4412,10 @@
   },
   {
     "Names": [ "KC", "Coffee - NYBOT" ],
+	"CodeConversions": {
+		"IB": { "KC":"KC" },
+		"BBG": { "KC":"KC" },
+	},
     "ExpiryGen": {
       "Calendar": "NYBOT",
       "MonthModifier": 1,
@@ -4546,6 +4574,10 @@
   },
   {
     "Names": [ "SB", "Sugar #11 - NYBOT" ],
+	"CodeConversions": {
+		"IB": { "SB":"SB" },
+		"BBG": { "SB":"SB" },
+	},
     "ExpiryGen": {
       "Calendar": "NYBOT",
       "MonthModifier": 0,
@@ -5298,6 +5330,10 @@
   },
   {
     "Names": [ "CT", "Cotton - NYBOT" ],
+	"CodeConversions": {
+		"IB": { "CT":"CT" },
+		"BBG": { "CT":"CT" },
+	},
     "ExpiryGen": {
       "Calendar": "NYBOT",
       "MonthModifier": 1,
@@ -5456,6 +5492,10 @@
   },
   {
     "Names": [ "OJ", "FCOJ - NYBOT", "Orange Juice - NYBOT" ],
+	"CodeConversions": {
+		"IB": { "OJ":"OJ" },
+		"BBG": { "OJ":"JO" },
+	},
     "ExpiryGen": {
       "Calendar": "NYBOT",
       "MonthModifier": 1,
@@ -5614,6 +5654,10 @@
   },
   {
     "Names": [ "HG", "Copper - COMEX" ],
+	"CodeConversions": {
+		"IB": { "HG":"HG" },
+		"BBG": { "HG":"HG" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,
@@ -5791,6 +5835,10 @@
   },
   {
     "Names": [ "GC", "Gold - COMEX" ],
+	"CodeConversions": {
+		"IB": { "GC":"GC" },
+		"BBG": { "GC":"GC" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,
@@ -5972,6 +6020,10 @@
   },
   {
     "Names": [ "SI", "Silver - COMEX" ],
+	"CodeConversions": {
+		"IB": { "SI":"SI" },
+		"BBG": { "SI":"SI" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,
@@ -6145,6 +6197,10 @@
   },
   {
     "Names": [ "PL", "Platinum - NYMEX" ],
+	"CodeConversions": {
+		"IB": { "PL":"PL" },
+		"BBG": { "PL":"PL" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,
@@ -6318,6 +6374,10 @@
   },
   {
     "Names": [ "PA", "Palladium - NYMEX" ],
+	"CodeConversions": {
+		"IB": { "PA":"PA" },
+		"BBG": { "PA":"PA" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,
@@ -6491,6 +6551,10 @@
   },
   {
     "Names": [ "CL", "WTI Crude - NYMEX" ],
+	"CodeConversions": {
+		"IB": { "CL":"CL" },
+		"BBG": { "CL":"CL" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEXThanksGiving",
       "MonthModifier": -1,
@@ -6668,6 +6732,10 @@
   },
   {
     "Names": [ "WTI", "WTI Crude - ICE" ],
+	"CodeConversions": {
+		"IB": { "WTI":"WTI" },
+		"BBG": { "WTI":"EN" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEXThanksGiving",
       "MonthModifier": -1,
@@ -6845,6 +6913,10 @@
   },
   {
     "Names": [ "RB", "XB", "RBOB Gasoline - NYMEX", "HO", "Heating Oil - NYMEX" ],
+	"CodeConversions": {
+		"IB": { "RB":"RB", "XB":"RB", "HO":"HO" },
+		"BBG": { "RB":"XB", "XB":"XB", "HO":"HO"  },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,
@@ -7020,8 +7092,12 @@
     "PriceMultiplier": 1.0,
     "TickSize": 0.0001
   },
-   {
+  {
     "Names": [ "RBOB", "RBOB Gasoline - ICE", "HOIL", "Heating Oil - ICE" ],
+		"CodeConversions": {
+		"IB": { "RBOB":"RBOB", "HOIL":"HOIL"},
+		"BBG": { "RBOB":"PG", "HOIL":"NV"  },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,
@@ -7199,6 +7275,10 @@
   },
   {
     "Names": [ "EH", "Ethanol - CBOT" ],
+	"CodeConversions": {
+		"IB": { "EH":"AC" },
+		"BBG": { "EH":"DL" },
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 0,
@@ -7357,6 +7437,10 @@
   },
   {
     "Names": [ "CO", "Brent Crude - ICE" ],
+	"CodeConversions": {
+		"IB": { "CO":"COIL" },
+		"BBG": { "CO":"CO" },
+	},
     "ExpiryGen": {
       "Calendar": "LON",
       "MonthModifier": -1,
@@ -7515,6 +7599,10 @@
   },
   {
     "Names": [ "QS", "Gasoil - ICE" ],
+	"CodeConversions": {
+		"IB": { "QS":"GOIL" },
+		"BBG": { "QS":"QS" },
+	},
     "ExpiryGen": {
       "Calendar": "LON",
       "MonthModifier": 0,
@@ -7629,6 +7717,10 @@
   },
   {
     "Names": [ "NGUK", "UK Natural Gas - ICE" ],
+	"CodeConversions": {
+		"IB": { "NGUK":"NGF" },
+		"BBG": { "NGUK":"FN" },
+	},
     "ExpiryGen": {
       "Calendar": "LON",
       "MonthModifier": 0,
@@ -7743,6 +7835,10 @@
   },
   {
     "Names": [ "XO", "Coal API4 - ICE", "XA", "Coal API2 - ICE" ],
+	"CodeConversions": {
+		"IB": { "XO":"AFR","XA":"ATW" },
+		"BBG": { "XO":"XO","XA":"ATW"  },
+	},
     "ExpiryGen": {
       "Calendar": "LON",
       "MonthModifier": 0,
@@ -7901,6 +7997,10 @@
   },
   {
     "Names": [ "NG", "Natural Gas - NYMEX" ],
+	"CodeConversions": {
+		"IB": { "NG":"NG" },
+		"BBG": { "NG":"NG" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,
@@ -8078,6 +8178,10 @@
   },
   {
     "Names": [ "LB", "Random Lumber - CME", "RL Lumber - CME" ],
+	"CodeConversions": {
+		"IB": { "LB":"LB" },
+		"BBG": { "LB":"LB" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,
@@ -8251,6 +8355,10 @@
   },
   {
     "Names": [ "DC", "Class III Milk - CME" ],
+	"CodeConversions": {
+		"IB": { "DC":"DA" },
+		"BBG": { "FC":"DA" },
+	},
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 0,
@@ -8409,6 +8517,10 @@
   },
   {
     "Names": [ "LH", "Lean Hogs - CME" ],
+	"CodeConversions": {
+		"IB": { "LH":"HE" },
+		"BBG": { "LH":"LH" },
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -8582,6 +8694,10 @@
   },
   {
     "Names": [ "LC", "Live Cattle - CME" ],
+	"CodeConversions": {
+		"IB": { "LC":"LE" },
+		"BBG": { "LC":"LC" },
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 1,
@@ -8755,6 +8871,10 @@
   },
   {
     "Names": [ "AUD", "Australian Dollar - CME", "NZD", "New Zealand Dollar - CME", "CAD", "Canadian Dollar - CME" ],
+	"CodeConversions": {
+		"IB": { "AUD":"6A","NZD":"6N","CAD":"6C" },
+		"BBG": { "AUD":"AD","NZD":"NV","CAD":"CD"  },
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -8932,6 +9052,10 @@
   },
   {
     "Names": [ "JPY", "Japanese Yen - CME" ],
+	"CodeConversions": {
+		"IB": { "JPY":"6J"},
+		"BBG": { "JPY":"JY" },
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -9109,6 +9233,10 @@
   },
   {
     "Names": [ "EUR", "Euro - CME", "CHF", "Swiss Franc - CME" ],
+	"CodeConversions": {
+		"IB": { "EUR":"6E", "CHF":"6S"},
+		"BBG": { "EUR":"EC", "CHF":"SF" },
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -9286,6 +9414,10 @@
   },
   {
     "Names": [ "GBP", "British Pound - CME" ],
+	"CodeConversions": {
+		"IB": { "GBP":"GBP"},
+		"BBG": { "GBP":"BP"},
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -9463,6 +9595,10 @@
   },
   {
     "Names": [ "3 Month Eurodollar - CME", "3M Eurodollar - CME", "ED" ],
+	"CodeConversions": {
+		"IB": { "ED":"GE"},
+		"BBG": { "ED":"ED"},
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -9640,6 +9776,10 @@
   },
   {
     "Names": [ "10Y US Note - CBOT", "ZN", "10Y" ],
+	"CodeConversions": {
+		"IB": { "ZN": "ZN"},
+		"BBG": { "ZN":"TY"},
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 1,
@@ -9813,6 +9953,10 @@
   },
   {
     "Names": [ "5Y US Note - CBOT", "ZF", "5Y" ],
+	"CodeConversions": {
+		"IB": { "ZF": "ZF"},
+		"BBG": { "ZF":"FV"},
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 1,
@@ -9986,6 +10130,10 @@
   },
   {
     "Names": [ "2Y US Note - CBOT", "ZT", "2Y" ],
+	"CodeConversions": {
+		"IB": { "ZT": "ZT"},
+		"BBG": { "ZT":"TU"},
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 1,
@@ -10159,6 +10307,10 @@
   },
   {
     "Names": [ "30D FedFunds - CBOT", "ZQ", "FF" ],
+	"CodeConversions": {
+		"IB": { "ZQ": "ZQ", "FF": "ZQ" },
+		"BBG": { "ZQ": "FF", "FF": "FF"},
+	},
     "ExpiryGen": {
       "Calendar": "CBOT",
       "MonthModifier": 1,
@@ -10336,6 +10488,10 @@
   },
   {
     "Names": [ "ES", "S+P 500 Emini - CME" ],
+	"CodeConversions": {
+		"IB": { "ES": "ES" },
+		"BBG": { "ES": "ES"},
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -10509,6 +10665,10 @@
   },
   {
     "Names": [ "NQ", "Nasdaq Emini - CME" ],
+	"CodeConversions": {
+		"IB": { "NQ": "NQ" },
+		"BBG": { "NQ": "NQ"},
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -10682,6 +10842,10 @@
   },
   {
     "Names": [ "YM", "Dow Jones Emini - CME" ],
+	"CodeConversions": {
+		"IB": { "YM": "YM" },
+		"BBG": { "YM": "DM"},
+	},
     "ExpiryGen": {
       "Calendar": "CME",
       "MonthModifier": 0,
@@ -10854,7 +11018,11 @@
     "TickSize": 1.0
   },
   {
-    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman","NWE3.5","NWE1.0","Sing0.5","NWE0.5","UkNbp","IronOre62","DCO","GO.1FOB","SingGo"],
+    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman", "NWE3.5", "NWE1.0", "Sing0.5", "NWE0.5", "UkNbp", "IronOre62", "SCO", "DCO", "GO.1FOB", "SingGo" ],
+    "CodeConversions": {
+      "IB": { "SCO": "SCI" },
+      "BBG": { "SCO": "SCO" }
+    },
     "ExpiryGen": {
       "Calendar": "NYMEX",
       "MonthModifier": 1,

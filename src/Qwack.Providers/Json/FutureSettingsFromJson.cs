@@ -42,7 +42,7 @@ namespace Qwack.Providers.Json
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading future settings from json");
             }
@@ -51,5 +51,15 @@ namespace Qwack.Providers.Json
         public FutureSettings this[string futureName] => _allSettingsByName[futureName];
 
         public bool TryGet(string futureName, out FutureSettings futureSettings) => _allSettingsByName.TryGetValue(futureName, out futureSettings);
+
+        public bool TryGet(string code, string codeProvider, out FutureSettings futureSettings)
+        {
+            futureSettings = _allFutureSettings.FirstOrDefault(
+                x => x.CodeConversions != null &&
+                x.CodeConversions.TryGetValue(codeProvider, out var result) &&
+                result.Values.Contains(code));
+
+            return futureSettings != null; 
+        }
     }
 }

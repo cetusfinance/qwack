@@ -11,6 +11,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Models;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Curves.Benchmark
 {

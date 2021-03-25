@@ -7,6 +7,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Providers.Json;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Curves.Benchmark
 {

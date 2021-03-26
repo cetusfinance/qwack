@@ -30,6 +30,8 @@ namespace Qwack.Futures
         public List<MarketShutRuleSet> MarketShutRules { get; set; }
         public List<DateTime> MarketShutRulesValidUntil { get; set; }
 
+        public Dictionary<string,Dictionary<string,string>> CodeConversions { get; set; }
+
         public double LotSize { get; set; }
         public double PriceMultiplier { get; set; }
         public double TickSize { get; set; }

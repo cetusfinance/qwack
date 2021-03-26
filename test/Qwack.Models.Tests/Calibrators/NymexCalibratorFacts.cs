@@ -28,7 +28,7 @@ namespace Qwack.Models.Tests.Calibrators
             var curve = NYMEXModelBuilder.GetCurveForCode("CL", FuturesFilename, "CL", TestProviderHelper.FutureSettingsProvider, TestProviderHelper.CurrencyProvider, Transport.BasicTypes.PriceCurveType.NYMEX);
             var surface = NYMEXModelBuilder.GetSurfaceForCode("LO", OptionsFilename, "CL", curve, TestProviderHelper.CalendarProvider, TestProviderHelper.CurrencyProvider, TestProviderHelper.FutureSettingsProvider);
 
-            Assert.Equal(0.237771169117785, surface.GetVolForAbsoluteStrike(60.0, new DateTime(2020, 01, 15), 60.85),4);
+            Assert.Equal(0.2450948536896106, surface.GetVolForAbsoluteStrike(60.0, new DateTime(2020, 01, 15), 60.85),4);
         }
     }
 }

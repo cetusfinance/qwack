@@ -184,6 +184,10 @@ namespace Qwack.Futures
                         var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
+                    case "FRI3":
+                        var dateInMonth2 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth2.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
+                        break;
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
@@ -217,6 +221,10 @@ namespace Qwack.Futures
                     case "WED3":
                         var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
+                        break;
+                    case "FRI3":
+                        var dateInMonth2 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth2.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
                         break;
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);

@@ -26,16 +26,15 @@ namespace Qwack.Dates
 
         public static bool TryParse(string frequency, out Frequency output)
         {
-            try
+            var (success, periodType, periodCount) = TrySplitPeriod(frequency);
+
+            if (success)
             {
-                output = new Frequency(frequency);
+                output = new Frequency(periodCount, periodType);
                 return true;
             }
-            catch
-            {
-                output = new Frequency(0, DatePeriodType.D);
-                return false;
-            }
+            output = new Frequency(0, DatePeriodType.D);
+            return false;
         }
 
         public DatePeriodType PeriodType { get; set; }
@@ -73,6 +72,49 @@ namespace Qwack.Dates
                     throw new ArgumentException(nameof(period), $"Unknown period type {periodType}");
             }
             PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
+        }
+
+        public static (bool success, DatePeriodType periodType, int periodCount) TrySplitPeriod(string period)
+        {
+            var periodTypeStr = period[period.Length - 1];
+            var periodType = DatePeriodType.Day;
+            var periodCount = 0;
+            var success = true;
+
+            switch (periodTypeStr)
+            {
+                case 'D':
+                case 'd':
+                    periodType = DatePeriodType.D;
+                    break;
+                case 'Y':
+                case 'y':
+                    periodType = DatePeriodType.Y;
+                    break;
+                case 'M':
+                case 'm':
+                    periodType = DatePeriodType.M;
+                    break;
+                case 'B':
+                case 'b':
+                    periodType = DatePeriodType.B;
+                    break;
+                case 'w':
+                case 'W':
+                    periodType = DatePeriodType.W;
+                    break;
+                default:
+                    success = false;
+                    break;
+            }
+
+            var result = int.TryParse(period.Substring(0, period.Length - 1), out var pc);
+            if (result)
+                periodCount = pc;
+            else
+                success = false;
+
+            return (success, periodType, periodCount);
         }
 
         public static bool operator ==(Frequency x, Frequency y) => x.PeriodCount == y.PeriodCount && y.PeriodType == x.PeriodType;

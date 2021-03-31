@@ -5440,7 +5440,7 @@
             "NeverExpires": false,
             "FixedFuture": null
         },
-        "Months": ["H", "K", "N", "U", "Z"],
+        "Months": ["F","G","H","J", "K","M", "N","Q", "U","V","X", "Z"],
         "TimeZone": {
             "Id": "Eastern Standard Time",
             "DisplayName": "(UTC-05:00) Eastern Time (US & Canada)",
@@ -5616,7 +5616,7 @@
             "NeverExpires": false,
             "FixedFuture": null
         },
-        "Months": ["G", "J", "M", "Q", "V", "Z"],
+        "Months": ["F","G","H", "J","K", "M","N", "Q", "U","V", "X","Z"],
         "TimeZone": {
             "Id": "Eastern Standard Time",
             "DisplayName": "(UTC-05:00) Eastern Time (US & Canada)",
@@ -5795,7 +5795,7 @@
             "NeverExpires": false,
             "FixedFuture": null
         },
-        "Months": ["H", "K", "N", "U", "Z"],
+        "Months": ["F","G","H", "J","K", "M","N", "Q", "U","V", "X","Z"],
         "TimeZone": {
             "Id": "Eastern Standard Time",
             "DisplayName": "(UTC-05:00) Eastern Time (US & Canada)",
@@ -9450,15 +9450,19 @@
         "PriceMultiplier": 0.0025,
         "TickSize": 2.5E-05
     }, {
-        "Names": ["STOXX 600 - EUREX", "STX600", "STOXX 600 Basic Resources - EUREX", "STX600-BASIC"],
+        "Names": ["STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC","SXO","Eurostoxx 50 - Eurex","VG","JS","KG"],
         "CodeConversions": {
             "IB": {
-                "STX600": "FXXP",
-				"STX600-BASIC": "FSTS"
+                "SXO": "FXXP",
+				"JS": "FSTS",
+				"VG": "FESX",
+				"KG": "FSTE"
             },
             "BBG": {
-                "STX600": "SXO",
-				"STX600-BASIC": "JS"
+                "SXO": "SXO",
+				"JS": "JS",
+				"VG": "VG",
+				"KG": "KG"
             },
         },
         "ExpiryGen": {

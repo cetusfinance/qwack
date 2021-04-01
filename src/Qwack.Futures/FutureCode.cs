@@ -188,11 +188,28 @@ namespace Qwack.Futures
                         var dateInMonth2 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth2.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
                         break;
+                    case "FRI2":
+                        var dateInMonthf2 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonthf2.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
+                        break;
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
+                        break;
+                    case "LASTMON-EUA":
+                        var dateInMonth3 = new DateTime(YearNumber, monthNum, 1);
+                        var lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
+                        var holidayInWeek = false;
+                        for (var i = 0; i < 5; i++)
+                        {
+                            holidayInWeek = holidayInWeek || _settings.RollGen.CalendarObject.IsHoliday(lastMon.AddDays(i));
+                        }
+                        if (holidayInWeek)
+                            lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 2);
+
+                        dayOfMonthToStart = lastMon.IfHolidayRollBack(_settings.RollGen.CalendarObject).Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
@@ -226,11 +243,28 @@ namespace Qwack.Futures
                         var dateInMonth2 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth2.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
                         break;
+                    case "FRI2":
+                        var dateInMonthf2 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonthf2.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
+                        break;
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
+                        break;
+                    case "LASTMON-EUA":
+                        var dateInMonth3 = new DateTime(YearNumber, monthNum, 1);
+                        var lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
+                        var holidayInWeek = false;
+                        for(var i=0;i<5; i++)
+                        {
+                            holidayInWeek = holidayInWeek || _settings.RollGen.CalendarObject.IsHoliday(lastMon.AddDays(i));
+                        }
+                        if (holidayInWeek)
+                            lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 2);
+
+                        dayOfMonthToStart = lastMon.IfHolidayRollBack(_settings.RollGen.CalendarObject).Day;
                         break;
                     default:
                         throw new Exception($"Dont know how to handle date code {_settings.RollGen.DayOfMonthToStartOther}");

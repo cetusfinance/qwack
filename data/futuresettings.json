@@ -9997,19 +9997,21 @@
         "PriceMultiplier": 0.0025,
         "TickSize": 2.5E-05
     }, {
-        "Names": ["STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC","SXO","Eurostoxx 50 - Eurex","VG","JS","KG"],
+        "Names": ["STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC","SXO","Eurostoxx 50 - Eurex","VG","JS","KG","QR"],
         "CodeConversions": {
             "IB": {
                 "SXO": "FXXP",
 				"JS": "FSTS",
 				"VG": "FESX",
-				"KG": "FSTE"
+				"KG": "FSTE",
+				"QR": "ESE"
             },
             "BBG": {
                 "SXO": "SXO",
 				"JS": "JS",
 				"VG": "VG",
-				"KG": "KG"
+				"KG": "KG",
+				"QR": "QR"
             },
         },
         "ExpiryGen": {

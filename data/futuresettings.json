@@ -7792,13 +7792,13 @@
         "PriceMultiplier": 1.0,
         "TickSize": 0.25
     }, {
-        "Names": ["NGUK", "UK Natural Gas - ICE"],
+        "Names": ["NGUK", "UK Natural Gas - ICE", "FN"],
         "CodeConversions": {
             "IB": {
-                "NGUK": "NGF"
+                "FN": "NGF"
             },
             "BBG": {
-                "NGUK": "FN"
+                "FN": "FN"
             },
         },
         "ExpiryGen": {

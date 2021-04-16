@@ -32,7 +32,7 @@ namespace Qwack.Excel.Tests.Cubes
         [Fact]
         public void DisplayCube_Facts()
         {
-            Assert.Equal("Could not find cube blahblah", CubeFunctions.DisplayCube("blahblah",false));
+            Assert.Equal("Could not find cube blahblah", CubeFunctions.DisplayCube("blahblah",false,false));
             
             var headers = new[] { "b", "c" };
             var metaData = new object[,] { { 1, 2 }, { 3, 4 } };
@@ -40,7 +40,7 @@ namespace Qwack.Excel.Tests.Cubes
 
             CubeFunctions.CreateCube("blahblah", headers, metaData, valueData);
 
-            var result = (object[,])CubeFunctions.DisplayCube("blahblah", false);
+            var result = (object[,])CubeFunctions.DisplayCube("blahblah", false, false);
             Assert.Equal(headers[0], result[0, 0]);
             Assert.Equal(metaData[0,1], result[1, 1]);
 

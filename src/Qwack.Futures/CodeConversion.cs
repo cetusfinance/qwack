@@ -7,6 +7,8 @@ namespace Qwack.Futures
 {
     public static class CodeConversion
     {
+        public static string[] MonthCodes = new[] { "F", "G", "H", "K", "J", "M", "N", "Q", "U", "V", "X", "Z" };
+
         public static string ConvertBbgToIB(this string bbg, IFutureSettingsProvider provider)
         {
             switch (bbg.ToLower().Right(6))

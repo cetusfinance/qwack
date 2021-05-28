@@ -5587,6 +5587,192 @@
         "PriceMultiplier": 1.0,
         "TickSize": 0.0005
     }, {
+        "Names": ["CA", "Copper - LME","AH","Aluminium - LME","NI","Nickel - LME","PB","Lead - LME", "ZS", "Zinc - LME", "SN", "Tin - LME"],
+        "CodeConversions": {
+            "IB": {
+                "CA": "CA",
+				"AH": "AH",
+				"NI": "NI",
+				"ZS": "ZS",
+				"SN": "SN",
+				"PB": "PB",
+            },
+            "BBG": {
+                "CA": "LP",
+				"AH": "LA",
+				"NI": "LN",
+				"ZS": "LX",
+				"SN": "LT",
+				"PB": "LL",
+            },
+        },
+        "ExpiryGen": {
+            "Calendar": "LME",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 0,
+            "DayOfMonthToStartOther": "WED3",
+            "DateOffsetModifier": "-0b",
+            "DoMToStartIsNumber": false,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "RollGen": {
+            "Calendar": "LME",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 0,
+            "DayOfMonthToStartOther": "WED3",
+            "DateOffsetModifier": "-2b",
+            "DoMToStartIsNumber": false,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "Months": ["F","G","H","J", "K","M", "N","Q", "U","V","X", "Z"],
+        "TimeZone": {
+            "Id": "Eastern Standard Time",
+            "DisplayName": "(UTC-05:00) Eastern Time (US & Canada)",
+            "StandardName": "Eastern Standard Time",
+            "DaylightName": "Eastern Daylight Time",
+            "BaseUtcOffset": "-05:00:00",
+            "AdjustmentRules": [{
+                    "DateStart": "0001-01-01T00:00:00",
+                    "DateEnd": "2006-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 4,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 10,
+                        "Week": 5,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }, {
+                    "DateStart": "2007-01-01T00:00:00",
+                    "DateEnd": "9999-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 3,
+                        "Week": 2,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 11,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }
+            ],
+            "SupportsDaylightSavingTime": true
+        },
+        "MarketCloseTime": ["13:00:00", "12:45:00", "13:00:00", "12:45:00", "13:00:00"],
+        "MarketOpenRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "MarketOpenTime": ["13:00:00"],
+        "MarketOpenModifier": [-1],
+        "MarketOpenTimeOverride": [],
+        "MarketCloseVWAPLength": ["00:01:00", "00:01:00", "00:01:00", "00:01:00", "00:01:00"],
+        "MarketCloseValidTo": ["2012-12-23T00:00:00", "2012-12-25T00:00:00", "2013-12-23T00:00:00", "2013-12-25T00:00:00", "9999-12-31T23:59:59.9999999"],
+        "MarketShutRules": [{
+                "ShutWholeDay": [6],
+                "CloseWhenHolidayFollows": "17:15:00",
+                "OpenOnHolidayWhenNormalDayFollows": "18:00:00",
+                "TimeZone": {
+                    "Id": "Eastern Standard Time",
+                    "DisplayName": "(UTC-05:00) Eastern Time (US & Canada)",
+                    "StandardName": "Eastern Standard Time",
+                    "DaylightName": "Eastern Daylight Time",
+                    "BaseUtcOffset": "-05:00:00",
+                    "AdjustmentRules": [{
+                            "DateStart": "0001-01-01T00:00:00",
+                            "DateEnd": "2006-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 4,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 10,
+                                "Week": 5,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }, {
+                            "DateStart": "2007-01-01T00:00:00",
+                            "DateEnd": "9999-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 3,
+                                "Week": 2,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 11,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }
+                    ],
+                    "SupportsDaylightSavingTime": true
+                },
+                "Calendar": "NYMEX",
+                "MarketPauses": [{
+                        "Start": "17:15:00",
+                        "End": "18:00:00"
+                    }
+                ]
+            }
+        ],
+        "MarketShutRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "Options": {
+            "StrikeRounding": 0.01,
+            "Kind": 1,
+            "StrikeRule": 0,
+            "OffsetSize": null,
+            "Generator": "COMEX_OPT",
+            "NumberOfPeriodsToOffset": 0,
+            "PeriodToOffset": null,
+            "Strikes": [{
+                    "Key": 5,
+                    "Value": 0.01
+                }, {
+                    "Key": 10,
+                    "Value": 0.05
+                }
+            ],
+            "CBOTRules": null
+        },
+        "LotSize": 25000.0,
+        "PriceMultiplier": 1.0,
+        "TickSize": 0.0005
+    },{
         "Names": ["GC", "Gold - COMEX"],
         "CodeConversions": {
             "IB": {
@@ -7606,13 +7792,13 @@
         "PriceMultiplier": 1.0,
         "TickSize": 0.25
     }, {
-        "Names": ["NGUK", "UK Natural Gas - ICE"],
+        "Names": ["NGUK", "UK Natural Gas - ICE", "FN"],
         "CodeConversions": {
             "IB": {
-                "NGUK": "NGF"
+                "FN": "NGF"
             },
             "BBG": {
-                "NGUK": "FN"
+                "FN": "FN"
             },
         },
         "ExpiryGen": {
@@ -9279,7 +9465,8 @@
         "LotSize": 125000.0,
         "PriceMultiplier": 1.0,
         "TickSize": 0.0001
-    }, {
+    },
+	{
         "Names": ["GBP", "British Pound - CME"],
         "CodeConversions": {
             "IB": {
@@ -9455,7 +9642,185 @@
         "LotSize": 62500.0,
         "PriceMultiplier": 1.0,
         "TickSize": 0.0001
-    }, {
+    }, 	
+	{
+        "Names": ["RUB", "Russian Ruble - CME"],
+        "CodeConversions": {
+            "IB": {
+                "RUB": "6R"
+            },
+            "BBG": {
+                "RUB": "RU"
+            },
+        },
+        "ExpiryGen": {
+            "Calendar": "CME",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 15,
+            "DayOfMonthToStartOther": null,
+            "DateOffsetModifier": "-0b",
+            "DoMToStartIsNumber": true,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "RollGen": {
+            "Calendar": "CME",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 15,
+            "DayOfMonthToStartOther": null,
+            "DateOffsetModifier": "-1b",
+            "DoMToStartIsNumber": true,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "Months": ["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"],
+        "TimeZone": {
+            "Id": "Central Standard Time",
+            "DisplayName": "(UTC-06:00) Central Time (US & Canada)",
+            "StandardName": "Central Standard Time",
+            "DaylightName": "Central Daylight Time",
+            "BaseUtcOffset": "-06:00:00",
+            "AdjustmentRules": [{
+                    "DateStart": "0001-01-01T00:00:00",
+                    "DateEnd": "2006-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 4,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 10,
+                        "Week": 5,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }, {
+                    "DateStart": "2007-01-01T00:00:00",
+                    "DateEnd": "9999-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 3,
+                        "Week": 2,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 11,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }
+            ],
+            "SupportsDaylightSavingTime": true
+        },
+        "MarketCloseTime": ["14:00:00"],
+        "MarketOpenRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "MarketOpenTime": ["14:00:00"],
+        "MarketOpenModifier": [-1],
+        "MarketOpenTimeOverride": [],
+        "MarketCloseVWAPLength": ["00:00:30"],
+        "MarketCloseValidTo": ["9999-12-31T23:59:59.9999999"],
+        "MarketShutRules": [{
+                "ShutWholeDay": [6],
+                "CloseWhenHolidayFollows": "16:00:00",
+                "OpenOnHolidayWhenNormalDayFollows": "17:00:00",
+                "TimeZone": {
+                    "Id": "Central Standard Time",
+                    "DisplayName": "(UTC-06:00) Central Time (US & Canada)",
+                    "StandardName": "Central Standard Time",
+                    "DaylightName": "Central Daylight Time",
+                    "BaseUtcOffset": "-06:00:00",
+                    "AdjustmentRules": [{
+                            "DateStart": "0001-01-01T00:00:00",
+                            "DateEnd": "2006-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 4,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 10,
+                                "Week": 5,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }, {
+                            "DateStart": "2007-01-01T00:00:00",
+                            "DateEnd": "9999-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 3,
+                                "Week": 2,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 11,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }
+                    ],
+                    "SupportsDaylightSavingTime": true
+                },
+                "Calendar": "CME",
+                "MarketPauses": [{
+                        "Start": "16:00:00",
+                        "End": "17:00:00"
+                    }
+                ]
+            }
+        ],
+        "MarketShutRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "Options": {
+            "StrikeRounding": 0.0001,
+            "Kind": 1,
+            "StrikeRule": 0,
+            "OffsetSize": null,
+            "Generator": "FX_OPT",
+            "NumberOfPeriodsToOffset": 0,
+            "PeriodToOffset": null,
+            "Strikes": [{
+                    "Key": 20,
+                    "Value": 0.0001
+                }, {
+                    "Key": 10,
+                    "Value": 0.0001
+                }
+            ],
+            "CBOTRules": null
+        },
+        "LotSize": 62500.0,
+        "PriceMultiplier": 1.0,
+        "TickSize": 0.0001
+    }, 
+	{
         "Names": ["3 Month Eurodollar - CME", "3M Eurodollar - CME", "ED"],
         "CodeConversions": {
             "IB": {
@@ -9632,19 +9997,21 @@
         "PriceMultiplier": 0.0025,
         "TickSize": 2.5E-05
     }, {
-        "Names": ["STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC","SXO","Eurostoxx 50 - Eurex","VG","JS","KG"],
+        "Names": ["STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC","SXO","Eurostoxx 50 - Eurex","VG","JS","KG","QR"],
         "CodeConversions": {
             "IB": {
                 "SXO": "FXXP",
 				"JS": "FSTS",
 				"VG": "FESX",
-				"KG": "FSTE"
+				"KG": "FSTE",
+				"QR": "ESE"
             },
             "BBG": {
                 "SXO": "SXO",
 				"JS": "JS",
 				"VG": "VG",
-				"KG": "KG"
+				"KG": "KG",
+				"QR": "QR"
             },
         },
         "ExpiryGen": {
@@ -9814,13 +10181,15 @@
         "PriceMultiplier": 0.0025,
         "TickSize": 2.5E-05
     }, {
-        "Names": ["10Y US Note - CBOT", "ZN", "10Y"],
+        "Names": ["10Y US Note - CBOT", "ZN", "10Y", "US T-BOND - CBOT", "ZB"],
         "CodeConversions": {
             "IB": {
-                "ZN": "ZN"
+                "ZN": "ZN",
+				"ZB": "ZB"
             },
             "BBG": {
-                "ZN": "TY"
+                "ZN": "TY",
+				"ZB": "US"
             },
         },
         "ExpiryGen": {
@@ -11035,8 +11404,181 @@
         "LotSize": 20.0,
         "PriceMultiplier": 1.0,
         "TickSize": 0.25
-    }, {
-        "Names": ["YM", "Dow Jones Emini - CME"],
+    },{
+        "Names": ["SMI", "Swiss Market Index - SOFFEX"],
+        "CodeConversions": {
+            "IB": {
+                "SMI": "SMI"
+            },
+            "BBG": {
+                "SMI": "SM"
+            },
+        },
+        "ExpiryGen": {
+            "Calendar": "CHF",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 0,
+            "DayOfMonthToStartOther": "FRI3",
+            "DateOffsetModifier": "-0b",
+            "DoMToStartIsNumber": false,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "RollGen": {
+            "Calendar": "CHF",
+            "MonthModifier": 0,
+            "DayOfMonthToStart": 0,
+            "DayOfMonthToStartOther": "FRI3",
+            "DateOffsetModifier": "-2b",
+            "DoMToStartIsNumber": false,
+            "NeverExpires": false,
+            "FixedFuture": null
+        },
+        "Months": ["H", "M", "U", "Z"],
+        "TimeZone": {
+            "Id": "Central Standard Time",
+            "DisplayName": "(UTC-06:00) Central Time (US & Canada)",
+            "StandardName": "Central Standard Time",
+            "DaylightName": "Central Daylight Time",
+            "BaseUtcOffset": "-06:00:00",
+            "AdjustmentRules": [{
+                    "DateStart": "0001-01-01T00:00:00",
+                    "DateEnd": "2006-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 4,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 10,
+                        "Week": 5,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }, {
+                    "DateStart": "2007-01-01T00:00:00",
+                    "DateEnd": "9999-12-31T00:00:00",
+                    "DaylightDelta": "01:00:00",
+                    "DaylightTransitionStart": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 3,
+                        "Week": 2,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "DaylightTransitionEnd": {
+                        "TimeOfDay": "0001-01-01T02:00:00",
+                        "Month": 11,
+                        "Week": 1,
+                        "Day": 1,
+                        "DayOfWeek": 0,
+                        "IsFixedDateRule": false
+                    },
+                    "BaseUtcOffsetDelta": "00:00:00"
+                }
+            ],
+            "SupportsDaylightSavingTime": true
+        },
+        "MarketCloseTime": ["15:15:00"],
+        "MarketOpenRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "MarketOpenTime": ["15:15:00"],
+        "MarketOpenModifier": [-1],
+        "MarketOpenTimeOverride": [],
+        "MarketCloseVWAPLength": ["00:00:30"],
+        "MarketCloseValidTo": ["9999-12-31T23:59:59.9999999"],
+        "MarketShutRules": [{
+                "ShutWholeDay": [6],
+                "CloseWhenHolidayFollows": "16:15:00",
+                "OpenOnHolidayWhenNormalDayFollows": "17:00:00",
+                "TimeZone": {
+                    "Id": "Central Standard Time",
+                    "DisplayName": "(UTC-06:00) Central Time (US & Canada)",
+                    "StandardName": "Central Standard Time",
+                    "DaylightName": "Central Daylight Time",
+                    "BaseUtcOffset": "-06:00:00",
+                    "AdjustmentRules": [{
+                            "DateStart": "0001-01-01T00:00:00",
+                            "DateEnd": "2006-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 4,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 10,
+                                "Week": 5,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }, {
+                            "DateStart": "2007-01-01T00:00:00",
+                            "DateEnd": "9999-12-31T00:00:00",
+                            "DaylightDelta": "01:00:00",
+                            "DaylightTransitionStart": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 3,
+                                "Week": 2,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "DaylightTransitionEnd": {
+                                "TimeOfDay": "0001-01-01T02:00:00",
+                                "Month": 11,
+                                "Week": 1,
+                                "Day": 1,
+                                "DayOfWeek": 0,
+                                "IsFixedDateRule": false
+                            },
+                            "BaseUtcOffsetDelta": "00:00:00"
+                        }
+                    ],
+                    "SupportsDaylightSavingTime": true
+                },
+                "Calendar": "CME",
+                "MarketPauses": [{
+                        "Start": "15:15:00",
+                        "End": "15:30:00"
+                    }
+                ]
+            }
+        ],
+        "MarketShutRulesValidUntil": ["9999-12-31T23:59:59.9999999"],
+        "Options": {
+            "StrikeRounding": 0.25,
+            "Kind": 1,
+            "StrikeRule": 0,
+            "OffsetSize": null,
+            "Generator": "EQ_QUARTERLY_OPT",
+            "NumberOfPeriodsToOffset": 0,
+            "PeriodToOffset": null,
+            "Strikes": [{
+                    "Key": 1,
+                    "Value": 0.25
+                }
+            ],
+            "CBOTRules": null
+        },
+        "LotSize": 20.0,
+        "PriceMultiplier": 1.0,
+        "TickSize": 0.25
+    },{
+        "Names": ["YM", "Dow Jones Emini - CME", "MSCIEM","MSCI Emerging Markets - LIFFE"],
         "CodeConversions": {
             "IB": {
                 "YM": "YM"
@@ -11209,7 +11751,7 @@
         "PriceMultiplier": 1.0,
         "TickSize": 1.0
     }, {
-        "Names": ["NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman", "NWE3.5", "NWE1.0", "Sing0.5", "NWE0.5", "UkNbp", "IronOre62", "SCO", "DCO", "GO.1FOB", "SingGo"],
+        "Names": ["NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman", "NWE3.5", "NWE1.0", "Sing0.5", "NWE0.5", "UkNbp", "IronOre62", "SCO", "DCO", "GO.1FOB", "SingGo","HRC"],
         "CodeConversions": {
             "IB": {
                 "SCO": "SCI"

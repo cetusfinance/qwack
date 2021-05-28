@@ -395,10 +395,16 @@ namespace Qwack.Models.Models
             var isCompo = euOpt.Currency != model.GetPriceCurve(euOpt.AssetId).Currency;
             var curve = model.GetPriceCurve(euOpt.AssetId);
             var fwdDate = euOpt.ExpiryDate.AddPeriod(RollType.F, euOpt.FixingCalendar, euOpt.SpotLag);
-            var fwd = curve.GetPriceForDate(fwdDate);
-            var fxFwd = isCompo ?
-                 model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency) :
-                 1.0;
+            var fwd = euOpt.ExpiryDate <= model.BuildDate && model.TryGetFixingDictionary(euOpt.AssetId,out var dict) && dict.TryGetFixing(euOpt.ExpiryDate, out var fix) ? 
+                fix : 
+                curve.GetPriceForDate(fwdDate);
+
+            var fxFwd = 1.0;
+            if (isCompo)
+            {
+                fxFwd = euOpt.ExpiryDate <= model.BuildDate && model.TryGetFixingDictionary(euOpt.FxFixingId, out var fxDict) && fxDict.TryGetFixing(euOpt.ExpiryDate, out var fxFix) ?
+                fxFix : model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency);
+            }
 
             var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
 

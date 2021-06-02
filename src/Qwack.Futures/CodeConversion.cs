@@ -9,6 +9,22 @@ namespace Qwack.Futures
     {
         public static string[] MonthCodes = new[] { "F", "G", "H", "K", "J", "M", "N", "Q", "U", "V", "X", "Z" };
 
+        public static Dictionary<string, string> MonthMap = new Dictionary<string, string>()
+            {
+                { "F", "Jan" },
+                { "G", "Feb" },
+                { "H", "Mar" },
+                { "J", "Apr" },
+                { "K", "May" },
+                { "M", "Jun" },
+                { "N", "Jul" },
+                { "Q", "Aug" },
+                { "U", "Sep" },
+                { "V", "Oct" },
+                { "X", "Nov" },
+                { "Z", "Dec" },
+            };
+
         public static string ConvertBbgToIB(this string bbg, IFutureSettingsProvider provider)
         {
             switch (bbg.ToLower().Right(6))

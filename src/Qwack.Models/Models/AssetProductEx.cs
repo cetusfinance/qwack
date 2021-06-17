@@ -1031,7 +1031,7 @@ namespace Qwack.Models.Models
                 case CashBalance cash:
                     pv = cash.Pv(model.FundingModel, false);
                     break;
-                case ETC etc:
+                case CashAsset etc:
                     pv = etc.PV(model);
                     break;
                 case STIRFuture stir:

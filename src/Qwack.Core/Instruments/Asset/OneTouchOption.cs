@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class OneTouchOption : IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public string PortfolioName { get; set; }

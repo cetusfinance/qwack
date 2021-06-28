@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class FloatingRateLoanDepo : IFundingInstrument, IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public FloatingRateLoanDepo() { }
 
         public FloatingRateLoanDepo(CashFlow[] flows, FloatRateIndex floatRateIndex, string forecastCurve, string discountCurve) : base()

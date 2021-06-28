@@ -155,6 +155,7 @@ namespace Qwack.Core.Tests.AssetModel
 
             var asianSwap = AssetProductFactory.CreateMonthlyAsianSwap(periodCode, strike, "Coconuts", cal, cal, new Frequency("5b"), zar, TradeDirection.Long, new Frequency("0b"), nominal, DateGenerationType.BusinessDays);
             asianSwap.TradeId = "aLovelyBunch";
+            asianSwap.MetaData.Add("Booo", "Baaa");
             foreach (var sw in asianSwap.Swaplets)
             {
                 sw.DiscountCurve = "USD.CURVE";
@@ -168,6 +169,10 @@ namespace Qwack.Core.Tests.AssetModel
             var pfPvCube = portfolio.PV(aModel, zar);
             var pfPv = (double)pfPvCube.GetAllRows().First().Value;
             Assert.Equal(expectedPV, pfPv, 8);
+
+            //test meta data feeds to cube
+            var booix = pfPvCube.GetColumnIndex("Booo");
+            Assert.Equal("Baaa", (string)pfPvCube.GetAllRows().First().MetaData[booix]);
 
             //expected fx delta is just asset delta in ZAR
             var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);

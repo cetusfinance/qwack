@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class CashAsset : IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public CashAsset() { }
         public CashAsset(double notional, string assetId, Currency ccy, double scalingFactor, Frequency settleLag, Calendar settleCalendar) : base()
         {

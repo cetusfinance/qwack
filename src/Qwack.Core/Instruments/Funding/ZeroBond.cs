@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ZeroBond : IFundingInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public ZeroBond() { }
         public ZeroBond(double price, DateTime maturityDate, string discountCurve):base()
         {

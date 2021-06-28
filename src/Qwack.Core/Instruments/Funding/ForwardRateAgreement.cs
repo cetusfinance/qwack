@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ForwardRateAgreement : IFundingInstrument, ISaCcrEnabledIR
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public ForwardRateAgreement() { }
 
         public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve):base()

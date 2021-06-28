@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class STIRFuture : IFundingInstrument, IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public double Price { get; set; } = 100.0;
         public double ContractSize { get; set; } = 1.0;
         public double Position { get; set; } = 1.0;

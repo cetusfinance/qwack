@@ -13,5 +13,6 @@ namespace Qwack.Core.Instruments
         string PortfolioName { get; set; }
         DateTime LastSensitivityDate { get; }
         Currency Currency { get; }
+        Dictionary<string, string> MetaData { get; set; }
     }
 }

@@ -46,6 +46,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var model = pvModel.VanillaModel;
@@ -97,6 +103,14 @@ namespace Qwack.Models.Risk
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Vega" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, vega);
                         }
                     }
@@ -119,6 +133,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var model = pvModel.VanillaModel;
@@ -172,6 +192,14 @@ namespace Qwack.Models.Risk
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Sega" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, vega);
                         }
                     }
@@ -202,6 +230,14 @@ namespace Qwack.Models.Risk
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Rega" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, vega);
                         }
                     }
@@ -227,6 +263,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var model = pvModel.VanillaModel;
@@ -276,6 +318,14 @@ namespace Qwack.Models.Risk
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Vega" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, vega);
                         }
                     }
@@ -299,6 +349,12 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
             model.BuildDependencyTree();
@@ -409,6 +465,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, delta);
                         }
 
@@ -427,6 +491,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Gamma" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, gamma);
                         }
                     }
@@ -449,6 +521,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, delta);
                         }
                     }
@@ -459,10 +539,11 @@ namespace Qwack.Models.Risk
         }
 
 
+
         public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize=false)
         {
             var bumpSize = 0.01;
-            var cube = new ResultCube();
+            var cube = new ResultCube();          
             var dataTypes = new Dictionary<string, Type>
             {
                 { TradeId, typeof(string) },
@@ -473,6 +554,13 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach(var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x=>x.TradeId!=null).ToDictionary(x => x.TradeId, x => x);
+
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel.Clone();
             model.BuildDependencyTree();
@@ -562,6 +650,7 @@ namespace Qwack.Models.Risk
 
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
+                        
                         if (computeGamma)
                         {
                             var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
@@ -584,6 +673,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
+                                if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                                {
+                                    foreach (var key in metaKeys)
+                                    {
+                                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                                            row[key] = metaData;
+                                    }
+                                }
                                 cube.AddRow(row, delta);
                             }
 
@@ -602,6 +699,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Gamma" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
+                                if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                                {
+                                    foreach (var key in metaKeys)
+                                    {
+                                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                                            row[key] = metaData;
+                                    }
+                                }
                                 cube.AddRow(row, gamma);
                             }
                         }
@@ -624,6 +729,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
                                 };
+                                if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                                {
+                                    foreach (var key in metaKeys)
+                                    {
+                                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                                            row[key] = metaData;
+                                    }
+                                }
                                 cube.AddRow(row, delta);
                             }
                         }
@@ -648,6 +761,12 @@ namespace Qwack.Models.Risk
                 { "CurveType", typeof(string) },
                 { "Currency", typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel.Clone();
             model.BuildDependencyTree();
@@ -720,6 +839,14 @@ namespace Qwack.Models.Risk
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "Currency", reportingCurrency?.Ccy??bCurve.Value.Currency.Ccy },
                                 };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, delta);
                         }
                     }
@@ -739,6 +866,12 @@ namespace Qwack.Models.Risk
                 { AssetId, typeof(string) },
                 { Metric, typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
 
@@ -808,6 +941,14 @@ namespace Qwack.Models.Risk
                                 { AssetId, curveName },
                                 { Metric, "ParallelDelta" },
                             };
+                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
                         cube.AddRow(row, delta);
                     }
                 }
@@ -828,6 +969,12 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
 
@@ -898,6 +1045,14 @@ namespace Qwack.Models.Risk
                             { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
+                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
                         cube.AddRow(row, delta);
                     }
 
@@ -915,6 +1070,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, gamma);
                         }
                     }
@@ -935,6 +1098,12 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
 
@@ -1000,6 +1169,14 @@ namespace Qwack.Models.Risk
                             { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
+                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
                         cube.AddRow(row, delta);
                     }
 
@@ -1017,6 +1194,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, gamma);
                         }
                     }
@@ -1037,6 +1222,12 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "Portfolio", typeof(string) },
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
 
@@ -1120,6 +1311,14 @@ namespace Qwack.Models.Risk
                             { Metric, "FxSpotDelta" },
                             { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                         };
+                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
                         cube.AddRow(row, delta);
                     }
 
@@ -1137,6 +1336,14 @@ namespace Qwack.Models.Risk
                                 { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, gamma);
                         }
                     }
@@ -1158,6 +1365,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel;
 
@@ -1210,6 +1423,14 @@ namespace Qwack.Models.Risk
                                 { PointLabel, bCurve.Key.ToString("yyyy-MM-dd") },
                                 { Metric, "IrDelta" }
                             };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
                             cube.AddRow(row, delta);
                         }
                     }
@@ -1230,6 +1451,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var model = pvModel.VanillaModel;
@@ -1265,6 +1492,14 @@ namespace Qwack.Models.Risk
                         { PointLabel, string.Empty },
                         { Metric, "Theta" }
                     };
+                    if (insDict.TryGetValue((string)pvRowsFwd[i].MetaData[tidIx], out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, theta);
                 }
             }
@@ -1283,6 +1518,14 @@ namespace Qwack.Models.Risk
                         { PointLabel, "CashMove" },
                         { Metric, "Theta" }
                     };
+                    if (insDict.TryGetValue((string)cashRows[i].MetaData[tidIx], out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, cash);
                 }
             }
@@ -1293,10 +1536,11 @@ namespace Qwack.Models.Risk
                 var baseDeltaCube = pvModel.AssetDelta();
                 var rolledDeltaCube = rolledPvModel.AssetDelta();
                 var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+                var charmRows = charmCube.GetAllRows();
                 var plId = charmCube.GetColumnIndex(PointLabel);
                 var aId = charmCube.GetColumnIndex(AssetId);
                 var ttId = charmCube.GetColumnIndex(TradeType);
-                foreach (var charmRow in charmCube.GetAllRows())
+                foreach (var charmRow in charmRows)
                 {
                     var row = new Dictionary<string, object>
                     {
@@ -1306,6 +1550,14 @@ namespace Qwack.Models.Risk
                     { PointLabel, charmRow.MetaData[plId] },
                     { Metric, "Charm" }
                     };
+                    if (insDict.TryGetValue((string)charmRow.MetaData[tidIx], out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, charmRow.Value);
                 }
 
@@ -1324,6 +1576,14 @@ namespace Qwack.Models.Risk
                     { PointLabel, string.Empty },
                     { Metric, "Charm" }
                     };
+                    if (insDict.TryGetValue((string)charmRow.MetaData[tidIx], out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, charmRow.Value);
                 }
             }
@@ -1341,6 +1601,12 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var model = pvModel.VanillaModel;
@@ -1362,6 +1628,14 @@ namespace Qwack.Models.Risk
                         { PointLabel, "Financing" },
                         { Metric, "Theta" }
                     };
+                    if (insDict.TryGetValue(t.Key.TradeId, out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, finTheta);
                 }
 
@@ -1376,6 +1650,14 @@ namespace Qwack.Models.Risk
                         { PointLabel, "Option" },
                         { Metric, "Theta" }
                     };
+                    if (insDict.TryGetValue(t.Key.TradeId, out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, optTheta);
                 }
             }
@@ -1392,6 +1674,12 @@ namespace Qwack.Models.Risk
                 { TradeId, typeof(string) },
                 { Metric, typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
             
             var pvCube = pvModel.PV(reportingCcy);
@@ -1419,6 +1707,14 @@ namespace Qwack.Models.Risk
                         { TradeId, bumpedRows[i].MetaData[tidIx] },
                         { Metric, "CorrelDelta" }
                     };
+                    if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                    {
+                        foreach (var key in metaKeys)
+                        {
+                            if (trade.MetaData.TryGetValue(key, out var metaData))
+                                row[key] = metaData;
+                        }
+                    }
                     cube.AddRow(row, cDelta);
                 }
             }
@@ -1440,6 +1736,12 @@ namespace Qwack.Models.Risk
                 { "Currency", typeof(string) },
                 { "Portfolio", typeof(string) }
             };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var pvCube = pvModel.PV(reportingCcy);

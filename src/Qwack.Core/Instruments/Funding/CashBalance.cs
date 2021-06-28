@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class CashBalance : IFundingInstrument, IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public CashBalance() { }
 
         public CashBalance(Currency currency, double notional, DateTime? payDate = null):base()

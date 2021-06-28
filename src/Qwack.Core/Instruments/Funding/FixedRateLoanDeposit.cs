@@ -9,6 +9,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class FixedRateLoanDeposit : IFundingInstrument, IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public FixedRateLoanDeposit() { }
 
         public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve):base()

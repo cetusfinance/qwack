@@ -15,6 +15,7 @@ namespace Qwack.Core.Instruments.Credit
 {
     public class CDS : ISaccrEnabledCredit, IInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public DateTime OriginDate { get; set; }
         public CdsScheduleType ScheduleType { get; set; }
         public DayCountBasis Basis { get; set; }

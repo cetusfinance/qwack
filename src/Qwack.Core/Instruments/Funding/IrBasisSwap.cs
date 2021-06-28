@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class IrBasisSwap : IFundingInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public IrBasisSwap() { }
 
         public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null):base()

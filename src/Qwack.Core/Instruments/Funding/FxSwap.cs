@@ -9,6 +9,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class FxSwap : IFundingInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public FxSwap(double swapPoints, DateTime nearDate, DateTime farDate, double notional, Currency domesticCcy, Currency foreignCcy)
         {
             PillarDate = farDate;

@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class MultiPeriodBackpricingOption : IHasVega, IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public OptionType CallPut { get; set; }
 
         public string TradeId { get; set; }

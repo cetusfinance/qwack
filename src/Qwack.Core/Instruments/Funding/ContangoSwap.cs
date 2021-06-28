@@ -11,6 +11,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class ContangoSwap : IFundingInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public double ContangoRate { get; set; }
         public double MetalQuantity { get; set; }
         public string PortfolioName { get; set; }

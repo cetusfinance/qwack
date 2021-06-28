@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 {
     public class FxForward : IFundingInstrument, IAssetInstrument, ISaccrEnabledFx
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public double Strike { get; set; }
         public double DomesticQuantity { get; set; }
         public DateTime DeliveryDate { get; set; }

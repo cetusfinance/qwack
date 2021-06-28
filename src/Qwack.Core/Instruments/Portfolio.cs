@@ -15,6 +15,7 @@ namespace Qwack.Core.Instruments
 {
     public class Portfolio : IInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public List<IInstrument> Instruments { get; set; }
         public string PortfolioName { get; set; }
         public string TradeId => throw new NotImplementedException();

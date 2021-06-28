@@ -902,6 +902,12 @@ namespace Qwack.Models.Models
                 { Consts.Cubes.TradeType, typeof(string) },
                 { Consts.Cubes.Portfolio, typeof(string) },
             };
+            var metaKeys = portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
 
             var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
@@ -918,7 +924,14 @@ namespace Qwack.Models.Models
                         { Consts.Cubes.TradeType, tradeType },
                         { Consts.Cubes.Portfolio, portfolio.Instruments[i].PortfolioName??string.Empty },
                   };
-
+                if (insDict.TryGetValue(tradeId, out var trade))
+                {
+                    foreach (var key in metaKeys)
+                    {
+                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                            row[key] = metaData;
+                    }
+                }
                 pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv);
             }, true).Wait();
 

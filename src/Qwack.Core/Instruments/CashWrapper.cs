@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments
 {
     public class CashWrapper : IAssetInstrument
     {
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public CashWrapper(IAssetInstrument underlyingInstrument, List<CashBalance> cashBalances = null)
         {
             UnderlyingInstrument = underlyingInstrument;

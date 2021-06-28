@@ -17,7 +17,10 @@
     <None Remove="QwackDna.dna" />
     <None Remove="QwackDna.xll" />
   </ItemGroup>
- 
+    <PropertyGroup>
+        <ExcelDnaAllowPackageReferenceProjectStyle>true</ExcelDnaAllowPackageReferenceProjectStyle>
+       <RunExcelDnaSetDebuggerOptions>false</RunExcelDnaSetDebuggerOptions>
+    </PropertyGroup>
   <ItemGroup>
     <Content Include="futuresettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,8 +38,8 @@
 
   <ItemGroup>
       <PackageReference Include="CsvHelper" Version="12.2.2" />
-      <PackageReference Include="ExcelDna.AddIn" Version="1.0.0" />
-      <PackageReference Include="ExcelDna.Integration" Version="1.0.0" />
+      <PackageReference Include="ExcelDna.AddIn" Version="1.5.0-rc1" />
+      <PackageReference Include="ExcelDna.Integration" Version="1.5.0-rc1" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.0" />

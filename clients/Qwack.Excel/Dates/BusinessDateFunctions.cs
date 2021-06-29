@@ -174,7 +174,7 @@ namespace Qwack.Excel.Dates
         }
 
         [ExcelFunction(Description = "Returns list of business days in a period for a give calendar", Category = "QDates", IsThreadSafe = Parallel)]
-        public static object QDates_ListBusinessDaysInPeriod(
+        public static object[] QDates_ListBusinessDaysInPeriod(
             [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
             [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
             [ExcelArgument(Description = "Calendar to check")] string calendar)
@@ -183,14 +183,14 @@ namespace Qwack.Excel.Dates
             {
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(calendar, out var cal))
                 {
-                    return $"Calendar {calendar} not found in cache";
+                    return new object[] { $"Calendar {calendar} not found in cache" };
                 }
-                return StartDate.BusinessDaysInPeriod(EndDate, cal).Select(x => x.ToOADate()).ToArray();
+                return StartDate.BusinessDaysInPeriod(EndDate, cal).Select(x => (object)x.ToOADate()).ToArray();
             });
         }
 
         [ExcelFunction(Description = "Returns list of Fridays in a period for a give calendar", Category = "QDates", IsThreadSafe = Parallel)]
-        public static object QDates_ListFridaysInPeriod(
+        public static object[] QDates_ListFridaysInPeriod(
            [ExcelArgument(Description = "Period start date (inclusive)")] DateTime StartDate,
            [ExcelArgument(Description = "Period end date (inclusive)")] DateTime EndDate,
            [ExcelArgument(Description = "Calendar to check")] string calendar)
@@ -199,9 +199,9 @@ namespace Qwack.Excel.Dates
             {
                 if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(calendar, out var cal))
                 {
-                    return $"Calendar {calendar} not found in cache";
+                    return new object[] { $"Calendar {calendar} not found in cache" };
                 }
-                return StartDate.FridaysInPeriod(EndDate, cal).Select(x => x.ToOADate()).ToArray();
+                return StartDate.FridaysInPeriod(EndDate, cal).Select(x => (object)x.ToOADate()).ToArray();
             });
         }
 
@@ -211,9 +211,9 @@ namespace Qwack.Excel.Dates
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                if (Code is double)
+                if (Code is double @double)
                 {
-                    Code = DateTime.FromOADate((double)Code).ToString("MMM-yy");
+                    Code = DateTime.FromOADate(@double).ToString("MMM-yy");
                 }
                 var (Start, End) = DateExtensions.ParsePeriod((string)Code);
                 return (new object[] { Start, End }).ReturnExcelRangeVector();

@@ -1279,6 +1279,12 @@ namespace Qwack.Models.Models
                 case ETC etc:
                     tradeType = "ETC";
                     break;
+                case Equity eq:
+                    tradeType = "Equity";
+                    break;
+                case Bond bd:
+                    tradeType = "Bond";
+                    break;
                 case OneTouchOption oto:
                     tradeType = "OneTouch";
                     break;
@@ -1300,6 +1306,7 @@ namespace Qwack.Models.Models
                 case CashWrapper wrapper:
                     tradeType = TradeType(wrapper.UnderlyingInstrument);
                     break;
+
                 default:
                     throw new Exception($"Unable to handle product of type {ins.GetType()}");
             }

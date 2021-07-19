@@ -78,7 +78,7 @@ namespace Qwack.Core.Cubes
 
         public void AddRow(Dictionary<string, object> data, double value)
         {
-            var row = new object[data.Count];
+            var row = new object[_fieldNames.Count];
             foreach (var d in data)
             {
                 if (!_types.ContainsKey(d.Key))

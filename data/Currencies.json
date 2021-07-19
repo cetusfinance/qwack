@@ -105,6 +105,11 @@
     "SettlementCalendarName": "CNY"
   },
   {
+    "Ccy": "CNH",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "CNH"
+  },
+  {
     "Ccy": "KRW",
     "DayCount": "Act365",
     "SettlementCalendarName": "KRW"
@@ -123,6 +128,21 @@
     "Ccy": "TWD",
     "DayCount": "Act365",
     "SettlementCalendarName": "TWD"
+  },
+  {
+    "Ccy": "MXN",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "MXN"
+  },
+  {
+    "Ccy": "HKD",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "HKD"
+  },
+  {
+    "Ccy": "CHF",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "CHF"
   },
   {
     "Ccy": "BTC",

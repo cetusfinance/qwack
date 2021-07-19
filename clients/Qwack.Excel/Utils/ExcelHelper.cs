@@ -35,6 +35,26 @@ namespace Qwack.Excel.Services
             }
         }
 
+        public static object[] Execute(ILogger logger, Func<object[]> functionToRun)
+        {
+            if (ExcelDnaUtil.IsInFunctionWizard()) return new[] { "Disabled in function wizard" };
+
+            try
+            {
+                return functionToRun.Invoke();
+            }
+            catch (AggregateException agEx)
+            {
+                //logger?.LogWarning(_eventId, agEx.InnerExceptions.First(), "Unhandled exception");
+                return new[] { agEx.InnerExceptions.First().Message };
+            }
+            catch (Exception ex)
+            {
+                //logger?.LogWarning(_eventId, ex, "Unhandled exception");
+                return new[] { ex.Message };
+            }
+        }
+
         public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles) => datesAsDoubles.Select(DateTime.FromOADate).ToArray();
         public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles, DateTime filterDate) => datesAsDoubles.Select(DateTime.FromOADate).Where(x => x >= filterDate).ToArray();
         public static Tuple<DateTime, DateTime>[] ToDateTimeArray(this IEnumerable<Tuple<double, double>> datesAsDoubles) => datesAsDoubles.Select(x => new Tuple<DateTime, DateTime>(DateTime.FromOADate(x.Item1), DateTime.FromOADate(x.Item2))).ToArray();

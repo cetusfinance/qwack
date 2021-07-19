@@ -97,8 +97,8 @@ namespace Qwack.Excel.Tests.Dates
         public void QDates_ListBusinessDaysInPeriod_Facts()
         {
             //returns strings for errors
-            Assert.True(BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Today, DateTime.Today, "blahblah") is string);
-            Assert.Equal("Calendar blahblah not found in cache", BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Today, DateTime.Today, "blahblah"));
+            Assert.True(BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Today, DateTime.Today, "blahblah")[0] is string);
+            Assert.Equal("Calendar blahblah not found in cache", BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Today, DateTime.Today, "blahblah")[0]);
 
             var expected = new DateTime[]
             {
@@ -110,16 +110,16 @@ namespace Qwack.Excel.Tests.Dates
             };
             Assert.True(
                 Enumerable.SequenceEqual(expected, 
-                ((double[])BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Parse("2018-09-18"), DateTime.Parse("2018-09-25"), "JHB"))
-                .Select(x => DateTime.FromOADate(x)).ToArray()));
+                BusinessDateFunctions.QDates_ListBusinessDaysInPeriod(DateTime.Parse("2018-09-18"), DateTime.Parse("2018-09-25"), "JHB")
+                .Select(x => DateTime.FromOADate((double)x)).ToArray()));
         }
 
         [Fact]
         public void QDates_ListFridaysInPeriod_Facts()
         {
             //returns strings for errors
-            Assert.True(BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Today, DateTime.Today, "blahblah") is string);
-            Assert.Equal("Calendar blahblah not found in cache", BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Today, DateTime.Today, "blahblah"));
+            Assert.True(BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Today, DateTime.Today, "blahblah")[0] is string);
+            Assert.Equal("Calendar blahblah not found in cache", BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Today, DateTime.Today, "blahblah")[0]);
 
             var expected = new DateTime[]
             {
@@ -130,8 +130,8 @@ namespace Qwack.Excel.Tests.Dates
             };
             Assert.True(
                 Enumerable.SequenceEqual(expected,
-                ((double[])BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Parse("2018-09-01"), DateTime.Parse("2018-09-30"), "JHB"))
-                .Select(x => DateTime.FromOADate(x)).ToArray()));
+                BusinessDateFunctions.QDates_ListFridaysInPeriod(DateTime.Parse("2018-09-01"), DateTime.Parse("2018-09-30"), "JHB")
+                .Select(x => DateTime.FromOADate((double)x)).ToArray()));
         }
 
         [Fact]

@@ -1074,6 +1074,13 @@
     "DaysToExclude": [],
     "MonthsToExclude": []
   },
+  "MXN": {
+    "InheritedCalendar": [ "MEX" ],
+    "Name": "MXN",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "CNY": {
     "InheritedCalendar": [ "BEB" ],
     "Name": "CNY",

@@ -279,6 +279,11 @@ namespace Qwack.Models.Calibrators
         public static Dictionary<string,Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(string filename, Dictionary<string,string> ccyPairMap)
         {
             var blob = CMEFileParser.Instance.GetBlob(filename);
+            return GetFwdFxRatesFromFwdFile(blob, ccyPairMap);
+        }
+
+        public static Dictionary<string, Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(FIXML blob, Dictionary<string, string> ccyPairMap)
+        {
             var o = new Dictionary<string, Dictionary<DateTime, double>>();
             foreach (var kv in ccyPairMap)
             {
@@ -293,6 +298,5 @@ namespace Qwack.Models.Calibrators
             }
             return o;
         }
-
     }
 }

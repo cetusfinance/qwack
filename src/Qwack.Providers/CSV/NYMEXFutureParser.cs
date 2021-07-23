@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,11 +19,14 @@ namespace Qwack.Providers.CSV
 
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
-            using var csv = new CsvReader(sr);
-            csv.Configuration.HasHeaderRecord = true;
-            csv.Configuration.BadDataFound = null;
-            csv.Configuration.RegisterClassMap<NYMEXFutureRecordMap>();
-
+            var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                BadDataFound = null,
+            };
+            
+            using var csv = new CsvReader(sr, cfg);
+            csv.Context.RegisterClassMap<NYMEXFutureRecordMap>();
             var list = csv.GetRecords<NYMEXFutureRecord>().ToList();
             _cache.TryAdd(fileName, list);
 

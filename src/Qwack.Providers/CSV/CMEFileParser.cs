@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -20,11 +21,24 @@ namespace Qwack.Providers.CSV
                 return record;
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
-            using var csv = new CsvReader(sr);
-            csv.Configuration.HasHeaderRecord = true;
+            var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                BadDataFound = null,
+            };
+            using var csv = new CsvReader(sr, cfg);
+
             var list = csv.GetRecords<CMEFileRecord>().ToList();
             _cache.TryAdd(fileName, list);
 
+            return list;
+        }
+
+        public List<CMEFileRecord> Parse(StreamReader stream)
+        {
+            using var csv = new CsvReader(stream, CultureInfo.InvariantCulture);
+            csv.Context.Configuration.HasHeaderRecord = true;
+            var list = csv.GetRecords<CMEFileRecord>().ToList();
             return list;
         }
 
@@ -56,6 +70,23 @@ namespace Qwack.Providers.CSV
                 blob = (FIXML)reader.Deserialize(fs);
             }
             _blobCache.TryAdd(filename, blob);
+            return blob;
+        }
+
+        public FIXML GetBlob(StreamReader stream)
+        {
+            XmlSerializer reader = null;
+
+            try
+            {
+                reader = new XmlSerializer(typeof(FIXML));
+            }
+            catch (FileNotFoundException)
+            {
+
+            }
+
+            var blob = (FIXML)reader.Deserialize(stream);
             return blob;
         }
 

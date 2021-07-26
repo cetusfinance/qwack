@@ -33,6 +33,21 @@ namespace Qwack.Providers.CSV
             return list;
         }
 
+        public List<NYMEXFutureRecord> Parse(StreamReader sr)
+        {
+            var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                BadDataFound = null,
+            };
+
+            using var csv = new CsvReader(sr, cfg);
+            csv.Context.RegisterClassMap<NYMEXFutureRecordMap>();
+            var list = csv.GetRecords<NYMEXFutureRecord>().ToList();
+
+            return list;
+        }
+
         private static readonly NYMEXFutureParser instance = new NYMEXFutureParser();
 
         static NYMEXFutureParser()

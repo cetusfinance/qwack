@@ -20,6 +20,14 @@ namespace Qwack.Providers.CSV
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
 
+            var list = Parse(sr);
+            _cache.TryAdd(fileName, list);
+
+            return list;
+        }
+
+        public List<NYMEXOptionRecord> Parse(StreamReader sr)
+        {
             var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
@@ -30,7 +38,6 @@ namespace Qwack.Providers.CSV
             csv.Context.RegisterClassMap<NYMEXOptionRecordMap>();
 
             var list = csv.GetRecords<NYMEXOptionRecord>().ToList();
-            _cache.TryAdd(fileName, list);
 
             return list;
         }

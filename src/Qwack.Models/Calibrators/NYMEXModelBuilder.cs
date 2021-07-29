@@ -63,6 +63,8 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
+        
+
         public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency, IFutureSettingsProvider futureSettingsProvider)
         {
             var parsed = NYMEXOptionParser.Instance.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);

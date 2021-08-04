@@ -9821,7 +9821,7 @@
         "TickSize": 0.0001
     }, 
 	{
-        "Names": ["3 Month Eurodollar - CME", "3M Eurodollar - CME", "ED"],
+        "Names": ["3 Month Eurodollar - CME", "3M Eurodollar - CME", "ED", "GE"],
         "CodeConversions": {
             "IB": {
                 "ED": "GE"

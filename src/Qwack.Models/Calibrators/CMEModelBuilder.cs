@@ -314,7 +314,6 @@ namespace Qwack.Models.Calibrators
             if (instruments.Count() > 1)
                 throw new Exception();
             return Convert.ToDouble(instruments.Single().Full.Single(f => f.Typ == "6").Px);
-
         }
 
         public static Dictionary<DateTime,double> GetFwdFxRatesFromFwdFile(string filename, string ccyPair)

@@ -15,14 +15,19 @@ namespace Qwack.Models.Calibrators
 {
     public static class ListedSurfaceHelper
     {
-        public static void ImplyVols(List<ListedOptionSettlementRecord> optionSettlements, Dictionary<string,double> futuresPrices, IIrCurve discountCurve=null)
+        public static void ImplyVols(List<ListedOptionSettlementRecord> optionSettlements, Dictionary<string, double> futuresPrices, IIrCurve discountCurve = null)
         {
             var o = new Dictionary<DateTime, IInterpolator1D>();
 
-            foreach(var s in optionSettlements)
+            foreach (var s in optionSettlements)
             {
-                if (!futuresPrices.TryGetValue(s.UnderlyingFuturesCode, out var fut))
+                double fut;
+                if (s.UnderlyingFuturesPrice != 0)
+                    fut = s.UnderlyingFuturesPrice;
+                else if (!futuresPrices.TryGetValue(s.UnderlyingFuturesCode, out fut))
+                {
                     throw new Exception($"No future price found for contract {s}");
+                }
 
                 var t = s.ValDate.CalculateYearFraction(s.ExpiryDate, DayCountBasis.ACT365F);
                 var r = 0.0;
@@ -59,10 +64,14 @@ namespace Qwack.Models.Calibrators
 
                 var t = expGroup.First().ValDate.CalculateYearFraction(expiry, DayCountBasis.ACT365F);
 
+                double fut;
+                if (expGroup.First().UnderlyingFuturesPrice != 0)
+                    fut = expGroup.First().UnderlyingFuturesPrice;
+                else if (!futuresPrices.TryGetValue(expGroup.First().UnderlyingFuturesCode, out fut))
+                {
+                    throw new Exception($"No future price found for contract {expGroup.First().UnderlyingFuturesCode}");
+                }
 
-                var futCode = expGroup.First().UnderlyingFuturesCode;
-                if (!futuresPrices.TryGetValue(futCode, out var fut))
-                    throw new Exception($"No future price found for contract {futCode}");
 
                 var filtered = new List<SmilePoint>();
                 var byStrike = expGroup.GroupBy(e => e.Strike).OrderBy(o => o.Key);
@@ -236,6 +245,7 @@ namespace Qwack.Models.Calibrators
         public OptionExerciseType ExerciseType { get; set; }
         public OptionMarginingType MarginType { get; set; }
         public string UnderlyingFuturesCode { get; set; }
+        public double UnderlyingFuturesPrice{ get; set; }
         public double ImpliedVol { get; set; }
     }
 

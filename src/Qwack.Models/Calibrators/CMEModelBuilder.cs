@@ -29,6 +29,17 @@ namespace Qwack.Models.Calibrators
         public static IrCurve GetCurveForCode(string cmeId, string cmeFilename, string qwackCode, string curveName, Dictionary<string,FloatRateIndex> indices, Dictionary<string,string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var parsed = CMEFileParser.Instance.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp=="FUT");
+            return GetCurveForCode(parsed, qwackCode, curveName, indices, curves, futureSettingsProvider, currencyProvider, calendarProvider);
+        }
+
+        public static IrCurve GetCurveForCode(string cmeId, StreamReader stream, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
+            var parsed = CMEFileParser.Instance.Parse(stream).Where(r => r.ID == cmeId && r.SecTyp == "FUT");
+            return GetCurveForCode(parsed, qwackCode, curveName, indices, curves, futureSettingsProvider, currencyProvider, calendarProvider);
+        }
+
+        public static IrCurve GetCurveForCode(IEnumerable<CMEFileRecord> parsed, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
             var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
             var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var instruments = parsed.Select(p => ToQwackIns(p, qwackCode, futureSettingsProvider, currencyProvider, indices, curves)).ToList();
@@ -117,6 +128,42 @@ namespace Qwack.Models.Calibrators
         public static IrCurve StripFxBasisCurve(string cmeFwdFileName, FxPair ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var fwdsDict = GetFwdFxRatesFromFwdFile(cmeFwdFileName, new Dictionary<string, string> { { ccyPair.ToString(), cmePair } });
+            var bc = baseCurve.Clone();
+            bc.SolveStage = -1;
+            var fwds = fwdsDict[ccyPair.ToString()];
+            var spotDate = ccyPair.SpotDate(valDate);
+            var spotRate = fwds[spotDate];
+            fwds = Downsample(fwds, spotDate, ccyPair.PrimaryCalendar);
+
+            var fwdObjects = fwds.Select(x => new FxForward
+            {
+                DomesticCCY = ccyPair.Domestic,
+                DeliveryDate = x.Key,
+                DomesticQuantity = 1e6,
+                ForeignCCY = ccyPair.Foreign,
+                PillarDate = x.Key,
+                SolveCurve = curveName,
+                Strike = x.Value,
+                ForeignDiscountCurve = ccyPair.Foreign == curveCcy ? curveName : baseCurve.Name,
+            });
+
+            var fic = new FundingInstrumentCollection(currencyProvider);
+            fic.AddRange(fwdObjects);
+            var pillars = fwds.Keys.OrderBy(x => x).ToArray();
+            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);
+            var fm = new FundingModel(valDate, new[] { curve, bc }, currencyProvider, calendarProvider);
+            var matrix = new FxMatrix(currencyProvider);
+            var discoMap = new Dictionary<Currency, string> { { curveCcy, curveName }, { baseCurve.Currency, baseCurve.Name } };
+            matrix.Init(ccyPair.Domestic, valDate, new Dictionary<Currency, double> { { ccyPair.Foreign, spotRate } }, new List<FxPair> { ccyPair }, discoMap);
+            fm.SetupFx(matrix);
+            var solver = new NewtonRaphsonMultiCurveSolverStaged() { InLineCurveGuessing = true };
+            solver.Solve(fm, fic);
+
+            return curve;
+        }
+
+        public static IrCurve StripFxBasisCurve(Dictionary<string, Dictionary<DateTime, double>>  fwdsDict, FxPair ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
             var bc = baseCurve.Clone();
             bc.SolveStage = -1;
             var fwds = fwdsDict[ccyPair.ToString()];
@@ -267,7 +314,6 @@ namespace Qwack.Models.Calibrators
             if (instruments.Count() > 1)
                 throw new Exception();
             return Convert.ToDouble(instruments.Single().Full.Single(f => f.Typ == "6").Px);
-
         }
 
         public static Dictionary<DateTime,double> GetFwdFxRatesFromFwdFile(string filename, string ccyPair)
@@ -279,6 +325,11 @@ namespace Qwack.Models.Calibrators
         public static Dictionary<string,Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(string filename, Dictionary<string,string> ccyPairMap)
         {
             var blob = CMEFileParser.Instance.GetBlob(filename);
+            return GetFwdFxRatesFromFwdFile(blob, ccyPairMap);
+        }
+
+        public static Dictionary<string, Dictionary<DateTime, double>> GetFwdFxRatesFromFwdFile(FIXML blob, Dictionary<string, string> ccyPairMap)
+        {
             var o = new Dictionary<string, Dictionary<DateTime, double>>();
             foreach (var kv in ccyPairMap)
             {
@@ -293,6 +344,5 @@ namespace Qwack.Models.Calibrators
             }
             return o;
         }
-
     }
 }

@@ -39,7 +39,7 @@ namespace Qwack.Core.Curves
         public DayCountBasis Basis { get; }
         public string[] PillarLabels { get; }
         public DateTime[] PillarDates { get; }
-
+        public string CollateralSpec { get; set; }
         public int NumberOfPillars => PillarDates.Length;
 
         public Currency Currency { get; set; }

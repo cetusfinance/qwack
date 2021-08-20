@@ -78,6 +78,9 @@ namespace Qwack.Core.Curves
     
         public double GetDf(DateTime startDate, DateTime endDate)
         {
+            if (startDate == endDate)
+                return 1.0;
+
             var ts = _buildDate.CalculateYearFraction(startDate, _basis);
             var te = _buildDate.CalculateYearFraction(endDate, _basis);
             return GetDf(ts, te);

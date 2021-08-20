@@ -1088,6 +1088,13 @@
     "DaysToExclude": [],
     "MonthsToExclude": []
   },
+  "CNH": {
+    "InheritedCalendar": [ "BEB" ],
+    "Name": "CNH",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "PHP": {
     "InheritedCalendar": [ "MAN" ],
     "Name": "PHP",

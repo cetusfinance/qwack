@@ -1150,7 +1150,7 @@ namespace Qwack.Models.Models
                     flow = fld.FlowsT0(model.FundingModel);
                     break;
                 case CashBalance cash:
-                case ETC etc:
+                case CashAsset etc:
                 case STIRFuture st:
                 case OISFuture oi:
                     flow = 0;

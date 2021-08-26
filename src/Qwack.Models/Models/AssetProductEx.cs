@@ -859,7 +859,7 @@ namespace Qwack.Models.Models
                 case STIRFuture sfut:
                 case OISFuture ofut:
                     return (0.0, 0.0);
-                case ETC etc:
+                case CashAsset etc:
                     pv = etc.PV(model);
                     break;
                 case CashBalance cash:

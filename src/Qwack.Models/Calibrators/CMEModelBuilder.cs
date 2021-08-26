@@ -168,7 +168,12 @@ namespace Qwack.Models.Calibrators
             bc.SolveStage = -1;
             var fwds = fwdsDict[ccyPair.ToString()];
             var spotDate = ccyPair.SpotDate(valDate);
-            var spotRate = fwds[spotDate];
+            var spotRate = 0.0;
+            while (!fwds.TryGetValue(spotDate, out spotRate))
+            {
+                spotDate = spotDate.AddDays(1);
+            }
+
             fwds = Downsample(fwds, spotDate, ccyPair.PrimaryCalendar);
 
             var fwdObjects = fwds.Select(x => new FxForward

@@ -375,8 +375,8 @@ namespace Qwack.Core.Instruments
                     return loanDepositFl.Equals((FloatingRateLoanDepo)B);
                 case CashWrapper wrapper:
                     return Equals(wrapper.UnderlyingInstrument, (CashWrapper)B);
-                case ETC etc:
-                    return etc.Equals((ETC)B);
+                case CashAsset etc:
+                    return etc.Equals((CashAsset)B);
                 default:
                     return false;
             }

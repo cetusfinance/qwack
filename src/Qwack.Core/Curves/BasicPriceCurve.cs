@@ -136,15 +136,29 @@ namespace Qwack.Core.Curves
             {
                 case PriceCurveType.Linear:
                     var oldSpotDate = BuildDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
-                    var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
-                    var newPillars = _pillarDates
-                        .Where(d => d >= newAnchorDate && d != oldSpotDate)
-                        .Concat(new[] { newSpotDate })
-                        .Distinct()
-                        .OrderBy(x => x)
-                        .ToArray();
-                    var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
-                    return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    if (_pillarDates.Contains(oldSpotDate))
+                    {
+                        var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+                        var newPillars = _pillarDates
+                            .Where(d => d >= newAnchorDate && d != oldSpotDate)
+                            .Concat(new[] { newSpotDate })
+                            .Distinct()
+                            .OrderBy(x => x)
+                            .ToArray();
+                        var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
+                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    }
+                    else
+                    {
+                        var newSpotDate = newAnchorDate.SpotDate(SpotLag, SpotCalendar, SpotCalendar);
+                        var newPillars = _pillarDates
+                            .Where(d => d >= newAnchorDate && d != oldSpotDate)
+                            .Distinct()
+                            .OrderBy(x => x)
+                            .ToArray();
+                        var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
+                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    }
                 case PriceCurveType.NYMEX:
                     var newPillarsNM = _pillarDates
                         .Where(d => d >= newAnchorDate)

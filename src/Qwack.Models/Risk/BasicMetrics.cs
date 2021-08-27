@@ -553,6 +553,7 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
+                { "RefPrice", typeof(double) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach(var key in metaKeys)
@@ -671,7 +672,8 @@ namespace Qwack.Models.Risk
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -697,7 +699,8 @@ namespace Qwack.Models.Risk
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Gamma" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -727,7 +730,8 @@ namespace Qwack.Models.Risk
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" }
+                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {

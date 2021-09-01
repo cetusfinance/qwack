@@ -116,7 +116,7 @@ namespace Qwack.Core.Curves
                 SpotCalendar = SpotCalendar,
                 SpotLag = SpotLag
             };
-            o.Add("Spot", cSpot);
+            o.Add(AssetId, cSpot);
             return o;
         }
 
@@ -140,7 +140,7 @@ namespace Qwack.Core.Curves
 
         public DateTime PillarDatesForLabel(string label)
         {
-            if (label == "Spot")
+            if (label == "Spot" || label == AssetId)
                 return SpotDate;
             var labelIx = Array.IndexOf(PillarLabels, label);
             return PillarDates[labelIx];

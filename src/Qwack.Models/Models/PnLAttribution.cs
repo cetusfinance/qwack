@@ -1033,7 +1033,8 @@ namespace Qwack.Models.Models
                         { Metric, "Gamma" }
                   });
 
-                var startCurve = model.GetPriceCurve(curveName);
+                //account for curves for assets first traded on the day, which dont exist in the previous EoD set
+                var startCurve = model.CurveNames.Contains(curveName)?model.GetPriceCurve(curveName): endModel.GetPriceCurve(curveName);
                 var endCurve = endModel.GetPriceCurve(curveName);
 
                 var fxRate = model.FundingModel.GetFxRate(model.BuildDate, startCurve.Currency, reportingCcy);

@@ -40,6 +40,8 @@ namespace Qwack.Core.Instruments.Asset
         public double ScalingFactor { get; }
         public Frequency SettleLag { get; }
         public Calendar SettleCalendar { get; }
+        public DateTime? SettleDate { get; set; }
+        public double? Price { get; set; }
 
         public IAssetInstrument Clone() => new ETC(Notional, AssetId, Currency, ScalingFactor, SettleLag, SettleCalendar)
         {
@@ -96,7 +98,8 @@ namespace Qwack.Core.Instruments.Asset
             var curve = model.GetPriceCurve(AssetId, PaymentCurrency);
             var fwd = curve.GetPriceForDate(date);
             var fx = curve.Currency == PaymentCurrency ? 1.0 : model.FundingModel.GetFxRate(LastSensitivityDate, curve.Currency, PaymentCurrency);
-            return fwd * Notional * ScalingFactor * fx;
+            var cost = SettleDate.HasValue && Price.HasValue && SettleDate.Value >= model.BuildDate ? -Price.Value * Notional : 0;
+            return (fwd * Notional + cost) * ScalingFactor * fx;
         }
 
         public override bool Equals(object obj) => obj is ETC eTC &&

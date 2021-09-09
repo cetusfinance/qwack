@@ -66,7 +66,15 @@ namespace Qwack.Models
         {
             var key = $"{ccy.Ccy}é{collateralSpec}";
             if (!_curvesBySpec.TryGetValue(key, out var curveName))
+            {
+                foreach(var kv in _curvesBySpec)
+                {
+                    if (kv.Key.StartsWith(ccy.Ccy))
+                        return Curves[kv.Value];
+                }
                 throw new Exception($"Could not find a curve with currency {ccy.Ccy} and collateral spec {collateralSpec}");
+            }
+                
 
             return Curves[curveName];
         }

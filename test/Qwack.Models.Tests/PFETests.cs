@@ -54,7 +54,7 @@ namespace Qwack.Models.Tests
             var am = GetModel();
             var swap = AssetProductFactory.CreateTermAsianSwap(valDate.AddDays(100), valDate.AddDays(100), assetPrice, "CL", null, valDate.AddDays(101), usd);
             swap.DiscountCurve = "USD";
-
+            swap.TradeId = "BLAH";
             var pfe = swap.QuickPFE(CI, am);
 
             var t = am.BuildDate.CalculateYearFraction(swap.AverageEndDate, Transport.BasicTypes.DayCountBasis.Act365F);
@@ -70,6 +70,7 @@ namespace Qwack.Models.Tests
             var am = GetModel();
             var swap = AssetProductFactory.CreateTermAsianSwap(valDate.AddDays(100), valDate.AddDays(100), assetPrice, "CL", null, valDate.AddDays(101), usd);
             swap.DiscountCurve = "USD";
+            swap.TradeId = "BLAH";
             var pf = new Portfolio { Instruments = new List<IInstrument> { swap } };
 
             var pfeCube = QuickPFECalculator.Calculate(am, pf, CI, usd, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);

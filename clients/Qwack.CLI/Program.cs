@@ -32,11 +32,13 @@ namespace Qwack.CLI
             var commandRows = new List<CommandFileRow>();
             using var textReader = File.OpenText(FileName);
             {
-                using var csv = new CsvReader(textReader);
+                var cfg = new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
                 {
-                    csv.Configuration.HasHeaderRecord = false;
-                    csv.Configuration.CultureInfo = System.Globalization.CultureInfo.InvariantCulture;
-                    csv.Configuration.MissingFieldFound = null;
+                    HasHeaderRecord = false,
+                    MissingFieldFound = null
+                };
+                using var csv = new CsvReader(textReader, cfg);
+                {      
                     commandRows = csv.GetRecords<CommandFileRow>().ToList();
                 }
             }

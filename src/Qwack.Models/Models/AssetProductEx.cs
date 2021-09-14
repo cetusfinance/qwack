@@ -377,7 +377,7 @@ namespace Qwack.Models.Models
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
 
             var fv = BlackFunctions.BlackPV(price, option.Strike, 0.0, t, vol, option.CallPut);
-            if (option.Premium != 0)
+            if (option.Premium != 0 && model.BuildDate<=option.PremiumDate)
             {
                 fv -= option.Premium;
             }

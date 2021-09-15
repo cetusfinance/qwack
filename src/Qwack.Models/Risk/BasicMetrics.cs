@@ -7,6 +7,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
+using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
@@ -33,6 +34,13 @@ namespace Qwack.Models.Risk
             return results.ToDictionary(k => k.Item1, v => v.Item2);
         }
 
+        private static double GetStrike(this IInstrument ins) => ins switch
+        {
+            null => 0.0,
+            EuropeanOption euo => euo.Strike,
+            FuturesOption fuo => fuo.Strike,
+            _ => 0.0,
+        };
         public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy, bool parallelize = true)
         {
             var bumpSize = 0.001;
@@ -44,7 +52,8 @@ namespace Qwack.Models.Risk
                 { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { PointLabel, typeof(string) },
-                { Metric, typeof(string) }
+                { Metric, typeof(string) },
+                { "Strike", typeof(double) }
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -67,6 +76,8 @@ namespace Qwack.Models.Risk
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
+
+                var strikesByTradeId = subPortfolio.Instruments.ToDictionary(t => t.TradeId, t => t.GetStrike());
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
@@ -94,15 +105,18 @@ namespace Qwack.Models.Risk
                         var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
+                            var trdId = bumpedRows[i].MetaData[tidIx] as string;
                             var row = new Dictionary<string, object>
                             {
-                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeId, trdId },
                                 { TradeType, bumpedRows[i].MetaData[tTypeIx] },
                                 { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
-                                { Metric, "Vega" }
+                                { Metric, "Vega" },
+                                { "Strike", strikesByTradeId[trdId] }
                             };
+                            
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {
                                 foreach (var key in metaKeys)

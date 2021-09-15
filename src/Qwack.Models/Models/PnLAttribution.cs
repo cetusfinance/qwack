@@ -1127,128 +1127,196 @@ namespace Qwack.Models.Models
             foreach (var surfaceName in endModel.VolSurfaceNames)
             {
                 //ATM vega
-                var riskForCurve = assetVega.Filter(
-                      new Dictionary<string, object> {
-                        { AssetId, surfaceName },
-                        { Metric, "Vega" }
-                      });
-
                 var startCurve = startModel.GetVolSurface(surfaceName);
                 var endCurve = endModel.GetVolSurface(surfaceName);
-                var explainedByTrade = new Dictionary<string, double>();
-                foreach (var r in riskForCurve.GetAllRows())
+
+                if (startCurve is SparsePointSurface)
                 {
-                    if (r.Value == 0.0) continue;
-                    var point = (string)r.MetaData[r_plIx];
-                    var pointDate = startCurve.PillarDatesForLabel(point);
-                    var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
-                    var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
-                    var explained = r.Value * (endRate - startRate) / 0.01;
+                    var r_strikeIx = assetVega.GetColumnIndex("Strike");
 
-                    var row = new Dictionary<string, object>
+                    var riskForCurve = assetVega.Filter(
+                        new Dictionary<string, object> {
+                            { AssetId, surfaceName },
+                            { Metric, "Vega" }
+                        });
+
+                    var explainedByTrade = new Dictionary<string, double>();
+                    foreach (var r in riskForCurve.GetAllRows())
                     {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "AssetVols" },
-                        { SubStep, surfaceName },
-                        { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]}
-                    };
-                    cube.AddRow(row, explained);
+                        if (r.Value == 0.0) continue;
+                        var point = (string)r.MetaData[r_plIx];
+                        var strike = (double)r.MetaData[r_strikeIx];
+                        var pointDate = startCurve.PillarDatesForLabel(point);
+                        var startRate = model.GetVolForStrikeAndDate(surfaceName, pointDate, strike);
+                        var endRate = endModel.GetVolForStrikeAndDate(surfaceName, pointDate, strike);
+                        var explained = r.Value * (endRate - startRate) / 0.01;
 
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[r_tidIx] },
+                            { TradeType, r.MetaData[r_tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Vega" },
+                            { PointLabel,r.MetaData[r_plIx]}
+                        };
+                        cube.AddRow(row, explained);
+
+                        if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                        else
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                    }
+
+                    //UX
+                    var targetSurface = endModel.GetVolSurface(surfaceName);
+                    model.AddVolSurface(surfaceName, targetSurface);
+                    newPVCube = portfolio.PV(model, reportingCcy);
+                    step = newPVCube.QuickDifference(lastPVCuve);
+
+                    foreach (var r in step.GetAllRows())
+                    {
+                        if (r.Value == 0.0) continue;
+
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[tidIx] },
+                            { TradeType, r.MetaData[tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Unexplained" },
+                            { PointLabel, "Unexplained" }
+                        };
+                        explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                        cube.AddRow(row, r.Value - explained);
+                    }
                 }
+                else
+                {
+                    var riskForCurve = assetVega.Filter(
+                          new Dictionary<string, object> {
+                        { AssetId, surfaceName },
+                        { Metric, "Vega" }
+                          });
 
-                //Rega
-                riskForCurve = assetSegaRega.Filter(
-                     new Dictionary<string, object> {
+
+                    var explainedByTrade = new Dictionary<string, double>();
+                    foreach (var r in riskForCurve.GetAllRows())
+                    {
+                        if (r.Value == 0.0) continue;
+                        var point = (string)r.MetaData[r_plIx];
+                        var pointDate = startCurve.PillarDatesForLabel(point);
+                        var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                        var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                        var explained = r.Value * (endRate - startRate) / 0.01;
+
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[r_tidIx] },
+                            { TradeType, r.MetaData[r_tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Vega" },
+                            { PointLabel,r.MetaData[r_plIx]}
+                        };
+                        cube.AddRow(row, explained);
+
+                        if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                        else
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                    }
+
+                    //Rega
+                    riskForCurve = assetSegaRega.Filter(
+                         new Dictionary<string, object> {
                         { AssetId, surfaceName },
                         { Metric, "Rega" }
-                     });
+                         });
 
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var point = (string)r.MetaData[r_plIx];
-                    var pointDate = startCurve.PillarDatesForLabel(point);
-                    var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25);
-                    var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25); ;
-                    var explained = r.Value * (endRate - startRate) / 0.001;
-
-                    var row = new Dictionary<string, object>
+                    foreach (var r in riskForCurve.GetAllRows())
                     {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "AssetVols" },
-                        { SubStep, surfaceName },
-                        { SubSubStep, "Rega" },
-                        { PointLabel,r.MetaData[r_plIx]}
-                    };
-                    cube.AddRow(row, explained);
+                        if (r.Value == 0.0) continue;
+                        var point = (string)r.MetaData[r_plIx];
+                        var pointDate = startCurve.PillarDatesForLabel(point);
+                        var startRate = model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25);
+                        var endRate = endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25); ;
+                        var explained = r.Value * (endRate - startRate) / 0.001;
 
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[r_tidIx] },
+                            { TradeType, r.MetaData[r_tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Rega" },
+                            { PointLabel,r.MetaData[r_plIx]}
+                        };
+                        cube.AddRow(row, explained);
 
-                //Sega
-                riskForCurve = assetSegaRega.Filter(
-                     new Dictionary<string, object> {
+                        if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                        else
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                    }
+
+                    //Sega
+                    riskForCurve = assetSegaRega.Filter(
+                         new Dictionary<string, object> {
                         { AssetId, surfaceName },
                         { Metric, "Sega" }
-                     });
+                         });
 
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var point = (string)r.MetaData[r_plIx];
-                    var pointDate = startCurve.PillarDatesForLabel(point);
-                    var startRate = (model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
-                    var endRate = (endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
-                    var explained = r.Value * (endRate - startRate) / 0.001;
 
-                    var row = new Dictionary<string, object>
+                    foreach (var r in riskForCurve.GetAllRows())
                     {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "AssetVols" },
-                        { SubStep, surfaceName },
-                        { SubSubStep, "Sega" },
-                        { PointLabel,r.MetaData[r_plIx]}
-                    };
-                    cube.AddRow(row, explained);
+                        if (r.Value == 0.0) continue;
+                        var point = (string)r.MetaData[r_plIx];
+                        var pointDate = startCurve.PillarDatesForLabel(point);
+                        var startRate = (model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - model.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                        var endRate = (endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.75) + endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.25)) / 2.0 - endModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                        var explained = r.Value * (endRate - startRate) / 0.001;
 
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[r_tidIx] },
+                            { TradeType, r.MetaData[r_tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Sega" },
+                            { PointLabel,r.MetaData[r_plIx]}
+                        };
+                        cube.AddRow(row, explained);
 
-                //UX
-                var targetSurface = endModel.GetVolSurface(surfaceName);
-                model.AddVolSurface(surfaceName, targetSurface);
-                newPVCube = portfolio.PV(model, reportingCcy);
-                step = newPVCube.QuickDifference(lastPVCuve);
+                        if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                        else
+                            explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                    }
 
-                foreach (var r in step.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
 
-                    var row = new Dictionary<string, object>
+                    //UX
+                    var targetSurface = endModel.GetVolSurface(surfaceName);
+                    model.AddVolSurface(surfaceName, targetSurface);
+                    newPVCube = portfolio.PV(model, reportingCcy);
+                    step = newPVCube.QuickDifference(lastPVCuve);
+
+                    foreach (var r in step.GetAllRows())
                     {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "AssetVols" },
-                        { SubStep, surfaceName },
-                        { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
-                    };
-                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
-                    cube.AddRow(row, r.Value - explained);
+                        if (r.Value == 0.0) continue;
+
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, r.MetaData[tidIx] },
+                            { TradeType, r.MetaData[tTypeIx] },
+                            { Step, "AssetVols" },
+                            { SubStep, surfaceName },
+                            { SubSubStep, "Unexplained" },
+                            { PointLabel, "Unexplained" }
+                        };
+                        explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                        cube.AddRow(row, r.Value - explained);
+                    }
                 }
                 lastPVCuve = newPVCube;
             }

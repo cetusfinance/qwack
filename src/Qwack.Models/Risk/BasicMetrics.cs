@@ -1131,8 +1131,8 @@ namespace Qwack.Models.Risk
 
             foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
             {
-                var homeBasePair = mf.FxMatrix.GetFxPair(homeCcy, currency);
-                var homeToBase = mf.GetFxRate(homeBasePair.SpotDate(model.BuildDate), homeCcy, currency);
+                var homeToCcyPair = mf.FxMatrix.GetFxPair(homeCcy, currency);
+                var homeToCcyRate = mf.GetFxRate(homeToCcyPair.SpotDate(model.BuildDate), homeCcy, currency);
 
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
@@ -1175,7 +1175,7 @@ namespace Qwack.Models.Risk
 
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
-                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / spotBump / dfToSpotDate * homeToBase;
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / spotBump / dfToSpotDate * homeToCcyRate;
 
                     if (delta != 0.0)
                     {
@@ -1200,7 +1200,7 @@ namespace Qwack.Models.Risk
 
                     if (computeGamma)
                     {
-                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / spotBumpDown / dfToSpotDate * homeToBase;
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / spotBumpDown / dfToSpotDate * homeToCcyRate;
                         var gamma = (delta - deltaDown) / (spotBump - spotBumpDown) * 2.0;
                         if (gamma != 0.0)
                         {

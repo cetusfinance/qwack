@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
@@ -10,8 +9,6 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
-using Qwack.Math.Extensions;
-using Qwack.Paths;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
@@ -20,17 +17,17 @@ namespace Qwack.Models.MCModels
 {
     public class AssetPathPayoff : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
-        private object _locker = new object();
+        private readonly object _locker = new();
 
-        private List<DateTime> _asianDates;
-        private List<DateTime> _asianFxDates;
-        private double _strike;
-        private double _notional;
-        private string _assetName;
-        private string _fxName;
-        private string _discountCurve;
-        private DateTime _payDate;
-        private Currency _ccy;
+        private readonly List<DateTime> _asianDates;
+        private readonly List<DateTime> _asianFxDates;
+        private readonly double _strike;
+        private readonly double _notional;
+        private readonly string _assetName;
+        private readonly string _fxName;
+        private readonly string _discountCurve;
+        private readonly DateTime _payDate;
+        private readonly Currency _ccy;
         private int _assetIndex;
         private int _fxIndex;
         private int[] _dateIndexes;
@@ -38,18 +35,18 @@ namespace Qwack.Models.MCModels
         private int _payDateIx;
         private Vector<double>[] _results;
         private bool _isComplete;
-        private bool _isCompo;
-        private OptionType _optionType;
-        private FxConversionType _fxType;
+        private readonly bool _isCompo;
+        private readonly OptionType _optionType;
+        private readonly FxConversionType _fxType;
         private int _rawNumberOfPaths;
-        private bool _requiresConversionToSimCcy;
+        private readonly bool _requiresConversionToSimCcy;
         private bool _requiresConversionToSimCcyInverted;
-        private string _conversionToSimCcyName;
+        private readonly string _conversionToSimCcyName;
         private int _conversionToSimCcyIx;
 
-        private List<IAssetPathPayoff> _subInstruments;
+        private readonly List<IAssetPathPayoff> _subInstruments;
 
-        private static readonly Vector<double> _one = new Vector<double>(1.0);
+        private static readonly Vector<double> _one = new(1.0);
         private readonly ICurrencyProvider _currencyProvider;
         private readonly ICalendarProvider _calendarProvider;
 

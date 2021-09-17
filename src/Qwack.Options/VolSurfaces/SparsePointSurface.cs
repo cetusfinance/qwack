@@ -10,12 +10,11 @@ namespace Qwack.Options.VolSurfaces
 {
     public class SparsePointSurface : IVolSurface, IATMVolSurface
     {
-        private readonly Dictionary<(DateTime expiry, double strike), double> _vols = new Dictionary<(DateTime expiry, double strike), double>();
-        private readonly Dictionary<DateTime, string> _pillarLabels = new Dictionary<DateTime, string>();
-        public SparsePointSurface(DateTime origin)
-        {
-            OriginDate = origin;
-        }
+        private readonly Dictionary<(DateTime expiry, double strike), double> _vols = new();
+        private readonly Dictionary<DateTime, string> _pillarLabels = new();
+        
+        public SparsePointSurface(DateTime origin) => OriginDate = origin;
+        
         public SparsePointSurface(DateTime origin, Dictionary<(DateTime expiry, double strike), double> vols, Dictionary<DateTime, string> labels)
         {
             OriginDate = origin;

@@ -1,17 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Pipelines;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Qwack.Serialization
 {
     public class BinarySerializer
     {
-        private List<object> _objectsCrawled = new List<object>();
-        private Dictionary<Type, (int number, SerializationStrategy strategy)> _serializationStrategies = new Dictionary<Type, (int number, SerializationStrategy strategy)>();
+        private readonly List<object> _objectsCrawled = new();
+        private readonly Dictionary<Type, (int number, SerializationStrategy strategy)> _serializationStrategies = new();
         int typeNumber = 0;
         private const byte ArrayType_ULong = 1;
 

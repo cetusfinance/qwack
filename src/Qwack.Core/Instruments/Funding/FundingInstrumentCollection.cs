@@ -16,14 +16,11 @@ namespace Qwack.Core.Instruments.Funding
     /// </summary>
     public class FundingInstrumentCollection:List<IFundingInstrument>
     {
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public List<string> SolveCurves => this.Select(x => x.SolveCurve).Distinct().ToList();
 
-        public FundingInstrumentCollection(ICurrencyProvider currencyProvider)
-        {
-            _currencyProvider = currencyProvider;
-        }
+        public FundingInstrumentCollection(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
 
         public FundingInstrumentCollection Clone()
         {
@@ -31,7 +28,6 @@ namespace Qwack.Core.Instruments.Funding
             fic.AddRange(this.Select(x => x.Clone()));
             return fic;
         }
-
 
         public Dictionary<string, IrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
         {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using Qwack.Math.Interpolation;
 using Qwack.Dates;
@@ -12,25 +11,20 @@ namespace Qwack.Core.Curves
 {
     public class FxForwardCurve : IPriceCurve
     {
+        private readonly IFundingModel _fModel;
+        private readonly Func<IFundingModel> fModelFunc;
+
         public DateTime BuildDate { get; private set; }
         public Currency DomesticCurrency { get; }
         public Currency ForeignCurrency { get; }
         public string Name { get; set; }
         public CommodityUnits Units { get; set; }
         public int NumberOfPillars => 0;
-
         public PriceCurveType CurveType => PriceCurveType.Linear;
-
         public Currency Currency { get => ForeignCurrency; set => throw new Exception(); }
-
         public bool UnderlyingsAreForwards => true;
-
-        private Func<IFundingModel> fModelFunc;
-
         public DateTime[] PillarDates => null;
-
         public string AssetId => ForeignCurrency.Ccy;
-
         public Frequency SpotLag { get; set; } = new Frequency("0b");
         public Calendar SpotCalendar { get; set; }
 
@@ -42,7 +36,7 @@ namespace Qwack.Core.Curves
             ForeignCurrency = foreignCurrency;
         }
 
-        IFundingModel _fModel;
+
         public FxForwardCurve(DateTime buildDate, IFundingModel fundingModel, Currency domesticCurrency, Currency foreignCurrency)
         {
             BuildDate = buildDate;
@@ -55,7 +49,7 @@ namespace Qwack.Core.Curves
         public double GetAveragePriceForDates(DateTime[] dates)
         {
             var model = fModelFunc.Invoke();
-            return dates.Select(date=>model.GetFxRate(date, DomesticCurrency, ForeignCurrency)).Average();
+            return dates.Select(date => model.GetFxRate(date, DomesticCurrency, ForeignCurrency)).Average();
         }
 
         public double GetPriceForDate(DateTime date)

@@ -12,8 +12,8 @@ namespace Qwack.Math.Interpolation
     {
         public Interpolator1DType Type => Interpolator1DType.NextValue;
 
-        private double[] _x;
-        private double[] _y;
+        private readonly double[] _x;
+        private readonly double[] _y;
         private double _minX;
         private double _maxX;
 

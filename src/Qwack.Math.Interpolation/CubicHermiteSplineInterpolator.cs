@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
 
@@ -13,17 +8,17 @@ namespace Qwack.Math.Interpolation
     {
         public Interpolator1DType Type => Interpolator1DType.CubicSpline;
 
-        const double xBump = 1e-10;
+        private const double xBump = 1e-10;
 
         public double MinX => _minX;
         public double MaxX => _maxX;
 
-        private double[] _x;
-        private double[] _y;
+        private readonly double[] _x;
+        private readonly double[] _y;
         public double[] Xs => _x;
         public double[] Ys => _y;
 
-        private double[] _tangents;
+        private readonly double[] _tangents;
 
         private readonly double _minX;
         private readonly double _maxX;

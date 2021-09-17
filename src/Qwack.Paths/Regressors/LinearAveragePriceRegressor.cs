@@ -18,13 +18,13 @@ namespace Qwack.Paths.Regressors
         private int[] _assetIxs;
         private double[] _pathwiseValuesReg;
         private double[][] _pathwiseValuesFwd;
-        private DateTime _regressionDate;
-        private DateTime[] _fixingDates;
-        private string _regressionKey;
-        private readonly List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly DateTime _regressionDate;
+        private readonly DateTime[] _fixingDates;
+        private readonly string _regressionKey;
+        private readonly List<Vector<double>> _results = new();
 
         public IInterpolator1D Regressor { get; private set; }
-        private object _threadlock = new object();
+        private readonly object _threadlock = new();
 
         public LinearAveragePriceRegressor(DateTime regressionDate, DateTime[] fixingDates, string regressionKey)
         {

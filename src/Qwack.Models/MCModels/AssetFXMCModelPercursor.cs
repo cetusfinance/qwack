@@ -18,6 +18,6 @@ namespace Qwack.Models.MCModels
         public ICalendarProvider CalendarProvider { get; set; }
         public IFutureSettingsProvider FutProvider { get; set; }
 
-        public AssetFxMCModel ToModel(Portfolio portfolio) => new AssetFxMCModel(AssetFxModel.BuildDate, portfolio, AssetFxModel, McSettings, CcyProvider, FutProvider, CalendarProvider);
+        public AssetFxMCModel ToModel(Portfolio portfolio) => new(AssetFxModel.BuildDate, portfolio, AssetFxModel, McSettings, CcyProvider, FutProvider, CalendarProvider);
     }
 }

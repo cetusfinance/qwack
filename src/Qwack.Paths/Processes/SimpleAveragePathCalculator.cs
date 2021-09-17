@@ -13,10 +13,10 @@ namespace Qwack.Paths.Processes
 {
     public class SimpleAveragePathCalculator : IPathProcess
     {
-        private string _name;
+        private readonly string _name;
         private int _factorIndex;
         private int _nPaths;
-        private bool _isComplete;
+        private readonly bool _isComplete;
         public bool CompactMode { get; set; }
 
         public double[] PathSum { get; private set; }
@@ -25,14 +25,11 @@ namespace Qwack.Paths.Processes
         public Dictionary<int,double[]> PathSumsByBlock { get; private set; }
         public Dictionary<int, int> PathCountsByBlock { get; private set; }
 
-        public SimpleAveragePathCalculator(string name)
-        {
-            _name = name;
-        }
+        public SimpleAveragePathCalculator(string name) => _name = name;
 
         public bool IsComplete => _isComplete;
 
-        private object _threadLock = new object();
+        private readonly object _threadLock = new();
         private void SetupAverages(Span<Vector<double>> blockSteps)
         {
             if (CompactMode)

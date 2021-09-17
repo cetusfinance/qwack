@@ -47,7 +47,7 @@ namespace Qwack.Core.Instruments.Funding
                    EqualityComparer<Currency>.Default.Equals(Currency, balance.Currency) &&
                    TradeId == balance.TradeId;
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => new();
 
         public double CalculateParRate(IFundingModel model) => 0.0;
 
@@ -66,14 +66,14 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument SetParRate(double parRate) => Clone();
 
         public string[] IrCurves(IAssetFxModel model) => new[] { model.FundingModel.FxMatrix.DiscountCurveMap[Currency] };
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
         public string FxPair(IAssetFxModel model) => string.Empty;
         IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
-            { new CashFlow()
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new()
+        { new CashFlow()
                 {
                     Currency = Currency,
                     SettleDate = PayDate==DateTime.MinValue ? model.BuildDate:PayDate,

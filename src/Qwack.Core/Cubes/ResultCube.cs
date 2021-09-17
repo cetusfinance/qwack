@@ -37,7 +37,7 @@ namespace Qwack.Core.Cubes
         }
 
         public TO_ResultCubeRow ToTransportObject() =>
-            new TO_ResultCubeRow
+            new()
             {
                 MetaData = MetaData.Select(x=>(string)Convert.ChangeType(x,typeof(string))).ToArray(),
                 Value = Value
@@ -46,7 +46,7 @@ namespace Qwack.Core.Cubes
 
     public class ResultCube : ICube
     {
-        private object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly Type[] _numericalTypes = { typeof(double) };
         private List<ResultCubeRow> _rows;
@@ -128,7 +128,7 @@ namespace Qwack.Core.Cubes
         }
 
         public TO_ResultCube ToTransportObject() =>
-            new TO_ResultCube
+            new()
             {
                 FieldNames = _fieldNames,
                 Rows = _rows.Select(x=>x.ToTransportObject()).ToList(),

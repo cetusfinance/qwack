@@ -19,7 +19,7 @@ namespace Qwack.Core.Curves
         private readonly SparsePriceCurveType _curveType;
         private IInterpolator1D _interpA;
         private IInterpolator1D _interpB;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public bool UnderlyingsAreForwards => _curveType == SparsePriceCurveType.Coal;
 

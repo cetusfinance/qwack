@@ -156,7 +156,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public string[] IrCurves(IAssetFxModel model) => new[] { DiscountCurve, ForecastCurve };
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
 
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
 

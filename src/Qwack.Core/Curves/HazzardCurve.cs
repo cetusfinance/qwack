@@ -11,6 +11,9 @@ namespace Qwack.Core.Curves
 {
     public class HazzardCurve
     {
+        private readonly IInterpolator1D _hazzardCurve;
+        private double? _constPD = null;
+
         public HazzardCurve(DateTime originDate, DayCountBasis basis, IInterpolator1D hazzardRateInterpolator)
         {
             OriginDate = originDate;
@@ -24,7 +27,6 @@ namespace Qwack.Core.Curves
                 ConstantPD = transportObject.ConstantPD.Value;
         }
 
-        private double? _constPD = null;
         public double ConstantPD
         {
             get
@@ -66,8 +68,6 @@ namespace Qwack.Core.Curves
         }
 
         public double GetDefaultProbability(DateTime startDate, DateTime endDate) => 1.0 - GetSurvivalProbability(startDate, endDate);
-
-        private IInterpolator1D _hazzardCurve;
 
         public double RiskyDiscountFactor(DateTime startDate, DateTime endDate, IIrCurve discountCurve, double LGD)
         {

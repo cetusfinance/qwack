@@ -11,7 +11,7 @@ namespace Qwack.Paths.Processes
         private int _outputIndex;
         private readonly string _name = "Returns";
         private readonly bool _logReturns;
-        private readonly Vector<double> _two = new Vector<double>(2.0);
+        private readonly Vector<double> _two = new(2.0);
 
         public Returns(string assetName, string outputName, bool logReturns)
         {

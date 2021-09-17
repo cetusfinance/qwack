@@ -155,7 +155,7 @@ namespace Qwack.Core.Instruments.Funding
             .Distinct()
             .ToArray();
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
 
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
 
@@ -167,8 +167,8 @@ namespace Qwack.Core.Instruments.Funding
         public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(T(today));
         private double T(DateTime today) => Max(0, today.CalculateYearFraction(LastSensitivityDate, DayCountBasis.Act365F));
 
-        public virtual List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
-            {
+        public virtual List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new()
+        {
                 new CashFlow()
                 {
                     Currency = DomesticCCY,

@@ -21,10 +21,7 @@ namespace Qwack.Random.Constant
         public Vector<double> _returnVec;
         public Vector<double> _returnVecNormInv;
 
-        public FlipFlop()
-        {
-            Init();
-        }
+        public FlipFlop() => Init();
 
         public FlipFlop(double returnValue, bool useNormalInverse) : base()
         {

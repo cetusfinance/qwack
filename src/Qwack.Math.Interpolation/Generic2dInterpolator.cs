@@ -15,7 +15,7 @@ namespace Qwack.Math.Interpolation
         private readonly double[,] _z;
         private readonly Interpolator1DType _xType;
         private readonly Interpolator1DType _yType;
-        private IInterpolator1D[] _yInterps;
+        private readonly IInterpolator1D[] _yInterps;
 
         public Generic2dInterpolator()
         {

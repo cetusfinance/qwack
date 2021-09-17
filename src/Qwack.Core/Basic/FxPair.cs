@@ -30,7 +30,7 @@ namespace Qwack.Core.Basic
 
         public override bool Equals(object x)
         {
-            if (!(x is FxPair x1))
+            if (x is not FxPair x1)
             {
                 return false;
             }
@@ -53,7 +53,7 @@ namespace Qwack.Core.Basic
         public override string ToString() => $"{Domestic}/{Foreign}";
 
         public TO_FxPair GetTransportObject() =>
-            new TO_FxPair
+            new()
             {
                 Domestic = Domestic.Ccy,
                 Foreign = Foreign.Ccy,
@@ -81,7 +81,7 @@ namespace Qwack.Core.Basic
             return d;
         }
 
-        public static FxPair FxPairFromString(this string pair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new FxPair
+        public static FxPair FxPairFromString(this string pair, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             Domestic = currencyProvider.GetCurrency(pair.Substring(0, 3)),
             Foreign = currencyProvider.GetCurrency(pair.Substring(pair.Length - 3, 3)),

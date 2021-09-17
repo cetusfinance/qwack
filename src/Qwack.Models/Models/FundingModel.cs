@@ -82,7 +82,7 @@ namespace Qwack.Models
         public Dictionary<string, IrCurve> Curves { get; private set; }
         public Dictionary<string, IVolSurface> VolSurfaces { get; set; }
 
-        private Dictionary<string, string> _curvesBySpec = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _curvesBySpec = new();
 
         public DateTime BuildDate { get; private set; }
         public IFxMatrix FxMatrix { get; private set; }
@@ -261,7 +261,7 @@ namespace Qwack.Models
         }
 
         public TO_FundingModel GetTransportObject() =>
-            new TO_FundingModel
+            new()
             {
                 BuildDate = BuildDate,
                 VolSurfaces = VolSurfaces.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),

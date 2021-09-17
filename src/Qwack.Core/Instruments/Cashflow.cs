@@ -35,7 +35,7 @@ namespace Qwack.Core.Instruments
         public FloatRateIndex RateIndex { get; set; }
 
 
-        public CashFlow Clone() => new CashFlow
+        public CashFlow Clone() => new()
         {
             AccrualPeriodStart = AccrualPeriodStart,
             AccrualPeriodEnd = AccrualPeriodEnd,

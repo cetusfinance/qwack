@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 
@@ -12,6 +10,8 @@ namespace Qwack.Providers.CSV
 {
     public class NYMEXOptionParser
     {
+        private readonly ConcurrentDictionary<string, List<NYMEXOptionRecord>> _cache = new();
+
         public List<NYMEXOptionRecord> Parse(string fileName)
         {
             if (_cache.TryGetValue(fileName, out var record))
@@ -42,7 +42,7 @@ namespace Qwack.Providers.CSV
             return list;
         }
 
-        private static readonly NYMEXOptionParser instance = new NYMEXOptionParser();
+        private static readonly NYMEXOptionParser instance = new();
 
         static NYMEXOptionParser()
         {
@@ -52,17 +52,7 @@ namespace Qwack.Providers.CSV
         {
         }
 
-        public static NYMEXOptionParser Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }
-
-
-        private ConcurrentDictionary<string, List<NYMEXOptionRecord>> _cache = new ConcurrentDictionary<string, List<NYMEXOptionRecord>>();
-
+        public static NYMEXOptionParser Instance => instance;
     }
 
     public class NYMEXOptionRecord

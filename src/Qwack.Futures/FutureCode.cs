@@ -10,7 +10,7 @@ namespace Qwack.Futures
 {
     public class FutureCode
     {
-        private FutureSettings _settings;
+        private readonly FutureSettings _settings;
         private static readonly string[] s_futureMonths = new string[] { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
 
         public int YearBeforeWhich2DigitDatesAreUsed { get; set; }

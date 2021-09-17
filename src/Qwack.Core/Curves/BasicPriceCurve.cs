@@ -17,7 +17,7 @@ namespace Qwack.Core.Curves
         private readonly double[] _prices;
         private readonly PriceCurveType _curveType;
         private IInterpolator1D _interp;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public bool UnderlyingsAreForwards => _curveType == PriceCurveType.LME;
 
@@ -191,7 +191,7 @@ namespace Qwack.Core.Curves
         }
 
         public TO_BasicPriceCurve ToTransportObject() =>
-            new TO_BasicPriceCurve
+            new()
             {
                 AssetId = AssetId,
                 BuildDate = BuildDate,

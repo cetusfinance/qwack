@@ -15,6 +15,9 @@ namespace Qwack.Providers.CSV
 {
     public class CMEFileParser
     {
+        private readonly ConcurrentDictionary<string, List<CMEFileRecord>> _cache = new();
+        private readonly ConcurrentDictionary<string, FIXML> _blobCache = new();
+
         public List<CMEFileRecord> Parse(string fileName)
         {
             if (_cache.TryGetValue(fileName, out var record))
@@ -90,7 +93,7 @@ namespace Qwack.Providers.CSV
             return blob;
         }
 
-        private static readonly CMEFileParser instance = new CMEFileParser();
+        private static readonly CMEFileParser instance = new();
 
         static CMEFileParser()
         {
@@ -100,16 +103,7 @@ namespace Qwack.Providers.CSV
         {
         }
 
-        public static CMEFileParser Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }
-
-        private ConcurrentDictionary<string, List<CMEFileRecord>> _cache = new ConcurrentDictionary<string, List<CMEFileRecord>>();
-        private ConcurrentDictionary<string, FIXML> _blobCache = new ConcurrentDictionary<string, FIXML>();
+        public static CMEFileParser Instance => instance;
     }
 
     public class CMEFileRecord

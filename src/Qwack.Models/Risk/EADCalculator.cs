@@ -48,7 +48,7 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        private object _threadLock = new object();
+        private readonly object _threadLock = new();
         private readonly Portfolio _portfolio;
         private readonly double _counterpartyRiskWeight;
         private readonly Dictionary<string, string> _assetIdToTypeMap;
@@ -61,7 +61,7 @@ namespace Qwack.Models.Risk
         private readonly DateTime _endDate;
 
 
-        private readonly Dictionary<DateTime, double> _ead = new Dictionary<DateTime, double>();
+        private readonly Dictionary<DateTime, double> _ead = new();
 
         public void Process()
         {

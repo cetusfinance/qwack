@@ -16,7 +16,7 @@ namespace Qwack.Paths.Payoffs
         private int _assetIndex;
         private int _expiryIndex;
         private bool _isComplete;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly List<Vector<double>> _results = new();
 
         public EuropeanPut(string assetName, double strike, DateTime expiry)
         {

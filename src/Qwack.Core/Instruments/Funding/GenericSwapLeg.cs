@@ -65,7 +65,7 @@ namespace Qwack.Core.Instruments.Funding
         public ExchangeType NotionalExchange { get; set; }
         public SwapPayReceiveType Direction { get; set; }
 
-        public GenericSwapLeg Clone() => new GenericSwapLeg
+        public GenericSwapLeg Clone() => new()
         {
             AccrualCalendar = AccrualCalendar,
             AccrualDCB = AccrualDCB,

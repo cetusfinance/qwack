@@ -14,16 +14,17 @@ namespace Qwack.Paths.Processes
     public class SimpleAveragePathCorrector : IPathProcess, IRequiresFinish
     {
         public SimpleAveragePathCalculator PathCalc { get; private set; }
-        private IATMVolSurface _surface;
+        private readonly IATMVolSurface _surface;
         private ITimeStepsFeature _timesteps;
-        private IATMVolSurface _adjSurface;
-        private double _correlation;
+        private readonly IATMVolSurface _adjSurface;
+        private readonly double _correlation;
 
-        private string _name;
-        private Dictionary<DateTime, double> _pastFixings;
+        private readonly string _name;
+        private readonly Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
+        
         [SkipSerialization]
-        private Func<double, double> _forwardCurve;
+        private readonly Func<double, double> _forwardCurve;
         private bool _isComplete;
         private double[] _fwds;
         private Vector<double>[] _correctionFactors;
@@ -63,7 +64,7 @@ namespace Qwack.Paths.Processes
             _isComplete = true;
         }
 
-        object _threadLock = new object();
+        private readonly object _threadLock = new();
         private void SetupFactors()
         {
             if (PathCalc.CompactMode)

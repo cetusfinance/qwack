@@ -9,7 +9,7 @@ namespace Qwack.Utils.Parallel
 {
     public sealed class ParallelUtils : IDisposable
     {
-        private static object _lock = new object();
+        private static readonly object _lock = new();
         private static ParallelUtils _instance;
         public static ParallelUtils Instance
         {
@@ -94,8 +94,8 @@ namespace Qwack.Utils.Parallel
 
 
 
-        private BlockingCollection<WorkItem> _taskQueue = new BlockingCollection<WorkItem>();
-        private BlockingCollection<WorkItem> _killQueue = new BlockingCollection<WorkItem>();
+        private readonly BlockingCollection<WorkItem> _taskQueue = new();
+        private readonly BlockingCollection<WorkItem> _killQueue = new();
 
         public async Task Foreach<T>(IList<T> values, Action<T> code, bool overrideMTFlag = false)
         {
@@ -196,9 +196,6 @@ namespace Qwack.Utils.Parallel
             await Task.WhenAll(taskList.ToArray());
         }
 
-        public void Dispose()
-        {
-            _taskQueue.CompleteAdding();
-        }
+        public void Dispose() => _taskQueue.CompleteAdding();
     }
 }

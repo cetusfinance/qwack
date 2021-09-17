@@ -17,10 +17,10 @@ namespace Qwack.Paths.Regressors
         private readonly IAssetPathPayoff[] _portfolio;
         private int _nDims;
         private int[] _dateIndexes;
-        private double[][][] _pathwiseValues;
-        private DateTime[] _regressionDates;
-        private Currency _repCcy;
-        private readonly List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly double[][][] _pathwiseValues;
+        private readonly DateTime[] _regressionDates;
+        private readonly Currency _repCcy;
+        private readonly List<Vector<double>> _results = new();
         private bool _isComplete;
         private MultipleLinearRegressor[] _regressors;
 

@@ -6,7 +6,7 @@ namespace Qwack.Serialization
 {
     public class DeserializationContext
     {
-        private List<object> _currentObjects = new List<object>();
+        private readonly List<object> _currentObjects = new();
 
         public object GetObjectById(int objectId)
         {

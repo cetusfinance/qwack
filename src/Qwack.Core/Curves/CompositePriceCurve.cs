@@ -11,6 +11,11 @@ namespace Qwack.Core.Curves
 {
     public class CompositePriceCurve : IPriceCurve
     {
+        private readonly Func<IFundingModel> fModelFunc;
+        private readonly Func<IPriceCurve> pCurveFunc;
+        private readonly IFundingModel _fModel;
+        private readonly IPriceCurve _pCurve;
+
         public DateTime BuildDate { get; private set; }
         public Currency CompoCurrency { get; }
         public Currency CurveCurrency => pCurveFunc.Invoke().Currency;
@@ -28,10 +33,6 @@ namespace Qwack.Core.Curves
         public int NumberOfPillars => pCurveFunc.Invoke().NumberOfPillars;
 
         public Currency Currency { get => CompoCurrency; set => throw new Exception("Cant set currency"); }
-
-        private Func<IFundingModel> fModelFunc;
-        private Func<IPriceCurve> pCurveFunc;
-
         public PriceCurveType CurveType => PriceCurveType.Linear;
 
         public CompositePriceCurve(DateTime buildDate, Func<IPriceCurve> priceCurve, Func<IFundingModel> fundingModel, Currency compoCurrency)
@@ -42,8 +43,6 @@ namespace Qwack.Core.Curves
             CompoCurrency = compoCurrency;
         }
 
-        IFundingModel _fModel;
-        IPriceCurve _pCurve;
         public CompositePriceCurve(DateTime buildDate, IPriceCurve priceCurve, IFundingModel fundingModel, Currency compoCurrency)
         {
             BuildDate = buildDate;

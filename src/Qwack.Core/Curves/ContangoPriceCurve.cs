@@ -14,7 +14,7 @@ namespace Qwack.Core.Curves
     public class ContangoPriceCurve : IPriceCurve
     {
         private IInterpolator1D _interp;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public PriceCurveType CurveType => PriceCurveType.Linear;
         public CommodityUnits Units { get; set; } = CommodityUnits.troyOunce;

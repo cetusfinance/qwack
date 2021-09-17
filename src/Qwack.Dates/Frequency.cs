@@ -133,7 +133,7 @@ namespace Qwack.Dates
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Frequency))
+            if (obj is not Frequency)
             {
                 return false;
             }
@@ -161,9 +161,6 @@ namespace Qwack.Dates
             throw new NotImplementedException("Can only add months/years and frequencies of same period type");
         }
 
-        public static Frequency operator -(Frequency x, Frequency y)
-        {
-            return x + new Frequency(-y.PeriodCount, y.PeriodType);
-        }
+        public static Frequency operator -(Frequency x, Frequency y) => x + new Frequency(-y.PeriodCount, y.PeriodType);
     }
 }

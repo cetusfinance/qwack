@@ -2,12 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Instruments;
 using Qwack.Core.Models;
-using Qwack.Math;
-using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
 using Qwack.Transport.BasicTypes;
 
@@ -15,12 +11,12 @@ namespace Qwack.Paths.Payoffs
 {
     public class LookBackOption : PathProductBase
     {
-        private List<DateTime> _sampleDates;
+        private readonly List<DateTime> _sampleDates;
         private readonly OptionType _callPut;
         private string _fxName;
         private int _fxIndex;
 
-        private readonly Vector<double> _one = new Vector<double>(1.0);
+        private readonly Vector<double> _one = new(1.0);
 
         private bool _isFx => _assetName.Length == 7 && _assetName[3] == '/';
 

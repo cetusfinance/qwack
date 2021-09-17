@@ -109,7 +109,7 @@ namespace Qwack.Core.Instruments.Funding
                    DiscountCurve == deposit.DiscountCurve &&
                    TradeId == deposit.TradeId;
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>() { DiscountCurve };
+        public List<string> Dependencies(IFxMatrix matrix) => new() { DiscountCurve };
 
         public double CalculateParRate(IFundingModel model) => 0.0;
 
@@ -134,7 +134,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public string[] IrCurves(IAssetFxModel model) => new[] { model.FundingModel.FxMatrix.DiscountCurveMap[Currency] };
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
 
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
 

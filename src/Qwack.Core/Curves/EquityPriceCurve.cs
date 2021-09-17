@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -15,7 +14,7 @@ namespace Qwack.Core.Curves
     public class EquityPriceCurve : IPriceCurve
     {
         private IInterpolator1D _interpDivYield;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public PriceCurveType CurveType => PriceCurveType.Linear;
         public CommodityUnits Units { get; set; } = CommodityUnits.Unspecified;

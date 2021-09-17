@@ -42,8 +42,8 @@ namespace Qwack.Models.MCModels
 
         public IAssetFxModel VanillaModel => Model;
 
-        private Dictionary<string, AssetPathPayoff> _payoffs;
-        private IPortfolioValueRegressor _regressor;
+        private readonly Dictionary<string, AssetPathPayoff> _payoffs;
+        private readonly IPortfolioValueRegressor _regressor;
         private readonly ICurrencyProvider _currencyProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly ICalendarProvider _calendarProvider;
@@ -134,7 +134,7 @@ namespace Qwack.Models.MCModels
                     continue;
                 }
 
-                if (!(model.GetVolSurface(assetId) is IATMVolSurface surface))
+                if (model.GetVolSurface(assetId) is not IATMVolSurface surface)
                     throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
                 var fixingDict = fixingsNeeded.ContainsKey(assetId) ? model.GetFixingDictionary(assetId) : null;
                 var fixings = fixingDict != null ?
@@ -181,7 +181,7 @@ namespace Qwack.Models.MCModels
                     {
                         var fxAdjPair = settings.ReportingCurrency + "/" + model.GetPriceCurve(assetId).Currency;
                         var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
-                        if (!(model.FundingModel.GetVolSurface(fxAdjPair) is IATMVolSurface adjSurface2))
+                        if (model.FundingModel.GetVolSurface(fxAdjPair) is not IATMVolSurface adjSurface2)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         adjSurface = adjSurface2;
                         if (model.CorrelationMatrix != null)
@@ -264,7 +264,7 @@ namespace Qwack.Models.MCModels
                 if (pairsAdded.Contains(pair.ToString()))
                     continue;
 
-                if (!(model.FundingModel.GetVolSurface(fxPairName) is IATMVolSurface surface))
+                if (model.FundingModel.GetVolSurface(fxPairName) is not IATMVolSurface surface)
                     throw new Exception($"Vol surface for fx pair {fxPairName} could not be cast to IATMVolSurface");
 
                 var fwdCurve = new Func<double, double>(t =>
@@ -298,7 +298,7 @@ namespace Qwack.Models.MCModels
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != settings.ReportingCurrency)
                     {//needs to be drift-adjusted
                         var fxAdjPair = settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
-                        if (!(model.FundingModel.VolSurfaces[fxAdjPair] is IATMVolSurface adjSurface))
+                        if (model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
                         if (correlation != -1.0 && model.CorrelationMatrix != null)
@@ -347,7 +347,7 @@ namespace Qwack.Models.MCModels
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != settings.ReportingCurrency)
                     {//needs to be drift-adjusted
                         var fxAdjPair = settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
-                        if (!(model.FundingModel.GetVolSurface(fxAdjPair) is IATMVolSurface adjSurface))
+                        if (model.FundingModel.GetVolSurface(fxAdjPair) is not IATMVolSurface adjSurface)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
                         if (correlation != -1.0 && model.CorrelationMatrix != null)

@@ -14,7 +14,7 @@ namespace Qwack.Core.Curves
 {
     public class IrCurve : IIrCurve
     {
-        private DateTime _buildDate;
+        private readonly DateTime _buildDate;
         private readonly DateTime[] _pillars;
         private readonly double[] _rates;
         private readonly DayCountBasis _basis = DayCountBasis.Act_365F;
@@ -49,11 +49,8 @@ namespace Qwack.Core.Curves
         }
 
         public IrCurve(TO_IrCurve transportObject, ICurrencyProvider currencyProvider)
-            :this(transportObject.Pillars, transportObject.Rates, transportObject.BuildDate, transportObject.Name, transportObject.InterpKind, 
-                 currencyProvider.GetCurrency(transportObject.Ccy), transportObject.CollateralSpec, transportObject.RateStorageType)
-        {
-            _basis = transportObject.Basis;
-        }
+            : this(transportObject.Pillars, transportObject.Rates, transportObject.BuildDate, transportObject.Name, transportObject.InterpKind,
+                 currencyProvider.GetCurrency(transportObject.Ccy), transportObject.CollateralSpec, transportObject.RateStorageType) => _basis = transportObject.Basis;
 
         public DateTime BuildDate => _buildDate;
         public string Name => _name;
@@ -277,13 +274,13 @@ namespace Qwack.Core.Curves
             return o;
         }
 
-        public IrCurve Clone() => new IrCurve((DateTime[])PillarDates.Clone(), (double[])_rates.Clone(), BuildDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType)
+        public IrCurve Clone() => new((DateTime[])PillarDates.Clone(), (double[])_rates.Clone(), BuildDate, Name, _interpKind, Currency, CollateralSpec, RateStorageType)
         {
             SolveStage = SolveStage
         };
 
         public TO_IrCurve GetTransportObject() =>
-            new TO_IrCurve 
+            new()
             { 
                 Basis = Basis,
                 BuildDate = BuildDate,

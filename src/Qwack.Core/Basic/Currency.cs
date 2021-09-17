@@ -8,7 +8,7 @@ namespace Qwack.Core.Basic
     /// </summary>
     public class Currency
     {
-        private ICalendarProvider _calendarProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public Currency(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
                 

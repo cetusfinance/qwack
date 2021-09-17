@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.TransportObjects.MarketData.Models;
@@ -12,7 +9,7 @@ namespace Qwack.Core.Basic
 {
     public class FxMatrix : IFxMatrix
     {
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public FxMatrix(TO_FxMatrix transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider):this(currencyProvider) 
         {
@@ -99,7 +96,7 @@ namespace Qwack.Core.Basic
         public string GetDiscountCurve(string currency) => DiscountCurveMap.TryGetValue(_currencyProvider.GetCurrency(currency), out var curve) ? curve : null;
 
         public TO_FxMatrix GetTransportObject() =>
-            new TO_FxMatrix
+            new()
             {
                 BaseCurrency = BaseCurrency.Ccy,
                 BuildDate = BuildDate,

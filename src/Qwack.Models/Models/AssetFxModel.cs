@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Correlation;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Models.Models;
@@ -21,11 +17,11 @@ namespace Qwack.Models
 {
     public class AssetFxModel : IAssetFxModel
     {
-        private Dictionary<VolSurfaceKey, IVolSurface> _assetVols;
-        private Dictionary<string, IPriceCurve> _assetCurves;
-        private Dictionary<string, IFixingDictionary> _fixings;
+        private readonly Dictionary<VolSurfaceKey, IVolSurface> _assetVols;
+        private readonly Dictionary<string, IPriceCurve> _assetCurves;
+        private readonly Dictionary<string, IFixingDictionary> _fixings;
         private DateTime _buildDate;
-        private IFundingModel _fundingModel;
+        private readonly IFundingModel _fundingModel;
 
         public IFundingModel FundingModel => _fundingModel;
         public DateTime BuildDate => _buildDate;
@@ -330,13 +326,10 @@ namespace Qwack.Models
         public string[] GetDependentCurves(string curve) => _dependencyTree.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
         public string[] GetAllDependentCurves(string curve) => _dependencyTreeFull.TryGetValue(curve, out var values) ? values : throw new Exception($"Curve {curve} not found");
 
-        public void OverrideBuildDate(DateTime buildDate)
-        {
-            _buildDate = buildDate;
-        }
+        public void OverrideBuildDate(DateTime buildDate) => _buildDate = buildDate;
 
         public TO_AssetFxModel ToTransportObject() =>
-            new TO_AssetFxModel
+            new()
             {
                 AssetCurves = _assetCurves?.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
                 AssetVols = _assetVols?.ToDictionary(x=>x.Key.GetTransportObject(),x=>x.Value.GetTransportObject()),
@@ -347,10 +340,7 @@ namespace Qwack.Models
                 Portfolio = _portfolio?.ToTransportObject(),
             };
 
-        public void RemovePriceCurve(IPriceCurve curve)
-        {
-            _assetCurves.Remove(curve.Name);
-        }
+        public void RemovePriceCurve(IPriceCurve curve) => _assetCurves.Remove(curve.Name);
 
         public void RemoveVolSurface(IVolSurface surface)
         {
@@ -358,10 +348,7 @@ namespace Qwack.Models
             _assetVols.Remove(key);
         }
 
-        public void RemoveFixingDictionary(string name)
-        {
-            _fixings.Remove(name);
-        }
+        public void RemoveFixingDictionary(string name) => _fixings.Remove(name);
 
         public IAssetFxModel TrimModel(Portfolio portfolio, string[] additionalIrCurves = null, string[] additionalCcys = null)
         {

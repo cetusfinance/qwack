@@ -11,9 +11,9 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         //private readonly string _name = "Cholesky";
         private double[][] _correlationMatrix;
-        private ICorrelationMatrix _matrix;
+        private readonly ICorrelationMatrix _matrix;
         private double[][] _decompMatrix;
-        private readonly Vector<double> _two = new Vector<double>(2.0);
+        private readonly Vector<double> _two = new(2.0);
         public Cholesky(double[][] correlationMatrix)
         {
             if (correlationMatrix.MaxAbsElement() > 1.0)

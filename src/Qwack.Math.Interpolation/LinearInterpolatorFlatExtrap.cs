@@ -13,8 +13,8 @@ namespace Qwack.Math.Interpolation
     {
         public Interpolator1DType Type => Interpolator1DType.LinearFlatExtrap;
 
-        private double[] _x;
-        private double[] _y;
+        private readonly double[] _x;
+        private readonly double[] _y;
         private double[] _slope;
         private double _minX;
         private double _maxX;

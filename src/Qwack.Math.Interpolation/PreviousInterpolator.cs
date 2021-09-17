@@ -10,8 +10,8 @@ namespace Qwack.Math.Interpolation
 
         const double xBump = 1e-10;
 
-        private double[] _x;
-        private double[] _y;
+        private readonly double[] _x;
+        private readonly double[] _y;
         private double _minX;
         private double _maxX;
 

@@ -16,7 +16,7 @@ namespace Qwack.Paths.Processes
 {
     public class ExpectedCapitalCalculator : IPathProcess, IRequiresFinish
     {
-        private int _factorIndex;
+        private readonly int _factorIndex;
         private int _nPaths;
         private bool _isComplete;
 
@@ -36,7 +36,7 @@ namespace Qwack.Paths.Processes
 
         public bool IsComplete => _isComplete;
 
-        private object _threadLock = new object();
+        private readonly object _threadLock = new();
         private readonly Portfolio _portfolio;
         private readonly double _counterpartyRiskWeight;
         private readonly Dictionary<string, string> _assetIdToGroupMap;
@@ -50,7 +50,7 @@ namespace Qwack.Paths.Processes
 
         private ITimeStepsFeature _timeFeature;
 
-        private readonly Dictionary<DateTime, double> _expectedCapital = new Dictionary<DateTime, double>();
+        private readonly Dictionary<DateTime, double> _expectedCapital = new();
 
         public void Process(IPathBlock block)
         {

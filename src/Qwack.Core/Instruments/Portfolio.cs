@@ -47,14 +47,14 @@ namespace Qwack.Core.Instruments
 
         public Currency Currency => throw new NotImplementedException();
 
-        public Portfolio Clone() => new Portfolio
+        public Portfolio Clone() => new()
         {
             Instruments = new List<IInstrument>(Instruments),
             PortfolioName = PortfolioName
         };
 
         public TO_Portfolio ToTransportObject() =>
-            new TO_Portfolio
+            new()
             {
                 PortfolioName = PortfolioName,
                 Instruments = Instruments.Select(x=>x.GetTransportObject()).ToList()
@@ -323,7 +323,7 @@ namespace Qwack.Core.Instruments
             var removedTradesIns = start.Instruments
                 .Where(i => 
                 !endIds.Contains(i.TradeId) && 
-                ((!(i is AsianSwap asw) && i.LastSensitivityDate > endDate )|| (i is CashBalance cb && cb.PayDate != endDate) || (i is AsianSwap aswp && aswp.PaymentDate > endDate)));
+                ((i is not AsianSwap asw && i.LastSensitivityDate > endDate )|| (i is CashBalance cb && cb.PayDate != endDate) || (i is AsianSwap aswp && aswp.PaymentDate > endDate)));
             var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
 
             var commonIds = startIds.Intersect(endIds).ToList();
@@ -335,7 +335,7 @@ namespace Qwack.Core.Instruments
             {
                 var startIns = start.Instruments.Where(x => x.TradeId == id).First();
                 var endIns = end.Instruments.Where(x => x.TradeId == id).First();
-                if (!startIns.Equals(endIns) && !(startIns is CashBalance))
+                if (!startIns.Equals(endIns) && startIns is not CashBalance)
                 {
                     ammendedTradesStart.Instruments.Add(startIns);
                     ammendedTradesEnd.Instruments.Add(endIns);
@@ -421,13 +421,13 @@ namespace Qwack.Core.Instruments
 
         private static double SupFacByHedgeSet(string hedgeSet) => hedgeSet == "Electricity" ? 0.4 : 0.18;
 
-        public static Portfolio UnWrapWrappers(this Portfolio portfolio) => new Portfolio()
+        public static Portfolio UnWrapWrappers(this Portfolio portfolio) => new()
         {
             Instruments = portfolio.Instruments.Select(x => x is CashWrapper cw ? cw.UnderlyingInstrument : x).ToList(),
             PortfolioName = portfolio.PortfolioName,
         };
 
-        public static Portfolio UnStripStrips(this Portfolio portfolio) => new Portfolio()
+        public static Portfolio UnStripStrips(this Portfolio portfolio) => new()
         {
             Instruments = portfolio.Instruments.SelectMany(x => x is AsianSwapStrip sw ? sw.Swaplets : new[] { x }).ToList(),
             PortfolioName = portfolio.PortfolioName,
@@ -596,7 +596,8 @@ namespace Qwack.Core.Instruments
         }
 
         public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
-            => new Portfolio { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
+            => new()
+            { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
 
         public static DateTime[] ComputeSimDates(this Portfolio pf, DateTime anchorDate, DatePeriodType frequency = DatePeriodType.Month)
         {

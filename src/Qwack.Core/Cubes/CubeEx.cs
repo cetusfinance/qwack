@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
+using CsvHelper.Configuration;
 
 namespace Qwack.Core.Cubes
 {
@@ -675,11 +676,12 @@ namespace Qwack.Core.Cubes
         {
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
-            using var csv = new CsvReader(sr);
-
-            csv.Configuration.HasHeaderRecord = false;
-            csv.Configuration.BadDataFound = null;
-
+            using var csv = new CsvReader(sr, new CsvConfiguration(CultureInfo.InvariantCulture)
+            { 
+                HasHeaderRecord = false,
+                BadDataFound = null,
+            });
+                        
             var rawSplit = new List<string[]>();
             while(csv.Read())
             {

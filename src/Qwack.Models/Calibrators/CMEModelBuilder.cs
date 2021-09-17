@@ -344,7 +344,7 @@ namespace Qwack.Models.Calibrators
                 var filteresIns = dates.Select(x => instruments.First(y => y.Instrmt.MatDt == x));
                 if (!filteresIns.Any())
                     throw new Exception();
-                var fwds = filteresIns.ToDictionary(x => x.Instrmt.MatDt, x => Convert.ToDouble(x.Full.Single(f => f.Typ == "6").Px));
+                var fwds = filteresIns.ToDictionary(x =>DateTime.ParseExact(x.Instrmt.MMY,"yyyyMMdd",CultureInfo.InvariantCulture), x => Convert.ToDouble(x.Full.Single(f => f.Typ == "6").Px));
                 o.Add(kv.Key, fwds);
             }
             return o;

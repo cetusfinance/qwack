@@ -54,7 +54,12 @@ namespace Qwack.Options.VolSurfaces
                 {
                     clonedVols[pair.Key] = pair.Value + bumpSize;
                 }
-                var bumpedSurface = new SparsePointSurface(OriginDate, clonedVols, _pillarLabels);
+                var bumpedSurface = new SparsePointSurface(OriginDate, clonedVols, _pillarLabels)
+                {
+                    Name = Name,
+                    AssetId = AssetId
+                };
+
                 o[kv.Value] = bumpedSurface;
             }
 

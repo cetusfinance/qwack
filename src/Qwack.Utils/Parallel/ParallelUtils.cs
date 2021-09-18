@@ -156,7 +156,7 @@ namespace Qwack.Utils.Parallel
             {
                 var tcs = new TaskCompletionSource<bool>();
                 var task = tcs.Task;
-                Action action = () => code(v);
+                void action() => code(v);
                 var workItem = new WorkItem() { Action = action, TaskCompletion = tcs };
                 if (_taskQueue.TryAdd(workItem))
                 {

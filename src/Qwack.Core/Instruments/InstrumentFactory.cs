@@ -47,13 +47,13 @@ namespace Qwack.Core.Instruments
             throw new Exception("Unable to re-constitute object");
         }
 
-        public static Portfolio GetPortfolio(this TO_Portfolio transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new Portfolio
+        public static Portfolio GetPortfolio(this TO_Portfolio transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             PortfolioName = transportObject.PortfolioName,
             Instruments = transportObject.Instruments.Select(x => x.GetInstrument(currencyProvider, calendarProvider)).ToList()
         };
 
-        private static AsianSwap GetAsianSwap(this TO_AsianSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new AsianSwap
+        private static AsianSwap GetAsianSwap(this TO_AsianSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,
@@ -81,7 +81,7 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
         };
 
-        private static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new AsianOption
+        private static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,
@@ -110,7 +110,7 @@ namespace Qwack.Core.Instruments
             CallPut = transportObject.CallPut
         };
 
-        private static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new Forward
+        private static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,

@@ -58,10 +58,7 @@ namespace Qwack.Core.Instruments.Funding
             return curves.Distinct().Where(x => x != SolveCurve).ToList();
         }
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
-        {
-            throw new NotImplementedException();
-        }
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => throw new NotImplementedException();
 
         public double Pv(IFundingModel model, bool updateState)
         {
@@ -74,19 +71,10 @@ namespace Qwack.Core.Instruments.Funding
             return farPv;
         }
 
-        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
-        {
-            throw new NotImplementedException();
-        }
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
-        public IFundingInstrument SetParRate(double parRate)
-        {
-            throw new NotImplementedException();
-        }
+        public IFundingInstrument SetParRate(double parRate) => throw new NotImplementedException();
 
-        public double SuggestPillarValue(IFundingModel assetFxModel)
-        {
-            return 0.05;
-        }
+        public double SuggestPillarValue(IFundingModel assetFxModel) => 0.05;
     }
 }

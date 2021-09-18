@@ -33,7 +33,7 @@ namespace Qwack.Providers.CSV
             return blob;
         }
 
-        private static readonly COMEXParser instance = new COMEXParser();
+        private static readonly COMEXParser instance = new();
 
         static COMEXParser()
         {
@@ -45,6 +45,6 @@ namespace Qwack.Providers.CSV
 
         public static COMEXParser Instance => instance;
 
-        private ConcurrentDictionary<string, FIXML> _blobCache = new ConcurrentDictionary<string, FIXML>();
+        private readonly ConcurrentDictionary<string, FIXML> _blobCache = new();
     }
 }

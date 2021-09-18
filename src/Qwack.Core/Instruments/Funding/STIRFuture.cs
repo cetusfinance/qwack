@@ -67,7 +67,7 @@ namespace Qwack.Core.Instruments.Funding
             };
         }
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => new();
 
         public double CalculateParRate(IFundingModel Model)
         {
@@ -105,18 +105,15 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new();
 
         public string[] IrCurves(IAssetFxModel model) => new[] { ForecastCurve };
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
         public string FxPair(IAssetFxModel model) => null;
         IAssetInstrument IAssetInstrument.Clone() => (STIRFuture)Clone();
 
-        public IAssetInstrument SetStrike(double strike)
-        {
-            throw new NotImplementedException();
-        }
+        public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
         public double SuggestPillarValue(IFundingModel model) => (100.0 - Price) / 100.0;
     }

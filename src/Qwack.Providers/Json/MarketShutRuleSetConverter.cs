@@ -12,7 +12,7 @@ namespace Qwack.Providers.Json
 
         public MarketShutRuleSetConverter(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 
-        public override MarketShutRuleSet Create(Type objectType) => new MarketShutRuleSet(_calendarProvider);
+        public override MarketShutRuleSet Create(Type objectType) => new(_calendarProvider);
     }
 
     public class FutureDatesGeneratorConverter :CustomCreationConverter<FutureDatesGenerator>
@@ -21,6 +21,6 @@ namespace Qwack.Providers.Json
 
         public FutureDatesGeneratorConverter(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 
-        public override FutureDatesGenerator Create(Type objectType) => new FutureDatesGenerator(_calendarProvider);
+        public override FutureDatesGenerator Create(Type objectType) => new(_calendarProvider);
     }
 }

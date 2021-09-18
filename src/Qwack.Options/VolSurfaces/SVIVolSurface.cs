@@ -33,8 +33,8 @@ namespace Qwack.Options.VolSurfaces
         public string[] PillarLabels { get; }
         public Frequency OverrideSpotLag { get; set; }
 
-        private IInterpolator1D[] _interps;
-        private IInterpolator1D _fwdsInterp;
+        private readonly IInterpolator1D[] _interps;
+        private readonly IInterpolator1D _fwdsInterp;
 
         public SVIVolSurface() { }
 

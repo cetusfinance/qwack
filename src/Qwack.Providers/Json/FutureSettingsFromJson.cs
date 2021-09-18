@@ -15,8 +15,8 @@ namespace Qwack.Providers.Json
         private readonly JsonSerializerSettings _jsonSettings;
         private readonly ICalendarProvider _calendarProvider;
         private readonly List<FutureSettings> _allFutureSettings;
-        private readonly Dictionary<string, FutureSettings> _allSettingsByName = new Dictionary<string, FutureSettings>(StringComparer.OrdinalIgnoreCase);
-        private ILogger _logger;
+        private readonly Dictionary<string, FutureSettings> _allSettingsByName = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ILogger _logger;
 
         public FutureSettingsFromJson(ICalendarProvider calendarProvider, string fileName, ILoggerFactory loggerFactory)
         {

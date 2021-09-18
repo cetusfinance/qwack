@@ -17,7 +17,7 @@ namespace Qwack.Models.Risk
 {
     public static class QuickPFECalculator
     {
-        private static Type[] AllowedTypes = { typeof(AsianSwap), typeof(AsianSwapStrip), typeof(AsianOption), typeof(Forward), typeof(EuropeanOption) };
+        private static readonly Type[] AllowedTypes = { typeof(AsianSwap), typeof(AsianSwapStrip), typeof(AsianOption), typeof(Forward), typeof(EuropeanOption) };
         public static ICube Calculate(IAssetFxModel model, Portfolio portfolio, double confidenceInterval, Currency reportingCcy, ICurrencyProvider currencyProvider, 
             ICalendarProvider calendarProvider, DateTime[] exposureDates = null, DatePeriodType sampleFreq = DatePeriodType.Month, bool correlationCorrection = true)
         {

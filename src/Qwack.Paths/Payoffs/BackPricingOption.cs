@@ -2,13 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Math;
-using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
@@ -17,11 +13,11 @@ namespace Qwack.Paths.Payoffs
 {
     public class BackPricingOption : PathProductBase
     {
-        private List<DateTime> _avgDates;
+        private readonly List<DateTime> _avgDates;
         private readonly DateTime _decisionDate;
         private readonly OptionType _callPut;
         private readonly DateTime _settleFixingDate;
-        private string _fxName;
+        private readonly string _fxName;
         private int _fxIndex;
         private int[] _dateIndexesPast;
         private int[] _dateIndexesFuture;
@@ -31,7 +27,7 @@ namespace Qwack.Paths.Payoffs
         private int _decisionDateIx;
         private double _expiryToSettleCarry;
 
-        private readonly Vector<double> _one = new Vector<double>(1.0);
+        private readonly Vector<double> _one = new(1.0);
 
         public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 

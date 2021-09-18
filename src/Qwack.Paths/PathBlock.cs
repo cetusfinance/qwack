@@ -59,7 +59,7 @@ namespace Qwack.Paths
         public int TotalBlockSize => _numberOfPaths * _numberOfFactors * _numberOfSteps;
         public double[] RawData => _backingArray;
 
-        private object _threadLock = new object();
+        private readonly object _threadLock = new();
 
         public double this[int index]
         {

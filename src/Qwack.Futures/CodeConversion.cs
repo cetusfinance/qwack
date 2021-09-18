@@ -72,14 +72,8 @@ namespace Qwack.Futures
             return null;
         }
 
-        public static string Right(this string str, int n)
-        {
-            return str.Substring(str.Length - n, n);
-        }
+        public static string Right(this string str, int n) => str.Substring(str.Length - n, n);
 
-        public static string Left(this string str, int n)
-        {
-            return str.Substring(0, n);
-        }
+        public static string Left(this string str, int n) => str.Substring(0, n);
     }
 }

@@ -23,7 +23,7 @@ namespace Qwack.Paths.Payoffs
         protected int[] _dateIndexes;
         protected Vector<double>[] _results;
         protected Vector<double> _notional;
-        protected Vector<double> _zero = new Vector<double>(0.0);
+        protected Vector<double> _zero = new(0.0);
         protected bool _isComplete;
 
         protected bool _requiresConversionToSimCcy;

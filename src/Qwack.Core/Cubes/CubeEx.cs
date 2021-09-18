@@ -81,10 +81,7 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction)
-        {
-            return cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
-        }
+        public static ICube Pivot(this ICube cube, string fieldToAggregateBy, AggregationAction aggregationAction) => cube.Pivot(new[] { fieldToAggregateBy }, aggregationAction);
 
 
         public static ICube Pivot(this ICube cube, string[] fieldsToAggregateBy, AggregationAction aggregationAction)
@@ -567,16 +564,16 @@ namespace Qwack.Core.Cubes
         {
             switch (v1)
             {
-                case string vs:
-                    return v2 is string && (string)v1 == (string)v2;
-                case double vd:
+                case string v1String:
+                    return v2 is string && v1String == (string)v2;
+                case double:
                     return v2 is double && (double)v1 == (double)v2;
-                case bool vb:
+                case bool:
                     return v2 is bool && (bool)v1 == (bool)v2;
                 case decimal vq:
                     return v2 is decimal && (decimal)v1 == (decimal)v2;
                 case DateTime vt:
-                    return v2 is DateTime && (DateTime)v1 == (DateTime)v2;
+                    return v2 is DateTime && vt == (DateTime)v2;
                 case char vc:
                     return v2 is char && (char)v1 == (char)v2;
                 case int vi:

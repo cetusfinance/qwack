@@ -9,12 +9,12 @@ namespace Qwack.Paths.Payoffs
 {
     public class AsianPut : IPathProcess, IRequiresFinish
     {
-        private List<DateTime> _asianDates;
+        private readonly List<DateTime> _asianDates;
         private readonly double _strike;
         private readonly string _assetName;
         private int _assetIndex;
         private int[] _dateIndexes;
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly List<Vector<double>> _results = new();
         private bool _isComplete;
 
         public AsianPut(string assetName, double strike, List<DateTime> asianingDates)

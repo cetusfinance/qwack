@@ -53,7 +53,7 @@ namespace Qwack.Dates
             if (m % 3 == 0 && input > ThirdWednesday(input))
                 return ThirdWednesday(input);
 
-            m = m - (m % 3 == 0 ? 3 : m % 3); //roll to next IMM month
+            m -= (m % 3 == 0 ? 3 : m % 3); //roll to next IMM month
             if (m >= 1) return ThirdWednesday(new DateTime(y, m, 1));
             m += 12;
             y--;
@@ -277,7 +277,7 @@ namespace Qwack.Dates
         /// </summary>
         /// <param name="input">Input date</param>
         /// <returns></returns>
-        public static DateTime FirstDayOfMonth(this DateTime input) => new DateTime(input.Year, input.Month, 1);
+        public static DateTime FirstDayOfMonth(this DateTime input) => new(input.Year, input.Month, 1);
 
         /// <summary>
         /// Returns last business day, according to the specified calendar, of the month in which the input date falls
@@ -550,22 +550,13 @@ namespace Qwack.Dates
                 return d;
             }
 
-            DateTime dt;
-            switch (datePeriod.PeriodType)
+            var dt = datePeriod.PeriodType switch
             {
-                case DatePeriodType.D:
-                    dt = date.AddDays(datePeriod.PeriodCount);
-                    break;
-                case DatePeriodType.M:
-                    dt = date.AddMonths(datePeriod.PeriodCount);
-                    break;
-                case DatePeriodType.W:
-                    dt = date.AddDays(datePeriod.PeriodCount * 7);
-                    break;
-                default:
-                    dt = date.AddYears(datePeriod.PeriodCount);
-                    break;
-            }
+                DatePeriodType.D => date.AddDays(datePeriod.PeriodCount),
+                DatePeriodType.M => date.AddMonths(datePeriod.PeriodCount),
+                DatePeriodType.W => date.AddDays(datePeriod.PeriodCount * 7),
+                _ => date.AddYears(datePeriod.PeriodCount),
+            };
 
             if ((rollType == RollType.MF_LIBOR) && (date == date.LastBusinessDayOfMonth(calendar)))
             {
@@ -636,7 +627,7 @@ namespace Qwack.Dates
         /// <param name="dateA"></param>
         /// <param name="dateB"></param>
         /// <returns></returns>
-        public static DateTime Average(this DateTime dateA, DateTime dateB) => new DateTime((dateB.Ticks + dateA.Ticks) / 2);
+        public static DateTime Average(this DateTime dateA, DateTime dateB) => new((dateB.Ticks + dateA.Ticks) / 2);
 
         /// <summary>
         /// Returns the start and end dates for a specified period string

@@ -57,20 +57,17 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetForwardATMVol(double start, double end) => Volatility;
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => new()
         {
-            return new Dictionary<string, IVolSurface>
-            {
                 { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency, AssetId=AssetId, Name=Name } }
             };
-        }
 
         public DateTime PillarDatesForLabel(string label) => OriginDate;
 
         public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);
         public double CDF(DateTime expiry, double fwd, double strike) => this.GenerateCDF2(100, expiry, fwd).Interpolate(strike);
 
-        public TO_ConstantVolSurface GetTransportObject() => new TO_ConstantVolSurface
+        public TO_ConstantVolSurface GetTransportObject() => new()
         {
             AssetId = AssetId,
             Name = Name,

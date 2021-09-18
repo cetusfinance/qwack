@@ -20,10 +20,7 @@ namespace Qwack.Paths.Processes
                 throw new Exception("Invalid correlation, must be in the range -1.0 to +1.0");
             _correlationMatrix = correlationMatrix;
         }
-        public Cholesky(ICorrelationMatrix correlationMatrix)
-        {
-            _matrix = correlationMatrix;
-        }
+        public Cholesky(ICorrelationMatrix correlationMatrix) => _matrix = correlationMatrix;
         public bool IsComplete => _isComplete;
         public void Finish(IFeatureCollection collection)
         {

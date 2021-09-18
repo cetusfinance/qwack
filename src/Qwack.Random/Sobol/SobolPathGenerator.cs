@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Math;
-using Qwack.Paths;
 using Qwack.Paths.Features;
 using static System.Math;
 namespace Qwack.Random.Sobol
@@ -15,7 +10,7 @@ namespace Qwack.Random.Sobol
         protected static double s_convertToDoubleConstant = Pow(2.0, -32.0);
 
         private int _numberOfDimensions;
-        private SobolDirectionNumbers _directionNumbers;
+        private readonly SobolDirectionNumbers _directionNumbers;
         private readonly int _seed;
         private uint _bitsRequired;
         private uint[][] _v;

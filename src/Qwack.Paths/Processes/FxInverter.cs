@@ -13,9 +13,9 @@ namespace Qwack.Paths.Processes
 {
     public class FxInverter : IPathProcess, IRequiresFinish, IRunSingleThreaded
     {
-        private readonly Vector<double> _one = new Vector<double>(1.0);
-        private string _fxPair;
-        private string _invertedFxPair;
+        private readonly Vector<double> _one = new(1.0);
+        private readonly string _fxPair;
+        private readonly string _invertedFxPair;
 
         private int _fxPairIx;
         private int _invertedFxPairIx;

@@ -82,7 +82,7 @@ namespace Qwack.Core.Instruments.Asset
         private double SupervisoryVol => SaCcrParameters.SupervisoryOptionVols[AssetClass];
 
         public override TO_Instrument ToTransportObject() =>
-            new TO_Instrument
+            new()
             {
                 AssetInstrumentType = AssetInstrumentType.AsianOption,
                 AsianOption = new TO_AsianOption

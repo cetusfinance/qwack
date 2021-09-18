@@ -36,10 +36,7 @@ namespace Qwack.Core.Curves
                 else
                     return GetDefaultProbability(OriginDate, OriginDate.AddDays(365));
             }
-            set
-            {
-                _constPD = value;
-            }
+            set => _constPD = value;
         }
 
         public DateTime OriginDate { get; private set; }

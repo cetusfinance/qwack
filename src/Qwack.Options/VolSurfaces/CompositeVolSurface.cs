@@ -21,10 +21,7 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
         public Frequency OverrideSpotLag { get; set; }
 
-        public CompositeVolSurface()
-        {
-            _Pair = FundingModel?.FxMatrix?.GetFxPair(AssetSurface.Currency, Currency);
-        }
+        public CompositeVolSurface() => _Pair = FundingModel?.FxMatrix?.GetFxPair(AssetSurface.Currency, Currency);
         public CompositeVolSurface(string name, string assetId, Currency ccy, IVolSurface assetSurface, IFundingModel fundingModel,  double correlation, CompositeVolType calculationType)
         {
             AssetSurface = assetSurface;

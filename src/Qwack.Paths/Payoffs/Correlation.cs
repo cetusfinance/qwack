@@ -16,7 +16,7 @@ namespace Qwack.Paths.Payoffs
         private int _assetIndex1;
         private int _assetIndex2;
 
-        private List<Vector<double>> _results = new List<Vector<double>>();
+        private readonly List<Vector<double>> _results = new();
         private bool _isComplete;
 
         public Correlation(string assetName1, string assetName2)

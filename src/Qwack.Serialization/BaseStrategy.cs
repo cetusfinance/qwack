@@ -10,8 +10,8 @@ namespace Qwack.Serialization
     {
         protected readonly Type _objectType;
         protected readonly SerializerDelegate _serializer;
-        protected List<ParameterExpression> _parameters = new List<ParameterExpression>();
-        protected Dictionary<Type, string> _methodMapping = new Dictionary<Type, string>
+        protected List<ParameterExpression> _parameters = new();
+        protected Dictionary<Type, string> _methodMapping = new()
         {
             [typeof(int)] = "Int",
             [typeof(uint)] = "UInt",

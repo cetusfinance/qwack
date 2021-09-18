@@ -17,9 +17,9 @@ namespace Qwack.Paths.Payoffs
 {
     public class MultiPeriodBackPricingOption : IPathProcess, IRequiresFinish, IAssetPathPayoff
     {
-        private object _locker = new object();
+        private readonly object _locker = new();
 
-        private List<DateTime[]> _avgDates;
+        private readonly List<DateTime[]> _avgDates;
         private readonly DateTime _decisionDate;
         private readonly OptionType _callPut;
         private readonly string _discountCurve;
@@ -28,7 +28,7 @@ namespace Qwack.Paths.Payoffs
         private readonly DateTime _payDate;
         private readonly string _assetName;
         private int _assetIndex;
-        private string _fxName;
+        private readonly string _fxName;
         private int _fxIndex;
         private List<int[]> _dateIndexes;
         private List<int[]> _dateIndexesPast;
@@ -42,7 +42,7 @@ namespace Qwack.Paths.Payoffs
         private bool _isComplete;
         private double _expiryToSettleCarry;
 
-        private readonly Vector<double> _one = new Vector<double>(1.0);
+        private readonly Vector<double> _one = new(1.0);
 
         public string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 

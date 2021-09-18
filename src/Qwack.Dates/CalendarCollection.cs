@@ -6,7 +6,7 @@ namespace Qwack.Dates
 {
     public class CalendarCollection
     {
-        private readonly Dictionary<string, Calendar> _mergedCalendars = new Dictionary<string, Calendar>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Calendar> _mergedCalendars = new(StringComparer.OrdinalIgnoreCase);
 
         public CalendarCollection(IEnumerable<Calendar> startingCalendars)
         {

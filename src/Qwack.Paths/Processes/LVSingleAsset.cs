@@ -16,13 +16,13 @@ namespace Qwack.Paths.Processes
 {
     public class LVSingleAsset : IPathProcess, IRequiresFinish
     {
-        private IVolSurface _surface;
+        private readonly IVolSurface _surface;
 
-        private IATMVolSurface _adjSurface;
-        private double _correlation;
+        private readonly IATMVolSurface _adjSurface;
+        private readonly double _correlation;
 
         private readonly DateTime _expiryDate;
-        private DateTime _startDate;
+        private readonly DateTime _startDate;
         private readonly int _numberOfSteps;
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
@@ -33,9 +33,9 @@ namespace Qwack.Paths.Processes
         private Vector<double>[] _drifts;
         private IInterpolator1D[] _lvInterps;
 
-        private readonly Vector<double> _two = new Vector<double>(2.0);
+        private readonly Vector<double> _two = new(2.0);
 
-        private bool _siegelInvert;
+        private readonly bool _siegelInvert;
 
         public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime,double> pastFixings=null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {

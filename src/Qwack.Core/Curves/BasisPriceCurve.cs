@@ -113,8 +113,8 @@ namespace Qwack.Core.Curves
             => new BasisPriceCurve(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, Curve.RebaseDate(newAnchorDate), BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
         
         public BasisPriceCurve Clone() 
-            => new BasisPriceCurve(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, BaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
+            => new(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, BaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
         public BasisPriceCurve ReCalibrate(IPriceCurve NewBaseCurve) 
-            => new BasisPriceCurve(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, NewBaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
+            => new(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, NewBaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
     }
 }

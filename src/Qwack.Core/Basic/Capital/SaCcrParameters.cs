@@ -7,7 +7,7 @@ namespace Qwack.Core.Basic.Capital
 {
     public static class SaCcrParameters
     {
-        public static Dictionary<SaCcrAssetClass, double> SupervisoryFactors = new Dictionary<SaCcrAssetClass, double>()
+        public static Dictionary<SaCcrAssetClass, double> SupervisoryFactors = new()
         {
             { SaCcrAssetClass.InterestRate, 0.005 },
             { SaCcrAssetClass.Fx, 0.04 },
@@ -29,7 +29,7 @@ namespace Qwack.Core.Basic.Capital
             { SaCcrAssetClass.CommoOther, 0.18 },
         };
 
-        public static Dictionary<SaCcrAssetClass, double> Correlations = new Dictionary<SaCcrAssetClass, double>()
+        public static Dictionary<SaCcrAssetClass, double> Correlations = new()
         {
             { SaCcrAssetClass.CreditSingleAAA, 0.5 },
             { SaCcrAssetClass.CreditSingleAA, 0.5 },
@@ -49,7 +49,7 @@ namespace Qwack.Core.Basic.Capital
             { SaCcrAssetClass.CommoOther, 0.4 },
         };
 
-        public static Dictionary<SaCcrAssetClass, double> SupervisoryOptionVols = new Dictionary<SaCcrAssetClass, double>()
+        public static Dictionary<SaCcrAssetClass, double> SupervisoryOptionVols = new()
         {
             { SaCcrAssetClass.InterestRate, 0.5 },
             { SaCcrAssetClass.Fx, 0.15 },

@@ -26,76 +26,63 @@ namespace Qwack.Math.Interpolation
         public static double[] Many(this IInterpolator1D interp, IEnumerable<double> Xs) 
             => Xs.Select(x => interp.Interpolate(x)).ToArray();
 
-        public static TO_Interpolator1d ToTransportObject(this IInterpolator1D interp)
+        public static TO_Interpolator1d ToTransportObject(this IInterpolator1D interp) => interp switch
         {
-            switch (interp)
+            LinearInterpolatorFlatExtrap i1 => new TO_Interpolator1d
             {
-                case LinearInterpolatorFlatExtrap i1:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i1.Xs,
-                        Ys = i1.Ys,
-                        Type = Interpolator1DType.LinearFlatExtrap
-                    };
-                case LinearInterpolator i2:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i2.Xs,
-                        Ys = i2.Ys,
-                        Type = Interpolator1DType.Linear
-                    };
-                case LinearInVarianceInterpolator i3:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i3.Xs,
-                        Ys = i3.Ys,
-                        Type = Interpolator1DType.LinearInVariance
-                    };
-                case GaussianKernelInterpolator i4:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i4.Xs,
-                        Ys = i4.Ys,
-                        Type = Interpolator1DType.GaussianKernel
-                    };
-                case NextInterpolator i5:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i5.Xs,
-                        Ys = i5.Ys,
-                        Type = Interpolator1DType.NextValue
-                    };
-                case PreviousInterpolator i6:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i6.Xs,
-                        Ys = i6.Ys,
-                        Type = Interpolator1DType.PreviousValue
-                    };
-                case CubicHermiteSplineInterpolator i7:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = i7.Xs,
-                        Ys = i7.Ys,
-                        Type = Interpolator1DType.CubicSpline
-                    };
-                case DummyPointInterpolator i8:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = new[] { i8.Point },
-                        Ys = new[] { i8.Point },
-                        Type = Interpolator1DType.DummyPoint
-                    };
-                case ConstantHazzardInterpolator i9:
-                    return new TO_Interpolator1d
-                    {
-                        Xs = new[] { i9.H },
-                        Ys = new[] { i9.H },
-                        Type = Interpolator1DType.ConstantHazzard
-                    };
-                default:
-                    throw new InvalidOperationException($"We don't have a way of serializing a {interp.GetType().Name} interpolator");
-            }
-        }
+                Xs = i1.Xs,
+                Ys = i1.Ys,
+                Type = Interpolator1DType.LinearFlatExtrap
+            },
+            LinearInterpolator i2 => new TO_Interpolator1d
+            {
+                Xs = i2.Xs,
+                Ys = i2.Ys,
+                Type = Interpolator1DType.Linear
+            },
+            LinearInVarianceInterpolator i3 => new TO_Interpolator1d
+            {
+                Xs = i3.Xs,
+                Ys = i3.Ys,
+                Type = Interpolator1DType.LinearInVariance
+            },
+            GaussianKernelInterpolator i4 => new TO_Interpolator1d
+            {
+                Xs = i4.Xs,
+                Ys = i4.Ys,
+                Type = Interpolator1DType.GaussianKernel
+            },
+            NextInterpolator i5 => new TO_Interpolator1d
+            {
+                Xs = i5.Xs,
+                Ys = i5.Ys,
+                Type = Interpolator1DType.NextValue
+            },
+            PreviousInterpolator i6 => new TO_Interpolator1d
+            {
+                Xs = i6.Xs,
+                Ys = i6.Ys,
+                Type = Interpolator1DType.PreviousValue
+            },
+            CubicHermiteSplineInterpolator i7 => new TO_Interpolator1d
+            {
+                Xs = i7.Xs,
+                Ys = i7.Ys,
+                Type = Interpolator1DType.CubicSpline
+            },
+            DummyPointInterpolator i8 => new TO_Interpolator1d
+            {
+                Xs = new[] { i8.Point },
+                Ys = new[] { i8.Point },
+                Type = Interpolator1DType.DummyPoint
+            },
+            ConstantHazzardInterpolator i9 => new TO_Interpolator1d
+            {
+                Xs = new[] { i9.H },
+                Ys = new[] { i9.H },
+                Type = Interpolator1DType.ConstantHazzard
+            },
+            _ => throw new InvalidOperationException($"We don't have a way of serializing a {interp.GetType().Name} interpolator"),
+        };
     }
 }

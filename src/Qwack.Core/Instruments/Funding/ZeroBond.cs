@@ -53,7 +53,7 @@ namespace Qwack.Core.Instruments.Funding
             };
         }
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => new();
 
         public double CalculateParRate(IFundingModel model)
         {
@@ -81,8 +81,8 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
-            { new CashFlow()
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new()
+        { new CashFlow()
                 {
                     Currency = Currency,
                     SettleDate = MaturityDate,

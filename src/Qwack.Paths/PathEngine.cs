@@ -12,9 +12,9 @@ namespace Qwack.Paths
 {
     public sealed class PathEngine : IEnumerable<PathBlock>, IDisposable, IEngineFeature
     {
-        private List<List<IPathProcess>> _pathProcesses = new List<List<IPathProcess>>();
-        private int _numberOfPaths;
-        private FeatureCollection _featureCollection = new FeatureCollection();
+        private readonly List<List<IPathProcess>> _pathProcesses = new();
+        private readonly int _numberOfPaths;
+        private readonly FeatureCollection _featureCollection = new();
         private int _dimensions;
         private int _steps;
         private BlockSet _blockset;

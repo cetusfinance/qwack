@@ -17,10 +17,7 @@ namespace Qwack.Core.Basic.Correlation
 
         public CorrelationMatrixCollection() { }
 
-        public CorrelationMatrixCollection(ICorrelationMatrix[] matrices)
-        {
-            Matrices = matrices;
-        }
+        public CorrelationMatrixCollection(ICorrelationMatrix[] matrices) => Matrices = matrices;
 
         public double GetCorrelation(string label1, string label2, double t = 0)
         {
@@ -53,7 +50,7 @@ namespace Qwack.Core.Basic.Correlation
        
 
         public TO_CorrelationMatrix GetTransportObject() =>
-           new TO_CorrelationMatrix
+           new()
            {
                Children = Matrices.Select(x=>GetTransportObject()).ToArray(),
            };

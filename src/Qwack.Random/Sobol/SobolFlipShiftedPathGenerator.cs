@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Models;
-using Qwack.Paths;
 using Qwack.Paths.Features;
 using static System.Math;
 
@@ -14,7 +10,7 @@ namespace Qwack.Random.Sobol
     {
         private int _timesteps;
         private int _factors;
-        private SobolDirectionNumbers _directionNumbers;
+        private readonly SobolDirectionNumbers _directionNumbers;
         private uint _bitsRequired;
         private uint[][] _v;
         private uint _n;

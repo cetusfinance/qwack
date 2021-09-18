@@ -46,31 +46,15 @@ namespace Qwack.Dates
         {
             var periodType = period[period.Length - 1];
 
-            switch (periodType)
+            PeriodType = periodType switch
             {
-                case 'D':
-                case 'd':
-                    PeriodType = DatePeriodType.D;
-                    break;
-                case 'Y':
-                case 'y':
-                    PeriodType = DatePeriodType.Y;
-                    break;
-                case 'M':
-                case 'm':
-                    PeriodType = DatePeriodType.M;
-                    break;
-                case 'B':
-                case 'b':
-                    PeriodType = DatePeriodType.B;
-                    break;
-                case 'w':
-                case 'W':
-                    PeriodType = DatePeriodType.W;
-                    break;
-                default:
-                    throw new ArgumentException(nameof(period), $"Unknown period type {periodType}");
-            }
+                'D' or 'd' => DatePeriodType.D,
+                'Y' or 'y' => DatePeriodType.Y,
+                'M' or 'm' => DatePeriodType.M,
+                'B' or 'b' => DatePeriodType.B,
+                'w' or 'W' => DatePeriodType.W,
+                _ => throw new ArgumentException(nameof(period), $"Unknown period type {periodType}"),
+            };
             PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
         }
 

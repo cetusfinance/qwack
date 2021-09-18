@@ -9,7 +9,7 @@ namespace Qwack.Providers.Json
 {
     public class CalendarsFromJson: ICalendarProvider
     {
-        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings() { DateFormatString = "yyyyMMdd" };
+        private static readonly JsonSerializerSettings _jsonSettings = new() { DateFormatString = "yyyyMMdd" };
         private Dictionary<string, Calendar> _loadedCalendars;
         private CalendarCollection _calendarCollection;
 

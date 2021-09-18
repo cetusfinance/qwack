@@ -417,7 +417,7 @@ namespace Qwack.Options.VolSurfaces
             return o;
         }
 
-        private bool rollUpATM = false;
+        private readonly bool rollUpATM = false;
         public override IVolSurface RollSurface(DateTime newOrigin)
         {
             //_suppressVarianceErrors = true;
@@ -456,7 +456,7 @@ namespace Qwack.Options.VolSurfaces
             };
         }
 
-        public new TO_RiskyFlySurface GetTransportObject() => new TO_RiskyFlySurface
+        public new TO_RiskyFlySurface GetTransportObject() => new()
         {
             AssetId = AssetId,
             Name = Name,

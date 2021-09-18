@@ -164,7 +164,7 @@ namespace Qwack.Core.Instruments.Asset
                    HedgingSet == swap.HedgingSet;
 
         public virtual TO_Instrument ToTransportObject() =>
-            new TO_Instrument
+            new()
             {
                 AssetInstrumentType = AssetInstrumentType.AsianSwap,
                 AsianSwap = new TO_AsianSwap

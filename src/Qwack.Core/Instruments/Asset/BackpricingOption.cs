@@ -65,33 +65,30 @@ namespace Qwack.Core.Instruments.Asset
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
 
-        public IAssetInstrument Clone()
+        public IAssetInstrument Clone() => new BackPricingOption
         {
-            return new BackPricingOption
-            {
-                TradeId = TradeId,
-                Notional = Notional,
-                Direction = Direction,
-                StartDate = StartDate,
-                EndDate = EndDate,
-                DecisionDate = DecisionDate,
-                FixingDates = (DateTime[])FixingDates.Clone(),
-                FixingCalendar = FixingCalendar,
-                PaymentCalendar = PaymentCalendar,
-                SpotLag = SpotLag,
-                SpotLagRollType = SpotLagRollType,
-                PaymentLag = PaymentLag,
-                PaymentLagRollType = PaymentLagRollType,
-                PaymentDate = PaymentDate,
-                PaymentCurrency = PaymentCurrency,
-                AssetFixingId = AssetFixingId,
-                AssetId = AssetId,
-                DiscountCurve = DiscountCurve,
-                FxConversionType = FxConversionType,
-                FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
-                FxFixingId = FxFixingId,
-            };
-        }
+            TradeId = TradeId,
+            Notional = Notional,
+            Direction = Direction,
+            StartDate = StartDate,
+            EndDate = EndDate,
+            DecisionDate = DecisionDate,
+            FixingDates = (DateTime[])FixingDates.Clone(),
+            FixingCalendar = FixingCalendar,
+            PaymentCalendar = PaymentCalendar,
+            SpotLag = SpotLag,
+            SpotLagRollType = SpotLagRollType,
+            PaymentLag = PaymentLag,
+            PaymentLagRollType = PaymentLagRollType,
+            PaymentDate = PaymentDate,
+            PaymentCurrency = PaymentCurrency,
+            AssetFixingId = AssetFixingId,
+            AssetId = AssetId,
+            DiscountCurve = DiscountCurve,
+            FxConversionType = FxConversionType,
+            FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+            FxFixingId = FxFixingId,
+        };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();    
     }

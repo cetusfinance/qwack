@@ -8,8 +8,8 @@ namespace Qwack.Utils.Parallel
 {
     public class ConcurrentHashSet<T> : IDisposable
     {
-        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private readonly HashSet<T> _hashSet = new HashSet<T>();
+        private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.SupportsRecursion);
+        private readonly HashSet<T> _hashSet = new();
 
         #region Implementation of ICollection<T> ...ish
         public bool Add(T item)

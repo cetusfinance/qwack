@@ -23,7 +23,7 @@ namespace Qwack.Core.Models
         public bool AvoidRegressionForBackPricing { get; set; }
         public CreditSettings CreditSettings { get; set; } = new CreditSettings();
 
-        public McSettings Clone() => new McSettings
+        public McSettings Clone() => new()
         {
             AveragePathCorrection = AveragePathCorrection,
             AvoidRegressionForBackPricing = AvoidRegressionForBackPricing,

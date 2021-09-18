@@ -19,7 +19,7 @@ namespace Qwack.Core.Models
         public PFERegressorType PfeRegressorType { get; set; }
         public DateTime[] ExposureDates { get; set; }
 
-        public CreditSettings Clone() => new CreditSettings
+        public CreditSettings Clone() => new()
         {
             Metric = Metric,
             ConfidenceInterval = ConfidenceInterval,

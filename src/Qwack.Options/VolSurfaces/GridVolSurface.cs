@@ -22,8 +22,8 @@ namespace Qwack.Options.VolSurfaces
     public class GridVolSurface : IVolSurface, IATMVolSurface
     {
         private readonly bool _allowCaching = true;
-        private ConcurrentDictionary<string, double> _absVolCache = new ConcurrentDictionary<string, double>();
-        private ConcurrentDictionary<string, double> _deltaVolCache = new ConcurrentDictionary<string, double>();
+        private readonly ConcurrentDictionary<string, double> _absVolCache = new();
+        private readonly ConcurrentDictionary<string, double> _deltaVolCache = new();
         public Frequency OverrideSpotLag { get; set; }
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
@@ -400,7 +400,7 @@ namespace Qwack.Options.VolSurfaces
             return b;
         }
 
-        public TO_GridVolSurface GetTransportObject() => new TO_GridVolSurface
+        public TO_GridVolSurface GetTransportObject() => new()
         {
             AssetId = AssetId,
             Name = Name,

@@ -13,6 +13,6 @@ namespace Qwack.Providers.Json
 
         public CurrencyConverter(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
 
-        public override Currency Create(Type objectType) => new Currency(_calendarProvider);
+        public override Currency Create(Type objectType) => new(_calendarProvider);
     }
 }

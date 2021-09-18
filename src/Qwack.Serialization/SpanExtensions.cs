@@ -66,7 +66,7 @@ namespace Qwack.Serialization
             return value;
         }
 
-        public static DateTime ReadDateTime(ref this Span<byte> span) => new DateTime(span.ReadLong());
+        public static DateTime ReadDateTime(ref this Span<byte> span) => new(span.ReadLong());
 
         public static long ReadLong(ref this Span<byte> span)
         {

@@ -159,7 +159,7 @@ namespace Qwack.Models.Risk
 
             foreach (var surfaceName in model.VolSurfaceNames)
             {
-                if (!(model.GetVolSurface(surfaceName) is RiskyFlySurface volObj))
+                if (model.GetVolSurface(surfaceName) is not RiskyFlySurface volObj)
                     continue;
 
                 var subPortfolio = new Portfolio()

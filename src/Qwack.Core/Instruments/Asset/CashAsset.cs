@@ -89,7 +89,7 @@ namespace Qwack.Core.Instruments.Asset
             }
         }
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new Dictionary<string, List<DateTime>>();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
         public double PV(IAssetFxModel model)

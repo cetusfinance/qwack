@@ -70,7 +70,7 @@ namespace Qwack.Core.Basic.Correlation
         }
 
         public TO_CorrelationMatrix GetTransportObject() =>
-           new TO_CorrelationMatrix
+           new()
            {
                Correlations = Correlations,
                LabelsX = LabelsX,

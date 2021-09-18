@@ -8,7 +8,7 @@ namespace Qwack.Paths.Processes
 {
     public class ConstantVolSingleAsset : IPathProcess
     {
-        private DateTime _startDate;
+        private readonly DateTime _startDate;
         private readonly DateTime _expiry;
         private readonly double _vol;
         private readonly double _scaledVol;

@@ -8,7 +8,7 @@ namespace Qwack.Paths
 {
     public class FeatureCollection : IFeatureCollection
     {
-        private Dictionary<Type, object> _features = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _features = new();
 
         public void AddFeature<T>(T featureToAdd) => _features.Add(typeof(T), featureToAdd);
 

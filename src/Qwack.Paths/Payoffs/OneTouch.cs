@@ -1,20 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Instruments;
 using Qwack.Core.Models;
-using Qwack.Math;
-using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {
     public class OneTouch : PathProductBase
     {
-        private object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly DateTime _obsStart;
         private readonly DateTime _obsEnd;

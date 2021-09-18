@@ -10,14 +10,14 @@ namespace Qwack.Paths.Features
 {
     public class TimeStepsFeature : ITimeStepsFeature, IRequiresFinish
     {
-        private object _locker = new object();
+        private readonly object _locker = new();
 
-        private ConcurrentHashSet<DateTime> _requiredDates = new ConcurrentHashSet<DateTime>();
+        private readonly ConcurrentHashSet<DateTime> _requiredDates = new();
         private double[] _timeSteps;
         private double[] _timeStepsSqrt;
         private double[] _times;
         private bool _isComplete;
-        private Dictionary<DateTime, int> _dateIndexes = new Dictionary<DateTime, int>();
+        private Dictionary<DateTime, int> _dateIndexes = new();
 
         public int TimeStepCount => Dates?.Length ?? _requiredDates.Count;
         public double[] TimeSteps => _timeSteps;
@@ -28,10 +28,7 @@ namespace Qwack.Paths.Features
         public bool IsComplete => _isComplete;
 
         public int GetDateIndex(DateTime date) => _dateIndexes.TryGetValue(date, out var d) ? d : -1;
-        public void AddDate(DateTime date)
-        {
-            _requiredDates.Add(date);
-        }
+        public void AddDate(DateTime date) => _requiredDates.Add(date);
 
 
         public void AddDates(IEnumerable<DateTime> dates)

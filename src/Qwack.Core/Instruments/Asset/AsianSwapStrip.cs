@@ -65,7 +65,7 @@ namespace Qwack.Core.Instruments.Asset
         public double TradeNotional(IAssetFxModel model) => Swaplets.Sum(x => x.TradeNotional(model));
 
         public TO_Instrument ToTransportObject() =>
-            new TO_Instrument
+            new()
             {
                 AssetInstrumentType = AssetInstrumentType.AsianSwapStrip,
                 AsianSwapStrip = new TO_AsianSwapStrip

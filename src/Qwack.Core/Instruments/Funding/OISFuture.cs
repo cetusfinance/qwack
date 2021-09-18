@@ -29,7 +29,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => AverageEndDate;
 
-        public List<string> Dependencies(IFxMatrix matrix) => new List<string>();
+        public List<string> Dependencies(IFxMatrix matrix) => new();
 
         public double Pv(IFundingModel Model, bool updateState)
         {
@@ -92,7 +92,7 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>();
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new();
 
         public double SuggestPillarValue(IFundingModel model) => (100.0 - Price) / 100.0;
     }

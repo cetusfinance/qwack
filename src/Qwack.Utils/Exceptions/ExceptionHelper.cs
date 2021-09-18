@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,15 +13,12 @@ namespace Qwack.Utils.Exceptions
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowException(ExceptionType exceptionType, string extraMessage = null)
         {
-            switch(exceptionType)
+            throw exceptionType switch
             {
-                case ExceptionType.InvalidFileInput:
-                    throw new System.IO.InvalidDataException($"{SR.ResourceManager.GetString(exceptionType.ToString())}-{extraMessage}");
-                case ExceptionType.InvalidDataAlignment:
-                    throw new DataMisalignedException(extraMessage);
-                default:
-                    throw new InvalidOperationException($"Unknown exception type {exceptionType}");
-            }
+                ExceptionType.InvalidFileInput => new System.IO.InvalidDataException($"{SR.ResourceManager.GetString(exceptionType.ToString())}-{extraMessage}"),
+                ExceptionType.InvalidDataAlignment => new DataMisalignedException(extraMessage),
+                _ => new InvalidOperationException($"Unknown exception type {exceptionType}"),
+            };
         }
     }
 }

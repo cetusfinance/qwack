@@ -35,7 +35,7 @@ namespace Qwack.Models.Calibrators
         private double[] _currentGuess;
         private double[] _currentPVs;
         private double[][] _jacobian;
-        private ICurrencyProvider _currencyProvider;
+        private readonly ICurrencyProvider _currencyProvider;
 
         public NewtonRaphsonAssetBasisCurveSolver(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
 

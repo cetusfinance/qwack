@@ -115,32 +115,29 @@ namespace Qwack.Models.Risk
             }).Wait();
         }
 
-        public void Process(Dictionary<DateTime,IAssetFxModel> models)
-        {
-            ParallelUtils.Instance.For(0, _calculationDates.Length, 1, i =>
-            {
-                var d = _calculationDates[i];
-                var epe = _epeValues[i];
-                var newModel = models[d];
+        public void Process(Dictionary<DateTime, IAssetFxModel> models) => ParallelUtils.Instance.For(0, _calculationDates.Length, 1, i =>
+                                                                         {
+                                                                             var d = _calculationDates[i];
+                                                                             var epe = _epeValues[i];
+                                                                             var newModel = models[d];
 
-                var ead = SaCcrHelper.SaCcrEad(_portfolio, newModel, epe);
-                var capital = _counterpartyRiskWeight * ead;
-                if (!_ead.ContainsKey(d))
-                    lock (_threadLock)
-                    {
-                        if (!_ead.ContainsKey(d))
-                            _ead.Add(d, 0.0);
-                    }
-                if (double.IsNaN(capital) || double.IsInfinity(capital))
-                    throw new Exception("Invalid capital generated");
+                                                                             var ead = SaCcrHelper.SaCcrEad(_portfolio, newModel, epe);
+                                                                             var capital = _counterpartyRiskWeight * ead;
+                                                                             if (!_ead.ContainsKey(d))
+                                                                                 lock (_threadLock)
+                                                                                 {
+                                                                                     if (!_ead.ContainsKey(d))
+                                                                                         _ead.Add(d, 0.0);
+                                                                                 }
+                                                                             if (double.IsNaN(capital) || double.IsInfinity(capital))
+                                                                                 throw new Exception("Invalid capital generated");
 
-                lock (_threadLock)
-                {
-                    _ead[d] += capital;
-                }
+                                                                             lock (_threadLock)
+                                                                             {
+                                                                                 _ead[d] += capital;
+                                                                             }
 
-            }).Wait();
-        }
+                                                                         }).Wait();
     }
 }
 

@@ -14,12 +14,12 @@ namespace Qwack.Paths.Processes
     {
         private bool _isComplete;
         
-        private ICorrelationMatrix _matrix;
-        private IAssetFxModel _model;
+        private readonly ICorrelationMatrix _matrix;
+        private readonly IAssetFxModel _model;
         private List<CorrelationMatrix> _localMatrix;
         private List<double[][]> _localMatrixSquare;
         private List<double[][]> _decompMatrix;
-        private readonly Vector<double> _two = new Vector<double>(2.0);
+        private readonly Vector<double> _two = new(2.0);
 
 
         public CholeskyWithTime(ICorrelationMatrix correlationMatrix, IAssetFxModel model)

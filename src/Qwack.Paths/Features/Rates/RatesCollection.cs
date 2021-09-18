@@ -7,7 +7,7 @@ namespace Qwack.Paths.Features.Rates
 {
     public class RatesCollection : IRatesFeature
     {
-        private List<IRateFeature> _ratesList = new List<IRateFeature>();
+        private readonly List<IRateFeature> _ratesList = new();
         private bool _isComplete = false;
 
         public bool IsComplete => _isComplete;

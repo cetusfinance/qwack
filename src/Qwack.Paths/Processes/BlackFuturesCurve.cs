@@ -13,10 +13,10 @@ namespace Qwack.Paths.Processes
 {
     public class BlackFuturesCurve : IPathProcess, IRequiresFinish
     {
-        private IATMVolSurface _surface;
-        private IFutureSettingsProvider _futureSettingsProvider;
+        private readonly IATMVolSurface _surface;
+        private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly DateTime _expiryDate;
-        private DateTime _startDate;
+        private readonly DateTime _startDate;
         private readonly int _numberOfSteps;
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
@@ -82,41 +82,38 @@ namespace Qwack.Paths.Processes
             _frontMonthFactors = codesForDate.Select(c => mappingFeature.GetDimension(c)).ToList();
             _isComplete = true;
         }
-        public void Process(IPathBlock block)
+        public void Process(IPathBlock block) => ParallelUtils.Instance.For(0, block.NumberOfPaths, Vector<double>.Count, path =>
+        //for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
         {
-            ParallelUtils.Instance.For(0, block.NumberOfPaths, Vector<double>.Count, path =>
-            //for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
-            {
-                var stepsMain = block.GetStepsForFactor(path, _mainFactorIndex);
-                for (var f = 0; f < _factorIndices.Length; f++)
+            var stepsMain = block.GetStepsForFactor(path, _mainFactorIndex);
+            for (var f = 0; f < _factorIndices.Length; f++)
                 //ParallelUtils.Instance.For(0,_factorIndices.Length,1,f=>
                 {
-                    var previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
-                    var steps = block.GetStepsForFactor(path, _factorIndices[f]);
-                    var c = 0;
-                    foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
-                    {
-                        steps[c] = new Vector<double>(kv.Value);
-                        c++;
-                    }
-                    steps[c] = previousStep;
-                    for (var step = c + 1; step < block.NumberOfSteps; step++)
-                    {
-                        var W = steps[step];
-                        var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                        var bm = (_vols[step][f] * _vols[step][f] / 2.0) * dt + (_vols[step][f] * _timesteps.TimeStepsSqrt[step] * W);
-                        previousStep *= bm.Exp();
-                        steps[step] = previousStep;
-                    }
-                }//).Wait();
+                var previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
+                var steps = block.GetStepsForFactor(path, _factorIndices[f]);
+                var c = 0;
+                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
+                {
+                    steps[c] = new Vector<double>(kv.Value);
+                    c++;
+                }
+                steps[c] = previousStep;
+                for (var step = c + 1; step < block.NumberOfSteps; step++)
+                {
+                    var W = steps[step];
+                    var dt = new Vector<double>(_timesteps.TimeSteps[step]);
+                    var bm = (_vols[step][f] * _vols[step][f] / 2.0) * dt + (_vols[step][f] * _timesteps.TimeStepsSqrt[step] * W);
+                    previousStep *= bm.Exp();
+                    steps[step] = previousStep;
+                }
+            }//).Wait();
 
                 for (var step = 0; step < block.NumberOfSteps; step++)
-                {
-                    var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
-                    stepsMain[step] = frontMonth[step];
-                }
-            }).Wait();
-        }
+            {
+                var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
+                stepsMain[step] = frontMonth[step];
+            }
+        }).Wait();
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             _factorIndices = new int[_codes.Count];

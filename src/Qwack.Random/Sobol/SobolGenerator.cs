@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using static System.Math;
 
@@ -13,7 +10,7 @@ namespace Qwack.Random.Sobol
         private uint[] _c;
         private uint _l;
         private uint _n;
-        private SobolDirectionNumbers _directionNumbers;
+        private readonly SobolDirectionNumbers _directionNumbers;
 
         public SobolGenerator(SobolDirectionNumbers directionNumbers) => _directionNumbers = directionNumbers;
 

@@ -23,9 +23,9 @@ namespace Qwack.Options.Calibrators
         private RRBFConstraint[] _smileConstraints;
         private ATMStraddleConstraint _atmConstraint;
 
-        private SABRParameters _currentSABR;
-        private SviRawParameters _currentSVIRaw;
-        private SviNaturalParameters _currentSVINatural;
+        private readonly SABRParameters _currentSABR;
+        private readonly SviRawParameters _currentSVIRaw;
+        private readonly SviNaturalParameters _currentSVINatural;
 
         private int _numberOfConstraints;
         private double _fwd;

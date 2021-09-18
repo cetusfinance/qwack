@@ -6,8 +6,8 @@ namespace Qwack.Paths.Features
 {
     public class PathMappingFeature : IPathMappingFeature
     {
-        private object _locker = new object();
-        private List<string> _dimensionNames = new List<string>();
+        private readonly object _locker = new();
+        private readonly List<string> _dimensionNames = new();
 
         public int NumberOfDimensions => _dimensionNames.Count;
 

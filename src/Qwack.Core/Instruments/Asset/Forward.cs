@@ -60,7 +60,7 @@ namespace Qwack.Core.Instruments.Asset
             }
         }
 
-        public AsianSwap AsBulletSwap() => new AsianSwap
+        public AsianSwap AsBulletSwap() => new()
         {
             TradeId = TradeId,
             Notional = Notional,
@@ -168,7 +168,7 @@ namespace Qwack.Core.Instruments.Asset
         }
 
         public TO_Instrument ToTransportObject() =>
-           new TO_Instrument
+           new()
            {
                AssetInstrumentType = AssetInstrumentType.Forward,
                Forward = new TO_Forward

@@ -14,20 +14,20 @@ namespace Qwack.Paths.Processes
 {
     public class TurboSkewSingleAsset : IPathProcess, IRequiresFinish
     {
-        private IATMVolSurface _surface;
+        private readonly IATMVolSurface _surface;
 
-        private IATMVolSurface _adjSurface;
-        private double _correlation;
+        private readonly IATMVolSurface _adjSurface;
+        private readonly double _correlation;
 
-        private DateTime _expiryDate;
-        private DateTime _startDate;
-        private int _numberOfSteps;
-        private string _name;
-        private Dictionary<DateTime, double> _pastFixings;
+        private readonly DateTime _expiryDate;
+        private readonly DateTime _startDate;
+        private readonly int _numberOfSteps;
+        private readonly string _name;
+        private readonly Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
         private ITimeStepsFeature _timesteps;
         [SkipSerialization]
-        private Func<double, double> _forwardCurve;
+        private readonly Func<double, double> _forwardCurve;
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
@@ -38,7 +38,7 @@ namespace Qwack.Paths.Processes
 
         private IInterpolator1D[] _invCdfs;
 
-        private bool _siegelInvert;
+        private readonly bool _siegelInvert;
 
         public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
         {

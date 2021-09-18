@@ -264,7 +264,7 @@ namespace Qwack.Models.Calibrators
             }
         }
 
-        private static Dictionary<string, string> _cmeCcyMap = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> _cmeCcyMap = new()
         {
             {"USDZAR","USDZRC" },
             {"USDJPY","USDJYC" },

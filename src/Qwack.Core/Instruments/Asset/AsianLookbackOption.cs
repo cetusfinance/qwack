@@ -39,7 +39,7 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
 
-        private bool _isFx => AssetId.Length == 7 && AssetId[3] == '/';
+        private bool IsFx => AssetId.Length == 7 && AssetId[3] == '/';
 
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
@@ -58,8 +58,8 @@ namespace Qwack.Core.Instruments.Asset
 
         public DateTime LastSensitivityDate => PaymentDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 
-        public string FxPair(IAssetFxModel model) => _isFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
-        public FxConversionType FxType(IAssetFxModel model) => _isFx ? FxConversionType.None :( model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
+        public string FxPair(IAssetFxModel model) => IsFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
+        public FxConversionType FxType(IAssetFxModel model) => IsFx ? FxConversionType.None :( model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
            new Dictionary<string, List<DateTime>>() :
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };

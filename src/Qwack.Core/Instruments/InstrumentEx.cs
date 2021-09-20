@@ -9,23 +9,14 @@ namespace Qwack.Core.Instruments
 {
     public static class InstrumentEx
     {
-        public static TO_Instrument GetTransportObject(this IInstrument instrument)
+        public static TO_Instrument GetTransportObject(this IInstrument instrument) => instrument switch
         {
-            switch(instrument)
-            {
-                case AsianOption asianOption:
-                    return asianOption.ToTransportObject();
-                case AsianSwap asianSwap:
-                    return asianSwap.ToTransportObject();
-                case AsianSwapStrip asianSwapStrip:
-                    return asianSwapStrip.ToTransportObject();
-                case EuropeanOption europeanOption:
-                    return europeanOption.ToTransportObject();
-                case Forward forward:
-                    return forward.ToTransportObject();
-                default:
-                    throw new Exception("Unable to serialize instrument");
-            }
-        }
+            AsianOption asianOption => asianOption.ToTransportObject(),
+            AsianSwap asianSwap => asianSwap.ToTransportObject(),
+            AsianSwapStrip asianSwapStrip => asianSwapStrip.ToTransportObject(),
+            EuropeanOption europeanOption => europeanOption.ToTransportObject(),
+            Forward forward => forward.ToTransportObject(),
+            _ => throw new Exception("Unable to serialize instrument"),
+        };
     }
 }

@@ -106,18 +106,11 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IPvModel model)
+        private ICube GetRisk(IPvModel model) => Metric switch
         {
-            switch (Metric)
-            {
-                case RiskMetric.AssetCurveDelta:
-                    return model.AssetDelta();
-                case RiskMetric.FxDelta:
-                    return model.FxDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency,_currencyProvider,false);
-                default:
-                    throw new Exception($"Unable to process risk metric {Metric}");
-
-            }
-        }
+            RiskMetric.AssetCurveDelta => model.AssetDelta(),
+            RiskMetric.FxDelta => model.FxDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, _currencyProvider, false),
+            _ => throw new Exception($"Unable to process risk metric {Metric}"),
+        };
     }
 }

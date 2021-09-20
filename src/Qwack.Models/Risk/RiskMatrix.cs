@@ -137,15 +137,11 @@ namespace Qwack.Models.Risk
                 if (thisShiftFx1 == 0)
                     shifted = model;
                 else
-                    switch (ShiftType)
+                    shifted = ShiftType switch
                     {
-                        case MutationType.FlatShift:
-                            shifted = FlatShiftMutator.FxSpotShift(Pair1, thisShiftFx1, model);
-                            break;
-                        default:
-                            throw new Exception($"Unable to process shift type {ShiftType}");
-                    }
-
+                        MutationType.FlatShift => FlatShiftMutator.FxSpotShift(Pair1, thisShiftFx1, model),
+                        _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                    };
                 for (var ifx = -NScenarios; ifx < NScenarios + 1; ifx++)
                 {
                     var fxIx = ifx + NScenarios;
@@ -228,22 +224,15 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IPvModel model)
+        private ICube GetRisk(IPvModel model) => Metric switch
         {
-            switch (Metric)
-            {
-                case RiskMetric.AssetCurveDelta:
-                    return model.AssetDelta();
-                //case RiskMetric.AssetCurveDeltaGamma:
-                //    return portfolio.AssetDeltaGamma(model);
-                case RiskMetric.FxDelta:
-                    return model.FxDeltaSpecific(_currencyProvider.GetCurrency("ZAR"), FxPairsForDelta, _currencyProvider, false);
-                //case RiskMetric.FxDeltaGamma:
-                //    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
-                default:
-                    throw new Exception($"Unable to process risk metric {Metric}");
-
-            }
-        }
+            RiskMetric.AssetCurveDelta => model.AssetDelta(),
+            //case RiskMetric.AssetCurveDeltaGamma:
+            //    return portfolio.AssetDeltaGamma(model);
+            RiskMetric.FxDelta => model.FxDeltaSpecific(_currencyProvider.GetCurrency("ZAR"), FxPairsForDelta, _currencyProvider, false),
+            //case RiskMetric.FxDeltaGamma:
+            //    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
+            _ => throw new Exception($"Unable to process risk metric {Metric}"),
+        };
     }
 }

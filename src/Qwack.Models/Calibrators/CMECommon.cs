@@ -26,51 +26,28 @@ namespace Qwack.Models.Calibrators
             return $"{code}{DateExtensions.FutureMonths[m - 1]}{MMY.Substring(2,2)}";
         }
 
-        public static (OptionExerciseType optionExerciseType, OptionMarginingType optionMarginingType) OptionTypeFromCode(string code)
+        public static (OptionExerciseType optionExerciseType, OptionMarginingType optionMarginingType) OptionTypeFromCode(string code) => code switch
         {
-            switch (code)
-            {
-                case "CL":
-                case "LO":
-                case "PO":
-                case "PAO":
-                case "ON":
-                case "OH":
-                case "OB":
-                case "NG":
-                case "EUU":
-                default:
-                    return (OptionExerciseType.American, OptionMarginingType.Regular);
-                case "CO":
-                case "BZO":
-                    return (OptionExerciseType.American, OptionMarginingType.FuturesStyle);
-                case "AO":
-                case "BA":
-                    return (OptionExerciseType.Asian, OptionMarginingType.Regular);
-            }
-        }
+            "CO" or "BZO" => (OptionExerciseType.American, OptionMarginingType.FuturesStyle),
+            "AO" or "BA" => (OptionExerciseType.Asian, OptionMarginingType.Regular),
+            _ => (OptionExerciseType.American, OptionMarginingType.Regular),
+        };
 
-        public static DateTime OptionExpiryFromNymexRecord(NYMEXOptionRecord record, ICalendarProvider calendarProvider)
+        public static DateTime OptionExpiryFromNymexRecord(NYMEXOptionRecord record, ICalendarProvider calendarProvider) => record.Symbol switch
         {
-            switch (record.Symbol)
-            {
-                case "LO": //WTI American
-                    return new DateTime(record.ContractYear, record.ContractMonth, 26)
-                        .AddMonths(-1)
-                        .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 7.Bd());
-                case "ON": //HH Natgas
-                case "OH": //Heat
-                case "OB": //Heat
-                    return new DateTime(record.ContractYear, record.ContractMonth, 1)
-                        .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 4.Bd());
-                case "BZO": //NYMEX Brent
-                    return new DateTime(record.ContractYear, record.ContractMonth, 1)
-                        .AddMonths(-1)
-                        .SubtractPeriod(RollType.P, calendarProvider.Collection["LON"], 4.Bd());
-                default:
-                    throw new Exception($"No option expiry mapping found for {record.Symbol}");
-            }
-        }
+            //WTI American
+            "LO" => new DateTime(record.ContractYear, record.ContractMonth, 26)
+                                    .AddMonths(-1)
+                                    .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 7.Bd()),
+            //HH Natgas
+            "ON" or "OH" or "OB" => new DateTime(record.ContractYear, record.ContractMonth, 1)
+                                    .SubtractPeriod(RollType.P, calendarProvider.Collection["NYC"], 4.Bd()),
+            //NYMEX Brent
+            "BZO" => new DateTime(record.ContractYear, record.ContractMonth, 1)
+                                    .AddMonths(-1)
+                                    .SubtractPeriod(RollType.P, calendarProvider.Collection["LON"], 4.Bd()),
+            _ => throw new Exception($"No option expiry mapping found for {record.Symbol}"),
+        };
 
         public static Dictionary<DateTime, double> Downsample(Dictionary<DateTime, double> curvePoints, DateTime valDate, Calendar calendar)
         {

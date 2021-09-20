@@ -37,18 +37,7 @@ namespace Qwack.Core.Basic
             return (x1.Foreign == Foreign && x1.Domestic == Domestic && x1.PrimaryCalendar == PrimaryCalendar && x1.SecondaryCalendar == SecondaryCalendar && x1.SpotLag == SpotLag);
         }
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var result = Foreign.GetHashCode();
-                result = (result * 397) ^ Domestic.GetHashCode();
-                result = (result * 397) ^ PrimaryCalendar.GetHashCode();
-                result = (result * 397) ^ SecondaryCalendar.GetHashCode();
-                result = (result * 397) ^ SpotLag.GetHashCode();
-                return result;
-            }
-        }
+        public override int GetHashCode() => HashCode.Combine(Foreign, Domestic, PrimaryCalendar, SecondaryCalendar, SpotLag);
 
         public override string ToString() => $"{Domestic}/{Foreign}";
 

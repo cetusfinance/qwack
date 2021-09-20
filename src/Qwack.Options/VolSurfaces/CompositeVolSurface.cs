@@ -21,7 +21,7 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
         public Frequency OverrideSpotLag { get; set; }
 
-        public CompositeVolSurface() => _Pair = FundingModel?.FxMatrix?.GetFxPair(AssetSurface.Currency, Currency);
+        public CompositeVolSurface() => Pair = FundingModel?.FxMatrix?.GetFxPair(AssetSurface.Currency, Currency);
         public CompositeVolSurface(string name, string assetId, Currency ccy, IVolSurface assetSurface, IFundingModel fundingModel,  double correlation, CompositeVolType calculationType)
         {
             AssetSurface = assetSurface;
@@ -32,7 +32,7 @@ namespace Qwack.Options.VolSurfaces
             AssetId = assetId;
             Currency = ccy;
 
-            _Pair = FundingModel.FxMatrix.GetFxPair(AssetSurface.Currency, Currency); 
+            Pair = FundingModel.FxMatrix.GetFxPair(AssetSurface.Currency, Currency); 
         }
 
         public DateTime OriginDate => AssetSurface.OriginDate;
@@ -41,7 +41,7 @@ namespace Qwack.Options.VolSurfaces
 
         public IInterpolator2D LocalVolGrid { get; set; }
 
-        private FxPair _Pair { get; }
+        private FxPair Pair { get; }
 
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
@@ -49,11 +49,11 @@ namespace Qwack.Options.VolSurfaces
             var aDict = AssetSurface.GetATMVegaScenarios(bumpSize, LastSensitivityDate);
             var oDict = aDict.ToDictionary(kv => kv.Key, kv => (IVolSurface)new CompositeVolSurface(Name, AssetId, Currency, kv.Value, FundingModel, Correlation, CalculationType));
 
-            var fDict = FundingModel.GetVolSurface(_Pair.ToString()).GetATMVegaScenarios(bumpSize, LastSensitivityDate);
+            var fDict = FundingModel.GetVolSurface(Pair.ToString()).GetATMVegaScenarios(bumpSize, LastSensitivityDate);
             foreach(var kv in fDict)
             {
                 var fModel = FundingModel.DeepClone(null);
-                fModel.VolSurfaces[_Pair.ToString()] = kv.Value;
+                fModel.VolSurfaces[Pair.ToString()] = kv.Value;
                 oDict.Add(kv.Key, new CompositeVolSurface(Name, AssetId, Currency, AssetSurface, fModel, Correlation, CalculationType));
             }
 

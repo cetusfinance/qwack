@@ -98,51 +98,29 @@ namespace Qwack.Core.Curves
             return GetRate(T);
         }
 
-        public static double DFFromRate(double t, double r, RateType rateType)
+        public static double DFFromRate(double t, double r, RateType rateType) => rateType switch
         {
-            switch (rateType)
-            {
-                case RateType.Exponential:
-                    return Exp(-r * t);
-                case RateType.Linear:
-                    return 1.0 / (1.0 + r * t);
-                case RateType.SemiAnnualCompounded:
-                    return Pow(1.0 + r / 2.0, -2.0 * t);
-                case RateType.QuarterlyCompounded:
-                    return Pow(1.0 + r / 4.0, -4.0 * t);
-                case RateType.MonthlyCompounded:
-                    return Pow(1.0 + r / 12.0, -12.0 * t);
-                case RateType.YearlyCompounded:
-                    return Pow(1.0 + r, t);
-                case RateType.DiscountFactor:
-                    return r;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+            RateType.Exponential => Exp(-r * t),
+            RateType.Linear => 1.0 / (1.0 + r * t),
+            RateType.SemiAnnualCompounded => Pow(1.0 + r / 2.0, -2.0 * t),
+            RateType.QuarterlyCompounded => Pow(1.0 + r / 4.0, -4.0 * t),
+            RateType.MonthlyCompounded => Pow(1.0 + r / 12.0, -12.0 * t),
+            RateType.YearlyCompounded => Pow(1.0 + r, t),
+            RateType.DiscountFactor => r,
+            _ => throw new NotImplementedException(),
+        };
 
-        public static double RateFromDF(double t, double df, RateType rateType)
+        public static double RateFromDF(double t, double df, RateType rateType) => rateType switch
         {
-            switch (rateType)
-            {
-                case RateType.Exponential:
-                    return Log(df)/-t;
-                case RateType.Linear:
-                    return (1.0 / df - 1.0) / t;
-                case RateType.SemiAnnualCompounded:
-                    return (Pow(df, -1.0 / (2.0 * t)) - 1.0) * 2.0;
-                case RateType.QuarterlyCompounded:
-                    return (Pow(df, -1.0 / (4.0 * t)) - 1.0) * 4.0;
-                case RateType.MonthlyCompounded:
-                    return (Pow(df, -12.0 * t) - 1.0) * 12.0;
-                case RateType.YearlyCompounded:
-                    return (Pow(df, - 1.0 * t) - 1.0);
-                case RateType.DiscountFactor:
-                    return df;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+            RateType.Exponential => Log(df) / -t,
+            RateType.Linear => (1.0 / df - 1.0) / t,
+            RateType.SemiAnnualCompounded => (Pow(df, -1.0 / (2.0 * t)) - 1.0) * 2.0,
+            RateType.QuarterlyCompounded => (Pow(df, -1.0 / (4.0 * t)) - 1.0) * 4.0,
+            RateType.MonthlyCompounded => (Pow(df, -12.0 * t) - 1.0) * 12.0,
+            RateType.YearlyCompounded => (Pow(df, -1.0 * t) - 1.0),
+            RateType.DiscountFactor => df,
+            _ => throw new NotImplementedException(),
+        };
 
         public double GetRate(double T) => _interpolator.Interpolate(T);
 

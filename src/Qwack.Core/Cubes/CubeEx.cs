@@ -22,12 +22,12 @@ namespace Qwack.Core.Cubes
             o.Initialize(baseCube.DataTypes);
             var baseRows = baseCube.GetAllRows().ToList();
             var subRows = cubeToSubtract.GetAllRows().ToList();
-            foreach(var br in baseRows)
+            foreach (var br in baseRows)
             {
                 var rowFound = false;
-                foreach(var sr in subRows)
+                foreach (var sr in subRows)
                 {
-                    if(Enumerable.SequenceEqual(br.MetaData,sr.MetaData))
+                    if (Enumerable.SequenceEqual(br.MetaData, sr.MetaData))
                     {
                         o.AddRow(br.MetaData, br.Value - sr.Value);
                         subRows.Remove(sr);
@@ -36,7 +36,7 @@ namespace Qwack.Core.Cubes
                     }
                 }
 
-                if(!rowFound) //zero to subtract
+                if (!rowFound) //zero to subtract
                 {
                     o.AddRow(br.MetaData, br.Value);
                 }
@@ -68,10 +68,10 @@ namespace Qwack.Core.Cubes
             var baseRows = baseCube.GetAllRows().ToArray();
             var subRows = cubeToSubtract.GetAllRows().ToArray();
 
-            if(baseRows.Length!=subRows.Length)
+            if (baseRows.Length != subRows.Length)
                 throw new Exception("Cubes must have same number of rows to quick-diff them");
 
-            for(var i=0;i<baseRows.Length;i++)
+            for (var i = 0; i < baseRows.Length; i++)
             {
                 var br = baseRows[i];
                 var sr = subRows[i];
@@ -95,7 +95,7 @@ namespace Qwack.Core.Cubes
             var ixs = fieldsToAggregateBy.Select(f => types.IndexOf(f)).ToArray();
 
             var rows = cube.GetAllRows();
-            var distinctValues = rows.Select(x => string.Join("~", ixs.Select(ix => x.MetaData[ix]?.ToString()??string.Empty))).Distinct();
+            var distinctValues = rows.Select(x => string.Join("~", ixs.Select(ix => x.MetaData[ix]?.ToString() ?? string.Empty))).Distinct();
 
             var outCube = new ResultCube();
             var oT = new Dictionary<string, Type>();
@@ -107,7 +107,7 @@ namespace Qwack.Core.Cubes
             var metaDict = new Dictionary<string, object[]>();
             foreach (var row in rows)
             {
-                var rowKey = string.Join("~", ixs.Select(i => row.MetaData[i]?.ToString()??string.Empty));
+                var rowKey = string.Join("~", ixs.Select(i => row.MetaData[i]?.ToString() ?? string.Empty));
                 if (!aggData.ContainsKey(rowKey))
                 {
                     if (aggregationAction == AggregationAction.Min)
@@ -155,7 +155,7 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
-        public static ICube Filter(this ICube cube, Dictionary<string, object> fieldsToFilterOn, bool filterOut=false)
+        public static ICube Filter(this ICube cube, Dictionary<string, object> fieldsToFilterOn, bool filterOut = false)
         {
             foreach (var fieldToFilterOn in fieldsToFilterOn.Keys)
                 if (!cube.DataTypes.ContainsKey(fieldToFilterOn))
@@ -172,7 +172,7 @@ namespace Qwack.Core.Cubes
                 var rowIsRelevant = true;
                 foreach (var kv in fieldsToFilterOn)
                 {
-                    if (!IsEqual(row.MetaData[indexes[kv.Key]], Convert.ChangeType(kv.Value,cube.DataTypes[kv.Key])))
+                    if (!IsEqual(row.MetaData[indexes[kv.Key]], Convert.ChangeType(kv.Value, cube.DataTypes[kv.Key])))
                     {
                         rowIsRelevant = false;
                         break;
@@ -188,14 +188,13 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
-        public static ICube BucketTimeAxis(this ICube cube, string timeFieldName, string bucketedFieldName, Dictionary<DateTime,string> bucketBoundaries)
+        public static ICube BucketTimeAxis(this ICube cube, string timeFieldName, string bucketedFieldName, Dictionary<DateTime, string> bucketBoundaries)
         {
             if (!cube.DataTypes.ContainsKey(timeFieldName))
                 throw new Exception($"Cannot filter on field {timeFieldName} as it is not present");
 
             var outCube = new ResultCube();
-            var newTypes = new Dictionary<string, Type>(cube.DataTypes);
-            newTypes.Add(bucketedFieldName, typeof(string));
+            var newTypes = new Dictionary<string, Type>(cube.DataTypes) { [bucketedFieldName] = typeof(string) };
             outCube.Initialize(newTypes);
 
             var buckets = bucketBoundaries.Keys.OrderBy(x => x).ToList();
@@ -205,7 +204,7 @@ namespace Qwack.Core.Cubes
             {
                 var date = (DateTime)row.MetaData[bucketFieldIx];
                 var bucket = buckets.BinarySearch(date);
-                if(bucket<0) bucket = ~bucket;
+                if (bucket < 0) bucket = ~bucket;
                 var bucketLabel = bucketBoundaries[buckets[bucket]];
 
                 var metaList = new List<object>(row.MetaData)
@@ -218,10 +217,10 @@ namespace Qwack.Core.Cubes
             return outCube;
         }
 
-        public static Dictionary<object,List<ResultCubeRow>> ToDictionary(this ICube cube, string keyField)
+        public static Dictionary<object, List<ResultCubeRow>> ToDictionary(this ICube cube, string keyField)
         {
-                if (!cube.DataTypes.ContainsKey(keyField))
-                    throw new Exception($"Cannot filter on field {keyField} as it is not present");
+            if (!cube.DataTypes.ContainsKey(keyField))
+                throw new Exception($"Cannot filter on field {keyField} as it is not present");
 
             var output = new Dictionary<object, List<ResultCubeRow>>();
 
@@ -239,9 +238,9 @@ namespace Qwack.Core.Cubes
             return output;
         }
 
-        public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn, bool filterOut=false)
+        public static ICube Filter(this ICube cube, List<KeyValuePair<string, object>> fieldsToFilterOn, bool filterOut = false)
         {
-            foreach (var fieldToFilterOn in fieldsToFilterOn.Select(x=>x.Key))
+            foreach (var fieldToFilterOn in fieldsToFilterOn.Select(x => x.Key))
                 if (!cube.DataTypes.ContainsKey(fieldToFilterOn))
                     throw new Exception($"Cannot filter on field {fieldToFilterOn} as it is not present");
 
@@ -254,7 +253,7 @@ namespace Qwack.Core.Cubes
                 .Distinct()
                 .ToDictionary(x => x, x => fieldNames.IndexOf(x));
             var values = new Dictionary<string, List<object>>();
-            foreach(var kv in fieldsToFilterOn)
+            foreach (var kv in fieldsToFilterOn)
             {
                 if (!values.ContainsKey(kv.Key))
                     values[kv.Key] = new List<object> { kv.Value };
@@ -267,7 +266,7 @@ namespace Qwack.Core.Cubes
                 var rowIsRelevant = true;
                 foreach (var kv in values)
                 {
-                    if (!kv.Value.Any(v=>IsEqual(row.MetaData[indexes[kv.Key]], v)))
+                    if (!kv.Value.Any(v => IsEqual(row.MetaData[indexes[kv.Key]], v)))
                     {
                         rowIsRelevant = false;
                         break;
@@ -317,7 +316,7 @@ namespace Qwack.Core.Cubes
             var fieldNames = cube.DataTypes.Keys.ToList();
             var indexes = Enumerable.Range(0, fieldNames.Count).Reverse().ToArray();
             var rows = new List<ResultCubeRow>(cube.GetAllRows());
-            foreach(var ix in indexes)
+            foreach (var ix in indexes)
             {
                 rows = rows.OrderBy(x => x.MetaData[ix]).ToList();
             }
@@ -405,7 +404,7 @@ namespace Qwack.Core.Cubes
                 var row = new object[cleanRow.Length];
                 Array.Copy(cleanRow, row, row.Length);
                 var br = baseRows[i];
-                for(var j=0;j<baseIx.Length;j++)
+                for (var j = 0; j < baseIx.Length; j++)
                 {
                     row[baseIx[j]] = br.MetaData[j];
                 }
@@ -430,7 +429,7 @@ namespace Qwack.Core.Cubes
 
         public static T[] KeysForField<T>(this ICube cube, string fieldName)
         {
-            if(!cube.DataTypes.ContainsKey(fieldName))
+            if (!cube.DataTypes.ContainsKey(fieldName))
                 throw new Exception($"Cubes does contain field {fieldName}");
             if (cube.DataTypes[fieldName] != typeof(T))
                 throw new Exception($"Field type does not match");
@@ -473,10 +472,10 @@ namespace Qwack.Core.Cubes
                     distinctV = distinctV.OrderBy(x => x).ToArray();
             }
 
-            var o = new object[distinctV.Length+1, distinctH.Length+1];
-            for(var r=0;r<o.GetLength(0);r++)
+            var o = new object[distinctV.Length + 1, distinctH.Length + 1];
+            for (var r = 0; r < o.GetLength(0); r++)
             {
-                for(var c=0;c<o.GetLength(1);c++)
+                for (var c = 0; c < o.GetLength(1); c++)
                 {
                     if (r == 0 && c == 0)
                         continue;
@@ -494,7 +493,7 @@ namespace Qwack.Core.Cubes
                             { verticalField, distinctV[r - 1] },
                             { horizontalField, distinctH[c - 1] }
                         }).GetAllRows();
-                        if(data.Any())
+                        if (data.Any())
                         {
                             o[r, c] = data.First().Value;
                         }
@@ -504,7 +503,7 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string,object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null, bool mergeTypes = false)
+        public static ICube Merge(this ICube baseCube, ICube otherCube, Dictionary<string, object> fieldsToAdd, Dictionary<string, object> fieldsToOverride = null, bool mergeTypes = false)
         {
             var o = new ResultCube();
 
@@ -539,15 +538,15 @@ namespace Qwack.Core.Cubes
             {
                 var br = otherRows[i];
                 var rowDict = new Dictionary<string, object>();
-                for(var j=0;j<br.MetaData.Length;j++)
+                for (var j = 0; j < br.MetaData.Length; j++)
                 {
                     rowDict.Add(otherFieldNames[j], br.MetaData[j]);
                 }
-                foreach(var fa in fieldsToAdd)
+                foreach (var fa in fieldsToAdd)
                 {
                     rowDict[fa.Key] = fa.Value;
                 }
-                if(fieldsToOverride!=null)
+                if (fieldsToOverride != null)
                 {
                     foreach (var fa in fieldsToOverride)
                     {
@@ -560,48 +559,32 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
-        public static bool IsEqual(object v1, object v2)
+        public static bool IsEqual(object v1, object v2) => v1 switch
         {
-            switch (v1)
-            {
-                case string v1String:
-                    return v2 is string && v1String == (string)v2;
-                case double:
-                    return v2 is double && (double)v1 == (double)v2;
-                case bool:
-                    return v2 is bool && (bool)v1 == (bool)v2;
-                case decimal vq:
-                    return v2 is decimal && (decimal)v1 == (decimal)v2;
-                case DateTime vt:
-                    return v2 is DateTime && vt == (DateTime)v2;
-                case char vc:
-                    return v2 is char && (char)v1 == (char)v2;
-                case int vi:
-                    return v2 is int && (int)v1 == (int)v2;
-            }
-            return false;
-        }
+            string v1String => v2 is string && v1String == (string)v2,
+            double => v2 is double && (double)v1 == (double)v2,
+            bool => v2 is bool && (bool)v1 == (bool)v2,
+            decimal vq => v2 is decimal && (decimal)v1 == (decimal)v2,
+            DateTime vt => v2 is DateTime && vt == (DateTime)v2,
+            char vc => v2 is char && (char)v1 == (char)v2,
+            int vi => v2 is int && (int)v1 == (int)v2,
+            _ => false,
+        };
 
         public static object[] KeysForField(this ICube cube, string fieldName)
         {
             if (!cube.DataTypes.ContainsKey(fieldName))
                 throw new Exception($"Cubes does contain field {fieldName}");
 
-            switch(Type.GetTypeCode(cube.DataTypes[fieldName]))
+            return Type.GetTypeCode(cube.DataTypes[fieldName]) switch
             {
-                case TypeCode.String:
-                    return cube.KeysForField<string>(fieldName);
-                case TypeCode.Double:
-                    return cube.KeysForField<double>(fieldName).Select(x => (object)x).ToArray();
-                case TypeCode.DateTime:
-                    return cube.KeysForField<DateTime>(fieldName).Select(x=>(object)x).ToArray();
-                case TypeCode.Int32:
-                    return cube.KeysForField<int>(fieldName).Select(x => (object)x).ToArray();
-                case TypeCode.Boolean:
-                    return cube.KeysForField<bool>(fieldName).Select(x => (object)x).ToArray();
-                default:
-                    throw new Exception("Unknown type");
-            }
+                TypeCode.String => cube.KeysForField<string>(fieldName),
+                TypeCode.Double => cube.KeysForField<double>(fieldName).Select(x => (object)x).ToArray(),
+                TypeCode.DateTime => cube.KeysForField<DateTime>(fieldName).Select(x => (object)x).ToArray(),
+                TypeCode.Int32 => cube.KeysForField<int>(fieldName).Select(x => (object)x).ToArray(),
+                TypeCode.Boolean => cube.KeysForField<bool>(fieldName).Select(x => (object)x).ToArray(),
+                _ => throw new Exception("Unknown type"),
+            };
         }
 
         [ExcludeFromCodeCoverage]
@@ -616,7 +599,7 @@ namespace Qwack.Core.Cubes
 
             foreach (var row in cube.GetAllRows())
             {
-                output.Add(string.Join(",", 
+                output.Add(string.Join(",",
                     row.MetaData.Select(x => Convert.ToString(x))
                     .Concat(new[] { Convert.ToString(row.Value) })));
             }
@@ -625,7 +608,7 @@ namespace Qwack.Core.Cubes
         }
 
         [ExcludeFromCodeCoverage]
-        public static ICube FromCSVFile(string fileName, bool hasHeaderRow=true, bool hasValue=true)
+        public static ICube FromCSVFile(string fileName, bool hasHeaderRow = true, bool hasValue = true)
         {
             var rawData = System.IO.File.ReadAllLines(fileName);
             var rawSplit = rawData.Select(x => x.Split(',')).ToArray();
@@ -639,7 +622,7 @@ namespace Qwack.Core.Cubes
             if (!hasHeaderRow)
             {
                 var maxWidth = rawSplit.Max(x => x.Length);
-                fieldNames = Enumerable.Range(0,maxWidth).Select((x, ix) => ix.ToString()).ToArray();
+                fieldNames = Enumerable.Range(0, maxWidth).Select((x, ix) => ix.ToString()).ToArray();
                 fieldTypes = fieldNames.Select(x => typeof(string)).ToArray();
                 types = fieldNames.ToDictionary(x => x, x => typeof(string));
             }
@@ -674,13 +657,13 @@ namespace Qwack.Core.Cubes
             var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var sr = new StreamReader(fs);
             using var csv = new CsvReader(sr, new CsvConfiguration(CultureInfo.InvariantCulture)
-            { 
+            {
                 HasHeaderRecord = false,
                 BadDataFound = null,
             });
-                        
+
             var rawSplit = new List<string[]>();
-            while(csv.Read())
+            while (csv.Read())
             {
                 var row = new List<string>();
                 var i = 0;
@@ -691,14 +674,14 @@ namespace Qwack.Core.Cubes
                 }
                 rawSplit.Add(row.ToArray());
             }
-            
+
             var cube = new ResultCube();
 
             var maxWidth = rawSplit.Max(x => x.Length);
-                var fieldNames = Enumerable.Range(0, maxWidth).Select((x, ix) => ix.ToString()).ToArray();
-                var fieldTypes = fieldNames.Select(x => typeof(string)).ToArray();
+            var fieldNames = Enumerable.Range(0, maxWidth).Select((x, ix) => ix.ToString()).ToArray();
+            var fieldTypes = fieldNames.Select(x => typeof(string)).ToArray();
             var types = fieldNames.ToDictionary(x => x, x => typeof(string));
-            
+
             cube.Initialize(types);
             for (var i = 0; i < rawSplit.Count; i++)
             {

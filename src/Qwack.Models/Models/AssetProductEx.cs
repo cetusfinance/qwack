@@ -1081,27 +1081,16 @@ namespace Qwack.Models.Models
             return (pv / fxRate, ccy, tradeId, tradeType);
         }
 
-        private static Currency GetCurrency(this IInstrument ins)
+        private static Currency GetCurrency(this IInstrument ins) => ins switch
         {
-            switch (ins)
-            {
-                case CashWrapper wrapper:
-                    return wrapper.UnderlyingInstrument.GetCurrency();
-                case FxForward fxf:
-                    return fxf.ForeignCCY;
-                case STIRFuture str:
-                    return str.Currency;
-                case OISFuture ois:
-                    return ois.Currency;
-                case IrSwap irs:
-                    return irs.Currency;
-                case IAssetInstrument aIns:
-                    return aIns.PaymentCurrency;
-                default:
-                    throw new Exception("Unable to determine instrument currency");
-
-            }
-        }
+            CashWrapper wrapper => wrapper.UnderlyingInstrument.GetCurrency(),
+            FxForward fxf => fxf.ForeignCCY,
+            STIRFuture str => str.Currency,
+            OISFuture ois => ois.Currency,
+            IrSwap irs => irs.Currency,
+            IAssetInstrument aIns => aIns.PaymentCurrency,
+            _ => throw new Exception("Unable to determine instrument currency"),
+        };
 
         private static (double flow, string tradeId, string tradeType, string ccy) ComputeFlowsT0(IInstrument ins, IAssetFxModel model, Currency reportingCurrency)
         {

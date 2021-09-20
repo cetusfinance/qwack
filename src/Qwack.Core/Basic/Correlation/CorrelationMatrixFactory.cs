@@ -16,19 +16,12 @@ namespace Qwack.Core.Basic.Correlation
             (ICorrelationMatrix) new CorrelationTimeVector(transportObject.LabelsX[0], transportObject.LabelsY, transportObject.Correlations, transportObject.Times, transportObject.InterpolatorType) :
             (ICorrelationMatrix) new CorrelationMatrix(transportObject.LabelsX, transportObject.LabelsY, transportObject.Correlations);
 
-        public static TO_CorrelationMatrix GetTransportObject(this ICorrelationMatrix matrix)
+        public static TO_CorrelationMatrix GetTransportObject(this ICorrelationMatrix matrix) => matrix switch
         {
-            switch(matrix)
-            {
-                case CorrelationMatrix cm:
-                    return cm.GetTransportObject();
-                case CorrelationTimeVector ctv:
-                    return ctv.GetTransportObject();
-                case CorrelationMatrixCollection ctc:
-                    return ctc.GetTransportObject();
-                default:
-                    throw new Exception("Unable to serialize correlation object");
-            }
-        }
+            CorrelationMatrix cm => cm.GetTransportObject(),
+            CorrelationTimeVector ctv => ctv.GetTransportObject(),
+            CorrelationMatrixCollection ctc => ctc.GetTransportObject(),
+            _ => throw new Exception("Unable to serialize correlation object"),
+        };
     }
 }

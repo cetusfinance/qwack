@@ -345,79 +345,43 @@ namespace Qwack.Core.Instruments
             return (newTrades, removedTrades, ammendedTradesStart, ammendedTradesEnd);
         }
 
-        public static bool Equals(this IInstrument A, IInstrument B)
+        public static bool Equals(this IInstrument A, IInstrument B) => A switch
         {
-            switch(A)
-            {
-                case AsianOption asianOption:
-                    return asianOption.Equals((AsianOption)B);
-                case AsianSwap asianSwap:
-                    return asianSwap.Equals((AsianSwap)B);
-                case AsianSwapStrip asianSwapStrip:
-                    return asianSwapStrip.Equals((AsianSwapStrip)B);
-                case AsianBasisSwap asianBasisSwap:
-                    return asianBasisSwap.Equals((AsianBasisSwap)B);
-                case FxForward fxForward:
-                    return fxForward.Equals((FxForward)B);
-                case EuropeanOption europeanOption:
-                    return europeanOption.Equals((EuropeanOption)B);
-                case Forward forward:
-                    return forward.Equals((Forward)B);
-                case FuturesOption option:
-                    return option.Equals((FuturesOption)B);
-                case Future future:
-                    return future.Equals((Future)B);
-                case CashBalance cash:
-                    return cash.Equals((CashBalance)B);
-                case FixedRateLoanDeposit loanDeposit:
-                    return loanDeposit.Equals((FixedRateLoanDeposit)B);
-                case FloatingRateLoanDepo loanDepositFl:
-                    return loanDepositFl.Equals((FloatingRateLoanDepo)B);
-                case CashWrapper wrapper:
-                    return Equals(wrapper.UnderlyingInstrument, (CashWrapper)B);
-                case CashAsset etc:
-                    return etc.Equals((CashAsset)B);
-                default:
-                    return false;
-            }
-        }
+            AsianOption asianOption => asianOption.Equals((AsianOption)B),
+            AsianSwap asianSwap => asianSwap.Equals((AsianSwap)B),
+            AsianSwapStrip asianSwapStrip => asianSwapStrip.Equals((AsianSwapStrip)B),
+            AsianBasisSwap asianBasisSwap => asianBasisSwap.Equals((AsianBasisSwap)B),
+            FxForward fxForward => fxForward.Equals((FxForward)B),
+            EuropeanOption europeanOption => europeanOption.Equals((EuropeanOption)B),
+            Forward forward => forward.Equals((Forward)B),
+            FuturesOption option => option.Equals((FuturesOption)B),
+            Future future => future.Equals((Future)B),
+            CashBalance cash => cash.Equals((CashBalance)B),
+            FixedRateLoanDeposit loanDeposit => loanDeposit.Equals((FixedRateLoanDeposit)B),
+            FloatingRateLoanDepo loanDepositFl => loanDepositFl.Equals((FloatingRateLoanDepo)B),
+            CashWrapper wrapper => Equals(wrapper.UnderlyingInstrument, (CashWrapper)B),
+            CashAsset etc => etc.Equals((CashAsset)B),
+            _ => false,
+        };
 
-        public static double Notional(this IInstrument ins)
+        public static double Notional(this IInstrument ins) => ins switch
         {
-            switch (ins)
-            {
-                case AsianOption asianOption:
-                    return asianOption.Notional;
-                case AsianSwap asianSwap:
-                    return asianSwap.Notional;
-                case AsianSwapStrip asianSwapStrip:
-                    return asianSwapStrip.Swaplets.Sum(x => x.Notional);
-                case AsianBasisSwap asianBasisSwap:
-                    return asianBasisSwap.PaySwaplets.Sum(x => x.Notional);
-                case FxForward fxForward:
-                    return fxForward.DomesticQuantity;
-                case EuropeanOption europeanOption:
-                    return europeanOption.Notional;
-                case Forward forward:
-                    return forward.Notional;
-                case FuturesOption option:
-                    return option.ContractQuantity * option.LotSize;
-                case Future future:
-                    return future.ContractQuantity * future.LotSize;
-                case CashBalance cash:
-                    return cash.Notional;
-                case FixedRateLoanDeposit loanDeposit:
-                    return loanDeposit.Notional;
-                case FloatingRateLoanDepo loanDepositFl:
-                    return loanDepositFl.Notional;
-                case CashWrapper wrapper:
-                    return wrapper.UnderlyingInstrument.Notional();
-                case ETC etc:
-                    return etc.Notional;
-                default:
-                    return 0.0;
-            }
-        }
+            AsianOption asianOption => asianOption.Notional,
+            AsianSwap asianSwap => asianSwap.Notional,
+            AsianSwapStrip asianSwapStrip => asianSwapStrip.Swaplets.Sum(x => x.Notional),
+            AsianBasisSwap asianBasisSwap => asianBasisSwap.PaySwaplets.Sum(x => x.Notional),
+            FxForward fxForward => fxForward.DomesticQuantity,
+            EuropeanOption europeanOption => europeanOption.Notional,
+            Forward forward => forward.Notional,
+            FuturesOption option => option.ContractQuantity * option.LotSize,
+            Future future => future.ContractQuantity * future.LotSize,
+            CashBalance cash => cash.Notional,
+            FixedRateLoanDeposit loanDeposit => loanDeposit.Notional,
+            FloatingRateLoanDepo loanDepositFl => loanDepositFl.Notional,
+            CashWrapper wrapper => wrapper.UnderlyingInstrument.Notional(),
+            ETC etc => etc.Notional,
+            _ => 0.0,
+        };
 
         private static double SupFacByHedgeSet(string hedgeSet) => hedgeSet == "Electricity" ? 0.4 : 0.18;
 

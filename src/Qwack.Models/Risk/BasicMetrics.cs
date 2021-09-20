@@ -919,23 +919,13 @@ namespace Qwack.Models.Risk
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
-                IPriceCurve bumpedCurve;
-
-                switch (curveObj)
+                IPriceCurve bumpedCurve = curveObj switch
                 {
-                    case ConstantPriceCurve con:
-                        bumpedCurve = new ConstantPriceCurve(con.Price * 1.01, con.BuildDate, currencyProvider);
-                        break;
-                    case ContangoPriceCurve cpc:
-                        bumpedCurve = new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels);
-                        break;
-                    case BasicPriceCurve pc:
-                        bumpedCurve = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels);
-                        break;
-                    default:
-                        throw new Exception("Unable to handle curve type for flat shift");
-                }
-
+                    ConstantPriceCurve con => new ConstantPriceCurve(con.Price * 1.01, con.BuildDate, currencyProvider),
+                    ContangoPriceCurve cpc => new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels),
+                    BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels),
+                    _ => throw new Exception("Unable to handle curve type for flat shift"),
+                };
                 var newVanillaModel = model.Clone();
                 newVanillaModel.AddPriceCurve(curveName, bumpedCurve);
 

@@ -22,7 +22,7 @@ namespace Qwack.Core.Instruments
             CashBalance cashBalance => cashBalance.GetTransportObject(),
             FxForward fxForward => fxForward.GetTransportObject(),
             FuturesOption futuresOption => futuresOption.GetTransportObject(),
-            Future future => future.GetTransportObject(),
+            Future future => future.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };
     }

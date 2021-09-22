@@ -24,7 +24,8 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_Forward Forward { get; set; }
         [ProtoMember(106)]
         public TO_EuropeanOption EuropeanOption { get; set; }
-
+        [ProtoMember(107)]
+        public TO_Future Future { get; set; }
 
         public override bool Equals(object obj) => obj is TO_Instrument instrument &&
                    FundingInstrumentType == instrument.FundingInstrumentType &&
@@ -33,7 +34,8 @@ namespace Qwack.Transport.TransportObjects.Instruments
                    EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip) &&
                    EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption) &&
                    EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward) &&
-                   EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption);
+                   EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption) &&
+                   EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future);
 
         public override int GetHashCode()
         {
@@ -45,6 +47,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_AsianOption>.Default.GetHashCode(AsianOption);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_Forward>.Default.GetHashCode(Forward);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_EuropeanOption>.Default.GetHashCode(EuropeanOption);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_Future>.Default.GetHashCode(Future);
             return hashCode;
         }
     }

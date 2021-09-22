@@ -16,6 +16,8 @@ namespace Qwack.Options.VolSurfaces
                 return new RiskyFlySurface(transportObject.RiskyFlySurface, currencyProvider);
             if (transportObject.GridVolSurface != null)
                 return new GridVolSurface(transportObject.GridVolSurface, currencyProvider);
+            if (transportObject.SparsePointSurface != null)
+                return new SparsePointSurface(transportObject.SparsePointSurface, currencyProvider);
 
             throw new Exception("Unknown volSurface type");
         }
@@ -25,6 +27,7 @@ namespace Qwack.Options.VolSurfaces
             RiskyFlySurface rf => new TO_VolSurface { RiskyFlySurface = rf.GetTransportObject() },
             GridVolSurface gs => new TO_VolSurface { GridVolSurface = gs.GetTransportObject() },
             ConstantVolSurface cs => new TO_VolSurface { ConstantVolSurface = cs.GetTransportObject() },
+            SparsePointSurface sp => new TO_VolSurface { SparsePointSurface = sp.GetTransportObject() },
             _ => throw new Exception("Unable to serialize volsurface"),
         };
     }

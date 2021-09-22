@@ -102,6 +102,27 @@ namespace Qwack.Core.Curves
                     SpotDate = c.SpotDate
                 }
             },
+            EquityPriceCurve e => new TO_PriceCurve
+            {
+                EquityPriceCurve = new TO_EquityPriceCurve
+                {
+                    AssetId = e.AssetId,
+                    Currency = e.Currency,
+                    Name = e.Name,
+                    SpotCalendar = e.SpotCalendar?.Name,
+                    SpotLag = e.SpotLag.ToString(),
+                    BuildDate = e.BuildDate,
+                    PillarLabels = e.PillarLabels,
+                    PillarDates = e.PillarDates,
+                    Basis = e.Basis,
+                    DiscreteDivDates = e.DiscreteDivDates,
+                    DiscreteDivs = e.DiscreteDivs,
+                    DivYields = e.DivYields,
+                    Units = e.Units,
+                    Spot = e.Spot,
+                    SpotDate = e.SpotDate
+                }
+            },
             _ => throw new Exception($"Unable to serialize price curve of type {curve.GetType()}"),
         };
     }

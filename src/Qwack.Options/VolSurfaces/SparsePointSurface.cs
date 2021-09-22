@@ -5,6 +5,7 @@ using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -22,6 +23,17 @@ namespace Qwack.Options.VolSurfaces
             _pillarLabels = labels;
         }
 
+        public SparsePointSurface(TO_SparsePointSurface to, ICurrencyProvider currencyProvider)
+        {
+            OriginDate = to.OriginDate;
+            Name = to.Name;
+            AssetId = to.AssetId;
+            Currency = currencyProvider.GetCurrencySafe(to.Currency);
+
+            _vols = to.Vols.ToDictionary(kv => (DateTime.Parse(kv.Key.Split('~')[0]), double.Parse(kv.Key.Split('~')[1])), kv => kv.Value);
+            _pillarLabels = to.PointLabels.ToDictionary(kv => DateTime.Parse(kv.Key), kv => kv.Value);
+        }
+
         public DateTime OriginDate { get; private set; }
         public DateTime[] Expiries => _vols.Keys.Select(k => k.expiry).Distinct().OrderBy(d => d).ToArray();
         public string Name { get; set; }
@@ -30,6 +42,9 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
         public Frequency OverrideSpotLag { get; set; }
+
+        public Dictionary<(DateTime expiry, double strike), double> Vols => _vols;
+        public Dictionary<DateTime, string> PillarLabels => _pillarLabels;
 
         public DateTime PillarDatesForLabel(string label) => _pillarLabels.Where(x => x.Value == label).FirstOrDefault().Key;
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => _vols[(expiry, strike)];
@@ -72,6 +87,15 @@ namespace Qwack.Options.VolSurfaces
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => throw new NotImplementedException();
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward) => throw new NotImplementedException();
         public double InverseCDF(DateTime expiry, double fwd, double p) => throw new NotImplementedException();
-       
+
+        public TO_SparsePointSurface GetTransportObject() => new TO_SparsePointSurface
+        {
+            OriginDate = OriginDate,
+            AssetId= AssetId,
+            Currency= Currency?.Ccy,
+            Name= Name,
+            Vols = _vols.ToDictionary(kv=>$"{kv.Key.expiry:yyyy-MM-dd}~{kv.Key.strike}", kv=>kv.Value),
+            PointLabels = _pillarLabels.ToDictionary(kv => $"{kv.Key:yyyy-MM-dd}", kv => kv.Value),
+        };
     }
 }

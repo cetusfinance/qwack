@@ -16,5 +16,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public TO_BasisPriceCurve BasisPriceCurve { get; set; }
         [ProtoMember(4)]
         public TO_ConstantPriceCurve ConstantPriceCurve { get; set; }
+        [ProtoMember(5)]
+        public TO_EquityPriceCurve EquityPriceCurve { get; set; }
     }
 }

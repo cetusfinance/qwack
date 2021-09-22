@@ -6,6 +6,8 @@ using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -29,6 +31,23 @@ namespace Qwack.Core.Instruments.Asset
         public Currency PaymentCurrency => Currency;
 
         public string[] AssetIds => new[] { AssetId };
+
+        public Future() { }
+        public Future(TO_Future to, ICurrencyProvider currencyProvider)
+        {
+            Currency = currencyProvider.GetCurrencySafe(to.Currency);
+            MetaData = to.MetaData;
+            Counterparty = to.Counterparty;
+            PortfolioName = to.PortfolioName;
+            ContractQuantity = to.ContractQuantity;
+            LotSize = to.LotSize;
+            PriceMultiplier = to.PriceMultiplier;
+            Direction = to.Direction;  
+            ExpiryDate = to.ExpiryDate;
+            Strike = to.Strike;
+            AssetId = to.AssetId;
+            TradeId = to.TradeId;
+        }
 
         public IAssetInstrument Clone() => new Future
         {
@@ -75,5 +94,24 @@ namespace Qwack.Core.Instruments.Asset
         public override int GetHashCode() => TradeId.GetHashCode() ^ ContractQuantity.GetHashCode() ^ LotSize.GetHashCode()
             ^ PriceMultiplier.GetHashCode() ^ Direction.GetHashCode() ^ ExpiryDate.GetHashCode() ^ Strike.GetHashCode()
             ^ AssetId.GetHashCode() ^ Currency.GetHashCode();
+
+        public TO_Instrument ToTransportObject() => new TO_Instrument
+        {
+            Future =
+            {
+                AssetId = AssetId,
+                ContractQuantity = ContractQuantity,
+                Counterparty = Counterparty,
+                Currency = Currency?.Ccy,
+                Direction = Direction,
+                ExpiryDate = ExpiryDate,
+                LotSize = LotSize,
+                MetaData = MetaData,
+                PortfolioName = PortfolioName,
+                PriceMultiplier = PriceMultiplier,
+                Strike = Strike,
+                TradeId = TradeId
+            }
+        };
     }
 }

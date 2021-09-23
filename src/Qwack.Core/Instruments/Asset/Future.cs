@@ -95,9 +95,10 @@ namespace Qwack.Core.Instruments.Asset
             ^ PriceMultiplier.GetHashCode() ^ Direction.GetHashCode() ^ ExpiryDate.GetHashCode() ^ Strike.GetHashCode()
             ^ AssetId.GetHashCode() ^ Currency.GetHashCode();
 
-        public TO_Instrument ToTransportObject() => new TO_Instrument
+        public TO_Instrument ToTransportObject() => new()
         {
-            Future =
+            AssetInstrumentType = AssetInstrumentType.Futrure,
+            Future = new TO_Future
             {
                 AssetId = AssetId,
                 ContractQuantity = ContractQuantity,

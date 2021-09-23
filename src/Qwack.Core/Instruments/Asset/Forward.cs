@@ -177,8 +177,8 @@ namespace Qwack.Core.Instruments.Asset
                    Notional = Notional,
                    Direction = Direction,
                    ExpiryDate = ExpiryDate,
-                   FixingCalendar = FixingCalendar.Name,
-                   PaymentCalendar = PaymentCalendar.Name,
+                   FixingCalendar = FixingCalendar?.Name,
+                   PaymentCalendar = PaymentCalendar?.Name,
                    SpotLag = SpotLag.ToString(),
                    PaymentLag = PaymentLag.ToString(),
                    Strike = Strike,
@@ -191,6 +191,7 @@ namespace Qwack.Core.Instruments.Asset
                    FxConversionType = FxConversionType,
                    HedgingSet = HedgingSet,
                    PortfolioName = PortfolioName,
+                   MetaData = new(MetaData)
                }
            };
     }

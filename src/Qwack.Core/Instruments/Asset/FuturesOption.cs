@@ -6,6 +6,8 @@ using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -17,6 +19,29 @@ namespace Qwack.Core.Instruments.Asset
         public string DiscountCurve { get; set; }
         public double Premium { get; set; }
         public DateTime PremiumDate { get; set; }
+
+        public FuturesOption() { }
+        public FuturesOption(TO_FuturesOption to, ICurrencyProvider currencyProvider)
+        {
+            Currency = currencyProvider.GetCurrencySafe(to.Currency);
+            MetaData = to.MetaData;
+            Counterparty = to.Counterparty;
+            PortfolioName = to.PortfolioName;
+            ContractQuantity = to.ContractQuantity;
+            LotSize = to.LotSize;
+            PriceMultiplier = to.PriceMultiplier;
+            Direction = to.Direction;
+            ExpiryDate = to.ExpiryDate;
+            Strike = to.Strike;
+            AssetId = to.AssetId;
+            TradeId = to.TradeId;
+            PremiumDate = to.PremiumDate;
+            Premium = to.Premium;
+            CallPut = to.CallPut;
+            ExerciseType= to.ExerciseType;
+            MarginingType= to.MarginingType;
+            
+        }
 
         public new IAssetInstrument Clone() => new FuturesOption
         {
@@ -66,5 +91,31 @@ namespace Qwack.Core.Instruments.Asset
             ^ ExerciseType.GetHashCode() ^ MarginingType.GetHashCode() ^ DiscountCurve.GetHashCode() ^ Currency.GetHashCode();
 
         public new string[] IrCurves(IAssetFxModel model) => string.IsNullOrWhiteSpace(DiscountCurve) ? Array.Empty<string>() : new[] { DiscountCurve };
+
+        public new TO_Instrument ToTransportObject() => new()
+        {
+            AssetInstrumentType = AssetInstrumentType.FuturesOption,
+            FuturesOption = new TO_FuturesOption
+            {
+                AssetId = AssetId,
+                ContractQuantity = ContractQuantity,
+                Counterparty = Counterparty,
+                Currency = Currency?.Ccy,
+                Direction = Direction,
+                ExpiryDate = ExpiryDate,
+                LotSize = LotSize,
+                MetaData = MetaData,
+                PortfolioName = PortfolioName,
+                PriceMultiplier = PriceMultiplier,
+                Strike = Strike,
+                TradeId = TradeId,
+                CallPut = CallPut,
+                ExerciseType = ExerciseType,
+                DiscountCurve = DiscountCurve,
+                MarginingType = MarginingType,
+                Premium = Premium,
+                PremiumDate = PremiumDate,
+            }
+        };
     }
 }

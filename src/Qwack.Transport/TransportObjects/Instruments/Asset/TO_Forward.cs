@@ -45,5 +45,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         [ProtoMember(18)]
         public string HedgingSet { get; set; }
+        [ProtoMember(19)]
+        public Dictionary<string, string> MetaData { get; set; }
     }
 }

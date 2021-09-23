@@ -26,20 +26,29 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_EuropeanOption EuropeanOption { get; set; }
         [ProtoMember(107)]
         public TO_Future Future { get; set; }
+        [ProtoMember(108)]
+        public TO_FuturesOption FuturesOption { get; set; }
+        [ProtoMember(109)]
+        public TO_Equity Equity { get; set; }
+        [ProtoMember(110)]
+        public TO_Bond Bond { get; set; }
 
-        public override bool Equals(object obj) => obj is TO_Instrument instrument &&
-                   FundingInstrumentType == instrument.FundingInstrumentType &&
-                   AssetInstrumentType == instrument.AssetInstrumentType &&
-                   EqualityComparer<TO_AsianSwap>.Default.Equals(AsianSwap, instrument.AsianSwap) &&
-                   EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip) &&
-                   EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption) &&
-                   EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward) &&
-                   EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption) &&
-                   EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future);
+        public override bool Equals(object obj) => obj is TO_Instrument instrument && 
+            FundingInstrumentType == instrument.FundingInstrumentType && 
+            AssetInstrumentType == instrument.AssetInstrumentType && 
+            EqualityComparer<TO_AsianSwap>.Default.Equals(AsianSwap, instrument.AsianSwap) && 
+            EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip) && 
+            EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption) && 
+            EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward) && 
+            EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption) && 
+            EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future) && 
+            EqualityComparer<TO_FuturesOption>.Default.Equals(FuturesOption, instrument.FuturesOption) && 
+            EqualityComparer<TO_Equity>.Default.Equals(Equity, instrument.Equity) && 
+            EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond);
 
         public override int GetHashCode()
         {
-            var hashCode = 16469108;
+            var hashCode = 243093849;
             hashCode = hashCode * -1521134295 + FundingInstrumentType.GetHashCode();
             hashCode = hashCode * -1521134295 + AssetInstrumentType.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_AsianSwap>.Default.GetHashCode(AsianSwap);
@@ -48,6 +57,9 @@ namespace Qwack.Transport.TransportObjects.Instruments
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_Forward>.Default.GetHashCode(Forward);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_EuropeanOption>.Default.GetHashCode(EuropeanOption);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_Future>.Default.GetHashCode(Future);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_FuturesOption>.Default.GetHashCode(FuturesOption);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_Equity>.Default.GetHashCode(Equity);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_Bond>.Default.GetHashCode(Bond);
             return hashCode;
         }
     }

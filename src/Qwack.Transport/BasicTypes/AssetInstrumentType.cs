@@ -23,6 +23,8 @@ namespace Qwack.Transport.BasicTypes
         FuturesOption,
         MultiPeriodBackpricingOption,
         OneTouchOption,
+        Equity,
+        Bond
 
     }
 }

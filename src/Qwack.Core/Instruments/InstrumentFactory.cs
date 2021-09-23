@@ -35,6 +35,14 @@ namespace Qwack.Core.Instruments
                         return ao;
                     case AssetInstrumentType.Forward:
                         return transportObject.Forward.GetForward(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.Equity:
+                        return new Equity(transportObject.Equity, currencyProvider, calendarProvider);
+                    case AssetInstrumentType.Bond:
+                        return new Bond(transportObject.Bond, currencyProvider, calendarProvider);
+                    case AssetInstrumentType.FuturesOption:
+                        return new FuturesOption(transportObject.FuturesOption, currencyProvider);
+                    case AssetInstrumentType.Futrure:
+                        return new Future(transportObject.Future, currencyProvider);
                 }
             }
             else

@@ -1212,93 +1212,36 @@ namespace Qwack.Models.Models
 
         public static string TradeType(this IInstrument ins)
         {
-            string tradeType;
-            switch (ins)
+            var tradeType = ins switch
             {
-                case AsianOption asianOption:
-                    tradeType = "AsianOption";
-                    break;
-                case AsianSwap swap:
-                    tradeType = "AsianSwap";
-                    break;
-                case AsianSwapStrip swapStrip:
-                    tradeType = "AsianSwapStrip";
-                    break;
-                case AsianBasisSwap basisSwap:
-                    tradeType = "AsianBasisSwap";
-                    break;
-                case EuropeanBarrierOption euBOpt:
-                    tradeType = "BarrierOption";
-                    break;
-                case FxVanillaOption euFxOpt:
-                    tradeType = "EuropeanOption";
-                    break;
-                case EuropeanOption euOpt:
-                    tradeType = "EuropeanOption";
-                    break;
-                case Forward fwd:
-                    tradeType = "Forward";
-                    break;
-                case FuturesOption futOpt:
-                    tradeType = "FutureOption";
-                    break;
-                case Future fut:
-                    tradeType = "Future";
-                    break;
-                case FxForward fxFwd:
-                    tradeType = "FxForward";
-                    break;
-                case FixedRateLoanDeposit loanDepo:
-                case FloatingRateLoanDepo loanDepoF:
-                    tradeType = "LoanDepo";
-                    break;
-                case PhysicalBalance phys:
-                    tradeType = "Physical";
-                    break;
-                case CashBalance cash:
-                    tradeType = "Cash";
-                    break;
-                case AsianLookbackOption lbo:
-                    tradeType = "LookBack";
-                    break;
-                case BackPricingOption bpo:
-                case MultiPeriodBackpricingOption mpbpo:
-                    tradeType = "BackPricing";
-                    break;
-                case ETC etc:
-                    tradeType = "ETC";
-                    break;
-                case Equity eq:
-                    tradeType = "Equity";
-                    break;
-                case Bond bd:
-                    tradeType = "Bond";
-                    break;
-                case OneTouchOption oto:
-                    tradeType = "OneTouch";
-                    break;
-                case DoubleNoTouchOption dnt:
-                    tradeType = "DoubleNoTouch";
-                    break;
-                case STIRFuture str:
-                    tradeType = "STIRFuture";
-                    break;
-                case OISFuture ois:
-                    tradeType = "OISFuture";
-                    break;
-                case IrSwap irs:
-                    tradeType = "IRSwap";
-                    break;
-                case IrBasisSwap irsb:
-                    tradeType = "IRBasisSwap";
-                    break;
-                case CashWrapper wrapper:
-                    tradeType = TradeType(wrapper.UnderlyingInstrument);
-                    break;
-
-                default:
-                    throw new Exception($"Unable to handle product of type {ins.GetType()}");
-            }
+                AsianOption => "AsianOption",
+                AsianSwap => "AsianSwap",
+                AsianSwapStrip => "AsianSwapStrip",
+                AsianBasisSwap => "AsianBasisSwap",
+                EuropeanBarrierOption => "BarrierOption",
+                FxVanillaOption => "EuropeanOption",
+                EuropeanOption => "EuropeanOption",
+                Forward => "Forward",
+                FuturesOption => "FutureOption",
+                Future => "Future",
+                FxForward => "FxForward",
+                FixedRateLoanDeposit or FloatingRateLoanDepo => "LoanDepo",
+                PhysicalBalance => "Physical",
+                CashBalance => "Cash",
+                AsianLookbackOption => "LookBack",
+                BackPricingOption or MultiPeriodBackpricingOption => "BackPricing",
+                ETC => "ETC",
+                Equity => "Equity",
+                Bond => "Bond",
+                OneTouchOption => "OneTouch",
+                DoubleNoTouchOption => "DoubleNoTouch",
+                STIRFuture => "STIRFuture",
+                OISFuture => "OISFuture",
+                IrSwap => "IRSwap",
+                IrBasisSwap => "IRBasisSwap",
+                CashWrapper wrapper => TradeType(wrapper.UnderlyingInstrument),
+                _ => throw new Exception($"Unable to handle product of type {ins.GetType()}"),
+            };
             return tradeType;
         }
 

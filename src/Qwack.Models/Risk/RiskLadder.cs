@@ -57,28 +57,20 @@ namespace Qwack.Models.Risk
                 {
                     if (string.IsNullOrWhiteSpace(AssetId))
                     {
-                        IPvModel shifted;
-                        switch (ShiftType)
+                        var shifted = ShiftType switch
                         {
-                            case MutationType.FlatShift:
-                                shifted = FlatShiftMutator.FxSpotShift(Ccy, thisShift, model);
-                                break;
-                            default:
-                                throw new Exception($"Unable to process shift type {ShiftType}");
-                        }
+                            MutationType.FlatShift => FlatShiftMutator.FxSpotShift(Ccy, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
                         results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
                     }
                     else
                     {
-                        IPvModel shifted;
-                        switch (ShiftType)
+                        var shifted = ShiftType switch
                         {
-                            case MutationType.FlatShift:
-                                shifted = FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model);
-                                break;
-                            default:
-                                throw new Exception($"Unable to process shift type {ShiftType}");
-                        }
+                            MutationType.FlatShift => FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
                         results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
                     }
                 }
@@ -140,18 +132,11 @@ namespace Qwack.Models.Risk
             return o;
         }
 
-        private ICube GetRisk(IPvModel model)
+        private ICube GetRisk(IPvModel model) => Metric switch
         {
-            switch (Metric)
-            {
-                case RiskMetric.AssetCurveDelta:
-                    return model.AssetDeltaSingleCurve(AssetId);
-                case RiskMetric.AssetVega:
-                    return model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency);
-                default:
-                    throw new Exception($"Unable to process risk metric {Metric}");
-
-            }
-        }
+            RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId),
+            RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            _ => throw new Exception($"Unable to process risk metric {Metric}"),
+        };
     }
 }

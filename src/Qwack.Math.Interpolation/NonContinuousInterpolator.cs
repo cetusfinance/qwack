@@ -7,7 +7,7 @@ namespace Qwack.Math.Interpolation
     {
         public Interpolator1DType Type => Interpolator1DType.Other;
 
-        const double xBump = 1e-10;
+        private const double xBump = 1e-10;
 
         private readonly double[] _upperBounds;
         private readonly IInterpolator1D[] _interpolatorSegments;

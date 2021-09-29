@@ -18,7 +18,7 @@ namespace Qwack.Paths.Payoffs
 
         private readonly Vector<double> _one = new(1.0);
 
-        private bool _isFx => _assetName.Length == 7 && _assetName[3] == '/';
+        private bool IsFx => _assetName.Length == 7 && _assetName[3] == '/';
 
         public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
@@ -35,7 +35,7 @@ namespace Qwack.Paths.Payoffs
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
             
-            if(!_isFx && _ccy.Ccy!="USD")
+            if(!IsFx && _ccy.Ccy!="USD")
             {
                 _fxName = $"USD/{_ccy.Ccy}";
                 _fxIndex = dims.GetDimension(_fxName);

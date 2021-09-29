@@ -38,13 +38,7 @@ namespace Qwack.Core.Basic
 
         public override string ToString() => AssetId + "~" + Currency?.Ccy;
 
-        public override int GetHashCode()
-        {
-            var hashCode = 159653148;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AssetId);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Currency>.Default.GetHashCode(Currency);
-            return hashCode;
-        }
+        public override int GetHashCode() => HashCode.Combine(AssetId, Currency);
 
         public string GetTransportObject() => AssetId + MagicChar + Currency?.Ccy;
     }

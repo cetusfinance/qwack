@@ -196,36 +196,18 @@ namespace Qwack.Models.Risk
                     return 1.0;
             }
         }
-        private static double GetBumpSize(IFundingInstrument ins)
+        private static double GetBumpSize(IFundingInstrument ins) => ins switch
         {
-            switch (ins)
-            {
-                case STIRFuture:
-                case OISFuture:
-                    return 0.01;
-                default:
-                    return 0.0001;
-            }
-        }
-        private static string GetRiskUnits(IFundingInstrument ins)
+            STIRFuture or OISFuture => 0.01,
+            _ => 0.0001,
+        };
+        private static string GetRiskUnits(IFundingInstrument ins) => ins switch
         {
-            switch (ins)
-            {
-                case STIRFuture:
-                case OISFuture:
-                    return "Contracts";
-                case ForwardRateAgreement:
-                case FxForward:
-                case IrSwap:
-                case FloatingRateLoanDepo:
-                case FixedRateLoanDeposit:
-                    return "Nominal";
-                case ContangoSwap:
-                    return "Oz";
-                default:
-                    return "PnL";
-            }
-        }
+            STIRFuture or OISFuture => "Contracts",
+            ForwardRateAgreement or FxForward or IrSwap or FloatingRateLoanDepo or FixedRateLoanDeposit => "Nominal",
+            ContangoSwap => "Oz",
+            _ => "PnL",
+        };
 
     }
 }

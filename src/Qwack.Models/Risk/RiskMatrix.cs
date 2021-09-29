@@ -87,15 +87,11 @@ namespace Qwack.Models.Risk
                 if (thisShiftAsset == 0)
                     shifted = model;
                 else
-                    switch (ShiftType)
+                    shifted = ShiftType switch
                     {
-                        case MutationType.FlatShift:
-                            shifted = FlatShiftMutator.AssetCurveShift(AssetId, thisShiftAsset, model);
-                            break;
-                        default:
-                            throw new Exception($"Unable to process shift type {ShiftType}");
-                    }
-
+                        MutationType.FlatShift => FlatShiftMutator.AssetCurveShift(AssetId, thisShiftAsset, model),
+                        _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                    };
                 for (var ifx = -NScenarios; ifx < NScenarios + 1; ifx++)
                 {
                     var fxIx = ifx + NScenarios;

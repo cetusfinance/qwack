@@ -452,7 +452,7 @@ namespace Qwack.Excel.Capital
         [ExcelFunction(Description = "Computes basel B factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselB))]
         public static object BaselB(
             [ExcelArgument(Description = "Probability-of-default")] double PD)
-            => ExcelHelper.Execute(_logger, () => BaselHelper.b(PD));
+            => ExcelHelper.Execute(_logger, () => BaselHelper.B(PD));
 
         [ExcelFunction(Description = "Computes basel R factor", Category = CategoryNames.Capital, Name = CategoryNames.Capital + "_" + nameof(BaselR))]
         public static object BaselR(

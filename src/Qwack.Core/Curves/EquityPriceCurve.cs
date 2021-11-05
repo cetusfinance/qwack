@@ -40,8 +40,9 @@ namespace Qwack.Core.Curves
         public DateTime[] PillarDates { get; }
         public string CollateralSpec { get; set; }
         public int NumberOfPillars => PillarDates.Length;
-
+        public ICurrencyProvider CurrencyProvider => _currencyProvider;
         public Currency Currency { get; set; }
+
 
         public EquityPriceCurve(DateTime buildDate, double spot, string ccy, IIrCurve irCurve, DateTime spotDate, DateTime[] pillarDates, double[] divYields, DateTime[] discreteDivDates, double[] discreteDivs, ICurrencyProvider currencyProvider,
             DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)

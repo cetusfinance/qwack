@@ -26,6 +26,14 @@ namespace Qwack.Models.Risk.Mutators
                     };
                     o.AddPriceCurve(assetId, npc);
                     break;
+                case EquityPriceCurve eq:
+                    var neq = new EquityPriceCurve(eq.BuildDate, eq.Spot + shiftSize, eq.Currency, eq.IrCurve, eq.SpotDate, eq.PillarDates, eq.DivYields, eq.DiscreteDivDates, eq.DiscreteDivs, eq.CurrencyProvider, eq.Basis, eq.PillarLabels);
+                    o.AddPriceCurve(assetId, neq);
+                    break;
+                case ContangoPriceCurve cp:
+                    var ncp = new ContangoPriceCurve(cp.BuildDate,cp.Spot + shiftSize, cp.SpotDate, cp.PillarDates, cp.Contangos, cp.CurrencyProvider, cp.Basis, cp.PillarLabels);
+                    o.AddPriceCurve(assetId, ncp);
+                    break;
                 default:
                     throw new Exception("Unable to mutate curve type");
             }

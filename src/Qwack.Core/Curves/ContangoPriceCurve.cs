@@ -40,6 +40,8 @@ namespace Qwack.Core.Curves
 
         public Currency Currency { get; set; }
 
+        public ICurrencyProvider CurrencyProvider => _currencyProvider;
+
         public ContangoPriceCurve(DateTime buildDate, double spot, DateTime spotDate, DateTime[] pillarDates, double[] contangos, ICurrencyProvider currencyProvider,
             DayCountBasis basis = DayCountBasis.ACT360, string[] pillarLabels = null)
         {

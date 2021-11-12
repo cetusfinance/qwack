@@ -814,5 +814,7 @@ namespace Qwack.Dates
             o.Add(end);
             return o.ToArray();
         }
+
+        public static int DiffinMonths(this DateTime start, DateTime end) => (end.Year * 12 + end.Month) - (start.Year * 12 + start.Month);
     }
 }

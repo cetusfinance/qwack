@@ -9947,13 +9947,15 @@
     "TickSize": 0.0001
   },
   {
-    "Names": [ "GBP", "British Pound - CME" ],
+    "Names": [ "GBP", "British Pound - CME", "MXN", "Mexican Peso - CME" ],
     "CodeConversions": {
       "IB": {
-        "GBP": "GBP"
+        "GBP": "GBP",
+        "MXN": "MXP"
       },
       "BBG": {
-        "GBP": "BP"
+        "GBP": "BP",
+        "MXN": "PE"
       }
     },
     "ExpiryGen": {

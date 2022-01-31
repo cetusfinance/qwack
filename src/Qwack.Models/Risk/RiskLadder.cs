@@ -136,6 +136,8 @@ namespace Qwack.Models.Risk
         {
             RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId),
             RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.PV => model.PV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             _ => throw new Exception($"Unable to process risk metric {Metric}"),
         };
     }

@@ -101,7 +101,7 @@ namespace Qwack.Options.VolSurfaces
             else
             {
                 var fwd = forward;
-                var cp = strike < 0 ? OptionType.Put : OptionType.Call;
+                //var cp = strike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (deltaK =>
                 {
                     var dkModified = FlatDeltaSmileInExtreme ? Min(1.0-FlatDeltaPoint,Max(deltaK, FlatDeltaPoint)) : deltaK;

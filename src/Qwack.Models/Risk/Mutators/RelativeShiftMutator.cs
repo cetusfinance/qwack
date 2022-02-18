@@ -86,5 +86,8 @@ namespace Qwack.Models.Risk.Mutators
             var newVanillaModel = FxSpotShift(pair, shiftSize, model.VanillaModel);
             return model.Rebuild(newVanillaModel, model.Portfolio);
         }
+
+
+      
     }
 }

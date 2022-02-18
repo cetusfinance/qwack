@@ -93,21 +93,21 @@ namespace Qwack.Models.Risk
                 _logger?.LogInformation($"Computing scenarios for {d}");
                 var m = _model.Clone();
 
-                foreach(var assetId in allAssetIds)
+                foreach (var assetId in allAssetIds)
                 {
-                    if(_spotTypeBumps.TryGetValue(assetId, out var spotBumpRecord))
+                    if (_spotTypeBumps.TryGetValue(assetId, out var spotBumpRecord))
                     {
                         if (spotBumpRecord.IsRelativeBump)
-                            RelativeShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
+                            m = RelativeShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                         else
-                            FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
+                            m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                     else if (_curveTypeBumps.TryGetValue(assetId, out var curveBumpRecord))
                     {
                         if (curveBumpRecord.IsRelativeBump)
-                            CurveShiftMutator.AssetCurveShiftRelative(assetId, curveBumpRecord.Bumps[d], m);
+                            m = CurveShiftMutator.AssetCurveShiftRelative(assetId, curveBumpRecord.Bumps[d], m);
                         else
-                            CurveShiftMutator.AssetCurveShiftAbsolute(assetId, curveBumpRecord.Bumps[d], m);
+                            m = CurveShiftMutator.AssetCurveShiftAbsolute(assetId, curveBumpRecord.Bumps[d], m);
                     }
                     else
                     {

@@ -47,7 +47,7 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public double Pv(IFundingModel Model, bool updateState) => Pv(Model, updateState, false);
-        public double Pv(IFundingModel Model, bool updateState, bool ignoreTodayFlows)
+        public virtual double Pv(IFundingModel Model, bool updateState, bool ignoreTodayFlows)
         {
             if (Model.BuildDate > DeliveryDate || (ignoreTodayFlows && Model.BuildDate == DeliveryDate))
                 return 0.0;

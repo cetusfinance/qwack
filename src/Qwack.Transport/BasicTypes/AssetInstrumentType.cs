@@ -19,7 +19,7 @@ namespace Qwack.Transport.BasicTypes
         EuropeanBarrierOption,
         EuropeanOption,
         Forward,
-        Futrure,
+        Future,
         FuturesOption,
         MultiPeriodBackpricingOption,
         OneTouchOption,

@@ -97,7 +97,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public TO_Instrument ToTransportObject() => new()
         {
-            AssetInstrumentType = AssetInstrumentType.Futrure,
+            AssetInstrumentType = AssetInstrumentType.Future,
             Future = new TO_Future
             {
                 AssetId = AssetId,

@@ -1032,6 +1032,12 @@ namespace Qwack.Models.Models
                 case Future fut:
                     pv = fut.PV(model, ignoreTodayFlows);
                     break;
+                case FxFuture fxFut:
+                    pv = fxFut.Pv(model.FundingModel, false, ignoreTodayFlows);
+                    break;
+                case FxPerpetual fxPerp:
+                    pv = fxPerp.Pv(model.FundingModel, false, ignoreTodayFlows);
+                    break;
                 case FxForward fxFwd:
                     pv = fxFwd.Pv(model.FundingModel, false, ignoreTodayFlows);
                     break;

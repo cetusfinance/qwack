@@ -17,6 +17,7 @@ namespace Qwack.Models.Risk
         private readonly Portfolio _portfolio;
         private readonly ILogger _logger;
         private readonly Dictionary<string, VaRSpotScenarios> _spotTypeBumps = new();
+        private readonly Dictionary<string, VaRSpotScenarios> _spotFxTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = new();
         private readonly Dictionary<DateTime, IAssetFxModel> _bumpedModels = new();
@@ -48,6 +49,28 @@ namespace Qwack.Models.Risk
                 AssetId = assetId,
                 Bumps = bumps,
             }; 
+        }
+
+        public void AddSpotFxRelativeScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
+        {
+            _logger?.LogInformation($"Adding relative/spot bumps for fx ccy {ccy}");
+            _spotFxTypeBumps[ccy] = new VaRSpotScenarios
+            {
+                IsRelativeBump = true,
+                AssetId = ccy,
+                Bumps = bumps,
+            };
+        }
+
+        public void AddSpotFxAbsoluteScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
+        {
+            _logger?.LogInformation($"Adding absolute/spot bumps for fx ccy {ccy}");
+            _spotFxTypeBumps[ccy] = new VaRSpotScenarios
+            {
+                IsRelativeBump = false,
+                AssetId = ccy,
+                Bumps = bumps,
+            };
         }
 
         public void AddCurveRelativeScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
@@ -143,6 +166,17 @@ namespace Qwack.Models.Risk
                             m = SurfaceShiftMutator.AssetSurfaceShiftRelative(assetId, surfaceBumpRecord.Bumps[d], m);
                         else
                             m = SurfaceShiftMutator.AssetSurfaceShiftAbsolute(assetId, surfaceBumpRecord.Bumps[d], m);
+                    }
+                }
+
+                foreach(var ccy in m.FundingModel.FxMatrix.SpotRates.Keys)
+                {
+                    if (_spotFxTypeBumps.TryGetValue(ccy, out var spotBumpRecord))
+                    {
+                        if (spotBumpRecord.IsRelativeBump)
+                            m = RelativeShiftMutator.SpotFxShift(ccy, spotBumpRecord.Bumps[d], m);
+                        //else
+                        //    m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                 }
 

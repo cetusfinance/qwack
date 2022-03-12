@@ -11,7 +11,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class FxFuture : FxForward, IHasVega, IAssetInstrument
+    public class FxFuture : FxForward, IAssetInstrument
     {
         public FxFuture() { }
 

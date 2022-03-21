@@ -1,4 +1,11 @@
 {
+  "NONE": {
+    "InheritedCalendar": [],
+    "Name": "NONE",
+    "DaysToAlwaysExclude": [],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "US_NYD": {
     "InheritedCalendar": [],
     "Name": "US_NYD",
@@ -1134,6 +1141,20 @@
     "InheritedCalendar": [ "LON" ],
     "Name": "XPD",
     "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "BTC": {
+    "InheritedCalendar": [ "NONE" ],
+    "Name": "BTC",
+    "DaysToAlwaysExclude": [],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
+  "ETH": {
+    "InheritedCalendar": [ "NONE" ],
+    "Name": "ETH",
+    "DaysToAlwaysExclude": [],
     "DaysToExclude": [],
     "MonthsToExclude": []
   }

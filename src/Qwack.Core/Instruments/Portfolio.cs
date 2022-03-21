@@ -77,6 +77,20 @@ namespace Qwack.Core.Instruments
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
         }
 
+        public static string[] AssetIdsWithVega(this Portfolio portfolio)
+        {
+            if (portfolio.Instruments.Count == 0)
+                return new string[0];
+
+            var assetTrades = portfolio.Instruments
+                .Where(x => x is IHasVega);
+
+            if (!assetTrades.Any())
+                return new string[0];
+
+            return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
+        }
+
         public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';
 
         public static string[] FxPairs(this Portfolio portfolio, IAssetFxModel model)
@@ -430,9 +444,9 @@ namespace Qwack.Core.Instruments
             foreach(var hs in activeHedgeSets)
             {
                 addOnByHedgeSet[hs.Key] = 0.0;
-                var term1 = System.Math.Pow(correl * hs.Value.Sum(x => x.Value), 2.0);
+                var term1 = Pow(correl * hs.Value.Sum(x => x.Value), 2.0);
                 var term2 = (1.0-correl*correl) * hs.Value.Sum(x => x.Value* x.Value);
-                addOnByHedgeSet[hs.Key] = System.Math.Sqrt(term1 + term2);
+                addOnByHedgeSet[hs.Key] = Sqrt(term1 + term2);
             }
 
             var addOn = addOnByHedgeSet.Sum(x=>x.Value);

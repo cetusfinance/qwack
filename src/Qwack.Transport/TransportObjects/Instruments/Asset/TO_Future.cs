@@ -33,6 +33,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string Currency { get; set; }
         [ProtoMember(12)]
         public Dictionary<string,string> MetaData { get; set; }
-        
+        [ProtoMember(13)]
+        public bool? IsPerpetual { get; set; }
+
     }
 }

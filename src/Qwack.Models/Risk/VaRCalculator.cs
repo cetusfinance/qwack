@@ -17,7 +17,9 @@ namespace Qwack.Models.Risk
         private readonly Portfolio _portfolio;
         private readonly ILogger _logger;
         private readonly Dictionary<string, VaRSpotScenarios> _spotTypeBumps = new();
+        private readonly Dictionary<string, VaRSpotScenarios> _spotFxTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = new();
+        private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = new();
         private readonly Dictionary<DateTime, IAssetFxModel> _bumpedModels = new();
 
         public VaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger)
@@ -49,6 +51,28 @@ namespace Qwack.Models.Risk
             }; 
         }
 
+        public void AddSpotFxRelativeScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
+        {
+            _logger?.LogInformation($"Adding relative/spot bumps for fx ccy {ccy}");
+            _spotFxTypeBumps[ccy] = new VaRSpotScenarios
+            {
+                IsRelativeBump = true,
+                AssetId = ccy,
+                Bumps = bumps,
+            };
+        }
+
+        public void AddSpotFxAbsoluteScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
+        {
+            _logger?.LogInformation($"Adding absolute/spot bumps for fx ccy {ccy}");
+            _spotFxTypeBumps[ccy] = new VaRSpotScenarios
+            {
+                IsRelativeBump = false,
+                AssetId = ccy,
+                Bumps = bumps,
+            };
+        }
+
         public void AddCurveRelativeScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
         {
             _logger?.LogInformation($"Adding relative/curve bumps for {assetId}");
@@ -64,6 +88,28 @@ namespace Qwack.Models.Risk
         {
             _logger?.LogInformation($"Adding absolute/curve bumps for {assetId}");
             _curveTypeBumps[assetId] = new VaRCurveScenarios
+            {
+                IsRelativeBump = false,
+                AssetId = assetId,
+                Bumps = bumps,
+            };
+        }
+
+        public void AddSurfaceAtmRelativeScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
+        {
+            _logger?.LogInformation($"Adding relative/surface atm bumps for {assetId}");
+            _surfaceTypeBumps[assetId] = new VaRCurveScenarios
+            {
+                IsRelativeBump = true,
+                AssetId = assetId,
+                Bumps = bumps,
+            };
+        }
+
+        public void AddSurfaceAtmAbsoluteScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
+        {
+            _logger?.LogInformation($"Adding absolute/surface atm bumps for {assetId}");
+            _surfaceTypeBumps[assetId] = new VaRCurveScenarios
             {
                 IsRelativeBump = false,
                 AssetId = assetId,
@@ -93,25 +139,44 @@ namespace Qwack.Models.Risk
                 _logger?.LogInformation($"Computing scenarios for {d}");
                 var m = _model.Clone();
 
-                foreach(var assetId in allAssetIds)
+                foreach (var assetId in allAssetIds)
                 {
-                    if(_spotTypeBumps.TryGetValue(assetId, out var spotBumpRecord))
+                    if (_spotTypeBumps.TryGetValue(assetId, out var spotBumpRecord))
                     {
                         if (spotBumpRecord.IsRelativeBump)
-                            RelativeShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
+                            m = RelativeShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                         else
-                            FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
+                            m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                     else if (_curveTypeBumps.TryGetValue(assetId, out var curveBumpRecord))
                     {
                         if (curveBumpRecord.IsRelativeBump)
-                            CurveShiftMutator.AssetCurveShiftRelative(assetId, curveBumpRecord.Bumps[d], m);
+                            m = CurveShiftMutator.AssetCurveShiftRelative(assetId, curveBumpRecord.Bumps[d], m);
                         else
-                            CurveShiftMutator.AssetCurveShiftAbsolute(assetId, curveBumpRecord.Bumps[d], m);
+                            m = CurveShiftMutator.AssetCurveShiftAbsolute(assetId, curveBumpRecord.Bumps[d], m);
                     }
                     else
                     {
                         _logger?.LogWarning($"No shift data available for {assetId} / {d}");
+                    }
+
+                    if (_surfaceTypeBumps.TryGetValue(assetId, out var surfaceBumpRecord))
+                    {
+                        if (surfaceBumpRecord.IsRelativeBump)
+                            m = SurfaceShiftMutator.AssetSurfaceShiftRelative(assetId, surfaceBumpRecord.Bumps[d], m);
+                        else
+                            m = SurfaceShiftMutator.AssetSurfaceShiftAbsolute(assetId, surfaceBumpRecord.Bumps[d], m);
+                    }
+                }
+
+                foreach(var ccy in m.FundingModel.FxMatrix.SpotRates.Keys)
+                {
+                    if (_spotFxTypeBumps.TryGetValue(ccy, out var spotBumpRecord))
+                    {
+                        if (spotBumpRecord.IsRelativeBump)
+                            m = RelativeShiftMutator.SpotFxShift(ccy, spotBumpRecord.Bumps[d], m);
+                        //else
+                        //    m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                 }
 
@@ -132,7 +197,7 @@ namespace Qwack.Models.Risk
 
             var sortedResults = results.OrderBy(kv=>kv.Value).ToList();
             var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-            var ciResult = sortedResults[ixCi];
+            var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi,0), sortedResults.Count-1)];
             return (ciResult.Value, ciResult.Key);
         }
 

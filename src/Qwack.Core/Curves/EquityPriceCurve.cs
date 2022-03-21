@@ -97,7 +97,7 @@ namespace Qwack.Core.Curves
             {
                 foreach(var d in DiscreteDivDates.Where(x => x > BuildDate && x <= fwdDate))
                 {
-                    var ix = Array.BinarySearch(DiscreteDivDates, d);
+                    var ix = Array.IndexOf(DiscreteDivDates, d); //Array.BinarySearch(DiscreteDivDates, d);
                     var div = DiscreteDivs[ix];
                     var dfDiv = IrCurve.GetDf(d, fwdDate);
                     fwd -= div / dfDiv;

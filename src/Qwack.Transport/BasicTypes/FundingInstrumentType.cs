@@ -14,6 +14,7 @@ namespace Qwack.Transport.BasicTypes
         FloatingRateLoanDepo,
         ForwardRateAgreement,
         FxForward,
+        FxPerpetual,
         FxSwap,
         FxVanillaOption,
         IrBasisSwap,

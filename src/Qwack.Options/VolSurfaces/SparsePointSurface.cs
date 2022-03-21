@@ -46,6 +46,12 @@ namespace Qwack.Options.VolSurfaces
         public Dictionary<(DateTime expiry, double strike), double> Vols => _vols;
         public Dictionary<DateTime, string> PillarLabels => _pillarLabels;
 
+        public double[] GetStrikesForExpiry(DateTime expiry)
+        {
+            var kvs = _vols.Where(kv=>kv.Key.expiry==expiry).ToArray();
+            return kvs.Select(kv=>kv.Key.strike).ToArray();
+        }
+
         public DateTime PillarDatesForLabel(string label) => _pillarLabels.Where(x => x.Value == label).FirstOrDefault().Key;
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => _vols[(expiry, strike)];
 

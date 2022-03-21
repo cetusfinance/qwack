@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
@@ -41,14 +42,17 @@ namespace Qwack.Core.Instruments
                         return new Bond(transportObject.Bond, currencyProvider, calendarProvider);
                     case AssetInstrumentType.FuturesOption:
                         return new FuturesOption(transportObject.FuturesOption, currencyProvider);
-                    case AssetInstrumentType.Futrure:
+                    case AssetInstrumentType.Future:
                         return new Future(transportObject.Future, currencyProvider);
+
                 }
             }
             else
             {
                 //switch (transportObject.FundingInstrumentType)
                 //{
+                //    case FundingInstrumentType.FxPerpetual:
+                //        return new FxPerpetual(transportObject.Future, currencyProvider);
                 //}
             }
 

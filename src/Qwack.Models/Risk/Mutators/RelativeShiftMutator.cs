@@ -39,10 +39,29 @@ namespace Qwack.Models.Risk.Mutators
             }
             return o;
         }
-
         public static IPvModel AssetCurveShift(string assetId, double shiftSize, IPvModel model)
         {
             var newVanillaModel = AssetCurveShift(assetId, shiftSize, model.VanillaModel);
+            return model.Rebuild(newVanillaModel, model.Portfolio);
+        }
+
+        public static IAssetFxModel SpotFxShift(string ccy, double shiftSize, IAssetFxModel model)
+        {
+            var o = model.Clone();
+            var spotRates = new Dictionary<Currency, double>(o.FundingModel.FxMatrix.SpotRates);
+            var currency = spotRates.Keys.FirstOrDefault(c=>c.Ccy== ccy);
+            if(currency != null)
+            {
+                spotRates[currency] *= (1.0 + shiftSize);
+                o.FundingModel.FxMatrix.UpdateSpotRates(spotRates);
+            }
+            
+            return o;
+        }
+
+        public static IPvModel SpotFxShift(string ccy, double shiftSize, IPvModel model)
+        {
+            var newVanillaModel = SpotFxShift(ccy, shiftSize, model.VanillaModel);
             return model.Rebuild(newVanillaModel, model.Portfolio);
         }
 
@@ -86,5 +105,8 @@ namespace Qwack.Models.Risk.Mutators
             var newVanillaModel = FxSpotShift(pair, shiftSize, model.VanillaModel);
             return model.Rebuild(newVanillaModel, model.Portfolio);
         }
+
+
+      
     }
 }

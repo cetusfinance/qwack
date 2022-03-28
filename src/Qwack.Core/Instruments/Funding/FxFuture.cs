@@ -8,6 +8,8 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -57,6 +59,27 @@ namespace Qwack.Core.Instruments.Funding
                     Fv = DomesticQuantity * Strike
                 }
             };
-            
+
+        public override TO_Instrument ToTransportObject() =>
+         new()
+         {
+             FundingInstrumentType = FundingInstrumentType.FxFuture,
+             FxFuture = new TO_FxFuture
+             {
+                 TradeId = TradeId,
+                 DomesticQuantity = DomesticQuantity,
+                 DomesticCCY = DomesticCCY,
+                 ForeignCCY = ForeignCCY,
+                 ForeignDiscountCurve = ForeignDiscountCurve,
+                 DeliveryDate = DeliveryDate,
+                 PillarDate = PillarDate,
+                 SolveCurve = SolveCurve,
+                 Strike = Strike,
+                 Counterparty = Counterparty,
+                 HedgingSet = HedgingSet,
+                 PortfolioName = PortfolioName,
+                 MetaData = new(MetaData)
+             }
+         };
     }
 }

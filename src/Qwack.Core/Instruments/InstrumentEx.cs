@@ -20,8 +20,11 @@ namespace Qwack.Core.Instruments
             Equity equity => equity.ToTransportObject(),
             Bond bond => bond.ToTransportObject(),
             //CashBalance cashBalance => cashBalance.ToTransportObject(),
-            //FxForward fxForward => fxForward.ToTransportObject(),
             FuturesOption futuresOption => futuresOption.ToTransportObject(),
+            FxFuture fxFuture => fxFuture.ToTransportObject(),
+            FxVanillaOption fxo => fxo.ToTransportObject(),
+            FxForward fxForward => fxForward.ToTransportObject(),
+            FxPerpetual fxPerpetual => fxPerpetual.ToTransportObject(),
             Future future => future.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };

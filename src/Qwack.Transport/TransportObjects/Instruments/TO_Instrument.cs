@@ -4,6 +4,7 @@ using System.Text;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Transport.TransportObjects.Instruments
 {
@@ -32,6 +33,14 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_Equity Equity { get; set; }
         [ProtoMember(110)]
         public TO_Bond Bond { get; set; }
+        [ProtoMember(111)]
+        public TO_FxForward FxForward { get; set; }
+        [ProtoMember(112)]
+        public TO_FxFuture FxFuture { get; set; }
+        [ProtoMember(113)]
+        public TO_FxVanillaOption FxOption { get; set; }
+        [ProtoMember(114)]
+        public TO_FxPerpetual FxPerpetual { get; set; }
 
         public override bool Equals(object obj) => obj is TO_Instrument instrument && 
             FundingInstrumentType == instrument.FundingInstrumentType && 
@@ -44,11 +53,15 @@ namespace Qwack.Transport.TransportObjects.Instruments
             EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future) && 
             EqualityComparer<TO_FuturesOption>.Default.Equals(FuturesOption, instrument.FuturesOption) && 
             EqualityComparer<TO_Equity>.Default.Equals(Equity, instrument.Equity) && 
-            EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond);
+            EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond) && 
+            EqualityComparer<TO_FxForward>.Default.Equals(FxForward, instrument.FxForward) && 
+            EqualityComparer<TO_FxFuture>.Default.Equals(FxFuture, instrument.FxFuture) && 
+            EqualityComparer<TO_FxVanillaOption>.Default.Equals(FxOption, instrument.FxOption) &&
+            EqualityComparer<TO_FxPerpetual>.Default.Equals(FxPerpetual, instrument.FxPerpetual);
 
         public override int GetHashCode()
         {
-            var hashCode = 243093849;
+            var hashCode = 467604924;
             hashCode = hashCode * -1521134295 + FundingInstrumentType.GetHashCode();
             hashCode = hashCode * -1521134295 + AssetInstrumentType.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_AsianSwap>.Default.GetHashCode(AsianSwap);
@@ -60,6 +73,10 @@ namespace Qwack.Transport.TransportObjects.Instruments
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_FuturesOption>.Default.GetHashCode(FuturesOption);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_Equity>.Default.GetHashCode(Equity);
             hashCode = hashCode * -1521134295 + EqualityComparer<TO_Bond>.Default.GetHashCode(Bond);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_FxForward>.Default.GetHashCode(FxForward);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_FxFuture>.Default.GetHashCode(FxFuture);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_FxVanillaOption>.Default.GetHashCode(FxOption);
+            hashCode = hashCode * -1521134295 + EqualityComparer<TO_FxPerpetual>.Default.GetHashCode(FxPerpetual);
             return hashCode;
         }
     }

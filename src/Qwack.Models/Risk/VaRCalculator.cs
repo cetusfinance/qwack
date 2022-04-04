@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
@@ -183,21 +184,42 @@ namespace Qwack.Models.Risk
                 _bumpedModels[d] = m;
             }
         }
-
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy)
+        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {
-            var basePv = _portfolio.PV(_model, ccy).SumOfAllRows;
+            var pf = _portfolio.Clone();
+            pf.Instruments.RemoveAll(i => excludeTradeIds.Contains(i.TradeId));
+            return CalculateVaR(ci, ccy, pf);
+        }
+
+        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
+
+        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize=true)
+        {
+            var basePv = pf.PV(_model, ccy).SumOfAllRows;
 
             var results = new Dictionary<DateTime, double>();
-            foreach (var kv in _bumpedModels)
+            var varFunc = new Action<DateTime, IAssetFxModel>((d, m) => {
+                var scenarioPv = pf.PV(m, ccy, false).SumOfAllRows;
+                results[d] = scenarioPv - basePv;
+            });
+            if (parallelize)
             {
-                var scenarioPv = _portfolio.PV(kv.Value, ccy).SumOfAllRows;
-                results[kv.Key] = scenarioPv - basePv;
+                Parallel.ForEach(_bumpedModels, kv =>
+                {
+                    varFunc(kv.Key, kv.Value);
+                });
+            }
+            else
+            {
+                foreach (var kv in _bumpedModels)
+                {
+                    varFunc(kv.Key, kv.Value);
+                }
             }
 
-            var sortedResults = results.OrderBy(kv=>kv.Value).ToList();
+            var sortedResults = results.OrderBy(kv => kv.Value).ToList();
             var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-            var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi,0), sortedResults.Count-1)];
+            var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
             return (ciResult.Value, ciResult.Key);
         }
 

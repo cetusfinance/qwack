@@ -892,7 +892,7 @@ namespace Qwack.Models.Models
             return (finTheta, 0.0);
         }
 
-        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false)
+        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false, bool parallelize = true)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -912,18 +912,17 @@ namespace Qwack.Models.Models
 
             var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
 
-            //for(var i=0;i< portfolio.Instruments.Count;i++)
-            ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
+            var pvFunc = new Action<int>((i) =>
             {
                 var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows);
 
                 var row = new Dictionary<string, object>
-                  {
-                        { TradeId, tradeId },
-                        { Consts.Cubes.Currency, ccy },
-                        { Consts.Cubes.TradeType, tradeType },
-                        { Consts.Cubes.Portfolio, portfolio.Instruments[i].PortfolioName??string.Empty },
-                  };
+                {
+                    { TradeId, tradeId },
+                    { Consts.Cubes.Currency, ccy },
+                    { Consts.Cubes.TradeType, tradeType },
+                    { Consts.Cubes.Portfolio, portfolio.Instruments[i].PortfolioName ?? string.Empty },
+                };
                 if (insDict.TryGetValue(tradeId, out var trade))
                 {
                     foreach (var key in metaKeys)
@@ -933,7 +932,22 @@ namespace Qwack.Models.Models
                     }
                 }
                 pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv);
-            }, true).Wait();
+            });
+
+            if (parallelize)
+            {
+                ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
+                {
+                    pvFunc(i);
+                }, true).Wait();
+            }
+            else
+            {
+                for(var i=0;i< portfolio.Instruments.Count; i++)
+                {
+                    pvFunc(i);
+                }
+            }
 
             for (var i = 0; i < pvs.Length; i++)
             {

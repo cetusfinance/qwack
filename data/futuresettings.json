@@ -5711,7 +5711,7 @@
       "MonthModifier": 1,
       "DayOfMonthToStart": 1,
       "DayOfMonthToStartOther": null,
-      "DateOffsetModifier": "-4b",
+      "DateOffsetModifier": "-3b",
       "DoMToStartIsNumber": false,
       "NeverExpires": false,
       "FixedFuture": null

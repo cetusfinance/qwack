@@ -8,6 +8,8 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -24,6 +26,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public OptionType CallPut { get; set; }
         public DateTime ExpiryDate { get; set; }
+        public double Premium { get; set; }
+        public DateTime PremiumDate { get; set; }
 
         public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(model.FundingModel.GetFxRate(ExpiryDate,Pair), Strike, T(model), CallPut, SupervisoryVol, DomesticQuantity);
         public override double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
@@ -41,7 +45,9 @@ namespace Qwack.Core.Instruments.Funding
             ForeignCCY = ForeignCCY,
             ForeignDiscountCurve = ForeignDiscountCurve,
             Strike = Strike,
-            TradeId = TradeId
+            TradeId = TradeId,
+            PremiumDate = PremiumDate,
+            Premium = Premium,
         };
 
         private bool InTheMoney(IAssetFxModel model) =>
@@ -66,6 +72,32 @@ namespace Qwack.Core.Instruments.Funding
                     Fv = DomesticQuantity * Strike
                 }
             };
-            
+
+        public override TO_Instrument ToTransportObject() =>
+         new()
+         {
+             FundingInstrumentType = FundingInstrumentType.FxVanillaOption,
+             FxOption = new TO_FxVanillaOption
+             {
+                 TradeId = TradeId,
+                 DomesticQuantity = DomesticQuantity,
+                 DomesticCCY = DomesticCCY,
+                 ForeignCCY = ForeignCCY,
+                 ForeignDiscountCurve = ForeignDiscountCurve,
+                 DeliveryDate = DeliveryDate,
+                 PillarDate = PillarDate,
+                 SolveCurve = SolveCurve,
+                 Strike = Strike,
+                 CallPut = CallPut,
+                 ExerciseType = OptionExerciseType.European,
+                 Premium = Premium,
+                 PremiumDate = PremiumDate,
+                 ExpiryDate = ExpiryDate,
+                 Counterparty = Counterparty,
+                 HedgingSet = HedgingSet,
+                 PortfolioName = PortfolioName,
+                 MetaData = new(MetaData)
+             }
+         };
     }
 }

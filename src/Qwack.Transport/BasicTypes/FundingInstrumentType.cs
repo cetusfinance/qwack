@@ -15,6 +15,7 @@ namespace Qwack.Transport.BasicTypes
         ForwardRateAgreement,
         FxForward,
         FxPerpetual,
+        FxFuture,
         FxSwap,
         FxVanillaOption,
         IrBasisSwap,

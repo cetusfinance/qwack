@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -197,7 +198,7 @@ namespace Qwack.Models.Risk
         {
             var basePv = pf.PV(_model, ccy).SumOfAllRows;
 
-            var results = new Dictionary<DateTime, double>();
+            var results = new ConcurrentDictionary<DateTime, double>();
             var varFunc = new Action<DateTime, IAssetFxModel>((d, m) => {
                 var scenarioPv = pf.PV(m, ccy, false).SumOfAllRows;
                 results[d] = scenarioPv - basePv;

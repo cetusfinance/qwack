@@ -22,7 +22,7 @@ namespace Qwack.Models.Calibrators
         public static BasicPriceCurve GetCurveForCode(string nymexSymbol, string nymexFutureFilename, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency, PriceCurveType curveType)
         {
             var parsed = NYMEXFutureParser.Instance.Parse(nymexFutureFilename).Where(r => r.Symbol == nymexSymbol);
-            var q = parsed.Where(x => x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
+            var q = parsed.Take(110).Where(x => x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
             var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
@@ -102,15 +102,15 @@ namespace Qwack.Models.Calibrators
             var lastDate = q.Max(x => x.ExpiryDate);
 
             var dummyFutureCode = $"{qwackCode}Z{DateExtensions.SingleDigitYear(DateTime.Today.Year + 2)}";
-            var c = new FutureCode(dummyFutureCode, DateTime.Today.Year - 2, futureSettingsProvider);
+            var c = new FutureCode(dummyFutureCode, origin.Year - 1, futureSettingsProvider);
 
             var contract = c.GetFrontMonth(origin, false);
             var lastContract = c.GetFrontMonth(lastDate, false);
 
             while (contract != lastContract)
             {
-                var cc = new FutureCode(contract, origin.Year, futureSettingsProvider);
-                var exp = ListedUtils.FuturesCodeToDateTime(contract);
+                var cc = new FutureCode(contract, origin.Year -1 , futureSettingsProvider);
+                var exp = ListedUtils.FuturesCodeToDateTime(contract, origin);
                 var record = new NYMEXOptionRecord
                 {
                     ContractMonth = exp.Month,

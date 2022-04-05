@@ -10,6 +10,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
+using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Risk
 {
@@ -123,7 +124,7 @@ namespace Qwack.Models.Risk
         {
             var allAssetIds = _portfolio.AssetIds();
             var allDates = _spotTypeBumps.First().Value.Bumps.Keys.ToList();
-            foreach(var kv in _spotTypeBumps)
+            foreach (var kv in _spotTypeBumps)
             {
                 allDates = allDates.Intersect(kv.Value.Bumps.Keys).ToList();
             }
@@ -134,11 +135,11 @@ namespace Qwack.Models.Risk
 
             _logger?.LogInformation($"Total of {allDates.Count} dates");
 
+            ConcurrentDictionary<DateTime, IAssetFxModel> bumpedModels = new();
 
-
-            foreach (var d in allDates)
+            ParallelUtils.Instance.Foreach(allDates, d =>
             {
-                _logger?.LogInformation($"Computing scenarios for {d}");
+                _logger?.LogDebug($"Computing scenarios for {d}");
                 var m = _model.Clone();
 
                 foreach (var assetId in allAssetIds)
@@ -171,7 +172,7 @@ namespace Qwack.Models.Risk
                     }
                 }
 
-                foreach(var ccy in m.FundingModel.FxMatrix.SpotRates.Keys)
+                foreach (var ccy in m.FundingModel.FxMatrix.SpotRates.Keys)
                 {
                     if (_spotFxTypeBumps.TryGetValue(ccy, out var spotBumpRecord))
                     {
@@ -181,9 +182,11 @@ namespace Qwack.Models.Risk
                         //    m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                 }
+                bumpedModels[d] = m;
+            }).Wait();
 
-                _bumpedModels[d] = m;
-            }
+            foreach (var kv in bumpedModels)
+                _bumpedModels[kv.Key] = kv.Value;
         }
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {

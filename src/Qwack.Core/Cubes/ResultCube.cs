@@ -65,7 +65,7 @@ namespace Qwack.Core.Cubes
 
         public void Initialize(Dictionary<string, Type> dataTypes)
         {
-            _types = dataTypes;
+            _types = new Dictionary<string,Type>(dataTypes);
             _fieldNames = dataTypes.Keys.ToList();
             _rows = new List<ResultCubeRow>();
         }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Core.Basic;
+using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
@@ -190,20 +191,38 @@ namespace Qwack.Models.Risk
         }
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {
-            var pf = _portfolio.Clone();
-            pf.Instruments.RemoveAll(i => excludeTradeIds.Contains(i.TradeId));
-            return CalculateVaR(ci, ccy, pf);
+            if (!_resultsCache.Any())
+            {
+                var pf = _portfolio.Clone();
+                pf.Instruments.RemoveAll(i => excludeTradeIds.Contains(i.TradeId));
+                return CalculateVaR(ci, ccy, pf);
+            }
+            else
+            {
+                var filterDict = excludeTradeIds.Select(x => new KeyValuePair<string, object>("TradeId", (object)x)).ToList();
+                var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, true).SumOfAllRows);
+                var sortedResults = results.OrderBy(kv => kv.Value).ToList();
+                var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
+                var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
+                var basePvForSet = _basePvCube.Filter(filterDict, true).SumOfAllRows;
+                return (ciResult.Value - basePvForSet, ciResult.Key);
+            }
         }
 
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
+        private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();
+        private ICube _basePvCube;
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize=true)
         {
-            var basePv = pf.PV(_model, ccy).SumOfAllRows;
-
+            _basePvCube = pf.PV(_model, ccy);
+            var basePv = _basePvCube.SumOfAllRows;
+            _resultsCache.Clear();
             var results = new ConcurrentDictionary<DateTime, double>();
             var varFunc = new Action<DateTime, IAssetFxModel>((d, m) => {
-                var scenarioPv = pf.PV(m, ccy, false).SumOfAllRows;
+                var cube = pf.PV(m, ccy, false);
+                var scenarioPv = cube.SumOfAllRows;
+                _resultsCache[d] = cube;
                 results[d] = scenarioPv - basePv;
             });
             if (parallelize)

@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Diagnostics;
 using System;
-using MSExcel = Microsoft.Office.Interop.Excel;
+//using MSExcel = Microsoft.Office.Interop.Excel;
 
 
 namespace Qwack.Excel.Ribbon
@@ -49,8 +49,8 @@ namespace Qwack.Excel.Ribbon
                 try
                 {
 
-                    var xlApp = (MSExcel.Application)ExcelDnaUtil.Application;
-                    var xlWb = xlApp.ActiveWorkbook;
+                    //var xlApp = (MSExcel.Application)ExcelDnaUtil.Application;
+                    //var xlWb = xlApp.ActiveWorkbook;
                     //  xlWb.SheetSelectionChange += new MSExcel.WorkbookEvents_SheetSelectionChangeEventHandler(xlWorkBook_SheetSelectionChange);
                 }
                 catch (Exception e)

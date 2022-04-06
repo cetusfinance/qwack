@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\clients\Qwack.Excel\Qwack.Excel.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
   </ItemGroup>
   <ItemGroup>

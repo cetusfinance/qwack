@@ -5,8 +5,4 @@
     <TargetFramework>net471</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Qwack.Excel\Qwack.Excel.csproj" />
-  </ItemGroup>
-
 </Project>

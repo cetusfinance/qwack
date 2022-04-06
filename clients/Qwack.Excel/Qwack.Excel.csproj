@@ -15,6 +15,7 @@
       <None Remove="Calendars.json" />
       <None Remove="Currencies.json" />
       <None Remove="futuresettings.json" />
+      <None Remove="QwackDna.dna" />
       <None Remove="SobolDirectionNumbers.txt" />
     </ItemGroup>
 
@@ -26,6 +27,9 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Content Include="futuresettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="QwackDna.dna">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Content Include="SobolDirectionNumbers.txt">

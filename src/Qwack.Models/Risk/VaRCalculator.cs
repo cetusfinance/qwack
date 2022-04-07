@@ -123,7 +123,7 @@ namespace Qwack.Models.Risk
 
         public void CalculateModels()
         {
-            var allAssetIds = _portfolio.AssetIds();
+            var allAssetIds = _portfolio.AssetIds().Where(x=>!(x.Length==7 && x[3]=='/')).ToArray();
             var allDates = _spotTypeBumps.First().Value.Bumps.Keys.ToList();
             foreach (var kv in _spotTypeBumps)
             {

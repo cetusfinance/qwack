@@ -198,6 +198,12 @@ namespace Qwack.Futures
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
                         break;
+                    case "LASTWED":
+                        var dateInMonth4 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth4.NthLastSpecificWeekDay(DayOfWeek.Wednesday, 1)
+                            .IfHolidayRollBack(_settings.RollGen.CalendarObject)
+                            .Day;
+                        break;
                     case "LASTMON-EUA":
                         var dateInMonth3 = new DateTime(YearNumber, monthNum, 1);
                         var lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
@@ -250,6 +256,12 @@ namespace Qwack.Futures
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
+                            .IfHolidayRollBack(_settings.RollGen.CalendarObject)
+                            .Day;
+                        break;
+                    case "LASTWED":
+                        var dateInMonth4 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonth4.NthLastSpecificWeekDay(DayOfWeek.Wednesday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
                         break;

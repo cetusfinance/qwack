@@ -394,6 +394,7 @@ namespace Qwack.Core.Instruments
             FloatingRateLoanDepo loanDepositFl => loanDepositFl.Notional,
             CashWrapper wrapper => wrapper.UnderlyingInstrument.Notional(),
             ETC etc => etc.Notional,
+            CashAsset ca => ca.Notional,
             _ => 0.0,
         };
 

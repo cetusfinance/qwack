@@ -124,7 +124,7 @@ namespace Qwack.Models.Risk
         public void CalculateModels()
         {
             var allAssetIds = _portfolio.AssetIds().Where(x=>!(x.Length==7 && x[3]=='/')).ToArray();
-            var allDates = _spotTypeBumps.First().Value.Bumps.Keys.ToList();
+            var allDates = _spotTypeBumps.Any() ? _spotTypeBumps.First().Value.Bumps.Keys.ToList() : _curveTypeBumps.First().Value.Bumps.Keys.ToList();
             foreach (var kv in _spotTypeBumps)
             {
                 allDates = allDates.Intersect(kv.Value.Bumps.Keys).ToList();
@@ -140,6 +140,9 @@ namespace Qwack.Models.Risk
 
             ParallelUtils.Instance.Foreach(allDates, d =>
             {
+                //if (d != new DateTime(2021, 08, 02))
+                //    return;
+
                 _logger?.LogDebug($"Computing scenarios for {d}");
                 var m = _model.Clone();
 
@@ -208,6 +211,28 @@ namespace Qwack.Models.Risk
                 return (ciResult.Value - basePvForSet, ciResult.Key);
             }
         }
+
+        public (double VaR, DateTime ScenarioDate) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
+        {
+            if (!_resultsCache.Any())
+            {
+                var pf = _portfolio.Clone();
+                pf.Instruments.RemoveAll(i => !includeTradeIds.Contains(i.TradeId));
+                return CalculateVaR(ci, ccy, pf);
+            }
+            else
+            {
+                var filterDict = includeTradeIds.Select(x => new KeyValuePair<string, object>("TradeId", (object)x)).ToList();
+                var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, false).SumOfAllRows);
+                var sortedResults = results.OrderBy(kv => kv.Value).ToList();
+                var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
+                var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
+                var basePvForSet = _basePvCube.Filter(filterDict, false).SumOfAllRows;
+                return (ciResult.Value - basePvForSet, ciResult.Key);
+            }
+        }
+
+        public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
 
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 

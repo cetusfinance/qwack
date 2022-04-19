@@ -232,6 +232,16 @@ namespace Qwack.Models.Risk
             }
         }
 
+        public double[] CalculateVaRRange(double[] cis)
+        {
+            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows);
+            var sortedResults = results.OrderBy(kv => kv.Value).ToList();
+            var ixCis = cis.Select(ci => (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci))).ToArray();
+            var ciResults = ixCis.Select(ixCi => sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)]);
+            var basePvForSet = _basePvCube.SumOfAllRows;
+            return ciResults.Select(x => x.Value - basePvForSet).ToArray();
+        }
+
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
 
         public Dictionary<string, double> GetContributions(DateTime scenarioDate)

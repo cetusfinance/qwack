@@ -234,6 +234,14 @@ namespace Qwack.Models.Risk
 
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
 
+        public Dictionary<string, double> GetContributions(DateTime scenarioDate)
+        {
+            var cube = _resultsCache[scenarioDate];
+            var diff = cube.Difference(_basePvCube);
+
+            return diff.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
+        }
+
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
         private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();

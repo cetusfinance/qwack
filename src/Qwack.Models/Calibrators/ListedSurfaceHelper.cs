@@ -200,7 +200,7 @@ namespace Qwack.Models.Calibrators
                             var t = 1;
                             while (i + t < riskies.Length)
                             {
-                                if (smile.MinX <= wingDeltas[w] && smile.MaxX >= (1 - wingDeltas[w]))
+                                if (smile.MinX <= wingDeltas[w] || smile.MaxX >= (1 - wingDeltas[w]))
                                 {
                                     var slopeRR = (riskies[i + t][w] - riskies[i - 1][w]) / (1.0 + t);
                                     riskies[i][w] = riskies[i - 1][w] + slopeRR;
@@ -213,8 +213,8 @@ namespace Qwack.Models.Calibrators
                             if (i + t >= riskies.Length)
                             {
                                 goodSmilesAhead = false;
-                                riskies[i][w] = riskies[i - 1][w];
-                                flies[i][w] = flies[i - 1][w];
+                                //riskies[i][w] = riskies[i - 1][w];
+                                //flies[i][w] = flies[i - 1][w];
                             }
                         }
                     }

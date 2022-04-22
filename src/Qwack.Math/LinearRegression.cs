@@ -150,7 +150,7 @@ namespace Qwack.Math
             private readonly double _r2;
             private readonly double _sse;
 
-            public LinearRegressionResult(double Alpha, double Beta, double R2, double SSE = double.NaN)
+            public LinearRegressionResult(double Alpha, double Beta, double R2, double SSE = 0)
             {
                 _alpha = Alpha;
                 _beta = Beta;

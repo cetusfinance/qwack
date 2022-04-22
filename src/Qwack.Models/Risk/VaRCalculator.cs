@@ -9,9 +9,11 @@ using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
+using Qwack.Math;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Utils.Parallel;
+using static Qwack.Math.LinearRegression;
 
 namespace Qwack.Models.Risk
 {
@@ -240,6 +242,31 @@ namespace Qwack.Models.Risk
             var ciResults = ixCis.Select(ixCi => sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)]);
             var basePvForSet = _basePvCube.SumOfAllRows;
             return ciResults.Select(x => x.Value - basePvForSet).ToArray();
+        }
+
+        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices)
+        {
+            var basePv = _basePvCube.SumOfAllRows;
+            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv + referenceNav);
+            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).OrderBy(x=>x).ToArray();
+            var pfReturns = new List<double>();
+            var benchmarkReturns = new List<double>();
+            for(var t=1; t<intersectingDates.Length; t++)
+            {
+                var y = intersectingDates[t-1];
+                var d = intersectingDates[t];
+                pfReturns.Add(System.Math.Log(results[d] / results[y]));
+                benchmarkReturns.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
+            }
+            
+            var lrResult = LinearRegression.LinearRegressionVector(benchmarkReturns.ToArray(), pfReturns.ToArray());
+
+            return new BetaAnalysisResult
+            {
+                LrResult = lrResult,
+                BenchmarkReturns = benchmarkReturns.ToArray(),
+                PortfolioReturns = pfReturns.ToArray(),
+            };
         }
 
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));

@@ -169,15 +169,10 @@ namespace Qwack.Models.Risk
 
                     IPvModel shiftedTime;
 
-                    if (thisShiftAsset == 0)
-                        shiftedTime = shifted;
-                    else
-                    {
-                        d = d.AddPeriod(RollType.F, _calendar.GetCalendarSafe("USD"), iT.Bd());
-                        shiftedTime = shifted.VanillaModel.Clone().RollModel(d, _currencyProvider);
-                        shiftedTime = shifted.Rebuild(shiftedTime.VanillaModel, model.Portfolio.RollWithLifecycle(d, pd));
-                        pd = d;
-                    }
+                    d = d.AddPeriod(RollType.F, _calendar.GetCalendarSafe("USD"), iT.Bd());
+                    shiftedTime = shifted.VanillaModel.Clone().RollModel(d, _currencyProvider);
+                    shiftedTime = shifted.Rebuild(shiftedTime.VanillaModel, model.Portfolio.RollWithLifecycle(d, pd));
+                    pd = d;
 
                     results[assetIx * NTimeSteps.Value + iT] = new KeyValuePair<Tuple<string, string>, IPvModel>(
                         new Tuple<string, string>(thisLabelAsset, thisLabelTime), shiftedTime);

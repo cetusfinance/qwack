@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -10,7 +9,7 @@ namespace Qwack.Core.Instruments.Asset
 {
     public static class AssetProductFactory
     {
-        public static AsianSwapStrip CreateMonthlyAsianSwap(string period, double strike, string assetId, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection=TradeDirection.Long, Frequency spotLag = new Frequency(), double notional=1, DateGenerationType fixingDateType=DateGenerationType.BusinessDays)
+        public static AsianSwapStrip CreateMonthlyAsianSwap(string period, double strike, string assetId, Calendar fixingCalendar, Calendar payCalendar, Frequency payOffset, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();
             return CreateMonthlyAsianSwap(Start, End, strike, assetId, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
@@ -94,7 +93,7 @@ namespace Qwack.Core.Instruments.Asset
                    start.BusinessDaysInPeriod(end, fixingCalendar) :
                    start.FridaysInPeriod(end, fixingCalendar);
 
-            if(!fixingDates.Any() && start==end) //hack for bullet swaps where system returns fixing date on holiday
+            if (!fixingDates.Any() && start == end) //hack for bullet swaps where system returns fixing date on holiday
             {
                 start = start.IfHolidayRollForward(fixingCalendar);
                 end = start;
@@ -138,8 +137,8 @@ namespace Qwack.Core.Instruments.Asset
 
             var swap = new AsianBasisSwap
             {
-                PaySwaplets = new [] {swapPay},
-                RecSwaplets = new [] {swapRec},
+                PaySwaplets = new[] { swapPay },
+                RecSwaplets = new[] { swapRec },
             };
 
             return swap;
@@ -211,7 +210,7 @@ namespace Qwack.Core.Instruments.Asset
         public static AsianOption CreateAsianOption(DateTime start, DateTime end, double strike, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
 
-            var fixingDates = start==end?new List<DateTime> { start } :
+            var fixingDates = start == end ? new List<DateTime> { start } :
                 fixingDateType == DateGenerationType.BusinessDays ?
                     start.BusinessDaysInPeriod(end, fixingCalendar) :
                     start.FridaysInPeriod(end, fixingCalendar);
@@ -300,10 +299,10 @@ namespace Qwack.Core.Instruments.Asset
             return CreateBackPricingOption(Start, End, End, assetId, putCall, fixingCalendar, payCalendar, payOffset, currency, tradeDirection, spotLag, notional, fixingDateType);
         }
 
-        public static MultiPeriodBackpricingOption CreateMultiPeriodBackPricingOption(Tuple<DateTime,DateTime>[] periodDates, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static MultiPeriodBackpricingOption CreateMultiPeriodBackPricingOption(Tuple<DateTime, DateTime>[] periodDates, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
-                    periodDates.Select(pd=>pd.Item1.BusinessDaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList() :
+                    periodDates.Select(pd => pd.Item1.BusinessDaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList() :
                     periodDates.Select(pd => pd.Item1.FridaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList();
             return new MultiPeriodBackpricingOption
             {

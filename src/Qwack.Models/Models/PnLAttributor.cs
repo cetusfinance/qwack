@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -10,7 +7,7 @@ namespace Qwack.Models.Models
 {
     public class PnLAttributor : IPnLAttributor
     {
-        public ICube BasicAttribution(Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency ccy, ICurrencyProvider ccyProvider) 
+        public ICube BasicAttribution(Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, Currency ccy, ICurrencyProvider ccyProvider)
             => portfolio.BasicAttribution(startModel, endModel, ccy, ccyProvider);
 
         public ICube ExplainAttribution(Portfolio portfolio, IAssetFxModel startModel, IAssetFxModel endModel, ICube startingGreeks, Currency ccy, ICurrencyProvider ccyProvider)

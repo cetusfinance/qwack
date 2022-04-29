@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Collections.Concurrent;
 using Qwack.Transport.TransportObjects.Cubes;
 
 namespace Qwack.Core.Cubes
@@ -39,7 +37,7 @@ namespace Qwack.Core.Cubes
         public TO_ResultCubeRow ToTransportObject() =>
             new()
             {
-                MetaData = MetaData.Select(x=>(string)Convert.ChangeType(x,typeof(string))).ToArray(),
+                MetaData = MetaData.Select(x => (string)Convert.ChangeType(x, typeof(string))).ToArray(),
                 Value = Value
             };
     }
@@ -65,7 +63,7 @@ namespace Qwack.Core.Cubes
 
         public void Initialize(Dictionary<string, Type> dataTypes)
         {
-            _types = new Dictionary<string,Type>(dataTypes);
+            _types = new Dictionary<string, Type>(dataTypes);
             _fieldNames = dataTypes.Keys.ToList();
             _rows = new List<ResultCubeRow>();
         }
@@ -84,7 +82,7 @@ namespace Qwack.Core.Cubes
                 if (!_types.ContainsKey(d.Key))
                     throw new Exception($"Could not map field {d.Key}");
 
-                if (d.Value == null && _types[d.Key]==typeof(string))
+                if (d.Value == null && _types[d.Key] == typeof(string))
                 {
 
                 }
@@ -131,8 +129,8 @@ namespace Qwack.Core.Cubes
             new()
             {
                 FieldNames = _fieldNames,
-                Rows = _rows.Select(x=>x.ToTransportObject()).ToList(),
-                Types = _types.ToDictionary(x=>x.Key,x=>x.Value.AssemblyQualifiedName)
+                Rows = _rows.Select(x => x.ToTransportObject()).ToList(),
+                Types = _types.ToDictionary(x => x.Key, x => x.Value.AssemblyQualifiedName)
             };
     }
 }

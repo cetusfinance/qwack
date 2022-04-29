@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Converters;
 using Qwack.Dates;
 
@@ -15,7 +13,7 @@ namespace Qwack.Providers.Json
         public override MarketShutRuleSet Create(Type objectType) => new(_calendarProvider);
     }
 
-    public class FutureDatesGeneratorConverter :CustomCreationConverter<FutureDatesGenerator>
+    public class FutureDatesGeneratorConverter : CustomCreationConverter<FutureDatesGenerator>
     {
         private readonly ICalendarProvider _calendarProvider;
 

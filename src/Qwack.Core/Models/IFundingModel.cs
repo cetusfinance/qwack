@@ -13,7 +13,7 @@ namespace Qwack.Core.Models
         Dictionary<string, IrCurve> Curves { get; }
         Dictionary<string, IVolSurface> VolSurfaces { get; set; }
         IFxMatrix FxMatrix { get; }
-        
+
         IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate);
         IFundingModel Clone();
         IFundingModel DeepClone(DateTime? newBuildDate);
@@ -35,7 +35,7 @@ namespace Qwack.Core.Models
         Currency GetCurrency(string currency);
 
         double CalibrationTimeMs { get; set; }
-        Dictionary<int,int> CalibrationItterations { get; set; }
+        Dictionary<int, int> CalibrationItterations { get; set; }
         Dictionary<int, string> CalibrationCurves { get; set; }
 
         TO_FundingModel GetTransportObject();

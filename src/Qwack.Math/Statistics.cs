@@ -1,8 +1,7 @@
-using Qwack.Math.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using Qwack.Math.Extensions;
 using static System.Math;
 
 namespace Qwack.Math
@@ -21,7 +20,7 @@ namespace Qwack.Math
 
         public static double NormInv(double p, double mu, double sigma)
         {
-            if (p < 0 || p > 1)
+            if (p is < 0 or > 1)
             {
                 throw new ArgumentOutOfRangeException("The probality p must be bigger than 0 and smaller than 1");
             }
@@ -133,7 +132,7 @@ namespace Qwack.Math
             var n = x.Count();
             var v = 0.0;
 
-            foreach(var xi in x)
+            foreach (var xi in x)
             {
                 var v1 = xi - xAvg;
                 v += (v1 * v1);
@@ -220,7 +219,7 @@ namespace Qwack.Math
 
         public static double FiNormSDist(double z)
         {
-            
+
             var RTWO = 1.4142135623731;
 
             var a0 = 0.6101430819232;
@@ -252,7 +251,7 @@ namespace Qwack.Math
             var xa = Abs(z) / RTWO;
             var p = 0.0;
             if (xa <= 100.0)
-            { 
+            {
                 var BP = 0.0;
                 var T = (8.0 * xa - 30.0) / (4 * xa + 15.0);
                 var bm = 0.0;
@@ -397,7 +396,7 @@ namespace Qwack.Math
             const double high = 1.0 - low;
             double z, R;
 
-            if (P <= 0 || P >= 1.0f)
+            if (P is <= 0 or >= (double)1.0f)
                 return (double)0x7FFFFFFF;
 
             if (P < low)
@@ -598,7 +597,7 @@ namespace Qwack.Math
         {
             var maxDD = 0.0;
             var peakPrice = double.MinValue;
-            foreach(var p in x)
+            foreach (var p in x)
             {
                 peakPrice = Max(peakPrice, p);
                 maxDD = Min(maxDD, p / peakPrice - 1.0);

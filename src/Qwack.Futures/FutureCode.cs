@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 
@@ -47,11 +44,10 @@ namespace Qwack.Futures
 
             //Find the last number
             var i = 0;
-            int tempNumber;
-
+            
             for (i = futureCode.Length; i >= 0; i--)
             {
-                if (int.TryParse(futureCode[i - 1].ToString(), out tempNumber))
+                if (int.TryParse(futureCode[i - 1].ToString(), out _))
                 {
                     break;
                 }
@@ -65,7 +61,7 @@ namespace Qwack.Futures
 
             for (i = futureCode.Length; i >= 0; i--)
             {
-                if (!int.TryParse(futureCode[i - 1].ToString(), out tempNumber))
+                if (!int.TryParse(futureCode[i - 1].ToString(), out _))
                     break;
             }
 
@@ -172,11 +168,11 @@ namespace Qwack.Futures
 
         public DateTime GetExpiry()
         {
-            var baseYear = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
+            _ = (int)Math.Floor(YearBeforeWhich2DigitDatesAreUsed / 10.0) * 10;
             var monthNum = s_futureMonths.ToList().IndexOf(MonthCode) + 1;
 
-            var dayOfMonthToStart= _settings.ExpiryGen.DayOfMonthToStart;
-            if (_settings.ExpiryGen.DayOfMonthToStart==0 && !string.IsNullOrWhiteSpace(_settings.ExpiryGen.DayOfMonthToStartOther))
+            var dayOfMonthToStart = _settings.ExpiryGen.DayOfMonthToStart;
+            if (_settings.ExpiryGen.DayOfMonthToStart == 0 && !string.IsNullOrWhiteSpace(_settings.ExpiryGen.DayOfMonthToStartOther))
             {
                 switch (_settings.ExpiryGen.DayOfMonthToStartOther)
                 {
@@ -269,7 +265,7 @@ namespace Qwack.Futures
                         var dateInMonth3 = new DateTime(YearNumber, monthNum, 1);
                         var lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
                         var holidayInWeek = false;
-                        for(var i=0;i<5; i++)
+                        for (var i = 0; i < 5; i++)
                         {
                             holidayInWeek = holidayInWeek || _settings.RollGen.CalendarObject.IsHoliday(lastMon.AddDays(i));
                         }
@@ -293,7 +289,7 @@ namespace Qwack.Futures
             return d;
         }
 
-        public string GetFrontMonth(DateTime date, bool useExpiryRatherThanRoll=false)
+        public string GetFrontMonth(DateTime date, bool useExpiryRatherThanRoll = false)
         {
             var d = date.AddMonths(-_settings.RollGen.MonthModifier);
             var trialMonth = s_futureMonths[d.Month - 1];
@@ -331,7 +327,7 @@ namespace Qwack.Futures
             {
                 if (YearBeforeWhich2DigitDatesAreUsed < 2010)
                 {
-                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed-2000) ? 2010 + YearNumber : 2000 + YearNumber;
+                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2000) ? 2010 + YearNumber : 2000 + YearNumber;
                 }
                 else
                 {

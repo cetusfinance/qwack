@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Qwack.Math.Solvers
 {
@@ -39,15 +37,15 @@ namespace Qwack.Math.Solvers
 
             var retCode = 0;
 
-            while (retCode==0)
-            { 
+            while (retCode == 0)
+            {
                 var p = new double[n, n + 1];
                 for (var i = 0; i < n; i++)
                     p[i, nn - 1] = startingPoint[i];
 
                 var y = new double[nn];
                 y[nn - 1] = fn(startingPoint);
-                icount ++;
+                icount++;
 
                 for (var j = 0; j < n; j++)
                 {
@@ -138,7 +136,7 @@ namespace Qwack.Math.Solvers
                             for (var i = 0; i < pstar.Length; i++)
                                 p[i, ihi] = pstar[i];
                             y[ihi] = ystar;
-                            
+
                         }
                         else // Retain extension or contraction.
                         {
@@ -164,8 +162,8 @@ namespace Qwack.Math.Solvers
                         {
                             var p2star = new double[n];
                             for (var i = 0; i < p2star.Length; i++)
-                                  p2star[i] = pbar[i] + ccoeff * (p[i, ihi] - pbar[i]);
-    
+                                p2star[i] = pbar[i] + ccoeff * (p[i, ihi] - pbar[i]);
+
                             var y2star = fn(p2star);
                             icount++;
 
@@ -200,7 +198,7 @@ namespace Qwack.Math.Solvers
                             {
                                 for (var i = 0; i < n; i++)
                                     p[i, ihi] = p2star[i];
-                  
+
                                 y[ihi] = y2star;
                             }
                         }// Contraction on the reflection side of the centroid.
@@ -251,7 +249,7 @@ namespace Qwack.Math.Solvers
 
                         var z = 0.0;
                         for (var i = 0; i < y.Length; i++)
-                            z+=y[i];
+                            z += y[i];
 
                         var x = z / nn;
 
@@ -306,7 +304,7 @@ namespace Qwack.Math.Solvers
 
                 // Restart the procedure.
                 Array.Copy(xmin, startingPoint, n);
-                
+
                 del = eps;
                 numres++;
             }

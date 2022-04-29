@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Interpolation;

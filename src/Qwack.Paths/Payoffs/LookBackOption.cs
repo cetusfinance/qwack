@@ -34,8 +34,8 @@ namespace Qwack.Paths.Payoffs
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
-            
-            if(!IsFx && _ccy.Ccy!="USD")
+
+            if (!IsFx && _ccy.Ccy != "USD")
             {
                 _fxName = $"USD/{_ccy.Ccy}";
                 _fxIndex = dims.GetDimension(_fxName);
@@ -43,7 +43,7 @@ namespace Qwack.Paths.Payoffs
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_sampleDates.Count];
-            for(var i = 0; i < _sampleDates.Count; i++)
+            for (var i = 0; i < _sampleDates.Count; i++)
             {
                 _dateIndexes[i] = dates.GetDateIndex(_sampleDates[i]);
             }
@@ -60,7 +60,7 @@ namespace Qwack.Paths.Payoffs
         {
             var blockBaseIx = block.GlobalPathIndex;
 
-            if (_callPut==OptionType.C)
+            if (_callPut == OptionType.C)
             {
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {

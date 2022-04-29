@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -8,7 +6,7 @@ using Qwack.Core.Instruments;
 namespace Qwack.Core.Models
 {
     public interface IModel
-    {         
+    {
 
         bool IsSetupForPortfolio(Portfolio portfolio);
 

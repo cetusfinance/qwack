@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
@@ -38,7 +33,7 @@ namespace Qwack.Math.Interpolation
             _maxY = _y[y.Length - 1];
             CalculateSlope();
         }
-                
+
         public LinearInterpolatorFlatExtrapNoBinSearch()
         { }
 
@@ -53,11 +48,11 @@ namespace Qwack.Math.Interpolation
         private int FindFloorPoint(double t)
         {
             var x = _x;
-            for(var i = 1; i < x.Length;i++)
+            for (var i = 1; i < x.Length; i++)
             {
-                if(x[i] >= t)
+                if (x[i] >= t)
                 {
-                    return i-1;
+                    return i - 1;
                 }
             }
             throw new NotImplementedException();
@@ -135,7 +130,7 @@ namespace Qwack.Math.Interpolation
                 Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
                 var newSlope = new double[_slope.Length];
                 Buffer.BlockCopy(_slope, 0, newSlope, 0, _slope.Length * 8);
-                var returnValue = new LinearInterpolatorFlatExtrapNoBinSearch(_x, newY, newSlope).Bump(pillar, newValue-_y[pillar], true);
+                var returnValue = new LinearInterpolatorFlatExtrapNoBinSearch(_x, newY, newSlope).Bump(pillar, newValue - _y[pillar], true);
                 return returnValue;
             }
         }

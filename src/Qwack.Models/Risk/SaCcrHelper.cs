@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
-using Qwack.Math.Extensions;
 using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
@@ -18,7 +16,7 @@ namespace Qwack.Models.Risk
         public const double DefaultAlpha = 1.4;
         public const double MultiplerFloor = 0.05;
 
-        public static double SaCcrEad(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, ICurrencyProvider currencyProvider, double? pv = null, double alpha = DefaultAlpha) 
+        public static double SaCcrEad(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, ICurrencyProvider currencyProvider, double? pv = null, double alpha = DefaultAlpha)
         {
             foreach (ISaCcrEnabledCommodity ins in portfolio.Instruments)
             {
@@ -38,14 +36,14 @@ namespace Qwack.Models.Risk
 
             return SaCcrEad(portfolio, m, pv, alpha);
         }
-        public static double SaCcrEad(this Portfolio portfolio, IAssetFxModel model, double? pv = null, double alpha = DefaultAlpha) => alpha * (Max(0,pv ?? Rc(portfolio, model)) + Pfe(portfolio, model, pv));
+        public static double SaCcrEad(this Portfolio portfolio, IAssetFxModel model, double? pv = null, double alpha = DefaultAlpha) => alpha * (Max(0, pv ?? Rc(portfolio, model)) + Pfe(portfolio, model, pv));
         public static double SaCcrEad_Margined(this Portfolio portfolio, IAssetFxModel model, SaCcrCollateralSpec collateralSpec, double? pv = null, double alpha = DefaultAlpha)
             => alpha * (Max(0, collateralSpec.Rc(portfolio, model, pv)) + Pfe(portfolio, model, pv, collateralSpec.MPOR, collateralSpec.Collateral));
         public static double Rc(Portfolio portfolio, IAssetFxModel model) => Max(0, portfolio.PV(model).SumOfAllRows);
-        public static double Pfe(Portfolio portfolio, IAssetFxModel model, double? pv=null, double? MPOR = null, double? collateral=null)
+        public static double Pfe(Portfolio portfolio, IAssetFxModel model, double? pv = null, double? MPOR = null, double? collateral = null)
         {
             var addon = AggregateAddOn(portfolio, model, MPOR);
-            return addon==0?0.0:Multipler(portfolio, model, pv, addon, collateral) * addon;
+            return addon == 0 ? 0.0 : Multipler(portfolio, model, pv, addon, collateral) * addon;
         }
 
         public static double Multipler(Portfolio portfolio, IAssetFxModel model, double? pv = null, double? addOn = null, double? collateral = null)
@@ -67,12 +65,12 @@ namespace Qwack.Models.Risk
                 var irTrades = ccyGroup.Select(ir => ir as ISaCcrEnabledIR).ToArray();
                 var irTradeBuckets = irTrades.GroupBy(x => x.MaturityBucket(model.BuildDate));
                 var buckets = new[] { 1, 2, 3 };
-                var D = new double[buckets.Max()+1];
+                var D = new double[buckets.Max() + 1];
                 foreach (var bucket in buckets)
                 {
                     var tradesThisBucket = irTradeBuckets.FirstOrDefault(irtb => irtb.Key == bucket);
                     if (tradesThisBucket != null)
-                        D[bucket] = tradesThisBucket.Sum(t => 
+                        D[bucket] = tradesThisBucket.Sum(t =>
                             t.SupervisoryDelta(model) * fxToBase * t.SupervisoryDuration(model.BuildDate) * t.TradeNotional * t.MaturityFactor(model.BuildDate, MPOR));
                 }
 
@@ -162,7 +160,7 @@ namespace Qwack.Models.Risk
         {
             var population = portfolio.Instruments.Select(x => x as ISaCcrEnabledCommodity).Where(x => x != null).GroupBy(x => x.AssetClass);
             var baseCcy = model.FundingModel.FxMatrix.BaseCurrency;
-            var addOnByClass = new Dictionary<SaCcrAssetClass, Dictionary<string,double>>();
+            var addOnByClass = new Dictionary<SaCcrAssetClass, Dictionary<string, double>>();
             foreach (var classGroup in population)
             {
                 var aClass = classGroup.Key;
@@ -204,7 +202,7 @@ namespace Qwack.Models.Risk
 
             return addOnCommodity;
         }
-    
+
 
         public static double AddOnEquity(Portfolio portfolio, IAssetFxModel model, double? MPOR = null)
         {
@@ -250,7 +248,7 @@ namespace Qwack.Models.Risk
         }
     }
 
-    
+
 
     public class SaCcrCollateralSpec
     {
@@ -263,7 +261,7 @@ namespace Qwack.Models.Risk
         /// <summary>
         /// Minimum Transfer Amount
         /// </summary>
-        public double MTA { get; set; } 
+        public double MTA { get; set; }
         public double Threshold { get; set; }
         /// <summary>
         /// Net independent collateral amount

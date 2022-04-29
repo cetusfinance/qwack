@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
@@ -12,7 +10,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
     public class TO_Instrument
     {
         [ProtoMember(100)]
-        public FundingInstrumentType FundingInstrumentType { get; set; } 
+        public FundingInstrumentType FundingInstrumentType { get; set; }
         [ProtoMember(101)]
         public AssetInstrumentType AssetInstrumentType { get; set; }
         [ProtoMember(102)]
@@ -42,20 +40,20 @@ namespace Qwack.Transport.TransportObjects.Instruments
         [ProtoMember(114)]
         public TO_FxPerpetual FxPerpetual { get; set; }
 
-        public override bool Equals(object obj) => obj is TO_Instrument instrument && 
-            FundingInstrumentType == instrument.FundingInstrumentType && 
-            AssetInstrumentType == instrument.AssetInstrumentType && 
-            EqualityComparer<TO_AsianSwap>.Default.Equals(AsianSwap, instrument.AsianSwap) && 
-            EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip) && 
-            EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption) && 
-            EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward) && 
-            EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption) && 
-            EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future) && 
-            EqualityComparer<TO_FuturesOption>.Default.Equals(FuturesOption, instrument.FuturesOption) && 
-            EqualityComparer<TO_Equity>.Default.Equals(Equity, instrument.Equity) && 
-            EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond) && 
-            EqualityComparer<TO_FxForward>.Default.Equals(FxForward, instrument.FxForward) && 
-            EqualityComparer<TO_FxFuture>.Default.Equals(FxFuture, instrument.FxFuture) && 
+        public override bool Equals(object obj) => obj is TO_Instrument instrument &&
+            FundingInstrumentType == instrument.FundingInstrumentType &&
+            AssetInstrumentType == instrument.AssetInstrumentType &&
+            EqualityComparer<TO_AsianSwap>.Default.Equals(AsianSwap, instrument.AsianSwap) &&
+            EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip) &&
+            EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption) &&
+            EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward) &&
+            EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption) &&
+            EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future) &&
+            EqualityComparer<TO_FuturesOption>.Default.Equals(FuturesOption, instrument.FuturesOption) &&
+            EqualityComparer<TO_Equity>.Default.Equals(Equity, instrument.Equity) &&
+            EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond) &&
+            EqualityComparer<TO_FxForward>.Default.Equals(FxForward, instrument.FxForward) &&
+            EqualityComparer<TO_FxFuture>.Default.Equals(FxFuture, instrument.FxFuture) &&
             EqualityComparer<TO_FxVanillaOption>.Default.Equals(FxOption, instrument.FxOption) &&
             EqualityComparer<TO_FxPerpetual>.Default.Equals(FxPerpetual, instrument.FxPerpetual);
 

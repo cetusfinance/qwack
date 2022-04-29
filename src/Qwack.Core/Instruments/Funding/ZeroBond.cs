@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Karambolo.Extensions.Logging.File;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 
@@ -14,7 +10,7 @@ namespace Qwack.Core.Instruments.Funding
     {
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public ZeroBond() { }
-        public ZeroBond(double price, DateTime maturityDate, string discountCurve):base()
+        public ZeroBond(double price, DateTime maturityDate, string discountCurve) : base()
         {
             Price = price;
             MaturityDate = maturityDate;

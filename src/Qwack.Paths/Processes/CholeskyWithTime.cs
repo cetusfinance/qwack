@@ -1,19 +1,18 @@
-using Qwack.Paths.Features;
-using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Matrix;
-using Qwack.Core.Models;
-using Qwack.Options;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Basic.Correlation;
+using Qwack.Core.Models;
+using Qwack.Math.Matrix;
+using Qwack.Options;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
     public class CholeskyWithTime : IPathProcess, IRequiresFinish
     {
         private bool _isComplete;
-        
+
         private readonly ICorrelationMatrix _matrix;
         private readonly IAssetFxModel _model;
         private List<CorrelationMatrix> _localMatrix;
@@ -38,7 +37,7 @@ namespace Qwack.Paths.Processes
             var pathFeatures = collection.GetFeature<IPathMappingFeature>();
             _localMatrixSquare = new List<double[][]>();
             var dimNames = pathFeatures.GetDimensionNames();
-            
+
             for (var t = 0; t < _localMatrix.Count; t++)
             {
                 _localMatrixSquare.Add(new double[pathFeatures.NumberOfDimensions][]);
@@ -73,7 +72,7 @@ namespace Qwack.Paths.Processes
                     {
                         randsForThisStep[r] = randsForSteps[r][step];
                     }
-                    var correlatedRands = Correlate(randsForThisStep,step);
+                    var correlatedRands = Correlate(randsForThisStep, step);
                     for (var r = 0; r < randsForSteps.Length; r++)
                     {
                         var x = block.GetStepsForFactor(path, r);

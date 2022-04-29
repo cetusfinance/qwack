@@ -45,7 +45,7 @@ namespace Qwack.Dates
                 {
                     return returnCalendar;
                 }
-                throw new ArgumentOutOfRangeException(nameof(calendarName),$"Could not find or make a calendar called {calendarName}");
+                throw new ArgumentOutOfRangeException(nameof(calendarName), $"Could not find or make a calendar called {calendarName}");
             }
         }
 
@@ -54,7 +54,7 @@ namespace Qwack.Dates
 
         public bool TryGetCalendar(string calendarName, out Calendar calendar)
         {
-            if(calendarName==null)
+            if (calendarName == null)
             {
                 calendar = default;
                 return false;
@@ -80,7 +80,7 @@ namespace Qwack.Dates
                 return true;
             }
             //We couldn't find it so lets generate it
-            calendar = new Calendar {Name = key};
+            calendar = new Calendar { Name = key };
 
             for (var i = 0; i < calendarsNames.Length; i++)
             {

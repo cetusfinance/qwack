@@ -34,7 +34,7 @@ namespace Qwack.Random.Sobol
             _numberOfDimensions *= collection.GetFeature<ITimeStepsFeature>().TimeStepCount;
             InitDimensions();
         }
-                
+
         public void Process(IPathBlock block)
         {
             var temp = new double[Vector<double>.Count];

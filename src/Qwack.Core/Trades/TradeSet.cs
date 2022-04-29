@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Instruments;
 
 namespace Qwack.Core.Trades

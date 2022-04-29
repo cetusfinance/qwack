@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -14,7 +13,7 @@ namespace Qwack.Models.Risk.Mutators
         {
             var o = model.Clone();
             var curve = model.GetPriceCurve(assetId);
-            switch(curve)
+            switch (curve)
             {
                 case BasicPriceCurve pc:
                     var npc = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * (1.0 + shiftSize)).ToArray(), pc.CurveType, pc.CurrencyProvider, pc.PillarLabels)
@@ -49,13 +48,13 @@ namespace Qwack.Models.Risk.Mutators
         {
             var o = model.Clone();
             var spotRates = new Dictionary<Currency, double>(o.FundingModel.FxMatrix.SpotRates);
-            var currency = spotRates.Keys.FirstOrDefault(c=>c.Ccy== ccy);
-            if(currency != null)
+            var currency = spotRates.Keys.FirstOrDefault(c => c.Ccy == ccy);
+            if (currency != null)
             {
                 spotRates[currency] *= (1.0 + shiftSize);
                 o.FundingModel.FxMatrix.UpdateSpotRates(spotRates);
             }
-            
+
             return o;
         }
 
@@ -82,7 +81,7 @@ namespace Qwack.Models.Risk.Mutators
         public static IAssetFxModel FxSpotShift(FxPair pair, double shiftSize, IAssetFxModel model)
         {
             var o = model.Clone();
-            if(pair.Domestic==model.FundingModel.FxMatrix.BaseCurrency)
+            if (pair.Domestic == model.FundingModel.FxMatrix.BaseCurrency)
             {
                 var spot = model.FundingModel.FxMatrix.GetSpotRate(pair.Foreign);
                 o.FundingModel.FxMatrix.SpotRates[pair.Foreign] = spot * (1.0 + shiftSize);
@@ -107,6 +106,6 @@ namespace Qwack.Models.Risk.Mutators
         }
 
 
-      
+
     }
 }

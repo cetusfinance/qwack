@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Models.Calibrators;
-using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
-using Qwack.Utils.Parallel;
+using Qwack.Core.Instruments.Funding;
+using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Models.Calibrators;
+using Qwack.Utils.Parallel;
 using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
@@ -38,10 +37,10 @@ namespace Qwack.Models.Risk
             var lastDateByCurve = insByCurve.ToDictionary(x => x.Key, x => DateTime.MinValue);
             foreach (var ins in pvModel.Portfolio.UnWrapWrappers().Instruments)
             {
-                if(ins is IFundingInstrument fins)
+                if (ins is IFundingInstrument fins)
                 {
                     var cvs = fins.Dependencies(pvModel.VanillaModel.FundingModel.FxMatrix);
-                    foreach(var c in cvs)
+                    foreach (var c in cvs)
                     {
                         if (!lastDateByCurve.ContainsKey(c))
                             lastDateByCurve[c] = DateTime.MinValue;
@@ -49,7 +48,7 @@ namespace Qwack.Models.Risk
                         lastDateByCurve[c] = lastDateByCurve[c].Max(ins.LastSensitivityDate);
                     }
                 }
-                else if(ins is IAssetInstrument ains)
+                else if (ins is IAssetInstrument ains)
                 {
                     var cvs = ains.IrCurves(pvModel.VanillaModel);
                     foreach (var c in cvs)
@@ -62,7 +61,7 @@ namespace Qwack.Models.Risk
                 }
             }
 
-            foreach(var c in lastDateByCurve.Keys.ToArray())
+            foreach (var c in lastDateByCurve.Keys.ToArray())
             {
                 if (dependencies.ContainsKey(c))
                 {
@@ -73,9 +72,9 @@ namespace Qwack.Models.Risk
                 }
             }
 
-            
+
             var insToRisk = new List<IFundingInstrument>();
-            foreach(var gp in insByCurve)
+            foreach (var gp in insByCurve)
             {
                 var lastDate = lastDateByCurve[gp.Key];
                 var sorted = gp.OrderBy(x => x.LastSensitivityDate).ToList();
@@ -93,7 +92,7 @@ namespace Qwack.Models.Risk
             var parRates = insToRisk.Select(x => x.CalculateParRate(pvModel.VanillaModel.FundingModel)).ToList();
             var newIns = insToRisk.Select((x, ix) => x.SetParRate(parRates[ix]));
             var newFic = new FundingInstrumentCollection(currencyProvider);
-            newFic.AddRange(newIns.OrderBy(x=>x.SolveCurve).ThenBy(x=>x.PillarDate));
+            newFic.AddRange(newIns.OrderBy(x => x.SolveCurve).ThenBy(x => x.PillarDate));
 
             var fModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
             var s = new NewtonRaphsonMultiCurveSolverStaged();
@@ -164,7 +163,7 @@ namespace Qwack.Models.Risk
                 }
             }).Wait();
 
-            return cube.Sort(new List<string> {"Curve","RiskDate",TradeId});
+            return cube.Sort(new List<string> { "Curve", "RiskDate", TradeId });
         }
 
         private static double GetScaleFactor(IFundingInstrument ins, double parFlat, double parBump, IFundingModel model)
@@ -179,8 +178,8 @@ namespace Qwack.Models.Risk
                     return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().YearFraction);
                 case ContangoSwap cs:
                     var t360 = (cs.PillarDate - model.BuildDate).TotalDays / 360.0;
-                    var spot = model.GetFxRate(model.BuildDate,cs.MetalCCY,cs.CashCCY);
-                    var fwdFlat = (1 + parFlat * t360)* spot;
+                    var spot = model.GetFxRate(model.BuildDate, cs.MetalCCY, cs.CashCCY);
+                    var fwdFlat = (1 + parFlat * t360) * spot;
                     var fwdBumped = (1 + parBump * t360) * spot;
                     return 1.0 / (fwdBumped - fwdFlat);
                 case IrSwap irs:

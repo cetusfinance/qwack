@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
-using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {
-    public interface IPriceCurve 
+    public interface IPriceCurve
     {
         DateTime BuildDate { get; }
-        
+
         double GetPriceForDate(DateTime date);
         double GetPriceForFixingDate(DateTime date);
 
@@ -36,7 +35,7 @@ namespace Qwack.Core.Curves
 
         PriceCurveType CurveType { get; }
 
-        Frequency SpotLag { get; set; } 
+        Frequency SpotLag { get; set; }
         Calendar SpotCalendar { get; set; }
 
         CommodityUnits Units { get; set; }

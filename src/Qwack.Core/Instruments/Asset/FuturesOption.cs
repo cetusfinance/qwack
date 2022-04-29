@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
-using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
@@ -38,9 +35,9 @@ namespace Qwack.Core.Instruments.Asset
             PremiumDate = to.PremiumDate;
             Premium = to.Premium;
             CallPut = to.CallPut;
-            ExerciseType= to.ExerciseType;
-            MarginingType= to.MarginingType;
-            
+            ExerciseType = to.ExerciseType;
+            MarginingType = to.MarginingType;
+
         }
 
         public new IAssetInstrument Clone() => new FuturesOption
@@ -86,7 +83,7 @@ namespace Qwack.Core.Instruments.Asset
                    DiscountCurve == futOpt.DiscountCurve &&
                    EqualityComparer<Currency>.Default.Equals(Currency, futOpt.Currency);
 
-        public override int GetHashCode() => TradeId.GetHashCode() ^ ContractQuantity.GetHashCode() ^ LotSize.GetHashCode() ^ PriceMultiplier.GetHashCode() 
+        public override int GetHashCode() => TradeId.GetHashCode() ^ ContractQuantity.GetHashCode() ^ LotSize.GetHashCode() ^ PriceMultiplier.GetHashCode()
             ^ Direction.GetHashCode() ^ ExpiryDate.GetHashCode() ^ Strike.GetHashCode() ^ AssetId.GetHashCode() ^ CallPut.GetHashCode()
             ^ ExerciseType.GetHashCode() ^ MarginingType.GetHashCode() ^ DiscountCurve.GetHashCode() ^ Currency.GetHashCode();
 

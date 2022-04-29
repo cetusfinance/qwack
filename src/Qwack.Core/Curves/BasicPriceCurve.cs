@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
-using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
-using Qwack.Core.Basic;
 using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
@@ -61,7 +60,7 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
-        public BasicPriceCurve(TO_BasicPriceCurve transportObject, ICurrencyProvider currencyProvider) : 
+        public BasicPriceCurve(TO_BasicPriceCurve transportObject, ICurrencyProvider currencyProvider) :
             this(transportObject.BuildDate, transportObject.PillarDates, transportObject.Prices, transportObject.CurveType, currencyProvider, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrency(transportObject.Currency);

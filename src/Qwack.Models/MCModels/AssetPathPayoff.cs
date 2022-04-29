@@ -74,7 +74,7 @@ namespace Qwack.Models.MCModels
             }
         }
         public LinearAveragePriceRegressor[] Regressors { get; private set; }
-        
+
         public void SetRegressor(LinearAveragePriceRegressor regressor)
         {
             var match = Regressors.Where(x => x == regressor);
@@ -87,7 +87,7 @@ namespace Qwack.Models.MCModels
                     if (Regressors[i] == m) Regressors[i] = m;
             }
 
-            switch(AssetInstrument)
+            switch (AssetInstrument)
             {
                 case BackPricingOption bpo:
                     var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
@@ -97,7 +97,7 @@ namespace Qwack.Models.MCModels
                 case MultiPeriodBackpricingOption mpbpo:
                     var mbpo = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOption;
                     if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
-                    for(var i=0;i<mbpo.AverageRegressors.Length;i++)
+                    for (var i = 0; i < mbpo.AverageRegressors.Length; i++)
                         if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
                     break;
             }
@@ -109,7 +109,7 @@ namespace Qwack.Models.MCModels
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
             SimulationCcy = simulationCcy;
-            
+
             switch (AssetInstrument)
             {
                 case AsianOption ao:
@@ -120,7 +120,7 @@ namespace Qwack.Models.MCModels
                     _fxType = ao.FxConversionType;
                     _ccy = ao.PaymentCurrency;
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
-                    _asianFxDates = ao.FxFixingDates?.ToList()??_asianDates;
+                    _asianFxDates = ao.FxFixingDates?.ToList() ?? _asianDates;
                     _discountCurve = ao.DiscountCurve;
                     _payDate = ao.PaymentDate;
                     break;
@@ -131,7 +131,7 @@ namespace Qwack.Models.MCModels
                     _optionType = OptionType.Swap;
                     _fxType = asw.FxConversionType;
                     _ccy = asw.PaymentCurrency;
-                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
+                    _fxName = _fxType == FxConversionType.None ? null : $"USD/{asw.PaymentCurrency.Ccy}";
                     _asianFxDates = asw.FxFixingDates?.ToList() ?? _asianDates;
                     _discountCurve = asw.DiscountCurve;
                     _payDate = asw.PaymentDate;
@@ -209,7 +209,7 @@ namespace Qwack.Models.MCModels
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     break;
                 case AsianBasisSwap abs:
-                    _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x,_currencyProvider,_calendarProvider, simulationCcy))
+                    _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider, simulationCcy))
                         .Concat(abs.RecSwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider, simulationCcy)))
                         .ToList();
                     break;
@@ -244,12 +244,12 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { mbp.SettlementRegressor };
                     break;
             }
-            _isCompo = _fxType == FxConversionType.ConvertThenAverage || _fxType == FxConversionType.AverageThenConvert;
-            _assetName = AssetInstrument.AssetIds.Any() ? 
+            _isCompo = _fxType is FxConversionType.ConvertThenAverage or FxConversionType.AverageThenConvert;
+            _assetName = AssetInstrument.AssetIds.Any() ?
                 AssetInstrument.AssetIds.First() :
                 (AssetInstrument is FxVanillaOption fxo ? fxo.Pair : null);
             _requiresConversionToSimCcy = SimulationCcy != _ccy;
-            if(_requiresConversionToSimCcy)
+            if (_requiresConversionToSimCcy)
             {
                 _conversionToSimCcyName = $"{SimulationCcy}/{_ccy}";
             }
@@ -323,9 +323,9 @@ namespace Qwack.Models.MCModels
 
         public void Process(IPathBlock block)
         {
-            if(_subInstruments!=null)
+            if (_subInstruments != null)
             {
-                foreach(var ins in _subInstruments)
+                foreach (var ins in _subInstruments)
                 {
                     ins.Process(block);
                 }
@@ -335,7 +335,7 @@ namespace Qwack.Models.MCModels
             var blockBaseIx = block.GlobalPathIndex;
 
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
-            { 
+            {
                 var steps = block.GetStepsForFactor(path, _assetIndex);
                 var stepsfx = (_isCompo || _fxType == FxConversionType.SettleOtherCurrency) ? block.GetStepsForFactor(path, _fxIndex) : null;
 
@@ -360,7 +360,7 @@ namespace Qwack.Models.MCModels
                     {
                         for (var i = 0; i < _fxDateIndexes.Length; i++)
                             finalValuesFx += stepsfx[_fxDateIndexes[i]];
-                        
+
                         finalValuesFx /= new Vector<double>(_fxDateIndexes.Length);
                         finalValues *= finalValuesFx;
                     }
@@ -382,15 +382,15 @@ namespace Qwack.Models.MCModels
                         break;
                 }
 
-                if(_fxType==FxConversionType.SettleOtherCurrency)
+                if (_fxType == FxConversionType.SettleOtherCurrency)
                 {
                     finalValues *= stepsfx[_payDateIx];
                 }
 
-                if(_requiresConversionToSimCcy)
+                if (_requiresConversionToSimCcy)
                 {
                     var stepsFxConv = block.GetStepsForFactor(path, _conversionToSimCcyIx);
-                    if(_requiresConversionToSimCcyInverted)
+                    if (_requiresConversionToSimCcyInverted)
                         finalValues *= stepsFxConv[_payDateIx];
                     else
                         finalValues /= stepsFxConv[_payDateIx];
@@ -423,7 +423,8 @@ namespace Qwack.Models.MCModels
 
         public double[] ResultsByPath
         {
-            get {
+            get
+            {
                 var vecLen = Vector<double>.Count;
                 var results = new double[_rawNumberOfPaths];
                 for (var i = 0; i < _results.Length; i++)
@@ -517,9 +518,9 @@ namespace Qwack.Models.MCModels
                         YearFraction = 1.0
                     }
                 }
-            }).ToArray(); 
+            }).ToArray();
         }
 
-        
+
     }
 }

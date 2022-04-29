@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Qwack.Core.Models;
-using Qwack.Paths;
-using Qwack.Paths.Features;
 
 namespace Qwack.Random.Constant
 {
@@ -15,14 +9,14 @@ namespace Qwack.Random.Constant
     {
 
         public readonly double ReturnValue = 0.5;
-        
+
         public Constant()
-        {        }
+        { }
 
         public Constant(double returnValue) : base() => ReturnValue = returnValue;
 
         public bool UseNormalInverse { get; set; }
-     
+
         public unsafe void Process(IPathBlock block)
         {
             if (!UseNormalInverse)

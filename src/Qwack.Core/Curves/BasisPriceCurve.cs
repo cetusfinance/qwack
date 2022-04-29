@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
-using System.Linq;
-using Qwack.Core.Instruments;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Curves;
@@ -26,7 +25,7 @@ namespace Qwack.Core.Curves
             DiscountCurve = discountCurve;
             BaseCurve = baseCurve;
             CurveType = curveType;
-            
+
             Solver = solver;
             BuildDate = buildDate;
             PillarLabels = pillarLabels ?? pillars.Select(x => x.ToString("yyyy-MM-dd")).ToList();
@@ -81,8 +80,8 @@ namespace Qwack.Core.Curves
         {
             var o = new Dictionary<string, IPriceCurve>();
 
-            var insToBump = LastDateToBump.HasValue ? 
-                Instruments.Where(x => x.LastSensitivityDate < LastDateToBump.Value.AddMonths(1)).ToList() : 
+            var insToBump = LastDateToBump.HasValue ?
+                Instruments.Where(x => x.LastSensitivityDate < LastDateToBump.Value.AddMonths(1)).ToList() :
                 Instruments.ToList();
 
             for (var i = 0; i < insToBump.Count; i++)
@@ -109,12 +108,12 @@ namespace Qwack.Core.Curves
         public double GetPriceForDate(DateTime date) => Curve.GetPriceForDate(date);
         public double GetPriceForFixingDate(DateTime date) => Curve.GetPriceForFixingDate(date);
         public DateTime PillarDatesForLabel(string label) => Curve.PillarDatesForLabel(label);
-        public IPriceCurve RebaseDate(DateTime newAnchorDate) 
+        public IPriceCurve RebaseDate(DateTime newAnchorDate)
             => new BasisPriceCurve(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, Curve.RebaseDate(newAnchorDate), BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
-        
-        public BasisPriceCurve Clone() 
+
+        public BasisPriceCurve Clone()
             => new(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, BaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
-        public BasisPriceCurve ReCalibrate(IPriceCurve NewBaseCurve) 
+        public BasisPriceCurve ReCalibrate(IPriceCurve NewBaseCurve)
             => new(Instruments.Select(x => (IAssetInstrument)x.Clone()).ToList(), Pillars, DiscountCurve, NewBaseCurve, BuildDate, CurveType, Solver) { Currency = Currency, AssetId = AssetId, Name = Name };
     }
 }

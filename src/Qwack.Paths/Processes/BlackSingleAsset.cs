@@ -1,11 +1,11 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Math.Extensions;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths.Features;
 using Qwack.Serialization;
 using static System.Math;
 
@@ -46,7 +46,7 @@ namespace Qwack.Paths.Processes
             _adjSurface = fxAdjustSurface;
             _correlation = fxAssetCorrelation;
 
-            if (volSurface is InverseFxSurface || (_adjSurface!=null && _adjSurface?.AssetId == volSurface.AssetId))
+            if (volSurface is InverseFxSurface || (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId))
                 _siegelInvert = true;
 
             if (_adjSurface != null && _adjSurface?.AssetId == volSurface.AssetId)
@@ -75,7 +75,7 @@ namespace Qwack.Paths.Processes
                 var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
                 var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
                 var varEnd = Pow(atmVol, 2) * _timesteps.Times[t];
-                var fwdVariance = Max(0,varEnd - varStart);
+                var fwdVariance = Max(0, varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
 

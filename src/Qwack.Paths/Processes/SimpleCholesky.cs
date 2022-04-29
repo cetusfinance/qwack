@@ -1,6 +1,6 @@
-using Qwack.Paths.Features;
 using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
@@ -29,7 +29,7 @@ namespace Qwack.Paths.Processes
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 var randsForSteps = new Vector<double>[nFactors][];
-                for(var r=0;r< randsForSteps.Length;r++)
+                for (var r = 0; r < randsForSteps.Length; r++)
                 {
                     randsForSteps[r] = block.GetStepsForFactor(path, r).ToArray();
                 }

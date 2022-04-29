@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
@@ -31,7 +28,7 @@ namespace Qwack.Math.Interpolation
             _maxX = _x[x.Length - 1];
             CalculateSlope();
         }
-                
+
         public LinearInterpolatorFlatExtrap()
         { }
 
@@ -106,9 +103,9 @@ namespace Qwack.Math.Interpolation
             var k = FindFloorPoint(x);
             if (k == 0)
                 return 0.5 * _slope[0];
-            if(k==_x.Length)
+            if (k == _x.Length)
                 return 0.5 * _slope[_slope.Length];
-            
+
             return (_slope[k] + _slope[k - 1]) / 2.0;
         }
 
@@ -119,7 +116,7 @@ namespace Qwack.Math.Interpolation
 
             var iSum = 0.0;
 
-            if(a<_minX) //flat extrap on the left
+            if (a < _minX) //flat extrap on the left
             {
                 iSum += (_minX - a) * _minX;
                 a = _minX;
@@ -134,7 +131,7 @@ namespace Qwack.Math.Interpolation
             var kb = FindFloorPoint(b);
 
             double vA, vU;
-            while(kb>ka)
+            while (kb > ka)
             {
                 var u = _x[ka + 1]; //upper bound of segment
                 vA = Interpolate(a);

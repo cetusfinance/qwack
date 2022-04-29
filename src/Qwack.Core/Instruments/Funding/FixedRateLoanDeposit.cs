@@ -12,7 +12,7 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public FixedRateLoanDeposit() { }
 
-        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve):base()
+        public FixedRateLoanDeposit(DateTime startDate, DateTime endDate, double interestRate, Currency currency, DayCountBasis basis, double notional, string discountCurve) : base()
         {
             StartDate = startDate;
             EndDate = endDate;
@@ -140,9 +140,9 @@ namespace Qwack.Core.Instruments.Funding
 
         public string FxPair(IAssetFxModel model) => string.Empty;
 
-        IAssetInstrument IAssetInstrument.Clone()=> (IAssetInstrument)Clone();
+        IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();
 
-        public IAssetInstrument SetStrike(double strike)=> throw new NotImplementedException();
+        public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
         {

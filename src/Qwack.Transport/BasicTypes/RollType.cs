@@ -29,6 +29,6 @@ namespace Qwack.Transport.BasicTypes
         IMM = 8,
         EOM = 9,
         ShortFLongMF = 10,
-        None=11
+        None = 11
     }
 }

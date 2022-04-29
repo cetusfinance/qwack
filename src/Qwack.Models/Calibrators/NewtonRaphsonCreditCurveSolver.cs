@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Qwack.Core.Basic;
 using Qwack.Core.Curves;
-using Qwack.Core.Instruments;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Credit;
-using Qwack.Core.Instruments.Funding;
-using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -53,7 +48,7 @@ namespace Qwack.Models.Calibrators
             _basis = basis;
             _recoveryRate = recoveryRate;
 
-            _currentGuess = instruments.OrderBy(x => x.FinalSensitivityDate).Select((x,ix) => x.Spread / (1.0 - recoveryRate)).ToArray();
+            _currentGuess = instruments.OrderBy(x => x.FinalSensitivityDate).Select((x, ix) => x.Spread / (1.0 - recoveryRate)).ToArray();
             _currentCurve = new LinearHazzardInterpolator(_pillarsT, _currentGuess);
             _currentPVs = ComputePVs();
 
@@ -92,7 +87,7 @@ namespace Qwack.Models.Calibrators
 
             for (var i = 0; i < _numberOfPillars; i++)
             {
-                
+
                 _currentCurve = new LinearHazzardInterpolator(_pillarsT, _currentGuess.Select((g, ix) => ix == i ? g + JacobianBump : g).ToArray());
                 var bumpedPVs = ComputePVs();
 
@@ -111,14 +106,14 @@ namespace Qwack.Models.Calibrators
             var hzCurve = new HazzardCurve(_buildDate, _basis, _currentCurve);
             for (var i = 0; i < o.Length; i++)
             {
-                o[i] = UseSmallSteps ? 
+                o[i] = UseSmallSteps ?
                     _curveInstruments[i].PV_SmallSteps(hzCurve, _discountCurve, _recoveryRate, true) :
                     _curveInstruments[i].PV_PiecewiseFlat(hzCurve, _discountCurve, _recoveryRate, true);
             }
             return o;
         }
 
-      
+
     }
 }
 

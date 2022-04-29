@@ -101,7 +101,7 @@ namespace Qwack.Core.Instruments.Funding
             var f = new CashFlowSchedule();
             var lf = new List<CashFlow>();
 
-            if (NotionalExchange == ExchangeType.FrontOnly || NotionalExchange == ExchangeType.Both)
+            if (NotionalExchange is ExchangeType.FrontOnly or ExchangeType.Both)
             {
                 lf.Add(new CashFlow
                 {
@@ -134,7 +134,7 @@ namespace Qwack.Core.Instruments.Funding
                             q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                 q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
-                            q.YearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                            q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
                                  1.0;
                             q.Dcf = q.YearFraction;
@@ -159,7 +159,7 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
-                                Q.Dcf = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                Q.Dcf = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                     Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                     1.0;
                             }
@@ -169,14 +169,14 @@ namespace Qwack.Core.Instruments.Funding
                                 {
                                     AccrualPeriodStart = startDate,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                    AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd!=DateTime.MinValue )? lf.Last().AccrualPeriodStart : endDate
+                                    AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd != DateTime.MinValue) ? lf.Last().AccrualPeriodStart : endDate
                                 };
-                                
+
                                 q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                q.YearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
                                  1.0;
                                 q.Dcf = q.YearFraction;
@@ -211,7 +211,7 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                 Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                             //Q.Currency = CCY;
-                            Q.YearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                            Q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                 Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                 1.0;
                             Q.Dcf = Q.YearFraction;
@@ -237,7 +237,7 @@ namespace Qwack.Core.Instruments.Funding
                                 Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
-                                Q.Dcf = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                Q.Dcf = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                     Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                     1.0;
                             }
@@ -253,7 +253,7 @@ namespace Qwack.Core.Instruments.Funding
                                     Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
                                     Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
                                 //Q.Currency = CCY;
-                                Q.YearFraction = (LegType != SwapLegType.FixedNoAccrual && LegType != SwapLegType.FloatNoAccrual) ?
+                                Q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                    Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                    1.0; Q.Notional = (double)Nominal;
                                 Q.Dcf = Q.YearFraction;
@@ -274,7 +274,7 @@ namespace Qwack.Core.Instruments.Funding
                     throw new NotImplementedException("Schedules with Both type stubs cannot be generated");
             }
 
-            if (NotionalExchange == ExchangeType.BackOnly || NotionalExchange == ExchangeType.Both)
+            if (NotionalExchange is ExchangeType.BackOnly or ExchangeType.Both)
             {
                 lf.Add(new CashFlow
                 {

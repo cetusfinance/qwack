@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
-using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Utils.Parallel;
 
@@ -22,7 +20,7 @@ namespace Qwack.Models.Risk
         public bool ReturnDifferential { get; private set; }
         public Currency Ccy { get; private set; }
 
-        public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential=true)
+        public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
             AssetId = assetId;
             ShiftType = shiftType;
@@ -52,7 +50,7 @@ namespace Qwack.Models.Risk
                 var thisShift = i * ShiftSize;
                 var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? Ccy.Ccy : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
-                    results[i+NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
+                    results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
                 else
                 {
                     if (string.IsNullOrWhiteSpace(AssetId))
@@ -90,8 +88,8 @@ namespace Qwack.Models.Risk
             var scenarios = GenerateScenarios(model);
 
             ICube baseRiskCube = null;
-            
-            if(ReturnDifferential)
+
+            if (ReturnDifferential)
             {
                 var baseModel = model;
                 if (portfolio != null)
@@ -105,7 +103,7 @@ namespace Qwack.Models.Risk
             var results = new ICube[scenarios.Count];
             var scList = scenarios.ToList();
 
-            ParallelUtils.Instance.For(0, scList.Count,1, i =>
+            ParallelUtils.Instance.For(0, scList.Count, 1, i =>
             {
                 var scenario = scList[i];
                 var pvModel = scenario.Value;
@@ -125,7 +123,7 @@ namespace Qwack.Models.Risk
 
             for (var i = 0; i < results.Length; i++)
             {
-                o = (ResultCube)o.Merge(results[i], 
+                o = (ResultCube)o.Merge(results[i],
                     new Dictionary<string, object> { { "Scenario", scList[i].Key } }, null, true);
             }
 

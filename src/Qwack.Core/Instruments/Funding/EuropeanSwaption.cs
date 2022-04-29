@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Capital;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -23,8 +19,8 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public EuropeanSwaption(DateTime startDate, Frequency swapTenor, FloatRateIndex rateIndex, double strike,
-            SwapPayReceiveType swapType, string forecastCurve, string discountCurve, DateTime expiryDate) 
-            : base(startDate,swapTenor,rateIndex, strike, swapType,forecastCurve, discountCurve)
+            SwapPayReceiveType swapType, string forecastCurve, string discountCurve, DateTime expiryDate)
+            : base(startDate, swapTenor, rateIndex, strike, swapType, forecastCurve, discountCurve)
         {
             CallPut = swapType == SwapPayReceiveType.Pay ? OptionType.P : OptionType.C;
             ExpiryDate = expiryDate;

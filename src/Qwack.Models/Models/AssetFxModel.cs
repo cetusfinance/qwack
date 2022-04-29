@@ -44,8 +44,8 @@ namespace Qwack.Models
         {
             _assetCurves = transportObject.AssetCurves?.ToDictionary(x => x.Key, x => x.Value.GetPriceCurve(currencyProvider, calendarProvider)) ?? new Dictionary<string, IPriceCurve>();
             _assetVols = transportObject.AssetVols?.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider)) ?? new Dictionary<VolSurfaceKey, IVolSurface>();
-            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>(); 
-            CorrelationMatrix = transportObject.CorrelationMatrix==null?null:CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
+            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>();
+            CorrelationMatrix = transportObject.CorrelationMatrix == null ? null : CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
         }
 
         public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
@@ -83,14 +83,14 @@ namespace Qwack.Models
 
             if (currency != null)
             {
-                if (!_assetVols.TryGetValue(new VolSurfaceKey(name,currency), out var surface))
+                if (!_assetVols.TryGetValue(new VolSurfaceKey(name, currency), out var surface))
                     throw new Exception($"Vol surface {name}/{currency} not found");
 
                 return surface;
             }
 
             var surfaces = _assetVols.Where(x => name.Contains("~") ? x.Key.ToString() == name : x.Key.AssetId == name);
-            if(!surfaces.Any())
+            if (!surfaces.Any())
                 throw new Exception($"Vol surface {name} not found");
 
             return surfaces.First().Value;
@@ -130,8 +130,8 @@ namespace Qwack.Models
         {
             var surface = GetVolSurface(name);
             var curve = GetPriceCurve(name);
-            var fwd = surface.OverrideSpotLag == null ? 
-                curve.GetPriceForFixingDate(expiry) : 
+            var fwd = surface.OverrideSpotLag == null ?
+                curve.GetPriceForFixingDate(expiry) :
                 curve.GetPriceForDate(expiry.AddPeriod(RollType.F, curve.SpotCalendar, surface.OverrideSpotLag));
             var vol = surface.GetVolForAbsoluteStrike(strike, expiry, fwd);
             return vol;
@@ -164,11 +164,11 @@ namespace Qwack.Models
         {
             var surface = GetVolSurface(name);
             var ts = expiries.Select(expiry => _buildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F)).ToArray();
-            var fwds = expiries.Select(expiry=>_assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
-            var vols = fwds.Select((fwd,ix)=> surface.GetVolForAbsoluteStrike(strike, expiries[ix], fwd));
+            var fwds = expiries.Select(expiry => _assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
+            var vols = fwds.Select((fwd, ix) => surface.GetVolForAbsoluteStrike(strike, expiries[ix], fwd));
             var varianceAvg = vols.Select((v, ix) => v * v * ts[ix]).Sum();
             varianceAvg /= ts.Sum();
-            var sigma = System.Math.Sqrt(varianceAvg/ts.Average());
+            var sigma = System.Math.Sqrt(varianceAvg / ts.Average());
             return sigma;
         }
 
@@ -179,8 +179,8 @@ namespace Qwack.Models
             var fwds = expiries.Select(expiry => _assetCurves[name].GetPriceForDate(expiry)); //needs to account for spot/fwd offset
             var vols = fwds.Select((fwd, ix) => surface.GetVolForAbsoluteStrike(fwd * moneyness, expiries[ix], fwd));
             var variances = vols.Select((v, ix) => v * v * ts[ix]).ToArray();
-            var varianceWeightedVol = vols.Select((v, ix) => v * variances[ix]).Sum()/variances.Sum();
-            
+            var varianceWeightedVol = vols.Select((v, ix) => v * variances[ix]).Sum() / variances.Sum();
+
             return varianceWeightedVol;
         }
 
@@ -200,7 +200,7 @@ namespace Qwack.Models
             var tExpC = BuildDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
             var correl = CorrelationMatrix?.GetCorrelation(fxId, assetId, tExpC) ?? 0.0;
             var sigma = GetVolForStrikeAndDate(assetId, expiry, strike / fxFwd);
-            sigma = System.Math.Sqrt(sigma  * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
+            sigma = System.Math.Sqrt(sigma * sigma + fxVol * fxVol + 2 * correl * fxVol * sigma);
             return sigma;
         }
 
@@ -292,19 +292,19 @@ namespace Qwack.Models
                 _dependencyTree.Add(curveName, linkedCurves);
             }
 
-            foreach(var kv in _dependencyTree)
+            foreach (var kv in _dependencyTree)
             {
                 var fullDeps = kv.Value;
                 var newDeps = new List<string>();
-                foreach(var dep in kv.Value)
+                foreach (var dep in kv.Value)
                 {
-                    if(_dependencyTree.TryGetValue(dep, out var deps))
+                    if (_dependencyTree.TryGetValue(dep, out var deps))
                     {
                         newDeps.AddRange(deps);
                     }
                 }
 
-                while(newDeps.Any())
+                while (newDeps.Any())
                 {
                     var actualNewDeps = newDeps.Where(x => !fullDeps.Contains(x));
                     fullDeps = fullDeps.Concat(actualNewDeps).Distinct().ToArray();
@@ -331,11 +331,11 @@ namespace Qwack.Models
         public TO_AssetFxModel ToTransportObject() =>
             new()
             {
-                AssetCurves = _assetCurves?.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
-                AssetVols = _assetVols?.ToDictionary(x=>x.Key.GetTransportObject(),x=>x.Value.GetTransportObject()),
+                AssetCurves = _assetCurves?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
+                AssetVols = _assetVols?.ToDictionary(x => x.Key.GetTransportObject(), x => x.Value.GetTransportObject()),
                 BuildDate = BuildDate,
                 CorrelationMatrix = CorrelationMatrix?.GetTransportObject(),
-                Fixings = _fixings?.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
+                Fixings = _fixings?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
                 FundingModel = _fundingModel.GetTransportObject(),
                 Portfolio = _portfolio?.ToTransportObject(),
             };
@@ -356,21 +356,21 @@ namespace Qwack.Models
             var assetIds = portfolio.AssetIds();
             var pairs = portfolio.FxPairs(o);
             var ccys = pairs.SelectMany(x => x.Split('/')).Distinct().ToArray();
-            if(additionalCcys!=null)
+            if (additionalCcys != null)
             {
                 ccys = ccys.Concat(additionalCcys).Distinct().ToArray();
             }
             var irCurves = portfolio.Instruments
                 .Where(x => x is IAssetInstrument).SelectMany(x => (x as IAssetInstrument).IrCurves(o))
-                .Concat(ccys.Select(c=>o.FundingModel.FxMatrix.DiscountCurveMap.Single(dc=>dc.Key.Ccy==c).Value))
+                .Concat(ccys.Select(c => o.FundingModel.FxMatrix.DiscountCurveMap.Single(dc => dc.Key.Ccy == c).Value))
                 .Distinct()
                 .ToArray();
-            
+
             var surplusCurves = o.CurveNames.Where(x => !assetIds.Contains(x)).ToArray();
             var surplusVols = o.VolSurfaceNames.Where(x => !assetIds.Contains(x)).ToArray();
             var surplusFixings = o.FixingDictionaryNames.Where(x => !assetIds.Contains(x) && !pairs.Contains(x)).ToArray();
             var surplusIrCurves = o.FundingModel.Curves.Keys.Where(x => !irCurves.Contains(x)).ToArray();
-            if(additionalIrCurves!=null)
+            if (additionalIrCurves != null)
             {
                 surplusIrCurves = surplusIrCurves.Where(ir => !additionalIrCurves.Contains(ir)).ToArray();
             }

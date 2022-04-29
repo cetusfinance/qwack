@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -15,7 +14,7 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public ForwardRateAgreement() { }
 
-        public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve):base()
+        public ForwardRateAgreement(DateTime valDate, string fraCode, double parRate, FloatRateIndex rateIndex, SwapPayReceiveType payRec, FraDiscountingType fraType, string forecastCurve, string discountCurve) : base()
         {
             var code = fraCode.ToUpper().Split('X');
             StartDate = valDate.AddPeriod(rateIndex.RollConvention, rateIndex.HolidayCalendars, new Frequency(code[0] + "M"));
@@ -235,7 +234,7 @@ namespace Qwack.Core.Instruments.Funding
         public double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => TradeNotional * SupervisoryDuration(model.BuildDate);
         private double tStart(DateTime today) => today.CalculateYearFraction(StartDate, DayCountBasis.Act365F);
-        private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate.Date(today,RateIndex.RollConvention,RateIndex.HolidayCalendars), DayCountBasis.Act365F);
+        private double tEnd(DateTime today) => today.CalculateYearFraction(EndDate.Date(today, RateIndex.RollConvention, RateIndex.HolidayCalendars), DayCountBasis.Act365F);
         public double SupervisoryDuration(DateTime today) => SaCcrUtils.SupervisoryDuration(tStart(today), tEnd(today));
         public double SupervisoryDelta(IAssetFxModel model) => (PayRec == SwapPayReceiveType.Pay ? 1.0 : -1.0) * System.Math.Sign(Notional);
         public double MaturityFactor(DateTime today, double? MPOR = null) => MPOR.HasValue ? SaCcrUtils.MfMargined(MPOR.Value) : SaCcrUtils.MfUnmargined(tEnd(today));

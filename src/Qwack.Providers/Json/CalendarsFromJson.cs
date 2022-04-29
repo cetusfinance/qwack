@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Qwack.Dates;
 
 namespace Qwack.Providers.Json
 {
-    public class CalendarsFromJson: ICalendarProvider
+    public class CalendarsFromJson : ICalendarProvider
     {
         private static readonly JsonSerializerSettings _jsonSettings = new() { DateFormatString = "yyyyMMdd" };
         private Dictionary<string, Calendar> _loadedCalendars;

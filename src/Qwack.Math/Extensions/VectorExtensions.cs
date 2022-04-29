@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 
 namespace Qwack.Math.Extensions
 {
@@ -19,7 +16,7 @@ namespace Qwack.Math.Extensions
             return (min, max);
         }
 
-        public static Vector<double> Exp (this Vector<double> z)
+        public static Vector<double> Exp(this Vector<double> z)
         {
             var exp = new Vector<double>(1.0);
             var facTotal = z;

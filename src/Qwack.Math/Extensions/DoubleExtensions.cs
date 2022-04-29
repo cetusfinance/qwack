@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Qwack.Math.Extensions
 {
@@ -51,7 +50,7 @@ namespace Qwack.Math.Extensions
 
         public static double Round(this double x, int nDigits) => System.Math.Round(x, nDigits);
         public static double Abs(this double x) => System.Math.Abs(x);
-        public static double Sqrt(this double x)=> System.Math.Sqrt(x);
+        public static double Sqrt(this double x) => System.Math.Sqrt(x);
         public static double Pow(this double x, double power) => System.Math.Pow(x, power);
 
         public static double IntPow(this double num, int exponent)
@@ -85,7 +84,7 @@ namespace Qwack.Math.Extensions
 
         public static int Factorial(this int x)
         {
-            if (x == 1 || x == 0)
+            if (x is 1 or 0)
                 return 1;
             else
                 return x * Factorial(x - 1);
@@ -109,13 +108,13 @@ namespace Qwack.Math.Extensions
             if (ys.Length != xs.Length)
                 throw new Exception("xs and ys must be of same length");
 
-            if(x>xs.Last() || x<xs.First())
+            if (x > xs.Last() || x < xs.First())
                 throw new Exception("x must lie in range of xs");
 
-            for (var i=0;i<xs.Length-1;i++)
+            for (var i = 0; i < xs.Length - 1; i++)
             {
                 if (x == xs[i]) return ys[i];
-                if(x>xs[i] && x<=xs[i+1])
+                if (x > xs[i] && x <= xs[i + 1])
                 {
                     var slope = (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
                     return ys[i] + slope * (x - xs[i]);

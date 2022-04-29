@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static Qwack.Math.Extensions.DoubleExtensions;
 using static System.Math;
+using static Qwack.Math.Extensions.DoubleExtensions;
 
 namespace Qwack.Math
 {

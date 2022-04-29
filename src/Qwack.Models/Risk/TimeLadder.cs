@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Models.Models;
-using Qwack.Models.Risk.Mutators;
 using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 
@@ -23,7 +21,7 @@ namespace Qwack.Models.Risk
         public bool ReturnDifferential { get; private set; }
         public Calendar Calendar { get; private set; }
 
-        public TimeLadder(RiskMetric metric, int nScenarios, Calendar calendar, ICurrencyProvider currencyProvider, bool returnDifferential=true)
+        public TimeLadder(RiskMetric metric, int nScenarios, Calendar calendar, ICurrencyProvider currencyProvider, bool returnDifferential = true)
         {
             Metric = metric;
             NScenarios = nScenarios;

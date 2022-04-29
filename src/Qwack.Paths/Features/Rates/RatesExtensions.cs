@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Models;
 
 namespace Qwack.Paths.Features.Rates
@@ -11,7 +8,7 @@ namespace Qwack.Paths.Features.Rates
         {
             var rateCollection = engine.Features.GetFeature<IRatesFeature>();
             rateCollection.AddRate(rateFeature);
-            if(rateFeature is IPathProcess process)
+            if (rateFeature is IPathProcess process)
             {
                 engine.AddPathProcess(process);
             }

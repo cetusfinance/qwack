@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Core.Cubes;
+using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
-using Qwack.Core.Instruments;
-using Qwack.Core.Basic;
-using Qwack.Utils.Parallel;
-using Qwack.Core.Cubes;
 using Qwack.Transport.BasicTypes;
+using Qwack.Utils.Parallel;
 using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Risk
@@ -15,7 +15,7 @@ namespace Qwack.Models.Risk
     public class EADCalculator
     {
         public EADCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string, string> assetIdToTypeMap,
-            Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates, 
+            Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates,
             double[] epeValues, ICurrencyProvider currencyProvider)
         {
             _portfolio = portfolio;
@@ -30,7 +30,7 @@ namespace Qwack.Models.Risk
             _endDate = portfolio.LastSensitivityDate;
         }
 
-        public Dictionary<DateTime, double> EAD => _ead.OrderBy(x=>x.Key).ToDictionary(x => x.Key, x => x.Value );
+        public Dictionary<DateTime, double> EAD => _ead.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
 
         public ICube ResultCube()
         {
@@ -66,7 +66,7 @@ namespace Qwack.Models.Risk
         public void Process()
         {
             IAssetFxModel model;
-            if(_assetFxModel.FundingModel.FxMatrix.BaseCurrency!=_reportingCurrency)
+            if (_assetFxModel.FundingModel.FxMatrix.BaseCurrency != _reportingCurrency)
             {
                 var newFm = FundingModel.RemapBaseCurrency(_assetFxModel.FundingModel, _reportingCurrency, _currencyProvider);
                 model = _assetFxModel.Clone(newFm);
@@ -89,7 +89,7 @@ namespace Qwack.Models.Risk
                 ins.AssetClass = _typeToAssetClassMap[ins.CommodityType];
             }
 
-            ParallelUtils.Instance.For(0,_calculationDates.Length,1,i=> 
+            ParallelUtils.Instance.For(0, _calculationDates.Length, 1, i =>
             {
                 var d = _calculationDates[i];
                 var epe = _epeValues[i];

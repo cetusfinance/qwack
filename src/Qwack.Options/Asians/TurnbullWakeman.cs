@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Qwack.Dates;
-using Qwack.Core.Basic;
-using Qwack.Options.VolSurfaces;
-using static System.Math;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Options.Asians
 {
@@ -39,7 +36,7 @@ namespace Qwack.Options.Asians
                 var df = Exp(-riskFree * tExpiry);
                 return df * expAvg;
             }
-            
+
 
             var pv = BlackFunctions.BlackPV(forward, K, riskFree, tExpiry, sigma_a, callPut);
 
@@ -58,7 +55,7 @@ namespace Qwack.Options.Asians
             return PV(forward, knownAverage, sigma, K, tAvgStart, tExpiry, riskFree, callPut);
         }
 
-        public static double PV(double[] forwards, DateTime[] fixingDates, DateTime evalDate, DateTime payDate, double[] sigmas, double K, double riskFree, OptionType callPut, bool todayFixed=false)
+        public static double PV(double[] forwards, DateTime[] fixingDates, DateTime evalDate, DateTime payDate, double[] sigmas, double K, double riskFree, OptionType callPut, bool todayFixed = false)
         {
             if (payDate < evalDate) return 0.0;
 
@@ -103,7 +100,7 @@ namespace Qwack.Options.Asians
             {
                 return (callPut == OptionType.P) ? 0.0 : df * Max(wholeAverage - k0, 0);
             }
-            
+
             var pv = BlackFunctions.BlackPV(m1, K, 0.0, tExpiry, sigma_a, callPut);
 
             if (tAvgStart < 0)
@@ -154,7 +151,7 @@ namespace Qwack.Options.Asians
                 var df = Exp(-riskFree * tExpiry);
                 return df * (expAvg - K);
             }
-            
+
             var delta = BlackFunctions.BlackDelta(forward, K, riskFree, tExpiry, sigma_a, callPut);
             if (tAvgStart < 0)
             {

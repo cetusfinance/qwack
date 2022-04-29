@@ -1,16 +1,14 @@
-using Qwack.Core.Basic;
-using Qwack.Dates;
-using Qwack.Math;
-using Qwack.Math.Interpolation;
-using static Qwack.Math.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using Qwack.Core.Basic;
+using Qwack.Dates;
+using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
-using static System.Math;
 using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
+using static System.Math;
 
 namespace Qwack.Options.VolSurfaces
 {
@@ -46,11 +44,11 @@ namespace Qwack.Options.VolSurfaces
 
         internal IInterpolator1D[] _interpolators;
 
-        public GridVolSurface()         {        }
+        public GridVolSurface() { }
 
-        public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols, 
-            StrikeType strikeType, Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType, 
-            DayCountBasis timeBasis, string[] pillarLabels = null):base()
+        public GridVolSurface(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols,
+            StrikeType strikeType, Interpolator1DType strikeInterpType, Interpolator1DType timeInterpType,
+            DayCountBasis timeBasis, string[] pillarLabels = null) : base()
         {
             StrikeType = strikeType;
             StrikeInterpolatorType = strikeInterpType;
@@ -66,7 +64,7 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public GridVolSurface(TO_GridVolSurface transportObject, ICurrencyProvider currencyProvider)
-            :this(transportObject.OriginDate,transportObject.Strikes,transportObject.Expiries,transportObject.Volatilities,transportObject.StrikeType, 
+            : this(transportObject.OriginDate, transportObject.Strikes, transportObject.Expiries, transportObject.Volatilities, transportObject.StrikeType,
                  transportObject.StrikeInterpolatorType, transportObject.TimeInterpolatorType, transportObject.TimeBasis, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrency(transportObject.Currency);
@@ -81,7 +79,7 @@ namespace Qwack.Options.VolSurfaces
             Expiries = expiries;
             Volatilities = vols;
             ExpiriesDouble = Expiries.Select(t => TimeBasis.CalculateYearFraction(originDate, t)).ToArray();
-            _interpolators = vols.Select((v, ix) => 
+            _interpolators = vols.Select((v, ix) =>
                 InterpolatorFactory.GetInterpolator(Strikes, v, StrikeInterpolatorType)).ToArray();
         }
 
@@ -104,7 +102,7 @@ namespace Qwack.Options.VolSurfaces
                 //var cp = strike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (deltaK =>
                 {
-                    var dkModified = FlatDeltaSmileInExtreme ? Min(1.0-FlatDeltaPoint,Max(deltaK, FlatDeltaPoint)) : deltaK;
+                    var dkModified = FlatDeltaSmileInExtreme ? Min(1.0 - FlatDeltaPoint, Max(deltaK, FlatDeltaPoint)) : deltaK;
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(-dkModified)).ToArray(),
                    TimeInterpolatorType);
@@ -147,7 +145,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward)
         {
-            if (deltaStrike > 1.0 || deltaStrike < -1.0)
+            if (deltaStrike is > 1.0 or < (-1.0))
                 throw new ArgumentOutOfRangeException($"Delta strike must be in range -1.0 < x < 1.0 - value was {deltaStrike}");
 
             var key = $"{deltaStrike:f6}~{maturity:f3}~{forward:f6}";
@@ -214,7 +212,7 @@ namespace Qwack.Options.VolSurfaces
             });
 
             var solvedStrike = -Math.Solvers.Brent.BrentsMethodSolve(testFunc, -0.99999999999, -0.00000000001, 1e-8);
-            if (solvedStrike == 0.00000000001 || solvedStrike == 0.99999999999) //out of bounds
+            if (solvedStrike is 0.00000000001 or 0.99999999999) //out of bounds
             {
                 var upperK = testFunc(-0.00000000001);
                 var lowerK = testFunc(-0.99999999999);
@@ -243,7 +241,7 @@ namespace Qwack.Options.VolSurfaces
                 lastBumpIx = Min(ix, lastBumpIx); //cap at last pillar
             }
 
-            for (var i=0;i< lastBumpIx; i++)
+            for (var i = 0; i < lastBumpIx; i++)
             {
                 var volsBumped = (double[][])Volatilities.Clone();
                 volsBumped[i] = volsBumped[i].Select(x => x + bumpSize).ToArray();
@@ -272,10 +270,10 @@ namespace Qwack.Options.VolSurfaces
             if (start > end)
                 throw new Exception("Start must be strictly less than end");
 
-            if (StrikeType==StrikeType.ForwardDelta)
+            if (StrikeType == StrikeType.ForwardDelta)
             {
                 if (start == end)
-                    return GetVolForDeltaStrike(0.5,start,1.0);
+                    return GetVolForDeltaStrike(0.5, start, 1.0);
 
                 var vStart = GetVolForDeltaStrike(0.5, start, 1.0);
                 vStart *= vStart * start;
@@ -307,11 +305,11 @@ namespace Qwack.Options.VolSurfaces
             var oldATMs = newMaturities.Select(m => GetForwardATMVol(OriginDate, m)).ToArray();
             var numDropped = Expiries.Length - newMaturities.Length;
 
-            for (var i=0;i<newMaturities.Length;i++)
+            for (var i = 0; i < newMaturities.Length; i++)
             {
                 newVols[i] = new double[Strikes.Length];
                 for (var j = 0; j < Strikes.Length; j++)
-                    newVols[i][j] = Volatilities[i+ numDropped][j] / oldATMs[i] * newATMs[i];
+                    newVols[i][j] = Volatilities[i + numDropped][j] / oldATMs[i] * newATMs[i];
             }
 
             return new GridVolSurface(newOrigin, Strikes, newMaturities, newVols, StrikeType, StrikeInterpolatorType, TimeInterpolatorType, TimeBasis, PillarLabels)
@@ -351,8 +349,8 @@ namespace Qwack.Options.VolSurfaces
         {
             var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
             var vol = GetVolForAbsoluteStrike(strike, expiry, fwd);
-            var nu = vol * Sqrt(t);
-            (var d1, var d2) = BlackFunctions.D1d2(fwd, strike, t, vol);
+            _ = vol * Sqrt(t);
+            (_, _) = BlackFunctions.D1d2(fwd, strike, t, vol);
             var vega = BlackFunctions.BlackVega(fwd, strike, 0.0, t, vol) / 0.01;
             var digi = BlackFunctions.BlackDigitalPV(fwd, strike, 0.0, t, vol, OptionType.P);
             var dvdk = Dvdk(strike, expiry, fwd);

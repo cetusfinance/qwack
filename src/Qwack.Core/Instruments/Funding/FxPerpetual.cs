@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -20,7 +19,7 @@ namespace Qwack.Core.Instruments.Funding
         public string PortfolioName { get; set; }
         public Currency DomesticCCY { get; set; }
         public Currency ForeignCCY { get; set; }
-        public Currency Currency => ForeignCCY;       
+        public Currency Currency => ForeignCCY;
 
         public string ForeignDiscountCurve { get; set; }
 
@@ -63,14 +62,11 @@ namespace Qwack.Core.Instruments.Funding
         public double FlowsT0(IFundingModel Model)
         {
             var fwdRate = Model.GetFxRate(Model.BuildDate, DomesticCCY, ForeignCCY);
-            var FV = (fwdRate - Strike) * DomesticQuantity;     
+            var FV = (fwdRate - Strike) * DomesticQuantity;
             return FV;
         }
 
-        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
-        {
-            return new Dictionary<string, Dictionary<DateTime, double>>();
-        }
+        public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => new();
 
         public virtual IAssetInstrument Clone() => (IAssetInstrument)(FxForward)((IFundingInstrument)this).Clone();
 
@@ -84,7 +80,7 @@ namespace Qwack.Core.Instruments.Funding
                    ForeignDiscountCurve == forward.ForeignDiscountCurve &&
                    TradeId == forward.TradeId;
 
-        public override int GetHashCode() => Strike.GetHashCode() ^ DomesticQuantity.GetHashCode() ^ DomesticCCY.GetHashCode() 
+        public override int GetHashCode() => Strike.GetHashCode() ^ DomesticQuantity.GetHashCode() ^ DomesticCCY.GetHashCode()
             ^ ForeignCCY.GetHashCode() ^ ForeignDiscountCurve.GetHashCode() ^ TradeId.GetHashCode();
 
         IFundingInstrument IFundingInstrument.Clone() => new FxForward
@@ -108,7 +104,7 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public string[] IrCurves(IAssetFxModel model) => 
+        public string[] IrCurves(IAssetFxModel model) =>
             new[] {
                 ForeignDiscountCurve,
                 model.FundingModel.FxMatrix.DiscountCurveMap[ForeignCCY],

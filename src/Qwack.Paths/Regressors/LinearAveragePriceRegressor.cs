@@ -41,10 +41,10 @@ namespace Qwack.Paths.Regressors
             var assetNames = _regressionKey.Split('*');
             _assetIxs = assetNames.Select(x => dims.GetDimension(x)).ToArray();
             _nDims = _assetIxs.Length;
-            
+
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIxRegression = dates.GetDateIndex(_regressionDate);
-            _dateIxsFwd = _fixingDates.Select(d=>dates.GetDateIndex(d)).ToArray();
+            _dateIxsFwd = _fixingDates.Select(d => dates.GetDateIndex(d)).ToArray();
 
             var engine = collection.GetFeature<IEngineFeature>();
 
@@ -106,7 +106,7 @@ namespace Qwack.Paths.Regressors
 
         public double Predict(double spot)
         {
-            if(Regressor==null)
+            if (Regressor == null)
             {
                 lock (_threadlock)
                 {

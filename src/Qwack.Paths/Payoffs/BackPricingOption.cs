@@ -105,7 +105,7 @@ namespace Qwack.Paths.Payoffs
                     stepsFx = block.GetStepsForFactor(path, _fxIndex);
 
                 var pastSum = new Vector<double>(0.0);
-                for(var p=0;p<_dateIndexesPast.Length;p++)
+                for (var p = 0; p < _dateIndexesPast.Length; p++)
                 {
                     pastSum += steps[_dateIndexesPast[p]] * (_fxName != null ? stepsFx[_dateIndexesPast[p]] : _one);
                 }
@@ -116,9 +116,9 @@ namespace Qwack.Paths.Payoffs
                 {
                     var setReg = new double[Vector<double>.Count];
                     for (var i = 0; i < Vector<double>.Count; i++)
-                          setReg[i] = spotAtExpiry[i] + _expiryToSettleCarry;
-                    
-                    var avgVec =  pastSum / nTotalVec;
+                        setReg[i] = spotAtExpiry[i] + _expiryToSettleCarry;
+
+                    var avgVec = pastSum / nTotalVec;
                     var setVec = new Vector<double>(setReg);
 
                     var payoff = (_callPut == OptionType.C) ?

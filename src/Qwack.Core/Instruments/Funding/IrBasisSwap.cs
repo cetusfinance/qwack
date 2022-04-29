@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -14,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public IrBasisSwap() { }
 
-        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null):base()
+        public IrBasisSwap(DateTime startDate, Frequency swapTenor, double parSpread, bool spreadOnPayLeg, FloatRateIndex payIndex, FloatRateIndex recIndex, string forecastCurvePay, string forecastCurveRec, string discountCurve, decimal? notional = null) : base()
         {
             SwapTenor = swapTenor;
 
@@ -95,7 +94,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public List<string> Dependencies(IFxMatrix matrix)
         {
-            var curves = new[] { ForecastCurvePay, ForecastCurveRec, DiscountCurve};
+            var curves = new[] { ForecastCurvePay, ForecastCurveRec, DiscountCurve };
             return curves.Distinct().Where(x => x != SolveCurve).ToList();
         }
 
@@ -119,14 +118,14 @@ namespace Qwack.Core.Instruments.Funding
             var discountCurve = model.Curves[DiscountCurve];
             var forecastCurvePay = model.Curves[ForecastCurvePay];
             var forecastCurveRec = model.Curves[ForecastCurveRec];
-           
+
             if (ParSpreadPay != 0.0)
             {
                 var newSched = FlowSchedulePay.Clone();
                 var recPV = FlowScheduleRec.PV(discountCurve, forecastCurveRec, true, true, true, BasisRec, null);
                 var targetFunc = new Func<double, double>(spread =>
                 {
-                    foreach (var s in newSched.Flows.Where(x=>x.FlowType==FlowType.FloatRate))
+                    foreach (var s in newSched.Flows.Where(x => x.FlowType == FlowType.FloatRate))
                     {
                         s.FixedRateOrMargin = spread;
                     }

@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 
@@ -30,7 +27,7 @@ namespace Qwack.Futures
         public List<MarketShutRuleSet> MarketShutRules { get; set; }
         public List<DateTime> MarketShutRulesValidUntil { get; set; }
 
-        public Dictionary<string,Dictionary<string,string>> CodeConversions { get; set; }
+        public Dictionary<string, Dictionary<string, string>> CodeConversions { get; set; }
 
         public double LotSize { get; set; }
         public double PriceMultiplier { get; set; }

@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Qwack.Futures
 {
@@ -30,9 +28,9 @@ namespace Qwack.Futures
             switch (bbg.ToLower().Right(6))
             {
                 case "comdty":
-                    if(bbg.Length<13) //its not an option
+                    if (bbg.Length < 13) //its not an option
                     {
-                        if(bbg.Length==11 && bbg.Substring(4,1)==" ") // ccMY Comdty format
+                        if (bbg.Length == 11 && bbg.Substring(4, 1) == " ") // ccMY Comdty format
                         {
                             var bbgCode = bbg.Left(2);
                             if (provider.TryGet(bbgCode, "BBG", out var fs))

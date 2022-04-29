@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Qwack.Core.Models;
 
 namespace Qwack.Paths
@@ -20,7 +16,7 @@ namespace Qwack.Paths
 
         private readonly bool _lazyInit;
 
-        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex, bool lazyInit=false)
+        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex, bool lazyInit = false)
         {
             GlobalPathIndex = globalPathIndex;
             _numberOfPaths = numberOfPaths;

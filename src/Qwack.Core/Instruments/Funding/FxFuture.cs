@@ -1,12 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Qwack.Core.Basic;
-using Qwack.Core.Basic.Capital;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
-using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
@@ -19,7 +12,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public override double SupervisoryDelta(IAssetFxModel model) => 1.0;
         public override double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
-   
+
         public override IAssetInstrument Clone() => new FxFuture()
         {
             Counterparty = Counterparty,
@@ -42,8 +35,8 @@ namespace Qwack.Core.Instruments.Funding
             return FV;
         }
 
-        public override List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new List<CashFlow>
-            {
+        public override List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new()
+        {
                 new CashFlow()
                 {
                     Currency = DomesticCCY,

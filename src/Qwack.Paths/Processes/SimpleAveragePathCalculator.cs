@@ -1,13 +1,9 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Models;
-using Qwack.Serialization;
-using static System.Math;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
@@ -22,7 +18,7 @@ namespace Qwack.Paths.Processes
         public double[] PathSum { get; private set; }
         public double[] PathAvg => PathSum.Select(x => x / _nPaths).ToArray();
 
-        public Dictionary<int,double[]> PathSumsByBlock { get; private set; }
+        public Dictionary<int, double[]> PathSumsByBlock { get; private set; }
         public Dictionary<int, int> PathCountsByBlock { get; private set; }
 
         public SimpleAveragePathCalculator(string name) => _name = name;
@@ -95,7 +91,7 @@ namespace Qwack.Paths.Processes
                                 }
                         }
                     }
-                   
+
                 }
             }
             else

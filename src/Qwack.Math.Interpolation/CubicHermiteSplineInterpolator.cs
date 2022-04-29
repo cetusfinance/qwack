@@ -41,7 +41,7 @@ namespace Qwack.Math.Interpolation
             Setup();
         }
 
-        private CubicHermiteSplineInterpolator(double[] x, double[] y, double[] tangents, bool monotone=false)
+        private CubicHermiteSplineInterpolator(double[] x, double[] y, double[] tangents, bool monotone = false)
         {
             _x = x;
             _y = y;
@@ -68,18 +68,18 @@ namespace Qwack.Math.Interpolation
             if (_x.Length == 1)
                 return;
 
-            var dk = new double[_tangents.Length-1];
+            var dk = new double[_tangents.Length - 1];
             _tangents[0] = (_y[1] - _y[0]) / (_x[1] - _x[0]);
             dk[0] = _tangents[0];
-            for(var i=1;i<_tangents.Length-1;i++)
+            for (var i = 1; i < _tangents.Length - 1; i++)
             {
-                dk[i] = (_y[i+1] - _y[i]) / (_x[i+1] - _x[i]);
-                _tangents[i] = 0.5 * (dk[i] + dk[i-1]);
+                dk[i] = (_y[i + 1] - _y[i]) / (_x[i + 1] - _x[i]);
+                _tangents[i] = 0.5 * (dk[i] + dk[i - 1]);
             }
             var l = _tangents.Length - 1;
-            _tangents[l] = (_y[l] - _y[l-1]) / (_x[l] - _x[l-1]);
+            _tangents[l] = (_y[l] - _y[l - 1]) / (_x[l] - _x[l - 1]);
 
-            if(_monotone)
+            if (_monotone)
             {
                 for (var i = 0; i < dk.Length; i++)
                 {
@@ -91,11 +91,11 @@ namespace Qwack.Math.Interpolation
                     else
                     {
                         var a = _tangents[i] / dk[i];
-                        var b = _tangents[i+1] / dk[i];
+                        var b = _tangents[i + 1] / dk[i];
                         if (a > 3)
                             _tangents[i] = dk[i] * 3.0;
                         if (b > 3)
-                            _tangents[i+1] = dk[i] * 3.0;
+                            _tangents[i + 1] = dk[i] * 3.0;
                     }
                 }
             }
@@ -117,9 +117,9 @@ namespace Qwack.Math.Interpolation
         private double H11dd(double t) => 6 * t - 2;
 
         private double H00i(double t) => 0.5 * t * t * t * t - t * t * t + t;
-        private double H10i(double t) => 0.25 * t * t * t * t - 2.0/3.0 * t * t * t + 0.5 * t * t;
+        private double H10i(double t) => 0.25 * t * t * t * t - 2.0 / 3.0 * t * t * t + 0.5 * t * t;
         private double H01i(double t) => -0.5 * t * t * t * t + t * t * t;
-        private double H11i(double t) => 0.25 * t * t * t * t - 1.0/3.0 * t * t * t;
+        private double H11i(double t) => 0.25 * t * t * t * t - 1.0 / 3.0 * t * t * t;
 
         public IInterpolator1D Bump(int pillar, double delta, bool updateInPlace = false)
         {
@@ -127,7 +127,7 @@ namespace Qwack.Math.Interpolation
             return UpdateY(pillar, newY, updateInPlace);
         }
 
-        
+
 
         public double Interpolate(double x)
         {
@@ -135,11 +135,11 @@ namespace Qwack.Math.Interpolation
             {
                 return _y[0];
             }
-            else if (x<=_minX) //linear extrapolation
+            else if (x <= _minX) //linear extrapolation
             {
                 return _y[0] + (_y[1] - _y[0]) / (_x[1] - _x[0]) * (x - _x[0]);
             }
-            else if (x>=_maxX) //linear extrapolation
+            else if (x >= _maxX) //linear extrapolation
             {
                 var k = _y.Length - 1;
                 return _y[k] + (_y[k] - _y[k - 1]) / (_x[k] - _x[k - 1]) * (x - _x[k]);
@@ -193,7 +193,7 @@ namespace Qwack.Math.Interpolation
             {
                 return 0;
             }
-            else if (x == _minX || x==_maxX) //numerical approx at linear bounds
+            else if (x == _minX || x == _maxX) //numerical approx at linear bounds
             {
                 var d = 0.00000001;
                 return (FirstDerivative(x + d / 2) - FirstDerivative(x - d / 2)) / d;
@@ -207,7 +207,7 @@ namespace Qwack.Math.Interpolation
                 var d2Vdt2 = H00dd(t) * _y[k]
                     + H10dd(t) * interval * _tangents[k]
                     + H01dd(t) * _y[k + 1]
-                    + H11dd(t) * interval * _tangents[k + 1];;
+                    + H11dd(t) * interval * _tangents[k + 1]; ;
                 var d2Vdx2 = (1 / interval) * (1 / interval);
                 return d2Vdt2 * d2Vdx2;
             }
@@ -220,7 +220,7 @@ namespace Qwack.Math.Interpolation
             newY[pillar] = newValue;
             var newT = new double[_tangents.Length];
             Buffer.BlockCopy(_tangents, 0, newT, 0, _tangents.Length * 8);
-             var returnValue = new CubicHermiteSplineInterpolator(_x, newY, newT);
+            var returnValue = new CubicHermiteSplineInterpolator(_x, newY, newT);
             return returnValue;
         }
 
@@ -262,8 +262,8 @@ namespace Qwack.Math.Interpolation
 
                     if (fullSegment)
                     {
-                        
-                        
+
+
                         var i1 = H00i(1.0) * _y[k]
                             + H10i(1.0) * interval * _tangents[k]
                             + H01i(1.0) * _y[k + 1]
@@ -305,7 +305,7 @@ namespace Qwack.Math.Interpolation
                         x = b;
                     }
 
-                   
+
                 }
             }
             return integral;

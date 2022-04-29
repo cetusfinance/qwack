@@ -1,16 +1,12 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
-using Qwack.Core.Models;
-using Qwack.Serialization;
-using static System.Math;
-using Qwack.Core.Instruments;
-using Qwack.Core.Curves;
+using System.Numerics;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
+using Qwack.Core.Instruments;
+using Qwack.Core.Models;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
@@ -20,7 +16,7 @@ namespace Qwack.Paths.Processes
         private int _nPaths;
         private bool _isComplete;
 
-        public ExpectedCapitalCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string,string> assetIdToGroupMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates)
+        public ExpectedCapitalCalculator(Portfolio portfolio, double counterpartyRiskWeight, Dictionary<string, string> assetIdToGroupMap, Currency reportingCurrency, IAssetFxModel assetFxModel, DateTime[] calculationDates)
         {
             _portfolio = portfolio;
             _counterpartyRiskWeight = counterpartyRiskWeight;
@@ -29,7 +25,7 @@ namespace Qwack.Paths.Processes
             _assetFxModel = assetFxModel;
             _calculationDates = calculationDates;
             _assetIds = _portfolio.AssetIds().Concat(_portfolio.FxPairs(assetFxModel)).ToArray();
-            
+
         }
 
         public Dictionary<DateTime, double> ExpectedCapital => _expectedCapital.ToDictionary(x => x.Key, x => x.Value / _nPaths);
@@ -57,7 +53,7 @@ namespace Qwack.Paths.Processes
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 var stepsByFactor = new Dictionary<int, Vector<double>[]>();
-                foreach(var ix in _assetIndices)
+                foreach (var ix in _assetIndices)
                     stepsByFactor.Add(ix, block.GetStepsForFactor(path, ix).ToArray());
 
                 var indexCounter = 0;
@@ -75,7 +71,7 @@ namespace Qwack.Paths.Processes
                         {
                             if (!fixingDictionaries.TryGetValue(_assetIds[a], out var fd))
                                 throw new Exception($"Fixing dictionary not found for asset {_assetIds[a]} ");
-                            fd[d] = stepsByFactor[a][i][j];  
+                            fd[d] = stepsByFactor[a][i][j];
                         }
                     }
 
@@ -86,11 +82,11 @@ namespace Qwack.Paths.Processes
                         newModel.OverrideBuildDate(currentDate);
                         newModel.AddFixingDictionaries(fixingDictionaries);
 
-                        var spotsByAsset = stepsByFactor.ToDictionary(x=>x.Key, x => x.Value[i]);
+                        var spotsByAsset = stepsByFactor.ToDictionary(x => x.Key, x => x.Value[i]);
                         for (var j = 0; j < Vector<double>.Count; j++)
                         {
                             //build on-path price curves in model
-                            foreach(var spot in spotsByAsset)
+                            foreach (var spot in spotsByAsset)
                             {
                                 var assetId = _assetIds[spot.Key];
                                 var baseCurve = _assetFxModel.GetPriceCurve(assetId);
@@ -115,7 +111,7 @@ namespace Qwack.Paths.Processes
                         }
 
                         indexCounter++;
-                        nextIndex = indexCounter < _calculationDateIndices.Length 
+                        nextIndex = indexCounter < _calculationDateIndices.Length
                             ? _calculationDateIndices[indexCounter] : int.MaxValue;
                     }
                 }

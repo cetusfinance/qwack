@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Models;
@@ -25,8 +24,8 @@ namespace Qwack.Core.Basic
             base(source)
         {
         }
-        public FixingDictionary(TO_FixingDictionary transportObject) 
-            : base(transportObject.Fixings==null?new Dictionary<DateTime, double>():transportObject.Fixings.ToDictionary(x=>DateTime.ParseExact(x.Key, "s",CultureInfo.InvariantCulture), x=>x.Value))
+        public FixingDictionary(TO_FixingDictionary transportObject)
+            : base(transportObject.Fixings == null ? new Dictionary<DateTime, double>() : transportObject.Fixings.ToDictionary(x => DateTime.ParseExact(x.Key, "s", CultureInfo.InvariantCulture), x => x.Value))
         {
             Name = transportObject.Name;
             AssetId = transportObject.AssetId;
@@ -55,7 +54,7 @@ namespace Qwack.Core.Basic
                 Name = Name,
                 FxPair = FxPair,
                 FixingDictionaryType = FixingDictionaryType,
-                Fixings = this.ToDictionary(x=>x.Key.ToString("s"),x=>x.Value)
+                Fixings = this.ToDictionary(x => x.Key.ToString("s"), x => x.Value)
             };
     }
 }

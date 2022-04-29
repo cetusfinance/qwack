@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Qwack.Transport.BasicTypes
 {
     public enum CommodityUnits
@@ -38,7 +34,7 @@ namespace Qwack.Transport.BasicTypes
         kiloLiter = 10,
         gallon = 11,
         gal = 11,
-        
+
         //energy   
         mmbtu = 12,
         joules = 13,

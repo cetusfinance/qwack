@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace Qwack.Serialization
 {
@@ -56,7 +55,7 @@ namespace Qwack.Serialization
             {
                 if (field.GetCustomAttribute(typeof(SkipSerializationAttribute)) != null) continue;
                 var fieldExp = Expression.Field(source, field);
-                            
+
                 var block = GetExpressionForType(fieldExp, buffer, deserializationContext);
                 if (block != null)
                 {

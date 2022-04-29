@@ -12,11 +12,11 @@ namespace Qwack.Models.Risk.Mutators
         {
             var o = model.Clone();
             var surf = model.GetVolSurface(assetId);
-            switch(surf)
+            switch (surf)
             {
                 case RiskyFlySurface rf:
                     var bumpedATMs = rf.ATMs.Select((p, ix) => ix < shiftSizes.Length ? p * (1.0 + shiftSizes[ix]) : p * (1.0 + shiftSizes.Last())).ToArray();
-                    var rfb = new RiskyFlySurface(rf.OriginDate, bumpedATMs, rf.Expiries, rf.WingDeltas, rf.Riskies, rf.Flies, rf.Forwards, rf.WingQuoteType, rf.AtmVolType, rf.StrikeInterpolatorType,rf.TimeInterpolatorType,rf.PillarLabels)
+                    var rfb = new RiskyFlySurface(rf.OriginDate, bumpedATMs, rf.Expiries, rf.WingDeltas, rf.Riskies, rf.Flies, rf.Forwards, rf.WingQuoteType, rf.AtmVolType, rf.StrikeInterpolatorType, rf.TimeInterpolatorType, rf.PillarLabels)
                     {
                         AssetId = rf.AssetId,
                         Name = rf.Name,
@@ -26,7 +26,7 @@ namespace Qwack.Models.Risk.Mutators
                     break;
                 case GridVolSurface gf:
                     var bumpedGrid = gf.Volatilities.Select((r, ix) => r.Select(c => c * (1.0 + shiftSizes[ix])).ToArray()).ToArray();
-                    var gfb = new GridVolSurface(gf.OriginDate, gf.Strikes,gf.Expiries,bumpedGrid,gf.StrikeType,gf.StrikeInterpolatorType,gf.TimeInterpolatorType,gf.TimeBasis,gf.PillarLabels )
+                    var gfb = new GridVolSurface(gf.OriginDate, gf.Strikes, gf.Expiries, bumpedGrid, gf.StrikeType, gf.StrikeInterpolatorType, gf.TimeInterpolatorType, gf.TimeBasis, gf.PillarLabels)
                     {
                         AssetId = gf.AssetId,
                         Name = gf.Name,
@@ -37,7 +37,7 @@ namespace Qwack.Models.Risk.Mutators
                 case SparsePointSurface sp:
                     var surfDates = sp.Vols.Keys.Select(x => x.expiry).Distinct().OrderBy(x => x).ToList();
                     var bumpedVols = new Dictionary<(DateTime expiry, double strike), double>();
-                    foreach(var kv in sp.Vols)
+                    foreach (var kv in sp.Vols)
                     {
                         var expiryIx = surfDates.IndexOf(kv.Key.expiry);
                         var bump = shiftSizes[expiryIx];
@@ -80,7 +80,7 @@ namespace Qwack.Models.Risk.Mutators
                     o.AddVolSurface(assetId, rfb);
                     break;
                 case GridVolSurface gf:
-                    var bumpedGrid = gf.Volatilities.Select((r, ix) => r.Select(c => c+ shiftSizes[ix]).ToArray()).ToArray();
+                    var bumpedGrid = gf.Volatilities.Select((r, ix) => r.Select(c => c + shiftSizes[ix]).ToArray()).ToArray();
                     var gfb = new GridVolSurface(gf.OriginDate, gf.Strikes, gf.Expiries, bumpedGrid, gf.StrikeType, gf.StrikeInterpolatorType, gf.TimeInterpolatorType, gf.TimeBasis, gf.PillarLabels)
                     {
                         AssetId = gf.AssetId,

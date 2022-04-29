@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
@@ -144,7 +140,7 @@ namespace Qwack.Models.Models
         public static (double FixedAverage, double FloatAverage, int FixedCount, int FloatCount) GetAveragesForSwap(this AsianSwap swap, IAssetFxModel model)
         {
             var fxDates = swap.FxFixingDates ?? swap.FixingDates;
-            
+
             var firstFix = swap.FxFixingDates?.First() ?? swap.FixingDates.First();
 
             var sampleDates = swap.FixingDates.AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag);
@@ -350,7 +346,7 @@ namespace Qwack.Models.Models
                 return 0.0;
             var curve = model.GetPriceCurve(future.AssetId);
 
-            var price = 0.0;
+            double price;
             if (curve.CurveType == PriceCurveType.NextButOnExpiry)
                 price = curve.GetPriceForDate(future.ExpiryDate.AddDays(-1));
             else
@@ -377,7 +373,7 @@ namespace Qwack.Models.Models
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
 
             var fv = BlackFunctions.BlackPV(price, option.Strike, 0.0, t, vol, option.CallPut);
-            if (option.Premium != 0 && model.BuildDate<=option.PremiumDate)
+            if (option.Premium != 0 && model.BuildDate <= option.PremiumDate)
             {
                 fv -= option.Premium;
             }
@@ -395,8 +391,8 @@ namespace Qwack.Models.Models
             var isCompo = euOpt.Currency != model.GetPriceCurve(euOpt.AssetId).Currency;
             var curve = model.GetPriceCurve(euOpt.AssetId);
             var fwdDate = euOpt.ExpiryDate.AddPeriod(RollType.F, euOpt.FixingCalendar, euOpt.SpotLag);
-            var fwd = euOpt.ExpiryDate <= model.BuildDate && model.TryGetFixingDictionary(euOpt.AssetId,out var dict) && dict.TryGetFixing(euOpt.ExpiryDate, out var fix) ? 
-                fix : 
+            var fwd = euOpt.ExpiryDate <= model.BuildDate && model.TryGetFixingDictionary(euOpt.AssetId, out var dict) && dict.TryGetFixing(euOpt.ExpiryDate, out var fix) ?
+                fix :
                 curve.GetPriceForDate(fwdDate);
 
             var fxFwd = 1.0;
@@ -470,7 +466,7 @@ namespace Qwack.Models.Models
 
         public static double FlowsT0(this AsianOption asianOption, IAssetFxModel model)
         {
-            var curve = model.GetPriceCurve(asianOption.AssetId);
+            _ = model.GetPriceCurve(asianOption.AssetId);
 
             var payDate = asianOption.PaymentDate == DateTime.MinValue ?
              asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
@@ -479,13 +475,13 @@ namespace Qwack.Models.Models
             if (payDate != model.BuildDate)
                 return 0.0;
 
-            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            var (FixedAverage, _, _, _) = asianOption.GetAveragesForSwap(model);
             return asianOption.Notional * (asianOption.CallPut == OptionType.Call ? Max(0, FixedAverage - asianOption.Strike) : Max(0, asianOption.Strike - FixedAverage));
         }
 
         public static double FlowsT0(this AsianSwap asianSwap, IAssetFxModel model)
         {
-            var curve = model.GetPriceCurve(asianSwap.AssetId);
+            _ = model.GetPriceCurve(asianSwap.AssetId);
 
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
              asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
@@ -493,8 +489,7 @@ namespace Qwack.Models.Models
 
             if (payDate != model.BuildDate)
                 return 0.0;
-
-            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianSwap.GetAveragesForSwap(model);
+            var (FixedAverage, _, _, _) = asianSwap.GetAveragesForSwap(model);
             return asianSwap.Notional * (FixedAverage - asianSwap.Strike);
         }
 
@@ -548,7 +543,7 @@ namespace Qwack.Models.Models
 
         public static List<CashFlow> ExpectedCashFlows(this AsianSwap asianSwap, IAssetFxModel model)
         {
-            var curve = model.GetPriceCurve(asianSwap.AssetId);
+            _ = model.GetPriceCurve(asianSwap.AssetId);
 
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
              asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
@@ -607,13 +602,13 @@ namespace Qwack.Models.Models
 
         public static List<CashFlow> ExpectedCashFlows(this AsianOption asianOption, IAssetFxModel model)
         {
-            var curve = model.GetPriceCurve(asianOption.AssetId);
+            _ = model.GetPriceCurve(asianOption.AssetId);
 
-            var payDate = asianOption.PaymentDate == DateTime.MinValue ?
+            _ = asianOption.PaymentDate == DateTime.MinValue ?
              asianOption.AverageEndDate.AddPeriod(asianOption.PaymentLagRollType, asianOption.PaymentCalendar, asianOption.PaymentLag) :
              asianOption.PaymentDate;
 
-            var (FixedAverage, FloatAverage, FixedCount, FloatCount) = asianOption.GetAveragesForSwap(model);
+            var (FixedAverage, _, _, _) = asianOption.GetAveragesForSwap(model);
             var fv = asianOption.Notional * (asianOption.CallPut == OptionType.Call ? Max(0, FixedAverage - asianOption.Strike) : Max(0, asianOption.Strike - FixedAverage));
 
             return new List<CashFlow>
@@ -855,9 +850,9 @@ namespace Qwack.Models.Models
                 case Forward fwd:
                     pv = fwd.PV(model, true);
                     break;
-                case Future fut:
-                case STIRFuture sfut:
-                case OISFuture ofut:
+                case Future:
+                case STIRFuture:
+                case OISFuture:
                     return (0.0, 0.0);
                 case CashAsset etc:
                     pv = etc.PV(model);
@@ -943,7 +938,7 @@ namespace Qwack.Models.Models
             }
             else
             {
-                for(var i=0;i< portfolio.Instruments.Count; i++)
+                for (var i = 0; i < portfolio.Instruments.Count; i++)
                 {
                     pvFunc(i);
                 }
@@ -978,8 +973,8 @@ namespace Qwack.Models.Models
         //    return pvCapital;
         //}
 
-        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD, 
-            double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models, 
+        public static double GrossRoC(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, double xVA_LGD,
+            double cvaCapitalWeight, double partyRiskWeight, IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models,
             Dictionary<string, string> assetToGroupMap, Dictionary<string, double> hedgeSetToCCF)
         {
             var exposureDates = portfolio.ExposureDatesForPortfolio(model.BuildDate);
@@ -1008,12 +1003,12 @@ namespace Qwack.Models.Models
 
         private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
         {
-            var pv = 0.0;
             var fxRate = 1.0;
             var ccy = reportingCurrency?.ToString();
             var pvCcy = ins.GetCurrency();
             var tradeId = ins.TradeId;
             var tradeType = TradeType(ins);
+            double pv;
             switch (ins)
             {
                 case AsianOption asianOption:
@@ -1158,10 +1153,10 @@ namespace Qwack.Models.Models
                 case FloatingRateLoanDepo fld:
                     flow = fld.FlowsT0(model.FundingModel);
                     break;
-                case CashBalance cash:
-                case CashAsset etc:
-                case STIRFuture st:
-                case OISFuture oi:
+                case CashBalance:
+                case CashAsset:
+                case STIRFuture:
+                case OISFuture:
                     flow = 0;
                     break;
                 case CashWrapper wrapper:
@@ -1407,7 +1402,7 @@ namespace Qwack.Models.Models
             return m.AssetAnalyticTheta(fwdValDate, reportingCcy, currencyProvider, false);
         }
 
-        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider, bool fillFixings=true)
+        public static IAssetFxModel RollModel(this IAssetFxModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider, bool fillFixings = true)
         {
             if (model.BuildDate == fwdValDate)
                 return model.Clone();
@@ -1515,7 +1510,7 @@ namespace Qwack.Models.Models
             return rolledModel;
         }
 
-        public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval, 
+        public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval,
             ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, List<string> fxPairsToRoll)
         {
             if (model.BuildDate == fwdValDate)
@@ -1525,7 +1520,7 @@ namespace Qwack.Models.Models
             var t = model.BuildDate.CalculateYearFraction(fwdValDate, DayCountBasis.ACT365F);
             var sqrt = Sqrt(t);
             var nCI = Statistics.NormInv(confidenceInterval);
-            var nCIInv = Statistics.NormInv(1.0-confidenceInterval);
+            var nCIInv = Statistics.NormInv(1.0 - confidenceInterval);
 
             //fx spots
             var matrix = m.FundingModel.FxMatrix;
@@ -1541,11 +1536,11 @@ namespace Qwack.Models.Models
                 x => x.Value == null ? 0.0 : (x.Value as IATMVolSurface).GetForwardATMVol(model.BuildDate, fwdValDate));
             var newSpotRates = new Dictionary<Currency, double>();
 
-            foreach(var pair in fxPairsToRoll)
+            foreach (var pair in fxPairsToRoll)
             {
                 var p = matrix.GetFxPair(pair);
 
-                if(p.Domestic==matrix.BaseCurrency)
+                if (p.Domestic == matrix.BaseCurrency)
                 {
                     var ccy = p.Foreign;
                     var vol = volsToRollFx[ccy];
@@ -1559,7 +1554,7 @@ namespace Qwack.Models.Models
                     var newSpot = matrix.SpotRates[ccy] * Exp(-(vol * vol) * t / 2.0 + vol * sqrt * nCIInv);
                     newSpotRates.Add(ccy, newSpot);
                 }
-                
+
             }
             //newSpotRates = volsToRollFx.ToDictionary(
             //    kv => kv.Key,
@@ -1643,10 +1638,10 @@ namespace Qwack.Models.Models
 
             var fxSurface = model.GetVolSurface(fxPair);
             var assetSurface = model.GetVolSurface(assetId);
-            var expiries = fxSurface.Expiries.Concat(assetSurface.Expiries).Distinct().OrderBy(x=>x);
+            var expiries = fxSurface.Expiries.Concat(assetSurface.Expiries).Distinct().OrderBy(x => x);
             var discoCurve = model.FundingModel.FxMatrix.DiscountCurveMap[ccy];
             var shifFactors = new Dictionary<DateTime, double>();
-            foreach(var e in expiries)
+            foreach (var e in expiries)
             {
                 var t = model.BuildDate.CalculateYearFraction(e, DayCountBasis.Act365F);
                 var fwdA = model.GetPriceCurve(assetId).GetPriceForDate(e);
@@ -1654,7 +1649,7 @@ namespace Qwack.Models.Models
                 var opt = AssetProductFactory.CreateAsianOption(e, e, fwdC, assetId, OptionType.C, null, e, ccy);
                 opt.DiscountCurve = discoCurve;
                 var exactFwd = ((AsianSwap)opt).ParRate(model);
-                opt =(AsianOption)opt.SetStrike(exactFwd);
+                opt = (AsianOption)opt.SetStrike(exactFwd);
                 var optPv = opt.PV(model, false);
                 var optFv = optPv / model.FundingModel.GetDf(discoCurve, model.BuildDate, e) / opt.Notional;
                 var iv = BlackFunctions.BlackImpliedVol(exactFwd, opt.Strike, 0, t, optFv, opt.CallPut);
@@ -1667,11 +1662,11 @@ namespace Qwack.Models.Models
 
 
             IVolSurface shiftedFxSurface;
-            switch(fxSurface)
+            switch (fxSurface)
             {
                 case RiskyFlySurface rf:
                     var to = rf.GetTransportObject();
-                    to.ATMs = to.ATMs.Select((v,ix)=>v*shifFactors[to.Expiries[ix]]).ToArray();
+                    to.ATMs = to.ATMs.Select((v, ix) => v * shifFactors[to.Expiries[ix]]).ToArray();
                     to.Riskies = rf.Riskies.Select((x, ix) => x.Select(r => r * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
                     to.Flies = rf.Flies.Select((x, ix) => x.Select(f => f * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
                     //to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
@@ -1771,11 +1766,11 @@ namespace Qwack.Models.Models
 
         public static bool IsLongDeltaPosition(this IAssetInstrument ins)
         {
-            switch(ins)
+            switch (ins)
             {
                 case AsianOption opt:
-                    if(opt.CallPut==OptionType.Call)
-                        return  (opt.Direction == TradeDirection.Long && Sign(opt.Notional) == 1) ||
+                    if (opt.CallPut == OptionType.Call)
+                        return (opt.Direction == TradeDirection.Long && Sign(opt.Notional) == 1) ||
                                 (opt.Direction == TradeDirection.Short && Sign(opt.Notional) == -1);
                     else
                         return (opt.Direction == TradeDirection.Long && Sign(opt.Notional) == -1) ||

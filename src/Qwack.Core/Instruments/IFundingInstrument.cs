@@ -1,7 +1,6 @@
-using Qwack.Core.Models;
-using System.Collections.Generic;
 using System;
-using Qwack.Core.Basic;
+using System.Collections.Generic;
+using Qwack.Core.Models;
 
 namespace Qwack.Core.Instruments
 {

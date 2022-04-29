@@ -24,7 +24,7 @@ namespace Qwack.Core.Curves
         private readonly string _name;
 
 
-        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec=null, RateType rateStorageType = RateType.Exponential)
+        public IrCurve(DateTime[] pillars, double[] rates, DateTime buildDate, string name, Interpolator1DType interpKind, Currency ccy, string collateralSpec = null, RateType rateStorageType = RateType.Exponential)
         {
             _interpKind = interpKind;
             _rateStorageType = rateStorageType;
@@ -72,7 +72,7 @@ namespace Qwack.Core.Curves
 
         public void SetRateIndex(FloatRateIndex rateIndex) => RateIndex = rateIndex;
 
-    
+
         public double GetDf(DateTime startDate, DateTime endDate)
         {
             if (startDate == endDate)
@@ -199,13 +199,13 @@ namespace Qwack.Core.Curves
         public IrCurve RebaseDate(DateTime newAnchorDate)
         {
             var pillarsDropped = _pillars.Count(x => x <= newAnchorDate);
-            var newLength =  _pillars.Length - pillarsDropped;
+            var newLength = _pillars.Length - pillarsDropped;
             var newPillars = new DateTime[newLength];
 
             Array.Copy(_pillars, pillarsDropped, newPillars, 0, newLength);
 
             var dfAdjust = GetDf(BuildDate, newAnchorDate);
-            var newDfs = newPillars.Select(x => GetDf(BuildDate, x)/ dfAdjust).ToArray();
+            var newDfs = newPillars.Select(x => GetDf(BuildDate, x) / dfAdjust).ToArray();
             var newRates = newDfs.Select((x, ix) => RateFromDF(newAnchorDate.CalculateYearFraction(newPillars[ix], _basis), x, RateStorageType)).ToArray();
             if (newPillars.First() == newAnchorDate && newRates.Length > 1)
                 newRates[0] = newRates[1];
@@ -259,7 +259,7 @@ namespace Qwack.Core.Curves
 
         public TO_IrCurve GetTransportObject() =>
             new()
-            { 
+            {
                 Basis = Basis,
                 BuildDate = BuildDate,
                 Ccy = Currency.Ccy,

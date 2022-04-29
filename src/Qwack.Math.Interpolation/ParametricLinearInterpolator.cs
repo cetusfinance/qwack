@@ -13,14 +13,14 @@ namespace Qwack.Math.Interpolation
         public double MinX => double.MinValue;
         public double MaxX => double.MaxValue;
 
-        public ParametricLinearInterpolator() {}
+        public ParametricLinearInterpolator() { }
 
         public ParametricLinearInterpolator(double alpha, double beta)
         {
             _alpha = alpha;
             _beta = beta;
         }
-    
+
         public double FirstDerivative(double x) => _beta;
         public double Interpolate(double t) => _alpha + t * _beta;
         public double SecondDerivative(double x) => 0.0;

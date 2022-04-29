@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -35,7 +33,7 @@ namespace Qwack.Models.Risk
 
         public List<FxPair> FxPairsForDelta { get; set; }
 
-        public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential=true)
+        public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
         {
             AssetId = assetId;
             Ccy = ccy;
@@ -259,7 +257,7 @@ namespace Qwack.Models.Risk
             var results = new ICube[scenarios.Count];
             var scList = scenarios.ToList();
 
-            ParallelUtils.Instance.For(0, scList.Count,1, i =>
+            ParallelUtils.Instance.For(0, scList.Count, 1, i =>
             {
                 var scenario = scList[i];
                 var pvModel = scenario.Value;
@@ -279,7 +277,7 @@ namespace Qwack.Models.Risk
 
             for (var i = 0; i < results.Length; i++)
             {
-                o = (ResultCube)o.Merge(results[i], 
+                o = (ResultCube)o.Merge(results[i],
                     new Dictionary<string, object>
                     {
                         { "AxisA", scList[i].Key.Item1 },

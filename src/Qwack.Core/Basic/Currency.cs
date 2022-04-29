@@ -11,11 +11,11 @@ namespace Qwack.Core.Basic
         private readonly ICalendarProvider _calendarProvider;
 
         public Currency(ICalendarProvider calendarProvider) => _calendarProvider = calendarProvider;
-                
-        public string Ccy { get; set;}
-        public DayCountBasis DayCount { get; set;}
+
+        public string Ccy { get; set; }
+        public DayCountBasis DayCount { get; set; }
         public Calendar SettlementCalendar => _calendarProvider.Collection[SettlementCalendarName];
-        public string SettlementCalendarName { get;set;}
+        public string SettlementCalendarName { get; set; }
 
         public override bool Equals(object x)
         {

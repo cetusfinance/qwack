@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Qwack.Math.Solvers
@@ -10,7 +9,7 @@ namespace Qwack.Math.Solvers
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
         public double JacobianBump { get; set; } = 0.0001;
-        public Func<double[],double[]> ObjectiveFunction { get; set; }
+        public Func<double[], double[]> ObjectiveFunction { get; set; }
         public double[] InitialGuess { get; set; }
 
         private double[] _currentGuess;
@@ -25,9 +24,9 @@ namespace Qwack.Math.Solvers
             Array.Copy(InitialGuess, _currentGuess, _n);
             _currentOutput = ObjectiveFunction(_currentGuess);
 
-            if (_currentOutput.Length!= _n)
+            if (_currentOutput.Length != _n)
                 throw new ArgumentException();
-     
+
             for (var i = 0; i < MaxItterations; i++)
             {
                 if (_currentOutput.Max(x => System.Math.Abs(x)) < Tollerance)

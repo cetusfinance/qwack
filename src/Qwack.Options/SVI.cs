@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Math.Extensions;
 using static System.Math;
 
@@ -22,7 +19,7 @@ namespace Qwack.Options
         /// <param name="m"></param>
         /// <param name="sigma"></param>
         /// <returns>Total implied variance, vol * vol * t</returns>
-        public static double SVI_Raw_ImpliedVariance(double a, double b, double rho, double k, double m, double sigma) 
+        public static double SVI_Raw_ImpliedVariance(double a, double b, double rho, double k, double m, double sigma)
             => a + b * (rho * (k - m) + Sqrt((k - m) * (k - m) + sigma * sigma));
 
         public static double SVI_Raw_ImpliedVol(double a, double b, double rho, double K, double F, double t, double m, double sigma)

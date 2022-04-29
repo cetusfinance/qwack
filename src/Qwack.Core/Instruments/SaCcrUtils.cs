@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
 using static Qwack.Math.Statistics;

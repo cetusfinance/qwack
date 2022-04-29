@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
@@ -66,7 +63,7 @@ namespace Qwack.Math.Interpolation
                 interps[i] = InterpolatorFactory.GetInterpolator(new[] { xLo, xHi }, new[] { yLo, yHi }, Interpolator1DType.Linear);
                 uBounds[i] = xHi;
             }
-            uBounds[uBounds.Length-1] = double.MaxValue;
+            uBounds[uBounds.Length - 1] = double.MaxValue;
             return new NonContinuousInterpolator(uBounds, interps);
         }
     }

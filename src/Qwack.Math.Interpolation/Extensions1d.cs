@@ -1,29 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using Qwack.Math;
-using Qwack.Transport.TransportObjects.Interpolators;
-using System.Runtime.CompilerServices;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Interpolators;
 
 namespace Qwack.Math.Interpolation
 {
     public static class Extensions1d
     {
-        public static double Average(this IInterpolator1D interp, IEnumerable<double> Xs) 
+        public static double Average(this IInterpolator1D interp, IEnumerable<double> Xs)
             => Xs.Average(x => interp.Interpolate(x));
 
-        public static double MaxY(this IInterpolator1D interp, IEnumerable<double> Xs) 
+        public static double MaxY(this IInterpolator1D interp, IEnumerable<double> Xs)
             => Xs.Max(x => interp.Interpolate(x));
 
-        public static double MinY(this IInterpolator1D interp, IEnumerable<double> Xs) 
+        public static double MinY(this IInterpolator1D interp, IEnumerable<double> Xs)
             => Xs.Min(x => interp.Interpolate(x));
 
-        public static double Sum(this IInterpolator1D interp, IEnumerable<double> Xs) 
+        public static double Sum(this IInterpolator1D interp, IEnumerable<double> Xs)
             => Xs.Sum(x => interp.Interpolate(x));
 
-        public static double[] Many(this IInterpolator1D interp, IEnumerable<double> Xs) 
+        public static double[] Many(this IInterpolator1D interp, IEnumerable<double> Xs)
             => Xs.Select(x => interp.Interpolate(x)).ToArray();
 
         public static TO_Interpolator1d ToTransportObject(this IInterpolator1D interp) => interp switch

@@ -1,17 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
     public class LinearInterpolator : IInterpolator1D
     {
-        public Interpolator1DType Type => Interpolator1DType.Linear; 
+        public Interpolator1DType Type => Interpolator1DType.Linear;
 
         private readonly double[] _x;
         private readonly double[] _y;
@@ -97,7 +93,7 @@ namespace Qwack.Math.Interpolation
             else if (t < _minX)
             {
                 var tDiff = t - _minX;
-                return _y[0] +  _slope[0] * tDiff;
+                return _y[0] + _slope[0] * tDiff;
             }
             else if (t > _maxX)
             {
@@ -145,7 +141,7 @@ namespace Qwack.Math.Interpolation
                 Buffer.BlockCopy(_y, 0, newY, 0, _y.Length * 8);
                 var newSlope = new double[_slope.Length];
                 Buffer.BlockCopy(_slope, 0, newSlope, 0, _slope.Length * 8);
-                var returnValue = new LinearInterpolator(_x, newY, newSlope).Bump(pillar, newValue-_y[pillar], true);
+                var returnValue = new LinearInterpolator(_x, newY, newSlope).Bump(pillar, newValue - _y[pillar], true);
                 return returnValue;
             }
         }

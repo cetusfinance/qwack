@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Qwack.Core.Curves;
-using Qwack.Providers.CSV;
-using Qwack.Futures;
-using Qwack.Core.Basic;
-using Qwack.Dates;
-using Qwack.Options.VolSurfaces;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Core.Curves;
+using Qwack.Dates;
+using Qwack.Futures;
+using Qwack.Options.VolSurfaces;
+using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
 using static Qwack.Models.Calibrators.CMECommon;
-using System.Runtime.CompilerServices;
-using System.IO;
 
 namespace Qwack.Models.Calibrators
 {
@@ -43,17 +41,17 @@ namespace Qwack.Models.Calibrators
 
         public static BasicPriceCurve GetCurveForCode(string nymexSymbol, StreamReader stream, string qwackCode, IFutureSettingsProvider provider, ICurrencyProvider currency, PriceCurveType curveType)
         {
-            var parsed = NYMEXFutureParser.Instance.Parse(stream).Where(r=>r.Symbol==nymexSymbol);
-            var q = parsed.Where(x=>x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
+            var parsed = NYMEXFutureParser.Instance.Parse(stream).Where(r => r.Symbol == nymexSymbol);
+            var q = parsed.Where(x => x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
             var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
-            var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value,MinPrice)).ToArray();
-            
+            var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value, MinPrice)).ToArray();
+
             if (pricesVec.Length == 0)
                 return null;
 
-            var origin = DateTime.ParseExact(parsed.First().TradeDate,"MM/dd/yyyy", CultureInfo.InvariantCulture);
+            var origin = DateTime.ParseExact(parsed.First().TradeDate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
             var curve = new BasicPriceCurve(origin, datesVec, pricesVec, curveType, currency, labelsVec)
             {
                 AssetId = qwackCode,
@@ -63,12 +61,12 @@ namespace Qwack.Models.Calibrators
             return curve;
         }
 
-        
+
 
         public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, string nymexOptionFilename, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency, IFutureSettingsProvider futureSettingsProvider)
         {
             var parsed = NYMEXOptionParser.Instance.Parse(nymexOptionFilename).Where(r => r.Symbol == nymexSymbol);
-            return GetSurfaceForCode(parsed,nymexSymbol,qwackCode,priceCurve,calendarProvider,currency,futureSettingsProvider);
+            return GetSurfaceForCode(parsed, nymexSymbol, qwackCode, priceCurve, calendarProvider, currency, futureSettingsProvider);
         }
 
         public static RiskyFlySurface GetSurfaceForCode(string nymexSymbol, StreamReader stream, string qwackCode, BasicPriceCurve priceCurve, ICalendarProvider calendarProvider, ICurrencyProvider currency, IFutureSettingsProvider futureSettingsProvider)
@@ -109,7 +107,7 @@ namespace Qwack.Models.Calibrators
 
             while (contract != lastContract)
             {
-                var cc = new FutureCode(contract, origin.Year -1 , futureSettingsProvider);
+                var cc = new FutureCode(contract, origin.Year - 1, futureSettingsProvider);
                 var exp = ListedUtils.FuturesCodeToDateTime(contract, origin);
                 var record = new NYMEXOptionRecord
                 {

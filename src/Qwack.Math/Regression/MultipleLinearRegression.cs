@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Qwack.Math.Matrix;
 
 namespace Qwack.Math.Regression
@@ -55,7 +53,7 @@ namespace Qwack.Math.Regression
                     designMatrix[c + 1][r] = predictors[r][c];
                 }
             }
-            
+
             var result = new double[designMatrix.Length][];
             var iterations = result.Length * result.Length;
             var vectors = designMatrix[0].Length / Vector<double>.Count;
@@ -69,7 +67,7 @@ namespace Qwack.Math.Regression
             {
                 var column1 = counter / result.Length;
                 var column2 = counter % result.Length;
-                if(column2 > column1)
+                if (column2 > column1)
                 {
                     continue;
                 }
@@ -80,7 +78,7 @@ namespace Qwack.Math.Regression
                 {
                     sum += Vector.Dot(vectorList1[i], vectorList2[i]);
                 }
-                for(var i = vectors*Vector<double>.Count; i < designMatrix[0].Length; i++)
+                for (var i = vectors * Vector<double>.Count; i < designMatrix[0].Length; i++)
                 {
                     sum += designMatrix[column1][i] * designMatrix[column2][i];
                 }
@@ -94,6 +92,6 @@ namespace Qwack.Math.Regression
             var weights = DoubleArrayFunctions.MatrixProductBounds(Z3, predictions);
             return weights;
         }
-        
+
     }
 }

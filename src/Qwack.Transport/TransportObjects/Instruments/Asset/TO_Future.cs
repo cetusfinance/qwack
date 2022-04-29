@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 
@@ -24,7 +23,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(7)]
         public TradeDirection Direction { get; set; }
         [ProtoMember(8)]
-        public DateTime ExpiryDate { get; set; }   
+        public DateTime ExpiryDate { get; set; }
         [ProtoMember(9)]
         public double Strike { get; set; }
         [ProtoMember(10)]
@@ -32,7 +31,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(11)]
         public string Currency { get; set; }
         [ProtoMember(12)]
-        public Dictionary<string,string> MetaData { get; set; }
+        public Dictionary<string, string> MetaData { get; set; }
         [ProtoMember(13)]
         public bool? IsPerpetual { get; set; }
 

@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
@@ -55,17 +53,17 @@ namespace Qwack.Models.Calibrators
                             }
                         }
 
-                        if(InLineCurveGuessing)
+                        if (InLineCurveGuessing)
                         {
                             var points = insForCurve.ToDictionary(x => x.PillarDate, x => x.SuggestPillarValue(fundingModel));
-                            for(var i=0;i<kv.Value.NumberOfPillars;i++)
+                            for (var i = 0; i < kv.Value.NumberOfPillars; i++)
                             {
                                 kv.Value.SetRate(i, points[kv.Value.PillarDates[i]], true);
                             }
                         }
                     }
                 }
-                curvesPerStange[stage] = string.Join(",",curvesForStage.Select(c => c.Name).ToArray());
+                curvesPerStange[stage] = string.Join(",", curvesForStage.Select(c => c.Name).ToArray());
                 var currentGuess = new double[fundingInstruments.Count];
                 var currentPvs = new double[fundingInstruments.Count];
                 var bumpedPvs = new double[fundingInstruments.Count];

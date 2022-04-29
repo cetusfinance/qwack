@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
-using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
-    public class DummyPointInterpolator:IInterpolator1D,IInterpolator2D
+    public class DummyPointInterpolator : IInterpolator1D, IInterpolator2D
     {
         public Interpolator1DType Type => Interpolator1DType.DummyPoint;
 
@@ -42,6 +36,6 @@ namespace Qwack.Math.Interpolation
         public double[] Sensitivity(double t) => new double[] { 1.0 };
 
         public double Interpolate(double x, double y) => _point;
- 
+
     }
 }

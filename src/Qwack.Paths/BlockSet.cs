@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Utils.Exceptions;
 using static System.Math;
 
@@ -15,7 +13,7 @@ namespace Qwack.Paths
     public sealed class BlockSet : IEnumerable<PathBlock>, IDisposable
     {
         public int NumberOfBlocks => _numberOfBlocks;
-        
+
         private static readonly int _numberOfThreads = Environment.ProcessorCount;
         private readonly int _numberOfPaths;
         private readonly int _numberOfBlocks;
@@ -37,14 +35,14 @@ namespace Qwack.Paths
             _compactMode = compactMode;
             _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
             numberOfPaths = RoundedNumberOfPaths(numberOfPaths);
-            
+
             _steps = steps;
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
             var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads);
 
-            if(pathsPerBlock==0)
+            if (pathsPerBlock == 0)
                 ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");
 
             _numberOfBlocks = numberOfPaths / pathsPerBlock;

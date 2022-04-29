@@ -213,7 +213,7 @@ namespace Qwack.Transport.CmeXml
 
         private string idField;
 
-        private string cFIField; 
+        private string cFIField;
 
         private string secTypField;
 

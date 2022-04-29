@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
-using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
@@ -28,7 +25,7 @@ namespace Qwack.Core.Instruments
                             TradeId = transportObject.AsianSwapStrip.TradeId,
                             Counterparty = transportObject.AsianSwapStrip.Counterparty,
                             PortfolioName = transportObject.AsianSwapStrip.PortfolioName,
-                            Swaplets = transportObject.AsianSwapStrip.Swaplets.Select(x => x.GetAsianSwap(currencyProvider,calendarProvider)).ToArray(),
+                            Swaplets = transportObject.AsianSwapStrip.Swaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
                             HedgingSet = transportObject.AsianSwapStrip.HedgingSet,
                         };
                     case AssetInstrumentType.AsianOption:

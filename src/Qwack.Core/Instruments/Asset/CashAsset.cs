@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -73,7 +72,7 @@ namespace Qwack.Core.Instruments.Asset
                 var ccys = AssetId.Split('/');
                 var c1 = model.FundingModel.FxMatrix.GetDiscountCurve(ccys[0]);
                 var c2 = model.FundingModel.FxMatrix.GetDiscountCurve(ccys[1]);
-                return (new[] { DiscountCurve, c1, c2 }).Distinct().Where(x=>!string.IsNullOrWhiteSpace(x)).ToArray();
+                return (new[] { DiscountCurve, c1, c2 }).Distinct().Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
             }
             else
             {

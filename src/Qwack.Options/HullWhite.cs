@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Qwack.Core.Curves;
-using Qwack.Math;
 using Qwack.Dates;
-using static System.Math;
+using Qwack.Math;
 using Qwack.Math.Extensions;
-using System.Net.Http;
-using static Qwack.Math.Statistics;
 using Qwack.Transport.BasicTypes;
-using Qwack.Core.Models;
+using static System.Math;
+using static Qwack.Math.Statistics;
 
 namespace Qwack.Options
 {
@@ -23,7 +17,7 @@ namespace Qwack.Options
 
         public IIrCurve DiscountCurve { get; private set; }
         public DayCountBasis DayCountBasis { get; set; }
-        
+
         public double P0(double T) => DiscountCurve.GetDf(DiscountCurve.BuildDate, DateExtensions.AddYearFraction(DiscountCurve.BuildDate, T, DayCountBasis));
         public double dLogP0dt(double T) => (Log(P0(T + _tBump / 2.0)) - Log(P0(T - _tBump / 2.0))) / _tBump;
         public double B(double t, double T) => (1.0 - Exp(-Alpha * (T - t))) / Alpha;
@@ -35,7 +29,7 @@ namespace Qwack.Options
         public double ZBP(double tFix, double tPay, double X)
         {
             var d1 = Log(P0(tFix) * X / P0(tPay)) / Sqrt(VarP0(tFix, tPay));
-            var d2 = 0.5*Sqrt(VarP0(tFix, tPay));
+            var d2 = 0.5 * Sqrt(VarP0(tFix, tPay));
             var dPlus = d1 + d2;
             var dMinus = d1 - d2;
 
@@ -47,7 +41,7 @@ namespace Qwack.Options
     {
         private const double tBump = 1e-6;
         public static double F0(double T, IIrCurve curve) => -(curve.GetDf(0, T) - curve.GetDf(0, T + tBump)) / tBump;
-        public static double F0dt(double T, IIrCurve curve) => (F0(T,curve) - F0(T + tBump,curve)) / tBump;
+        public static double F0dt(double T, IIrCurve curve) => (F0(T, curve) - F0(T + tBump, curve)) / tBump;
         public static double Theta(double T, double sigma, double alpha, IIrCurve curve) =>
             alpha * F0(T, curve) + F0dt(T, curve) + sigma * sigma / (2.0 * alpha) * (1.0 - Exp(-2 * alpha * T));
     }

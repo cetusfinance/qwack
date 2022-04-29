@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
-using Qwack.Dates;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Models;
@@ -45,7 +45,7 @@ namespace Qwack.Models
         public FundingModel(TO_FundingModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
             this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
         {
-            if(transportObject.VolSurfaces!=null)
+            if (transportObject.VolSurfaces != null)
                 VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
             SetupFx(new FxMatrix(transportObject.FxMatrix, currencyProvider, calendarProvider));
         }
@@ -53,7 +53,7 @@ namespace Qwack.Models
 
         private void SetupMappings()
         {
-            foreach(var curve in Curves)
+            foreach (var curve in Curves)
             {
                 var key = $"{curve.Value.Currency.Ccy}é{curve.Value.CollateralSpec}";
                 if (_curvesBySpec.ContainsKey(key))
@@ -67,14 +67,14 @@ namespace Qwack.Models
             var key = $"{ccy.Ccy}é{collateralSpec}";
             if (!_curvesBySpec.TryGetValue(key, out var curveName))
             {
-                foreach(var kv in _curvesBySpec)
+                foreach (var kv in _curvesBySpec)
                 {
                     if (kv.Key.StartsWith(ccy.Ccy))
                         return Curves[kv.Value];
                 }
                 throw new Exception($"Could not find a curve with currency {ccy.Ccy} and collateral spec {collateralSpec}");
             }
-                
+
 
             return Curves[curveName];
         }
@@ -90,7 +90,7 @@ namespace Qwack.Models
 
         public double CalibrationTimeMs { get; set; }
 
-        public Dictionary<int,int> CalibrationItterations { get; set; }
+        public Dictionary<int, int> CalibrationItterations { get; set; }
         public Dictionary<int, string> CalibrationCurves { get; set; }
         public void UpdateCurves(Dictionary<string, IrCurve> updateCurves) => Curves = new Dictionary<string, IrCurve>(updateCurves);
 
@@ -240,7 +240,7 @@ namespace Qwack.Models
             if (newBaseCurrency == input.FxMatrix.BaseCurrency)
                 return input.Clone();
 
-            var mf = input.DeepClone(null);   
+            var mf = input.DeepClone(null);
             var homeToBase = mf.FxMatrix.SpotRates[newBaseCurrency];
             var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
                 .Concat(new[] { mf.FxMatrix.BaseCurrency })
@@ -264,11 +264,11 @@ namespace Qwack.Models
             new()
             {
                 BuildDate = BuildDate,
-                VolSurfaces = VolSurfaces.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
-                Curves = Curves.ToDictionary(x=>x.Key,x=>x.Value.GetTransportObject()),
+                VolSurfaces = VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
+                Curves = Curves.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
                 FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject()
             };
     }
 
-    
+
 }

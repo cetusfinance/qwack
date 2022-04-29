@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Funding;
@@ -14,7 +11,7 @@ namespace Qwack.Models.Calibrators
         public static IrCurve StripFlatSpread(string name, double spread, FloatRateIndex floatRateIndex, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var pillars = baseCurve.PillarDates;
-            var startRates = baseCurve.GetRates().Select(x=>x+spread).ToArray();
+            var startRates = baseCurve.GetRates().Select(x => x + spread).ToArray();
             var fCurve = new IrCurve(pillars, startRates, baseCurve.BuildDate, name, baseCurve.InterpolatorType, baseCurve.Currency, "FUNDING", baseCurve.RateStorageType)
             {
                 SolveStage = 0

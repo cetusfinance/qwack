@@ -1,7 +1,6 @@
 using System;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Transport.TransportObjects.Instruments.Funding
 {

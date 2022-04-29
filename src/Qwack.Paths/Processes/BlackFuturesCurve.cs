@@ -1,12 +1,12 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Models;
 using Qwack.Futures;
+using Qwack.Math.Extensions;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths.Features;
 using Qwack.Utils.Parallel;
 
 namespace Qwack.Paths.Processes
@@ -87,8 +87,8 @@ namespace Qwack.Paths.Processes
         {
             var stepsMain = block.GetStepsForFactor(path, _mainFactorIndex);
             for (var f = 0; f < _factorIndices.Length; f++)
-                //ParallelUtils.Instance.For(0,_factorIndices.Length,1,f=>
-                {
+            //ParallelUtils.Instance.For(0,_factorIndices.Length,1,f=>
+            {
                 var previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
                 var steps = block.GetStepsForFactor(path, _factorIndices[f]);
                 var c = 0;
@@ -108,7 +108,7 @@ namespace Qwack.Paths.Processes
                 }
             }//).Wait();
 
-                for (var step = 0; step < block.NumberOfSteps; step++)
+            for (var step = 0; step < block.NumberOfSteps; step++)
             {
                 var frontMonth = block.GetStepsForFactor(path, _frontMonthFactors[step]);
                 stepsMain[step] = frontMonth[step];

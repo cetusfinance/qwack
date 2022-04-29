@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ProtoBuf;
 
 namespace Qwack.Transport.BasicTypes
@@ -31,7 +28,7 @@ namespace Qwack.Transport.BasicTypes
             Length1 = squareInput.GetLength(1);
             BackingArray = new double[Length0 * Length1];
             for (var i = 0; i < Length0; i++)
-                for (var j = 0; j < Length1; j++)           
+                for (var j = 0; j < Length1; j++)
                     BackingArray[i * Length0 + j] = squareInput[i, j];
         }
 
@@ -53,7 +50,7 @@ namespace Qwack.Transport.BasicTypes
             var o = new double[m.Length0, m.Length1];
             for (var i = 0; i < m.Length0; i++)
                 for (var j = 0; j < m.Length1; j++)
-                    o[i,j]=m.BackingArray[i * m.Length0 + j];
+                    o[i, j] = m.BackingArray[i * m.Length0 + j];
             return o;
         }
 

@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Options.VolSurfaces
 {
     public static class VolUtils
     {
-        public static double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward, Func<double,double> GetVolForAbsoluteStrike)
+        public static double GetVolForDeltaStrike(double deltaStrike, double maturity, double forward, Func<double, double> GetVolForAbsoluteStrike)
         {
             var fwd = forward;
             var cp = OptionType.Put;
@@ -24,7 +22,7 @@ namespace Qwack.Options.VolSurfaces
             return GetVolForAbsoluteStrike(solvedStrike);
         }
 
-        public static double GetForwardATMVol(double start, double end, double fwdStart, double fwdEnd, Func<double,double,double,double> GetVolForAbsoluteStrike)
+        public static double GetForwardATMVol(double start, double end, double fwdStart, double fwdEnd, Func<double, double, double, double> GetVolForAbsoluteStrike)
         {
             if (start > end)
                 throw new Exception("Start must be strictly less than end");

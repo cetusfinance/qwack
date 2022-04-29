@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
@@ -88,7 +85,7 @@ namespace Qwack.Math.Interpolation
 
         public double Interpolate(double t)
         {
-            if(t==0)
+            if (t == 0)
             {
                 return 0.0;
             }

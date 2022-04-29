@@ -1,6 +1,6 @@
-using Qwack.Paths.Features;
 using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
@@ -40,9 +40,9 @@ namespace Qwack.Paths.Processes
                     var currentIndex = new double[Vector<double>.Count];
                     steps[step].CopyTo(currentIndex);
 
-                    if(_logReturns)
+                    if (_logReturns)
                     {
-                        
+
                     }
                     else
                     {

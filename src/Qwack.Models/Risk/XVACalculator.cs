@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
@@ -9,9 +8,6 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Math;
-using Qwack.Math.Extensions;
-using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
@@ -25,11 +21,11 @@ namespace Qwack.Models.Risk
         {
             if (EPEDates.Length != EPEExposures.Length)
                 throw new Exception("Number of EPE dates and EPE values must be equal");
-            
+
             var lastDate = originDate;
             var cva = 0.0;
 
-            for(var i=0;i<EPEDates.Length;i++)
+            for (var i = 0; i < EPEDates.Length; i++)
             {
                 if (EPEDates[i] < originDate)
                     continue;
@@ -40,7 +36,7 @@ namespace Qwack.Models.Risk
 
                 lastDate = EPEDates[i];
             }
-            
+
             return -cva;
         }
 
@@ -50,7 +46,7 @@ namespace Qwack.Models.Risk
             return CVA(originDate, epeDates, epeValues, hazzardCurve, discountCurve, LGD);
         }
 
-        public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime,IAssetFxModel> models = null)
+        public static double CVA_Approx(DateTime[] exposureDates, Portfolio portfolio, HazzardCurve hazzardCurve, IAssetFxModel model, IIrCurve discountCurve, double LGD, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
             var exposures = EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
             return CVA(model.BuildDate, exposureDates, exposures, hazzardCurve, discountCurve, LGD);
@@ -59,7 +55,7 @@ namespace Qwack.Models.Risk
         public static double CVA_CapitalB3_Approx(DateTime[] exposureDates, Portfolio portfolio, double PD, IAssetFxModel model, double LGD, double partyWeight, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
         {
             var exposures = EPE_Approx(exposureDates, portfolio, model, reportingCurrency, currencyProvider, models);
-            return RWA_BaselIII_CVA_IMM(model.BuildDate, exposureDates, exposures, PD, LGD, partyWeight)*0.11;
+            return RWA_BaselIII_CVA_IMM(model.BuildDate, exposureDates, exposures, PD, LGD, partyWeight) * 0.11;
         }
 
         public static double[] EPE_Approx(DateTime[] exposureDates, Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
@@ -198,7 +194,7 @@ namespace Qwack.Models.Risk
         {
             if (ExEDates.Length != CapExposures.Length)
                 throw new Exception("Number of exposure dates and values must be equal");
-            
+
             var lastDate = originDate;
             var kva = 0.0;
             for (var i = 0; i < ExEDates.Length; i++)
@@ -209,7 +205,7 @@ namespace Qwack.Models.Risk
                 var fwdDf = fundingCurve.GetDf(lastDate, ExEDates[i]);
                 var df = fundingCurve.GetDf(originDate, ExEDates[i]);
                 kva += CapExposures[i] / fwdDf * df;
-                
+
                 lastDate = ExEDates[i];
             }
             return kva;
@@ -232,7 +228,7 @@ namespace Qwack.Models.Risk
             var sumDt = 0.0;
             var mTop = 0.0;
             var eee = new double[exposures.Length];
-            for(var i=0;i<eee.Length;i++)
+            for (var i = 0; i < eee.Length; i++)
             {
                 var dt = (i == 0) ? 0.0 : exposureDates[i - 1].CalculateYearFraction(exposureDates[i], DayCountBasis.Act365F);
                 eee[i] = (i == 0) ? exposures[0] : Max(exposures[i], eee[i - 1]);

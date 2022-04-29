@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using static System.Math;
@@ -7,7 +6,7 @@ namespace Qwack.Math
 {
     public static class HistoricVolatility
     {
-        public static double CloseToCloseVolatility(this IEnumerable<double> prices, VolatilitySamplingPeriod period = VolatilitySamplingPeriod.BusinessDaily, int nPeriodsPerSample = 1) 
+        public static double CloseToCloseVolatility(this IEnumerable<double> prices, VolatilitySamplingPeriod period = VolatilitySamplingPeriod.BusinessDaily, int nPeriodsPerSample = 1)
             => prices.Returns(true).StdDev() * GetScalingFactor(period, nPeriodsPerSample);
 
 
@@ -29,7 +28,7 @@ namespace Qwack.Math
                 return -1;
 
             var sum = 0.0;
-            for(var i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 sum += Pow(Log(highs[i] / lows[i]), 2);
             }
@@ -55,7 +54,7 @@ namespace Qwack.Math
         public static double GarmanKlass(IList<double> opens, IList<double> highs, IList<double> lows, IList<double> closes, VolatilitySamplingPeriod period = VolatilitySamplingPeriod.BusinessDaily, int nPeriodsPerSample = 1)
         {
             double n = highs.Count();
-            if (n != lows.Count() || n!=closes.Count() || n!=opens.Count())
+            if (n != lows.Count() || n != closes.Count() || n != opens.Count())
                 return -1;
 
             var sum = 0.0;
@@ -97,7 +96,7 @@ namespace Qwack.Math
         }
 
 
-        private static double GetScalingFactor (VolatilitySamplingPeriod period, int nPeriodsPerSample)
+        private static double GetScalingFactor(VolatilitySamplingPeriod period, int nPeriodsPerSample)
         {
             var freq = 1.0;
             switch (period)

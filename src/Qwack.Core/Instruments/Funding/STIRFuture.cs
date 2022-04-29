@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -45,7 +43,7 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model)
         {
             //only forecast for STIR future
-            var forecastDict =  new Dictionary<DateTime, double>();
+            var forecastDict = new Dictionary<DateTime, double>();
             var forecastCurve = model.Curves[ForecastCurve];
 
             var rateStart = Expiry.AddPeriod(RollType.F, Index.HolidayCalendars, Index.FixingOffset);

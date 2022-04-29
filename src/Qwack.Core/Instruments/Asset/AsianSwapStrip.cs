@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Transport.BasicTypes;
@@ -58,7 +57,7 @@ namespace Qwack.Core.Instruments.Asset
         public SaCcrAssetClass AssetClass { get; set; }
         public string CommodityType { get; set; }
 
-        public double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => Swaplets.Sum(x=>x.EffectiveNotional(model, MPOR));
+        public double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => Swaplets.Sum(x => x.EffectiveNotional(model, MPOR));
         public double AdjustedNotional(IAssetFxModel model) => Swaplets.Sum(x => x.AdjustedNotional(model));
         public double SupervisoryDelta(IAssetFxModel model) => Swaplets.Average(x => x.SupervisoryDelta(model));
         public double MaturityFactor(DateTime today, double? MPOR = null) => Swaplets.Max(x => x.MaturityFactor(today, MPOR));

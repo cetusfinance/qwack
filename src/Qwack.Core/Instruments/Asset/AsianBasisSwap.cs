@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -18,7 +17,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public AsianSwap[] PaySwaplets { get; set; }
         public AsianSwap[] RecSwaplets { get; set; }
-        
+
         public string[] AssetIds => PaySwaplets.Select(x => x.AssetId).Concat(RecSwaplets.Select(x => x.AssetId)).Distinct().ToArray();
         public string[] IrCurves(IAssetFxModel model) => PaySwaplets.SelectMany(x => x.IrCurves(model)).Concat(RecSwaplets.SelectMany(x => x.IrCurves(model))).Distinct().ToArray();
         public Currency Currency => PaySwaplets.First().PaymentCurrency;

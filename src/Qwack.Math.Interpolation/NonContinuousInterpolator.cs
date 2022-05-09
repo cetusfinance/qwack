@@ -53,7 +53,7 @@ namespace Qwack.Math.Interpolation
                 k--;
             return _interpolatorSegments[k].Interpolate(t);
         }
-    
+
 
         public double SecondDerivative(double t)
         {

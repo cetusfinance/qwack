@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Qwack.Dates;
@@ -59,7 +57,7 @@ namespace Qwack.Providers.Json
                 x.CodeConversions.TryGetValue(codeProvider, out var result) &&
                 result.Values.Contains(code));
 
-            return futureSettings != null; 
+            return futureSettings != null;
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -60,7 +59,7 @@ namespace Qwack.Models.Calibrators
                 }
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeNextGuess(double[] currentGuess, int numberOfInstruments, List<IIrCurve> curvesForStage)
         {
@@ -87,9 +86,9 @@ namespace Qwack.Models.Calibrators
         private void ComputeJacobian(List<IFundingInstrument> instruments, IFundingModel model, List<IIrCurve> curvesForStage)
         {
             var nPillars = curvesForStage.Sum(x => x.NumberOfPillars);
-            
+
             _jacobian = new double[instruments.Count][];
-            for(var i=0;i<_jacobian.Length;i++)
+            for (var i = 0; i < _jacobian.Length; i++)
                 _jacobian[i] = new double[nPillars];
 
             for (var i = 0; i < instruments.Count; i++)
@@ -103,7 +102,7 @@ namespace Qwack.Models.Calibrators
                         {
                             var s1 = curve.GetSensitivity(date);
                             for (var p = 0; p < s1.Length; p++)
-                                _jacobian[pillarOffset + p][i] += s1[p]* sensitivities[curve.Name][date];
+                                _jacobian[pillarOffset + p][i] += s1[p] * sensitivities[curve.Name][date];
                         }
 
                     pillarOffset += curve.NumberOfPillars;

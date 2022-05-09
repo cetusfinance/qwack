@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
-using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
@@ -42,7 +39,7 @@ namespace Qwack.Core.Instruments.Asset
             ContractQuantity = to.ContractQuantity;
             LotSize = to.LotSize;
             PriceMultiplier = to.PriceMultiplier;
-            Direction = to.Direction;  
+            Direction = to.Direction;
             ExpiryDate = to.ExpiryDate;
             Strike = to.Strike;
             AssetId = to.AssetId;

@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using static System.Math;
 using static Qwack.Math.Matrix.DoubleArrayFunctions;
 
@@ -67,7 +65,7 @@ namespace Qwack.Math
             }
             var xAvg = 0.0;
             var yAvg = 0.0;
-            for (var i = X.Length-overFlow; i < X.Length; i++)
+            for (var i = X.Length - overFlow; i < X.Length; i++)
             {
                 xAvg += X[i];
                 yAvg += Y[i];

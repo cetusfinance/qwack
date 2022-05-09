@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
-using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Credit
@@ -51,14 +49,14 @@ namespace Qwack.Core.Instruments.Credit
 
         public CDS()
         {
-            
+
         }
 
         public void Init()
         {
             Frequency resetFrequency;
             string rollDay;
-            switch(ScheduleType)
+            switch (ScheduleType)
             {
                 case CdsScheduleType.Basic:
                     resetFrequency = new Frequency(3, DatePeriodType.M);
@@ -93,7 +91,7 @@ namespace Qwack.Core.Instruments.Credit
 
             //contingent leg
             var d = hazzardCurve.OriginDate;
-            foreach(var nd in nodeDates)
+            foreach (var nd in nodeDates)
             {
                 var deltaT = d.CalculateYearFraction(nd, hazzardCurve.Basis);
                 var s = hazzardCurve.GetSurvivalProbability(d);
@@ -125,7 +123,7 @@ namespace Qwack.Core.Instruments.Credit
             var nodeDates = DatePeriodType.M.GenerateDateSchedule(hazzardCurve.OriginDate, FinalSensitivityDate);
             var ts = nodeDates.Select(d => discountCurve.BuildDate.CalculateYearFraction(d, DayCountBasis.ACT365F)).ToArray();
 
-            var integrandD = new Func<DateTime,double> (d => discountCurve.GetDf(discountCurve.BuildDate, d) * -hazzardCurve.GetSurvivalProbabilitySlope(d));
+            var integrandD = new Func<DateTime, double>(d => discountCurve.GetDf(discountCurve.BuildDate, d) * -hazzardCurve.GetSurvivalProbabilitySlope(d));
             var integrandT = new Func<double, double>(t => integrandD(OriginDate.AddYearFraction(t, DayCountBasis.ACT365F)));
 
             //contingent leg
@@ -153,7 +151,7 @@ namespace Qwack.Core.Instruments.Credit
             for (var i = 1; i < nodeDates.Length; i++)
             {
 
-                pv += discountCurve.GetDf(discountCurve.BuildDate, nodeDates[i]) 
+                pv += discountCurve.GetDf(discountCurve.BuildDate, nodeDates[i])
                     * hazzardCurve.GetDefaultProbability(nodeDates[i - 1], nodeDates[i]);
             }
 

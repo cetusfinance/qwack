@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Qwack.Random
+﻿namespace Qwack.Random
 {
     public class RandomOptions
     {

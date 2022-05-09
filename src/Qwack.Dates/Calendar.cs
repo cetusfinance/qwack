@@ -22,7 +22,7 @@ namespace Qwack.Dates
 
         public bool IsMerged { get; set; }
         public List<string> InheritedCalendar { get; set; }
-        public List<Calendar> InheritedCalendarObjects{ get; set; }
+        public List<Calendar> InheritedCalendarObjects { get; set; }
         public string Name { get; set; }
         public List<DayOfWeek> DaysToAlwaysExclude { get; set; }
         public HashSet<DateTime> DaysToExclude { get; set; }
@@ -37,7 +37,7 @@ namespace Qwack.Dates
 
         public bool IsHoliday(DateTime date)
         {
-            foreach(var c in InheritedCalendarObjects)
+            foreach (var c in InheritedCalendarObjects)
             {
                 if (c.IsHoliday(date))
                     return true;
@@ -59,7 +59,7 @@ namespace Qwack.Dates
                 return true;
             }
 
-            foreach(var ic in InheritedCalendarObjects)
+            foreach (var ic in InheritedCalendarObjects)
             {
                 if (ic.IsHoliday(date))
                     return true;
@@ -70,8 +70,8 @@ namespace Qwack.Dates
 
         private bool IsHolidayFromRules(DateTime date)
         {
-            
-            switch(CalendarType)
+
+            switch (CalendarType)
             {
                 case CalendarType.EasterGoodFriday:
                     return DateExtensions.EasterGauss(date.Year).AddDays(-2) == date;
@@ -115,7 +115,7 @@ namespace Qwack.Dates
             return newCalender;
         }
 
-        public override bool Equals(object obj) => obj is Calendar calendar && GetHashCode()==calendar.GetHashCode();
+        public override bool Equals(object obj) => obj is Calendar calendar && GetHashCode() == calendar.GetHashCode();
 
         public override int GetHashCode()
         {

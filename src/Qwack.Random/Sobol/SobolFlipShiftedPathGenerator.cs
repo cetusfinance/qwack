@@ -26,7 +26,7 @@ namespace Qwack.Random.Sobol
         }
 
         public bool IsComplete => true;
-        
+
         public void Finish(IFeatureCollection collection)
         {
             _numberOfPaths = collection.GetFeature<IEngineFeature>().NumberOfPaths + 1;
@@ -111,7 +111,7 @@ namespace Qwack.Random.Sobol
             var di = _directionNumbers.GetInfoForDimension(dimension + 1);
 
             // Read in parameters  
-            var d = (uint)di.Dimension;
+            //var d = (uint)di.Dimension;
             var s = di.S;
             var a = di.A;
             var m = new uint[s + 1];
@@ -121,7 +121,7 @@ namespace Qwack.Random.Sobol
             }
 
             // Compute direction numbers V[1] to V[L], scaled by pow(2,32)
-            if (_bitsRequired  <= s)
+            if (_bitsRequired <= s)
             {
                 for (var i = 1; i <= _bitsRequired; i++) _v[dimension][i] = m[i] << (32 - i);
             }
@@ -152,20 +152,20 @@ namespace Qwack.Random.Sobol
         public void Process(IPathBlock block)
         {
             var index = 0;
-            for(var path = 0; path < block.NumberOfPaths;path+=Vector<double>.Count)
+            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                for(var factor = 0; factor < block.Factors;factor++)
+                for (var factor = 0; factor < block.Factors; factor++)
                 {
-                    for(var step = 0; step < block.NumberOfSteps;step++)
+                    for (var step = 0; step < block.NumberOfSteps; step++)
                     {
                         var dim = step * block.Factors + factor;
 
                         for (var i = 0; i < Vector<double>.Count; i++)
                         {
                             var pathid = path + i + block.GlobalPathIndex;
-                            var point =CreatePoint(pathid, dim) / Pow(2.0,32.0);
+                            var point = CreatePoint(pathid, dim) / Pow(2.0, 32.0);
                             //point = ShiftNumber(point,dim);
-                            if(_useNormalInv)
+                            if (_useNormalInv)
                             {
                                 point = Math.Statistics.NormInv(point);
                             }

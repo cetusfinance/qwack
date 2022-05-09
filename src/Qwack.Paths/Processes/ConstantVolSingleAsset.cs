@@ -54,10 +54,10 @@ namespace Qwack.Paths.Processes
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.AddDimension(_name);
-            
+
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             var stepSize = (_expiry - _startDate).TotalDays / _numberOfSteps;
-            for(var i = 0; i < _numberOfSteps - 1;i++)
+            for (var i = 0; i < _numberOfSteps - 1; i++)
             {
                 _timesteps.AddDate(_startDate.AddDays(i * stepSize));
             }

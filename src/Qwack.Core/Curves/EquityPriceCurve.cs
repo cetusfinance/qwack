@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
-using Qwack.Dates;
-using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Curves;
-using Qwack.Core.Models;
 
 namespace Qwack.Core.Curves
 {
@@ -60,12 +60,12 @@ namespace Qwack.Core.Curves
             SpotDate = spotDate;
 
             PillarLabels = pillarLabels ?? PillarDates.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
-            
+
             Initialize();
         }
 
         public EquityPriceCurve(TO_EquityPriceCurve to, IFundingModel fundingModel, ICurrencyProvider currencyProvider)
-            : this(to.BuildDate, to.Spot, to.Currency, fundingModel.GetCurve(to.Currency), to.SpotDate, to.PillarDates, to.DivYields, to.DiscreteDivDates, 
+            : this(to.BuildDate, to.Spot, to.Currency, fundingModel.GetCurve(to.Currency), to.SpotDate, to.PillarDates, to.DivYields, to.DiscreteDivDates,
                   to.DiscreteDivs, currencyProvider, to.Basis, to.PillarLabels)
         {
             AssetId = to.AssetId;
@@ -93,9 +93,9 @@ namespace Qwack.Core.Curves
             var t = SpotDate.CalculateYearFraction(fwdDate, Basis);
             var df = IrCurve.GetDf(BuildDate, fwdDate);
             var fwd = Spot / df / (1 + divYield * t);
-            if(DiscreteDivDates.Any(x=>x>BuildDate && x<=fwdDate))
+            if (DiscreteDivDates.Any(x => x > BuildDate && x <= fwdDate))
             {
-                foreach(var d in DiscreteDivDates.Where(x => x > BuildDate && x <= fwdDate))
+                foreach (var d in DiscreteDivDates.Where(x => x > BuildDate && x <= fwdDate))
                 {
                     var ix = Array.IndexOf(DiscreteDivDates, d); //Array.BinarySearch(DiscreteDivDates, d);
                     var div = DiscreteDivs[ix];

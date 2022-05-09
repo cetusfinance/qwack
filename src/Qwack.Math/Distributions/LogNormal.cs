@@ -10,7 +10,7 @@ namespace Qwack.Math.Distributions
         public static double Mu(double m, double v) => Log(m / Sqrt(1 + v / m / m));
         public static double Sigma(double m, double v) => Log(m / Sqrt(1 + v / m / m));
 
-        public static double PDF(double x, double mu, double sigma) 
+        public static double PDF(double x, double mu, double sigma)
             => 1.0 / (x * sigma * DoubleExtensions.Sqrt2Pi) * Exp(-(Log(x) - mu).IntPow(2) / (2.0 * sigma * sigma));
 
         public static double CDF(double x, double mu, double sigma)

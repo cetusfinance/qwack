@@ -1,4 +1,3 @@
-using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 
 namespace Qwack.Core.Models

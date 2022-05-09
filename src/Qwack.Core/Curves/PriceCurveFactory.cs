@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Dates;
@@ -20,7 +18,7 @@ namespace Qwack.Core.Curves
                     AssetId = transportObject.ConstantPriceCurve.AssetId,
                     Name = transportObject.ConstantPriceCurve.Name,
                     Units = transportObject.ConstantPriceCurve.Units,
-                }; 
+                };
 
             if (transportObject.BasicPriceCurve != null)
                 return new BasicPriceCurve(transportObject.BasicPriceCurve, currencyProvider);

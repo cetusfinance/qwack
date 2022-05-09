@@ -1,25 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Qwack.Core.Curves;
-using Qwack.Providers.CSV;
-using Qwack.Futures;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Options.VolSurfaces;
-using System.Globalization;
+using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
 using static Qwack.Models.Calibrators.CMECommon;
-using System.Runtime.CompilerServices;
-using Qwack.Core.Instruments.Funding;
 
 namespace Qwack.Models.Calibrators
 {
     public class COMEXModelBuilder
     {
 
-        
+
         public static (IrCurve curve, double spotPrice) GetMetalCurveForCode(string cmxSettleFwdFilename, string cmxSymbol, FxPair metalPair, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var blob = CMEFileParser.Instance.GetBlob(cmxSettleFwdFilename);

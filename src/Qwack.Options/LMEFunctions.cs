@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Math;
-using static System.Math;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Options
 {
@@ -20,7 +17,7 @@ namespace Qwack.Options
         public static double LMEBlackPV(double forward, double strike, double discountingRate, double expiryTime, double deliveryTime, double volatility, OptionType CP)
         {
             var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
-            
+
             var d1 = (Log(forward / strike) + (expiryTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expiryTime));
             var d2 = d1 - volatility * Sqrt(expiryTime);
 
@@ -35,15 +32,15 @@ namespace Qwack.Options
             var num5 = Exp(-discountingRate * deliveryTime);
             return (((forward * num5) * Statistics.Phi(d)) * Sqrt(expiryTime)) / 100.0;
         }
-        
+
         public static double LMEBlackGamma(double forward, double strike, double expiryTime, double volatility)
         {
             double d1, d2;
             d1 = (Log(forward / strike) + (expiryTime / 2 * (Pow(volatility, 2)))) / (volatility * Sqrt(expiryTime));
             d2 = d1 - volatility * Sqrt(expiryTime);
-            return  Statistics.Phi(d1) / (forward * volatility * Sqrt(expiryTime)) * (0.01 * forward);
+            return Statistics.Phi(d1) / (forward * volatility * Sqrt(expiryTime)) * (0.01 * forward);
         }
-        
+
         public static double LMEBlackDelta(double forward, double strike, double expiryTime, double volatility, OptionType CP)
         {
             double d1, d2;

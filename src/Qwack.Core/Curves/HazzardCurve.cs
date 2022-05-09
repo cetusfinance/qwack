@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Qwack.Math.Interpolation;
 using Qwack.Dates;
 using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Curves;
 
@@ -21,9 +19,9 @@ namespace Qwack.Core.Curves
             _hazzardCurve = hazzardRateInterpolator;
         }
 
-        public HazzardCurve(TO_HazzardCurve transportObject):this(transportObject.OriginDate, transportObject.Basis, InterpolatorFactory.GetInterpolator(transportObject.HazzardCurve))
+        public HazzardCurve(TO_HazzardCurve transportObject) : this(transportObject.OriginDate, transportObject.Basis, InterpolatorFactory.GetInterpolator(transportObject.HazzardCurve))
         {
-            if(transportObject.ConstantPD.HasValue)
+            if (transportObject.ConstantPD.HasValue)
                 ConstantPD = transportObject.ConstantPD.Value;
         }
 
@@ -47,7 +45,7 @@ namespace Qwack.Core.Curves
             if (startDate == endDate) return 1.0;
             var pStart = GetSurvivalProbability(startDate);
             var pEnd = GetSurvivalProbability(endDate);
-            return pEnd/pStart;
+            return pEnd / pStart;
         }
 
         public double GetSurvivalProbability(DateTime endDate)

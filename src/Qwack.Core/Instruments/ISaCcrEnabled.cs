@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Transport.BasicTypes;
 
@@ -8,10 +6,10 @@ namespace Qwack.Core.Instruments
 {
     public interface ISaccrEnabled
     {
-        double EffectiveNotional(IAssetFxModel model, double? MPOR=null);
-        double AdjustedNotional (IAssetFxModel model);
+        double EffectiveNotional(IAssetFxModel model, double? MPOR = null);
+        double AdjustedNotional(IAssetFxModel model);
         double SupervisoryDelta(IAssetFxModel model);
-        double MaturityFactor(DateTime today, double? MPOR=null);
+        double MaturityFactor(DateTime today, double? MPOR = null);
         string HedgingSet { get; set; }
     }
 

@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Math;
-using Qwack.Math.Interpolation;
 using Qwack.Math.Extensions;
 using Qwack.Transport.BasicTypes;
 
@@ -138,7 +134,7 @@ namespace Qwack.Options
             return p[0];
         }
 
-   
+
         public static double AmericanFutureOptionPV(double forward, double strike, double riskFree, double expTime, double volatility, OptionType CP)
         {
             var blackPV = BlackFunctions.BlackPV(forward, strike, riskFree, expTime, volatility, CP);

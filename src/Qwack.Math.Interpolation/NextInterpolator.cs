@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
-    public class NextInterpolator:IInterpolator1D
+    public class NextInterpolator : IInterpolator1D
     {
         public Interpolator1DType Type => Interpolator1DType.NextValue;
 

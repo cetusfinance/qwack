@@ -138,7 +138,7 @@ namespace Qwack.Paths.Regressors
                 }
 
                 sortedFinalValues = sortedFinalValues.OrderBy(q => q.Key).ToArray();
-                
+
                 if (_requireContinuity)
                     o[d] = SegmentedLinearRegression.Regress(sortedFinalValues.Select(x => x.Key).ToArray(), sortedFinalValues.Select(y => y.Value).ToArray(), 5);
                 else
@@ -179,10 +179,10 @@ namespace Qwack.Paths.Regressors
 
             var o = new double[_dateIndexes.Length];
             var regressors = Regress(model);
-            
+
             ParallelUtils.Instance.For(0, _dateIndexes.Length, 1, d =>
             {
-                o[d] = _pathwiseValues[d].Select(p => Max(0,regressors[d].Interpolate(p))).OrderBy(x => x).Average();
+                o[d] = _pathwiseValues[d].Select(p => Max(0, regressors[d].Interpolate(p))).OrderBy(x => x).Average();
                 o[d] /= model.FundingModel.GetDf(_repCcy, model.BuildDate, _regressionDates[d]);
             }).Wait();
             _epe = o;

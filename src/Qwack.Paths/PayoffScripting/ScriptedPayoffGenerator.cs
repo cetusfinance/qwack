@@ -1,8 +1,6 @@
+using System;
 using Qwack.Core.Models;
 using Qwack.Paths.Features;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Qwack.Paths.PayoffScripting
 {

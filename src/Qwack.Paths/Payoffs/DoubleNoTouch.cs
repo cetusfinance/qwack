@@ -1,13 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Instruments;
 using Qwack.Core.Models;
-using Qwack.Math;
-using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
@@ -38,7 +33,7 @@ namespace Qwack.Paths.Payoffs
             _assetIndex = dims.GetDimension(_assetName);
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
-            
+
             var obsStart = dates.GetDateIndex(_obsStart);
             var obsEnd = dates.GetDateIndex(_obsEnd);
             _dateIndexes = Enumerable.Range(obsStart, (obsEnd - obsStart) + 1).ToArray();

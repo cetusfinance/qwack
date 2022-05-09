@@ -1,13 +1,10 @@
-using Qwack.Core.Basic;
-using Qwack.Dates;
-using Qwack.Math.Interpolation;
-using Qwack.Options;
-using Qwack.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Qwack.Core.Models;
+using Qwack.Core.Basic;
+using Qwack.Dates;
+using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;
 using Qwack.Transport.BasicTypes;
 
@@ -142,14 +139,14 @@ namespace Qwack.Options.VolSurfaces
             OriginDate = originDate;
             TimeInterpolatorType = timeInterpType;
             Expiries = expiries;
-            ExpiriesDouble = expiries.Select(x => originDate.CalculateYearFraction(x,TimeBasis)).ToArray();
+            ExpiriesDouble = expiries.Select(x => originDate.CalculateYearFraction(x, TimeBasis)).ToArray();
 
             Alphas = parameters.Select(x => x.Alpha).ToArray();
             Betas = parameters.Select(x => x.Beta).ToArray();
             Nus = parameters.Select(x => x.Nu).ToArray();
             Rhos = parameters.Select(x => x.Rho).ToArray();
 
-            _alphaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble,  Alphas, TimeInterpolatorType);
+            _alphaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Alphas, TimeInterpolatorType);
             _betaInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Betas, TimeInterpolatorType);
             _rhoInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Rhos, TimeInterpolatorType);
             _nuInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, Nus, TimeInterpolatorType);

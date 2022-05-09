@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -14,7 +13,7 @@ namespace Qwack.Core.Instruments.Funding
     /// Just a specific class for now, later we will need more features in this 
     /// so this gives us an easy way to do that without having to change interfaces
     /// </summary>
-    public class FundingInstrumentCollection:List<IFundingInstrument>
+    public class FundingInstrumentCollection : List<IFundingInstrument>
     {
         private readonly ICurrencyProvider _currencyProvider;
 
@@ -33,7 +32,7 @@ namespace Qwack.Core.Instruments.Funding
         {
             var o = new Dictionary<string, IrCurve>();
 
-            foreach(var curveName in SolveCurves)
+            foreach (var curveName in SolveCurves)
             {
                 var pillars = this.Where(x => x.SolveCurve == curveName)
                     .Select(x => x.PillarDate)
@@ -44,7 +43,7 @@ namespace Qwack.Core.Instruments.Funding
 
                 var dummyRates = pillars.Select(x => 0.05).ToArray();
                 var ccy = _currencyProvider.GetCurrency(curveName.Split('.')[0]);
-                var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Substring(curveName.IndexOf('.')+1);
+                var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Substring(curveName.IndexOf('.') + 1);
                 if (o.Values.Any(v => v.CollateralSpec == colSpec))
                     colSpec = colSpec + "_" + curveName;
 
@@ -63,7 +62,7 @@ namespace Qwack.Core.Instruments.Funding
             {
                 var insForCurve = this.Where(x => x.SolveCurve == curveName);
                 dependencies.Add(curveName, new List<string>());
-                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Where(x=>x!=curveName).Distinct();
+                var deps = insForCurve.SelectMany(x => x.Dependencies(matrix)).Where(x => x != curveName).Distinct();
                 if (deps.Any())
                     dependencies[curveName].AddRange(deps);
             }
@@ -71,7 +70,7 @@ namespace Qwack.Core.Instruments.Funding
             var currentStage = 0;
             //first find any curves depending on no other
             var noDepCurves = dependencies.Where(x => !x.Value.Any()).ToArray();
-            foreach(var curve in noDepCurves)
+            foreach (var curve in noDepCurves)
             {
                 o.Add(curve.Key, currentStage);
                 currentStage++;
@@ -199,7 +198,7 @@ namespace Qwack.Core.Instruments.Funding
 
             var sumAllDeps = -1;
             var breakout = 0;
-            while (dependencies.Sum(x => x.Value.Count) > sumAllDeps && breakout<20)
+            while (dependencies.Sum(x => x.Value.Count) > sumAllDeps && breakout < 20)
             {
                 sumAllDeps = dependencies.Sum(x => x.Value.Count);
 
@@ -214,7 +213,7 @@ namespace Qwack.Core.Instruments.Funding
             }
 
             return dependencies;
-           
+
         }
 
         public Dictionary<string, List<string>> FindDependenciesInverse(IFxMatrix matrix)
@@ -223,7 +222,7 @@ namespace Qwack.Core.Instruments.Funding
 
             var invDeps = new Dictionary<string, List<string>>();
 
-            foreach(var d in deps.Keys.ToArray())
+            foreach (var d in deps.Keys.ToArray())
             {
                 invDeps[d] = deps.Where(x => x.Value.Contains(d)).Select(x => x.Key).ToList();
             }

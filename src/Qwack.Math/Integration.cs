@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Qwack.Math.Extensions;
 using static System.Math;
 
@@ -87,12 +84,12 @@ namespace Qwack.Math
             if (n <= 0) return 1.0;
             if (n == 1) return x;
 
-            return ((2 * (n-1) + 1) * x * LegendrePolynomial(x, n - 1) - (n - 1) * LegendrePolynomial(x, n - 2)) / n;
+            return ((2 * (n - 1) + 1) * x * LegendrePolynomial(x, n - 1) - (n - 1) * LegendrePolynomial(x, n - 2)) / n;
         }
 
         public static double[] LegendrePolynomialRoots(int n)
         {
-            switch(n)
+            switch (n)
             {
                 case 1:
                     return new[] { 0.0 };
@@ -179,7 +176,7 @@ namespace Qwack.Math
                     var x15e = 0.848206583410427;
                     var x15f = 0.937273392400706;
                     var x15g = 0.987992518020485;
-                    return new[] { -x15a, -x15b, -x15c, -x15d, -x15e, -x15f, -x15g,0.0, x15a, x15b, x15c, x15d, x15e, x15f, x15g };
+                    return new[] { -x15a, -x15b, -x15c, -x15d, -x15e, -x15f, -x15g, 0.0, x15a, x15b, x15c, x15d, x15e, x15f, x15g };
                 case 16:
                     var x16a = 0.095012509837637;
                     var x16b = 0.281603550779259;
@@ -202,9 +199,9 @@ namespace Qwack.Math
 
             var xi = LegendrePolynomialRoots(nPoints);
             var wi = xi.Select(x => 2.0 * (1 - x * x) / ((nPoints + 1) * (nPoints + 1) * LegendrePolynomial(x, nPoints + 1).IntPow(2))).ToArray();
-            var iSum = xi.Select((x, ix) => wi[ix] * f(q1*x+q2));
+            var iSum = xi.Select((x, ix) => wi[ix] * f(q1 * x + q2));
 
-            return q1*iSum.Sum();
+            return q1 * iSum.Sum();
         }
 
         public static double TwoDimensionalGaussLegendre(Func<double, double, double> fxy, double ax, double bx, double ay, double by, int nPoints)
@@ -243,7 +240,7 @@ namespace Qwack.Math
 
             var ys = new Func<double, double>(ix => ay + ix * hy);
             var xs = new Func<double, double>(ix => ax + ix * hx);
-            
+
             var iSum = fxy(ax, ay) + fxy(bx, ay) + fxy(ax, by) + fxy(bx, by);
 
             for (var i = 1; i <= nSteps; i++)
@@ -262,7 +259,7 @@ namespace Qwack.Math
 
                 for (var j = 1; j <= nSteps; j++)
                 {
-                    iSum += 16 * fxy(xs(2 * i-1), ys(2 * j - 1));
+                    iSum += 16 * fxy(xs(2 * i - 1), ys(2 * j - 1));
 
                     if (i < nSteps)
                     {
@@ -272,14 +269,14 @@ namespace Qwack.Math
 
                 for (var j = 1; j < nSteps; j++)
                 {
-                    iSum += 8 * fxy(xs(2 * i-1), ys(2 * j));
+                    iSum += 8 * fxy(xs(2 * i - 1), ys(2 * j));
 
                     if (i < nSteps)
                     {
                         iSum += 4 * fxy(xs(2 * i), ys(2 * j));
                     }
                 }
-            } 
+            }
 
             iSum *= hx * hy / 9.0;
 

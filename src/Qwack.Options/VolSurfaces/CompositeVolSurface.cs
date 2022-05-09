@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -22,7 +21,7 @@ namespace Qwack.Options.VolSurfaces
         public Frequency OverrideSpotLag { get; set; }
 
         public CompositeVolSurface() => Pair = FundingModel?.FxMatrix?.GetFxPair(AssetSurface.Currency, Currency);
-        public CompositeVolSurface(string name, string assetId, Currency ccy, IVolSurface assetSurface, IFundingModel fundingModel,  double correlation, CompositeVolType calculationType)
+        public CompositeVolSurface(string name, string assetId, Currency ccy, IVolSurface assetSurface, IFundingModel fundingModel, double correlation, CompositeVolType calculationType)
         {
             AssetSurface = assetSurface;
             FundingModel = fundingModel;
@@ -32,7 +31,7 @@ namespace Qwack.Options.VolSurfaces
             AssetId = assetId;
             Currency = ccy;
 
-            Pair = FundingModel.FxMatrix.GetFxPair(AssetSurface.Currency, Currency); 
+            Pair = FundingModel.FxMatrix.GetFxPair(AssetSurface.Currency, Currency);
         }
 
         public DateTime OriginDate => AssetSurface.OriginDate;
@@ -50,7 +49,7 @@ namespace Qwack.Options.VolSurfaces
             var oDict = aDict.ToDictionary(kv => kv.Key, kv => (IVolSurface)new CompositeVolSurface(Name, AssetId, Currency, kv.Value, FundingModel, Correlation, CalculationType));
 
             var fDict = FundingModel.GetVolSurface(Pair.ToString()).GetATMVegaScenarios(bumpSize, LastSensitivityDate);
-            foreach(var kv in fDict)
+            foreach (var kv in fDict)
             {
                 var fModel = FundingModel.DeepClone(null);
                 fModel.VolSurfaces[Pair.ToString()] = kv.Value;
@@ -69,7 +68,7 @@ namespace Qwack.Options.VolSurfaces
             var fxFwd = FundingModel.GetFxRate(pair.SpotDate(expiry), pair.Domestic, pair.Foreign);
 
             double vA, vF;
-            switch(CalculationType)
+            switch (CalculationType)
             {
                 case CompositeVolType.Black:
                     vA = AssetSurface.GetVolForAbsoluteStrike(forward / fxFwd, expiry, forward / fxFwd);

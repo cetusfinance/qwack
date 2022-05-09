@@ -18,8 +18,7 @@ namespace Qwack.Serialization
             if (!objectGraph.GetType().Namespace.StartsWith("Qwack")) return;
             if (objectGraph.GetType().IsValueType) return;
             var objType = objectGraph.GetType();
-
-            if (!_serializationStrategies.TryGetValue(objType, out var strat))
+            if (!_serializationStrategies.TryGetValue(objType, out _))
             {
                 _serializationStrategies.Add(objType, (typeNumber++, new SerializationStrategy(objType)));
             }

@@ -1,8 +1,8 @@
-using Qwack.Paths.Features;
 using System;
 using System.Numerics;
-using Qwack.Math.Matrix;
 using Qwack.Core.Models;
+using Qwack.Math.Matrix;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Qwack.Math
 {
@@ -54,9 +51,9 @@ namespace Qwack.Math
                         else
                             nextDelta = inSpreads[nextPoint] - sparseNewSpreads[nextPoint].Value;
                         deltaDelta = (nextDelta - delta) / (nextPoint - lastKnownPoint);
-                        for (var j = lastKnownPoint+1; j <= nextPoint; j++)
+                        for (var j = lastKnownPoint + 1; j <= nextPoint; j++)
                         {
-                            o[j] = inSpreads[j] - (delta + deltaDelta * (j-lastKnownPoint));
+                            o[j] = inSpreads[j] - (delta + deltaDelta * (j - lastKnownPoint));
                         }
                     }
                 }

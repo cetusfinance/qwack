@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Qwack.Dates
 {
@@ -15,7 +13,7 @@ namespace Qwack.Dates
                 refDate = DateTime.Today;
 
             var offset = futuresCode.Length - 1;
-            while (int.TryParse(futuresCode.Substring(offset, 1), out var dummy))
+            while (int.TryParse(futuresCode.Substring(offset, 1), out _))
             {
                 offset--;
                 if (offset < 0)

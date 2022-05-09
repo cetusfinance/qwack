@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Qwack.Core.Instruments;
-using Qwack.Paths;
-using Qwack.Core.Basic;
-using Qwack.Core.Models;
-using Qwack.Paths.Processes;
-using Qwack.Dates;
-using Qwack.Core.Cubes;
-using Qwack.Core.Instruments.Asset;
-using Qwack.Options.VolSurfaces;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using Qwack.Paths.Regressors;
+using Qwack.Core.Basic;
+using Qwack.Core.Cubes;
+using Qwack.Core.Curves;
+using Qwack.Core.Instruments;
+using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Futures;
 using Qwack.Models.Models;
-using Qwack.Core.Curves;
 using Qwack.Models.Risk;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths;
+using Qwack.Paths.Processes;
+using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
 using static Qwack.Core.Basic.Consts.Cubes;
 
@@ -193,7 +193,7 @@ namespace Qwack.Models.MCModels
                         }
                     }
 
-                    if (settings.McModelType==McModelType.LocalVol)
+                    if (settings.McModelType == McModelType.LocalVol)
                     {
                         var asset = new LVSingleAsset
                         (
@@ -250,7 +250,7 @@ namespace Qwack.Models.MCModels
             var pairsAdded = new List<string>();
             var fxPairs = portfolio.FxPairs(model).Concat(fxAssetsToAdd);
             var payoutCcys = portfolio.Instruments.Select(i => i.Currency);
-            if(payoutCcys.Any(p=>p!=settings.ReportingCurrency))
+            if (payoutCcys.Any(p => p != settings.ReportingCurrency))
             {
                 var ccysToAdd = payoutCcys.Where(p => p != settings.ReportingCurrency).Distinct();
                 var pairsToAdd = ccysToAdd.Select(c => $"{c.Ccy}/{settings.ReportingCurrency}");
@@ -276,7 +276,7 @@ namespace Qwack.Models.MCModels
 
                 pairsAdded.Add(pair.ToString());
 
-                if (settings.McModelType==McModelType.LocalVol)
+                if (settings.McModelType == McModelType.LocalVol)
                 {
                     var asset = new LVSingleAsset
                     (
@@ -342,7 +342,7 @@ namespace Qwack.Models.MCModels
 
                     }
                 }
-                else 
+                else
                 {
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != settings.ReportingCurrency)
                     {//needs to be drift-adjusted
@@ -438,7 +438,7 @@ namespace Qwack.Models.MCModels
 
             var metricsNeedRegression = new[] { BaseMetric.PFE, BaseMetric.KVA, BaseMetric.CVA, BaseMetric.FVA, BaseMetric.EPE };
             //Need to calculate PFE
-            if (settings.CreditSettings!=null && settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && metricsNeedRegression.Contains(settings.CreditSettings.Metric))//setup for PFE, etc
+            if (settings.CreditSettings != null && settings.CreditSettings.ExposureDates != null && settings.ReportingCurrency != null && metricsNeedRegression.Contains(settings.CreditSettings.Metric))//setup for PFE, etc
             {
                 Engine.IncrementDepth();
 
@@ -466,7 +466,7 @@ namespace Qwack.Models.MCModels
 
             Engine.SetupFeatures();
         }
-        public ICube PFE(double confidenceLevel) => PackResults(() => FudgePFE(confidenceLevel),"PFE");
+        public ICube PFE(double confidenceLevel) => PackResults(() => FudgePFE(confidenceLevel), "PFE");
 
         private double[] FudgePFE(double confidenceLevel)
         {
@@ -479,11 +479,11 @@ namespace Qwack.Models.MCModels
             return pfe;
         }
 
-        public ICube EPE() => PackResults(() => _regressor.EPE(Model),"EPE");
-        public ICube ENE() => PackResults(() => _regressor.ENE(Model),"ENE");
-        public ICube ExpectedCapital() => PackResults(() =>  _capitalCalc.ExpectedCapital,"ExpCapital");
+        public ICube EPE() => PackResults(() => _regressor.EPE(Model), "EPE");
+        public ICube ENE() => PackResults(() => _regressor.ENE(Model), "ENE");
+        public ICube ExpectedCapital() => PackResults(() => _capitalCalc.ExpectedCapital, "ExpCapital");
         public double CVA() => XVACalculator.CVA(Model.BuildDate, EPE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.FundingCurve, Settings.CreditSettings.LGD);
-        public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(),ENE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.BaseDiscountCurve, Settings.CreditSettings.FundingCurve);
+        public (double FBA, double FCA) FVA() => XVACalculator.FVA(Model.BuildDate, EPE(), ENE(), Settings.CreditSettings.CreditCurve, Settings.CreditSettings.BaseDiscountCurve, Settings.CreditSettings.FundingCurve);
         public double KVA() => XVACalculator.KVA(Model.BuildDate, ExpectedCapital(), Settings.CreditSettings.FundingCurve);
 
         public ICube FullPack(double confidenceLevel)
@@ -536,7 +536,7 @@ namespace Qwack.Models.MCModels
             return cube;
         }
 
-        private ICube PackResults(Func<Dictionary<DateTime,double>> method, string metric)
+        private ICube PackResults(Func<Dictionary<DateTime, double>> method, string metric)
         {
             Engine.RunProcess();
             var e = method.Invoke();
@@ -622,7 +622,7 @@ namespace Qwack.Models.MCModels
                 cube.Initialize(dataTypes);
             }
             Engine.RunProcess();
-            
+
             foreach (var kv in _payoffs)
             {
                 var insQuery = Portfolio.Instruments.Where(x => x.TradeId == kv.Key);

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;

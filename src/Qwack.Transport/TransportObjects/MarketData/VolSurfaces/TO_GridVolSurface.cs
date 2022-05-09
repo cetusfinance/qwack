@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects.Interpolators;
 
 namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
 {

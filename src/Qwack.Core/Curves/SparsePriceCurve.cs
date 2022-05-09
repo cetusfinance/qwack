@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
-using Qwack.Dates;
-using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
@@ -30,7 +29,7 @@ namespace Qwack.Core.Curves
 
         public int NumberOfPillars => _pillarDates.Length;
 
-        public Currency Currency { get; set; } 
+        public Currency Currency { get; set; }
 
         public Calendar SpotCalendar { get; set; }
         public Frequency SpotLag { get; set; }
@@ -39,7 +38,7 @@ namespace Qwack.Core.Curves
 
         public PriceCurveType CurveType => throw new NotImplementedException();
 
-        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels=null)
+        public SparsePriceCurve(DateTime buildDate, DateTime[] PillarDates, double[] Prices, SparsePriceCurveType curveType, ICurrencyProvider currencyProvider, string[] pillarLabels = null)
         {
             _currencyProvider = currencyProvider;
             Currency = currencyProvider["USD"];
@@ -59,12 +58,12 @@ namespace Qwack.Core.Curves
         private void Initialize()
         {
             var pillarsAsDoubles = _pillarDates.Select(x => x.ToOADate()).ToArray();
-            switch(_curveType)
+            switch (_curveType)
             {
                 case SparsePriceCurveType.Coal:
                     _interpA = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.LinearFlatExtrap);
                     var allDates = _pillarDates.First().CalendarDaysInPeriod(_pillarDates.Last());
-                    var monthlyDates = allDates.Select(x => x.NthLastSpecificWeekDay(DayOfWeek.Friday,1)).Distinct();
+                    var monthlyDates = allDates.Select(x => x.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)).Distinct();
                     var monthlyPillars = monthlyDates.Select(x => x.ToOADate()).ToArray();
                     var monthlyPrices = _interpA.Many(monthlyPillars).ToArray();
                     _interpB = InterpolatorFactory.GetInterpolator(monthlyPillars, monthlyPrices, Interpolator1DType.NextValue);

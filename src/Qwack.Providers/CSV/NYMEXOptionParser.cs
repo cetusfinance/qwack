@@ -97,7 +97,7 @@ namespace Qwack.Providers.CSV
             Map(m => m.Settle).Name("SETTLE").Default(-1.0);
             Map(m => m.Change).Name("PT CHG");
             Map(m => m.Volume).Name("EST. VOL");
-            Map(m => m.PriorSettle).Name("PRIOR SETTLE").Default(-1.0); 
+            Map(m => m.PriorSettle).Name("PRIOR SETTLE").Default(-1.0);
             Map(m => m.PriorVolume).Name("PRIOR VOL");
             Map(m => m.PriorOI).Name("PRIOR INT");
             Map(m => m.TradeDate).Name("TRADEDATE");

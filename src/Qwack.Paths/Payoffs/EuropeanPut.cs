@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
 using System.Linq;
-using Qwack.Paths.Features;
+using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Payoffs
 {

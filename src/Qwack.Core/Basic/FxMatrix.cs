@@ -11,7 +11,7 @@ namespace Qwack.Core.Basic
     {
         private readonly ICurrencyProvider _currencyProvider;
 
-        public FxMatrix(TO_FxMatrix transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider):this(currencyProvider) 
+        public FxMatrix(TO_FxMatrix transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) : this(currencyProvider)
         {
             BaseCurrency = currencyProvider.GetCurrency(transportObject.BaseCurrency);
             BuildDate = transportObject.BuildDate;
@@ -54,7 +54,7 @@ namespace Qwack.Core.Basic
         public FxPair GetFxPair(string pair)
         {
             var leftCCy = _currencyProvider[pair.Substring(0, 3)];
-            var rightCcy = _currencyProvider[pair.Substring(pair.Length-3, 3)];
+            var rightCcy = _currencyProvider[pair.Substring(pair.Length - 3, 3)];
             return GetFxPair(leftCCy, rightCcy);
         }
 
@@ -65,7 +65,7 @@ namespace Qwack.Core.Basic
 
         public FxPair GetFxPair(Currency domesticCcy, Currency foreignCcy)
         {
-            if(domesticCcy==foreignCcy)
+            if (domesticCcy == foreignCcy)
                 return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = new Calendar(), SpotLag = 0.Day() };
 
             var pair = FxPairDefinitions.SingleOrDefault(x => x.Domestic == domesticCcy && x.Foreign == foreignCcy);
@@ -74,8 +74,8 @@ namespace Qwack.Core.Basic
 
             pair = FxPairDefinitions.SingleOrDefault(x => x.Foreign == domesticCcy && x.Domestic == foreignCcy);
             if (pair != null)
-                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = pair.PrimaryCalendar, SecondaryCalendar = pair.SecondaryCalendar, SpotLag = pair.SpotLag }; 
-            
+                return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = pair.PrimaryCalendar, SecondaryCalendar = pair.SecondaryCalendar, SpotLag = pair.SpotLag };
+
             return new FxPair { Domestic = domesticCcy, Foreign = foreignCcy, PrimaryCalendar = foreignCcy.SettlementCalendar.Merge(domesticCcy.SettlementCalendar), SpotLag = 2.Bd() };
         }
 
@@ -86,7 +86,7 @@ namespace Qwack.Core.Basic
             return o;
         }
 
-        public IFxMatrix Rebase(DateTime newBuildDate, Dictionary<Currency,double> newSpotRates)
+        public IFxMatrix Rebase(DateTime newBuildDate, Dictionary<Currency, double> newSpotRates)
         {
             var o = new FxMatrix(_currencyProvider);
             o.Init(BaseCurrency, newBuildDate, newSpotRates, new List<FxPair>(FxPairDefinitions), new Dictionary<Currency, string>(DiscountCurveMap));
@@ -102,7 +102,7 @@ namespace Qwack.Core.Basic
                 BuildDate = BuildDate,
                 DiscountCurveMap = DiscountCurveMap.ToDictionary(x => x.Key.Ccy, x => x.Value),
                 SpotRates = SpotRates.ToDictionary(x => x.Key.Ccy, x => x.Value),
-                FxPairDefinitions = FxPairDefinitions.Select(x=>x.GetTransportObject()).ToList()
+                FxPairDefinitions = FxPairDefinitions.Select(x => x.GetTransportObject()).ToList()
             };
     }
 }

@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
 
@@ -21,7 +17,7 @@ namespace Qwack.Math.Interpolation
         public double MinX => double.MinValue;
         public double MaxX => double.MaxValue;
 
-        public ConstantHazzardInterpolator() {}
+        public ConstantHazzardInterpolator() { }
 
         public ConstantHazzardInterpolator(double hazzardRate) => _h = hazzardRate;
 

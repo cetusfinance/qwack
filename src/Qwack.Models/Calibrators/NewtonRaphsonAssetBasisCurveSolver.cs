@@ -5,7 +5,6 @@ using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
-using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;

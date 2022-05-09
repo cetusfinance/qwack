@@ -1,14 +1,14 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Math;
+using Qwack.Math.Extensions;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths.Features;
 using Qwack.Serialization;
 using static System.Math;
-using Qwack.Math;
 
 namespace Qwack.Paths.Processes
 {
@@ -40,7 +40,7 @@ namespace Qwack.Paths.Processes
 
         private readonly bool _siegelInvert;
 
-        public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation=0.0)
+        public TurboSkewSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
             _startDate = startDate;
@@ -86,11 +86,11 @@ namespace Qwack.Paths.Processes
                 var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
                 var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
                 var varEnd = Pow(atmVol, 2) * _timesteps.Times[t];
-                var fwdVariance = Max(0,varEnd - varStart);
+                var fwdVariance = Max(0, varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
                 _invCdfs[t] = _surface.GenerateCDF2(500, _timesteps.Dates[t], spot, true, driftAdj);
-                
+
                 _spotVols[t] = atmVol;
                 _spotDrifts[t] = Log(spot / _spot0) / _timesteps.Times[t];
 

@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
 
@@ -14,10 +11,10 @@ namespace Qwack.Models.Risk.Mutators
         {
             var o = model.Clone();
             var curve = model.GetPriceCurve(assetId);
-            switch(curve)
+            switch (curve)
             {
                 case BasicPriceCurve pc:
-                    var npc = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p,ix) => ix<shiftSizes.Length ? p * (1.0 + shiftSizes[ix]): p * (1.0+ shiftSizes.Last())).ToArray(), pc.CurveType, pc.CurrencyProvider, pc.PillarLabels)
+                    var npc = new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p, ix) => ix < shiftSizes.Length ? p * (1.0 + shiftSizes[ix]) : p * (1.0 + shiftSizes.Last())).ToArray(), pc.CurveType, pc.CurrencyProvider, pc.PillarLabels)
                     {
                         AssetId = pc.AssetId,
                         Name = pc.Name,

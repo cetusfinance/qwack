@@ -13,13 +13,13 @@ namespace Qwack.Core.Basic
         public Calendar PrimaryCalendar { get; set; }
         public Calendar SecondaryCalendar { get; set; }
 
-        public FxPair() 
+        public FxPair()
         {
             PrimaryCalendar = new Calendar() { Name = "Empty" };
             SecondaryCalendar = new Calendar() { Name = "Empty" };
         }
 
-        public FxPair(TO_FxPair transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider):base()
+        public FxPair(TO_FxPair transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) : base()
         {
             Foreign = currencyProvider.GetCurrency(transportObject.Foreign);
             Domestic = currencyProvider.GetCurrency(transportObject.Domestic);
@@ -82,7 +82,7 @@ namespace Qwack.Core.Basic
         public static DateTime OptionExpiry(this FxPair pair, DateTime valDate, Frequency tenor)
         {
             var spot = pair.SpotDate(valDate);
-            var roll = tenor.PeriodType == DatePeriodType.M || tenor.PeriodType == DatePeriodType.Y ? RollType.MF : RollType.F;
+            var roll = tenor.PeriodType is DatePeriodType.M or DatePeriodType.Y ? RollType.MF : RollType.F;
             var delivery = spot.AddPeriod(roll, pair.PrimaryCalendar, tenor);
             delivery = delivery.IfHolidayRoll(roll, pair.SecondaryCalendar);
             var expiry = delivery.SubtractPeriod(RollType.P, pair.PrimaryCalendar, pair.SpotLag);

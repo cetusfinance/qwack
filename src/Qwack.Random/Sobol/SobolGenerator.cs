@@ -79,7 +79,7 @@ namespace Qwack.Random.Sobol
             var dimension = (int)dm;
             var di = _directionNumbers.GetInfoForDimension(dimension + 1);
             // Read in parameters  
-            var d = (uint)di.Dimension;
+            //var d = (uint)di.Dimension;
             var s = di.S;
             var a = di.A;
             var m = new uint[s + 1];

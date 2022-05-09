@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
-using Qwack.Options.VolSurfaces;
 using Qwack.Options;
+using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
-using Qwack.Core.Basic;
 
 namespace Qwack.Models.Calibrators
 {
@@ -48,12 +47,12 @@ namespace Qwack.Models.Calibrators
             }
         }
 
-        public static Dictionary<DateTime, IInterpolator1D> ToDeltaSmiles(this List<ListedOptionSettlementRecord> optionSettlements, Dictionary<string, double> futuresPrices, SmileOrderOfPrecedence orderOfP=SmileOrderOfPrecedence.UseOTM)
+        public static Dictionary<DateTime, IInterpolator1D> ToDeltaSmiles(this List<ListedOptionSettlementRecord> optionSettlements, Dictionary<string, double> futuresPrices, SmileOrderOfPrecedence orderOfP = SmileOrderOfPrecedence.UseOTM)
         {
             var output = new Dictionary<DateTime, IInterpolator1D>();
 
             var byExpiry = optionSettlements.GroupBy(r => r.ExpiryDate).OrderBy(o => o.Key);
-            foreach(var expGroup in byExpiry)
+            foreach (var expGroup in byExpiry)
             {
                 var expiry = expGroup.Key;
                 if (expGroup.Select(x => x.UnderlyingFuturesCode).Distinct().Count() != 1)
@@ -88,7 +87,7 @@ namespace Qwack.Models.Calibrators
                                 filtered.Add(
                                     new SmilePoint
                                     {
-                                        Strike = -BlackFunctions.BlackDelta(fut,k,0.0,t,v,OptionType.P),
+                                        Strike = -BlackFunctions.BlackDelta(fut, k, 0.0, t, v, OptionType.P),
                                         ImpliedVol = v
                                     });
                                 break;
@@ -101,7 +100,7 @@ namespace Qwack.Models.Calibrators
                                 else
                                     r = strikeGrp.Where(sg => sg.CallPut == OptionType.C).SingleOrDefault();
 
-                                if (r != null && r.ImpliedVol>1e-8)
+                                if (r != null && r.ImpliedVol > 1e-8)
                                     filtered.Add(
                                         new SmilePoint
                                         {
@@ -129,8 +128,8 @@ namespace Qwack.Models.Calibrators
                     wingDeltas.Select(w => x.Value.Interpolate(1.0 - w) - x.Value.Interpolate(w))
                     .ToArray())
                 .ToArray();
-            var flies = smiles.Select((x,ix) =>
-                    wingDeltas.Select(w => (x.Value.Interpolate(1.0 - w) + x.Value.Interpolate(w))/2.0-atmVols[ix])
+            var flies = smiles.Select((x, ix) =>
+                    wingDeltas.Select(w => (x.Value.Interpolate(1.0 - w) + x.Value.Interpolate(w)) / 2.0 - atmVols[ix])
                     .ToArray())
                 .ToArray();
 
@@ -148,7 +147,7 @@ namespace Qwack.Models.Calibrators
         {
             var wingDeltas = new[] { 0.25, 0.1 };
             var expiries = smiles.Keys.ToArray();
-            var expiriesDouble = expiries.Select(e=>e.ToOADate()).ToArray();
+            var expiriesDouble = expiries.Select(e => e.ToOADate()).ToArray();
             var atmVols = smiles.Select(x => x.Value.Interpolate(0.5)).ToArray();
             var riskies = smiles.Select(x =>
                     wingDeltas.Select(w => x.Value.Interpolate(1.0 - w) - x.Value.Interpolate(w))
@@ -245,7 +244,7 @@ namespace Qwack.Models.Calibrators
         public OptionExerciseType ExerciseType { get; set; }
         public OptionMarginingType MarginType { get; set; }
         public string UnderlyingFuturesCode { get; set; }
-        public double UnderlyingFuturesPrice{ get; set; }
+        public double UnderlyingFuturesPrice { get; set; }
         public double ImpliedVol { get; set; }
     }
 

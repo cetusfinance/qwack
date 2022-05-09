@@ -40,7 +40,7 @@ namespace Qwack.Options.Calibrators
 
         private bool _vegaWeighted;
 
-        public double[] Solve(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate, 
+        public double[] Solve(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate,
             DateTime expiry, double fwd, double[] strikesToFit, Interpolator1DType interpType)
         {
             _atmConstraint = atmConstraint;
@@ -85,7 +85,7 @@ namespace Qwack.Options.Calibrators
         }
 
         public SABRParameters SolveSABR(ATMStraddleConstraint atmConstraint, RRBFConstraint[] smileConstraints, DateTime buildDate,
-        DateTime expiry, double fwd, double beta = 1.0, bool vegaWeightedFit=true)
+        DateTime expiry, double fwd, double beta = 1.0, bool vegaWeightedFit = true)
         {
             _atmConstraint = atmConstraint;
             _smileConstraints = smileConstraints;
@@ -140,9 +140,9 @@ namespace Qwack.Options.Calibrators
             _buildDate = buildDate;
             _tExp = (expiry - buildDate).TotalDays / 365.0;
 
-            var startingPoint = new[] { atmConstraint.MarketVol* atmConstraint.MarketVol *_tExp-Sqrt(atmConstraint.MarketVol), 1.0, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1, 0, Sqrt(atmConstraint.MarketVol) };
+            var startingPoint = new[] { atmConstraint.MarketVol * atmConstraint.MarketVol * _tExp - Sqrt(atmConstraint.MarketVol), 1.0, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.1 : -0.1, 0, Sqrt(atmConstraint.MarketVol) };
             //var startingPoint = new[] { atmConstraint.MarketVol* atmConstraint.MarketVol *_tExp-Sqrt(atmConstraint.MarketVol), 0.5, smileConstraints.Average(x => x.RisykVol) >= 0 ? 0.25 : -0.25, 0, Sqrt(atmConstraint.MarketVol) };
-            var initialStep = new[] { atmConstraint.MarketVol * atmConstraint.MarketVol, 0.5, 0.5, 0.002, Sqrt(atmConstraint.MarketVol) /2};
+            var initialStep = new[] { atmConstraint.MarketVol * atmConstraint.MarketVol, 0.5, 0.5, 0.002, Sqrt(atmConstraint.MarketVol) / 2 };
 
             //var startingPoint = new[] { atmConstraint.MarketVol, 1.0, 0.1, 0, 0.1 };
             //var initialStep = new[] { 0.1, 0.25, 0.25, 0.01, 0.1 };
@@ -188,16 +188,16 @@ namespace Qwack.Options.Calibrators
             vols = new double[_strikes.Length];
             var sc = _smileConstraints.OrderBy(x => x.Delta).ToArray();
             var atm = _atmConstraint.MarketVol;
-            if (sc.Length * 2 + 1 == _strikes.Length && sc[0].WingQuoteType==WingQuoteType.Simple)
+            if (sc.Length * 2 + 1 == _strikes.Length && sc[0].WingQuoteType == WingQuoteType.Simple)
             {
                 var deltas = sc.Select(x => x.Delta).ToArray();
-                for(var i=0;i<deltas.Length;i++)
+                for (var i = 0; i < deltas.Length; i++)
                 {
-                    if (_strikes[i] != deltas[i] || _strikes[_strikes.Length-1-i] != 1 - deltas[i])
+                    if (_strikes[i] != deltas[i] || _strikes[_strikes.Length - 1 - i] != 1 - deltas[i])
                         return false;
 
                     vols[i] = atm + sc[i].FlyVol - 0.5 * sc[i].RisykVol;
-                    vols[vols.Length-1-i] = atm + sc[i].FlyVol + 0.5 * sc[i].RisykVol;
+                    vols[vols.Length - 1 - i] = atm + sc[i].FlyVol + 0.5 * sc[i].RisykVol;
                 }
                 vols[deltas.Length] = atm;
                 return true;
@@ -305,12 +305,12 @@ namespace Qwack.Options.Calibrators
         {
             var volFunc = new Func<double, double>(k => CalcVolSviRaw(k, currentSviRaw));
             var o = ComputeErrorsGeneric(volFunc, true);
-            if (currentSviRaw.B < 0.0 || currentSviRaw.B > 4.0/(_tExp*(1+Abs(currentSviRaw.Rho))) || currentSviRaw.Sigma <= 0.0 || currentSviRaw.Sigma > 10.0 || currentSviRaw.Rho < -1.0 || currentSviRaw.Rho > 1.0)
+            if (currentSviRaw.B < 0.0 || currentSviRaw.B > 4.0 / (_tExp * (1 + Abs(currentSviRaw.Rho))) || currentSviRaw.Sigma <= 0.0 || currentSviRaw.Sigma > 10.0 || currentSviRaw.Rho < -1.0 || currentSviRaw.Rho > 1.0)
                 o = o.Select(x => x * 1e100).ToArray();
             return o;
         }
 
-        private double[] ComputeErrorsGeneric(Func<double,double> volForStrike, bool squareErrors)
+        private double[] ComputeErrorsGeneric(Func<double, double> volForStrike, bool squareErrors)
         {
             double callVol, putVol;
 
@@ -378,7 +378,7 @@ namespace Qwack.Options.Calibrators
 
         private void UpdateInterpolator() => _interp = InterpolatorFactory.GetInterpolator(_strikes, _currentGuess, _interpType);
 
-   
+
 
         private double GetVolForAbsoluteStrike(double strike, IInterpolator1D interp)
         {

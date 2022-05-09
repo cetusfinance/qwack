@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Qwack.Math.Solvers
@@ -10,7 +9,7 @@ namespace Qwack.Math.Solvers
         public int MaxItterations { get; set; } = 1000;
         public int UsedItterations { get; set; }
         public double JacobianBump { get; set; } = 0.000001;
-        public Func<double[],double[]> ObjectiveFunction { get; set; }
+        public Func<double[], double[]> ObjectiveFunction { get; set; }
         public double[] InitialGuess { get; set; }
 
         private double[] _currentGuess;
@@ -60,7 +59,7 @@ namespace Qwack.Math.Solvers
             var deltaGuess = Math.Matrix.DoubleArrayFunctions.MatrixProduct(term2, _currentOutput);
 
             var trialSoltion = _currentGuess.Select((x, ix) => x - deltaGuess[ix]).ToArray();
-            while (ObjectiveFunction(trialSoltion).Select(x => x * x).Sum()>RMS && deltaGuess.Any(x=>x!=0))
+            while (ObjectiveFunction(trialSoltion).Select(x => x * x).Sum() > RMS && deltaGuess.Any(x => x != 0))
             {
                 deltaGuess = deltaGuess.Select(x => x / 2.0).ToArray();
                 trialSoltion = _currentGuess.Select((x, ix) => x - deltaGuess[ix]).ToArray();

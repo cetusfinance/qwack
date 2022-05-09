@@ -145,7 +145,7 @@ namespace Qwack.Core.Instruments
                 double fv, pv;
                 var df = model.GetDf(reportingCCy, model.BuildDate, flow.SettleDate);
                 var fwdFxRate = model.GetFxRate(flow.SettleDate, flow.Currency, reportingCCy);
-                
+
                 switch (flow.FlowType)
                 {
                     case FlowType.FixedRate:

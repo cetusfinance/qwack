@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -97,13 +95,13 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, Dictionary<DateTime, double>> Sensitivities(IFundingModel model) => throw new NotImplementedException();
 
 
-        public List<string> Dependencies(IFxMatrix matrix) => (new [] { DiscountCurve, ForecastCurve } ).Distinct().ToList();
+        public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurve }).Distinct().ToList();
 
         public double CalculateParRate(IFundingModel model)
         {
             var sumTop = 0.0;
             var sumBottom = 0.0;
-            foreach(var flow in LoanDepoSchedule.Flows)
+            foreach (var flow in LoanDepoSchedule.Flows)
             {
                 var n = flow.Notional;
                 var df = model.Curves[DiscountCurve].GetDf(model.BuildDate, flow.SettleDate);
@@ -128,7 +126,7 @@ namespace Qwack.Core.Instruments.Funding
             //return par;
         }
 
-        public IFundingInstrument Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x=>x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
+        public IFundingInstrument Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x => x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
         {
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,
@@ -140,7 +138,7 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument SetParRate(double parRate)
         {
             var flowsNew = LoanDepoSchedule.Flows.Select(x => x.Clone()).ToArray();
-            foreach(var flow in flowsNew.Where(x=>x.FlowType==FlowType.FloatRate))
+            foreach (var flow in flowsNew.Where(x => x.FlowType == FlowType.FloatRate))
             {
                 flow.FixedRateOrMargin = parRate;
             }
@@ -162,7 +160,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public string FxPair(IAssetFxModel model) => string.Empty;
 
-        IAssetInstrument IAssetInstrument.Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x=>x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
+        IAssetInstrument IAssetInstrument.Clone() => new FloatingRateLoanDepo(LoanDepoSchedule.Flows.Select(x => x.Clone()).ToArray(), FloatRateIndex, ForecastCurve, DiscountCurve)
         {
             PillarDate = PillarDate,
             SolveCurve = SolveCurve,

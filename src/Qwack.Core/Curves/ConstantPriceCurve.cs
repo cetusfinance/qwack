@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Curves
 {
-    public class ConstantPriceCurve:BasicPriceCurve
+    public class ConstantPriceCurve : BasicPriceCurve
     {
 
         public ConstantPriceCurve(double price, DateTime originDate, ICurrencyProvider ccyProvider)

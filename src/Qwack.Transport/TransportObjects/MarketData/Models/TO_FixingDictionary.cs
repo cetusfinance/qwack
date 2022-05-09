@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 
@@ -18,7 +16,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
         [ProtoMember(4)]
         public FixingDictionaryType FixingDictionaryType { get; set; }
         [ProtoMember(5)]
-        public Dictionary<string,double> Fixings { get; set; }
+        public Dictionary<string, double> Fixings { get; set; }
 
     }
 }

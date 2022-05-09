@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Qwack.Math;
 using Qwack.Core.Basic;
-using static System.Math;
+using Qwack.Math;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Options
 {
@@ -26,7 +23,7 @@ namespace Qwack.Options
         {
             var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
 
-            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
+            (var _, var _) = D1d2(forward, strike, expTime, volatility);
 
             var num2 = (Log(forward / strike) + ((expTime / 2.0) * Pow(volatility, 2.0))) / (volatility * Sqrt(expTime));
             var num3 = num2 - (volatility * Sqrt(expTime));
@@ -36,7 +33,7 @@ namespace Qwack.Options
         public static double BlackDigitalPV(double forward, double strike, double riskFreeRate, double expTime, double volatility, OptionType CP)
         {
             var cpf = (CP == OptionType.Put) ? -1.0 : 1.0;
-            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
+            (var _, var d2) = D1d2(forward, strike, expTime, volatility);
             return Exp(-riskFreeRate * expTime) * Statistics.NormSDist(d2 * cpf);
         }
 
@@ -46,11 +43,11 @@ namespace Qwack.Options
             var num5 = Exp(-riskFreeRate * expTime);
             return (((forward * num5) * Statistics.Phi(d)) * Sqrt(expTime)) / 100.0;
         }
-        
+
         public static double BlackGamma(double forward, double strike, double riskFreeRate, double expTime, double volatility)
         {
             var dF = Exp(-riskFreeRate * expTime);
-            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
+            (var d1, var _) = D1d2(forward, strike, expTime, volatility);
             return dF * Statistics.Phi(d1) / (forward * volatility * Sqrt(expTime)) * (0.01 * forward);
         }
 
@@ -76,7 +73,7 @@ namespace Qwack.Options
         {
             var output = new double[3];
             var DF = Exp(-riskFreeRate * expTime);
-            (var d1, var d2) = D1d2(forward, strike, expTime, volatility);
+            (var d1, var _) = D1d2(forward, strike, expTime, volatility);
 
             //delta
             output[0] = (CP == OptionType.Put) ? DF * (Statistics.NormSDist(d1) - 1) : DF * Statistics.NormSDist(d1);
@@ -129,9 +126,9 @@ namespace Qwack.Options
             return barrierType == BarrierType.KI ? barrierHitProb * blackPV : (1.0 - barrierHitProb) * blackPV;
         }
 
-        public static double BarrierAdjust(double barrier, double vol, double deltaT, BarrierSide side) => 
-            side==BarrierSide.Down 
-            ? barrier * Exp(0.5826 * vol * deltaT) 
+        public static double BarrierAdjust(double barrier, double vol, double deltaT, BarrierSide side) =>
+            side == BarrierSide.Down
+            ? barrier * Exp(0.5826 * vol * deltaT)
             : barrier / Exp(0.5826 * vol * deltaT);
     }
 }

@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Interpolators;
 
@@ -28,8 +25,8 @@ namespace Qwack.Math.Interpolation
             switch (kind)
             {
                 case Interpolator1DType.LinearFlatExtrap:
-                    if(x.Length < 50)
-                    { 
+                    if (x.Length < 50)
+                    {
                         return new LinearInterpolatorFlatExtrapNoBinSearch(x, y);
                     }
                     else
@@ -39,7 +36,7 @@ namespace Qwack.Math.Interpolation
                 case Interpolator1DType.Linear:
                     return new LinearInterpolator(x, y);
                 case Interpolator1DType.LinearInVariance:
-                    return new LinearInVarianceInterpolator(x,y);
+                    return new LinearInVarianceInterpolator(x, y);
                 case Interpolator1DType.GaussianKernel:
                     return new GaussianKernelInterpolator(x, y);
                 case Interpolator1DType.NextValue:
@@ -57,7 +54,7 @@ namespace Qwack.Math.Interpolation
             }
         }
 
-        public static IInterpolator1D GetInterpolator(TO_Interpolator1d transportObject) => 
+        public static IInterpolator1D GetInterpolator(TO_Interpolator1d transportObject) =>
             GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Type, transportObject.NoCopy, transportObject.IsSorted);
 
 
@@ -84,7 +81,7 @@ namespace Qwack.Math.Interpolation
         public static IInterpolator2D GetInterpolator(TO_Interpolator2d_Jagged transportObject) =>
             GetInterpolator(transportObject.Xs, transportObject.Ys, transportObject.Zs, transportObject.Type);
 
-        public static IInterpolator2D GetInterpolator(TO_Interpolator2d transportObject) => 
+        public static IInterpolator2D GetInterpolator(TO_Interpolator2d transportObject) =>
             transportObject.IsJagged ? GetInterpolator(transportObject.Jagged) : GetInterpolator(transportObject.Square);
     }
 }

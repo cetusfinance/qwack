@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 using Qwack.Transport.TransportObjects.Instruments;
 using Qwack.Transport.TransportObjects.MarketData.Correlations;
@@ -13,7 +12,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
     public class TO_AssetFxModel
     {
         [ProtoMember(8)]
-        public Dictionary<string, TO_VolSurface> AssetVols{ get; set; }
+        public Dictionary<string, TO_VolSurface> AssetVols { get; set; }
         [ProtoMember(9)]
         public Dictionary<string, TO_PriceCurve> AssetCurves { get; set; }
         [ProtoMember(10)]

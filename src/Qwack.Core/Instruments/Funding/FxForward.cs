@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -70,7 +69,7 @@ namespace Qwack.Core.Instruments.Funding
                 return 0.0;
 
             var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
-            var FV = (fwdRate - Strike) * DomesticQuantity;     
+            var FV = (fwdRate - Strike) * DomesticQuantity;
             return FV;
         }
 
@@ -100,7 +99,7 @@ namespace Qwack.Core.Instruments.Funding
             else
             {
                 foreignDict = new Dictionary<DateTime, double>() { { DeliveryDate, fwdRate * DomesticQuantity * df * -t } };
-                var foreignDiscDict = new Dictionary<DateTime, double>() { { DeliveryDate, (fwdRate-Strike) * DomesticQuantity * df * -t } };
+                var foreignDiscDict = new Dictionary<DateTime, double>() { { DeliveryDate, (fwdRate - Strike) * DomesticQuantity * df * -t } };
 
                 return new Dictionary<string, Dictionary<DateTime, double>>()
                 {
@@ -124,7 +123,7 @@ namespace Qwack.Core.Instruments.Funding
                    ForeignDiscountCurve == forward.ForeignDiscountCurve &&
                    TradeId == forward.TradeId;
 
-        public override int GetHashCode() => Strike.GetHashCode() ^ DomesticQuantity.GetHashCode() ^ DeliveryDate.GetHashCode() 
+        public override int GetHashCode() => Strike.GetHashCode() ^ DomesticQuantity.GetHashCode() ^ DeliveryDate.GetHashCode()
             ^ DomesticCCY.GetHashCode() ^ ForeignCCY.GetHashCode() ^ ForeignDiscountCurve.GetHashCode() ^ TradeId.GetHashCode();
 
         IFundingInstrument IFundingInstrument.Clone() => new FxForward
@@ -149,7 +148,7 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public string[] IrCurves(IAssetFxModel model) => 
+        public string[] IrCurves(IAssetFxModel model) =>
             new[] {
                 ForeignDiscountCurve,
                 model.FundingModel.FxMatrix.DiscountCurveMap[ForeignCCY],
@@ -216,7 +215,7 @@ namespace Qwack.Core.Instruments.Funding
                  DeliveryDate = DeliveryDate,
                  PillarDate = PillarDate,
                  SolveCurve = SolveCurve,
-                 Strike = Strike,     
+                 Strike = Strike,
                  Counterparty = Counterparty,
                  HedgingSet = HedgingSet,
                  PortfolioName = PortfolioName,

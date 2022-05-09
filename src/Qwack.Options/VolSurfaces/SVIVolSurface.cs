@@ -1,11 +1,10 @@
-using Qwack.Core.Basic;
-using Qwack.Dates;
-using Qwack.Math.Interpolation;
-using Qwack.Options;
-using Qwack.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Qwack.Core.Basic;
+using Qwack.Dates;
+using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;
 using Qwack.Transport.BasicTypes;
 
@@ -40,7 +39,7 @@ namespace Qwack.Options.VolSurfaces
 
         public SVIVolSurface(DateTime originDate, double[] ATMVols, DateTime[] expiries, double[] wingDeltas,
           double[][] riskies, double[][] flies, double[] fwds, WingQuoteType wingQuoteType, AtmVolType atmVolType,
-          Interpolator1DType timeInterpType, SviType sviType=SviType.Raw, string[] pillarLabels = null):base()
+          Interpolator1DType timeInterpType, SviType sviType = SviType.Raw, string[] pillarLabels = null) : base()
         {
             if (pillarLabels == null)
                 PillarLabels = expiries.Select(x => x.ToString("yyyy-MM-dd")).ToArray();
@@ -124,7 +123,7 @@ namespace Qwack.Options.VolSurfaces
             OriginDate = originDate;
             TimeInterpolatorType = timeInterpType;
             Expiries = expiries;
-            ExpiriesDouble = expiries.Select(x => originDate.CalculateYearFraction(x,TimeBasis)).ToArray();
+            ExpiriesDouble = expiries.Select(x => originDate.CalculateYearFraction(x, TimeBasis)).ToArray();
 
             _interps = new IInterpolator1D[5];
             _interps[0] = InterpolatorFactory.GetInterpolator(ExpiriesDouble, RawParams.Select(x => x.A).ToArray(), TimeInterpolatorType);
@@ -135,7 +134,7 @@ namespace Qwack.Options.VolSurfaces
             _fwdsInterp = InterpolatorFactory.GetInterpolator(ExpiriesDouble, fwds, Interpolator1DType.Linear);
         }
 
-        public static double GetVolForAbsoluteStrike(double strike, double maturity, double forward, SviRawParameters rawParams) 
+        public static double GetVolForAbsoluteStrike(double strike, double maturity, double forward, SviRawParameters rawParams)
             => SVI.SVI_Raw_ImpliedVol(rawParams.A, rawParams.B, rawParams.Rho, strike, forward, maturity, rawParams.M, rawParams.Sigma);
 
         public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);

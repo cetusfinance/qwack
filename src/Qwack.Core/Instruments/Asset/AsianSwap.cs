@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
-using static System.Math;
 
 namespace Qwack.Core.Instruments.Asset
 {

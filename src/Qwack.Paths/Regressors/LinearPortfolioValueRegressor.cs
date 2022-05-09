@@ -11,7 +11,7 @@ using static System.Math;
 
 namespace Qwack.Paths.Regressors
 {
-    public class LinearPortfolioValueRegressor :  IPortfolioValueRegressor
+    public class LinearPortfolioValueRegressor : IPortfolioValueRegressor
     {
 
         private readonly IAssetPathPayoff[] _portfolio;

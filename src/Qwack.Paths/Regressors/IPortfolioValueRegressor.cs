@@ -1,5 +1,4 @@
 using Qwack.Core.Models;
-using Qwack.Math.Regression;
 
 namespace Qwack.Paths.Regressors
 {

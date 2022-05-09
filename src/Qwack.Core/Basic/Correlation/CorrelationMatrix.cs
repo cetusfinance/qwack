@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Models;
-using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.Correlations;
 
 namespace Qwack.Core.Basic.Correlation

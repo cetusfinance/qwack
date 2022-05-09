@@ -1,11 +1,10 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Qwack.Math.Extensions;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths.Features;
 using Qwack.Serialization;
 using static System.Math;
 
@@ -22,7 +21,7 @@ namespace Qwack.Paths.Processes
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
         private int _factorIndex;
-        
+
         [SkipSerialization]
         private readonly Func<double, double> _forwardCurve;
         private bool _isComplete;
@@ -101,7 +100,7 @@ namespace Qwack.Paths.Processes
             SetupFactors();
             if (PathCalc.CompactMode)
             {
-                var averagesForThisBlock = PathCalc.PathSumsByBlock[block.GlobalPathIndex].Select(a=>a / PathCalc.PathCountsByBlock[block.GlobalPathIndex]).ToArray();
+                var averagesForThisBlock = PathCalc.PathSumsByBlock[block.GlobalPathIndex].Select(a => a / PathCalc.PathCountsByBlock[block.GlobalPathIndex]).ToArray();
                 var factorsForThisBlock = _fwds.Select((f, ix) => new Vector<double>(f / averagesForThisBlock[ix])).ToArray();
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths.Features;
 using Qwack.Paths.Features.Rates;
@@ -48,7 +47,7 @@ namespace Qwack.Paths
 
             if (Parallelize)
             {
-                if(CompactMemoryMode)
+                if (CompactMemoryMode)
                 {
                     foreach (var block in _blockset)
                     {
@@ -193,22 +192,22 @@ namespace Qwack.Paths
         private void IterateFinishing(List<IRequiresFinish> unfinished)
         {
             var numberFinished = 1;
-            while(numberFinished > 0)
+            while (numberFinished > 0)
             {
                 numberFinished = 0;
-                for(var i = 0; i < unfinished.Count;i++)
+                for (var i = 0; i < unfinished.Count; i++)
                 {
-                    if(unfinished[i] != null)
+                    if (unfinished[i] != null)
                     {
                         unfinished[i].Finish(_featureCollection);
-                        if(unfinished[i].IsComplete)
+                        if (unfinished[i].IsComplete)
                         {
                             numberFinished++;
                             unfinished[i] = null;
                         }
                     }
                 }
-                if(unfinished.All(f => f == null))
+                if (unfinished.All(f => f == null))
                 {
                     //Completed!!
                     return;

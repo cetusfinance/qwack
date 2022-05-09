@@ -2,7 +2,7 @@ using System;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 
-namespace Qwack.Transport.TransportObjects.MarketData.Curves 
+namespace Qwack.Transport.TransportObjects.MarketData.Curves
 {
     [ProtoContract]
     public class TO_BasicPriceCurve

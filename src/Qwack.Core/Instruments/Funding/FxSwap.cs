@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 
@@ -66,7 +65,7 @@ namespace Qwack.Core.Instruments.Funding
             var discCurve = model.GetCurve(discName);
             var farFx = model.GetFxRate(FarDate, DomesticCcy, ForeignCcy);
             var nearFx = model.GetFxRate(NearDate, DomesticCcy, ForeignCcy);
-            var farStrike = nearFx + SwapPoints/ Divisor;
+            var farStrike = nearFx + SwapPoints / Divisor;
             var farPv = -(farFx - farStrike) * Notional * discCurve.GetDf(model.BuildDate, FarDate);
             return farPv;
         }

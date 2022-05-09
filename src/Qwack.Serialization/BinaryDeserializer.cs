@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Qwack.Serialization
 {
@@ -11,7 +10,7 @@ namespace Qwack.Serialization
         {
             var strategyCount = buffer.ReadInt();
             var strategies = new Dictionary<int, DeserializationStrategy>(strategyCount);
-            for(var i = 0; i < strategyCount;i++)
+            for (var i = 0; i < strategyCount; i++)
             {
                 var id = buffer.ReadInt();
                 var s = buffer.ReadString();
@@ -21,7 +20,7 @@ namespace Qwack.Serialization
 
             var context = new DeserializationContext();
             object lastObject = null;
-            while(buffer.Length > 0)
+            while (buffer.Length > 0)
             {
                 var strategy = strategies[buffer.ReadInt()];
                 lastObject = strategy.Deserialize(ref buffer, context);

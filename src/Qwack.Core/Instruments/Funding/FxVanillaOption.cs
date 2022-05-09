@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Capital;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -29,7 +26,7 @@ namespace Qwack.Core.Instruments.Funding
         public double Premium { get; set; }
         public DateTime PremiumDate { get; set; }
 
-        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(model.FundingModel.GetFxRate(ExpiryDate,Pair), Strike, T(model), CallPut, SupervisoryVol, DomesticQuantity);
+        public override double SupervisoryDelta(IAssetFxModel model) => SaCcrUtils.SupervisoryDelta(model.FundingModel.GetFxRate(ExpiryDate, Pair), Strike, T(model), CallPut, SupervisoryVol, DomesticQuantity);
         public override double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         private double SupervisoryVol => SaCcrParameters.SupervisoryOptionVols[SaCcrAssetClass.Fx];
         private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F);

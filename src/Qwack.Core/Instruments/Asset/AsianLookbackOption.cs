@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -59,7 +57,7 @@ namespace Qwack.Core.Instruments.Asset
         public DateTime LastSensitivityDate => PaymentDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 
         public string FxPair(IAssetFxModel model) => IsFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
-        public FxConversionType FxType(IAssetFxModel model) => IsFx ? FxConversionType.None :( model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
+        public FxConversionType FxType(IAssetFxModel model) => IsFx ? FxConversionType.None : (model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
            new Dictionary<string, List<DateTime>>() :
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
@@ -89,6 +87,6 @@ namespace Qwack.Core.Instruments.Asset
             FxFixingId = FxFixingId,
         };
 
-        public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();    
+        public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
     }
 }

@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
-using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
@@ -88,7 +86,7 @@ namespace Qwack.Paths.Payoffs
                 .Select(x => x.Select(y => dates.GetDateIndex(y)).ToArray())
                 .ToList();
             _dateIndexesPast = _avgDates
-                .Select(y=>y
+                .Select(y => y
                     .Where(x => x <= _decisionDate)
                     .Select(x => dates.GetDateIndex(x))
                     .ToArray())
@@ -101,9 +99,9 @@ namespace Qwack.Paths.Payoffs
                 .ToList();
             _decisionDateIx = dates.GetDateIndex(_decisionDate);
 
-            _nPast = _dateIndexesPast.Select(x=>x.Length).ToArray();
+            _nPast = _dateIndexesPast.Select(x => x.Length).ToArray();
             _nFuture = _dateIndexesFuture.Select(x => x.Length).ToArray();
-            _nTotal = _nPast.Select((x,ix)=>x + _nFuture[ix]).ToArray();
+            _nTotal = _nPast.Select((x, ix) => x + _nFuture[ix]).ToArray();
 
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
@@ -113,7 +111,7 @@ namespace Qwack.Paths.Payoffs
                 var curve = VanillaModel.GetPriceCurve(_assetName);
                 var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
                 _expiryToSettleCarry = curve.GetPriceForDate(_payDate) / curve.GetPriceForDate(decisionSpotDate);
-            } 
+            }
 
             _isComplete = true;
         }
@@ -144,7 +142,7 @@ namespace Qwack.Paths.Payoffs
                     }
 
                     var spotAtExpiry = steps[_decisionDateIx] * (_fxName != null ? stepsFx[_decisionDateIx] : _one);
-                
+
                     if (VanillaModel != null && AverageRegressors[a] == null)
                     {
                         avgs[a] = pastSum / nTotalVec[a];
@@ -184,7 +182,7 @@ namespace Qwack.Paths.Payoffs
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
-            dates.AddDates(_avgDates.SelectMany(x=>x));
+            dates.AddDates(_avgDates.SelectMany(x => x));
             dates.AddDate(_payDate);
             dates.AddDate(_decisionDate);
         }

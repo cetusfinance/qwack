@@ -1,16 +1,16 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using Qwack.Core.Basic;
+using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Math.Interpolation;
-using Qwack.Core.Basic;
-using System.Linq;
-using Qwack.Core.Models;
-using static System.Math;
+using Qwack.Options.VolSurfaces;
+using Qwack.Paths.Features;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Paths.Processes
 {
@@ -37,14 +37,14 @@ namespace Qwack.Paths.Processes
 
         private readonly bool _siegelInvert;
 
-        public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime,double> pastFixings=null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
+        public LVSingleAsset(IVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
             _startDate = startDate;
             _expiryDate = expiryDate;
             _numberOfSteps = nTimeSteps;
             _name = name;
-            _pastFixings = pastFixings??(new Dictionary<DateTime,double>());
+            _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>());
             _forwardCurve = forwardCurve;
 
             _adjSurface = fxAdjustSurface;
@@ -96,7 +96,7 @@ namespace Qwack.Paths.Processes
             }
 
             var lvSurface = Options.LocalVol.ComputeLocalVarianceOnGridFromCalls(_surface, strikes, _timesteps.Times, _forwardCurve);
-            
+
             for (var t = 0; t < _lvInterps.Length; t++)
             {
                 _lvInterps[t] = InterpolatorFactory.GetInterpolator(strikes[t], lvSurface[t], t == 0 ? Interpolator1DType.DummyPoint : Interpolator1DType.LinearFlatExtrap);
@@ -110,7 +110,7 @@ namespace Qwack.Paths.Processes
                 var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
 
                 _drifts[t] = new Vector<double>(Log(spot / prevSpot) / _timesteps.TimeSteps[t]);
-    
+
                 prevSpot = spot;
             }
             _isComplete = true;
@@ -123,7 +123,7 @@ namespace Qwack.Paths.Processes
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 var c = 0;
-                foreach(var kv in _pastFixings.Where(x=>x.Key<_startDate))
+                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
                 {
                     steps[c] = new Vector<double>(kv.Value);
                     c++;

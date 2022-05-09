@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Dates;
 using Qwack.Providers.CSV;
 using Qwack.Transport.BasicTypes;
@@ -10,7 +9,7 @@ namespace Qwack.Models.Calibrators
 {
     public static class CMECommon
     {
-        public static double MinPrice = 1e-10; 
+        public static double MinPrice = 1e-10;
 
         public static string Year2to1(string input)
         {
@@ -23,7 +22,7 @@ namespace Qwack.Models.Calibrators
         public static string GetCode(string code, string MMY)
         {
             var m = int.Parse(MMY.Substring(MMY.Length - 2, 2));
-            return $"{code}{DateExtensions.FutureMonths[m - 1]}{MMY.Substring(2,2)}";
+            return $"{code}{DateExtensions.FutureMonths[m - 1]}{MMY.Substring(2, 2)}";
         }
 
         public static (OptionExerciseType optionExerciseType, OptionMarginingType optionMarginingType) OptionTypeFromCode(string code) => code switch

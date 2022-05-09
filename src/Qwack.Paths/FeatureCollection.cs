@@ -1,8 +1,6 @@
-using Qwack.Core.Models;
-using Qwack.Paths.Features;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Qwack.Core.Models;
 
 namespace Qwack.Paths
 {
@@ -28,7 +26,7 @@ namespace Qwack.Paths
                 if (feature.Value is IRequiresFinish finish)
                 {
                     finish.Finish(this);
-                    if(!finish.IsComplete)
+                    if (!finish.IsComplete)
                     {
                         unfinishedFeatures.Add(finish);
                     }

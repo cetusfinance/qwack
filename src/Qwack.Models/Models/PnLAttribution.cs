@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -921,7 +920,7 @@ namespace Qwack.Models.Models
             r_tidIx = fxGreeks.GetColumnIndex(TradeId);
             r_tTypeIx = fxGreeks.GetColumnIndex(TradeType);
 
-           
+
             foreach (var fxSpot in endModel.FundingModel.FxMatrix.SpotRates)
             {
                 var fxPair = $"{fxSpot.Key.Ccy}/{endModel.FundingModel.FxMatrix.BaseCurrency}";
@@ -1034,7 +1033,7 @@ namespace Qwack.Models.Models
                   });
 
                 //account for curves for assets first traded on the day, which dont exist in the previous EoD set
-                var startCurve = model.CurveNames.Contains(curveName)?model.GetPriceCurve(curveName): endModel.GetPriceCurve(curveName);
+                var startCurve = model.CurveNames.Contains(curveName) ? model.GetPriceCurve(curveName) : endModel.GetPriceCurve(curveName);
                 var endCurve = endModel.GetPriceCurve(curveName);
 
                 var fxRate = model.FundingModel.GetFxRate(model.BuildDate, startCurve.Currency, reportingCcy);

@@ -46,7 +46,7 @@ namespace Qwack.Math.Solvers
                 var f = function(x);
                 var fBumped = function(x + bump);
                 var dfdx = (fBumped - f) / bump;
-                while(dfdx==0 && itteration < maxItterations)
+                while (dfdx == 0 && itteration < maxItterations)
                 {
                     bump *= 2.0;
                     fBumped = function(x + bump);

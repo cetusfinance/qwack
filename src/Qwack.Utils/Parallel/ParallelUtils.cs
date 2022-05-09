@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Qwack.Utils.Parallel
 {
@@ -15,7 +15,7 @@ namespace Qwack.Utils.Parallel
         {
             get
             {
-                if(_instance==null)
+                if (_instance == null)
                 {
                     lock (_lock)
                     {
@@ -58,7 +58,7 @@ namespace Qwack.Utils.Parallel
 
         private void ThreadStart()
         {
-            foreach(var item in _taskQueue.GetConsumingEnumerable())
+            foreach (var item in _taskQueue.GetConsumingEnumerable())
             {
                 if (item.TaskCompletion != null)
                 {
@@ -156,7 +156,11 @@ namespace Qwack.Utils.Parallel
             {
                 var tcs = new TaskCompletionSource<bool>();
                 var task = tcs.Task;
-                void action() => code(v);
+                void action()
+                {
+                    code(v);
+                }
+
                 var workItem = new WorkItem() { Action = action, TaskCompletion = tcs };
                 if (_taskQueue.TryAdd(workItem))
                 {
@@ -172,11 +176,11 @@ namespace Qwack.Utils.Parallel
             {
                 await Task.WhenAll(taskList.ToArray());
             }
-            catch(AggregateException ex)
+            catch (AggregateException ex)
             {
                 throw ex.InnerExceptions.First();
             }
-            
+
         }
 
         public async Task QueueAndRunTasks(IEnumerable<Task> tasks)

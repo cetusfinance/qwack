@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
-using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
@@ -116,7 +114,7 @@ namespace Qwack.Models.Risk
                                 { Metric, "Vega" },
                                 { "Strike", strikesByTradeId[trdId] }
                             };
-                            
+
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {
                                 foreach (var key in metaKeys)
@@ -131,7 +129,7 @@ namespace Qwack.Models.Risk
                 }, !(parallelize)).Wait();
             }
 
-            return cube.Sort(new List<string> {AssetId,"PointDate",TradeType});
+            return cube.Sort(new List<string> { AssetId, "PointDate", TradeType });
         }
 
         public static ICube AssetSegaRega(this IPvModel pvModel, Currency reportingCcy)
@@ -260,7 +258,7 @@ namespace Qwack.Models.Risk
                 var tasks = new[] { t1, t2 };
                 Task.WaitAll(tasks);
             }
- 
+
             return cube.Sort();
         }
 
@@ -467,7 +465,7 @@ namespace Qwack.Models.Risk
                         if (Abs(delta) > 1e-8)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -493,7 +491,7 @@ namespace Qwack.Models.Risk
                         if (Abs(gamma) > 1e-8)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
-                                    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -523,7 +521,7 @@ namespace Qwack.Models.Risk
                         if (delta != 0.0)
                         {
                             if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-                                    delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                             var row = new Dictionary<string, object>
                             {
@@ -554,10 +552,10 @@ namespace Qwack.Models.Risk
 
 
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize=false)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false)
         {
             var bumpSize = 0.01;
-            var cube = new ResultCube();          
+            var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
                 { TradeId, typeof(string) },
@@ -570,11 +568,11 @@ namespace Qwack.Models.Risk
                 { "RefPrice", typeof(double) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
-            foreach(var key in metaKeys)
+            foreach (var key in metaKeys)
             {
                 dataTypes[key] = typeof(string);
             }
-            var insDict = pvModel.Portfolio.Instruments.Where(x=>x.TradeId!=null).ToDictionary(x => x.TradeId, x => x);
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
 
             cube.Initialize(dataTypes);
             var model = pvModel.VanillaModel.Clone();
@@ -636,7 +634,7 @@ namespace Qwack.Models.Risk
                         throw new Exception("Dimensions do not match");
 
                     ResultCubeRow[] bumpedRowsDown = null;
-                    if(computeGamma)
+                    if (computeGamma)
                     {
                         var newVanillaModelDown = model.Clone();
                         newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
@@ -665,7 +663,7 @@ namespace Qwack.Models.Risk
 
                     for (var i = 0; i < bumpedRows.Length; i++)
                     {
-                        
+
                         if (computeGamma)
                         {
                             var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
@@ -759,12 +757,12 @@ namespace Qwack.Models.Risk
                             }
                         }
                     }
-                },!(parallelize)).Wait();
+                }, !(parallelize)).Wait();
             }
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
-        public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency=null)
+        public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency = null)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -841,7 +839,7 @@ namespace Qwack.Models.Risk
                             var date = bCurve.Value.PillarDatesForLabel(bCurve.Key);
                             var fwd = bCurve.Value.GetPriceForDate(date);
                             delta *= fwd;
-                            if(reportingCurrency!=null && bCurve.Value.Currency!=reportingCurrency)
+                            if (reportingCurrency != null && bCurve.Value.Currency != reportingCurrency)
                             {
                                 var fxFwd = model.FundingModel.GetFxRate(date, bCurve.Value.Currency, reportingCurrency);
                                 delta *= fxFwd;
@@ -965,7 +963,7 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { AssetId, TradeId });
         }
 
-        public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta=false)
+        public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta = false)
         {
             var bumpSize = 0.0001;
             var cube = new ResultCube();
@@ -1361,7 +1359,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize=0.0001)
+        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize = 0.0001)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1487,7 +1485,7 @@ namespace Qwack.Models.Risk
             //theta
             for (var i = 0; i < pvRowsFwd.Length; i++)
             {
-               
+
                 var theta = (string)cashRows[i].MetaData[tTypeIx] != "Physical" ? pvRowsFwd[i].Value - pvRows[i].Value : 0.0;
 
                 if (theta != 0.0)
@@ -1623,7 +1621,7 @@ namespace Qwack.Models.Risk
                 .Select(x => new KeyValuePair<IInstrument, (double Financing, double Option)>(x, x.Theta(model, fwdValDate, reportingCcy)))
                 .ToArray();
 
-            foreach(var t in thetasByTrade)
+            foreach (var t in thetasByTrade)
             {
                 var finTheta = t.Value.Financing;
                 if (finTheta != 0.0)
@@ -1689,7 +1687,7 @@ namespace Qwack.Models.Risk
             }
             var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
             cube.Initialize(dataTypes);
-            
+
             var pvCube = pvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex(TradeId);

@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Models;
-using Qwack.Paths;
 
 namespace Qwack.Random.Sobol
 {
@@ -11,7 +7,7 @@ namespace Qwack.Random.Sobol
         private double[] _dimensionShifts;
 
         public SobolShiftedPathGenerator(SobolDirectionNumbers dirNumbers, int seed)
-            :base(dirNumbers, seed)
+            : base(dirNumbers, seed)
         {
 
         }

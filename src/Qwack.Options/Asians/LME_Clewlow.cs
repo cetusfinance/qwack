@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Qwack.Dates;
 using System.Linq;
-using static System.Math;
+using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Options.Asians
 {
@@ -39,8 +37,8 @@ namespace Qwack.Options.Asians
             var DeltaT = (nFixed + 2 >= nResets) ?
                 DeltaTPrime :
                 (avgEndDate - resetDates[nFixed + 1]).TotalDays / 365.0 / nFloat;
-            
-            var Ak = knownAverage * nFixed  / nResets;
+
+            var Ak = knownAverage * nFixed / nResets;
             var E5 = 2 * Ak * forward * nFloat / nResets + (Ak * Ak);
 
             var E4 = 1.0;
@@ -53,7 +51,7 @@ namespace Qwack.Options.Asians
 
             var E3 = Pow(forward / nResets, 2) * Exp(sigma * sigma * DeltaTPrime);
             var E2 = E3 * E4 + E5;
-            var E1 = forward * (nResets - nFixed) / nResets  + Ak;
+            var E1 = forward * (nResets - nFixed) / nResets + Ak;
 
             var EA = Ak + forward * nFloat / nResets;
 

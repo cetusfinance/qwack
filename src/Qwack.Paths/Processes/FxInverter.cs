@@ -1,13 +1,6 @@
-using Qwack.Options.VolSurfaces;
-using Qwack.Paths.Features;
-using System;
-using System.Collections.Generic;
 using System.Numerics;
-using Qwack.Math.Extensions;
-using System.Linq;
 using Qwack.Core.Models;
-using Qwack.Serialization;
-using static System.Math;
+using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Processes
 {
@@ -44,7 +37,7 @@ namespace Qwack.Paths.Processes
             {
                 var steps = block.GetStepsForFactor(path, _fxPairIx);
                 var stepsInv = block.GetStepsForFactor(path, _invertedFxPairIx);
-                for(var s=0;s<steps.Length;s++)
+                for (var s = 0; s < steps.Length; s++)
                 {
                     stepsInv[s] = _one / steps[s];
                 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -29,13 +28,13 @@ namespace Qwack.Core.Curves
 
         public Frequency SpotLag { get => BaseCurve.SpotLag; set => throw new NotImplementedException(); }
         public Calendar SpotCalendar { get => BaseCurve.SpotCalendar; set => throw new NotImplementedException(); }
-     
+
         public double GetAveragePriceForDates(DateTime[] dates) => BaseCurve.GetAveragePriceForDates(dates) * ScalingFactor;
 
         public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump) => throw new NotImplementedException();
 
         public double GetPriceForDate(DateTime date) => BaseCurve.GetPriceForDate(date) * ScalingFactor;
-     
+
         public double GetPriceForFixingDate(DateTime date) => BaseCurve.GetPriceForFixingDate(date) * ScalingFactor;
 
         public DateTime PillarDatesForLabel(string label) => BaseCurve.PillarDatesForLabel(label);

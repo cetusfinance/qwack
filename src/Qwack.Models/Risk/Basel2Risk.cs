@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Models.Models;
 using Qwack.Options;
 using Qwack.Options.Asians;
 using Qwack.Transport.BasicTypes;
@@ -16,10 +14,10 @@ namespace Qwack.Models.Risk
 {
     public static class Basel2Risk
     {
-        public static Dictionary<string,double> Delta(IInstrument ins, IAssetFxModel model, Currency repCcy)
+        public static Dictionary<string, double> Delta(IInstrument ins, IAssetFxModel model, Currency repCcy)
         {
             var o = new Dictionary<string, double>();
-            switch(ins)
+            switch (ins)
             {
                 case EuropeanOption eu:
                     if (eu.ExpiryDate < model.BuildDate)
@@ -45,7 +43,7 @@ namespace Qwack.Models.Risk
                     var fxToRep = model.FundingModel.GetFxRate(model.BuildDate, f.Currency, repCcy);
                     var commoDelta = f.Notional * comFwd * fxToRep;
                     o.Add(f.AssetId, commoDelta);
-                    if(fxToRep!=1)
+                    if (fxToRep != 1)
                     {
                         var pair = $"{f.Currency}/{repCcy}";
                         o.Add(pair, commoDelta);
@@ -59,7 +57,7 @@ namespace Qwack.Models.Risk
                     var vol1 = model.GetCompositeVolForStrikeAndDate(aso.AssetId, volDate, aso.Strike, aso.Currency);
                     var tS = model.BuildDate.CalculateYearFraction(aso.AverageStartDate, DayCountBasis.ACT365F);
                     var tE = model.BuildDate.CalculateYearFraction(aso.AverageEndDate, DayCountBasis.ACT365F);
-                    var commoDelta1 = TurnbullWakeman.Delta(comFwd1, comFwd1, vol1, aso.Strike, tS,tE, 0.0, aso.CallPut) * fxToRep1;
+                    var commoDelta1 = TurnbullWakeman.Delta(comFwd1, comFwd1, vol1, aso.Strike, tS, tE, 0.0, aso.CallPut) * fxToRep1;
                     o.Add(aso.AssetId, commoDelta1);
                     if (fxToRep1 != 1)
                     {
@@ -76,7 +74,7 @@ namespace Qwack.Models.Risk
                     var fxToRep2 = model.FundingModel.GetFxRate(model.BuildDate, ass.Currency, repCcy);
                     var commoDelta2 = ass.Notional * comFwd2 * fxToRep2;
 
-                    if(ass.AverageStartDate>model.BuildDate)
+                    if (ass.AverageStartDate > model.BuildDate)
                     {
                         var factor = ass.FixingDates.Count(x => x > model.BuildDate) / ass.FixingDates.Count();
                         commoDelta2 *= factor;

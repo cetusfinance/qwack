@@ -25,7 +25,7 @@ namespace Qwack.Providers.CSV
                 HasHeaderRecord = true,
                 BadDataFound = null,
             };
-            
+
             using var csv = new CsvReader(sr, cfg);
             csv.Context.RegisterClassMap<NYMEXFutureRecordMap>();
             var list = csv.GetRecords<NYMEXFutureRecord>().ToList();

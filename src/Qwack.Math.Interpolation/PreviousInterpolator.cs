@@ -4,9 +4,9 @@ using static System.Math;
 
 namespace Qwack.Math.Interpolation
 {
-    public class PreviousInterpolator:IInterpolator1D
+    public class PreviousInterpolator : IInterpolator1D
     {
-        public Interpolator1DType Type => Interpolator1DType.PreviousValue; 
+        public Interpolator1DType Type => Interpolator1DType.PreviousValue;
 
         const double xBump = 1e-10;
 

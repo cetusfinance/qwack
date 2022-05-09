@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Qwack.Core.Basic;
 using Qwack.Core.Basic.Capital;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -59,31 +54,31 @@ namespace Qwack.Core.Instruments.Asset
         private double T(IAssetFxModel model) => model.BuildDate.CalculateYearFraction(ExpiryDate, DayCountBasis.Act365F);
 
         public new TO_Instrument ToTransportObject() => new()
-           {
-               AssetInstrumentType = AssetInstrumentType.EuropeanOption,
-               EuropeanOption = new TO_EuropeanOption
-               {
-                   TradeId = TradeId,
-                   Notional = Notional,
-                   Direction = Direction,
-                   ExpiryDate = ExpiryDate,
-                   FixingCalendar = FixingCalendar?.Name,
-                   PaymentCalendar = PaymentCalendar?.Name,
-                   SpotLag = SpotLag.ToString(),
-                   PaymentLag = PaymentLag.ToString(),
-                   Strike = Strike,
-                   AssetId = AssetId,
-                   PaymentCurrency = PaymentCurrency,
-                   FxFixingId = FxFixingId,
-                   DiscountCurve = DiscountCurve,
-                   PaymentDate = PaymentDate,
-                   Counterparty = Counterparty,
-                   FxConversionType = FxConversionType,
-                   HedgingSet = HedgingSet,
-                   PortfolioName = PortfolioName,
-                   CallPut = CallPut,
-                   MetaData = new(MetaData)
-               }
-           };
+        {
+            AssetInstrumentType = AssetInstrumentType.EuropeanOption,
+            EuropeanOption = new TO_EuropeanOption
+            {
+                TradeId = TradeId,
+                Notional = Notional,
+                Direction = Direction,
+                ExpiryDate = ExpiryDate,
+                FixingCalendar = FixingCalendar?.Name,
+                PaymentCalendar = PaymentCalendar?.Name,
+                SpotLag = SpotLag.ToString(),
+                PaymentLag = PaymentLag.ToString(),
+                Strike = Strike,
+                AssetId = AssetId,
+                PaymentCurrency = PaymentCurrency,
+                FxFixingId = FxFixingId,
+                DiscountCurve = DiscountCurve,
+                PaymentDate = PaymentDate,
+                Counterparty = Counterparty,
+                FxConversionType = FxConversionType,
+                HedgingSet = HedgingSet,
+                PortfolioName = PortfolioName,
+                CallPut = CallPut,
+                MetaData = new(MetaData)
+            }
+        };
     }
 }

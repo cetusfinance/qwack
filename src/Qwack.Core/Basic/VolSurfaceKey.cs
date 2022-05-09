@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Core.Basic
@@ -11,19 +9,19 @@ namespace Qwack.Core.Basic
         const char MagicChar = '¬';
 
         public VolSurfaceKey() { }
-        public VolSurfaceKey(string assetId, Currency currency):base()
+        public VolSurfaceKey(string assetId, Currency currency) : base()
         {
             AssetId = assetId;
             Currency = currency;
         }
 
-        public VolSurfaceKey(TO_VolSurfaceKey transportObject, ICurrencyProvider currencyProvider) 
+        public VolSurfaceKey(TO_VolSurfaceKey transportObject, ICurrencyProvider currencyProvider)
             : this(transportObject.AssetId, currencyProvider.GetCurrencySafe(transportObject.Currency))
-        { 
+        {
         }
 
         public VolSurfaceKey(string keyAsString, ICurrencyProvider currencyProvider)
-            : this(keyAsString.Split(MagicChar)[0], keyAsString.Split(MagicChar).Length>1?currencyProvider.GetCurrencySafe(keyAsString.Split(MagicChar)[1]):null)
+            : this(keyAsString.Split(MagicChar)[0], keyAsString.Split(MagicChar).Length > 1 ? currencyProvider.GetCurrencySafe(keyAsString.Split(MagicChar)[1]) : null)
         {
         }
 

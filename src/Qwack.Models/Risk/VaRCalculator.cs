@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Core.Basic;
@@ -13,7 +12,6 @@ using Qwack.Math;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Utils.Parallel;
-using static Qwack.Math.LinearRegression;
 
 namespace Qwack.Models.Risk
 {
@@ -43,7 +41,7 @@ namespace Qwack.Models.Risk
                 IsRelativeBump = true,
                 AssetId = assetId,
                 Bumps = bumps,
-            }; 
+            };
         }
 
         public void AddSpotAbsoluteScenarioBumps(string assetId, Dictionary<DateTime, double> bumps)
@@ -54,7 +52,7 @@ namespace Qwack.Models.Risk
                 IsRelativeBump = false,
                 AssetId = assetId,
                 Bumps = bumps,
-            }; 
+            };
         }
 
         public void AddSpotFxRelativeScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
@@ -125,7 +123,7 @@ namespace Qwack.Models.Risk
 
         public void CalculateModels()
         {
-            var allAssetIds = _portfolio.AssetIds().Where(x=>!(x.Length==7 && x[3]=='/')).ToArray();
+            var allAssetIds = _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
             var allDates = _spotTypeBumps.Any() ? _spotTypeBumps.First().Value.Bumps.Keys.ToList() : _curveTypeBumps.First().Value.Bumps.Keys.ToList();
             foreach (var kv in _spotTypeBumps)
             {
@@ -248,17 +246,17 @@ namespace Qwack.Models.Risk
         {
             var basePv = _basePvCube.SumOfAllRows;
             var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv + referenceNav);
-            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).OrderBy(x=>x).ToArray();
+            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).OrderBy(x => x).ToArray();
             var pfReturns = new List<double>();
             var benchmarkReturns = new List<double>();
-            for(var t=1; t<intersectingDates.Length; t++)
+            for (var t = 1; t < intersectingDates.Length; t++)
             {
-                var y = intersectingDates[t-1];
+                var y = intersectingDates[t - 1];
                 var d = intersectingDates[t];
                 pfReturns.Add(System.Math.Log(results[d] / results[y]));
                 benchmarkReturns.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
             }
-            
+
             var lrResult = LinearRegression.LinearRegressionVector(benchmarkReturns.ToArray(), pfReturns.ToArray());
 
             return new BetaAnalysisResult
@@ -283,13 +281,14 @@ namespace Qwack.Models.Risk
 
         private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();
         private ICube _basePvCube;
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize=true)
+        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
             _basePvCube = pf.PV(_model, ccy);
             var basePv = _basePvCube.SumOfAllRows;
             _resultsCache.Clear();
             var results = new ConcurrentDictionary<DateTime, double>();
-            var varFunc = new Action<DateTime, IAssetFxModel>((d, m) => {
+            var varFunc = new Action<DateTime, IAssetFxModel>((d, m) =>
+            {
                 var cube = pf.PV(m, ccy, false);
                 var scenarioPv = cube.SumOfAllRows;
                 _resultsCache[d] = cube;

@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static System.Math;
-using Qwack.Math;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math.Interpolation
@@ -39,7 +34,7 @@ namespace Qwack.Math.Interpolation
             _maxX = _x[x.Length - 1];
             FitWeights();
         }
-      
+
         private void FitWeights()
         {
             Func<double[], double[]> errFunc = (weights =>
@@ -62,7 +57,7 @@ namespace Qwack.Math.Interpolation
         {
             var output = 0.0;
             var Q = 0.0;
-            
+
             for (var i = 0; i < Xmeans.Length; i++)
             {
                 var K = Distributions.Gaussian.GKern(X, Xmeans[i], Bandwidth);

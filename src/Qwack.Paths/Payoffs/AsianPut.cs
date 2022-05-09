@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 using Qwack.Core.Models;
 using Qwack.Paths.Features;
 
@@ -33,7 +32,7 @@ namespace Qwack.Paths.Payoffs
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_asianDates.Count];
-            for(var i = 0; i < _asianDates.Count; i++)
+            for (var i = 0; i < _asianDates.Count; i++)
             {
                 _dateIndexes[i] = dates.GetDateIndex(_asianDates[i]);
             }
@@ -46,11 +45,11 @@ namespace Qwack.Paths.Payoffs
             {
                 var steps = block.GetStepsForFactor(path, _assetIndex);
                 var finalValues = new Vector<double>(0.0);
-                for(var i = 0; i< _dateIndexes.Length;i++)
+                for (var i = 0; i < _dateIndexes.Length; i++)
                 {
                     finalValues += steps[_dateIndexes[i]];
                 }
-                finalValues = (new Vector<double>(_strike)) - (finalValues /  new Vector<double>(_dateIndexes.Length));
+                finalValues = (new Vector<double>(_strike)) - (finalValues / new Vector<double>(_dateIndexes.Length));
                 finalValues = Vector.Max(new Vector<double>(0), finalValues);
                 _results.Add(finalValues);
             }

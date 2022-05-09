@@ -39,7 +39,7 @@ namespace Qwack.Paths.Payoffs
             _assetIndex = dims.GetDimension(_assetName);
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
-            
+
             var obsStart = dates.GetDateIndex(_obsStart);
             var obsEnd = dates.GetDateIndex(_obsEnd);
             _dateIndexes = Enumerable.Range(obsStart, (obsEnd - obsStart) + 1).ToArray();
@@ -67,7 +67,7 @@ namespace Qwack.Paths.Payoffs
                         minValue = Vector.Min(steps[_dateIndexes[i]], minValue);
                     }
                     barrierHit = Vector.ConvertToDouble(Vector.LessThan(minValue, _barrierVec));
-           
+
                     if (_barrierType == BarrierType.KI)
                     {
                         var payoff = -barrierHit * _notional;
@@ -96,7 +96,7 @@ namespace Qwack.Paths.Payoffs
                         maxValue = Vector.Max(steps[_dateIndexes[i]], maxValue);
                     }
                     barrierHit = Vector.ConvertToDouble(Vector.GreaterThan(maxValue, _barrierVec));
-                 
+
                     if (_barrierType == BarrierType.KI)
                     {
                         var payoff = barrierHit * _notional;

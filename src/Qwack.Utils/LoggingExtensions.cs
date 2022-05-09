@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -11,9 +8,9 @@ namespace Qwack.Utils
     {
         public static IServiceCollection AddQwackLogging(this IServiceCollection serviceCollection)
         {
-            
+
             var logPath = Environment.GetEnvironmentVariable("QWACKLOGPATH");
-            if(!string.IsNullOrEmpty(logPath))
+            if (!string.IsNullOrEmpty(logPath))
             {
                 serviceCollection.AddLogging(lb => lb.AddFile(lo =>
                 {

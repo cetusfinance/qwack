@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
-using Qwack.Math.Interpolation;
 using Qwack.Options.Calibrators;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
@@ -46,7 +44,7 @@ namespace Qwack.Options.VolSurfaces
                     strikes[strikes.Length - 1 - s] = 1.0 - wingDeltas[wingDeltas.Length - 1 - s];
                 }
 
-                for (var t =0;t<expiries.Length;t++)
+                for (var t = 0; t < expiries.Length; t++)
                 {
                     vols[t] = Enumerable.Repeat(ATMVols[t], strikes.Length).ToArray();
                 }
@@ -139,13 +137,13 @@ namespace Qwack.Options.VolSurfaces
         }
 
         public RiskyFlySurface(TO_RiskyFlySurface transportObject, ICurrencyProvider currencyProvider)
-            :this(transportObject.OriginDate,transportObject.ATMs, transportObject.Expiries, transportObject.WingDeltas,transportObject.Riskies,
-                 transportObject.Flies,transportObject.Forwards, transportObject.WingQuoteType, transportObject.AtmVolType, transportObject.StrikeInterpolatorType, 
+            : this(transportObject.OriginDate, transportObject.ATMs, transportObject.Expiries, transportObject.WingDeltas, transportObject.Riskies,
+                 transportObject.Flies, transportObject.Forwards, transportObject.WingQuoteType, transportObject.AtmVolType, transportObject.StrikeInterpolatorType,
                  transportObject.TimeInterpolatorType, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             AssetId = transportObject.AssetId;
-            Name = transportObject.Name;  
+            Name = transportObject.Name;
         }
 
         private int LastIx(DateTime? LastSensitivityDate)
@@ -187,7 +185,7 @@ namespace Qwack.Options.VolSurfaces
             for (var i = 0; i < lastExpiry; i++)
             {
                 var volsBumped = (double[][])Riskies.Clone();
-                if(highDeltaFirst)
+                if (highDeltaFirst)
                 {
                     var ratios = volsBumped[i].Select(x => x / volsBumped[i][0]).ToArray();
                     volsBumped[i] = ratios.Select(r => (volsBumped[i][0] + bumpSize) * r).ToArray();
@@ -197,7 +195,7 @@ namespace Qwack.Options.VolSurfaces
                     var ratios = volsBumped[i].Select(x => x / volsBumped[i].Last()).ToArray();
                     volsBumped[i] = ratios.Select(r => (volsBumped[i].Last() + bumpSize) * r).ToArray();
                 }
-               
+
                 o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, ATMs, Expiries, WingDeltas, volsBumped, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
             }
 
@@ -396,14 +394,14 @@ namespace Qwack.Options.VolSurfaces
             //headers
             o[0, 0] = "Expiry";
             o[0, 1] = "ATM";
-            for(var i=0;i<WingDeltas.Length;i++)
+            for (var i = 0; i < WingDeltas.Length; i++)
             {
                 o[0, 2 + i] = "RR~" + WingDeltas[i];
                 o[0, 2 + WingDeltas.Length + i] = "BF~" + WingDeltas[i];
             }
-            
+
             //data
-            for(var i=0;i<Expiries.Length;i++)
+            for (var i = 0; i < Expiries.Length; i++)
             {
                 o[1 + i, 0] = Expiries[i];
                 o[1 + i, 1] = ATMs[i];
@@ -424,7 +422,7 @@ namespace Qwack.Options.VolSurfaces
 
             var newMaturities = Expiries.Where(x => x > newOrigin).ToArray();
             var newVols = new double[newMaturities.Length][];
-            var newATMs = newMaturities.Select(m => rollUpATM ? GetForwardATMVol(newOrigin, m) : GetVolForDeltaStrike(0.5,m,1.0)).ToArray();
+            var newATMs = newMaturities.Select(m => rollUpATM ? GetForwardATMVol(newOrigin, m) : GetVolForDeltaStrike(0.5, m, 1.0)).ToArray();
             //var newATMs = new double[newMaturities.Length];
             var newRRs = new double[newMaturities.Length][];
             var newBFs = new double[newMaturities.Length][];

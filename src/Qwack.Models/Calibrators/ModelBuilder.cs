@@ -1,22 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO.Compression;
-using System.Data;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using Newtonsoft.Json;
-using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
+using Qwack.Core.Instruments.Funding;
+using Qwack.Dates;
+using Qwack.Futures;
+using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Funding;
-using Qwack.Core.Models;
-using Qwack.Core.Curves;
-using Qwack.Futures;
-using Qwack.Dates;
-using System.Linq;
-using Qwack.Models;
 using Qwack.Transport.TransportObjects.MarketData.Models;
-using Qwack.Options.VolSurfaces;
 
 namespace Qwack.Models.Calibrators
 {
@@ -81,7 +77,7 @@ namespace Qwack.Models.Calibrators
                 {
                     throw new Exception($"Error building NYMEX curve for {c.QwackCode}");
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(c.NymexCodeOption))
                 {
                     try
@@ -147,7 +143,7 @@ namespace Qwack.Models.Calibrators
                 }
             }
 
-            foreach(var c in spec.FundingCurves)
+            foreach (var c in spec.FundingCurves)
             {
                 var baseCurve = irCurves[c.BaseCurve].Clone();
                 baseCurve.SolveStage = -1;

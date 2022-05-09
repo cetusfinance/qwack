@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Converters;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 
 namespace Qwack.Providers.Json
 {
-    public class CurrencyConverter: CustomCreationConverter<Currency>
+    public class CurrencyConverter : CustomCreationConverter<Currency>
     {
         private readonly ICalendarProvider _calendarProvider;
 

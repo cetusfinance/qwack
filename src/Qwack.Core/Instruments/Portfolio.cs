@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
@@ -57,7 +56,7 @@ namespace Qwack.Core.Instruments
             new()
             {
                 PortfolioName = PortfolioName,
-                Instruments = Instruments.Select(x=>x.GetTransportObject()).ToList()
+                Instruments = Instruments.Select(x => x.GetTransportObject()).ToList()
             };
     }
 
@@ -71,7 +70,7 @@ namespace Qwack.Core.Instruments
             var assetTrades = portfolio.Instruments
                 .Where(x => x is IAssetInstrument);
 
-            if(!assetTrades.Any())
+            if (!assetTrades.Any())
                 return new string[0];
 
             return assetTrades.SelectMany(x => ((IAssetInstrument)x).AssetIds).Distinct().ToArray();
@@ -110,9 +109,9 @@ namespace Qwack.Core.Instruments
 
             var o = new List<string>();
 
-            if(fxTrades.Any())
+            if (fxTrades.Any())
             {
-                o.AddRange(fxTrades.Select(x => (x is CashWrapper cw)?(cw.UnderlyingInstrument as FxForward).Pair:((FxForward)x).Pair));
+                o.AddRange(fxTrades.Select(x => (x is CashWrapper cw) ? (cw.UnderlyingInstrument as FxForward).Pair : ((FxForward)x).Pair));
             }
             if (fxOptionTrades.Any())
             {
@@ -120,7 +119,7 @@ namespace Qwack.Core.Instruments
             }
             if (assetTrades.Any())
             {
-                var compoTrades = assetTrades.Select(x=>x as IAssetInstrument)
+                var compoTrades = assetTrades.Select(x => x as IAssetInstrument)
                     .Where(x => x.FxType(model) != FxConversionType.None);
                 var assetIsFxTrades = assetTrades.Select(x => x as IAssetInstrument)
                     .Where(x => IsFx(x.AssetIds.First()));
@@ -138,12 +137,12 @@ namespace Qwack.Core.Instruments
         }
 
         private static string CpStr(this OptionType callPut) => callPut == OptionType.C ? "Call" : "Put";
-        
+
         public static object[,] Details(this Portfolio pf)
         {
             var nInstrumnets = pf.Instruments.Count;
             var o = new object[nInstrumnets + 1, 11];
-            
+
             //column headers
             o[0, 0] = "TradeId";
             o[0, 1] = "Type";
@@ -157,7 +156,7 @@ namespace Qwack.Core.Instruments
             o[0, 9] = "Call/Put";
             o[0, 10] = "Counterparty";
 
-            for(var i=0;i<nInstrumnets;i++)
+            for (var i = 0; i < nInstrumnets; i++)
             {
                 var ins = pf.Instruments[i];
                 if (ins is CashWrapper cw) ins = cw.UnderlyingInstrument;
@@ -199,7 +198,7 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 7] = asws.Swaplets.First().Strike;
                         o[i + 1, 8] = asws.Swaplets.Sum(x => x.Notional);
                         o[i + 1, 9] = string.Empty;
-                        o[i + 1, 10] = asws.Counterparty??string.Empty;
+                        o[i + 1, 10] = asws.Counterparty ?? string.Empty;
                         break;
                     case EuropeanOption eo:
                         o[i + 1, 1] = "EuroOption";
@@ -210,7 +209,7 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 6] = eo.PaymentDate;
                         o[i + 1, 7] = eo.Strike;
                         o[i + 1, 8] = eo.Notional;
-                        o[i + 1, 9] = eo.CallPut.CpStr(); 
+                        o[i + 1, 9] = eo.CallPut.CpStr();
                         o[i + 1, 10] = eo.Counterparty ?? string.Empty;
                         break;
                     case FuturesOption fo:
@@ -277,7 +276,7 @@ namespace Qwack.Core.Instruments
                         o[i + 1, 1] = "LoanDepoFloat";
                         o[i + 1, 2] = lf.Currency.Ccy;
                         o[i + 1, 3] = lf.Currency.Ccy;
-                        o[i + 1, 4] = lf.LoanDepoSchedule.Flows.Min(x=>x.AccrualPeriodStart);
+                        o[i + 1, 4] = lf.LoanDepoSchedule.Flows.Min(x => x.AccrualPeriodStart);
                         o[i + 1, 5] = lf.LastSensitivityDate;
                         o[i + 1, 6] = lf.LastSensitivityDate;
                         o[i + 1, 7] = lf.LoanDepoSchedule.Flows.Average(x => x.FixedRateOrMargin);
@@ -335,9 +334,9 @@ namespace Qwack.Core.Instruments
 
             var endIds = end.Instruments.Select(x => x.TradeId).ToList();
             var removedTradesIns = start.Instruments
-                .Where(i => 
-                !endIds.Contains(i.TradeId) && 
-                ((i is not AsianSwap asw && i.LastSensitivityDate > endDate )|| (i is CashBalance cb && cb.PayDate != endDate) || (i is AsianSwap aswp && aswp.PaymentDate > endDate)));
+                .Where(i =>
+                !endIds.Contains(i.TradeId) &&
+                ((i is not AsianSwap asw && i.LastSensitivityDate > endDate) || (i is CashBalance cb && cb.PayDate != endDate) || (i is AsianSwap aswp && aswp.PaymentDate > endDate)));
             var removedTrades = new Portfolio { Instruments = removedTradesIns.ToList() };
 
             var commonIds = startIds.Intersect(endIds).ToList();
@@ -345,7 +344,7 @@ namespace Qwack.Core.Instruments
             var ammendedTradesStart = new Portfolio { Instruments = new List<IInstrument>() };
             var ammendedTradesEnd = new Portfolio { Instruments = new List<IInstrument>() };
 
-            foreach(var id in commonIds)
+            foreach (var id in commonIds)
             {
                 var startIns = start.Instruments.Where(x => x.TradeId == id).First();
                 var endIns = end.Instruments.Where(x => x.TradeId == id).First();
@@ -442,16 +441,16 @@ namespace Qwack.Core.Instruments
             var activeHedgeSets = activeHedgeSetNames.ToDictionary(x => x, x => addOnByAsset.Where(y => AssetIdToHedgingSetMap[y.Key] == x));
             var addOnByHedgeSet = new Dictionary<string, double>();
             var correl = 0.4;
-            foreach(var hs in activeHedgeSets)
+            foreach (var hs in activeHedgeSets)
             {
                 addOnByHedgeSet[hs.Key] = 0.0;
                 var term1 = Pow(correl * hs.Value.Sum(x => x.Value), 2.0);
-                var term2 = (1.0-correl*correl) * hs.Value.Sum(x => x.Value* x.Value);
+                var term2 = (1.0 - correl * correl) * hs.Value.Sum(x => x.Value * x.Value);
                 addOnByHedgeSet[hs.Key] = Sqrt(term1 + term2);
             }
 
-            var addOn = addOnByHedgeSet.Sum(x=>x.Value);
-            
+            var addOn = addOnByHedgeSet.Sum(x => x.Value);
+
             return addOn;
         }
 
@@ -464,19 +463,19 @@ namespace Qwack.Core.Instruments
             return alpha * (rc + pfe);
         }
 
-        public static Portfolio RollWithLifecycle(this Portfolio pf, DateTime rollfromDate, DateTime rollToDate, bool cashOnDayAlreadyPaid=false)
+        public static Portfolio RollWithLifecycle(this Portfolio pf, DateTime rollfromDate, DateTime rollToDate, bool cashOnDayAlreadyPaid = false)
         {
             var o = new Portfolio
             {
                 PortfolioName = pf.PortfolioName,
                 Instruments = new List<IInstrument>()
             };
-            foreach(var i in pf.Instruments)
+            foreach (var i in pf.Instruments)
             {
-                switch(i)
+                switch (i)
                 {
                     case FxForward fxf:
-                        if(fxf.DeliveryDate<rollToDate && fxf.DeliveryDate >= rollfromDate)
+                        if (fxf.DeliveryDate < rollToDate && fxf.DeliveryDate >= rollfromDate)
                         {
                             o.Instruments.Add(new CashBalance(fxf.DomesticCCY, fxf.DomesticQuantity) { TradeId = i.TradeId + "d" });
                             o.Instruments.Add(new CashBalance(fxf.ForeignCCY, -fxf.DomesticQuantity * fxf.Strike) { TradeId = i.TradeId + "f" });
@@ -505,7 +504,8 @@ namespace Qwack.Core.Instruments
                                 {
                                     wrapper.CashBalances.Add(new CashBalance(wfxf.DomesticCCY, wfxf.DomesticQuantity) { TradeId = i.TradeId + "d" });
                                     wrapper.CashBalances.Add(new CashBalance(wfxf.ForeignCCY, -wfxf.DomesticQuantity * wfxf.Strike) { TradeId = i.TradeId + "f" });
-                                }                                break;
+                                }
+                                break;
                             case FixedRateLoanDeposit wl:
                                 if (wl.StartDate < rollToDate && ((!cashOnDayAlreadyPaid && wl.StartDate >= rollfromDate) || (cashOnDayAlreadyPaid && wl.StartDate > rollfromDate)))
                                 {
@@ -574,7 +574,7 @@ namespace Qwack.Core.Instruments
             return m;
         }
 
-        public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore) 
+        public static Portfolio FilterOnSettleDate(this Portfolio pf, DateTime filterOutOnOrBefore)
             => new()
             { Instruments = pf.Instruments.Where(x => x.LastSensitivityDate > filterOutOnOrBefore || (x is CashBalance)).ToList() };
 
@@ -595,10 +595,10 @@ namespace Qwack.Core.Instruments
             }
             else if (frequency == DatePeriodType.Week)
             {
-                var nWeeks = (int)((finalDate - anchorDate).TotalDays / 7) + 1 ;
+                var nWeeks = (int)((finalDate - anchorDate).TotalDays / 7) + 1;
                 if (nWeeks > 0)
                     gridDates = Enumerable.Range(1, nWeeks)
-                        .Select(x => anchorDate.AddDays(x*7))
+                        .Select(x => anchorDate.AddDays(x * 7))
                         .ToList();
             }
             else
@@ -617,7 +617,7 @@ namespace Qwack.Core.Instruments
             };
             foreach (var d in combinedDates)
             {
-                if(d.Subtract(o.Last()).TotalDays>removeDateWhenCloserThan)
+                if (d.Subtract(o.Last()).TotalDays > removeDateWhenCloserThan)
                 {
                     o.Add(d);
                 }

@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
-using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
@@ -15,17 +11,17 @@ namespace Qwack.Core.Instruments.Funding
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public CashBalance() { }
 
-        public CashBalance(Currency currency, double notional, DateTime? payDate = null):base()
+        public CashBalance(Currency currency, double notional, DateTime? payDate = null) : base()
         {
             Notional = notional;
             Currency = currency;
             PayDate = payDate ?? DateTime.MinValue;
         }
-        
+
         public double Notional { get; set; }
         public string PortfolioName { get; set; }
-        public Currency Currency { get; set; }        
-  
+        public Currency Currency { get; set; }
+
         public string SolveCurve { get; set; }
         public string TradeId { get; set; }
         public string Counterparty { get; set; }

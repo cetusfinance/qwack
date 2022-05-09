@@ -1,25 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Qwack.Options.VolSurfaces;
-using Qwack.Core.Basic;
-using static System.Math;
 using System.Linq;
-using Qwack.Utils.Parallel;
-using Qwack.Core.Models;
-using Qwack.Math.Extensions;
+using Qwack.Core.Basic;
 using Qwack.Core.Basic.Correlation;
+using Qwack.Core.Models;
+using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
+using static System.Math;
 
 namespace Qwack.Options
 {
     public static class LocalVol
     {
-        public static double[][] ComputeLocalVarianceOnGrid(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double,double> forwardFunc)
+        public static double[][] ComputeLocalVarianceOnGrid(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double, double> forwardFunc)
         {
             var numberOfTimesteps = timeSteps.Length;
-            var deltaK = 0.001 * forwardFunc(timeSteps[0]);     
-            var lvGrid = new double[numberOfTimesteps-1][];
+            var deltaK = 0.001 * forwardFunc(timeSteps[0]);
+            var lvGrid = new double[numberOfTimesteps - 1][];
 
             var Ss = new double[numberOfTimesteps];
             for (var i = 0; i < Ss.Length; i++)
@@ -27,10 +24,10 @@ namespace Qwack.Options
                 Ss[i] = forwardFunc(timeSteps[i]);
             }
 
-           
-            for (var it = 1; it < numberOfTimesteps ; it++)
+
+            for (var it = 1; it < numberOfTimesteps; it++)
             {
-                var numberOfStrikes = strikes[it-1].Length;
+                var numberOfStrikes = strikes[it - 1].Length;
                 lvGrid[it - 1] = new double[numberOfStrikes];
 
                 double K, V, S, Td, dwdT, localVariance, TdSq, T, T1;
@@ -41,7 +38,7 @@ namespace Qwack.Options
                 T1 = timeSteps[it - 1];
                 Td = T - T1;
                 TdSq = Sqrt(Td);
-                S = Ss[it]; 
+                S = Ss[it];
                 St = Ss[it - 1];
                 var fwd = forwardFunc(T);
 
@@ -127,7 +124,7 @@ namespace Qwack.Options
                 {
                     var K = strikes[it][0];
                     var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
-                    lvGrid[it - 1][0] = V*V;
+                    lvGrid[it - 1][0] = V * V;
                 }
             }//, false).Wait();
 
@@ -142,7 +139,7 @@ namespace Qwack.Options
             for (var it = 0; it < times.Length; it++)
             {
                 o.Add(new double[matrix.LabelsX.Length][]);
-                for(var ix=0; ix < matrix.LabelsX.Length; ix++)
+                for (var ix = 0; ix < matrix.LabelsX.Length; ix++)
                 {
                     o[it][ix] = new double[matrix.LabelsY.Length];
                 }
@@ -164,7 +161,7 @@ namespace Qwack.Options
                         var volX = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(0, t);
                         var volY = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(0, t);
                         var termVar = (volX * volX + volY * volY + 2 * termCorrel * volX * volY) * t;
-                        var incrementalVar = (termVar - lastVarBasket)/dt;
+                        var incrementalVar = (termVar - lastVarBasket) / dt;
                         var volXfwd = ((IATMVolSurface)model.GetVolSurface(labelX)).GetForwardATMVol(tLast, t);
                         var volYfwd = ((IATMVolSurface)model.GetVolSurface(labelY)).GetForwardATMVol(tLast, t);
                         var localCorrel = (incrementalVar - volXfwd * volXfwd - volYfwd * volYfwd) / (2 * volXfwd * volYfwd);
@@ -185,7 +182,7 @@ namespace Qwack.Options
 
             for (var it = 0; it < times.Length; it++)
             {
-                o.Add(new double[matrix.LabelsX.Length][]);  
+                o.Add(new double[matrix.LabelsX.Length][]);
             }
 
             for (var ix = 0; ix < matrix.LabelsX.Length; ix++)

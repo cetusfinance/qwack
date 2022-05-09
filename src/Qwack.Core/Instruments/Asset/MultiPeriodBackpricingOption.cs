@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -21,7 +19,7 @@ namespace Qwack.Core.Instruments.Asset
         public double Notional { get; set; }
         public TradeDirection Direction { get; set; }
 
-        public Tuple<DateTime,DateTime>[] PeriodDates { get; set; }
+        public Tuple<DateTime, DateTime>[] PeriodDates { get; set; }
         public DateTime DecisionDate { get; set; }
         public DateTime SettlementDate { get; set; }
         public List<DateTime[]> FixingDates { get; set; }
@@ -59,9 +57,9 @@ namespace Qwack.Core.Instruments.Asset
 
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
         public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.Min(x=>x.Min())?
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.Min(x => x.Min()) ?
            new Dictionary<string, List<DateTime>>() :
-           new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.SelectMany(x=>x).Where(d => d < valDate).ToList() } };
+           new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.SelectMany(x => x).Where(d => d < valDate).ToList() } };
 
 
         public IAssetInstrument Clone() => new MultiPeriodBackpricingOption
@@ -92,6 +90,6 @@ namespace Qwack.Core.Instruments.Asset
             SettlementDate = SettlementDate
         };
 
-        public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();    
+        public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
     }
 }

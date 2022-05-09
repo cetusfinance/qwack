@@ -618,6 +618,36 @@ namespace Qwack.Math
             return maxDD;
         }
 
+        public static double MaxDD(this IEnumerable<double> x, int indexSince)
+        {
+            var maxDD = 0.0;
+            var peakPrice = double.MinValue;
+            var ix = 0;
+            foreach (var p in x)
+            {
+                peakPrice = Max(peakPrice, p);
+                ix++;
+                if (ix > indexSince)
+                    maxDD = Min(maxDD, p / peakPrice - 1.0);
+            }
+            return maxDD;
+        }
+
+        public static decimal MaxDD(this IEnumerable<decimal> x, int indexSince)
+        {
+            var maxDD = 0.0M;
+            var peakPrice = decimal.MinValue;
+            var ix = 0;
+            foreach (var p in x)
+            {
+                peakPrice = Max(peakPrice, p);
+                ix++;
+                if(ix>indexSince)
+                    maxDD = Min(maxDD, p / peakPrice - 1.0M);
+            }
+            return maxDD;
+        }
+
         public static double FisherTransform(double correl, double conf, double sampleSize, bool isBid)
         {
             var mean = 0.5 * Log((1 + correl) / (1 - correl));

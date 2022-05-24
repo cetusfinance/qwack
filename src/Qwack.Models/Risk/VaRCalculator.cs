@@ -242,11 +242,14 @@ namespace Qwack.Models.Risk
             return ciResults.Select(x => x.Value - basePvForSet).ToArray();
         }
 
-        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices)
+        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null)
         {
+            if (!earliestDate.HasValue)
+                earliestDate = DateTime.MinValue;
+
             var basePv = _basePvCube.SumOfAllRows;
             var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv + referenceNav);
-            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).OrderBy(x => x).ToArray();
+            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).Where(x => x > earliestDate).OrderBy(x => x).ToArray();
             var pfReturns = new List<double>();
             var benchmarkReturns = new List<double>();
             for (var t = 1; t < intersectingDates.Length; t++)

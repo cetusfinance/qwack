@@ -16,13 +16,13 @@ namespace Qwack.Math
                );
 
         public static double PriceFromYTC(double couponRate, double callPrice, double tCall, double ytc) =>
-            couponRate / 2 * ((1 - System.Math.Pow(1 + ytc / 2, -2 * tCall)) / (ytc / 2)) + System.Math.Pow(callPrice / (1 + ytc / 2), 2 * tCall);
+            couponRate / 2 * ((1 - System.Math.Pow(1 + ytc / 2, -2 * tCall)) / (ytc / 2)) + callPrice / System.Math.Pow( (1 + ytc / 2), 2 * tCall);
 
         public static double YtcFromPrice(double couponRate, double callPrice, double tCall, double cleanPrice)
         {
             var solverFn = new Func<double, double>(ytc =>
             {
-                return PriceFromYTC(couponRate, callPrice, tCall, ytc);
+                return PriceFromYTC(couponRate, callPrice, tCall, ytc) - cleanPrice;
             });
 
             return Solvers.Brent.BrentsMethodSolve(solverFn, 1e-6, 1, 1e-6);

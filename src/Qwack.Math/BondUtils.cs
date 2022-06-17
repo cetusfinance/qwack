@@ -15,6 +15,10 @@ namespace Qwack.Math
                 YieldToMaturity(couponRate, callPrice, cleanPrice, tCall)
                );
 
+        public static double PriceFromYtm(double couponRate, double faceValue, double ytm, double t)
+            => (couponRate * 2 + faceValue * (2 / t - ytm)) / (ytm + 2 / t);
+
+
         public static double PriceFromYTC(double couponRate, double callPrice, double tCall, double ytc) =>
             couponRate / 2 * ((1 - System.Math.Pow(1 + ytc / 2, -2 * tCall)) / (ytc / 2)) + callPrice / System.Math.Pow( (1 + ytc / 2), 2 * tCall);
 
@@ -26,6 +30,26 @@ namespace Qwack.Math
             });
 
             return Solvers.Brent.BrentsMethodSolve(solverFn, 1e-6, 1, 1e-6);
+        }
+
+        public static double MacaulayDuration (double couponRate, double faceValue, double ytm, double periodsPerYear, double tMaturity, double tNext, double cleanPrice)
+        {
+            var nPeriods = (tMaturity-tNext) * periodsPerYear;
+            var couponFlow = couponRate * faceValue / periodsPerYear;
+            var divisor = 1 + ytm / periodsPerYear;
+            var sum = 0.0;
+
+            for(var i = 0; i <= nPeriods; i++)
+            {
+                var df = System.Math.Pow(divisor, i + 1);
+                var rowFlow = couponFlow / df * (tNext + i / periodsPerYear) / cleanPrice;
+                if (i == nPeriods)
+                {
+                    rowFlow += faceValue / df * (tNext + i / periodsPerYear) / cleanPrice;
+                }
+                sum += rowFlow;
+            }
+            return sum;
         }
     }
 }

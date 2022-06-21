@@ -124,15 +124,33 @@ namespace Qwack.Models.Risk
         public void CalculateModels()
         {
             var allAssetIds = _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
-            var allDates = _spotTypeBumps.Any() ? _spotTypeBumps.First().Value.Bumps.Keys.ToList() : _curveTypeBumps.First().Value.Bumps.Keys.ToList();
-            foreach (var kv in _spotTypeBumps)
+            var allDatesSet = new HashSet<DateTime>();
+
+            if (_spotTypeBumps.Any())
             {
-                allDates = allDates.Intersect(kv.Value.Bumps.Keys).ToList();
+                foreach(var d in _spotTypeBumps.First().Value.Bumps.Keys)
+                {
+                    allDatesSet.Add(d);
+                }
             }
-            foreach (var kv in _curveTypeBumps)
+
+            if (_curveTypeBumps.Any())
             {
-                allDates = allDates.Intersect(kv.Value.Bumps.Keys).ToList();
+                foreach (var d in _curveTypeBumps.First().Value.Bumps.Keys)
+                {
+                    allDatesSet.Add(d);
+                }
             }
+
+            if (_spotFxTypeBumps.Any())
+            {
+                foreach (var d in _spotFxTypeBumps.First().Value.Bumps.Keys)
+                {
+                    allDatesSet.Add(d);
+                }
+            }
+
+            var allDates = allDatesSet.OrderBy(d => d).ToList();
 
             _logger?.LogInformation($"Total of {allDates.Count} dates");
 

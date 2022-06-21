@@ -58,5 +58,10 @@ namespace Qwack.Providers.Json
         }
 
         public Currency[] GetAllCurrencies() => _currenciesByName.Values.ToArray();
+
+        public void AddCurrency(Currency currency)
+        {
+            _currenciesByName[currency.Ccy] = currency;
+        }
     }
 }

@@ -7,5 +7,6 @@ namespace Qwack.Core.Basic
         Currency GetCurrency(string ccy);
         Currency GetCurrencySafe(string ccy);
         Currency[] GetAllCurrencies();
+        void AddCurrency(Currency currency);
     }
 }

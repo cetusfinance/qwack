@@ -60,13 +60,15 @@ namespace Qwack.Models
         }
         public void AddVolSurface(VolSurfaceKey key, IVolSurface surface) => _assetVols[key] = surface;
 
-        public static bool IsFx(string name) => name.Length == 7 && name[3] == '/';
+        public static bool IsFx(string name) => (name.Length == 7 && name[3] == '/') || (name.Length == 8 && name[4] == '/');
 
         public IPriceCurve GetPriceCurve(string name, Currency currency = null)
         {
             if (IsFx(name))
-                return new FxForwardCurve(BuildDate, FundingModel, FundingModel.GetCurrency(name.Substring(0, 3)), FundingModel.GetCurrency(name.Substring(4, 3)));
-
+            {
+                var ccys = name.Split('/');
+                return new FxForwardCurve(BuildDate, FundingModel, FundingModel.GetCurrency(ccys[0]), FundingModel.GetCurrency(ccys[1]));
+            }
             if (!_assetCurves.TryGetValue(name, out var curve))
                 throw new Exception($"Curve with name {name} not found");
 

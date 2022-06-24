@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using static Qwack.Math.LinearRegression;
 
 namespace Qwack.Models.Risk
@@ -7,5 +9,6 @@ namespace Qwack.Models.Risk
         public LinearRegressionResult LrResult { get; set; }
         public double[] BenchmarkReturns { get; set; }
         public double[] PortfolioReturns { get; set; }
+        public Dictionary<DateTime, double> BenchmarkPrices { get; set; }
     }
 }

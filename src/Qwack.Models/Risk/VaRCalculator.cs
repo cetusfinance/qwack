@@ -285,6 +285,7 @@ namespace Qwack.Models.Risk
                 LrResult = lrResult,
                 BenchmarkReturns = benchmarkReturns.ToArray(),
                 PortfolioReturns = pfReturns.ToArray(),
+                BenchmarkPrices = benchmarkPrices
             };
         }
 

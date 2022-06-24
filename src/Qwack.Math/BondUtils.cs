@@ -34,7 +34,7 @@ namespace Qwack.Math
 
         public static double MacaulayDuration(double couponRate, double faceValue, double ytm, double periodsPerYear, double tMaturity, double tNext, double cleanPrice)
         {
-            var nPeriods = (tMaturity - tNext) * periodsPerYear;
+            var nPeriods = System.Math.Round((tMaturity - tNext) * periodsPerYear);
             var couponFlow = couponRate * faceValue / periodsPerYear;
             var divisor = 1 + ytm / periodsPerYear;
             var sum = 0.0;

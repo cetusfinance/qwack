@@ -291,6 +291,7 @@ namespace Qwack.Models.Risk
         private ICube GetRisk(IPvModel model) => Metric switch
         {
             RiskMetric.AssetCurveDelta => model.AssetDelta(),
+            RiskMetric.PV => model.PV(Ccy??model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             //case RiskMetric.AssetCurveDeltaGamma:
             //    return portfolio.AssetDeltaGamma(model);
             RiskMetric.FxDelta => model.FxDeltaSpecific(_currencyProvider.GetCurrency("ZAR"), FxPairsForDelta, _currencyProvider, false),

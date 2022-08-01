@@ -523,6 +523,12 @@ namespace Qwack.Core.Instruments
                                         wrapper.CashBalances.Add(new CashBalance(flow.Currency, flow.Fv) { TradeId = i.TradeId + $"{flow.SettleDate}" });
                                 }
                                 break;
+                            case CashAsset ca:
+                                if (ca.SettleDate.HasValue && ca.SettleDate < rollToDate && ca.SettleDate >= rollfromDate)
+                                {
+                                    wrapper.CashBalances.Add(new CashBalance(ca.Currency, -ca.Price.Value * ca.Notional) { TradeId = i.TradeId + "c" });
+                                }
+                                break;
                         }
                         o.Instruments.Add(wrapper);
                         break;

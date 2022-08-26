@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using static Qwack.Math.LinearRegression;
 
-namespace Qwack.Models.Risk
+namespace Qwack.Transport.Results
 {
     public class BetaAnalysisResult
     {

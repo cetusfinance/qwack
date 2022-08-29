@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Qwack.Math
@@ -57,6 +58,46 @@ namespace Qwack.Math
             var mcD = MacaulayDuration(couponRate, faceValue, ytm, periodsPerYear, tMaturity, tNext, cleanPrice);
             var modD = mcD / (1 + ytm / periodsPerYear);
             return modD;
+        }
+
+        public static Dictionary<double,double> BondFlows(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext)
+        {
+            var nPeriods = System.Math.Round((tMaturity - tNext) * periodsPerYear);
+            var couponFlow = couponRate * faceValue / periodsPerYear;
+
+            var o = new Dictionary<double, double>();
+
+            for (var i = 0; i <= nPeriods; i++)
+            {
+                var t = tNext + i * 1 / periodsPerYear;
+                o[t] = couponFlow;
+                if (i == nPeriods)
+                    o[t] += faceValue;
+            }
+            return o;
+        }
+
+        public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double,double> fxRates, double cleanPriceInLocal)
+        {
+            var flows = BondFlows(couponRate, faceValue, periodsPerYear, tMaturity, tNext);
+            var flowsInBase = flows.ToDictionary(f => f.Key, f => f.Value * fxRates(f.Key));
+            var tPerP = (tMaturity - tNext) / (flows.Count()-1);
+
+            var pvFunc = (double ytm) =>
+            {
+                var sum = 0.0;
+                foreach(var kv in flowsInBase)
+                {
+                    var t = kv.Key;
+                    var n = (t - tNext) / tPerP;
+                    sum += kv.Value / System.Math.Pow(1.0 + ytm, n);
+                }
+
+                return sum / faceValue - cleanPriceInLocal;
+            };
+
+            var ytm = Solvers.Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);
+            return ytm;
         }
     }
 }

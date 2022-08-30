@@ -21,4 +21,8 @@
     <ProjectReference Include="..\..\src\Qwack.Serialization\Qwack.Serialization.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
 </Project>

@@ -90,7 +90,7 @@ namespace Qwack.Math
                 {
                     var t = kv.Key;
                     var n = (t - tNext) / tPerP;
-                    sum += kv.Value / System.Math.Pow(1.0 + ytm, n);
+                    sum += kv.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, n );
                 }
 
                 return sum / faceValue - cleanPriceInLocal;

@@ -56,5 +56,22 @@ namespace Qwack.Math.Tests
             
             Assert.Equal(2.684, mac, 3);
         }
+
+        [Fact]
+ 
+        public void xccyTests()
+        {
+            var cleanPrice = 101.50 / 100;
+            var couponRate = 0.05875;
+            var couponsPerYear = 2.0;
+            var faceValue = 100;
+            var t = 2.75;
+            var tNext = 0.25;
+            var fxRates = (double t) => System.Math.Exp(t * 0.02);
+            var ytm = BondUtils.YieldToMaturity(couponRate * faceValue, faceValue, cleanPrice*100, t);
+            var ytmX = BondUtils.YtmInBase(couponRate, faceValue, couponsPerYear, t, tNext, fxRates, cleanPrice);
+
+            Assert.Equal(0.0881044430381541, ytmX, 3);
+        }
     }
 }

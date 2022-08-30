@@ -44,4 +44,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
 </Project>

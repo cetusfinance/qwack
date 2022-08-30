@@ -92,8 +92,8 @@ namespace Qwack.Math
                     var n = (t - tNext) / tPerP;
                     sum += kv.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, n );
                 }
-
-                return sum / faceValue - cleanPriceInLocal;
+                sum /= System.Math.Pow(1.0 + ytm / periodsPerYear, tNext);
+                return sum / faceValue - cleanPriceInLocal * fxRates(0);
             };
 
             var ytm = Solvers.Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);

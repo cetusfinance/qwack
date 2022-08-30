@@ -77,7 +77,7 @@ namespace Qwack.Math
             return o;
         }
 
-        public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double,double> fxRates, double cleanPriceInLocal)
+        public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double,double> fxRates, double dirtyPriceInLocal)
         {
             var flows = BondFlows(couponRate, faceValue, periodsPerYear, tMaturity, tNext);
             var flowsInBase = flows.ToDictionary(f => f.Key, f => f.Value * fxRates(f.Key));
@@ -93,7 +93,7 @@ namespace Qwack.Math
                     sum += kv.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, n );
                 }
                 sum /= System.Math.Pow(1.0 + ytm / periodsPerYear, tNext);
-                return sum / faceValue - cleanPriceInLocal * fxRates(0);
+                return sum / faceValue - dirtyPriceInLocal * fxRates(0);
             };
 
             var ytm = Solvers.Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);

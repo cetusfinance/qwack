@@ -10,6 +10,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,9 +25,4 @@
     <ProjectReference Include="..\Qwack.Random\Qwack.Random.csproj" />
     <ProjectReference Include="..\Qwack.Storage\Qwack.Storage.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-
 </Project>

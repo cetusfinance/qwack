@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="protobuf-net" Version="2.4.6" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -246,10 +247,6 @@
     <None Update="TO_VolSurfaceKey.ts">
       <CustomToolNamespace>TransportObjects\MarketData\VolSurfaces\TO_VolSurfaceKey.cs</CustomToolNamespace>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>

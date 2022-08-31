@@ -8,6 +8,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
  <ItemGroup>
@@ -18,10 +21,4 @@
     <ProjectReference Include="..\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
     <ProjectReference Include="..\Qwack.Providers\Qwack.Providers.csproj" />
   </ItemGroup>
-
- <ItemGroup>
-   <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
-   <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
-   <PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
- </ItemGroup>
 </Project>

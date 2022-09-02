@@ -147,12 +147,12 @@
   {
     "Ccy": "BTC",
     "DayCount": "Act365",
-    "SettlementCalendarName": "CRY"
+    "SettlementCalendarName": "USD"
   },
   {
     "Ccy": "ETH",
     "DayCount": "Act365",
-    "SettlementCalendarName": "CRY"
+    "SettlementCalendarName": "USD"
   }
 
 ]

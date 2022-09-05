@@ -16,6 +16,7 @@ namespace Qwack.Core.Instruments
         {
             UnderlyingInstrument = underlyingInstrument;
             CashBalances = cashBalances ?? new List<CashBalance>();
+            MetaData = underlyingInstrument.MetaData;
         }
 
         public IAssetInstrument UnderlyingInstrument { get; }

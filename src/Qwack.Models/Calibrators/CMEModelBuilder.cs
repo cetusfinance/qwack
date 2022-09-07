@@ -157,9 +157,14 @@ namespace Qwack.Models.Calibrators
 
         public static IrCurve StripFxBasisCurve(Dictionary<string, Dictionary<DateTime, double>> fwdsDict, FxPair ccyPair, string cmePair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
+            var fwds = fwdsDict[ccyPair.ToString()];
+            return StripFxBasisCurve(fwds, ccyPair, curveCcy, curveName, valDate, baseCurve, currencyProvider, calendarProvider);
+        }
+
+        public static IrCurve StripFxBasisCurve(Dictionary<DateTime, double> fwds, FxPair ccyPair, Currency curveCcy, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
             var bc = baseCurve.Clone();
             bc.SolveStage = -1;
-            var fwds = fwdsDict[ccyPair.ToString()];
             var spotDate = ccyPair.SpotDate(valDate);
             var spotRate = 0.0;
             while (!fwds.TryGetValue(spotDate, out spotRate))

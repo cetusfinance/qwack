@@ -16,9 +16,11 @@ namespace Qwack.Math
                 YieldToMaturity(couponRate, callPrice, cleanPrice, tCall)
                );
 
+        public static double YieldToWorst(double couponRate, double[] redemptionPrices, double cleanPrice, double[] tRedeem)
+            => tRedeem.Select((t, ix) => YieldToMaturity(couponRate, redemptionPrices[ix], cleanPrice, t)).Min();
+
         public static double PriceFromYtm(double couponRate, double faceValue, double ytm, double t)
             => (couponRate * 2 + faceValue * (2 / t - ytm)) / (ytm + 2 / t);
-
 
         public static double PriceFromYTC(double couponRate, double callPrice, double tCall, double ytc) =>
             couponRate / 2 * ((1 - System.Math.Pow(1 + ytc / 2, -2 * tCall)) / (ytc / 2)) + callPrice / System.Math.Pow((1 + ytc / 2), 2 * tCall);

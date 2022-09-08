@@ -1497,7 +1497,7 @@ namespace Qwack.Models.Risk
                     {
                         { TradeId, pvRowsFwd[i].MetaData[tidIx] },
                         { TradeType, pvRowsFwd[i].MetaData[tTypeIx] },
-                        { AssetId, string.Empty },
+                        { AssetId,  string.Empty },
                         { PointLabel, string.Empty },
                         { Metric, "Theta" }
                     };

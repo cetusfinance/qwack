@@ -1064,14 +1064,16 @@ namespace Qwack.Models.Risk
 
                     if (computeGamma)
                     {
+                        var noGammaTypes = new[] { "Equity", "Bond", "Cash", "Future", "LoanDepo", "FxForward" };
+                        var tradeType = bumpedRows[i].MetaData[tTypeIx];
                         var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown / dfToSpotDate;
                         var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
-                        if (gamma != 0.0)
+                        if (gamma != 0.0 && !noGammaTypes.Contains(tradeType))
                         {
                             var row = new Dictionary<string, object>
                             {
                                 { TradeId, bumpedRows[i].MetaData[tidIx] },
-                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { TradeType, tradeType },
                                 { AssetId, fxPair },
                                 { Metric, "FxSpotGamma" },
                                 { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
@@ -1477,7 +1479,8 @@ namespace Qwack.Models.Risk
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
-            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
+            var rolledPortfolio = pvModel.Portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate, fwdValDate);
+            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
             var pvCubeFwd = rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();

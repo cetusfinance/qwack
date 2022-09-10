@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Transport\Qwack.Transport.csproj" />
+      
   </ItemGroup>
 </Project>

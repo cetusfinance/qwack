@@ -14,8 +14,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Qwack.Transport\Qwack.Transport.csproj" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
-      <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+      <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
  </Project>

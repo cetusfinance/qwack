@@ -49,6 +49,8 @@ namespace Qwack.Models.MCModels
         private readonly ICalendarProvider _calendarProvider;
         private readonly ExpectedCapitalCalculator _capitalCalc;
 
+        private int _priceFactorDepth;
+
         public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider)
         {
             if (settings.CompactMemoryMode && settings.AveragePathCorrection)
@@ -124,6 +126,7 @@ namespace Qwack.Models.MCModels
             }
 
             //asset processes
+            _priceFactorDepth = Engine.CurrentDepth;
             var fxAssetsToAdd = new List<string>();
             var corrections = new Dictionary<string, SimpleAveragePathCorrector>();
             foreach (var assetId in assetIds)
@@ -466,6 +469,177 @@ namespace Qwack.Models.MCModels
 
             Engine.SetupFeatures();
         }
+
+        public AssetFxMCModel(DateTime originDate, FactorReturnPayoff fp, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider)
+        {
+            if (settings.CompactMemoryMode && settings.AveragePathCorrection)
+                throw new Exception("Can't use both CompactMemoryMode and PathCorrection");
+
+            _currencyProvider = currencyProvider;
+            _futureSettingsProvider = futureSettingsProvider;
+            _calendarProvider = calendarProvider;
+            Engine = new PathEngine(settings.NumberOfPaths)
+            {
+                Parallelize = settings.Parallelize,
+                CompactMemoryMode = settings.CompactMemoryMode
+            };
+            OriginDate = originDate;
+            Model = model;
+            Settings = settings;
+            switch (settings.Generator)
+            {
+                case RandomGeneratorType.MersenneTwister:
+                    Engine.AddPathProcess(new Random.MersenneTwister.MersenneTwister64()
+                    {
+                        UseNormalInverse = true,
+                        UseAnthithetic = false
+                    });
+                    break;
+                case RandomGeneratorType.Sobol:
+                    var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
+                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1000)
+                    {
+                        UseNormalInverse = true
+                    });
+                    break;
+                case RandomGeneratorType.Constant:
+                    Engine.AddPathProcess(new Random.Constant.Constant()
+                    {
+                        UseNormalInverse = true,
+                    });
+                    break;
+                case RandomGeneratorType.FlipFlop:
+                    Engine.AddPathProcess(new Random.Constant.FlipFlop(settings.CreditSettings.ConfidenceInterval, true));
+                    break;
+            }
+            Engine.IncrementDepth();
+
+            if (model.CorrelationMatrix != null)
+            {
+                if (settings.LocalCorrelation)
+                    Engine.AddPathProcess(new CholeskyWithTime(model.CorrelationMatrix, model));
+                else
+                    Engine.AddPathProcess(new Cholesky(model.CorrelationMatrix));
+                Engine.IncrementDepth();
+            }
+
+            var lastDate = fp.SimDates.Max();
+            var assetIds = fp.AssetIds;
+
+            //asset processes
+            _priceFactorDepth = Engine.CurrentDepth;
+            foreach (var assetId in assetIds)
+            {
+                if (model.GetVolSurface(assetId) is not IATMVolSurface surface)
+                    throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
+              
+                var futuresSim = settings.ExpensiveFuturesSimulation &&
+                   (model.GetPriceCurve(assetId).CurveType == PriceCurveType.ICE || model.GetPriceCurve(assetId).CurveType == PriceCurveType.NYMEX);
+                if (futuresSim)
+                {
+                    var fwdCurve = new Func<DateTime, double>(t =>
+                    {
+                        return model.GetPriceCurve(assetId).GetPriceForDate(t);
+                    });
+                    var asset = new BlackFuturesCurve
+                    (
+                       startDate: originDate,
+                       expiryDate: lastDate,
+                       volSurface: surface,
+                       forwardCurve: fwdCurve,
+                       nTimeSteps: settings.NumberOfTimesteps,
+                       name: Settings.FuturesMappingTable[assetId],
+                       futureSettingsProvider: _futureSettingsProvider
+                    );
+                    Engine.AddPathProcess(asset);
+                }
+                else
+                {
+                    var fwdCurve = new Func<double, double>(t =>
+                    {
+                        var c = model.GetPriceCurve(assetId);
+                        var d = originDate.AddYearFraction(t, DayCountBasis.ACT365F);
+                        if (c is BasicPriceCurve pc)
+                            d = d.AddPeriod(RollType.F, pc.SpotCalendar, pc.SpotLag);
+                        else if (c is ContangoPriceCurve cc)
+                            d = d.AddPeriod(RollType.F, cc.SpotCalendar, cc.SpotLag);
+                        return c.GetPriceForDate(d);
+                    });
+
+                    IATMVolSurface adjSurface = null;
+                    var correlation = 0.0;
+
+                    if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
+                    {
+                        var fxAdjPair = settings.ReportingCurrency + "/" + model.GetPriceCurve(assetId).Currency;
+                        var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                        if (model.FundingModel.GetVolSurface(fxAdjPair) is not IATMVolSurface adjSurface2)
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        adjSurface = adjSurface2;
+                        if (model.CorrelationMatrix != null)
+                        {
+                            if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, assetId, out var correl))
+                                correlation = correl;
+                            else if (model.CorrelationMatrix.TryGetCorrelation(fxAdjPairInv, assetId, out var correl2))
+                                correlation = -correl2;
+                        }
+                    }
+
+                    if (settings.McModelType == McModelType.LocalVol)
+                    {
+                        var asset = new LVSingleAsset
+                        (
+                            startDate: originDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
+                            nTimeSteps: settings.NumberOfTimesteps,
+                            name: assetId,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                    else if (settings.McModelType == McModelType.TurboSkew)
+                    {
+                        var asset = new TurboSkewSingleAsset
+                        (
+                            startDate: originDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
+                            nTimeSteps: settings.NumberOfTimesteps,
+                            name: assetId,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                    else
+                    {
+                        var asset = new BlackSingleAsset
+                        (
+                            startDate: originDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
+                            nTimeSteps: settings.NumberOfTimesteps,
+                            name: assetId,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                }
+            }
+
+            //payoff
+            Engine.IncrementDepth();
+            Engine.AddPathProcess(fp);
+
+            Engine.SetupFeatures();
+        }
+
         public ICube PFE(double confidenceLevel) => PackResults(() => FudgePFE(confidenceLevel), "PFE");
 
         private double[] FudgePFE(double confidenceLevel)
@@ -661,5 +835,20 @@ namespace Qwack.Models.MCModels
         }
 
         public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio) => new AssetFxMCModel(OriginDate, portfolio, newVanillaModel, Settings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
+
+        public Dictionary<double, Dictionary<string, double[]>> GetFactorValues()
+        {
+            var factorValues = new Dictionary<double, Dictionary<string, double[]>>();
+            Engine.RunProcess();
+
+            var pathProcesses = Engine.GetProcessesForDepth(_priceFactorDepth);
+
+            foreach (var pathProcess in pathProcesses)
+            {
+                //pathProcess.
+            }
+
+            return factorValues;
+        } 
     }
 }

@@ -132,6 +132,9 @@ namespace Qwack.Paths
             _currentProcessDepth++;
         }
 
+        public int CurrentDepth => _currentProcessDepth;
+        public List<IPathProcess> GetProcessesForDepth(int depth) => _pathProcesses[depth];
+
         public void SetupFeatures()
         {
             foreach (var ppLevel in _pathProcesses)

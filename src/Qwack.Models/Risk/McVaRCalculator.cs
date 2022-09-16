@@ -14,6 +14,7 @@ using Qwack.Math;
 using Qwack.Models.MCModels;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
+using Qwack.Options.VolSurfaces;
 using Qwack.Transport.Results;
 using Qwack.Utils.Parallel;
 
@@ -34,7 +35,7 @@ namespace Qwack.Models.Risk
         public McVaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider, 
             ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider)
         {
-            _model = model;
+            _model = model.Clone();
             _portfolio = portfolio;
             _logger = logger;
             _currencyProvider = currencyProvider;
@@ -56,19 +57,26 @@ namespace Qwack.Models.Risk
             var allAssetIds = _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
             var simulatedIds = allAssetIds.Intersect(_spotFactors.Keys).ToArray();
 
+            foreach(var simulatedId in simulatedIds)
+            {
+                _model.AddVolSurface(simulatedId, new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId });
+            }
+
             _logger.LogInformation("Simulating {nFac} spot factors", simulatedIds.Length);
 
             var mcSettings = new McSettings
             {
                 McModelType=McModelType.Black,
                 Generator=RandomGeneratorType.MersenneTwister,
-                NumberOfPaths=1000,
-                NumberOfTimesteps=10
+                NumberOfPaths=2048,
+                NumberOfTimesteps=2,
+                ReportingCurrency=_currencyProvider.GetCurrencySafe("USD")
             };
 
             var fp = new FactorReturnPayoff(simulatedIds, new DateTime[] { _model.BuildDate.AddDays(1) });
             
-            var mcModel = new AssetFxMCModel(_model.BuildDate, _portfolio, _model, mcSettings, _currencyProvider, _futureSettingsProvider, _calendarProvider); 
+            var mcModel = new AssetFxMCModel(_model.BuildDate, fp, _model, mcSettings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
+            mcModel.Engine.RunProcess();
         }
 
         public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)

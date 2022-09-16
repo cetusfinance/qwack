@@ -14,7 +14,7 @@ namespace Qwack.Models.MCModels
     {
         private int[] _dateIndexes;
 
-        private Vector<double>[][][] _results;
+        private double[][][] _results;
         private bool _isComplete;
         private int _rawNumberOfPaths;
 
@@ -51,12 +51,12 @@ namespace Qwack.Models.MCModels
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
 
-            _assetIndices = AssetIds1.Select(assetId=>dims.GetDimension(assetId)).ToArray();
+            _assetIndices = AssetIds.Select(assetId=>dims.GetDimension(assetId)).ToArray();
 
             if (_assetIndices.Min() < 0)
             {
                 var err = _assetIndices.Select((x, ix) => (x, ix)).Where(f => f.x < 0).Select(f => f.ix).ToList();
-                var missingAssets = string.Join(",", err.Select(e => AssetIds1[e]));
+                var missingAssets = string.Join(",", err.Select(e => AssetIds[e]));
                 throw new Exception($"Assets {missingAssets} not found in MC engine");
             }
 
@@ -69,7 +69,7 @@ namespace Qwack.Models.MCModels
 
             var engine = collection.GetFeature<IEngineFeature>();
             _nPathVectorBlocks = engine.RoundedNumberOfPaths / Vector<double>.Count;
-            _results = new Vector<double>[_assetIndices.Length][][];
+            _results = new double[_assetIndices.Length][][];
             _rawNumberOfPaths = engine.NumberOfPaths;
 
             _isComplete = true;
@@ -77,30 +77,32 @@ namespace Qwack.Models.MCModels
 
         public void Process(IPathBlock block)
         {
-            if (_subInstruments != null)
-            {
-                foreach (var ins in _subInstruments)
-                {
-                    ins.Process(block);
-                }
-                return;
-            }
-
             var blockBaseIx = block.GlobalPathIndex;
+            var vecLen = Vector<double>.Count;
 
             for (var a = 0; a < _assetIndices.Length; a++)
             {
-                _results[a] = new Vector<double>[_nPathVectorBlocks][];
+                if(_results[a] == null) 
+                    _results[a] = new double[_rawNumberOfPaths][];
 
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
                 {
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
-                    _results[a][resultIx] = new Vector<double>[_dateIndexes.Length];
                     var steps = block.GetStepsForFactor(path, _assetIndices[a]);
-
-                    for(var tIx = 0; tIx < _dateIndexes.Length; tIx++)
+                    for (var j = 0; j < vecLen; j++)
                     {
-                        _results[a][resultIx][tIx] = steps[_dateIndexes[tIx]];
+                        var c = resultIx * vecLen + j;
+                        if(_results[a][c]==null)
+                            _results[a][c] = new double[_dateIndexes.Length];
+
+                        if (c >= _results[a].Length)
+                            break;
+         
+                        for (var tIx = 0; tIx < _dateIndexes.Length; tIx++)
+                        {
+                            //_results[a][resultIx][tIx] = steps[_dateIndexes[tIx]][1];
+                            _results[a][c][tIx] = steps[_dateIndexes[tIx]][j];
+                        }
                     }
                 }
             }
@@ -132,7 +134,7 @@ namespace Qwack.Models.MCModels
                                 if (c >= results.Length)
                                     break;
                                 // _results[a][resultIx][tIx] = steps[_dateIndexes[tIx]];
-                                results[a][tix][c] = _results[a][i][tix][j];
+                                //results[a][tix][c] = _results[a][i][tix][j];
                             }
                         }
                     }

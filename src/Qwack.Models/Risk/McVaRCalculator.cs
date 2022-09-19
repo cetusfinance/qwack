@@ -28,7 +28,7 @@ namespace Qwack.Models.Risk
         private readonly ICurrencyProvider _currencyProvider;
         private readonly ICalendarProvider _calendarProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
-        private readonly Dictionary<DateTime, IAssetFxModel> _bumpedModels = new();
+        private readonly List<IAssetFxModel> _bumpedModels = new();
         private readonly Dictionary<string, double> _spotFactors = new();
         
 
@@ -54,12 +54,14 @@ namespace Qwack.Models.Risk
 
         public void CalculateModels()
         {
-            var allAssetIds = _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
+            var allAssetIds = _portfolio.AssetIds().Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x =>$"USD/{x}")).ToArray();
             var simulatedIds = allAssetIds.Intersect(_spotFactors.Keys).ToArray();
 
             foreach(var simulatedId in simulatedIds)
             {
                 _model.AddVolSurface(simulatedId, new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId });
+                if(simulatedId.Length==6 && simulatedId[3]=='/')
+                    _model.FundingModel.VolSurfaces.Add(simulatedId, new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId });
             }
 
             _logger.LogInformation("Simulating {nFac} spot factors", simulatedIds.Length);
@@ -73,13 +75,35 @@ namespace Qwack.Models.Risk
                 ReportingCurrency=_currencyProvider.GetCurrencySafe("USD")
             };
 
-            var fp = new FactorReturnPayoff(simulatedIds, new DateTime[] { _model.BuildDate.AddDays(1) });
+            var vd = _model.BuildDate.AddDays(1);
+            var fp = new FactorReturnPayoff(simulatedIds, new DateTime[] { _model.BuildDate, vd });
             
             var mcModel = new AssetFxMCModel(_model.BuildDate, fp, _model, mcSettings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
             mcModel.Engine.RunProcess();
+
+            var dix = fp.DateIndices[vd];
+            for (var p = 0; p < mcSettings.NumberOfPaths; p++)
+            {
+                var pModel = _model.Clone();
+                for (var a = 0; a < simulatedIds.Length; a++)
+                {
+                    var price0 = fp.ResultsByPath[a][p][0];
+                    var price1 = fp.ResultsByPath[a][p][dix];
+                    var bump = price1 / price0 - 1.0;
+
+                    if (IsFx(simulatedIds[a]))
+                        pModel = RelativeShiftMutator.FxSpotShift(_currencyProvider.GetCurrencySafe(simulatedIds[a].Split('/').Last()), bump, pModel);
+                    else
+                        pModel = RelativeShiftMutator.AssetCurveShift(simulatedIds[a], bump, pModel);
+                }
+
+                _bumpedModels.Add(pModel);
+            }
         }
 
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
+        private static bool IsFx(string assetId) => assetId.Length == 7 && assetId[3] == '/';
+
+        public double CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {
             if (!_resultsCache.Any())
             {
@@ -95,11 +119,11 @@ namespace Qwack.Models.Risk
                 var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
                 var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
                 var basePvForSet = _basePvCube.Filter(filterDict, true).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key);
+                return ciResult.Value - basePvForSet;
             }
         }
 
-        public (double VaR, DateTime ScenarioDate) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
+        public double CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
         {
             if (!_resultsCache.Any())
             {
@@ -115,7 +139,7 @@ namespace Qwack.Models.Risk
                 var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
                 var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
                 var basePvForSet = _basePvCube.Filter(filterDict, false).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key);
+                return ciResult.Value - basePvForSet;
             }
         }
 
@@ -129,56 +153,27 @@ namespace Qwack.Models.Risk
             return ciResults.Select(x => x.Value - basePvForSet).ToArray();
         }
 
-        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null)
-        {
-            if (!earliestDate.HasValue)
-                earliestDate = DateTime.MinValue;
-
-            var basePv = _basePvCube.SumOfAllRows;
-            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv + referenceNav);
-            var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).Where(x => x > earliestDate).OrderBy(x => x).ToArray();
-            var pfReturns = new List<double>();
-            var benchmarkReturns = new List<double>();
-            for (var t = 1; t < intersectingDates.Length; t++)
-            {
-                var y = intersectingDates[t - 1];
-                var d = intersectingDates[t];
-                pfReturns.Add(System.Math.Log(results[d] / results[y]));
-                benchmarkReturns.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
-            }
-
-            var lrResult = LinearRegression.LinearRegressionVector(benchmarkReturns.ToArray(), pfReturns.ToArray());
-
-            return new BetaAnalysisResult
-            {
-                LrResult = lrResult,
-                BenchmarkReturns = benchmarkReturns.ToArray(),
-                PortfolioReturns = pfReturns.ToArray(),
-                BenchmarkPrices = benchmarkPrices
-            };
-        }
-
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
 
-        public Dictionary<string, double> GetContributions(DateTime scenarioDate)
+        public Dictionary<string, double> GetContributions(int ix)
         {
-            var cube = _resultsCache[scenarioDate];
+            var cube = _resultsCache[ix];
             var diff = cube.Difference(_basePvCube);
 
             return diff.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
         }
 
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
+        public double  CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
-        private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();
+        private readonly ConcurrentDictionary<int, ICube> _resultsCache = new();
         private ICube _basePvCube;
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
+        public double CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
             _basePvCube = pf.PV(_model, ccy);
             var basePv = _basePvCube.SumOfAllRows;
             _resultsCache.Clear();
-            var results = new ConcurrentDictionary<DateTime, double>();
-            var varFunc = new Action<DateTime, IAssetFxModel>((d, m) =>
+            var results = new ConcurrentDictionary<int, double>();
+            var varFunc = new Action<int, IAssetFxModel>((d, m) =>
             {
                 var cube = pf.PV(m, ccy, false);
                 var scenarioPv = cube.SumOfAllRows;
@@ -187,23 +182,23 @@ namespace Qwack.Models.Risk
             });
             if (parallelize)
             {
-                Parallel.ForEach(_bumpedModels, kv =>
+                Parallel.For(0, _bumpedModels.Count, ix => 
                 {
-                    varFunc(kv.Key, kv.Value);
+                    varFunc(ix, _bumpedModels[ix]);
                 });
             }
             else
             {
-                foreach (var kv in _bumpedModels)
+                for (var ix=0; ix<_bumpedModels.Count; ix++)
                 {
-                    varFunc(kv.Key, kv.Value);
+                    varFunc(ix, _bumpedModels[ix]);
                 }
             }
 
             var sortedResults = results.OrderBy(kv => kv.Value).ToList();
             var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
             var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
-            return (ciResult.Value, ciResult.Key);
+            return ciResult.Value;
         }
 
         internal class VaRSpotScenarios

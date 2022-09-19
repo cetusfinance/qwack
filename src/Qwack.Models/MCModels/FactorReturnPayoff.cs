@@ -42,6 +42,9 @@ namespace Qwack.Models.MCModels
             _simDates = simDates;
         }
 
+        public Dictionary<string, int> AssetIndices { get; private set; } = new Dictionary<string, int>();
+        public Dictionary<DateTime, int> DateIndices { get; private set; } = new Dictionary<DateTime, int>();
+
         public bool IsComplete => _isComplete;
 
         public IAssetInstrument AssetInstrument { get; private set; }
@@ -60,11 +63,17 @@ namespace Qwack.Models.MCModels
                 throw new Exception($"Assets {missingAssets} not found in MC engine");
             }
 
+            for(var a = 0; a < AssetIds.Length; a++)
+            {
+                AssetIndices[AssetIds[a]] = _assetIndices[a];
+            }
+
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIndexes = new int[_simDates.Length];
             for (var i = 0; i < _simDates.Length; i++)
             {
                 _dateIndexes[i] = dates.GetDateIndex(_simDates[i]);
+                DateIndices[_simDates[i]] = _dateIndexes[i];
             }
 
             var engine = collection.GetFeature<IEngineFeature>();
@@ -114,34 +123,10 @@ namespace Qwack.Models.MCModels
             dates.AddDates(_simDates);
         }
 
-        public double[][][] ResultsByPath
-        {
-            get
-            {
-                var vecLen = Vector<double>.Count;
-                var results = new double[_assetIndices.Length][][]; // [_dateIndexes.Length][_rawNumberOfPaths];
-                for (var a = 0; a < _assetIndices.Length; a++)
-                {
-                    results[a] = new double[_dateIndexes.Length][];
-                    for (var tix = 0; tix < _dateIndexes.Length; tix++)
-                    {
-                        results[a][tix] = new double[_rawNumberOfPaths];
-                        for (var i = 0; i < _results.Length; i++)
-                        {
-                            for (var j = 0; j < vecLen; j++)
-                            {
-                                var c = i * vecLen + j;
-                                if (c >= results.Length)
-                                    break;
-                                // _results[a][resultIx][tIx] = steps[_dateIndexes[tIx]];
-                                //results[a][tix][c] = _results[a][i][tix][j];
-                            }
-                        }
-                    }
-                }
-                return results;
-            }
-        }
+        /// <summary>
+        /// [AssetIx][PathIx][TimeIx]
+        /// </summary>
+        public double[][][] ResultsByPath => _results;        
 
         public CashFlowSchedule ExpectedFlows(IAssetFxModel model) => null;
 

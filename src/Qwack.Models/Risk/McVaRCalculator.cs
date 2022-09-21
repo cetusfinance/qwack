@@ -30,7 +30,9 @@ namespace Qwack.Models.Risk
         private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly List<IAssetFxModel> _bumpedModels = new();
         private readonly Dictionary<string, double> _spotFactors = new();
-        
+        private int _ciIx = 0;
+
+        public int CIIX => _ciIx;
 
         public McVaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider, 
             ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider)
@@ -117,6 +119,7 @@ namespace Qwack.Models.Risk
                 var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, true).SumOfAllRows);
                 var sortedResults = results.OrderBy(kv => kv.Value).ToList();
                 var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
+                _ciIx = ixCi;
                 var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
                 var basePvForSet = _basePvCube.Filter(filterDict, true).SumOfAllRows;
                 return ciResult.Value - basePvForSet;

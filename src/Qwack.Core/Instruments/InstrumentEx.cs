@@ -23,6 +23,7 @@ namespace Qwack.Core.Instruments
             FxForward fxForward => fxForward.ToTransportObject(),
             FxPerpetual fxPerpetual => fxPerpetual.ToTransportObject(),
             Future future => future.ToTransportObject(),
+            CashWrapper cashWrapper => cashWrapper.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };
     }

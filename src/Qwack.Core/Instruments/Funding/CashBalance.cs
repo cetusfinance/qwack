@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -17,6 +18,9 @@ namespace Qwack.Core.Instruments.Funding
             Currency = currency;
             PayDate = payDate ?? DateTime.MinValue;
         }
+
+        public CashBalance(TO_CashBalance to, ICurrencyProvider currencyProvider)
+            : this(currencyProvider.GetCurrencySafe(to.Currency), to.Notional, to.PayDate) { }
 
         public double Notional { get; set; }
         public string PortfolioName { get; set; }
@@ -79,5 +83,8 @@ namespace Qwack.Core.Instruments.Funding
         };
 
         public double SuggestPillarValue(IFundingModel model) => 0.05;
+
+        public TO_CashBalance ToTransportObject() 
+            => new TO_CashBalance { Currency = Currency.Ccy, Notional = Notional, PayDate = PayDate };
     }
 }

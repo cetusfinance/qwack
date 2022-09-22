@@ -39,6 +39,8 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_FxVanillaOption FxOption { get; set; }
         [ProtoMember(114)]
         public TO_FxPerpetual FxPerpetual { get; set; }
+        [ProtoMember(115)]
+        public TO_CashWrapper CashWrapper { get; set; }
 
         public override bool Equals(object obj) => obj is TO_Instrument instrument &&
             FundingInstrumentType == instrument.FundingInstrumentType &&

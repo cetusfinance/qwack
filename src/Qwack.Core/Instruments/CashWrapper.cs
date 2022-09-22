@@ -5,7 +5,10 @@ using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments
 {
@@ -17,6 +20,10 @@ namespace Qwack.Core.Instruments
             UnderlyingInstrument = underlyingInstrument;
             CashBalances = cashBalances ?? new List<CashBalance>();
             MetaData = underlyingInstrument.MetaData;
+        }
+        public CashWrapper(TO_CashWrapper to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
+            this(InstrumentFactory.GetInstrument(to.Underlying, currencyProvider, calendarProvider) as IAssetInstrument, to.CashBalances?.Select(x => new CashBalance(x, currencyProvider)).ToList())
+        { 
         }
 
         public IAssetInstrument UnderlyingInstrument { get; }
@@ -66,5 +73,15 @@ namespace Qwack.Core.Instruments
         public string[] IrCurves(IAssetFxModel model) => UnderlyingInstrument.IrCurves(model);
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => UnderlyingInstrument.PastFixingDates(valDate);
         public IAssetInstrument SetStrike(double strike) => UnderlyingInstrument.SetStrike(strike);
+
+        public TO_Instrument ToTransportObject() => new()
+        {
+            AssetInstrumentType = AssetInstrumentType.CashWrapper,
+            CashWrapper = new TO_CashWrapper
+            {
+                CashBalances = CashBalances.Select(x => x.ToTransportObject()).ToArray(),
+                Underlying = UnderlyingInstrument.GetTransportObject()
+            }
+        };
     }
 }

@@ -41,7 +41,8 @@ namespace Qwack.Core.Instruments
                         return new FuturesOption(transportObject.FuturesOption, currencyProvider);
                     case AssetInstrumentType.Future:
                         return new Future(transportObject.Future, currencyProvider);
-
+                    case AssetInstrumentType.CashWrapper:
+                        return new CashWrapper(transportObject.CashWrapper, currencyProvider, calendarProvider);
                 }
             }
             else

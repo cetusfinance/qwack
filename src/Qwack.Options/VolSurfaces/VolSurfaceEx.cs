@@ -70,6 +70,11 @@ namespace Qwack.Options.VolSurfaces
 
         public static IInterpolator1D GenerateCDF2(this IVolSurface surface, int numSamples, DateTime expiry, double fwd, bool returnInverse = false, double strikeScale = 1.0, bool logStrikes = false)
         {
+            if(surface is ConstantVolSurface cv && cv.Returns!=null)
+            {
+                return GenerateCDF(cv.Returns, fwd, returnInverse);
+            }
+
             var premInterp = GeneratePremiumInterpolator(surface, numSamples, expiry, fwd, OptionType.P);
             var t = surface.OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F);
 
@@ -95,6 +100,24 @@ namespace Qwack.Options.VolSurfaces
             return returnInverse ?
                 InterpolatorFactory.GetInterpolator(y, x, Interpolator1DType.MonotoneCubicSpline) :
                 InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
+        }
+
+        public static IInterpolator1D GenerateCDF(double[] returns, double fwd, bool returnInverse = false)
+        {
+            var shockedPrices = returns.Select(r => fwd * (1.0 + r)).OrderBy(x => x).ToArray();
+            var strikes = shockedPrices.Distinct().ToArray();
+            var cumProbs = new double[strikes.Length];
+
+            var count = 0.0;
+            for(var i=0;i<strikes.Length;i++)
+            {
+                count = shockedPrices.Where(x=>x<=strikes[i]).Count();
+                cumProbs[i]=count / returns.Length;
+            }
+
+            return returnInverse ?
+               InterpolatorFactory.GetInterpolator(cumProbs, shockedPrices, Interpolator1DType.MonotoneCubicSpline) :
+               InterpolatorFactory.GetInterpolator(shockedPrices, cumProbs, Interpolator1DType.MonotoneCubicSpline);
         }
 
         public static IInterpolator1D GeneratePDF(this IVolSurface surface, int numSamples, DateTime expiry, double fwd)

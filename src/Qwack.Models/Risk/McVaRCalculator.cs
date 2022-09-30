@@ -28,14 +28,16 @@ namespace Qwack.Models.Risk
         private readonly ICurrencyProvider _currencyProvider;
         private readonly ICalendarProvider _calendarProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
+        private readonly McModelType _modelType;
         private readonly List<IAssetFxModel> _bumpedModels = new();
         private readonly Dictionary<string, double> _spotFactors = new();
+        private readonly Dictionary<string, double[]> _returns = new();
         private int _ciIx = 0;
 
         public int CIIX => _ciIx;
 
         public McVaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider, 
-            ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider)
+            ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider, McModelType modelType)
         {
             _model = model.Clone();
             _portfolio = portfolio;
@@ -43,11 +45,17 @@ namespace Qwack.Models.Risk
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
             _futureSettingsProvider = futureSettingsProvider;
+            _modelType = modelType;
         }
 
         public void AddSpotFactor(string assetId, double vol)
         {
             _spotFactors[assetId] = vol;
+        }
+
+        public void AddReturns(string assetId, double[] returns)
+        {
+            _returns[assetId] = returns;
         }
 
         public string[] GetSpotFactors() => _spotFactors.Keys.OrderBy(x => x).ToArray();
@@ -56,21 +64,27 @@ namespace Qwack.Models.Risk
 
         public void CalculateModels()
         {
-            var allAssetIds = _portfolio.AssetIds().Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x =>$"USD/{x}")).ToArray();
+            //var allAssetIds = _portfolio.AssetIds().Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x =>$"USD/{x}")).ToArray();
+            var allAssetIds = _model.CurveNames.Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x => $"USD/{x}")).ToArray();
             var simulatedIds = allAssetIds.Intersect(_spotFactors.Keys).ToArray();
 
             foreach(var simulatedId in simulatedIds)
             {
-                _model.AddVolSurface(simulatedId, new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId });
-                if(simulatedId.Length==6 && simulatedId[3]=='/')
-                    _model.FundingModel.VolSurfaces.Add(simulatedId, new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId });
+                var surf = new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId };
+                if (_returns.TryGetValue(simulatedId, out var returns))
+                    surf.Returns = returns;
+                _model.AddVolSurface(simulatedId, surf);
+                if(simulatedId.Length==6 && simulatedId[3] == '/')
+                {
+                    _model.FundingModel.VolSurfaces.Add(simulatedId, surf);
+                }   
             }
 
             _logger.LogInformation("Simulating {nFac} spot factors", simulatedIds.Length);
 
             var mcSettings = new McSettings
             {
-                McModelType=McModelType.Black,
+                McModelType= _modelType,
                 Generator=RandomGeneratorType.MersenneTwister,
                 NumberOfPaths=2048,
                 NumberOfTimesteps=2,
@@ -164,6 +178,24 @@ namespace Qwack.Models.Risk
             var diff = cube.Difference(_basePvCube);
 
             return diff.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
+        }
+
+        public decimal ComputeStress(string insId, decimal shockSize)
+        {
+            var basePv = _basePvCube.SumOfAllRows;
+            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
+
+            var allScenarios = _resultsCache
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .OrderBy(x => x.Item2)
+                .ToList();
+
+            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+
+            var interp = lr.Alpha + lr.Beta * shockedLevel;
+
+            return Convert.ToDecimal(interp - basePv);
         }
 
         public double  CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);

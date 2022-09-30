@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Math;
+using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Transport.Results;
@@ -124,7 +126,7 @@ namespace Qwack.Models.Risk
 
         public void CalculateModels()
         {
-            var allAssetIds = _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
+            var allAssetIds = _model.CurveNames.Where(x => !(x.Length == 7 && x[3] == '/')).ToArray(); // _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
             var allDatesSet = new HashSet<DateTime>();
 
             if (_spotTypeBumps.Any())
@@ -288,6 +290,24 @@ namespace Qwack.Models.Risk
                 PortfolioReturns = pfReturns.ToArray(),
                 BenchmarkPrices = benchmarkPrices
             };
+        }
+
+        public decimal ComputeStress(string insId, decimal shockSize)
+        {
+            var basePv = _basePvCube.SumOfAllRows;
+            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
+
+            var allScenarios = _resultsCache
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .OrderBy(x=>x.Item2)
+                .ToList();
+
+            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+
+            var interp = lr.Alpha + lr.Beta * shockedLevel;
+
+            return Convert.ToDecimal(interp - basePv);
         }
 
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));

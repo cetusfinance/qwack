@@ -95,18 +95,18 @@ jobs:
 
     - name: Push
       run: |
-        dotnet nuget push ./Qwack.Dates/Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Core/Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Math/Qwack.Math.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Math.Interpolation/Qwack.Math.Interpolation.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Options/Qwack.Options.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Paths/Qwack.Paths.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Models/Qwack.Models.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Random/Qwack.Random.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Providers/Qwack.Providers.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Utils/Qwack.Utils.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Futures/Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push ./Qwack.Transport/Qwack.Transport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./Qwack.Dates/Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Core/Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Math/Qwack.Math.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Math.Interpolation/Qwack.Math.Interpolation.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Options/Qwack.Options.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Paths/Qwack.Paths.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Models/Qwack.Models.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Random/Qwack.Random.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Providers/Qwack.Providers.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Utils/Qwack.Utils.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Futures/Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Transport/Qwack.Transport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
       working-directory: './src/'
       env:
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

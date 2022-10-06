@@ -120,7 +120,7 @@ jobs:
         dotnet nuget push ./Qwack.Futures/Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
         dotnet nuget push ./Qwack.Transport/Qwack.Transport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
         dotnet nuget push ./Qwack.Storage/Qwack.Storage.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
-        dotnet nuget push ./Qwack.Serialization/Qwack.TransSerializationport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
+        dotnet nuget push ./Qwack.Serialization/Qwack.Serialization.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY} --skip-duplicate
       working-directory: './src/'
       env:
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

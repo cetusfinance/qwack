@@ -33,11 +33,79 @@ jobs:
       env:
         VERSION: ${{ env.version }}
 
+    - name: Pack Math
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Math'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Interpolation
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Math.Interpolation'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Options
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Options'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Paths
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Paths'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Providers
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Providers'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Transport
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Transport'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Futures
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Futures'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Models
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Models'
+      env:
+        VERSION: ${{ env.version }}  
+
+    - name: Pack Utils
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Utils'
+      env:
+        VERSION: ${{ env.version }}  
+
+    - name: Pack Random
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Random'
+      env:
+        VERSION: ${{ env.version }}  
+
     - name: Push
       run: |
-        dotnet nuget push Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        
+        dotnet nuget push ./src/Qwack.Dates/Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Core/Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Math/Qwack.Math.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Math.Interpolation/Qwack.Math.Interpolation.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Options/Qwack.Options.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Paths/Qwack.Paths.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Models/Qwack.Models.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Random/Qwack.Random.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Providers/Qwack.Providers.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Utils/Qwack.Utils.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push ./src/Qwack.Futures/Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
       working-directory: './src/'
       env:
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

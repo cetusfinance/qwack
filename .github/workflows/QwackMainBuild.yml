@@ -19,11 +19,11 @@ jobs:
 
     - name: Restore DotNet
       run: dotnet restore
-      working-directory: './src'
+      working-directory: '.'
     
     - name: Pack
       run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
-      working-directory: './src'
+      working-directory: '.'
       env:
         VERSION: ${{ env.version }}
 

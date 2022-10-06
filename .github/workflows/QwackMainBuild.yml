@@ -1,0 +1,48 @@
+name: Qwack Main Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout code'
+      uses: actions/checkout@main
+      with:
+        submodules: 'true'
+    
+    - name: 'Set environment var'
+      run: VERSION=$(cat ./version.txt) && echo "version=$VERSION" >> $GITHUB_ENV
+    - name: 'Check environment var'
+      run: echo "${{ env.version}}"
+
+    - name: Restore DotNet
+      run: dotnet restore
+      working-directory: './src'
+    
+    - name: Pack
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Push
+      run: |
+        dotnet nuget push Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Math.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Math.Interpolation.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Options.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Paths.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Providers.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Random.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Utils.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Models.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        dotnet nuget push Qwack.Transport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+      working-directory: './src/'
+      env:
+        NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
+        VERSION: ${{ env.version }}
+

@@ -21,9 +21,15 @@ jobs:
       run: dotnet restore
       working-directory: '.'
     
-    - name: Pack
+    - name: Pack Dates
       run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
-      working-directory: '.'
+      working-directory: './src/Qwack.Dates'
+      env:
+        VERSION: ${{ env.version }}
+
+    - name: Pack Core
+      run: dotnet pack --configuration Release /p:Version=${VERSION} --output .
+      working-directory: './src/Qwack.Core'
       env:
         VERSION: ${{ env.version }}
 
@@ -31,16 +37,7 @@ jobs:
       run: |
         dotnet nuget push Qwack.Dates.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
         dotnet nuget push Qwack.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Math.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Math.Interpolation.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Options.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Paths.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Providers.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Random.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Utils.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Models.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Futures.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
-        dotnet nuget push Qwack.Transport.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_APIKEY}
+        
       working-directory: './src/'
       env:
         NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}

@@ -206,7 +206,7 @@ namespace Qwack.Models.Calibrators
             switch (qwackCode)
             {
                 case "ED":
-                    var edExp = FutureCode.GetExpiryFromCode(MmmYtoCode(record.MMY, qwackCode), futureSettingsProvider);
+                    var edExp = DateTime.ParseExact(record.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture); // FutureCode.GetExpiryFromCode(MmmYtoCode(record.MMY, qwackCode), futureSettingsProvider);
                     return new STIRFuture
                     {
                         ContractSize = 1e6,

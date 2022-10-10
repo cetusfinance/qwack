@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Qwack.Math
 {
@@ -19,10 +18,22 @@ namespace Qwack.Math
         public static double YieldToWorst(double couponRate, double[] redemptionPrices, double cleanPrice, double[] tRedeem)
             => tRedeem.Select((t, ix) => YieldToMaturity(couponRate, redemptionPrices[ix], cleanPrice, t)).Min();
 
+        public static (double ytw, double t) YieldToWorstWithWorkout(double couponRate, double[] redemptionPrices, double cleanPrice, double[] tRedeem)
+            => tRedeem.Select((t, ix) => (YieldToMaturity(couponRate, redemptionPrices[ix], cleanPrice, t), t))
+            .OrderBy(x => x.Item1)
+            .Take(1)
+            .Select(x => (x.Item1, x.t))
+            .FirstOrDefault();
 
-        //    public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double,double> fxRates, double dirtyPriceInLocal)
         public static double YieldToWorstInBase(double couponRate, double[] redemptionPrices, double periodsPerYear, double tNext, double cleanPrice, double[] tRedeem, Func<double, double> fxRates)
             => tRedeem.Select((t, ix) => YtmInBase(couponRate, redemptionPrices[ix], periodsPerYear, t, tNext, fxRates, cleanPrice)).Min();
+
+        public static (double ytw, double t) YieldToWorstInBaseWithWorkout(double couponRate, double[] redemptionPrices, double periodsPerYear, double tNext, double cleanPrice, double[] tRedeem, Func<double, double> fxRates)
+            => tRedeem.Select((t, ix) => (YtmInBase(couponRate, redemptionPrices[ix], periodsPerYear, t, tNext, fxRates, cleanPrice), t))
+            .OrderBy(x => x.Item1)
+            .Take(1)
+            .Select(x => (x.Item1, x.t))
+            .FirstOrDefault();
 
         public static double PriceFromYtm(double couponRate, double faceValue, double ytm, double t)
             => (couponRate * 2 + faceValue * (2 / t - ytm)) / (ytm + 2 / t);

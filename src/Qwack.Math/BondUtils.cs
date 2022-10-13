@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Qwack.Math.Solvers;
 
 namespace Qwack.Math
 {
@@ -8,6 +9,25 @@ namespace Qwack.Math
     {
         public static double YieldToMaturity(double couponRate, double faceValue, double cleanPrice, double t)
             => (couponRate + (faceValue - cleanPrice) / t) / ((faceValue + cleanPrice) / 2.0);
+
+        public static double YieldToMaturity(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, double cleanPrice)
+        {
+            var source = BondFlows(couponRate / faceValue, faceValue, periodsPerYear, tMaturity, tNext);
+            var tPerP = 1 / periodsPerYear;
+            return Brent.BrentsMethodSolve(delegate (double ytm)
+            {
+                var num = 0.0;
+                foreach (var item in source)
+                {
+                    var y = (item.Key) / tPerP;
+                    num += item.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, y);
+                }
+                return num - cleanPrice;
+            }, -0.1, 1.0, 1E-06);
+        }
+
+        public static double YieldToWorst(double couponRate, double[] redemptionPrices, double cleanPrice, double[] tRedeem, double periodsPerYear, double tNext)
+            => tRedeem.Select((t, ix) => YieldToMaturity(couponRate, redemptionPrices[ix], periodsPerYear, t, tNext, cleanPrice)).Min();
 
         public static double YieldToWorst(double couponRate, double faceValue, double cleanPrice, double tMaturity, double tCall, double callPrice)
             => System.Math.Min(

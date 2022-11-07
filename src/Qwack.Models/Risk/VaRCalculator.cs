@@ -213,7 +213,7 @@ namespace Qwack.Models.Risk
             foreach (var kv in bumpedModels)
                 _bumpedModels[kv.Key] = kv.Value;
         }
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
+        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {
             if (!_resultsCache.Any())
             {
@@ -227,13 +227,14 @@ namespace Qwack.Models.Risk
                 var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, true).SumOfAllRows);
                 var sortedResults = results.OrderBy(kv => kv.Value).ToList();
                 var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-                var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
+                var ciResult = sortedResults[ixCi];
+                var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
                 var basePvForSet = _basePvCube.Filter(filterDict, true).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key);
+                return (ciResult.Value - basePvForSet, ciResult.Key, cVaR - basePvForSet);
             }
         }
 
-        public (double VaR, DateTime ScenarioDate) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
+        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
         {
             if (!_resultsCache.Any())
             {
@@ -247,9 +248,11 @@ namespace Qwack.Models.Risk
                 var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, false).SumOfAllRows);
                 var sortedResults = results.OrderBy(kv => kv.Value).ToList();
                 var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-                var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
+                ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
+                var ciResult = sortedResults[ixCi];
+                var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
                 var basePvForSet = _basePvCube.Filter(filterDict, false).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key);
+                return (ciResult.Value - basePvForSet, ciResult.Key, cVaR - basePvForSet);
             }
         }
 
@@ -310,6 +313,38 @@ namespace Qwack.Models.Risk
             return Convert.ToDecimal(interp - basePv);
         }
 
+
+        public StressTestResult ComputeStressObject(string insId, decimal shockSize)
+        {
+            var basePv = _basePvCube.SumOfAllRows;
+            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
+
+            var allScenarios = _resultsCache
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .OrderBy(x => x.Item2)
+                .ToList();
+
+            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+
+            var interp = lr.Alpha + lr.Beta * shockedLevel;
+
+            var scenarioPoints = new Dictionary<double, double>();
+            foreach(var kv in allScenarios)
+            {
+                scenarioPoints[kv.Item2] = kv.SumOfAllRows - basePv;
+            }
+
+            return new StressTestResult
+            {
+                Id = insId,
+                StressSize = Convert.ToDouble(shockSize),
+                LR = lr,
+                ScenarioPoints = scenarioPoints,
+                StressPvChange = Convert.ToDecimal(interp - basePv)
+            };
+        }
+
         public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
 
         public Dictionary<string, double> GetContributions(DateTime scenarioDate)
@@ -320,11 +355,11 @@ namespace Qwack.Models.Risk
             return diff.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
         }
 
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
+        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
         private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();
         private ICube _basePvCube;
-        public (double VaR, DateTime ScenarioDate) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
+        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
             _basePvCube = pf.PV(_model, ccy);
             var basePv = _basePvCube.SumOfAllRows;
@@ -354,8 +389,10 @@ namespace Qwack.Models.Risk
 
             var sortedResults = results.OrderBy(kv => kv.Value).ToList();
             var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-            var ciResult = sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)];
-            return (ciResult.Value, ciResult.Key);
+            ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
+            var ciResult = sortedResults[ixCi];
+            var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
+            return (ciResult.Value, ciResult.Key, cVaR);
         }
 
         internal class VaRSpotScenarios

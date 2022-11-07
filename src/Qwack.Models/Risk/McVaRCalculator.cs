@@ -198,6 +198,37 @@ namespace Qwack.Models.Risk
             return Convert.ToDecimal(interp - basePv);
         }
 
+        public StressTestResult ComputeStressObject(string insId, decimal shockSize)
+        {
+            var basePv = _basePvCube.SumOfAllRows;
+            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
+
+            var allScenarios = _resultsCache
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .OrderBy(x => x.Item2)
+                .ToList();
+
+            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+
+            var interp = lr.Alpha + lr.Beta * shockedLevel;
+
+            var scenarioPoints = new Dictionary<double, double>();
+            foreach (var kv in allScenarios)
+            {
+                scenarioPoints[kv.Item2] = kv.SumOfAllRows - basePv;
+            }
+
+            return new StressTestResult
+            {
+                Id = insId,
+                StressSize = Convert.ToDouble(shockSize),
+                LR = lr,
+                ScenarioPoints = scenarioPoints,
+                StressPvChange = Convert.ToDecimal(interp - basePv)
+            };
+        }
+
         public double  CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
         private readonly ConcurrentDictionary<int, ICube> _resultsCache = new();

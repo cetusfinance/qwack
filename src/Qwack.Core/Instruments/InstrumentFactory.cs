@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Asset;
+using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
@@ -45,13 +46,51 @@ namespace Qwack.Core.Instruments
                         return new CashWrapper(transportObject.CashWrapper, currencyProvider, calendarProvider);
                 }
             }
-            else
+            else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)
             {
-                //switch (transportObject.FundingInstrumentType)
-                //{
-                //    case FundingInstrumentType.FxPerpetual:
-                //        return new FxPerpetual(transportObject.Future, currencyProvider);
-                //}
+                switch (transportObject.FundingInstrumentType)
+                {
+                    case FundingInstrumentType.FxForward:
+                        var to1 = transportObject.FxForward;
+                        return new FxForward()
+                        {
+                            Counterparty = to1.Counterparty,
+                            DeliveryDate = to1.DeliveryDate,
+                            DomesticCCY = currencyProvider.GetCurrencySafe(to1.DomesticCCY),
+                            ForeignCCY = currencyProvider.GetCurrencySafe(to1.ForeignCCY),
+                            DomesticQuantity = to1.DomesticQuantity,
+                            ForeignDiscountCurve = to1.ForeignDiscountCurve,
+                            HedgingSet = to1.HedgingSet,
+                            MetaData = to1.MetaData,
+                            PillarDate = to1.PillarDate,
+                            PortfolioName = to1.PortfolioName,
+                            SolveCurve = to1.SolveCurve,
+                            Strike = to1.Strike,
+                            TradeId = to1.TradeId 
+                        };
+                    case FundingInstrumentType.FxVanillaOption:
+                        var to2 = transportObject.FxOption;
+                        return new FxVanillaOption(currencyProvider, calendarProvider)
+                        {
+                            Counterparty = to2.Counterparty,
+                            DeliveryDate = to2.DeliveryDate,
+                            DomesticCCY = currencyProvider.GetCurrencySafe(to2.DomesticCCY),
+                            ForeignCCY = currencyProvider.GetCurrencySafe(to2.ForeignCCY),
+                            DomesticQuantity = to2.DomesticQuantity,
+                            ForeignDiscountCurve = to2.ForeignDiscountCurve,
+                            HedgingSet = to2.HedgingSet,
+                            MetaData = to2.MetaData,
+                            PillarDate = to2.PillarDate,
+                            PortfolioName = to2.PortfolioName,
+                            SolveCurve = to2.SolveCurve,
+                            Strike = to2.Strike,
+                            TradeId = to2.TradeId,
+                            CallPut = to2.CallPut,
+                            ExpiryDate = to2.ExpiryDate,
+                            Premium = to2.Premium,
+                            PremiumDate = to2.PremiumDate,
+                        };
+                }
             }
 
             throw new Exception("Unable to re-constitute object");

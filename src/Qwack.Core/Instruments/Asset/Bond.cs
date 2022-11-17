@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -8,6 +10,17 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class Bond : CashAsset
     {
+        public double? Coupon { get;set; }
+        public CouponFrequency CouponFrequency { get; set; } = CouponFrequency.SemiAnnual;
+
+        public DateTime? IssueDate { get; set; }
+        public DateTime? MaturityDate { get; set; }
+        public DateTime? FirstCouponDate { get; set; }
+
+        public Dictionary<DateTime, double> CallSchedule { get; set; } = new();
+        public Dictionary<DateTime, double> SinkingSchedule { get; set; } = new();
+
+
         public Bond() : base() { }
         public Bond(double notional, string assetId, Currency ccy, double scalingFactor, Frequency settleLag, Calendar settleCalendar)
             : base(notional, assetId, ccy, scalingFactor, settleLag, settleCalendar)
@@ -38,7 +51,14 @@ namespace Qwack.Core.Instruments.Asset
                 PortfolioName = PortfolioName,
                 TradeId = TradeId,
                 SettleLag = SettleLag.ToString(),
-                MetaData = new(MetaData)
+                MetaData = new(MetaData),
+                Coupon = Coupon,
+                CallSchedule = CallSchedule,
+                SinkingSchedule = SinkingSchedule,
+                CouponFrequency = CouponFrequency,
+                FirstCouponDate = FirstCouponDate,
+                IssueDate = IssueDate,
+                MaturityDate = MaturityDate
             }
         };
     }

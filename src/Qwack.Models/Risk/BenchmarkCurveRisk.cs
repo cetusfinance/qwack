@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
+using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
@@ -15,6 +17,34 @@ namespace Qwack.Models.Risk
 {
     public static class BenchmarkCurveRisk
     {
+        public static ICube BenchmarkRiskWithReStrip(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, Currency reportingCcy)
+        {
+            var insByCurve = riskCollection.GroupBy(x => x.SolveCurve);
+            var curvesNeeded = insByCurve.Select(x => x.Key).ToArray();
+            var newCurves = new List<IrCurve>();
+
+            var newFundingModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
+            foreach(var grp in insByCurve)
+            {
+                var existingCurve = newFundingModel.GetCurve(grp.Key);
+                var pillars = grp.Select(x => x.PillarDate).Distinct().OrderBy(x => x).ToArray();
+                var rates = pillars.Select(x=>existingCurve.GetRate(x)).ToArray();
+
+                var newCurve = new IrCurve(pillars, rates, existingCurve.BuildDate, existingCurve.Name, existingCurve.InterpolatorType, existingCurve.Currency, existingCurve.CollateralSpec, existingCurve.RateStorageType)
+                {
+                    SolveStage = existingCurve.SolveStage, 
+                };
+
+                newFundingModel.Curves[grp.Key] = newCurve;
+            }
+
+            var sol = new NewtonRaphsonMultiCurveSolverStaged();
+            sol.Solve(newFundingModel, riskCollection);
+            var newModel = pvModel.VanillaModel.Clone(newFundingModel);
+
+            return newModel.BenchmarkRisk(riskCollection, currencyProvider, reportingCcy);
+        }
+        
         public static ICube BenchmarkRisk(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, Currency reportingCcy)
         {
             var cube = new ResultCube();

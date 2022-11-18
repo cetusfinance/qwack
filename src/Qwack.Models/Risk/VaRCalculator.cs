@@ -295,7 +295,7 @@ namespace Qwack.Models.Risk
             };
         }
 
-        public decimal ComputeStress(string insId, decimal shockSize)
+        public decimal ComputeStress(string insId, decimal shockSize, int? nNearestSamples = null)
         {
             var basePv = _basePvCube.SumOfAllRows;
             var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
@@ -306,7 +306,20 @@ namespace Qwack.Models.Risk
                 .OrderBy(x=>x.Item2)
                 .ToList();
 
-            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+            LinearRegressionResult lr;
+
+            if (nNearestSamples.HasValue)
+            {
+                var shockDbl = Convert.ToDouble(shockSize);
+                var subset = allScenarios
+                    .OrderBy(x => System.Math.Abs(x.Item2 - shockDbl))
+                    .Take(nNearestSamples.Value)
+                    .OrderBy(x => x.Item2)
+                    .ToArray();
+                lr = LinearRegression.LinearRegressionNoVector(subset.Select(x => x.Item2).ToArray(), subset.Select(x => x.SumOfAllRows).ToArray(), false);
+            }
+            else
+                lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
 
             var interp = lr.Alpha + lr.Beta * shockedLevel;
 
@@ -314,7 +327,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public StressTestResult ComputeStressObject(string insId, decimal shockSize)
+        public StressTestResult ComputeStressObject(string insId, decimal shockSize, int? nNearestSamples = null)
         {
             var basePv = _basePvCube.SumOfAllRows;
             var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
@@ -325,7 +338,20 @@ namespace Qwack.Models.Risk
                 .OrderBy(x => x.Item2)
                 .ToList();
 
-            var lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
+            LinearRegressionResult lr;
+
+            if (nNearestSamples.HasValue)
+            {
+                var shockDbl = Convert.ToDouble(shockSize);
+                var subset = allScenarios
+                    .OrderBy(x => System.Math.Abs(x.Item2 - shockDbl))
+                    .Take(nNearestSamples.Value)
+                    .OrderBy(x => x.Item2)
+                    .ToArray();
+                lr = LinearRegression.LinearRegressionNoVector(subset.Select(x => x.Item2).ToArray(), subset.Select(x => x.SumOfAllRows).ToArray(), false);
+            }
+            else
+                lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
 
             var interp = lr.Alpha + lr.Beta * shockedLevel;
 

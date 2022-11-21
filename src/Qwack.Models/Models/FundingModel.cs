@@ -244,7 +244,8 @@ namespace Qwack.Models
             var homeToBase = mf.FxMatrix.SpotRates[newBaseCurrency];
             var ccys = mf.FxMatrix.SpotRates.Keys.ToList()
                 .Concat(new[] { mf.FxMatrix.BaseCurrency })
-                .Where(x => x != newBaseCurrency);
+                .Where(x => x != newBaseCurrency)
+                .Distinct();
             var newRateDict = new Dictionary<Currency, double>();
             foreach (var ccy in ccys)
             {

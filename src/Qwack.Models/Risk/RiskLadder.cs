@@ -5,6 +5,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Utils.Parallel;
 
@@ -12,6 +13,8 @@ namespace Qwack.Models.Risk
 {
     public class RiskLadder
     {
+        public ICurrencyProvider CurrencyProvider { get; set; }
+
         public string AssetId { get; private set; }
         public MutationType ShiftType { get; private set; }
         public RiskMetric Metric { get; private set; }
@@ -19,6 +22,7 @@ namespace Qwack.Models.Risk
         public int NScenarios { get; private set; }
         public bool ReturnDifferential { get; private set; }
         public Currency Ccy { get; private set; }
+        public FxPair FxPair { get; private set; }
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
@@ -40,6 +44,16 @@ namespace Qwack.Models.Risk
             ReturnDifferential = returnDifferential;
         }
 
+        public RiskLadder(FxPair pair, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
+        {
+            FxPair = pair;
+            ShiftType = shiftType;
+            Metric = metric;
+            ShiftSize = shiftStepSize;
+            NScenarios = nScenarios;
+            ReturnDifferential = returnDifferential;
+        }
+
         public Dictionary<string, IPvModel> GenerateScenarios(IPvModel model)
         {
             var o = new Dictionary<string, IPvModel>();
@@ -48,16 +62,25 @@ namespace Qwack.Models.Risk
             ParallelUtils.Instance.For(-NScenarios, NScenarios + 1, 1, (i) =>
             {
                 var thisShift = i * ShiftSize;
-                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? Ccy.Ccy : AssetId) + "~" + thisShift;
+                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy ) : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
                     results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
                 else
                 {
-                    if (string.IsNullOrWhiteSpace(AssetId))
+                    if (string.IsNullOrWhiteSpace(AssetId) && FxPair==null)
                     {
                         var shifted = ShiftType switch
                         {
                             MutationType.FlatShift => FlatShiftMutator.FxSpotShift(Ccy, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
+                        results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    }
+                    else if (FxPair != null)
+                    {
+                        var shifted = ShiftType switch
+                        {
+                            MutationType.FlatShift => FlatShiftMutator.FxSpotShift(FxPair, thisShift, model),
                             _ => throw new Exception($"Unable to process shift type {ShiftType}"),
                         };
                         results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
@@ -136,7 +159,11 @@ namespace Qwack.Models.Risk
             RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             RiskMetric.PV => model.PV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.FxDelta => model.FxDelta(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, CurrencyProvider, false, ShouldInvert(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency)),
             _ => throw new Exception($"Unable to process risk metric {Metric}"),
         };
+
+        static string[] _inverseCcys = new[] { "EUR", "GBP", "AUD", "NZD" };
+        private static bool ShouldInvert(string ccy) => !_inverseCcys.Contains(ccy);
     }
 }

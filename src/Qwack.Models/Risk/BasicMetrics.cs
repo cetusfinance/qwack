@@ -347,6 +347,139 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
+        public static ICube FxSegaRega(this IPvModel pvModel, Currency reportingCcy)
+        {
+            var bumpSize = 0.001;
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
+            };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            foreach (var surfaceName in model.FundingModel.VolSurfaces.Keys)
+            {
+                if (model.GetVolSurface(surfaceName) is not RiskyFlySurface volObj)
+                    continue;
+
+                var ccys = new [] { surfaceName.Substring(0,3), surfaceName.Substring(surfaceName.Length-3,3) };
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = model.Portfolio.Instruments.Where(x => (x is IHasVega) && ccys.Contains(x.Currency.Ccy)).ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = basePvModel.PV(reportingCcy);
+                var pvRows = pvCube.GetAllRows();
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
+
+                var bumpedSurfacesSega = volObj.GetSegaScenarios(bumpSize, lastDateInBook);
+                var bumpedSurfacesRega = volObj.GetRegaScenarios(bumpSize, lastDateInBook);
+
+                var t1 = ParallelUtils.Instance.Foreach(bumpedSurfacesSega.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //sega and rega quoted as for a 10bp move
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.001;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Sega" }
+                            };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                });
+
+                var t2 = ParallelUtils.Instance.Foreach(bumpedSurfacesRega.ToList(), bCurve =>
+                {
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
+                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
+                    var bumpedRows = bumpedPVCube.GetAllRows();
+                    if (bumpedRows.Length != pvRows.Length)
+                        throw new Exception("Dimensions do not match");
+
+                    for (var i = 0; i < bumpedRows.Length; i++)
+                    {
+                        //sega and rega quoted as for a 10bp move
+                        var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.001;
+                        if (vega != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                { AssetId, surfaceName },
+                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { PointLabel, bCurve.Key },
+                                { Metric, "Rega" }
+                            };
+                            if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
+                            cube.AddRow(row, vega);
+                        }
+                    }
+                });
+
+                var tasks = new[] { t1, t2 };
+                Task.WaitAll(tasks);
+            }
+
+            return cube.Sort();
+        }
+
+
         public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false)
         {
             var bumpSize = 0.01;

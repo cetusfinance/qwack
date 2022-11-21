@@ -1373,6 +1373,14 @@ namespace Qwack.Models.Models
 
         }
 
+        public static ICube FxSegaRega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
+        {
+            var m = model.Clone();
+            m.AttachPortfolio(portfolio);
+            return m.FxSegaRega(reportingCcy);
+
+        }
+
         public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy = null, double bumpSize = 0.0001)
         {
             var m = model.Clone();

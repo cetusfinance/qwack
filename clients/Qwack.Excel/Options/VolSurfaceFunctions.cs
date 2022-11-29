@@ -18,6 +18,8 @@ using Qwack.Core.Models;
 using Qwack.Excel.Curves;
 using Qwack.Core.Cubes;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
+using Newtonsoft.Json;
 
 namespace Qwack.Excel.Options
 {
@@ -524,6 +526,43 @@ namespace Qwack.Excel.Options
                 var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(SurfaceName, $"Vol surface {SurfaceName} not found");
                 var rrbf = (RiskyFlySurface)surface.Value;
                 return rrbf.DisplayQuotes();
+            });
+        }
+
+        [ExcelFunction(Description = "Extracts TO from surface object", Category = CategoryNames.Volatility,
+            Name = CategoryNames.Volatility + "_" + nameof(SurfaceToTransportObject), IsThreadSafe = Parallel)]
+        public static object SurfaceToTransportObject(
+            [ExcelArgument(Description = "Surface name")] string SurfaceName,
+            [ExcelArgument(Description = "Transport Object filename")] string TOFileName)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var surface = ContainerStores.GetObjectCache<IVolSurface>().GetObjectOrThrow(SurfaceName, $"Vol surface {SurfaceName} not found");
+                var jsonString = string.Empty;
+                
+                if(surface.Value is RiskyFlySurface rrbf)
+                {
+                    var to = rrbf.GetTransportObject();
+                    jsonString = JsonConvert.SerializeObject(to);
+                }
+                else if (surface.Value is GridVolSurface gr)
+                {
+                    var to = gr.GetTransportObject();
+                    jsonString = JsonConvert.SerializeObject(to);
+                }
+                else if (surface.Value is ConstantVolSurface cv)
+                {
+                    var to = cv.GetTransportObject();
+                    jsonString = JsonConvert.SerializeObject(to);
+                }
+
+                if(jsonString != string.Empty)
+                {
+                    System.IO.File.WriteAllText(TOFileName, jsonString);
+                    return $"Wrote {jsonString.Length} chars to {TOFileName}";
+                }
+
+                return "Unable to convert surface object";
             });
         }
     }

@@ -271,7 +271,6 @@ namespace Qwack.Models.Risk
                 { TradeId, typeof(string) },
                 { TradeType, typeof(string) },
                 { AssetId, typeof(string) },
-                { "Underlying", typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) }
@@ -327,7 +326,6 @@ namespace Qwack.Models.Risk
                                 { TradeId, bumpedRows[i].MetaData[tidIx] },
                                 { TradeType, bumpedRows[i].MetaData[tTypeIx] },
                                 { AssetId, surface.Key },
-                                { "Underlying", surface.Key },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Vega" }

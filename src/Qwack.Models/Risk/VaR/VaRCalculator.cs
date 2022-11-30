@@ -16,7 +16,7 @@ using Qwack.Models.Risk.Mutators;
 using Qwack.Transport.Results;
 using Qwack.Utils.Parallel;
 
-namespace Qwack.Models.Risk
+namespace Qwack.Models.Risk.VaR
 {
     public class VaRCalculator
     {
@@ -28,6 +28,7 @@ namespace Qwack.Models.Risk
         private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = new();
         private readonly Dictionary<DateTime, IAssetFxModel> _bumpedModels = new();
+        private VaREngine _varEngine;
 
         public VaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger)
         {
@@ -131,7 +132,7 @@ namespace Qwack.Models.Risk
 
             if (_spotTypeBumps.Any())
             {
-                foreach(var d in _spotTypeBumps.First().Value.Bumps.Keys)
+                foreach (var d in _spotTypeBumps.First().Value.Bumps.Keys)
                 {
                     allDatesSet.Add(d);
                 }
@@ -212,67 +213,24 @@ namespace Qwack.Models.Risk
 
             foreach (var kv in bumpedModels)
                 _bumpedModels[kv.Key] = kv.Value;
-        }
-        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
-        {
-            if (!_resultsCache.Any())
-            {
-                var pf = _portfolio.Clone();
-                pf.Instruments.RemoveAll(i => excludeTradeIds.Contains(i.TradeId));
-                return CalculateVaR(ci, ccy, pf);
-            }
-            else
-            {
-                var filterDict = excludeTradeIds.Select(x => new KeyValuePair<string, object>("TradeId", (object)x)).ToList();
-                var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, true).SumOfAllRows);
-                var sortedResults = results.OrderBy(kv => kv.Value).ToList();
-                var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-                var ciResult = sortedResults[ixCi];
-                var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
-                var basePvForSet = _basePvCube.Filter(filterDict, true).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key, cVaR - basePvForSet);
-            }
-        }
 
-        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
-        {
-            if (!_resultsCache.Any())
-            {
-                var pf = _portfolio.Clone();
-                pf.Instruments.RemoveAll(i => !includeTradeIds.Contains(i.TradeId));
-                return CalculateVaR(ci, ccy, pf);
-            }
-            else
-            {
-                var filterDict = includeTradeIds.Select(x => new KeyValuePair<string, object>("TradeId", (object)x)).ToList();
-                var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.Filter(filterDict, false).SumOfAllRows);
-                var sortedResults = results.OrderBy(kv => kv.Value).ToList();
-                var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-                ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
-                var ciResult = sortedResults[ixCi];
-                var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
-                var basePvForSet = _basePvCube.Filter(filterDict, false).SumOfAllRows;
-                return (ciResult.Value - basePvForSet, ciResult.Key, cVaR - basePvForSet);
-            }
+            _varEngine = new VaREngine(_logger, _model, _portfolio, _bumpedModels.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value));
         }
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
+            => _varEngine.CalculateVaR(ci, ccy, excludeTradeIds);
 
-        public double[] CalculateVaRRange(double[] cis)
-        {
-            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows);
-            var sortedResults = results.OrderBy(kv => kv.Value).ToList();
-            var ixCis = cis.Select(ci => (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci))).ToArray();
-            var ciResults = ixCis.Select(ixCi => sortedResults[System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1)]);
-            var basePvForSet = _basePvCube.SumOfAllRows;
-            return ciResults.Select(x => x.Value - basePvForSet).ToArray();
-        }
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaRInc(double ci, Currency ccy, string[] includeTradeIds)
+            => _varEngine.CalculateVaRInc(ci, ccy, includeTradeIds);
+
+        public double[] CalculateVaRRange(double[] cis) => _varEngine.CalculateVaRRange(cis);
 
         public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null)
         {
             if (!earliestDate.HasValue)
                 earliestDate = DateTime.MinValue;
 
-            var basePv = _basePvCube.SumOfAllRows;
-            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv + referenceNav);
+            var basePv = _varEngine.BasePvCube.SumOfAllRows;
+            var results = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.SumOfAllRows - basePv + referenceNav);
             var intersectingDates = results.Keys.Intersect(benchmarkPrices.Keys).Where(x => x > earliestDate).OrderBy(x => x).ToArray();
             var pfReturns = new List<double>();
             var benchmarkReturns = new List<double>();
@@ -284,7 +242,7 @@ namespace Qwack.Models.Risk
                 benchmarkReturns.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
             }
 
-            var lrResult = LinearRegression.LinearRegressionVector(benchmarkReturns.ToArray(), pfReturns.ToArray());
+            var lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
 
             return new BetaAnalysisResult
             {
@@ -295,131 +253,20 @@ namespace Qwack.Models.Risk
             };
         }
 
+        public Dictionary<string, double> GetBaseValuations() => _varEngine.GetBaseValuations();
+
+        public Dictionary<string, double> GetContributions(DateTime scenarioDate) => _varEngine.GetContributions(scenarioDate.ToString());
+
         public decimal ComputeStress(string insId, decimal shockSize, int? nNearestSamples = null)
-        {
-            var basePv = _basePvCube.SumOfAllRows;
-            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
-            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
-
-            var allScenarios = _resultsCache
-                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
-                .OrderBy(x=>x.Item2)
-                .ToList();
-
-            LinearRegressionResult lr;
-
-            if (nNearestSamples.HasValue)
-            {
-                var shockDbl = Convert.ToDouble(shockSize);
-                var subset = allScenarios
-                    .OrderBy(x => System.Math.Abs(x.Item2 - shockDbl))
-                    .Take(nNearestSamples.Value)
-                    .OrderBy(x => x.Item2)
-                    .ToArray();
-                lr = LinearRegression.LinearRegressionNoVector(subset.Select(x => x.Item2).ToArray(), subset.Select(x => x.SumOfAllRows).ToArray(), false);
-            }
-            else
-                lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
-
-            var interp = lr.Alpha + lr.Beta * shockedLevel;
-
-            return Convert.ToDecimal(interp - basePv);
-        }
-
+            => _varEngine.ComputeStress(insId, shockSize, nNearestSamples);
 
         public StressTestResult ComputeStressObject(string insId, decimal shockSize, int? nNearestSamples = null)
-        {
-            var basePv = _basePvCube.SumOfAllRows;
-            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
-            var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
+            => _varEngine.ComputeStressObject(insId, shockSize, nNearestSamples);
 
-            var allScenarios = _resultsCache
-                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
-                .OrderBy(x => x.Item2)
-                .ToList();
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
 
-            LinearRegressionResult lr;
-
-            if (nNearestSamples.HasValue)
-            {
-                var shockDbl = Convert.ToDouble(shockSize);
-                var subset = allScenarios
-                    .OrderBy(x => System.Math.Abs(x.Item2 - shockDbl))
-                    .Take(nNearestSamples.Value)
-                    .OrderBy(x => x.Item2)
-                    .ToArray();
-                lr = LinearRegression.LinearRegressionNoVector(subset.Select(x => x.Item2).ToArray(), subset.Select(x => x.SumOfAllRows).ToArray(), false);
-            }
-            else
-                lr = LinearRegression.LinearRegressionNoVector(allScenarios.Select(x => x.Item2).ToArray(), allScenarios.Select(x => x.SumOfAllRows).ToArray(), false);
-
-            var interp = lr.Alpha + lr.Beta * shockedLevel;
-
-            var scenarioPoints = new Dictionary<double, double>();
-            foreach(var kv in allScenarios)
-            {
-                scenarioPoints[kv.Item2] = kv.SumOfAllRows - basePv;
-            }
-
-            return new StressTestResult
-            {
-                Id = insId,
-                StressSize = Convert.ToDouble(shockSize),
-                LR = lr,
-                ScenarioPoints = scenarioPoints,
-                StressPvChange = Convert.ToDecimal(interp - basePv)
-            };
-        }
-
-        public Dictionary<string, double> GetBaseValuations() => _basePvCube.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
-
-        public Dictionary<string, double> GetContributions(DateTime scenarioDate)
-        {
-            var cube = _resultsCache[scenarioDate];
-            var diff = cube.Difference(_basePvCube);
-
-            return diff.Pivot("TradeId", AggregationAction.Sum).ToDictionary("TradeId").ToDictionary(x => x.Key as string, x => x.Value.Sum(r => r.Value));
-        }
-
-        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
-
-        private readonly ConcurrentDictionary<DateTime, ICube> _resultsCache = new();
-        private ICube _basePvCube;
-        public (double VaR, DateTime ScenarioDate, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
-        {
-            _basePvCube = pf.PV(_model, ccy);
-            var basePv = _basePvCube.SumOfAllRows;
-            _resultsCache.Clear();
-            var results = new ConcurrentDictionary<DateTime, double>();
-            var varFunc = new Action<DateTime, IAssetFxModel>((d, m) =>
-            {
-                var cube = pf.PV(m, ccy, false);
-                var scenarioPv = cube.SumOfAllRows;
-                _resultsCache[d] = cube;
-                results[d] = scenarioPv - basePv;
-            });
-            if (parallelize)
-            {
-                Parallel.ForEach(_bumpedModels, kv =>
-                {
-                    varFunc(kv.Key, kv.Value);
-                });
-            }
-            else
-            {
-                foreach (var kv in _bumpedModels)
-                {
-                    varFunc(kv.Key, kv.Value);
-                }
-            }
-
-            var sortedResults = results.OrderBy(kv => kv.Value).ToList();
-            var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
-            ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
-            var ciResult = sortedResults[ixCi];
-            var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
-            return (ciResult.Value, ciResult.Key, cVaR);
-        }
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
+            => _varEngine.CalculateVaR(ci, ccy, pf, parallelize);
 
         internal class VaRSpotScenarios
         {
@@ -435,6 +282,4 @@ namespace Qwack.Models.Risk
             public Dictionary<DateTime, double[]> Bumps { get; set; }
         }
     }
-
-
 }

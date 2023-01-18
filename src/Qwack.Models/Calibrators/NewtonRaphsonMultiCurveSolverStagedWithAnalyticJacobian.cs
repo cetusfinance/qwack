@@ -20,7 +20,7 @@ namespace Qwack.Models.Calibrators
 
         public void Solve(IFundingModel fundingModel, FundingInstrumentCollection instruments)
         {
-            var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
+            var maxStage = fundingModel.Curves.Max(x => (x.Value as IrCurve).SolveStage);
             var curvesForStage = new List<IIrCurve>();
             var fundingInstruments = new List<IFundingInstrument>();
             for (var stage = 0; stage <= maxStage; stage++)
@@ -29,7 +29,7 @@ namespace Qwack.Models.Calibrators
                 fundingInstruments.Clear();
                 foreach (var kv in fundingModel.Curves)
                 {
-                    if (kv.Value.SolveStage == stage)
+                    if ((kv.Value as IrCurve).SolveStage == stage)
                     {
                         curvesForStage.Add(kv.Value);
                         foreach (var inst in instruments)

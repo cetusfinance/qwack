@@ -275,10 +275,10 @@ namespace Qwack.Core.Tests.CurveSolving
 
                 foreach (var curve in engine.Curves)
                 {
-                    var otherCurve = engine0.Curves[curve.Key];
+                    var otherCurve = engine0.Curves[curve.Key] as IrCurve;
                     Assert.Equal(curve.Value.NumberOfPillars, otherCurve.NumberOfPillars);
                     var otherRates = otherCurve.GetRates();
-                    var rates = curve.Value.GetRates();
+                    var rates = (curve.Value as IrCurve).GetRates();
                     for (var i = 0; i < otherRates.Length; i++)
                     {
                         Assert.Equal(otherRates[i], rates[i], 10);
@@ -420,7 +420,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var ZARcurveOIS = new IrCurve(ZARpillarDatesOIS, new double[ZARpillarDatesOIS.Length], startDate, "ZAR.DISC.CSA_ZAR", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 0 };
             var USDcurve3m = new IrCurve(USDpillarDates3m, new double[USDpillarDates3m.Length], startDate, "USD.LIBOR.3M", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
             var USDcurveOIS = new IrCurve(USDpillarDatesOIS, new double[USDpillarDatesOIS.Length], startDate, "USD.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyUsd) { SolveStage = 1 };
-            var fxCurve = new IrCurve(fxPillarDates, new double[fxPillarDates.Length], startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 2 };
+            var fxCurve = new IrCurve(fxPillarDates, Enumerable.Repeat(0.05,fxPillarDates.Length).ToArray(), startDate, "ZAR.DISC.CSA_USD", Interpolator1DType.LinearFlatExtrap, ccyZar) { SolveStage = 2 };
 
 
             var engine = new FundingModel(startDate, new IrCurve[] { ZARcurve3m, ZARcurveOIS, USDcurve3m, USDcurveOIS, fxCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);

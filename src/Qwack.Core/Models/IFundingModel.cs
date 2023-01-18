@@ -10,7 +10,7 @@ namespace Qwack.Core.Models
     {
         DateTime BuildDate { get; }
         string CurrentSolveCurve { get; set; }
-        Dictionary<string, IrCurve> Curves { get; }
+        Dictionary<string, IIrCurve> Curves { get; }
         Dictionary<string, IVolSurface> VolSurfaces { get; set; }
         IFxMatrix FxMatrix { get; }
 
@@ -23,10 +23,10 @@ namespace Qwack.Core.Models
         double[] GetFxRates(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
         double GetFxAverage(DateTime[] fixingDates, Currency domesticCcy, Currency foreignCcy);
         void SetupFx(IFxMatrix fxMatrix);
-        void UpdateCurves(Dictionary<string, IrCurve> updateCurves);
+        void UpdateCurves(Dictionary<string, IIrCurve> updateCurves);
 
-        IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
-        IrCurve GetCurve(string name);
+        IIrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec);
+        IIrCurve GetCurve(string name);
         IVolSurface GetVolSurface(string name);
         bool TryGetVolSurface(string name, out IVolSurface volSurface);
         double GetDf(string curveName, DateTime startDate, DateTime endDate);

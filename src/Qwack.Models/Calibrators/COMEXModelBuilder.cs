@@ -16,13 +16,13 @@ namespace Qwack.Models.Calibrators
     {
 
 
-        public static (IrCurve curve, double spotPrice) GetMetalCurveForCode(string cmxSettleFwdFilename, string cmxSymbol, FxPair metalPair, string curveName, DateTime valDate, IrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static (IrCurve curve, double spotPrice) GetMetalCurveForCode(string cmxSettleFwdFilename, string cmxSymbol, FxPair metalPair, string curveName, DateTime valDate, IIrCurve baseCurve, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             var blob = CMEFileParser.Instance.GetBlob(cmxSettleFwdFilename);
             var fwds = blob.Batch.Where(b => b.Instrmt.Sym == cmxSymbol).ToDictionary(x => x.Instrmt.MatDt, x => Convert.ToDouble(x.Full.Where(x => x.Typ == "6").First().Px));
 
             var curveCcy = metalPair.Domestic;
-            var bc = baseCurve.Clone();
+            var bc = (baseCurve as IrCurve).Clone();
             bc.SolveStage = -1;
             var spotDate = metalPair.SpotDate(valDate);
             var spotRate = Convert.ToDouble(fwds[spotDate]);
@@ -46,7 +46,7 @@ namespace Qwack.Models.Calibrators
             var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);
             var fm = new FundingModel(valDate, new[] { curve, bc }, currencyProvider, calendarProvider);
             var matrix = new FxMatrix(currencyProvider);
-            var discoMap = new Dictionary<Currency, string> { { curveCcy, curveName }, { baseCurve.Currency, baseCurve.Name } };
+            var discoMap = new Dictionary<Currency, string> { { curveCcy, curveName }, { (baseCurve as IrCurve).Currency, baseCurve.Name } };
             matrix.Init(metalPair.Foreign, valDate, new Dictionary<Currency, double> { { metalPair.Domestic, spotRate } }, new List<FxPair> { metalPair }, discoMap);
             fm.SetupFx(matrix);
             var solver = new NewtonRaphsonMultiCurveSolverStaged() { InLineCurveGuessing = true };

@@ -6080,10 +6080,10 @@
     "Names": [ "DXY", "DXY - NYBOT", "DX", "DX - NYBOT"],
     "CodeConversions": {
       "IB": {
-        "DX": "DX",
+        "DX": "DX"
       },
       "BBG": {
-        "DX": "DX",
+        "DX": "DX"
       }
     },
     "ExpiryGen": {
@@ -11791,12 +11791,12 @@
       "IB": {
         "RX": "RX",
 		"OE": "OE",
-		"DU": "DU",
+		"DU": "DU"
       },
       "BBG": {
         "RX": "RX",
 		"OE": "OE",
-		"DU": "DU",
+		"DU": "DU"
       }
     },
     "ExpiryGen": {
@@ -11971,15 +11971,17 @@
     "TickSize": 0.015625
   },
   {
-    "Names": [ "10Y US Note - CBOT", "ZN", "10Y", "US T-BOND - CBOT", "ZB" ],
+    "Names": [ "10Y US Note - CBOT", "ZN", "10Y", "US T-BOND - CBOT", "ZB", "Ultra 10y US Note-ECBOT", "TN" ],
     "CodeConversions": {
       "IB": {
         "ZN": "ZN",
-        "ZB": "ZB"
+        "ZB": "ZB",
+        "TN": "TN"
       },
       "BBG": {
         "ZN": "TY",
-        "ZB": "US"
+        "ZB": "US",
+        "TN": "UXT"
       }
     },
     "ExpiryGen": {
@@ -11994,10 +11996,10 @@
     },
     "RollGen": {
       "Calendar": "CBOT",
-      "MonthModifier": 0,
+      "MonthModifier": 1,
       "DayOfMonthToStart": 1,
       "DayOfMonthToStartOther": null,
-      "DateOffsetModifier": "-2b",
+      "DateOffsetModifier": "-9b",
       "DoMToStartIsNumber": false,
       "NeverExpires": false,
       "FixedFuture": null

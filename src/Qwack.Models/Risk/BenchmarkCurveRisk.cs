@@ -26,7 +26,7 @@ namespace Qwack.Models.Risk
             var newFundingModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
             foreach(var grp in insByCurve)
             {
-                var existingCurve = newFundingModel.GetCurve(grp.Key);
+                var existingCurve = newFundingModel.GetCurve(grp.Key) as IrCurve;
                 var pillars = grp.Select(x => x.PillarDate).Distinct().OrderBy(x => x).ToArray();
                 var rates = pillars.Select(x=>existingCurve.GetRate(x)).ToArray();
 

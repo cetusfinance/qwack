@@ -1416,10 +1416,11 @@ namespace Qwack.Models.Models
                 return model.Clone();
 
             //setup the "tomorrow" scenario
-            var rolledIrCurves = new Dictionary<string, IrCurve>();
+            var rolledIrCurves = new Dictionary<string, IIrCurve>();
             foreach (var curve in model.FundingModel.Curves)
             {
-                var rolledCurve = curve.Value.RebaseDate(fwdValDate);
+                var c = curve.Value as IrCurve;
+                var rolledCurve = c.RebaseDate(fwdValDate);
                 rolledIrCurves.Add(curve.Key, rolledCurve);
             }
 

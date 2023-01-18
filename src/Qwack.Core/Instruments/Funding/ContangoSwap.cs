@@ -46,7 +46,8 @@ namespace Qwack.Core.Instruments.Funding
             var strike = SpotRate * (1.0 + ContangoRate * t);
             var fwd = model.GetFxRate(DeliveryDate, MetalCCY, CashCCY);
             var FV = (fwd - strike) * MetalQuantity;
-            var PV = discountCurve.Pv(FV, DeliveryDate);
+            var df = discountCurve.GetDf(model.BuildDate, DeliveryDate);
+            var PV = df * FV;
 
             return PV;
         }
@@ -66,7 +67,7 @@ namespace Qwack.Core.Instruments.Funding
             var foreignCurve = model.FxMatrix.DiscountCurveMap[CashCCY];
             var domesticCurve = model.FxMatrix.DiscountCurveMap[MetalCCY];
             var discountCurve = model.Curves[CashDiscountCurve];
-            var df = discountCurve.Pv(1.0, DeliveryDate);
+            var df = discountCurve.GetDf(model.BuildDate, DeliveryDate);
             var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, DeliveryDate);
             var spotRate = model.GetFxRate(SpotDate, MetalCCY, CashCCY);
             var strike = spotRate * (1.0 + ContangoRate * t);

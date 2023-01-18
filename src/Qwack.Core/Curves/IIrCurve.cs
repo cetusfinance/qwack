@@ -17,9 +17,13 @@ namespace Qwack.Core.Curves
         double GetRate(int pillarIx);
         double GetRate(DateTime valueDate);
         double[] GetSensitivity(DateTime valueDate);
-        IrCurve BumpRate(int pillarIx, double delta, bool mutate);
-        IrCurve BumpRateFlat(double delta, bool mutate);
+        IIrCurve BumpRate(int pillarIx, double delta, bool mutate);
+        IIrCurve BumpRateFlat(double delta, bool mutate);
 
-        Dictionary<DateTime, IrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate);
+        Dictionary<DateTime, IIrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate);
+
+        DayCountBasis Basis { get; }
+
+        IIrCurve RebaseDate(DateTime newAnchorDate);
     }
 }

@@ -100,10 +100,8 @@ namespace Qwack.Core.Instruments.Funding
 
         public double CalculateParRate(IFundingModel model) => FlowScheduleFra.Flows.First().GetFloatRate(model.Curves[ForecastCurve], Basis);
 
-        public double Pv(IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
+        public double Pv(IIrCurve discountCurve, IIrCurve forecastCurve, bool updateState, bool updateDF, bool updateEstimate)
         {
-            var totalPV = 0.0;
-
             if (FlowScheduleFra.Flows.Count != 1)
                 throw new InvalidOperationException("FRA should have a sinlge flow");
 
@@ -126,12 +124,11 @@ namespace Qwack.Core.Instruments.Funding
                 FV = flow.Fv;
 
             if (updateDF)
-                DF = discountCurve.Pv(1.0, flow.SettleDate);
+                DF = discountCurve.GetDf(discountCurve.BuildDate, flow.SettleDate);
             else
                 DF = flow.Pv / flow.Fv;
 
-            totalPV = discountCurve.Pv(FV, flow.SettleDate);
-
+            var totalPV = DF * FV;
             if (!updateState) return totalPV;
             flow.Fv = FV;
             flow.Pv = totalPV;

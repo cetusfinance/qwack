@@ -155,7 +155,7 @@ namespace Qwack.Core.Curves
             return fv * df;
         }
 
-        public IrCurve BumpRate(int pillarIx, double delta, bool mutate)
+        public IIrCurve BumpRate(int pillarIx, double delta, bool mutate)
         {
             if (mutate)
             {
@@ -196,7 +196,7 @@ namespace Qwack.Core.Curves
             return _interpolator.Sensitivity(T);
         }
 
-        public IrCurve RebaseDate(DateTime newAnchorDate)
+        public IIrCurve RebaseDate(DateTime newAnchorDate)
         {
             var pillarsDropped = _pillars.Count(x => x <= newAnchorDate);
             var newLength = _pillars.Length - pillarsDropped;
@@ -215,7 +215,7 @@ namespace Qwack.Core.Curves
             return newCurve;
         }
 
-        public IrCurve BumpRateFlat(double delta, bool mutate)
+        public IIrCurve BumpRateFlat(double delta, bool mutate)
         {
             if (mutate)
             {
@@ -234,9 +234,9 @@ namespace Qwack.Core.Curves
             }
         }
 
-        public Dictionary<DateTime, IrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate)
+        public Dictionary<DateTime, IIrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate)
         {
-            var o = new Dictionary<DateTime, IrCurve>();
+            var o = new Dictionary<DateTime, IIrCurve>();
 
             var lastBumpIx = _pillars.Length;
 

@@ -26,7 +26,7 @@ namespace Qwack.Core.Instruments
 
     public static class CashFlowScheduleEx
     {
-        public static double PV(this CashFlowSchedule schedule, IrCurve discountCurve, IrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate, DayCountBasis basisFloat, DateTime? filterDate)
+        public static double PV(this CashFlowSchedule schedule, IIrCurve discountCurve, IIrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate, DayCountBasis basisFloat, DateTime? filterDate)
         {
             double totalPv = 0;
 
@@ -56,7 +56,7 @@ namespace Qwack.Core.Instruments
 
                             if (updateDf)
                             {
-                                df = discountCurve.Pv(1, flow.SettleDate);
+                                df = discountCurve.GetDf(discountCurve.BuildDate, flow.SettleDate);
                             }
                             else
                             {
@@ -91,7 +91,7 @@ namespace Qwack.Core.Instruments
                             }
 
                             if (updateDf)
-                                df = discountCurve.Pv(1, flow.SettleDate);
+                                df = discountCurve.GetDf(discountCurve.BuildDate, flow.SettleDate);
                             else
                                 df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
 
@@ -110,7 +110,7 @@ namespace Qwack.Core.Instruments
                             fv = flow.Notional;
 
                             if (updateDf)
-                                df = discountCurve.Pv(1, flow.SettleDate);
+                                df = discountCurve.GetDf(discountCurve.BuildDate, flow.SettleDate);
                             else
                                 df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
 
@@ -123,6 +123,37 @@ namespace Qwack.Core.Instruments
                                 flow.Pv = pv;
                             }
 
+                            break;
+                        }
+                    case FlowType.FloatInflation:
+                        {
+                            if (updateEstimate)
+                            {
+                                var s = flow.AccrualPeriodStart;
+                                var e = flow.AccrualPeriodEnd;
+                                var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, basisFloat);
+                                rateLin += flow.FixedRateOrMargin;
+                                var yf = flow.YearFraction;
+                                fv = rateLin * yf * flow.Notional;
+                            }
+                            else
+                            {
+                                fv = flow.Fv;
+                            }
+
+                            if (updateDf)
+                                df = discountCurve.GetDf(discountCurve.BuildDate, flow.SettleDate);
+                            else
+                                df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
+
+                            pv = fv * df;
+                            totalPv += pv;
+
+                            if (updateState)
+                            {
+                                flow.Fv = fv;
+                                flow.Pv = pv;
+                            }
                             break;
                         }
                 }

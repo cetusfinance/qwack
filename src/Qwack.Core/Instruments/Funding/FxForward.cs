@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -56,7 +58,7 @@ namespace Qwack.Core.Instruments.Funding
             var discountCurve = Model.Curves[ForeignDiscountCurve];
             var fwdRate = Model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
             var FV = (fwdRate - Strike) * DomesticQuantity;
-            var PV = discountCurve.Pv(FV, DeliveryDate);
+            var PV = FV * discountCurve.GetDf(Model.BuildDate, DeliveryDate);
 
             return PV;
         }
@@ -78,8 +80,8 @@ namespace Qwack.Core.Instruments.Funding
             var foreignCurve = model.FxMatrix.DiscountCurveMap[ForeignCCY];
             var domesticCurve = model.FxMatrix.DiscountCurveMap[DomesticCCY];
             var discountCurve = model.Curves[ForeignDiscountCurve];
-            var df = discountCurve.Pv(1.0, DeliveryDate);
-            var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, DeliveryDate);
+            var df = discountCurve.GetDf(model.BuildDate, DeliveryDate);
+            var t = ((discountCurve as IrCurve)?.Basis ?? DayCountBasis.Act_365F).CalculateYearFraction(discountCurve.BuildDate, DeliveryDate);
             var fwdRate = model.GetFxRate(DeliveryDate, DomesticCCY, ForeignCCY);
 
             var domesticDict = new Dictionary<DateTime, double>() { { DeliveryDate, fwdRate * DomesticQuantity * df * t } };
@@ -194,7 +196,7 @@ namespace Qwack.Core.Instruments.Funding
             var df1 = model.GetCurve(model.FxMatrix.GetDiscountCurve(DomesticCCY.Ccy)).GetDf(spotDate, PillarDate);
             var df2 = df1 / fxr;
             var discountCurve = model.Curves[SolveCurve];
-            var t = discountCurve.Basis.CalculateYearFraction(spotDate, PillarDate);
+            var t = ((discountCurve as IrCurve)?.Basis ?? DayCountBasis.ACT365F).CalculateYearFraction(spotDate, PillarDate);
             var rate = -Log(df2) / t;
             if (double.IsNaN(rate) || double.IsInfinity(rate))
                 rate = 0.05;

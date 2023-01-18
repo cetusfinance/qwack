@@ -20,30 +20,30 @@ namespace Qwack.Models
         {
         }
 
-        public FundingModel(DateTime buildDate, IrCurve[] curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public FundingModel(DateTime buildDate, IIrCurve[] curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
             BuildDate = buildDate;
-            Curves = new Dictionary<string, IrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
+            Curves = new Dictionary<string, IIrCurve>(curves.ToDictionary(kv => kv.Name, kv => kv));
             FxMatrix = new FxMatrix(_currencyProvider);
             VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
 
-        public FundingModel(DateTime buildDate, Dictionary<string, IrCurve> curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public FundingModel(DateTime buildDate, Dictionary<string, IIrCurve> curves, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             _currencyProvider = currencyProvider;
             _calendarProvider = calendarProvider;
             BuildDate = buildDate;
-            Curves = new Dictionary<string, IrCurve>(curves);
+            Curves = new Dictionary<string, IIrCurve>(curves);
             FxMatrix = new FxMatrix(_currencyProvider);
             VolSurfaces = new Dictionary<string, IVolSurface>();
             SetupMappings();
         }
 
         public FundingModel(TO_FundingModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
-            this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
+            this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => (IIrCurve)new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
         {
             if (transportObject.VolSurfaces != null)
                 VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
@@ -55,14 +55,17 @@ namespace Qwack.Models
         {
             foreach (var curve in Curves)
             {
-                var key = $"{curve.Value.Currency.Ccy}é{curve.Value.CollateralSpec}";
-                if (_curvesBySpec.ContainsKey(key))
-                    throw new Exception($"More than one curve specifed with collateral key {key}");
-                _curvesBySpec.Add(key, curve.Key);
+                if (curve.Value is IrCurve c)
+                {
+                    var key = $"{c.Currency.Ccy}é{c.CollateralSpec}";
+                    if (_curvesBySpec.ContainsKey(key))
+                        throw new Exception($"More than one curve specifed with collateral key {key}");
+                    _curvesBySpec.Add(key, curve.Key);
+                }
             }
         }
 
-        public IrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec)
+        public IIrCurve GetCurveByCCyAndSpec(Currency ccy, string collateralSpec)
         {
             var key = $"{ccy.Ccy}é{collateralSpec}";
             if (!_curvesBySpec.TryGetValue(key, out var curveName))
@@ -79,7 +82,7 @@ namespace Qwack.Models
             return Curves[curveName];
         }
 
-        public Dictionary<string, IrCurve> Curves { get; private set; }
+        public Dictionary<string, IIrCurve> Curves { get; private set; }
         public Dictionary<string, IVolSurface> VolSurfaces { get; set; }
 
         private readonly Dictionary<string, string> _curvesBySpec = new();
@@ -92,7 +95,7 @@ namespace Qwack.Models
 
         public Dictionary<int, int> CalibrationItterations { get; set; }
         public Dictionary<int, string> CalibrationCurves { get; set; }
-        public void UpdateCurves(Dictionary<string, IrCurve> updateCurves) => Curves = new Dictionary<string, IrCurve>(updateCurves);
+        public void UpdateCurves(Dictionary<string, IIrCurve> updateCurves) => Curves = new Dictionary<string, IIrCurve>(updateCurves);
 
         public IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate)
         {
@@ -125,7 +128,7 @@ namespace Qwack.Models
 
         public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => c.Clone()).ToArray(), _currencyProvider, _calendarProvider)
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => (c as IrCurve).Clone()).ToArray(), _currencyProvider, _calendarProvider)
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };
@@ -207,7 +210,7 @@ namespace Qwack.Models
 
         public void SetupFx(IFxMatrix fxMatrix) => FxMatrix = fxMatrix;
 
-        public IrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
+        public IIrCurve GetCurve(string name) => Curves.TryGetValue(name, out var curve) ? curve : throw new Exception($"Curve named {name} not found");
         public IVolSurface GetVolSurface(string name) => TryGetVolSurface(name, out var surface) ? surface : throw new Exception($"Surface named {name} not found");
         private static string Shorten(string name) => name.Length == 7 && name[3] == '/' ? name.Substring(0, 3) + name.Substring(4, 3) : name;
         public bool TryGetVolSurface(string name, out IVolSurface volSurface)
@@ -266,7 +269,7 @@ namespace Qwack.Models
             {
                 BuildDate = BuildDate,
                 VolSurfaces = VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
-                Curves = Curves.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
+                Curves = Curves.ToDictionary(x => x.Key, x => (x.Value as IrCurve).GetTransportObject()),
                 FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject()
             };
     }

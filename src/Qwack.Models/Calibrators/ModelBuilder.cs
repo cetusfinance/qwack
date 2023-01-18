@@ -99,7 +99,7 @@ namespace Qwack.Models.Calibrators
                 var surface = new RiskyFlySurface(surfaceTo, currencyProvider);
                 surfaces.Add(surface);
             }
-            var irCurves = new Dictionary<string, IrCurve>();
+            var irCurves = new Dictionary<string, IIrCurve>();
             foreach (var c in spec.CmeBaseCurveSpecs)
             {
                 var ixForThis = new Dictionary<string, FloatRateIndex> { { c.QwackCode, indices[c.FloatRateIndex] } };
@@ -110,7 +110,7 @@ namespace Qwack.Models.Calibrators
             foreach (var c in spec.CmeBasisCurveSpecs)
             {
                 var fxPair = fxPairs.Single(x => $"{x.Domestic}{x.Foreign}" == c.FxPair);
-                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCmeFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency), c.CurveName, valDate, irCurves[c.BaseCurveName], currencyProvider, calendarProvider);
+                var curve = CMEModelBuilder.StripFxBasisCurve(Path.Combine(_filepath, FilenameCmeFwdsXml), fxPair, c.CmeFxPair, currencyProvider.GetCurrency(c.Currency), c.CurveName, valDate, irCurves[c.BaseCurveName] as IrCurve, currencyProvider, calendarProvider);
                 irCurves.Add(c.CurveName, curve);
             }
             foreach (var c in spec.CmeFxFutureSpecs)
@@ -145,7 +145,7 @@ namespace Qwack.Models.Calibrators
 
             foreach (var c in spec.FundingCurves)
             {
-                var baseCurve = irCurves[c.BaseCurve].Clone();
+                var baseCurve = (irCurves[c.BaseCurve] as IrCurve).Clone();
                 baseCurve.SolveStage = -1;
                 var floatIx = indices[c.FloatRateIndex];
                 var fCurve = QuickFundingCurveStripper.StripFlatSpread(c.Name, c.Spread, floatIx, baseCurve, currencyProvider, calendarProvider);

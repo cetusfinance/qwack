@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Qwack.Dates;
 using Qwack.Math.Solvers;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Math
 {
@@ -68,7 +70,7 @@ namespace Qwack.Math
                 return PriceFromYTC(couponRate, callPrice, tCall, ytc) - cleanPrice;
             });
 
-            return Solvers.Brent.BrentsMethodSolve(solverFn, 1e-6, 1, 1e-6);
+            return Brent.BrentsMethodSolve(solverFn, 1e-6, 1, 1e-6);
         }
 
         public static double MacaulayDuration(double couponRate, double faceValue, double ytm, double periodsPerYear, double tMaturity, double tNext, double cleanPrice)
@@ -115,7 +117,7 @@ namespace Qwack.Math
             return o;
         }
 
-        public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double,double> fxRates, double dirtyPriceInLocal)
+        public static double YtmInBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double, double> fxRates, double dirtyPriceInLocal)
         {
             var flows = BondFlows(couponRate, faceValue, periodsPerYear, tMaturity, tNext);
             var flowsInBase = flows.ToDictionary(f => f.Key, f => f.Value * fxRates(f.Key));
@@ -134,8 +136,71 @@ namespace Qwack.Math
                 return sum / faceValue - dirtyPriceInLocal * fxRates(0);
             };
 
-            var ytm = Solvers.Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);
+            var ytm = Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);
             return ytm;
+        }
+
+        public static double PvBpBase(double couponRate, double faceValue, double periodsPerYear, double tMaturity, double tNext, Func<double, double> fxRates, double dirtyPriceInLocal)
+        {
+            var flows = BondFlows(couponRate, faceValue, periodsPerYear, tMaturity, tNext);
+            var flowsInBase = flows.ToDictionary(f => f.Key, f => f.Value * fxRates(f.Key));
+
+            var tPerP = (tMaturity - tNext) / (flows.Count() - 1);
+
+            var pvFunc = (double ytm) =>
+            {
+                var sum = 0.0;
+                foreach (var kv in flows)
+                {
+                    var t = kv.Key;
+                    var n = (t - tNext) / tPerP;
+                    sum += kv.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, n);
+                }
+                sum /= System.Math.Pow(1.0 + ytm / periodsPerYear, tNext);
+                return sum / faceValue - dirtyPriceInLocal * fxRates(0);
+            };
+
+            var ytm = Brent.BrentsMethodSolve(pvFunc, -0.1, 1, 1e-6);
+
+            var pvBump = pvFunc(ytm + 0.0001);
+
+            return ytm;
+        }
+
+
+        public static double YtmInLcl(DateTime spotDate, Dictionary<DateTime, double> schedule, double dirtyPrice, double periodsPerYear, DayCountBasis basis = DayCountBasis.Thirty360)
+        {
+            return YtmInBase(spotDate, schedule, dirtyPrice, periodsPerYear, (t) => 1.0, basis);
+        }
+
+        public static double YtmInBase(DateTime spotDate, Dictionary<DateTime, double> schedule, double dirtyPrice, double periodsPerYear, Func<DateTime, double> fxRates, DayCountBasis basis = DayCountBasis.Thirty360)
+        {
+            var flowsInBase = schedule.ToDictionary(f => DateExtensions.CalculateYearFraction(spotDate, f.Key, basis), f => f.Value * fxRates(f.Key));
+            var tPerP = 1 / periodsPerYear;
+            return Brent.BrentsMethodSolve(delegate (double ytm)
+            {
+                var num = 0.0;
+                foreach (var item in flowsInBase)
+                {
+                    var y = (item.Key) / tPerP;
+                    num += item.Value / System.Math.Pow(1.0 + ytm / periodsPerYear, y);
+                }
+
+                //num /= System.Math.Pow(1.0 + ytm / periodsPerYear, tNext);
+                return num - dirtyPrice * fxRates(spotDate);
+            }, -0.1, 1.0, 1E-06);
+        }
+
+        public static (double ytw, DateTime workoutDate) YtwInLcl(DateTime spotDate, Dictionary<DateTime, double>[] schedules, double dirtyPrice, double periodsPerYear)
+        {
+            var yields = schedules.Select(s => (YtmInLcl(spotDate, s, dirtyPrice, periodsPerYear), s.Max(ss => ss.Key))).ToList();
+            return yields.OrderBy(x => x.Item1).First();
+        }
+
+        public static (double ytw, DateTime workoutDate) YtwInBase(DateTime spotDate, Dictionary<DateTime, double>[] schedules, double dirtyPrice, double periodsPerYear, Func<DateTime, double> fxRates)
+        {
+            var yields = schedules.Select(s => (YtmInBase(spotDate, s, dirtyPrice, periodsPerYear, fxRates), s.Max(ss => ss.Key))).ToList();
+            return yields.OrderBy(x => x.Item1).First();
         }
     }
 }

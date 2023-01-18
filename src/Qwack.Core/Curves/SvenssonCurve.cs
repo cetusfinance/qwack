@@ -170,5 +170,9 @@ namespace Qwack.Core.Curves
         }
 
         public SvenssonCurve Clone() => new SvenssonCurve(Beta0, Beta1, Beta2, Beta3, Tau1, Tau2, BuildDate, Name, Currency, CollateralSpec);
+        IIrCurve IIrCurve.BumpRate(int pillarIx, double delta, bool mutate) => throw new NotImplementedException();
+        IIrCurve IIrCurve.BumpRateFlat(double delta, bool mutate) => throw new NotImplementedException();
+        Dictionary<DateTime, IIrCurve> IIrCurve.BumpScenarios(double delta, DateTime lastSensitivityDate) => throw new NotImplementedException();
+        IIrCurve IIrCurve.RebaseDate(DateTime newAnchorDate) => throw new NotImplementedException();
     }
 }

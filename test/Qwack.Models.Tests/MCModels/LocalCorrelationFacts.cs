@@ -42,7 +42,7 @@ namespace Qwack.Models.Tests.MCModels
             var comSurface = new GridVolSurface(buildDate, new[] { 0.5 }, dates, vols.Select(x => new double[] { x }).ToArray(), StrikeType.ForwardDelta, Interpolator1DType.Linear, Interpolator1DType.LinearInVariance, DayCountBasis.Act365F) { AssetId = "CL" };
             var fxSurface = new ConstantVolSurface(buildDate, 0.16) { AssetId = "USD/ZAR" }; 
             var correlVector = new CorrelationTimeVector("CL", "USD/ZAR", _correls, times);
-            var fModel = new FundingModel(buildDate, new Dictionary<string, IrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            var fModel = new FundingModel(buildDate, new Dictionary<string, IIrCurve> { { "DISCO", dfCurve } }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             var fxM = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxM.Init(usd, buildDate, new Dictionary<Currency, double>() { { zar, 14.0 } }, new List<FxPair>() { pair }, new Dictionary<Currency, string> { { usd, "DISCO" }, { zar, "DISCO" } });
             fModel.SetupFx(fxM);

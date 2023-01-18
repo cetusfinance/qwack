@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -163,7 +164,7 @@ namespace Qwack.Core.Instruments.Funding
 
                 if (updateDfPay)
                 {
-                    df = discountCurvePay.Pv(1, flow.SettleDate);
+                    df = discountCurvePay.GetDf(model.BuildDate, flow.SettleDate);
                 }
                 else
                 {
@@ -203,7 +204,7 @@ namespace Qwack.Core.Instruments.Funding
 
                 if (updateDfRec)
                 {
-                    DF = discountCurveRec.Pv(1, flow.SettleDate);
+                    DF = discountCurveRec.GetDf(model.BuildDate, flow.SettleDate);
                 }
                 else
                 {
@@ -420,8 +421,8 @@ namespace Qwack.Core.Instruments.Funding
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => FlowSchedulePay.Flows.Concat(FlowScheduleRec.Flows).ToList();
 
         public double SuggestPillarValue(IFundingModel model) => SolveCurve == DiscountCurvePay
-                ? model.GetCurve(ForecastCurvePay).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadPay
-                : model.GetCurve(ForecastCurveRec).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadRec;
+                ? (model.GetCurve(ForecastCurvePay) as IrCurve).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadPay
+                : (model.GetCurve(ForecastCurveRec) as IrCurve).GetForwardCCRate(model.BuildDate, PillarDate) + ParSpreadRec;
 
 
     }

@@ -1517,7 +1517,10 @@ namespace Qwack.Models.Risk
 
             foreach (var curve in model.FundingModel.Curves)
             {
-                var curveObj = curve.Value;
+                var curveObj = curve.Value as IrCurve;
+
+                if (curveObj == null)
+                    continue;
 
                 var subPortfolio = new Portfolio()
                 {

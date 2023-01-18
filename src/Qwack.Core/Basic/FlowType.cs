@@ -1,10 +1,11 @@
-﻿namespace Qwack.Core.Basic
+namespace Qwack.Core.Basic
 {
     public enum FlowType
     {
         FloatRate,
         FixedRate,
         FixedAmount,
-        NotionalExchange
+        NotionalExchange,
+        FloatInflation
     }
 }

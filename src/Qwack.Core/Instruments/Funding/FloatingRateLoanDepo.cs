@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -177,6 +178,6 @@ namespace Qwack.Core.Instruments.Funding
             return LoanDepoSchedule.Flows;
         }
 
-        public double SuggestPillarValue(IFundingModel model) => model.GetCurve(ForecastCurve).GetForwardCCRate(model.BuildDate, PillarDate) + Spread;
+        public double SuggestPillarValue(IFundingModel model) => (model.GetCurve(ForecastCurve) as IrCurve).GetForwardCCRate(model.BuildDate, PillarDate) + Spread;
     }
 }

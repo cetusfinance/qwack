@@ -66,7 +66,6 @@ namespace Qwack.Core.Tests.Inflation
                 SolveStage = 0,
             };
 
-
             var model = new FundingModel(vd, new IIrCurve[] { usdIrCurve, cpiCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             var S = new NewtonRaphsonMultiCurveSolverStaged

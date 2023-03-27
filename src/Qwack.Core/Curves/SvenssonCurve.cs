@@ -56,6 +56,7 @@ namespace Qwack.Core.Curves
 
         public void SetRateIndex(FloatRateIndex rateIndex) => RateIndex = rateIndex;
 
+        public int SolveStage { get { throw new NotImplementedException(); } }
 
         public double GetDf(DateTime startDate, DateTime endDate)
         {

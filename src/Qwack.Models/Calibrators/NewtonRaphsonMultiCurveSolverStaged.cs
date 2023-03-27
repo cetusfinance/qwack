@@ -18,7 +18,7 @@ namespace Qwack.Models.Calibrators
 
         public bool InLineCurveGuessing { get; set; }
 
-        private const double JacobianBump = 0.00001;
+        public double JacobianBump { get; set; } = 0.00001;
 
         //private double[][] _jacobian;
         //double[] _currentPvs;
@@ -30,7 +30,7 @@ namespace Qwack.Models.Calibrators
             var itterationsPerStage = new Dictionary<int, int>();
             var curvesPerStange = new Dictionary<int, string>();
 
-            var maxStage = fundingModel.Curves.Max(x => (x.Value as IrCurve).SolveStage);
+            var maxStage = fundingModel.Curves.Max(x => x.Value.SolveStage);
             var curvesForStage = new List<IIrCurve>();
             var fundingInstruments = new List<IFundingInstrument>();
             for (var stage = 0; stage <= maxStage; stage++)
@@ -40,7 +40,7 @@ namespace Qwack.Models.Calibrators
 
                 foreach (var kv in fundingModel.Curves)
                 {
-                    if ((kv.Value as IrCurve).SolveStage == stage)
+                    if (kv.Value.SolveStage == stage)
                     {
                         var insForCurve = new List<IFundingInstrument>();
                         curvesForStage.Add(kv.Value);

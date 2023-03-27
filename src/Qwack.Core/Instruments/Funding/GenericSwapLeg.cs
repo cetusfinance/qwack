@@ -101,6 +101,25 @@ namespace Qwack.Core.Instruments.Funding
             var f = new CashFlowSchedule();
             var lf = new List<CashFlow>();
 
+            if(LegType==SwapLegType.InflationCoupon)
+            {
+                var yf = startDate.CalculateYearFraction(endDate, AccrualDCB);
+                lf.Add(new CashFlow
+                {
+                    Notional = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
+                    Fv = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
+                    SettleDate = endDate,
+                    AccrualPeriodEnd = endDate,
+                    AccrualPeriodStart = startDate,
+                    YearFraction = yf,
+                    Dcf = yf,
+                    FlowType = FlowType.FloatInflation,
+                    FixedRateOrMargin = (double)FixedRateOrMargin
+                });
+                f.Flows = lf;
+                return f;
+            }
+
             if (NotionalExchange is ExchangeType.FrontOnly or ExchangeType.Both)
             {
                 lf.Add(new CashFlow

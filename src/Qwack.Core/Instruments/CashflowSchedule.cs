@@ -129,12 +129,15 @@ namespace Qwack.Core.Instruments
                         {
                             if (updateEstimate)
                             {
+                                if (forecastCurve is not CPICurve infCurve)
+                                {
+                                    throw new Exception("Curve is not inflation type");
+                                }
                                 var s = flow.AccrualPeriodStart;
                                 var e = flow.AccrualPeriodEnd;
-                                var rateLin = forecastCurve.GetForwardRate(s, e, RateType.Linear, basisFloat);
-                                rateLin += flow.FixedRateOrMargin;
-                                var yf = flow.YearFraction;
-                                fv = rateLin * yf * flow.Notional;
+                                var cpiStart = forecastCurve.GetRate(s);
+                                var cpiEnd = forecastCurve.GetRate(e);
+                                fv = cpiEnd / cpiStart * flow.Notional * flow.FixedRateOrMargin * flow.YearFraction; 
                             }
                             else
                             {

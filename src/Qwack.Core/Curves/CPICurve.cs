@@ -28,7 +28,7 @@ namespace Qwack.Core.Curves
 
         private void BuildInterpolator()
         {
-            var allCpiPoints = new Dictionary<DateTime, double>(CpiHistory.Where(x => x.Key < BuildDate).ToDictionary(x => x.Key, x => x.Value));
+            var allCpiPoints = new Dictionary<DateTime, double>(CpiHistory.Where(x => x.Key <= BuildDate).ToDictionary(x => x.Key, x => x.Value));
 
             for (var i = 0; i < Pillars.Length; i++)
             {
@@ -56,6 +56,8 @@ namespace Qwack.Core.Curves
         public InflationIndex InflationIndex { get; set; }
 
         private IInterpolator1D _cpiInterp;
+
+        public int SolveStage { get; set; }
 
         public IIrCurve BumpRate(int pillarIx, double delta, bool mutate)
         {

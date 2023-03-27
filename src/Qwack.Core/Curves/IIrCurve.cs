@@ -25,5 +25,7 @@ namespace Qwack.Core.Curves
         DayCountBasis Basis { get; }
 
         IIrCurve RebaseDate(DateTime newAnchorDate);
+
+        int SolveStage { get; }
     }
 }

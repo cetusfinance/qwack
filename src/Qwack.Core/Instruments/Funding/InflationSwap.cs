@@ -14,7 +14,7 @@ namespace Qwack.Core.Instruments.Funding
         public InflationSwap() { }
 
         public InflationSwap(DateTime startDate, Frequency swapTenor, InflationIndex rateIndex, double parRate,
-            SwapPayReceiveType swapType, string forecastCurve, string discountCurve)
+            SwapPayReceiveType swapType, string forecastCurveCpi, string forecastCurveIr, string discountCurve)
         {
             SwapTenor = swapTenor;
             ResetFrequency = rateIndex.ResetFrequency;
@@ -27,15 +27,15 @@ namespace Qwack.Core.Instruments.Funding
             RateIndex = rateIndex;
             Currency = rateIndex.Currency;
 
-            FixedLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
+            CpiLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFixed)
             {
                 FixedRateOrMargin = (decimal)parRate,
-                LegType = SwapLegType.Fixed,
+                LegType = SwapLegType.InflationCoupon,
                 Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M),
                 AccrualDCB = rateIndex.DayCountBasisFixed
             };
-            FloatLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
+            IrLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
                 ResetFrequency, BasisFloat)
             {
                 FixedRateOrMargin = 0.0M,
@@ -43,12 +43,13 @@ namespace Qwack.Core.Instruments.Funding
                 Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M),
                 AccrualDCB = rateIndex.DayCountBasis
             };
-            FlowScheduleFixed = FixedLeg.GenerateSchedule();
-            FlowScheduleFloat = FloatLeg.GenerateSchedule();
+            FlowScheduleCpiLinked = CpiLeg.GenerateSchedule();
+            FlowScheduleIrLinked = IrLeg.GenerateSchedule();
 
-            ResetDates = FlowScheduleFloat.Flows.Select(x => x.FixingDateStart).ToArray();
+            ResetDates = FlowScheduleIrLinked.Flows.Select(x => x.FixingDateStart).ToArray();
 
-            ForecastCurve = forecastCurve;
+            ForecastCurveCpi = forecastCurveCpi;
+            ForecastCurveIr = forecastCurveIr;
             DiscountCurve = discountCurve;
         }
 
@@ -59,16 +60,17 @@ namespace Qwack.Core.Instruments.Funding
         public int NDates { get; set; }
         public DateTime[] ResetDates { get; set; }
         public Currency Currency { get; set; }
-        public GenericSwapLeg FixedLeg { get; set; }
-        public GenericSwapLeg FloatLeg { get; set; }
-        public CashFlowSchedule FlowScheduleFixed { get; set; }
-        public CashFlowSchedule FlowScheduleFloat { get; set; }
+        public GenericSwapLeg CpiLeg { get; set; }
+        public GenericSwapLeg IrLeg { get; set; }
+        public CashFlowSchedule FlowScheduleCpiLinked { get; set; }
+        public CashFlowSchedule FlowScheduleIrLinked { get; set; }
         public DayCountBasis BasisFixed { get; set; }
         public DayCountBasis BasisFloat { get; set; }
         public Frequency ResetFrequency { get; set; }
         public Frequency SwapTenor { get; set; }
         public SwapPayReceiveType SwapType { get; set; }
-        public string ForecastCurve { get; set; }
+        public string ForecastCurveCpi { get; set; }
+        public string ForecastCurveIr { get; set; }
         public string DiscountCurve { get; set; }
         public string SolveCurve { get; set; }
         public DateTime PillarDate { get; set; }
@@ -79,19 +81,20 @@ namespace Qwack.Core.Instruments.Funding
 
         public DateTime LastSensitivityDate => EndDate;
 
-        public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurve }).Distinct().Where(x => x != SolveCurve).ToList();
+        public List<string> Dependencies(IFxMatrix matrix) => (new[] { DiscountCurve, ForecastCurveCpi, ForecastCurveIr }).Distinct().Where(x => x != SolveCurve).ToList();
 
         public double Pv(IFundingModel model, bool updateState)
         {
             var updateDf = updateState || (model.CurrentSolveCurve == DiscountCurve);
-            var updateEst = updateState || (model.CurrentSolveCurve == ForecastCurve);
+            var updateEst = updateState || (model.CurrentSolveCurve == ForecastCurveCpi);
 
             var discountCurve = model.Curves[DiscountCurve];
-            var forecastCurve = model.Curves[ForecastCurve];
-            var fixedPv = FlowScheduleFixed.PV(discountCurve, forecastCurve, updateState, updateDf, updateEst, BasisFloat, null);
-            var floatPv = FlowScheduleFloat.PV(discountCurve, forecastCurve, updateState, updateDf, updateEst, BasisFloat, null);
+            var forecastCurveCpi = model.Curves[ForecastCurveCpi];
+            var forecastCurveIr = model.Curves[ForecastCurveIr];
+            var cpiLegPv = FlowScheduleCpiLinked.PV(discountCurve, forecastCurveCpi, updateState, updateDf, updateEst, BasisFloat, null);
+            var irLegPv = FlowScheduleIrLinked.PV(discountCurve, forecastCurveIr, updateState, updateDf, updateEst, BasisFloat, null);
 
-            return fixedPv + floatPv;
+            return cpiLegPv + irLegPv;
         }
 
         //assumes zero cc rates for now
@@ -100,7 +103,7 @@ namespace Qwack.Core.Instruments.Funding
             //discounting first
             var discountDict = new Dictionary<DateTime, double>();
             var discountCurve = model.Curves[DiscountCurve];
-            foreach (var flow in FlowScheduleFloat.Flows.Union(FlowScheduleFixed.Flows))
+            foreach (var flow in FlowScheduleIrLinked.Flows.Union(FlowScheduleCpiLinked.Flows))
             {
                 var t = discountCurve.Basis.CalculateYearFraction(discountCurve.BuildDate, flow.SettleDate);
                 if (discountDict.ContainsKey(flow.SettleDate))
@@ -111,9 +114,9 @@ namespace Qwack.Core.Instruments.Funding
 
 
             //then forecast
-            var forecastDict = (ForecastCurve == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
-            var forecastCurve = model.Curves[ForecastCurve];
-            foreach (var flow in FlowScheduleFloat.Flows)
+            var forecastDict = (ForecastCurveCpi == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
+            var forecastCurve = model.Curves[ForecastCurveCpi];
+            foreach (var flow in FlowScheduleIrLinked.Flows)
             {
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;
                 var RateFloat = flow.Fv / (flow.Notional * flow.YearFraction);
@@ -136,7 +139,7 @@ namespace Qwack.Core.Instruments.Funding
             }
 
 
-            if (ForecastCurve == DiscountCurve)
+            if (ForecastCurveCpi == DiscountCurve)
                 return new Dictionary<string, Dictionary<DateTime, double>>()
             {
                 {DiscountCurve,discountDict },
@@ -145,14 +148,14 @@ namespace Qwack.Core.Instruments.Funding
                 return new Dictionary<string, Dictionary<DateTime, double>>()
             {
                 {DiscountCurve,discountDict },
-                {ForecastCurve,forecastDict },
+                {ForecastCurveCpi,forecastDict },
             };
         }
 
         public double CalculateParRate(IFundingModel model)
         {
-            var dFs = FlowScheduleFloat.Flows.Select(x => x.SettleDate).Select(y => model.Curves[DiscountCurve].GetDf(model.BuildDate, y));
-            var floatRates = FlowScheduleFloat.Flows.Select(x => x.GetFloatRate(model.Curves[ForecastCurve], BasisFloat)).ToArray();
+            var dFs = FlowScheduleIrLinked.Flows.Select(x => x.SettleDate).Select(y => model.Curves[DiscountCurve].GetDf(model.BuildDate, y));
+            var floatRates = FlowScheduleIrLinked.Flows.Select(x => x.GetFloatRate(model.Curves[ForecastCurveCpi], BasisFloat)).ToArray();
             var parRate = dFs.Select((x, ix) => x * floatRates[ix]).Sum() / dFs.Sum();
             return parRate;
         }
@@ -165,11 +168,11 @@ namespace Qwack.Core.Instruments.Funding
             Counterparty = Counterparty,
             DiscountCurve = DiscountCurve,
             EndDate = EndDate,
-            FixedLeg = FixedLeg.Clone(),
-            FloatLeg = FloatLeg.Clone(),
-            FlowScheduleFixed = FlowScheduleFixed.Clone(),
-            FlowScheduleFloat = FlowScheduleFloat.Clone(),
-            ForecastCurve = ForecastCurve,
+            CpiLeg = CpiLeg.Clone(),
+            IrLeg = IrLeg.Clone(),
+            FlowScheduleCpiLinked = FlowScheduleCpiLinked.Clone(),
+            FlowScheduleIrLinked = FlowScheduleIrLinked.Clone(),
+            ForecastCurveCpi = ForecastCurveCpi,
             NDates = NDates,
             Notional = Notional,
             ParRate = ParRate,
@@ -186,7 +189,7 @@ namespace Qwack.Core.Instruments.Funding
             HedgingSet = HedgingSet
         };
 
-        public IFundingInstrument SetParRate(double parRate) => new InflationSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurve, DiscountCurve)
+        public IFundingInstrument SetParRate(double parRate) => new InflationSwap(StartDate, SwapTenor, RateIndex, parRate, SwapType, ForecastCurveCpi, ForecastCurveIr, DiscountCurve)
         {
             TradeId = TradeId,
             SolveCurve = SolveCurve,
@@ -211,7 +214,7 @@ namespace Qwack.Core.Instruments.Funding
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
         {
             Pv(model.FundingModel, true);
-            return FlowScheduleFixed.Flows.Concat(FlowScheduleFloat.Flows).ToList();
+            return FlowScheduleCpiLinked.Flows.Concat(FlowScheduleIrLinked.Flows).ToList();
         }
 
         public double SuggestPillarValue(IFundingModel model) => ParRate;

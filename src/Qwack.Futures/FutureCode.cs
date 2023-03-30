@@ -172,44 +172,43 @@ namespace Qwack.Futures
             var monthNum = s_futureMonths.ToList().IndexOf(MonthCode) + 1;
 
             var dayOfMonthToStart = _settings.ExpiryGen.DayOfMonthToStart;
+
+            var dateInMonth = new DateTime(YearNumber, monthNum, 1);
+            dateInMonth = dateInMonth.AddMonths(_settings.ExpiryGen.MonthModifier);
+
             if (_settings.ExpiryGen.DayOfMonthToStart == 0 && !string.IsNullOrWhiteSpace(_settings.ExpiryGen.DayOfMonthToStartOther))
             {
                 switch (_settings.ExpiryGen.DayOfMonthToStartOther)
                 {
                     case "WED3":
-                        var dateInMonth = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Wednesday, 3).Day;
                         break;
                     case "FRI3":
-                        var dateInMonth2 = new DateTime(YearNumber, monthNum, 1);
-                        dayOfMonthToStart = dateInMonth2.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
+                        dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Friday, 3).Day;
                         break;
                     case "FRI2":
-                        var dateInMonthf2 = new DateTime(YearNumber, monthNum, 1);
-                        dayOfMonthToStart = dateInMonthf2.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
+                        dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
                         break;
                     case "LASTFRI":
-                        var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
-                        dayOfMonthToStart = dateInMonth1.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
+ 
+                        dayOfMonthToStart = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
                         break;
                     case "LASTWED":
-                        var dateInMonth4 = new DateTime(YearNumber, monthNum, 1);
-                        dayOfMonthToStart = dateInMonth4.NthLastSpecificWeekDay(DayOfWeek.Wednesday, 1)
+                        dayOfMonthToStart = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Wednesday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
                         break;
                     case "LASTMON-EUA":
-                        var dateInMonth3 = new DateTime(YearNumber, monthNum, 1);
-                        var lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
+                        var lastMon = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Monday, 1);
                         var holidayInWeek = false;
                         for (var i = 0; i < 5; i++)
                         {
                             holidayInWeek = holidayInWeek || _settings.RollGen.CalendarObject.IsHoliday(lastMon.AddDays(i));
                         }
                         if (holidayInWeek)
-                            lastMon = dateInMonth3.NthLastSpecificWeekDay(DayOfWeek.Monday, 2);
+                            lastMon = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Monday, 2);
 
                         dayOfMonthToStart = lastMon.IfHolidayRollBack(_settings.RollGen.CalendarObject).Day;
                         break;
@@ -218,8 +217,8 @@ namespace Qwack.Futures
                 }
             }
             var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
-
             d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
+
             var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
 
             foreach (var part in parts)

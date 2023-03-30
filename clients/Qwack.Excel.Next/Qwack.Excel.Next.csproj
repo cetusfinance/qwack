@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+      <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExcelDna.AddIn" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+      <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.0" />
+      <PackageReference Include="Azure.Identity" Version="1.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Qwack.Core\Qwack.Core.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Futures\Qwack.Futures.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Math.Interpolation\Qwack.Math.Interpolation.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Math\Qwack.Math.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Models\Qwack.Models.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Options\Qwack.Options.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Paths\Qwack.Paths.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Providers\Qwack.Providers.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Random\Qwack.Random.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Serialization\Qwack.Serialization.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Storage\Qwack.Storage.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Transport\Qwack.Transport.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Utils\Qwack.Utils.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Calendars.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Currencies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="futuresettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

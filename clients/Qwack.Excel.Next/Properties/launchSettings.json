@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Excel64": {
+      "executablePath": "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+      "commandLineArgs": "QwackDna64.xll"
+    },
+    "Excel": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+      "commandLineArgs": "QwackDna64.xll"
+    }
+  }
+}

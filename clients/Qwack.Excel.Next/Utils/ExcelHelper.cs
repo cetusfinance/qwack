@@ -1,0 +1,422 @@
+using ExcelDna.Integration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Qwack.Dates;
+using Qwack.Excel.Utils;
+using Qwack.Core.Cubes;
+using static Qwack.Core.Basic.Consts.Cubes;
+
+namespace Qwack.Excel.Services
+{
+    public static class ExcelHelper
+    {
+        private static readonly EventId _eventId = new EventId(1);
+
+        public static object Execute(ILogger logger, Func<object> functionToRun)
+        {
+            if (ExcelDnaUtil.IsInFunctionWizard()) return "Disabled in function wizard";
+
+            try
+            {
+                return functionToRun.Invoke();
+            }
+            catch (AggregateException agEx)
+            {
+                //logger?.LogWarning(_eventId, agEx.InnerExceptions.First(), "Unhandled exception");
+                return agEx.InnerExceptions.First().Message;
+            }
+            catch (Exception ex)
+            {
+                //logger?.LogWarning(_eventId, ex, "Unhandled exception");
+                return ex.Message;
+            }
+        }
+
+        public static object[] Execute(ILogger logger, Func<object[]> functionToRun)
+        {
+            if (ExcelDnaUtil.IsInFunctionWizard()) return new[] { "Disabled in function wizard" };
+
+            try
+            {
+                return functionToRun.Invoke();
+            }
+            catch (AggregateException agEx)
+            {
+                //logger?.LogWarning(_eventId, agEx.InnerExceptions.First(), "Unhandled exception");
+                return new[] { agEx.InnerExceptions.First().Message };
+            }
+            catch (Exception ex)
+            {
+                //logger?.LogWarning(_eventId, ex, "Unhandled exception");
+                return new[] { ex.Message };
+            }
+        }
+
+        public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles) => datesAsDoubles.Select(DateTime.FromOADate).ToArray();
+        public static DateTime[] ToDateTimeArray(this IEnumerable<double> datesAsDoubles, DateTime filterDate) => datesAsDoubles.Select(DateTime.FromOADate).Where(x => x >= filterDate).ToArray();
+        public static Tuple<DateTime, DateTime>[] ToDateTimeArray(this IEnumerable<Tuple<double, double>> datesAsDoubles) => datesAsDoubles.Select(x => new Tuple<DateTime, DateTime>(DateTime.FromOADate(x.Item1), DateTime.FromOADate(x.Item2))).ToArray();
+
+        public static T[][] SquareToJagged<T>(this T[,] data)
+        {
+            var o = new T[data.GetLength(0)][];
+            for(var r=0;r< data.GetLength(0);r++)
+            {
+                o[r] = new T[data.GetLength(1)];
+                for(var c=0;c<data.GetLength(1);c++)
+                {
+                    o[r][c] = data[r, c];
+                }
+            }
+            return o;
+        }
+
+        public static Dictionary<T1, T2> RangeToDictionary<T1, T2>(this object[,] input)
+        {
+            if (input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 range for dictionary");
+
+            var o = new Dictionary<T1, T2>();
+            for (var r = 0; r < input.GetLength(0); r++)
+            {
+                T1 val1;
+                T2 val2;
+
+                if (typeof(T1).IsEnum)
+                    val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
+                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double)
+                {
+                    val1 = (T1)((object)DateTime.FromOADate((double)input[r, 0]));
+                }
+                else
+                    val1 = (T1)Convert.ChangeType(input[r, 0], typeof(T1));
+
+                if (typeof(T2).IsEnum)
+                    val2 = (T2)Enum.Parse(typeof(T2), (string)input[r, 1]);
+                else if (typeof(T2) == typeof(DateTime) && input[r, 1] is double)
+                {
+                    val2 = (T2)((object)DateTime.FromOADate((double)input[r, 1]));
+                }
+                else
+                    val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
+
+                o.Add(val1, val2);
+            }
+            return o;
+        }
+
+        public static object[,] DictionaryToRange<T1, T2>(this Dictionary<T1, T2> input)
+        {
+            var o = new object[input.Count(), 2];
+
+            var r = 0;
+            foreach (var kv in input)
+            {
+                o[r, 0] = kv.Key;
+                o[r, 1] = kv.Value;
+                r++;
+            }
+            return o;
+        }
+
+        public static List<KeyValuePair<T1, T2>> RangeToKvList<T1, T2>(this object[,] input)
+        {
+            if (input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 range for input data");
+
+            var o = new List<KeyValuePair<T1, T2>>();
+            for (var r = 0; r < input.GetLength(0); r++)
+            {
+                T1 val1;
+                T2 val2;
+
+                if (typeof(T1).IsEnum)
+                    val1 = (T1)Enum.Parse(typeof(T1), (string)input[r, 0]);
+                else if (typeof(T1) == typeof(DateTime) && input[r, 0] is double)
+                {
+                    val1 = (T1)((object)DateTime.FromOADate((double)input[r, 0]));
+                }
+                else
+                    val1 = (T1)Convert.ChangeType(input[r, 0], typeof(T1));
+
+                if (typeof(T2).IsEnum)
+                    val2 = (T2)Enum.Parse(typeof(T2), (string)input[r, 1]);
+                else if (typeof(T2) == typeof(DateTime) && input[r, 1] is double)
+                {
+                    val2 = (T2)((object)DateTime.FromOADate((double)input[r, 1]));
+                }
+                else
+                    val2 = (T2)Convert.ChangeType(input[r, 1], typeof(T2));
+
+                o.Add(new KeyValuePair<T1, T2>(val1, val2));
+            }
+            return o;
+        }
+
+        public static T OptionalExcel<T>(this object objectInput, T defaultValue)
+        {
+            var returnValue = defaultValue;
+            if (!(objectInput is ExcelMissing))
+                returnValue = (T)objectInput;
+
+            return returnValue;
+        }
+
+        public static object ReturnExcelRangeVector(this object[] data)
+        {
+            try
+            {
+                var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+                // Now you can inspect the size of the caller with 
+                var rows = caller.RowLast - caller.RowFirst + 1;
+                var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+                if (rows > cols) //return column vector
+                {
+                    var o = new object[data.Length, 1];
+                    for (var r = 0; r < o.Length; r++)
+                    {
+                        o[r, 0] = data[r];
+                    }
+                    return o;
+                }
+                else //return row vector == default behaviour
+                {
+                    return data;
+                }
+            }
+            catch 
+            {
+                return data;
+            }
+        }
+
+        public static object ReturnExcelRangeVectorFromDouble(this double[] data)
+        {
+            ExcelReference caller;
+            try
+            {
+                caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            }
+            catch
+            {
+                return data;
+            }
+
+            // Now you can inspect the size of the caller with 
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            if (rows > cols) //return column vector
+            {
+                var o = new object[data.Length, 1];
+                for (var r = 0; r < o.Length; r++)
+                {
+                    o[r, 0] = data[r];
+                }
+                return o;
+            }
+            else //return row vector == default behaviour
+            {
+                return data;
+            }
+        }
+
+        public static object ReturnExcelRangeVectorFromDate(this DateTime[] data)
+        {
+            ExcelReference caller;
+            try
+            {
+                caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            }
+            catch
+            {
+                return data;
+            }
+
+            // Now you can inspect the size of the caller with 
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            if (rows > cols) //return column vector
+            {
+                var o = new object[data.Length, 1];
+                for (var r = 0; r < o.Length; r++)
+                {
+                    o[r, 0] = data[r];
+                }
+                return o;
+            }
+            else //return row vector == default behaviour
+            {
+                return data;
+            }
+        }
+
+        public static IEnumerable<T> GetAnyFromCache<T>(this object[] Names)
+        {
+            var tCache = ContainerStores.GetObjectCache<T>();
+            var ts = new List<T>();
+            for (var i = 0; i < Names.GetLength(0); i++)
+                {
+                    var s = Names[i];
+                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string)
+                        && tCache.TryGetObject(s as string, out var o))
+                    {
+                        ts.Add(o.Value);
+                    }
+                }
+            return ts;
+        }
+
+        public static IEnumerable<T> GetAnyFromCache<T>(this object[,] Names)
+        {
+            var tCache = ContainerStores.GetObjectCache<T>();
+            var ts = new List<T>();
+            for (var i = 0; i < Names.GetLength(0); i++)
+                for (var j = 0; j < Names.GetLength(1); j++)
+                {
+                    var s = Names[i, j];
+                    if (!(s is ExcelMissing) && !(s is ExcelEmpty) && !string.IsNullOrWhiteSpace(s as string) 
+                        && tCache.TryGetObject(s as string, out var o))
+                    {
+                        ts.Add(o.Value);
+                    }
+                }
+            return ts;
+        }
+
+        public static T[] ObjectRangeToVector<T>(this object[,] input)
+        {      
+            if(input.GetLength(0)> input.GetLength(1))
+            {
+                var o = new T[input.GetLength(0)];
+                for(var i=0;i<input.GetLength(0);i++)
+                {
+                    o[i] = input[i, 0] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i, 0],typeof(T));
+                }
+                return o;
+            }
+            else
+            {
+                var o = new T[input.GetLength(1)];
+                for (var i = 0; i < input.GetLength(1); i++)
+                {
+                    o[i] = input[0, i] is ExcelEmpty ? default : (T)Convert.ChangeType(input[0, i], typeof(T));
+                }
+                return o;
+            }
+        }
+
+        public static T[] Flatten2d<T>(this T[,] input)
+        {
+            var o = new List<T>();
+            for (var i = 0; i < input.GetLength(0); i++)
+                for (var j = 0; j < input.GetLength(1); j++)
+                {
+                    if (!(input[i, j] is ExcelEmpty))
+                        o.Add(input[i, j]);
+                }
+            return o.ToArray();
+        }
+
+        public static Tuple<T1,T2> [] ObjectRangeToVector<T1,T2>(this object[,] input)
+        {
+            if (input.GetLength(0) != 2 && input.GetLength(1) != 2)
+                throw new Exception("Expected Nx2 or 2xN range");
+
+            if (input.GetLength(1) == 2)
+            {
+                var o = new Tuple<T1,T2>[input.GetLength(0)];
+                for (var i = 0; i < input.GetLength(0); i++)
+                {
+                    o[i] = new Tuple<T1, T2>(
+                        input[i, 0] is ExcelEmpty ? default : (T1)Convert.ChangeType(input[i, 0], typeof(T1)),
+                        input[i, 1] is ExcelEmpty ? default : (T2)Convert.ChangeType(input[i, 1], typeof(T2)));
+                }
+                return o;
+            }
+            else
+            {
+                var o = new Tuple<T1, T2>[input.GetLength(1)];
+                for (var i = 0; i < input.GetLength(1); i++)
+                {
+                    o[i] = new Tuple<T1, T2>(
+                       input[0, i] is ExcelEmpty ? default : (T1)Convert.ChangeType(input[0, i], typeof(T1)),
+                       input[1, i] is ExcelEmpty ? default : (T2)Convert.ChangeType(input[1, i], typeof(T2)));
+                }
+                return o;
+            }
+        }
+
+        public static T[,] ObjectRangeToMatrix<T>(this object[,] input)
+        {
+            var o = new T[input.GetLength(0), input.GetLength(1)];
+            for (var i = 0; i < input.GetLength(0); i++)
+            {
+                for (var j = 0; j < input.GetLength(1); j++)
+                {
+                    o[i,j] = input[i, j] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i, j], typeof(T));
+                }
+            }
+            return o;
+        }
+
+        public static T[] ObjectRangeToVector<T>(this object[] input)
+        {
+            var o = new T[input.Length];
+            for (var i = 0; i < input.Length; i++)
+            {
+                o[i] = input[i] is ExcelEmpty ? default : (T)Convert.ChangeType(input[i], typeof(T));
+            }
+            return o;
+        }
+
+        public static object ReturnPrettyExcelRangeVector(this object[,] data)
+        {
+            var caller = (ExcelReference)XlCall.Excel(XlCall.xlfCaller);
+            // Now you can inspect the size of the caller with 
+            var rows = caller.RowLast - caller.RowFirst + 1;
+            var cols = caller.ColumnLast - caller.ColumnFirst + 1;
+
+            var o = new object[rows, cols];
+
+            for(var r=0;r<o.GetLength(0);r++)
+                for(var c=0;c<o.GetLength(1);c++)
+                {
+                    if (r < data.GetLength(0) && c < data.GetLength(1))
+                        o[r, c] = data[r, c];
+                    else
+                        o[r, c] = string.Empty;
+                }
+
+            return o;
+        }
+
+        public static string PushToCache<T>(T objToPush, string ResultObjectName)
+        {
+            var resultCache = ContainerStores.GetObjectCache<T>();
+            resultCache.PutObject(ResultObjectName, new SessionItem<T> { Name = ResultObjectName, Value = objToPush });
+            return ResultObjectName + '¬' + resultCache.GetObject(ResultObjectName).Version;
+        }
+
+        public static ICube PackResults(DateTime[] dates, double[] values, string metric)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { ExposureDate, typeof(DateTime) },
+                { Metric, typeof(string) }
+            };
+            cube.Initialize(dataTypes);
+
+            for (var i = 0; i < dates.Length; i++)
+            {
+                cube.AddRow(new object[] { dates[i], metric }, values[i]);
+            }
+            return cube;
+        }
+    }
+}

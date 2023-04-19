@@ -78,5 +78,65 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(97, s2.Price);
         }
 
+
+        [Fact]
+        public void OISFuturePastFixings()
+        {
+            var bd = new DateTime(2023, 04, 19);
+            var pillars = new[] { bd, bd.AddDays(1000) };
+            var flatRate = 0.05;
+            var rates = pillars.Select(p => flatRate).ToArray();
+            CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
+            
+            var curve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
+
+            var ix = new FloatRateIndex
+            {
+                Currency = usd,
+                DayCountBasis = DayCountBasis.ACT360,
+                FixingOffset = 2.Bd(),
+                HolidayCalendars = cal,
+                ResetTenor = 3.Months(),
+                RollConvention = RollType.MF
+            };
+
+            var maturity = bd.AddDays(-1);
+            var accrualStart = maturity.SubtractPeriod(RollType.F, ix.HolidayCalendars, 3.Months());
+            var accrualEnd = maturity;
+            var dcf = accrualStart.CalculateYearFraction(accrualEnd, DayCountBasis.ACT360);
+            var fModel = new FundingModel(bd, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+
+            var sut = new OISFuture()
+            {
+                Currency = usd,
+                ContractSize = 1e6,
+                Position = 1,
+                DCF = dcf,
+                AverageStartDate = accrualStart,
+                AverageEndDate = accrualEnd,
+                ForecastCurve = "USD.BLAH",
+                Price = 100,
+                Index = ix
+            };
+
+            var fixRate = 0.025;
+            var bizDates = accrualStart.BusinessDaysInPeriod(accrualEnd, cal);
+            var fixings = bizDates.ToDictionary(x => x, x => fixRate);
+            curve.Fixings = fixings;
+
+            var par = sut.CalculateParRate(fModel);
+            var nDays = (accrualEnd - accrualStart).TotalDays;
+            var index = 1.0;
+            for (var i = 0; i < bizDates.Count -1; i++)
+            {
+                var d = (bizDates[i+1] - bizDates[i]).TotalDays;
+                index *= (1 + fixRate * d / 360);
+            }
+                
+            var expectedPar = 100.0 -  (index - 1) * 360 / nDays * 100.0;
+            Assert.Equal(expectedPar, par, 8);
+        }
+
     }
 }

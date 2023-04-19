@@ -31,7 +31,7 @@ namespace Qwack.Models.Calibrators
             return GetCurveForCode(parsed, qwackCode, curveName, indices, curves, futureSettingsProvider, currencyProvider, calendarProvider);
         }
 
-        public static IrCurve GetCurveForCode(IEnumerable<CMEFileRecord> parsed, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static IrCurve GetCurveForCode(IEnumerable<CMEFileRecord> parsed, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Dictionary<DateTime, double> fixings = null)
         {
             var q = parsed.ToDictionary(x => DateTime.ParseExact(x.MatDt, "yyyy-MM-dd", CultureInfo.InvariantCulture), x => x.SettlePrice);
             var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -39,7 +39,11 @@ namespace Qwack.Models.Calibrators
             var pillars = instruments.Select(x => x.PillarDate).OrderBy(x => x).ToArray();
             var fic = new FundingInstrumentCollection(currencyProvider);
             fic.AddRange(instruments);
-            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"));
+            var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"))
+            {
+                Fixings = fixings,
+            };
+            
             var fm = new FundingModel(origin, new[] { curve }, currencyProvider, calendarProvider);
 
             var solver = new NewtonRaphsonMultiCurveSolverStaged();
@@ -239,6 +243,24 @@ namespace Qwack.Models.Calibrators
                         ForecastCurve = forecastCurves["FF"],
                         AverageStartDate = ffStart,
                         AverageEndDate = ffEnd,
+                    };
+                case "SR3":
+                    var srEnd = FutureCode.GetExpiryFromCode(MmmYtoCode(record.MMY, qwackCode), futureSettingsProvider);
+                    var srStart = srEnd.AddMonths(-3).ThirdWednesday();
+                    return new OISFuture
+                    {
+                        ContractSize = 1e6,
+                        Currency = currencyProvider.GetCurrency("USD"),
+                        DCF = srStart.CalculateYearFraction(srEnd, DayCountBasis.ACT360),
+                        Price = record.SettlePrice.Value,
+                        Index = indices["SR3"],
+                        PillarDate = srEnd,
+                        TradeId = qwackCode + record.MMY,
+                        Position = 1,
+                        SolveCurve = forecastCurves["SR3"],
+                        ForecastCurve = forecastCurves["SR3"],
+                        AverageStartDate = srStart,
+                        AverageEndDate = srEnd,
                     };
                 default:
                     throw new Exception($"No mapping found for code {qwackCode}");

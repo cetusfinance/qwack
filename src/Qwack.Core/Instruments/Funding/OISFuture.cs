@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -39,7 +41,30 @@ namespace Qwack.Core.Instruments.Funding
         public double CalculateParRate(IFundingModel Model)
         {
             var forecastCurve = Model.Curves[ForecastCurve];
-            var fwdRate = forecastCurve.GetForwardRate(AverageStartDate, AverageEndDate, RateType.Linear, Index.DayCountBasis);
+            var cal = Index?.HolidayCalendars ?? Currency.SettlementCalendar;
+            double fwdRate = 0;
+            if (Model?.BuildDate > AverageStartDate && forecastCurve is IrCurve fc &&  fc.Fixings!=null)
+            {
+                var avgDates = AverageStartDate.BusinessDaysInPeriod(AverageEndDate, cal);
+                var rates = avgDates.Select(d => fc.Fixings.TryGetValue(d, out var x) ? x : 0).ToArray();
+                var index = 1.0;
+                for(var i=0;i< avgDates.Count-1; i++)
+                {
+                    if (rates[i] == 0 && avgDates[i]>= Model.BuildDate)
+                    {
+                        rates[i] = forecastCurve.GetForwardRate(avgDates[i], avgDates[i+1], RateType.Linear, Index.DayCountBasis);
+                    }
+                    else if (i>0 && rates[i] == 0 && rates[i-1]!=0)
+                        rates[i] = rates[i-1];
+
+                    var d = avgDates[i + 1].Subtract(avgDates[i]).TotalDays;
+                    index *= 1 + rates[i] * d / 360.0;
+                }
+                var bigD = AverageEndDate.Subtract(AverageStartDate).TotalDays;
+                fwdRate = (index - 1) * 360.0 / bigD;
+            }
+            else
+                fwdRate = forecastCurve.GetForwardRate(AverageStartDate, AverageEndDate, RateType.Linear, Index.DayCountBasis);
 
             var fairPrice = 100.0 - fwdRate * 100.0;
             return fairPrice;

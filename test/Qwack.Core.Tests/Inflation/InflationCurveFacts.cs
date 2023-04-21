@@ -71,13 +71,50 @@ namespace Qwack.Core.Tests.Inflation
             var S = new NewtonRaphsonMultiCurveSolverStaged
             {
                 JacobianBump = 0.01,
-                Tollerance =  0.00000001,
+                Tollerance = 0.00000001,
                 MaxItterations = 100,
             };
 
             S.Solve(model, fic);
 
             Assert.DoesNotContain(rates, double.IsNaN);
+        }
+
+        [Fact]
+        public void TestInflationPerfSwap()
+        {
+            var vd = new DateTime(2023, 02, 01);
+            var usd = TestProviderHelper.CurrencyProvider.GetCurrencySafe("USD");
+            var usdIrCurve = new ConstantRateIrCurve(0.05, vd, "USD-CURVE", usd)
+            {
+                SolveStage = -1,
+            };
+
+            var infIx = new InflationIndex
+            {
+                Currency = usd,
+                DayCountBasis = DayCountBasis.Act_Act,
+                DayCountBasisFixed = DayCountBasis.Act_Act,
+                FixingInterpolation = Interpolator1DType.Linear,
+                FixingLag = 1.Months(),
+                ResetFrequency = 1.Years()
+            };
+
+            var pillars = new DateTime[] { vd, vd.AddYears(1).AddMonths(-1) };
+            var cpiRates = new double[] { 100, 150 };
+            var cpiCurve = new CPICurve(vd, pillars, cpiRates, infIx, new Dictionary<DateTime, double> { { vd.AddMonths(-1), 100.0 } }) { Name = "USD-CPI" };
+
+            var fModel = new FundingModel(vd, new IIrCurve[] { usdIrCurve, cpiCurve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+
+            var infSwap1y = new InflationPerformanceSwap(vd, 1.Years(), infIx, 0.045, 1e6, Core.Basic.SwapPayReceiveType.Pay, "USD-CPI", "USD-CURVE")
+            {
+                SolveCurve = "USD-CPI",
+            };
+
+            Assert.Equal(0.5, infSwap1y.CalculateParRate(fModel), 3);
+            Assert.NotEqual(0, infSwap1y.Pv(fModel, false), 3);
+            infSwap1y = infSwap1y.SetParRate(infSwap1y.CalculateParRate(fModel)) as InflationPerformanceSwap;
+            Assert.Equal(0, infSwap1y.Pv(fModel, false), 8);
         }
     }
 }

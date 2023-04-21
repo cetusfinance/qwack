@@ -93,8 +93,8 @@ namespace Qwack.Core.Curves
 
         public double GetReturn(DateTime startDate, DateTime endDate)
         {
-            var cpiStart = _cpiInterp.Interpolate(startDate.ToOADate());
-            var cpiEnd = _cpiInterp.Interpolate(endDate.ToOADate());
+            var cpiStart = _cpiInterp.Interpolate(startDate.SubtractPeriod(InflationIndex.RollConvention, InflationIndex.HolidayCalendars, InflationIndex.FixingLag).ToOADate());
+            var cpiEnd = _cpiInterp.Interpolate(endDate.SubtractPeriod(InflationIndex.RollConvention, InflationIndex.HolidayCalendars, InflationIndex.FixingLag).ToOADate());
             return cpiEnd / cpiStart - 1;
         }
 

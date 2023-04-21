@@ -138,5 +138,131 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(expectedPar, par, 8);
         }
 
+        [Fact]
+        public void OISFutureRealSofrFixings()
+        {
+            var bd = new DateTime(2023, 04, 20);
+            var pillars = new[] { bd, bd.AddDays(1000) };
+            var flatRate = 0.05;
+            var rates = pillars.Select(p => flatRate).ToArray();
+            CalendarProvider.Collection.TryGetCalendar("LON", out var cal);
+            var usd = TestProviderHelper.CurrencyProvider["USD"];
+
+            var curve = new IrCurve(pillars, rates, bd, "USD.BLAH", Interpolator1DType.Linear, usd);
+
+            var ix = new FloatRateIndex
+            {
+                Currency = usd,
+                DayCountBasis = DayCountBasis.ACT360,
+                FixingOffset = 0.Bd(),
+                HolidayCalendars = cal,
+                ResetTenor = 3.Months(),
+                RollConvention = RollType.MF
+            };
+
+            var maturity = bd.AddDays(-1);
+            var accrualStart = maturity.SubtractPeriod(RollType.F, ix.HolidayCalendars, 3.Months()).ThirdWednesday();
+            var accrualEnd = maturity;
+            var dcf = accrualStart.CalculateYearFraction(accrualEnd, DayCountBasis.ACT360);
+            var fModel = new FundingModel(bd, new[] { curve }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+
+            var sut = new OISFuture()
+            {
+                Currency = usd,
+                ContractSize = 1e6,
+                Position = 1,
+                DCF = dcf,
+                AverageStartDate = accrualStart,
+                AverageEndDate = accrualEnd,
+                ForecastCurve = "USD.BLAH",
+                Price = 100,
+                Index = ix
+            };
+
+            var fixings = _sofrFixings.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value/100.0);
+            curve.Fixings = fixings;
+
+            var par = sut.CalculateParRate(fModel);
+            var edsp = 95.3850;
+            Assert.Equal(edsp, par, 4);
+        }
+
+        readonly Dictionary<string, double> _sofrFixings = new Dictionary<string, double>()
+        {
+            {"2023-04-19", 4.8},
+            {"2023-04-18", 4.8},
+            {"2023-04-17", 4.8},
+            {"2023-04-14", 4.8},
+            {"2023-04-13", 4.8},
+            {"2023-04-12", 4.8},
+            {"2023-04-11", 4.8},
+            {"2023-04-10", 4.81},
+            {"2023-04-06", 4.81},
+            {"2023-04-05", 4.81},
+            {"2023-04-04", 4.83},
+            {"2023-04-03", 4.84},
+            {"2023-03-31", 4.87},
+            {"2023-03-30", 4.82},
+            {"2023-03-29", 4.83},
+            {"2023-03-28", 4.84},
+            {"2023-03-27", 4.81},
+            {"2023-03-24", 4.8},
+            {"2023-03-23", 4.8},
+            {"2023-03-22", 4.55},
+            {"2023-03-21", 4.55},
+            {"2023-03-20", 4.55},
+            {"2023-03-17", 4.55},
+            {"2023-03-16", 4.57},
+            {"2023-03-15", 4.58},
+            {"2023-03-14", 4.55},
+            {"2023-03-13", 4.55},
+            {"2023-03-10", 4.55},
+            {"2023-03-09", 4.55},
+            {"2023-03-08", 4.55},
+            {"2023-03-07", 4.55},
+            {"2023-03-06", 4.55},
+            {"2023-03-03", 4.55},
+            {"2023-03-02", 4.55},
+            {"2023-03-01", 4.55},
+            {"2023-02-28", 4.55},
+            {"2023-02-27", 4.55},
+            {"2023-02-24", 4.55},
+            {"2023-02-23", 4.55},
+            {"2023-02-22", 4.55},
+            {"2023-02-21", 4.55},
+            {"2023-02-17", 4.55},
+            {"2023-02-16", 4.55},
+            {"2023-02-15", 4.55},
+            {"2023-02-14", 4.55},
+            {"2023-02-13", 4.55},
+            {"2023-02-10", 4.55},
+            {"2023-02-09", 4.55},
+            {"2023-02-08", 4.55},
+            {"2023-02-07", 4.55},
+            {"2023-02-06", 4.55},
+            {"2023-02-03", 4.55},
+            {"2023-02-02", 4.56},
+            {"2023-02-01", 4.31},
+            {"2023-01-31", 4.31},
+            {"2023-01-30", 4.3},
+            {"2023-01-27", 4.3},
+            {"2023-01-26", 4.3},
+            {"2023-01-25", 4.31},
+            {"2023-01-24", 4.3},
+            {"2023-01-23", 4.3},
+            {"2023-01-20", 4.3},
+            {"2023-01-19", 4.31},
+            {"2023-01-18", 4.3},
+            {"2023-01-17", 4.31},
+            {"2023-01-13", 4.3},
+            {"2023-01-12", 4.3},
+            {"2023-01-11", 4.3},
+            {"2023-01-10", 4.31},
+            {"2023-01-09", 4.31},
+            {"2023-01-06", 4.31},
+            {"2023-01-05", 4.31},
+            {"2023-01-04", 4.3},
+            {"2023-01-03", 4.31},
+        };
     }
 }

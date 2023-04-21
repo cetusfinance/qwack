@@ -32,7 +32,7 @@ jobs:
     - name: Build and Publish Excel Add-in
       working-directory: './'
       run: |
-        $version = Get-Content ../../version.txt
+        $version = Get-Content ./version.txt
         dotnet build Qwackl.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile 
     
     - name: Zip deployment

@@ -33,7 +33,7 @@ jobs:
       working-directory: './'
       run: |
         $version = Get-Content ./version.txt
-        dotnet build Qwackl.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile 
+        dotnet build Qwack.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile 
     
     - name: Zip deployment
       uses: vimtor/action-zip@v1

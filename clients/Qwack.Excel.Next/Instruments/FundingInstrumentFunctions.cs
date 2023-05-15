@@ -681,5 +681,102 @@ namespace Qwack.Excel.Instruments
                 return ExcelHelper.PushToCache(pair, ObjectName);
             });
         }
+
+        #region Inflation
+
+        [ExcelFunction(Description = "Creates a standard inflation swap object following conventions for the given rate index",
+           Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateInflationBenchmarkSwap), IsThreadSafe = Parallel)]
+        public static object CreateInflationBenchmarkSwap(
+              [ExcelArgument(Description = "Object name")] string ObjectName,
+              [ExcelArgument(Description = "Value date")] DateTime ValDate,
+              [ExcelArgument(Description = "Tenor")] string SwapTenor,
+              [ExcelArgument(Description = "Inflation Index")] string InfIndex,
+              [ExcelArgument(Description = "Par Rate")] double ParRate,
+              [ExcelArgument(Description = "Notional")] double Notional,
+              [ExcelArgument(Description = "Forecast Curve (CPI)")] string ForecastCurve,
+              [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
+              [ExcelArgument(Description = "Pay / Receive")] object PayRec,
+              [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+              [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var payRec = PayRec.OptionalExcel("Pay");
+
+                if (!ContainerStores.GetObjectCache<InflationIndex>().TryGetObject(InfIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", InfIndex);
+                    return $"Rate index {InfIndex} not found in cache";
+                }
+
+                if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
+                {
+                    return $"Could not parse pay/rec - {payRec}";
+                }
+
+                var tenor = new Frequency(SwapTenor);
+
+                var product = new InflationPerformanceSwap(ValDate, tenor, rIndex.Value, ParRate, Notional, pType, ForecastCurve, DiscountCurve)
+                {
+                    TradeId = ObjectName,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    Notional = Notional
+                };
+                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a new inflation index object", Category = CategoryNames.Instruments,
+           Name = CategoryNames.Instruments + "_" + nameof(CreateInflationIndex), IsVolatile = true, IsThreadSafe = Parallel)]
+        public static object CreateInflationIndex(
+             [ExcelArgument(Description = "Index name")] string IndexName,
+             [ExcelArgument(Description = "Currency")] string Currency,
+             [ExcelArgument(Description = "Rate forecast tenor")] string FixingInterpolation,
+             [ExcelArgument(Description = "Day count basis, float leg")] string DaycountBasisFloat,
+             [ExcelArgument(Description = "Day count basis, fixed leg")] string DaycountBasisFixed,
+             [ExcelArgument(Description = "Reset Frequency")] string ResetFrequency,
+             [ExcelArgument(Description = "Holiday calendars")] string HolidayCalendars,
+             [ExcelArgument(Description = "Fixing offset, e.g. 2b")] string FixingOffset,
+             [ExcelArgument(Description = "Roll convention")] string RollConvention)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!Enum.TryParse(DaycountBasisFixed, out DayCountBasis dFixed))
+                    return $"Could not parse fixed daycount - {DaycountBasisFixed}";
+                if (!Enum.TryParse(DaycountBasisFloat, out DayCountBasis dFloat))
+                    return $"Could not parse float daycount - {DaycountBasisFloat}";
+                if (!Enum.TryParse(RollConvention, out RollType rConv))
+                    return $"Could not parse roll convention - {RollConvention}";
+                if (!Enum.TryParse(FixingInterpolation, out Interpolator1DType iType))
+                    return $"Could not parse fixing interpolation - {FixingInterpolation}";
+
+                var resetFrequency = new Frequency(ResetFrequency);
+                var fixOffset = new Frequency(FixingOffset);
+
+                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(HolidayCalendars, out var cal))
+                {
+                    _logger?.LogInformation("Calendar {HolidayCalendars} not found in cache", HolidayCalendars);
+                    return $"Calendar {HolidayCalendars} not found in cache";
+                }
+
+                var infIndex = new InflationIndex
+                {
+                    Currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency],
+                    RollConvention = rConv,
+                    FixingInterpolation = iType,
+                    FixingLag = fixOffset,
+                    ResetFrequency = resetFrequency,
+                    HolidayCalendars = cal,
+                    DayCountBasis = dFloat,
+                    DayCountBasisFixed = dFixed
+                };
+
+                return ExcelHelper.PushToCache(infIndex, IndexName);
+            });
+        }
+
+        #endregion
     }
 }

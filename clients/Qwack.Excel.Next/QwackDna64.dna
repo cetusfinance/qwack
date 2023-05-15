@@ -1,4 +1,4 @@
-<DnaLibrary Name="Qwack.Excel" RuntimeVersion="v4.0">
+<DnaLibrary Name="Qwack.Excel.Next" RuntimeVersion="v4.0">
    <ExternalLibrary Path="Qwack.Excel.Next.dll" />
   <CustomUI>
     <customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>

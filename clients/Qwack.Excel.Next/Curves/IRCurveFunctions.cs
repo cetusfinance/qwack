@@ -128,9 +128,9 @@ namespace Qwack.Excel.Curves
                 var ccy = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[ccyStr];
 
                 var zeroRates = DiscountFactors
-                .Select((df, ix) => 
-                    DateTime.FromOADate(Pillars[ix])==BuildDate ? 0.0 
-                    : IrCurve.RateFromDF(BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F),df, rType))
+                .Select((df, ix) =>
+                    DateTime.FromOADate(Pillars[ix]) == BuildDate ? 0.0
+                    : IrCurve.RateFromDF(BuildDate.CalculateYearFraction(DateTime.FromOADate(Pillars[ix]), DayCountBasis.ACT365F), df, rType))
                 .ToArray();
 
                 if (DateTime.FromOADate(Pillars[0]) == BuildDate && zeroRates.Length > 1)
@@ -151,7 +151,7 @@ namespace Qwack.Excel.Curves
             {
                 if (ContainerStores.GetObjectCache<IIrCurve>().TryGetObject(ObjectName, out var curve))
                 {
-                    return curve.Value.GetDf(StartDate,EndDate);
+                    return curve.Value.GetDf(StartDate, EndDate);
                 }
 
                 return $"IR curve {ObjectName} not found in cache";
@@ -253,7 +253,7 @@ namespace Qwack.Excel.Curves
                 }
 
                 var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
-                
+
                 if (!(FxMatrix is ExcelMissing))
                     model.SetupFx(fxMatrix);
 
@@ -379,7 +379,7 @@ namespace Qwack.Excel.Curves
             return ExcelHelper.Execute(_logger, () =>
             {
                 var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
-                if(!modelCache.TryGetObject(FundingModelA,out var modelA))
+                if (!modelCache.TryGetObject(FundingModelA, out var modelA))
                 {
                     return $"Could not find funding model {FundingModelA}";
                 }
@@ -390,7 +390,7 @@ namespace Qwack.Excel.Curves
 
                 var combinedCurves = modelA.Value.Curves.Values.Concat(modelB.Value.Curves.Values).ToArray();
 
-                if(combinedCurves.Length != combinedCurves.Select(x=>x.Name).Distinct().Count())
+                if (combinedCurves.Length != combinedCurves.Select(x => x.Name).Distinct().Count())
                 {
                     return $"Not all curves have unique names";
                 }
@@ -437,14 +437,14 @@ namespace Qwack.Excel.Curves
                 var modelCache = ContainerStores.GetObjectCache<IFundingModel>();
                 var model = modelCache.GetObject(FundingModelName).Value;
 
-                return model.Curves.Keys.Select(x=>x as string).ToArray().ReturnExcelRangeVector();
+                return model.Curves.Keys.Select(x => x as string).ToArray().ReturnExcelRangeVector();
             });
         }
 
         [ExcelFunction(Description = "Extracts a curve from a funding model", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ExtractCurveFromModel), IsThreadSafe = false)]
         public static object ExtractCurveFromModel(
            [ExcelArgument(Description = "Funding model name")] string FundingModelName,
-           [ExcelArgument(Description = "Curve name")]  string CurveName,
+           [ExcelArgument(Description = "Curve name")] string CurveName,
            [ExcelArgument(Description = "Output curve object name")] string OutputName)
         {
             return ExcelHelper.Execute(_logger, () =>

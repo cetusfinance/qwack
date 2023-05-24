@@ -65,7 +65,7 @@ namespace Qwack.Core.Curves
 
         public Currency Currency;
 
-        public string CollateralSpec { get; private set; }
+        public string CollateralSpec { get; set; }
         public FloatRateIndex RateIndex { get; private set; }
 
         public Dictionary<DateTime, double> Fixings { get; set; }

@@ -4,6 +4,7 @@ using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
 
@@ -16,39 +17,57 @@ namespace Qwack.Core.Instruments.Funding
     public class FundingInstrumentCollection : List<IFundingInstrument>
     {
         private readonly ICurrencyProvider _currencyProvider;
+        private readonly ICalendarProvider _calendarProvider;
 
         public List<string> SolveCurves => this.Select(x => x.SolveCurve).Distinct().ToList();
 
-        public FundingInstrumentCollection(ICurrencyProvider currencyProvider) => _currencyProvider = currencyProvider;
+        public FundingInstrumentCollection(ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
+            _currencyProvider = currencyProvider;
+            _calendarProvider = calendarProvider;
+        }
 
         public FundingInstrumentCollection Clone()
         {
-            var fic = new FundingInstrumentCollection(_currencyProvider);
+            var fic = new FundingInstrumentCollection(_currencyProvider, _calendarProvider);
             fic.AddRange(this.Select(x => x.Clone()));
             return fic;
         }
 
-        public Dictionary<string, IrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
+        public Dictionary<string, IIrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
         {
-            var o = new Dictionary<string, IrCurve>();
+            var o = new Dictionary<string, IIrCurve>();
 
             foreach (var curveName in SolveCurves)
             {
-                var pillars = this.Where(x => x.SolveCurve == curveName)
-                    .Select(x => x.PillarDate)
+                var insInScope = this.Where(x => x.SolveCurve == curveName).ToList();
+                var pillars = insInScope.Select(x => x.PillarDate)
                     .OrderBy(x => x)
                     .ToArray();
-                if (pillars.Distinct().Count() != pillars.Count())
+                if (pillars.Distinct().Count() != pillars.Length)
                     throw new Exception($"More than one instrument has the same solve pillar on curve {curveName}");
 
-                var dummyRates = pillars.Select(x => 0.05).ToArray();
                 var ccy = _currencyProvider.GetCurrency(curveName.Split('.')[0]);
                 var colSpec = (curveName.Contains("[")) ? curveName.Split('[').Last().Trim("[]".ToCharArray()) : curveName.Substring(curveName.IndexOf('.') + 1);
                 if (o.Values.Any(v => v.CollateralSpec == colSpec))
                     colSpec = colSpec + "_" + curveName;
 
-                var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType, ccy, colSpec);
-                o.Add(curveName, irCurve);
+                if (insInScope.All(i => i is IIsInflationInstrument))
+                {
+                    var dummyRates = pillars.Select(x => 100.0).ToArray();
+                    var irCurve = new CPICurve(buildDate, pillars, dummyRates, DayCountBasis.Act360, new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy))
+                    {
+                        Name = curveName,
+                        CollateralSpec = colSpec,
+                    };
+                    o.Add(curveName, irCurve);
+                }
+                else
+                {
+                    var dummyRates = pillars.Select(x => 0.05).ToArray();
+                    var irCurve = new IrCurve(pillars, dummyRates, buildDate, curveName, interpType, ccy, colSpec);
+                    o.Add(curveName, irCurve);
+                }
             }
             return o;
         }

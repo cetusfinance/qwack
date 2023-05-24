@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class InflationSwap : IFundingInstrument, ISaCcrEnabledIR
+    public class InflationSwap : IFundingInstrument, ISaCcrEnabledIR, IIsInflationInstrument
     {
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public InflationSwap() { }
@@ -44,6 +45,10 @@ namespace Qwack.Core.Instruments.Funding
                 AccrualDCB = rateIndex.DayCountBasis
             };
             FlowScheduleCpiLinked = CpiLeg.GenerateSchedule();
+            foreach(var flow in FlowScheduleCpiLinked.Flows)
+            {
+                flow.CpiFixingLagInMonths = rateIndex.FixingLag.PeriodCount;
+            }
             FlowScheduleIrLinked = IrLeg.GenerateSchedule();
 
             ResetDates = FlowScheduleIrLinked.Flows.Select(x => x.FixingDateStart).ToArray();
@@ -57,7 +62,7 @@ namespace Qwack.Core.Instruments.Funding
         public double ParRate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public int NDates { get; set; }
+        public double InitialFixing { get; set; }
         public DateTime[] ResetDates { get; set; }
         public Currency Currency { get; set; }
         public GenericSwapLeg CpiLeg { get; set; }
@@ -78,6 +83,7 @@ namespace Qwack.Core.Instruments.Funding
         public string Counterparty { get; set; }
         public InflationIndex RateIndex { get; set; }
         public string PortfolioName { get; set; }
+       
 
         public DateTime LastSensitivityDate => EndDate;
 
@@ -91,7 +97,15 @@ namespace Qwack.Core.Instruments.Funding
             var discountCurve = model.Curves[DiscountCurve];
             var forecastCurveCpi = model.Curves[ForecastCurveCpi];
             var forecastCurveIr = model.Curves[ForecastCurveIr];
-            var cpiLegPv = FlowScheduleCpiLinked.PV(discountCurve, forecastCurveCpi, updateState, updateDf, updateEst, BasisFloat, null);
+
+            if (InitialFixing == 0)
+            {
+                if (!model.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
+                    throw new Exception($"Fixing dictionary not found for inflation index {ForecastCurveCpi}");
+
+                InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
+            }
+            var cpiLegPv = FlowScheduleCpiLinked.PV(discountCurve, forecastCurveCpi, updateState, updateDf, updateEst, BasisFloat, null, InitialFixing);
             var irLegPv = FlowScheduleIrLinked.PV(discountCurve, forecastCurveIr, updateState, updateDf, updateEst, BasisFloat, null);
 
             return cpiLegPv + irLegPv;
@@ -173,7 +187,7 @@ namespace Qwack.Core.Instruments.Funding
             FlowScheduleCpiLinked = FlowScheduleCpiLinked.Clone(),
             FlowScheduleIrLinked = FlowScheduleIrLinked.Clone(),
             ForecastCurveCpi = ForecastCurveCpi,
-            NDates = NDates,
+            InitialFixing = InitialFixing,
             Notional = Notional,
             ParRate = ParRate,
             PillarDate = PillarDate,

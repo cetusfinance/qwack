@@ -77,7 +77,7 @@ namespace Qwack.Curves.Benchmark
 
             var ccySwaps = new XccyBasisSwap[oisTenors.Length];
 
-            _instruments = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
+            _instruments = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             
             for (var i = 0; i < FRATenors.Length; i++)
             {

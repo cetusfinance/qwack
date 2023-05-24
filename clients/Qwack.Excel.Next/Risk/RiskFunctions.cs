@@ -240,7 +240,7 @@ namespace Qwack.Excel.Curves
                 var model = InstrumentFunctions.GetModelFromCache(ModelName, PortfolioName);
                 var fic = ContainerStores.GetObjectCache<FundingInstrumentCollection>().GetObjectOrThrow(FICName, $"FIC {FICName} not found in cache");
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(ReportingCcy);
-                var result = model.BenchmarkRisk(fic.Value, ContainerStores.CurrencyProvider, ccy);
+                var result = model.BenchmarkRisk(fic.Value, ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider, ccy);
                 return PushCubeToCache(result, ResultObjectName);
             });
         }

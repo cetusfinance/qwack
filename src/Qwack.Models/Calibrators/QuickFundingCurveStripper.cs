@@ -19,7 +19,7 @@ namespace Qwack.Models.Calibrators
             var instruments = pillars.Select(p =>
                 new FloatingRateLoanDepo(baseCurve.BuildDate, p, floatRateIndex, 1e6, spread, baseCurve.Name, name)  //-spread hack
                 { SolveCurve = name, PillarDate = p }).ToArray();
-            var fic = new FundingInstrumentCollection(currencyProvider);
+            var fic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             fic.AddRange(instruments);
             var solver = new NewtonRaphsonMultiCurveSolverStaged();
             var fm = new FundingModel(baseCurve.BuildDate, new[] { baseCurve, fCurve }, currencyProvider, calendarProvider);

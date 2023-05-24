@@ -32,7 +32,6 @@ namespace Qwack.Excel.Curves
              [ExcelArgument(Description = "Array of CPI forecasts")] double[] CPIForecasts,
              [ExcelArgument(Description = "Type of interpolation")] object InterpolationType,
              [ExcelArgument(Description = "Inflation Index")] string InfIndex,
-             [ExcelArgument(Description = "Fixing Dictionary")] string FixingDict,
              [ExcelArgument(Description = "Collateral Spec - default LIBOR.3M")] object CollateralSpec)
         {
             return ExcelHelper.Execute(_logger, () =>
@@ -52,15 +51,8 @@ namespace Qwack.Excel.Curves
                     return $"Rate index {InfIndex} not found in cache";
                 }
 
-                var fixings = new Dictionary<DateTime, double>();
-                if(ContainerStores.GetObjectCache<IFixingDictionary>().TryGetObject(FixingDict, out var fixDict))
-                {
-                    foreach(var kv in fixDict.Value)
-                        fixings.Add(kv.Key, kv.Value);
-                }
-
                 var pDates = Pillars.ToDateTimeArray();
-                var cObj = new CPICurve(BuildDate, pDates, CPIForecasts, rIndex.Value, fixings)
+                var cObj = new CPICurve(BuildDate, pDates, CPIForecasts, rIndex.Value)
                 {
                     Name = curveName,
                 };

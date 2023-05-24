@@ -110,13 +110,13 @@ namespace Qwack.Models.Tests.Risk
                 Price = 95,
                 PillarDate = _originDate.AddDays(180),
             };
-            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider)
             {
                 f1,
                 f2
             };
 
-            var cube = model.BenchmarkRisk(fic, TestProviderHelper.CurrencyProvider, usd);
+            var cube = model.BenchmarkRisk(fic, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, usd);
 
             var riskSum = cube.SumOfAllRows;
 

@@ -26,6 +26,8 @@ namespace Qwack.Core.Curves
 
         IIrCurve RebaseDate(DateTime newAnchorDate);
 
-        int SolveStage { get; }
+        int SolveStage { get; set; }
+
+        string CollateralSpec { get; set; }
     }
 }

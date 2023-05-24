@@ -49,14 +49,18 @@ namespace Qwack.Core.Curves
         public double Beta3 { get; }
         public double Tau1 { get; }
         public double Tau2 { get; }
-        public string CollateralSpec { get; private set; }
+        public string CollateralSpec { get; set; }
         public FloatRateIndex RateIndex { get; private set; }
 
         public void SetCollateralSpec(string collateralSpec) => CollateralSpec = collateralSpec;
 
         public void SetRateIndex(FloatRateIndex rateIndex) => RateIndex = rateIndex;
 
-        public int SolveStage { get { throw new NotImplementedException(); } }
+        public int SolveStage
+        {
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+        }
 
         public double GetDf(DateTime startDate, DateTime endDate)
         {

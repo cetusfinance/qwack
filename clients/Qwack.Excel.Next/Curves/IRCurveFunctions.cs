@@ -230,7 +230,7 @@ namespace Qwack.Excel.Curves
                     fxMatrix = fxMatrixCache.GetObject((string)FxMatrix).Value;
                 }
 
-                var emptyCurves = new Dictionary<string, IrCurve>();
+                var emptyCurves = new Dictionary<string, IIrCurve>();
                 if (fic != null)
                 {
                     emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
@@ -9,7 +10,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Instruments.Funding
 {
-    public class InflationPerformanceSwap : IFundingInstrument, ISaCcrEnabledIR
+    public class InflationPerformanceSwap : IFundingInstrument, ISaCcrEnabledIR, IIsInflationInstrument
     {
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public InflationPerformanceSwap() { }
@@ -44,7 +45,7 @@ namespace Qwack.Core.Instruments.Funding
         public double ParRate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public int NDates { get; set; }
+        public double InitialFixing { get; set; }
         public DateTime[] ResetDates { get; set; }
         public Currency Currency { get; set; }
 
@@ -70,8 +71,18 @@ namespace Qwack.Core.Instruments.Funding
         {
             var discountCurve = model.Curves[DiscountCurve];
             var forecastCurveCpi = model.Curves[ForecastCurveCpi];
-            
-            var cpiPerf = (forecastCurveCpi as CPICurve).GetReturn(StartDate, EndDate);
+   
+            if (InitialFixing == 0)
+            {
+                if (!model.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
+                    throw new Exception($"Fixing dictionary not found for inflation index {ForecastCurveCpi}");
+
+                InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
+            }
+
+            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+
+            var cpiPerf = forecast / InitialFixing - 1;
 
             var cpiLegFv = cpiPerf * Notional * (SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0);
             var fixedLegFv = FixedFlow;
@@ -89,10 +100,19 @@ namespace Qwack.Core.Instruments.Funding
         public double CalculateParRate(IFundingModel model)
         {
             var forecastCurveCpi = model.Curves[ForecastCurveCpi];
+            if (InitialFixing == 0)
+            {
+                if (!model.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
+                    throw new Exception($"Fixing dictionary not found for inflation index {ForecastCurveCpi}");
 
-            var cpiPerf = (forecastCurveCpi as CPICurve).GetReturn(StartDate, EndDate);
+                InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
+            }
 
-            return System.Math.Pow(cpiPerf + 1, 1 / T) - 1;
+            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+
+            var cpiPerf = forecast / InitialFixing;
+
+            return System.Math.Pow(cpiPerf, 1 / T) - 1;
         }
 
         public IFundingInstrument Clone() => new InflationPerformanceSwap
@@ -105,7 +125,7 @@ namespace Qwack.Core.Instruments.Funding
             EndDate = EndDate,
             FixedFlow = FixedFlow,        
             ForecastCurveCpi = ForecastCurveCpi,
-            NDates = NDates,
+            InitialFixing = InitialFixing,
             Notional = Notional,
             ParRate = ParRate,
             PillarDate = PillarDate,
@@ -147,7 +167,17 @@ namespace Qwack.Core.Instruments.Funding
             var discountCurve = model.FundingModel.Curves[DiscountCurve];
             var forecastCurveCpi = model.FundingModel.Curves[ForecastCurveCpi];
 
-            var cpiPerf = (forecastCurveCpi as CPICurve).GetReturn(StartDate, EndDate);
+            if (InitialFixing == 0)
+            {
+                if (!model.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
+                    throw new Exception($"Fixing dictionary not found for inflation index {ForecastCurveCpi}");
+
+                InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
+            }
+
+            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+
+            var cpiPerf = forecast / InitialFixing;
 
             var cpiLegFv = cpiPerf * Notional * (SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0);
             var fixedLegFv = FixedFlow;

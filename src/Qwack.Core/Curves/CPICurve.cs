@@ -14,21 +14,38 @@ namespace Qwack.Core.Curves
     {
         public CPICurve() { }
 
-        public CPICurve(DateTime buildDate, DateTime[] pillars, double[] cpiRates, InflationIndex inflationIndex, Dictionary<DateTime, double> cpiHistory = null) 
+        public CPICurve(DateTime buildDate, DateTime[] pillars, double[] cpiRates, InflationIndex inflationIndex) 
         {
             BuildDate = buildDate;
             Pillars = pillars;
             CpiRates = cpiRates;
             InflationIndex = inflationIndex;
             Basis = InflationIndex.DayCountBasis;
-            CpiHistory = cpiHistory ?? new Dictionary<DateTime, double>();
+
+            BuildInterpolator();
+        }
+
+        public CPICurve(DateTime buildDate, DateTime[] pillars, double[] cpiRates, DayCountBasis cpiBasis, Frequency cpiFixingLag, Calendar cpiCalendar)
+        {
+            BuildDate = buildDate;
+            Pillars = pillars;
+            CpiRates = cpiRates;
+            InflationIndex = new InflationIndex
+            {
+                DayCountBasis = cpiBasis,
+                RollConvention = RollType.P,
+                HolidayCalendars = cpiCalendar,
+                FixingLag = cpiFixingLag
+            };
+
+            Basis = cpiBasis;
 
             BuildInterpolator();
         }
 
         private void BuildInterpolator()
         {
-            var allCpiPoints = new Dictionary<DateTime, double>(CpiHistory.Where(x => x.Key <= BuildDate).ToDictionary(x => x.Key, x => x.Value));
+            var allCpiPoints = new Dictionary<DateTime, double>();
 
             for (var i = 0; i < Pillars.Length; i++)
             {
@@ -49,8 +66,6 @@ namespace Qwack.Core.Curves
         public DateTime[] Pillars { get; set; } = Array.Empty<DateTime>();
         public double[] CpiRates { get; set; } = Array.Empty<double>();
 
-        public Dictionary<DateTime, double> CpiHistory { get; set; } = new();
-
         public int NumberOfPillars => Pillars.Length;
 
         public InflationIndex InflationIndex { get; set; }
@@ -58,6 +73,7 @@ namespace Qwack.Core.Curves
         private IInterpolator1D _cpiInterp;
 
         public int SolveStage { get; set; }
+        public string CollateralSpec { get; set; }
 
         public IIrCurve BumpRate(int pillarIx, double delta, bool mutate)
         {
@@ -69,7 +85,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                return new CPICurve(BuildDate, Pillars, CpiRates.Select((x, ix) => ix == pillarIx ? x + delta : x).ToArray(), InflationIndex, CpiHistory);
+                return new CPICurve(BuildDate, Pillars, CpiRates.Select((x, ix) => ix == pillarIx ? x + delta : x).ToArray(), InflationIndex);
             }
         }
         public IIrCurve BumpRateFlat(double delta, bool mutate)
@@ -85,18 +101,13 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                return new CPICurve(BuildDate, Pillars, CpiRates.Select(x => x + delta).ToArray(), InflationIndex, CpiHistory);
+                return new CPICurve(BuildDate, Pillars, CpiRates.Select(x => x + delta).ToArray(), InflationIndex);
             }
         }
         public Dictionary<DateTime, IIrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate) => throw new NotImplementedException();
 
 
-        public double GetReturn(DateTime startDate, DateTime endDate)
-        {
-            var cpiStart = _cpiInterp.Interpolate(startDate.SubtractPeriod(InflationIndex.RollConvention, InflationIndex.HolidayCalendars, InflationIndex.FixingLag).ToOADate());
-            var cpiEnd = _cpiInterp.Interpolate(endDate.SubtractPeriod(InflationIndex.RollConvention, InflationIndex.HolidayCalendars, InflationIndex.FixingLag).ToOADate());
-            return cpiEnd / cpiStart - 1;
-        }
+        public double GetForecast(DateTime fixingDate, int fixingLagInMonths) => InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
 
         public double GetDf(DateTime startDate, DateTime endDate)
         {
@@ -130,7 +141,7 @@ namespace Qwack.Core.Curves
             }
             else
             {
-                return new CPICurve(BuildDate, Pillars, CpiRates.Select((x, ix) => ix == pillarIx ? rate : x).ToArray(), InflationIndex, CpiHistory);
+                return new CPICurve(BuildDate, Pillars, CpiRates.Select((x, ix) => ix == pillarIx ? rate : x).ToArray(), InflationIndex);
             }
         }
 

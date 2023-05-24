@@ -27,6 +27,7 @@ namespace Qwack.Core.Instruments
         public double Dcf { get; set; }
         public Currency Currency { get; set; }
         public double FixedRateOrMargin { get; set; }
+        public int CpiFixingLagInMonths { get; set; }
 
         public FlowType FlowType { get; set; }
         public DayCountBasis Basis { get; set; }
@@ -51,7 +52,8 @@ namespace Qwack.Core.Instruments
             FlowType = FlowType,
             Basis = Basis,
             RateIndex = RateIndex,
-            Dcf = Dcf
+            Dcf = Dcf,
+            CpiFixingLagInMonths = CpiFixingLagInMonths
         };
     }
 

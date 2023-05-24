@@ -93,7 +93,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var oisSwaps = new IrBasisSwap[oisTenors.Length];
             var FRAs = new ForwardRateAgreement[FRATenors.Length];
 
-            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             for (var i = 0; i < FRAs.Length; i++)
             {
@@ -193,7 +193,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var USDFRAs = new ForwardRateAgreement[FRATenors.Length];
 
 
-            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -352,7 +352,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var fxForwards = new FxForward[fxForwardTenors.Length];
             var xcySwaps = new XccyBasisSwap[xcySwapTenors.Length];
 
-            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {
@@ -481,7 +481,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var ZARdepos = new IrSwap[depoTenors.Length];
             var ZARFRAs = new ForwardRateAgreement[FRATenors.Length];
 
-            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider);
+            var FIC = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
 
             for (var i = 0; i < FRATenors.Length; i++)
             {

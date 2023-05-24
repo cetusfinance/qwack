@@ -40,7 +40,7 @@ namespace Qwack.Models.Calibrators
                 ForeignDiscountCurve = baseCurve.Name,
             });
 
-            var fic = new FundingInstrumentCollection(currencyProvider);
+            var fic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             fic.AddRange(fwdObjects);
             var pillars = fwds.Keys.OrderBy(x => x).ToArray();
             var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);

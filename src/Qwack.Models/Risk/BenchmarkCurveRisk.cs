@@ -17,7 +17,7 @@ namespace Qwack.Models.Risk
 {
     public static class BenchmarkCurveRisk
     {
-        public static ICube BenchmarkRiskWithReStrip(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, Currency reportingCcy)
+        public static ICube BenchmarkRiskWithReStrip(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency reportingCcy)
         {
             var insByCurve = riskCollection.GroupBy(x => x.SolveCurve);
             var curvesNeeded = insByCurve.Select(x => x.Key).ToArray();
@@ -42,10 +42,10 @@ namespace Qwack.Models.Risk
             sol.Solve(newFundingModel, riskCollection);
             var newModel = pvModel.VanillaModel.Clone(newFundingModel);
 
-            return newModel.BenchmarkRisk(riskCollection, currencyProvider, reportingCcy);
+            return newModel.BenchmarkRisk(riskCollection, currencyProvider, calendarProvider, reportingCcy);
         }
         
-        public static ICube BenchmarkRisk(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, Currency reportingCcy)
+        public static ICube BenchmarkRisk(this IPvModel pvModel, FundingInstrumentCollection riskCollection, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency reportingCcy)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -121,7 +121,7 @@ namespace Qwack.Models.Risk
 
             var parRates = insToRisk.Select(x => x.CalculateParRate(pvModel.VanillaModel.FundingModel)).ToList();
             var newIns = insToRisk.Select((x, ix) => x.SetParRate(parRates[ix]));
-            var newFic = new FundingInstrumentCollection(currencyProvider);
+            var newFic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             newFic.AddRange(newIns.OrderBy(x => x.SolveCurve).ThenBy(x => x.PillarDate));
 
             var fModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
@@ -150,7 +150,7 @@ namespace Qwack.Models.Risk
                 var bumpSize = GetBumpSize(insToRisk[i]);
 
                 var bumpedIns = newIns.Select((x, ix) => x.SetParRate(parRates[ix] + (ix == i ? bumpSize : 0.0)));
-                var newFicb = new FundingInstrumentCollection(currencyProvider);
+                var newFicb = new FundingInstrumentCollection(currencyProvider, calendarProvider);
                 newFicb.AddRange(bumpedIns);
 
                 var fModelb = fModel.DeepClone(null);

@@ -26,7 +26,7 @@ namespace Qwack.Core.Instruments
 
     public static class CashFlowScheduleEx
     {
-        public static double PV(this CashFlowSchedule schedule, IIrCurve discountCurve, IIrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate, DayCountBasis basisFloat, DateTime? filterDate)
+        public static double PV(this CashFlowSchedule schedule, IIrCurve discountCurve, IIrCurve forecastCurve, bool updateState, bool updateDf, bool updateEstimate, DayCountBasis basisFloat, DateTime? filterDate, double? initialCpiFixing = null)
         {
             double totalPv = 0;
 
@@ -135,8 +135,8 @@ namespace Qwack.Core.Instruments
                                 }
                                 var s = flow.AccrualPeriodStart;
                                 var e = flow.AccrualPeriodEnd;
-                                var cpiStart = forecastCurve.GetRate(s);
-                                var cpiEnd = forecastCurve.GetRate(e);
+                                var cpiStart = initialCpiFixing ?? forecastCurve.GetRate(s);
+                                var cpiEnd =  infCurve.GetForecast(e, flow.CpiFixingLagInMonths);
                                 fv = cpiEnd / cpiStart * flow.Notional * flow.FixedRateOrMargin * flow.YearFraction; 
                             }
                             else

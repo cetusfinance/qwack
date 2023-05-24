@@ -46,7 +46,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var swap2 = new IrSwap(startDate, swapTenor2, zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
             var depo = new IrSwap(startDate, 3.Months(), zar3m, 0.06, SwapPayReceiveType.Payer, "ZAR.JIBAR.3M", "ZAR.JIBAR.3M");
 
-            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider)
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider)
             {
                 swap,
                 swap2,

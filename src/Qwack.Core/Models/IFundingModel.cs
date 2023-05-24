@@ -39,5 +39,10 @@ namespace Qwack.Core.Models
         Dictionary<int, string> CalibrationCurves { get; set; }
 
         TO_FundingModel GetTransportObject();
+
+        IFixingDictionary GetFixingDictionary(string name);
+        bool TryGetFixingDictionary(string name, out IFixingDictionary fixings);
+        void AddFixingDictionary(string name, IFixingDictionary fixings);
+        void RemoveFixingDictionary(string name);
     }
 }

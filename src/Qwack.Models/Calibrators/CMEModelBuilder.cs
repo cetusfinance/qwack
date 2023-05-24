@@ -37,7 +37,7 @@ namespace Qwack.Models.Calibrators
             var origin = DateTime.ParseExact(parsed.First().BizDt, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var instruments = parsed.Select(p => ToQwackIns(p, qwackCode, futureSettingsProvider, currencyProvider, indices, curves)).ToList();
             var pillars = instruments.Select(x => x.PillarDate).OrderBy(x => x).ToArray();
-            var fic = new FundingInstrumentCollection(currencyProvider);
+            var fic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             fic.AddRange(instruments);
             var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), origin, curveName, Interpolator1DType.Linear, currencyProvider.GetCurrency("USD"))
             {
@@ -144,7 +144,7 @@ namespace Qwack.Models.Calibrators
                 ForeignDiscountCurve = ccyPair.Foreign == curveCcy ? curveName : baseCurve.Name,
             });
 
-            var fic = new FundingInstrumentCollection(currencyProvider);
+            var fic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             fic.AddRange(fwdObjects);
             var pillars = fwds.Keys.OrderBy(x => x).ToArray();
             var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);
@@ -190,7 +190,7 @@ namespace Qwack.Models.Calibrators
                 ForeignDiscountCurve = ccyPair.Foreign == curveCcy ? curveName : baseCurve.Name,
             });
 
-            var fic = new FundingInstrumentCollection(currencyProvider);
+            var fic = new FundingInstrumentCollection(currencyProvider, calendarProvider);
             fic.AddRange(fwdObjects);
             var pillars = fwds.Keys.OrderBy(x => x).ToArray();
             var curve = new IrCurve(pillars, pillars.Select(p => 0.01).ToArray(), valDate, curveName, Interpolator1DType.Linear, curveCcy);

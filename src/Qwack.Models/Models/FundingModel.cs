@@ -97,6 +97,23 @@ namespace Qwack.Models
         public Dictionary<int, string> CalibrationCurves { get; set; }
         public void UpdateCurves(Dictionary<string, IIrCurve> updateCurves) => Curves = new Dictionary<string, IIrCurve>(updateCurves);
 
+        private readonly Dictionary<string, IFixingDictionary> _fixings = new();
+
+        public void AddFixingDictionary(string name, IFixingDictionary fixings) => _fixings[name] = fixings;
+        public void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings)
+        {
+            foreach (var kv in fixings)
+                _fixings[kv.Key] = kv.Value;
+        }
+        public IFixingDictionary GetFixingDictionary(string name)
+        {
+            if (!_fixings.TryGetValue(name, out var dict))
+                throw new Exception($"Fixing dictionary with name {name} not found");
+            return dict;
+        }
+        public bool TryGetFixingDictionary(string name, out IFixingDictionary fixings) => _fixings.TryGetValue(name, out fixings);
+        public void RemoveFixingDictionary(string name) => _fixings.Remove(name);
+
         public IFundingModel BumpCurve(string curveName, int pillarIx, double deltaBump, bool mutate)
         {
             var newModel = new FundingModel(BuildDate, Curves.Select(kv =>

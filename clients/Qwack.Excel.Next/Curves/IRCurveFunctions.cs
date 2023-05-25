@@ -217,7 +217,8 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Funding instrument collection")] string FundingInstrumentCollection,
             [ExcelArgument(Description = "Curve to solve stage mappings")] object SolveStages,
             [ExcelArgument(Description = "Fx matrix object")] object FxMatrix,
-            [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces)
+            [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces,
+            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -251,8 +252,12 @@ namespace Qwack.Excel.Curves
                         }
                     }
                 }
+                var fixings = Fixings.GetAnyFromCache<IFixingDictionary>();
 
                 var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
+
+                foreach (var f in fixings)
+                    model.AddFixingDictionary(f.Name, f);
 
                 if (!(FxMatrix is ExcelMissing))
                     model.SetupFx(fxMatrix);

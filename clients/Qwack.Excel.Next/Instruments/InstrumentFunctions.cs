@@ -1444,6 +1444,9 @@ namespace Qwack.Excel.Instruments
             var dntOpts = Instruments.GetAnyFromCache<DoubleNoTouchOption>();
             var fltDepos = Instruments.GetAnyFromCache<FloatingRateLoanDepo>();
 
+            var infSwaps = Instruments.GetAnyFromCache<InflationPerformanceSwap>();
+            var infSwapsB = Instruments.GetAnyFromCache<InflationSwap>();
+
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
                 .SelectMany(s => s);
@@ -1484,6 +1487,10 @@ namespace Qwack.Excel.Instruments
             pf.Instruments.AddRange(otOpts);
             pf.Instruments.AddRange(dntOpts);
             pf.Instruments.AddRange(fltDepos);
+
+            pf.Instruments.AddRange(infSwaps);
+            pf.Instruments.AddRange(infSwapsB);
+
 
             return pf;
         }

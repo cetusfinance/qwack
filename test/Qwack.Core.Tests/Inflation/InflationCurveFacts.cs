@@ -83,6 +83,89 @@ namespace Qwack.Core.Tests.Inflation
         }
 
         [Fact]
+        public void TestInflationCurve2()
+        {
+            var vd = new DateTime(2023, 03, 01);
+            var usd = TestProviderHelper.CurrencyProvider.GetCurrencySafe("USD");
+            var usdIrCurve = new ConstantRateIrCurve(0.05, vd, "USD.CURVE", usd)
+            {
+                SolveStage = -1,
+            };
+
+            var infIx = new InflationIndex
+            {
+                Currency = usd,
+                DayCountBasis = DayCountBasis.Act360,
+                DayCountBasisFixed = DayCountBasis.Act360,
+                FixingInterpolation = Interpolator1DType.Linear,
+                FixingLag = 1.Months(),
+                ResetFrequency = 1.Years()
+            };
+
+            var infSwap6m = new InflationPerformanceSwap(vd, 6.Months(), infIx, 0.045, 1e6, SwapPayReceiveType.Pay, "USD.CPI", "USD.CURVE")
+            {
+                SolveCurve = "USD.CPI"
+            };
+            var infSwap1y = new InflationPerformanceSwap(vd, 1.Years(), infIx, 0.05, 1e6, SwapPayReceiveType.Pay, "USD.CPI", "USD.CURVE")
+            {
+                SolveCurve = "USD.CPI"
+            };
+            var infSwap2y = new InflationPerformanceSwap(vd, 2.Years(), infIx, 0.055, 1e6, SwapPayReceiveType.Pay, "USD.CPI", "USD.CURVE")
+            {
+                SolveCurve = "USD.CPI"
+            };
+            var infSwap3y = new InflationPerformanceSwap(vd, 3.Years(), infIx, 0.06, 1e6, SwapPayReceiveType.Pay, "USD.CPI", "USD.CURVE")
+            {
+                SolveCurve = "USD.CPI"
+            };
+            var infSwap5y = new InflationPerformanceSwap(vd, 5.Years(), infIx, 0.08, 1e6, SwapPayReceiveType.Pay, "USD.CPI", "USD.CURVE")
+            {
+                SolveCurve = "USD.CPI"
+            };
+
+
+            var fic = new FundingInstrumentCollection(TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider)
+            {
+                infSwap6m,
+                infSwap1y,
+                infSwap2y,
+                infSwap3y,
+                infSwap5y,
+            };
+
+            var curves = fic.ImplyContainedCurves(vd, Interpolator1DType.Linear);
+            curves.Add("USD.CURVE",usdIrCurve);
+
+            var fixings = new Dictionary<DateTime, double>()
+            {
+                { vd.AddMonths(-1), 110 },
+                { vd.AddMonths(-2), 100 },
+            };
+
+            var pillars = new[] { vd.AddYears(1), vd.AddYears(2) };
+            var rates = new[] { 120.0, 121.0 };
+
+            var model = new FundingModel(vd, curves.Values.ToArray(), TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
+            model.AddFixingDictionary("USD.CPI", new FixingDictionary(fixings));
+
+            var S = new NewtonRaphsonMultiCurveSolverStaged
+            {
+                JacobianBump = 0.01,
+                Tollerance = 0.00000001,
+                MaxItterations = 100,
+            };
+
+            S.Solve(model, fic);
+
+            var cpiCurve = curves["USD.CPI"] as CPICurve;
+            Assert.DoesNotContain(cpiCurve.CpiRates, double.IsNaN);
+            foreach(var i in fic)
+            {
+                Assert.Equal(0, i.Pv(model, false), 8);
+            }
+        }
+
+        [Fact]
         public void TestInflationPerfSwap()
         {
             var vd = new DateTime(2023, 02, 01);

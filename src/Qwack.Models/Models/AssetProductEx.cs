@@ -1254,6 +1254,8 @@ namespace Qwack.Models.Models
                 OISFuture => "OISFuture",
                 IrSwap => "IRSwap",
                 IrBasisSwap => "IRBasisSwap",
+                InflationPerformanceSwap => "InfPerfSwap",
+                InflationSwap => "InfSwap",
                 CashWrapper wrapper => TradeType(wrapper.UnderlyingInstrument),
                 _ => throw new Exception($"Unable to handle product of type {ins.GetType()}"),
             };

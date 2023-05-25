@@ -62,5 +62,27 @@ namespace Qwack.Excel.Curves
                 return ObjectName + '¬' + cache.GetObject(ObjectName).Version;
             });
         }
+
+        [ExcelFunction(Description = "Gets a CPI forecast from a curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetCpiForecast), IsThreadSafe = false)]
+        public static object GetCpiForecast(
+        [ExcelArgument(Description = "Curve object name")] string ObjectName,
+        [ExcelArgument(Description = "Fixing Date")] DateTime FixingDate,
+        [ExcelArgument(Description = "Fixing lag in months")] int LagInMonths)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (ContainerStores.GetObjectCache<IIrCurve>().TryGetObject(ObjectName, out var curve))
+                {
+                    if (curve.Value is CPICurve cpi)
+                    {
+                        return cpi.GetForecast(FixingDate, LagInMonths);
+                    }
+
+                    return $"Curve {ObjectName} is not a CPI Curve";
+                }
+
+                return $"CPI curve {ObjectName} not found in cache";
+            });
+        }
     }
 }

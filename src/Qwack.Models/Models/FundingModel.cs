@@ -47,6 +47,7 @@ namespace Qwack.Models
         {
             if (transportObject.VolSurfaces != null)
                 VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
+            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>();
             SetupFx(new FxMatrix(transportObject.FxMatrix, currencyProvider, calendarProvider));
         }
 
@@ -138,8 +139,12 @@ namespace Qwack.Models
             var returnValue = new FundingModel(BuildDate, Curves.Values.ToArray(), _currencyProvider, _calendarProvider)
             {
                 FxMatrix = FxMatrix,
-                VolSurfaces = VolSurfaces
+                VolSurfaces = VolSurfaces,
             };
+
+            foreach (var kv in _fixings)
+                returnValue.AddFixingDictionary(kv.Key, kv.Value);
+
             return returnValue;
         }
 
@@ -152,6 +157,10 @@ namespace Qwack.Models
 
             if (FxMatrix != null)
                 returnValue.SetupFx(FxMatrix.Clone());
+
+            foreach (var kv in _fixings)
+                returnValue.AddFixingDictionary(kv.Key, kv.Value);
+
             return returnValue;
         }
 
@@ -287,7 +296,8 @@ namespace Qwack.Models
                 BuildDate = BuildDate,
                 VolSurfaces = VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
                 Curves = Curves.ToDictionary(x => x.Key, x => (x.Value as IrCurve).GetTransportObject()),
-                FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject()
+                FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject(),
+                Fixings = _fixings?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
             };
     }
 

@@ -528,6 +528,7 @@ namespace Qwack.Excel.Instruments
                 var loanDepos = Instruments.GetAnyFromCache<FixedRateLoanDeposit>();
                 var ctgoSwaps = Instruments.GetAnyFromCache<ContangoSwap>();
                 var flrDepos = Instruments.GetAnyFromCache<FloatingRateLoanDepo>();
+                var infSwaps = Instruments.GetAnyFromCache<InflationPerformanceSwap>();
 
                 //allows merging of FICs into portfolios
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -546,6 +547,7 @@ namespace Qwack.Excel.Instruments
                 fic.AddRange(loanDepos);
                 fic.AddRange(ctgoSwaps);
                 fic.AddRange(flrDepos);
+                fic.AddRange(infSwaps);
 
                 return ExcelHelper.PushToCache(fic, ObjectName);
             });

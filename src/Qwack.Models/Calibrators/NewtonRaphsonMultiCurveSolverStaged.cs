@@ -58,7 +58,7 @@ namespace Qwack.Models.Calibrators
                             var points = insForCurve.ToDictionary(x => x.PillarDate, x => x.SuggestPillarValue(fundingModel));
                             for (var i = 0; i < kv.Value.NumberOfPillars; i++)
                             {
-                                kv.Value.SetRate(i, points[(kv.Value as IrCurve).PillarDates[i]], true);
+                                kv.Value.SetRate(i, points[kv.Value.PillarDates[i]], true);
                             }
                         }
                     }

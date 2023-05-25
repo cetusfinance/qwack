@@ -17,6 +17,8 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
         public DateTime BuildDate { get; set; }
         [ProtoMember(7)]
         public TO_FxMatrix FxMatrix { get; set; }
+        [ProtoMember(8)]
+        public Dictionary<string, TO_FixingDictionary> Fixings { get; set; }
 
     }
 }

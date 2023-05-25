@@ -57,7 +57,16 @@ namespace Qwack.Core.Instruments.Funding
         public string ForecastCurveCpi { get; set; }
         public string DiscountCurve { get; set; }
         public string SolveCurve { get; set; }
-        public DateTime PillarDate { get; set; }
+
+        private DateTime? _pillarDate;
+        public DateTime PillarDate
+        {
+            get => _pillarDate ?? EndDate;
+            set
+            {
+                _pillarDate = value;
+            }
+        }
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public InflationIndex RateIndex { get; set; }
@@ -169,7 +178,7 @@ namespace Qwack.Core.Instruments.Funding
 
             if (InitialFixing == 0)
             {
-                if (!model.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
+                if (!model.FundingModel.TryGetFixingDictionary(ForecastCurveCpi, out var fixingDictionary))
                     throw new Exception($"Fixing dictionary not found for inflation index {ForecastCurveCpi}");
 
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
@@ -177,7 +186,7 @@ namespace Qwack.Core.Instruments.Funding
 
             var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
 
-            var cpiPerf = forecast / InitialFixing;
+            var cpiPerf = forecast / InitialFixing - 1;
 
             var cpiLegFv = cpiPerf * Notional * (SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0);
             var fixedLegFv = FixedFlow;

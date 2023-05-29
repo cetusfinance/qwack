@@ -68,7 +68,7 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
                     Currency = ccy
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd);
+                product.PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(product.FlowScheduleFra.Flows.Last().AccrualPeriodEnd.ToOADate()));
 
 
                 return ExcelHelper.PushToCache(product, ObjectName);
@@ -232,7 +232,7 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
                     Notional = Notional
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+                product.PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(product.EndDate.ToOADate()));
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
@@ -321,7 +321,7 @@ namespace Qwack.Excel.Instruments
                     Position = Quantity,
                     Price = Price,
                     SolveCurve = SolveCurve.OptionalExcel(ForecastCurve),
-                    PillarDate = SolvePillarDate.OptionalExcel(accrualEnd),
+                    PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(accrualEnd.ToOADate())),
                     TradeId = ObjectName
                 };
 
@@ -368,7 +368,54 @@ namespace Qwack.Excel.Instruments
                     Position = Quantity,
                     Price = Price,
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
-                    PillarDate = SolvePillarDate.OptionalExcel(accrualEnd),
+                    PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(accrualEnd.ToOADate())),
+                    TradeId = ObjectName
+                };
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates a compounded SOFR rate future object from a futures code",
+          Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateSofrFutureFromCode), IsThreadSafe = Parallel)]
+        public static object CreateSofrFutureFromCode(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Value date")] DateTime ValDate,
+            [ExcelArgument(Description = "Futures Code, e.g. EDZ9")] string FuturesCode,
+            [ExcelArgument(Description = "Rate Index")] string RateIndex,
+            [ExcelArgument(Description = "Price")] double Price,
+            [ExcelArgument(Description = "Quantity in lots")] double Quantity,
+            [ExcelArgument(Description = "Forecast Curve")] string ForecastCurve,
+            [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+            [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<FloatRateIndex>().TryGetObject(RateIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", RateIndex);
+                    return $"Rate index {RateIndex} not found in cache";
+                }
+
+                var c = new FutureCode(FuturesCode, DateTime.Today.Year - 2, ContainerStores.SessionContainer.GetService<IFutureSettingsProvider>());
+
+                var expiry = c.GetExpiry();
+                var accrualStart = expiry.AddMonths(-3).ThirdWednesday();
+                var accrualEnd = expiry;
+                var dcf = accrualStart.CalculateYearFraction(accrualEnd, rIndex.Value.DayCountBasis);
+                var product = new OISFuture
+                {
+                    Currency = rIndex.Value.Currency,
+                    ContractSize = c.Settings.LotSize,
+                    DCF = dcf,
+                    AverageStartDate = accrualStart,
+                    AverageEndDate = accrualEnd,
+                    ForecastCurve = ForecastCurve,
+                    Index = rIndex.Value,
+                    Position = Quantity,
+                    Price = Price,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(accrualEnd.ToOADate())),
                     TradeId = ObjectName
                 };
 
@@ -529,6 +576,7 @@ namespace Qwack.Excel.Instruments
                 var ctgoSwaps = Instruments.GetAnyFromCache<ContangoSwap>();
                 var flrDepos = Instruments.GetAnyFromCache<FloatingRateLoanDepo>();
                 var infSwaps = Instruments.GetAnyFromCache<InflationPerformanceSwap>();
+                var infFwds = Instruments.GetAnyFromCache<InflationFwd>();
 
                 //allows merging of FICs into portfolios
                 var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -548,6 +596,7 @@ namespace Qwack.Excel.Instruments
                 fic.AddRange(ctgoSwaps);
                 fic.AddRange(flrDepos);
                 fic.AddRange(infSwaps);
+                fic.AddRange(infFwds);
 
                 return ExcelHelper.PushToCache(fic, ObjectName);
             });
@@ -724,11 +773,88 @@ namespace Qwack.Excel.Instruments
                     SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
                     Notional = Notional
                 };
-                product.PillarDate = SolvePillarDate.OptionalExcel(product.EndDate);
+                product.PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(product.EndDate.ToOADate()));
 
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
         }
+
+        [ExcelFunction(Description = "Creates a standard inflation forward following conventions for the given rate index",
+   Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateInflationFwd), IsThreadSafe = Parallel)]
+        public static object CreateInflationFwd(
+      [ExcelArgument(Description = "Object name")] string ObjectName,
+      [ExcelArgument(Description = "Fixing date")] DateTime FixingDate,
+      [ExcelArgument(Description = "Inflation Index")] string InfIndex,
+      [ExcelArgument(Description = "Strike")] double Strike,
+      [ExcelArgument(Description = "Notional")] double Notional,
+      [ExcelArgument(Description = "Forecast Curve (CPI)")] string ForecastCurve,
+      [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
+      [ExcelArgument(Description = "Solve Curve name ")] object SolveCurve,
+      [ExcelArgument(Description = "Solve Pillar Date")] object SolvePillarDate)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                if (!ContainerStores.GetObjectCache<InflationIndex>().TryGetObject(InfIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", InfIndex);
+                    return $"Rate index {InfIndex} not found in cache";
+                }
+
+                var product = new InflationFwd(FixingDate, rIndex.Value, Strike, Notional, ForecastCurve, DiscountCurve)
+                {
+                    TradeId = ObjectName,
+                    SolveCurve = SolveCurve.OptionalExcel(rIndex.Name),
+                    Notional = Notional
+                };
+                product.PillarDate = DateTime.FromOADate(SolvePillarDate.OptionalExcel(product.FixingDate.ToOADate()));
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an inflation swap object following conventions for the given rate index",
+            Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateInflationPerfSwap), IsThreadSafe = Parallel)]
+        public static object CreateInflationPerfSwap(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Start Date")] DateTime StartDate,
+            [ExcelArgument(Description = "EndDate")] DateTime EndDate,
+            [ExcelArgument(Description = "Inflation Index")] string InfIndex,
+            [ExcelArgument(Description = "Par Rate")] double ParRate,
+            [ExcelArgument(Description = "Notional")] double Notional,
+            [ExcelArgument(Description = "Forecast Curve (CPI)")] string ForecastCurve,
+            [ExcelArgument(Description = "Discount Curve")] string DiscountCurve,
+            [ExcelArgument(Description = "Pay / Receive (opt)")] object PayRec,
+            [ExcelArgument(Description = "Initial Fixing (opt)")] object InitialFixing)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var payRec = PayRec.OptionalExcel("Pay");
+                var initialFixing = InitialFixing.OptionalExcel<double?>(null);
+
+                if (!ContainerStores.GetObjectCache<InflationIndex>().TryGetObject(InfIndex, out var rIndex))
+                {
+                    _logger?.LogInformation("Rate index {index} not found in cache", InfIndex);
+                    return $"Rate index {InfIndex} not found in cache";
+                }
+
+                if (!Enum.TryParse(payRec, out SwapPayReceiveType pType))
+                {
+                    return $"Could not parse pay/rec - {payRec}";
+                }
+
+                var product = new InflationPerformanceSwap(StartDate, EndDate, rIndex.Value, ParRate, Notional, pType, ForecastCurve, DiscountCurve)
+                {
+                    TradeId = ObjectName,
+                    Notional = Notional
+                };
+
+                if (initialFixing.HasValue)
+                    product.InitialFixing = initialFixing.Value;
+
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
 
         [ExcelFunction(Description = "Creates a new inflation index object", Category = CategoryNames.Instruments,
            Name = CategoryNames.Instruments + "_" + nameof(CreateInflationIndex), IsVolatile = true, IsThreadSafe = Parallel)]

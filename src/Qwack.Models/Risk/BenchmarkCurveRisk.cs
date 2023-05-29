@@ -125,7 +125,7 @@ namespace Qwack.Models.Risk
             newFic.AddRange(newIns.OrderBy(x => x.SolveCurve).ThenBy(x => x.PillarDate));
 
             var fModel = pvModel.VanillaModel.FundingModel.DeepClone(null);
-            var s = new NewtonRaphsonMultiCurveSolverStaged();
+            var s = new NewtonRaphsonMultiCurveSolverStaged() { Tollerance = 0.000000001 };
             s.Solve(fModel, newFic);
 
             var vModel = pvModel.VanillaModel.Clone(fModel);
@@ -155,7 +155,7 @@ namespace Qwack.Models.Risk
 
                 var fModelb = fModel.DeepClone(null);
 
-                var sb = new NewtonRaphsonMultiCurveSolverStaged();
+                var sb = new NewtonRaphsonMultiCurveSolverStaged() { Tollerance = 0.0000000001 };
                 sb.Solve(fModelb, newFicb);
 
                 var vModelb = pvModel.VanillaModel.Clone(fModelb);
@@ -170,13 +170,14 @@ namespace Qwack.Models.Risk
                 var riskUnits = GetRiskUnits(insToRisk[i]);
 
                 var deltaCube = bumpedPV.QuickDifference(basePV);
-                var deltaScale = GetScaleFactor(insToRisk[i], parRates[i], parRates[i] + bumpSize, fModel);
-                var fxToCurveCcy = fModel.GetFxRate(fModel.BuildDate, reportingCcy, insToRisk[i].Currency);
-
+           
                 foreach (var dRow in deltaCube.GetAllRows())
                 {
                     if (dRow.Value == 0.0)
                         continue;
+
+                    var deltaScale = GetScaleFactor(insToRisk[i], parRates[i], parRates[i] + bumpSize, fModel);
+                    var fxToCurveCcy = insToRisk[i].Currency == null ? 1.0 : fModel.GetFxRate(fModel.BuildDate, reportingCcy, insToRisk[i].Currency);
 
                     var row = new Dictionary<string, object>
                             {
@@ -204,6 +205,8 @@ namespace Qwack.Models.Risk
                     return 1.0 / (parBump - parFlat);
                 case STIRFuture st:
                     return 1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
+                case OISFuture oi:
+                    return 1.0 / ((parBump - parFlat) / 0.01 * oi.UnitPV01);
                 case ForwardRateAgreement fra:
                     return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().YearFraction);
                 case ContangoSwap cs:
@@ -215,6 +218,9 @@ namespace Qwack.Models.Risk
                 case IrSwap irs:
                     var pv = irs.SetParRate(parBump).Pv(model, true);
                     return 1.0 / pv * irs.Notional;
+                case InflationPerformanceSwap cpi:
+                    var pv2a = (cpi.SetParRate(parBump).Pv(model,false) - cpi.SetParRate(parFlat).Pv(model, false));
+                    return -1.0 / pv2a * cpi.Notional;
                 case FloatingRateLoanDepo fld:
                     var pvF = fld.SetParRate(parBump).Pv(model, true);
                     return 1.0 / pvF * fld.Notional;
@@ -227,13 +233,14 @@ namespace Qwack.Models.Risk
         }
         private static double GetBumpSize(IFundingInstrument ins) => ins switch
         {
-            STIRFuture or OISFuture => 0.01,
+            STIRFuture or OISFuture or InflationPerformanceSwap => 0.01,
+            //STIRFuture or OISFuture => 0.01,
             _ => 0.0001,
         };
         private static string GetRiskUnits(IFundingInstrument ins) => ins switch
         {
             STIRFuture or OISFuture => "Contracts",
-            ForwardRateAgreement or FxForward or IrSwap or FloatingRateLoanDepo or FixedRateLoanDeposit => "Nominal",
+            ForwardRateAgreement or FxForward or IrSwap or FloatingRateLoanDepo or FixedRateLoanDeposit or InflationPerformanceSwap => "Nominal",
             ContangoSwap => "Oz",
             _ => "PnL",
         };

@@ -38,6 +38,28 @@ namespace Qwack.Core.Instruments.Funding
             FixedFlow = (System.Math.Pow(1.0 + parRate, T) - 1.0) * Notional * (swapType == SwapPayReceiveType.Payer ? -1.0 : 1.0);
         }
 
+        public InflationPerformanceSwap(DateTime startDate, DateTime endDate, InflationIndex rateIndex, double parRate, double notional,
+    SwapPayReceiveType swapType, string forecastCurveCpi, string discountCurve)
+        {
+            ResetFrequency = rateIndex.ResetFrequency;
+            StartDate = startDate;
+            EndDate = endDate;
+            ParRate = parRate;
+            BasisFloat = rateIndex.DayCountBasis;
+            BasisFixed = rateIndex.DayCountBasisFixed;
+            SwapType = swapType;
+            RateIndex = rateIndex;
+            Currency = rateIndex.Currency;
+            Notional = notional;
+            ResetDates = new[] { StartDate, EndDate };
+
+            ForecastCurveCpi = forecastCurveCpi;
+            DiscountCurve = discountCurve;
+
+            T = StartDate.CalculateYearFraction(EndDate, BasisFixed);
+            FixedFlow = (System.Math.Pow(1.0 + parRate, T) - 1.0) * Notional * (swapType == SwapPayReceiveType.Payer ? -1.0 : 1.0);
+        }
+
         public double FixedFlow { get; set; }
         public double T { get; set; }
 
@@ -150,15 +172,18 @@ namespace Qwack.Core.Instruments.Funding
             HedgingSet = HedgingSet
         };
 
-        public IFundingInstrument SetParRate(double parRate) => new InflationPerformanceSwap(StartDate, SwapTenor, RateIndex, parRate, Notional, SwapType, ForecastCurveCpi, DiscountCurve)
+        public IFundingInstrument SetParRate(double parRate)
         {
-            TradeId = TradeId,
-            SolveCurve = SolveCurve,
-            PillarDate = PillarDate,
-            RateIndex = RateIndex,
-            PortfolioName = PortfolioName,
-            HedgingSet = HedgingSet
-        };
+            return new InflationPerformanceSwap(StartDate, SwapTenor, RateIndex, parRate, Notional, SwapType, ForecastCurveCpi, DiscountCurve)
+            {
+                TradeId = TradeId,
+                SolveCurve = SolveCurve,
+                PillarDate = PillarDate,
+                RateIndex = RateIndex,
+                PortfolioName = PortfolioName,
+                HedgingSet = HedgingSet
+            };
+        }
 
         public double TradeNotional => System.Math.Abs(Notional);
         public virtual double EffectiveNotional(IAssetFxModel model, double? MPOR = null) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
@@ -184,7 +209,7 @@ namespace Qwack.Core.Instruments.Funding
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
             }
 
-            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+            var forecast = (forecastCurveCpi as CPICurve).GetRate(EndDate.AddPeriod(RollType.P,RateIndex.HolidayCalendars, RateIndex.FixingLag));
 
             var cpiPerf = forecast / InitialFixing - 1;
 
@@ -198,6 +223,12 @@ namespace Qwack.Core.Instruments.Funding
             };
         }
 
-        public double SuggestPillarValue(IFundingModel model) => ParRate;
+        public double SuggestPillarValue(IFundingModel model)
+        {
+            var forecastCurveCpi = model.Curves[ForecastCurveCpi];
+            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+
+            return forecast;
+        }
     }
 }

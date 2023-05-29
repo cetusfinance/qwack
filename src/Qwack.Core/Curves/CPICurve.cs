@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CsvHelper;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Dates;
 using Qwack.Math;
@@ -35,7 +36,8 @@ namespace Qwack.Core.Curves
                 DayCountBasis = cpiBasis,
                 RollConvention = RollType.P,
                 HolidayCalendars = cpiCalendar,
-                FixingLag = cpiFixingLag
+                FixingLag = cpiFixingLag,
+                FixingInterpolation = Interpolator1DType.Linear
             };
 
             Basis = cpiBasis;
@@ -107,7 +109,8 @@ namespace Qwack.Core.Curves
         public Dictionary<DateTime, IIrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate) => throw new NotImplementedException();
 
 
-        public double GetForecast(DateTime fixingDate, int fixingLagInMonths) => InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
+        public double GetForecast(DateTime fixingDate, int fixingLagInMonths) => _cpiInterp.Interpolate(fixingDate.AddMonths(fixingLagInMonths).ToOADate()); // InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
+        public double GetForecastExact(DateTime fixingDate, int fixingLagInMonths) => InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
 
         public double GetDf(DateTime startDate, DateTime endDate)
         {
@@ -146,5 +149,12 @@ namespace Qwack.Core.Curves
         }
 
         public IIrCurve RebaseDate(DateTime newAnchorDate) => throw new NotImplementedException();
+
+        public CPICurve Clone() => new(BuildDate, (DateTime[])PillarDates.Clone(), (double[])CpiRates.Clone(), InflationIndex)
+        {
+            Name = Name,
+            SolveStage = SolveStage,
+            CollateralSpec = CollateralSpec,
+        };
     }
 }

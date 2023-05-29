@@ -1074,6 +1074,12 @@ namespace Qwack.Models.Models
                 case IrBasisSwap irsb:
                     pv = (irsb.Clone() as IrBasisSwap).Pv(model.FundingModel, true);
                     break;
+                case InflationPerformanceSwap cpi:
+                    pv = (cpi.Clone() as InflationPerformanceSwap).Pv(model.FundingModel, true);
+                    break;
+                case InflationSwap cpi2:
+                    pv = (cpi2.Clone() as InflationSwap).Pv(model.FundingModel, true);
+                    break;
                 case CashWrapper wrapper:
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
                     if (reportingCurrency != null)
@@ -1103,6 +1109,8 @@ namespace Qwack.Models.Models
             STIRFuture str => str.Currency,
             OISFuture ois => ois.Currency,
             IrSwap irs => irs.Currency,
+            InflationPerformanceSwap cpi => cpi.Currency,
+            InflationSwap cpi2 => cpi2.Currency,
             IAssetInstrument aIns => aIns.PaymentCurrency,
             _ => throw new Exception("Unable to determine instrument currency"),
         };

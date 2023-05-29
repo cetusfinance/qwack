@@ -277,7 +277,8 @@ namespace Qwack.Excel.Curves
                 {
                     var calibrator = new NewtonRaphsonMultiCurveSolverStaged()
                     {
-                        InLineCurveGuessing = true
+                        InLineCurveGuessing = true,
+                        Tollerance = 0.00000001
                     };
                     calibrator.Solve(model, fic.Value);
                 }

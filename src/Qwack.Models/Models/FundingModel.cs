@@ -148,9 +148,19 @@ namespace Qwack.Models
             return returnValue;
         }
 
+        private static IIrCurve CloneCurve(IIrCurve curve)
+        {
+            if (curve is IrCurve ir)
+                return ir.Clone();
+            if (curve is CPICurve cpi)
+                return cpi.Clone();
+
+            return (curve as IrCurve).Clone();
+        }
+
         public IFundingModel DeepClone(DateTime? newBuildDate = null)
         {
-            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(c => (c as IrCurve).Clone()).ToArray(), _currencyProvider, _calendarProvider)
+            var returnValue = new FundingModel(newBuildDate ?? BuildDate, Curves.Values.Select(CloneCurve).ToArray(), _currencyProvider, _calendarProvider)
             {
                 VolSurfaces = VolSurfaces == null ? new Dictionary<string, IVolSurface>() : new Dictionary<string, IVolSurface>(VolSurfaces)
             };

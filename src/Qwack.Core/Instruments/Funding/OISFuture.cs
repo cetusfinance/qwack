@@ -27,6 +27,8 @@ namespace Qwack.Core.Instruments.Funding
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
 
+        public double UnitPV01 => ContractSize * DCF * 0.0001;
+
         public DateTime LastSensitivityDate => AverageEndDate;
 
         public List<string> Dependencies(IFxMatrix matrix) => new();

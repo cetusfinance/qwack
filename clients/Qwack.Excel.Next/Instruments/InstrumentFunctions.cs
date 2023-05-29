@@ -1446,6 +1446,7 @@ namespace Qwack.Excel.Instruments
 
             var infSwaps = Instruments.GetAnyFromCache<InflationPerformanceSwap>();
             var infSwapsB = Instruments.GetAnyFromCache<InflationSwap>();
+            var infFwds = Instruments.GetAnyFromCache<InflationFwd>();
 
             //allows merging of FICs into portfolios
             var ficInstruments = Instruments.GetAnyFromCache<FundingInstrumentCollection>()
@@ -1490,6 +1491,7 @@ namespace Qwack.Excel.Instruments
 
             pf.Instruments.AddRange(infSwaps);
             pf.Instruments.AddRange(infSwapsB);
+            pf.Instruments.AddRange(infFwds);
 
 
             return pf;

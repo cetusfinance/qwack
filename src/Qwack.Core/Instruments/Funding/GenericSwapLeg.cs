@@ -337,7 +337,14 @@ namespace Qwack.Core.Instruments.Funding
                     var d1 = currentReset.SubtractPeriod(ResetRollType, ResetCalendar, ResetFrequency);
                     return new DateTime(d1.Year, d1.Month, rollOut).AddPeriod(ResetRollType, ResetCalendar, 0.Bd());
                 }
-            return fwdDirection ? currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency) : currentReset.SubtractPeriod(ResetRollType, ResetCalendar, ResetFrequency);
+            return fwdDirection ? currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency) : currentReset.SubtractPeriod(FlipRoll(ResetRollType), ResetCalendar, ResetFrequency);
         }
+
+        private static RollType FlipRoll(RollType rollType) => rollType switch
+        {
+            RollType.Following => RollType.Previous,
+            RollType.ModFollowing => RollType.ModPrevious,
+            _ => rollType,
+        };
     }
 }

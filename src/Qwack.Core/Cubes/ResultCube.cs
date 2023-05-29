@@ -88,9 +88,7 @@ namespace Qwack.Core.Cubes
                 }
                 else
                 {
-                    var valAsType = Convert.ChangeType(d.Value, _types[d.Key]);
-                    if (valAsType == null)
-                        throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
+                    _ = Convert.ChangeType(d.Value, _types[d.Key]) ?? throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
                 }
 
                 var ix = _fieldNames.IndexOf(d.Key);

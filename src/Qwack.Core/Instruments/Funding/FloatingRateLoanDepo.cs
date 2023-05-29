@@ -178,6 +178,7 @@ namespace Qwack.Core.Instruments.Funding
             return LoanDepoSchedule.Flows;
         }
 
-        public double SuggestPillarValue(IFundingModel model) => (model.GetCurve(ForecastCurve) as IrCurve).GetForwardCCRate(model.BuildDate, PillarDate) + Spread;
+        //public double SuggestPillarValue(IFundingModel model) => (model.GetCurve(ForecastCurve) as IrCurve).GetForwardCCRate(model.BuildDate, PillarDate) + Spread;
+        public double SuggestPillarValue(IFundingModel model) => Spread;
     }
 }

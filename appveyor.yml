@@ -41,27 +41,27 @@ after_test:
   - dotnet pack -c Release src/Qwack.Futures
   - dotnet pack -c Release src/Qwack.Transport
   
-artifacts:
-  - path: '**/*.nupkg'
-
-  - path : ./clients/qwack.excel/exceloutput
-    name : exceloutput
-    type : zip
-
-deploy:  
-- provider: NuGet
-  server: https://www.myget.org/F/qwack/api/v2/package
-  api_key:
-    secure: F4U6pELKG7NqzEZXyr7WmOySddam2tpYB1LqAPlJAKGT2WRukOZRtWk8ZBuZ+nzs
-  skip_symbols: true
-  on:
-    branch: master
-
-- provider: GitHub
-  auth_token:
-    secure: QXX1FZtMhL54ppRs3l07glqZ/BGc/jkSRTbAJq8Zu1O96UqmG6XJ4HPDjFp36TAE
-  artifact: /.*\.zip/            
-  draft: false
-  prerelease: false
-  on:
-    branch: master                 # release from master branch only
+#artifacts:
+#  - path: '**/*.nupkg'
+#
+#  - path : ./clients/qwack.excel/exceloutput
+#    name : exceloutput
+#    type : zip
+#
+#deploy:  
+#- provider: NuGet
+#  server: https://www.myget.org/F/qwack/api/v2/package
+#  api_key:
+#    secure: F4U6pELKG7NqzEZXyr7WmOySddam2tpYB1LqAPlJAKGT2WRukOZRtWk8ZBuZ+nzs
+#  skip_symbols: true
+#  on:
+#    branch: master
+#
+#- provider: GitHub
+#  auth_token:
+#    secure: QXX1FZtMhL54ppRs3l07glqZ/BGc/jkSRTbAJq8Zu1O96UqmG6XJ4HPDjFp36TAE
+# artifact: /.*\.zip/            
+#  draft: false
+#  prerelease: false
+#  on:
+#    branch: master                 # release from master branch only

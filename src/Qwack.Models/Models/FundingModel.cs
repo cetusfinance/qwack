@@ -7,6 +7,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Models
@@ -43,7 +44,13 @@ namespace Qwack.Models
         }
 
         public FundingModel(TO_FundingModel transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
-            this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x => (IIrCurve)new IrCurve(x.Value, currencyProvider)), currencyProvider, calendarProvider)
+            this(transportObject.BuildDate, transportObject.Curves.ToDictionary(x => x.Key, x =>
+            {
+                if (x.Value.IrCurve != null)
+                    return (IIrCurve)new IrCurve(x.Value.IrCurve, currencyProvider);
+                else
+                    return (IIrCurve)new CPICurve(x.Value.CPICurve, calendarProvider);
+            }), currencyProvider, calendarProvider)
         {
             if (transportObject.VolSurfaces != null)
                 VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
@@ -305,7 +312,14 @@ namespace Qwack.Models
             {
                 BuildDate = BuildDate,
                 VolSurfaces = VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
-                Curves = Curves.ToDictionary(x => x.Key, x => (x.Value as IrCurve).GetTransportObject()),
+                Curves = Curves.ToDictionary(x => x.Key, x =>
+                {
+                    if (x.Value is IrCurve ir)
+                        return new TO_IIrCurve { IrCurve = ir.GetTransportObject() };
+                    else if (x.Value is CPICurve cpi)
+                        return new TO_IIrCurve { CPICurve = cpi.GetTransportObject() };
+                    return null;
+                }),
                 FxMatrix = ((FxMatrix)FxMatrix).GetTransportObject(),
                 Fixings = _fixings?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
             };

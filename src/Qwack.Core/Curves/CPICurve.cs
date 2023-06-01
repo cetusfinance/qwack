@@ -8,6 +8,7 @@ using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves
 {
@@ -44,6 +45,16 @@ namespace Qwack.Core.Curves
 
             BuildInterpolator();
         }
+
+
+        public CPICurve(TO_CPICurve transportObject, ICalendarProvider calendarProvider)
+            : this(transportObject.BuildDate, transportObject.PillarDates, transportObject.CpiRates, transportObject.Basis, new Frequency(transportObject.InflationIndex.FixingLag), calendarProvider.GetCalendarSafe(transportObject.InflationIndex.HolidayCalendars))
+        {
+            Name = transportObject.Name;
+            SolveStage = transportObject.SolveStage;
+        }
+
+
 
         private void BuildInterpolator()
         {
@@ -156,5 +167,18 @@ namespace Qwack.Core.Curves
             SolveStage = SolveStage,
             CollateralSpec = CollateralSpec,
         };
+
+        public TO_CPICurve GetTransportObject() =>
+           new()
+           {
+               Basis = Basis,
+               BuildDate = BuildDate,
+               CollateralSpec = CollateralSpec,
+               Name = Name,
+               PillarDates = (DateTime[])PillarDates.Clone(),
+               CpiRates = (double[])CpiRates.Clone(),
+               SolveStage=SolveStage,
+               InflationIndex = InflationIndex.GetTransportObject(),
+           };
     }
 }

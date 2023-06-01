@@ -10,6 +10,7 @@ using Qwack.Dates;
 using Qwack.Models;
 using Qwack.Models.Calibrators;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 using Xunit;
 
 namespace Qwack.Core.Tests.Inflation

@@ -15,6 +15,7 @@ using Qwack.Core.Models;
 using Qwack.Models.Calibrators;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Models;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Excel.Curves
 {

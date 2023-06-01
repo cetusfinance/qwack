@@ -46,3 +46,9 @@ jobs:
       with:
         name: QwackExcel.Next
         path: ./QwackExcel.zip
+
+    - name: Release
+      uses: ncipollo/release-action@v1
+      with:
+        name: QwackExcel.Next
+        artifacts: QwackExcel.zip

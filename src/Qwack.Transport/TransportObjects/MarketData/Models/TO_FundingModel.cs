@@ -10,7 +10,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
     public class TO_FundingModel
     {
         [ProtoMember(4)]
-        public Dictionary<string, TO_IrCurve> Curves { get; set; }
+        public Dictionary<string, TO_IIrCurve> Curves { get; set; }
         [ProtoMember(5)]
         public Dictionary<string, TO_VolSurface> VolSurfaces { get; set; }
         [ProtoMember(6)]

@@ -52,3 +52,5 @@ jobs:
       with:
         name: QwackExcel.Next
         artifacts: QwackExcel.zip
+        tag: latest
+        commit: latest

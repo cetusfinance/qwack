@@ -47,13 +47,16 @@ jobs:
         name: QwackExcel.Next
         path: ./QwackExcel.zip
     
-    - name: Create Tag
-      uses: rickstaa/action-create-tag@v1
-      id: "tag_create"
+    - name: Create tag
+      uses: actions/github-script@v5
       with:
-        tag: "latest"
-        tag_exists_error: false
-        message: "Latest release"
+        script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/latest',
+              sha: context.sha
+            })
 
     - name: Release
       uses: ncipollo/release-action@v1

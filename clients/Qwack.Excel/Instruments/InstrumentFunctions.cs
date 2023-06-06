@@ -21,6 +21,7 @@ using Qwack.Models.MCModels;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
 using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Excel.Instruments
 {

@@ -7,6 +7,8 @@ using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -230,5 +232,36 @@ namespace Qwack.Core.Instruments.Funding
 
             return forecast;
         }
+
+        public TO_Instrument ToTransportObject() =>
+           new()
+           {
+               FundingInstrumentType = FundingInstrumentType.InflationPerformanceSwap,
+               InflationPerfSwap = new TO_InflationPerformanceSwap
+               {
+                   BasisFixed = BasisFixed,
+                   BasisFloat = BasisFloat,
+                   Currency = Currency,
+                   Counterparty = Counterparty,
+                   DiscountCurve = DiscountCurve,
+                   EndDate = EndDate,
+                   FixedFlow = FixedFlow,
+                   ForecastCurveCpi = ForecastCurveCpi,
+                   InitialFixing = InitialFixing,
+                   Notional = Notional,
+                   ParRate = ParRate,
+                   PillarDate = PillarDate,
+                   ResetDates = ResetDates,
+                   ResetFrequency = ResetFrequency.ToString(),
+                   SolveCurve = SolveCurve,
+                   StartDate = StartDate,
+                   SwapTenor = SwapTenor.ToString(),
+                   SwapType = SwapType,
+                   TradeId = TradeId,
+                   RateIndex = RateIndex.GetTransportObject(),
+                   PortfolioName = PortfolioName,
+                   HedgingSet = HedgingSet
+               }
+           };
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -29,6 +30,36 @@ namespace Qwack.Core.Instruments.Funding
             Currency = currency;
             SetAllCalendars(calendars);
             AccrualDCB = dayBasis;
+        }
+
+        public GenericSwapLeg(TO_GenericSwapLeg to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            EffectiveDate = to.EffectiveDate;
+            TerminationDate = to.TerminationDate.Relative != null ? new TenorDateRelative(new Frequency(to.TerminationDate.Relative)) : new TenorDateAbsolute(to.TerminationDate.Absolute??DateTime.MinValue);
+            ResetFrequency = new Frequency(to.ResetFrequency);
+            Currency = currencyProvider.GetCurrencySafe(to.Currency);
+            AccrualDCB = to.AccrualDCB;
+            FixingCalendar = calendarProvider.GetCalendarSafe(to.FixingCalendar);
+            ResetCalendar = calendarProvider.GetCalendarSafe(to.ResetCalendar);
+            AccrualCalendar = calendarProvider.GetCalendarSafe(to.AccrualCalendar);
+            PaymentCalendar = calendarProvider.GetCalendarSafe(to.PaymentCalendar);
+            ResetRollType = to.ResetRollType;
+            PaymentRollType = to.PaymentRollType;
+            FixingRollType = to.FixingRollType;
+            RollDay = to.RollDay;
+            StubType = to.StubType;
+            ResetFrequency = new Frequency(to.ResetFrequency);
+            FixingOffset = new Frequency(to.FixingOffset);
+            ForecastTenor = new Frequency(to.ForecastTenor);
+            LegType = to.LegType;
+            PaymentOffset = new Frequency(to.PaymentOffset);
+            PaymentOffsetRelativeTo = to.PaymentOffsetRelativeTo;
+            FixedRateOrMargin = to.FixedRateOrMargin;
+            Nominal = to.Nominal;
+            FraDiscounting = to.FraDiscounting;
+            AveragingType = to.AveragingType;
+            NotionalExchange = to.NotionalExchange;
+            Direction = to.Direction;
         }
 
         private void SetAllCalendars(Calendar calendars)
@@ -93,6 +124,36 @@ namespace Qwack.Core.Instruments.Funding
             StubType = StubType,
             TerminationDate = TerminationDate,
         };
+
+        public TO_GenericSwapLeg GetTransportObject() => new()
+        {
+            EffectiveDate = EffectiveDate,
+            TerminationDate = new TO_ITenorDate { Absolute = TerminationDate is TenorDateAbsolute ta ? ta.AbsoluteDate : null, Relative = TerminationDate is TenorDateRelative tr ? tr.RelativeTenor.ToString() : null },
+            ResetFrequency = ResetFrequency.ToString(),
+            Currency = Currency.ToString(),
+            AccrualDCB = AccrualDCB,
+            FixingCalendar = FixingCalendar.Name,
+            ResetCalendar = ResetCalendar.Name,
+            AccrualCalendar = AccrualCalendar.Name,
+            PaymentCalendar = PaymentCalendar.Name,
+            ResetRollType = ResetRollType,
+            PaymentRollType = PaymentRollType,
+            FixingRollType = FixingRollType,
+            RollDay = RollDay,
+            StubType = StubType,
+            FixingOffset = FixingOffset.ToString(),
+            ForecastTenor = ForecastTenor.ToString(),
+            LegType = LegType,
+            PaymentOffset = PaymentOffset.ToString(),
+            PaymentOffsetRelativeTo = PaymentOffsetRelativeTo,
+            FixedRateOrMargin = FixedRateOrMargin,
+            Nominal = Nominal,
+            FraDiscounting = FraDiscounting,
+            AveragingType = AveragingType,
+            NotionalExchange = NotionalExchange,
+            Direction = Direction
+        };
+    
 
         public CashFlowSchedule GenerateSchedule()
         {

@@ -29,5 +29,17 @@ namespace Qwack.Core.Instruments.Funding
         public RollType RollConvention { get; set; }
         public Currency Currency { get; set; }
         public Frequency FixingOffset { get; set; }
+
+        public TO_FloatRateIndex GetTransportObject() => new()
+        {
+            DayCountBasis = DayCountBasis,
+            DayCountBasisFixed = DayCountBasisFixed,
+            ResetTenor = ResetTenor.ToString(),
+            ResetTenorFixed = ResetTenorFixed.ToString(),
+            HolidayCalendars = HolidayCalendars.ToString(),
+            RollConvention = RollConvention,
+            Currency = Currency.ToString(),
+            FixingOffset = FixingOffset.ToString(),
+        };
     }
 }

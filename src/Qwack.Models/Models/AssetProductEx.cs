@@ -16,6 +16,7 @@ using Qwack.Options;
 using Qwack.Options.Asians;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Utils.Parallel;
 using static System.Math;
 using static Qwack.Core.Basic.Consts.Cubes;

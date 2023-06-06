@@ -5,6 +5,8 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments.Funding
 {
@@ -50,6 +52,35 @@ namespace Qwack.Core.Instruments.Funding
 
             ForecastCurve = forecastCurve;
             DiscountCurve = discountCurve;
+        }
+
+        public IrSwap(TO_IrSwap to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            Notional = to.Notional;
+            ParRate = to.ParRate;
+            StartDate = to.StartDate;
+            EndDate = to.EndDate;
+            NDates = to.NDates;
+            ResetDates = to.ResetDates;
+            Currency = currencyProvider.GetCurrencySafe(to.Currency);
+            FixedLeg = new GenericSwapLeg(to.FixedLeg, calendarProvider, currencyProvider);
+            FloatLeg = new GenericSwapLeg(to.FloatLeg, calendarProvider, currencyProvider);
+            FlowScheduleFixed = new CashFlowSchedule(to.FlowScheduleFixed, calendarProvider, currencyProvider);
+            FlowScheduleFloat = new CashFlowSchedule(to.FlowScheduleFloat, calendarProvider, currencyProvider);
+            BasisFixed = to.BasisFixed;
+            BasisFloat = to.BasisFloat;
+            ResetFrequency = new Frequency(to.ResetFrequency);
+            SwapTenor = new Frequency(to.SwapTenor);
+            SwapType = to.SwapType;
+            ForecastCurve = to.ForecastCurve;
+            DiscountCurve = to.DiscountCurve;
+            SolveCurve = to.SolveCurve;
+            PillarDate = to.PillarDate;
+            TradeId = to.TradeId;
+            Counterparty = to.Counterparty;
+            RateIndex = new FloatRateIndex(to.RateIndex, calendarProvider, currencyProvider);
+            PortfolioName = to.PortfolioName;
+            HedgingSet = to.HedgingSet;
         }
 
         public double Notional { get; set; }
@@ -215,5 +246,40 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public double SuggestPillarValue(IFundingModel model) => ParRate;
+
+        public TO_Instrument ToTransportObject() =>
+           new()
+           {
+               FundingInstrumentType = FundingInstrumentType.IrSwap,
+               IrSwap = new TO_IrSwap
+               {
+                   BasisFixed = BasisFixed,
+                   BasisFloat = BasisFloat,
+                   Counterparty = Counterparty,
+                   Currency = Currency.Ccy,
+                   DiscountCurve = DiscountCurve,
+                   EndDate = EndDate,
+                   FixedLeg = FixedLeg.GetTransportObject(),
+                   FloatLeg = FloatLeg.GetTransportObject(),
+                   FlowScheduleFixed = FlowScheduleFixed.GetTransportObject(),
+                   FlowScheduleFloat = FlowScheduleFloat.GetTransportObject(),
+                   ForecastCurve = ForecastCurve,
+                   HedgingSet = HedgingSet,
+                   MetaData = MetaData.ToDictionary(x => x.Key, x => x.Value),
+                   NDates = NDates,
+                   Notional = Notional,
+                   ParRate = ParRate,
+                   PillarDate = PillarDate,
+                   PortfolioName = PortfolioName,
+                   RateIndex = RateIndex.GetTransportObject(),
+                   ResetDates = ResetDates.ToArray(),
+                   ResetFrequency = ResetFrequency.ToString(),
+                   SolveCurve = SolveCurve,
+                   StartDate = StartDate,
+                   SwapTenor = SwapTenor.ToString(),
+                   SwapType = SwapType,
+                   TradeId = TradeId,
+               }
+           };
     }
 }

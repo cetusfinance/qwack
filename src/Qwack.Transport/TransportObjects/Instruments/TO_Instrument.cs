@@ -46,26 +46,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_InflationFwd InflationFwd { get; set; }
         [ProtoMember(117)]
         public TO_InflationPerformanceSwap InflationPerfSwap { get; set; }
-
-        public override bool Equals(object obj) => obj is TO_Instrument instrument
-                                                   && FundingInstrumentType == instrument.FundingInstrumentType
-                                                   && AssetInstrumentType == instrument.AssetInstrumentType
-                                                   && EqualityComparer<TO_AsianSwap>.Default.Equals(AsianSwap, instrument.AsianSwap)
-                                                   && EqualityComparer<TO_AsianSwapStrip>.Default.Equals(AsianSwapStrip, instrument.AsianSwapStrip)
-                                                   && EqualityComparer<TO_AsianOption>.Default.Equals(AsianOption, instrument.AsianOption)
-                                                   && EqualityComparer<TO_Forward>.Default.Equals(Forward, instrument.Forward)
-                                                   && EqualityComparer<TO_EuropeanOption>.Default.Equals(EuropeanOption, instrument.EuropeanOption)
-                                                   && EqualityComparer<TO_Future>.Default.Equals(Future, instrument.Future)
-                                                   && EqualityComparer<TO_FuturesOption>.Default.Equals(FuturesOption, instrument.FuturesOption)
-                                                   && EqualityComparer<TO_Equity>.Default.Equals(Equity, instrument.Equity)
-                                                   && EqualityComparer<TO_Bond>.Default.Equals(Bond, instrument.Bond)
-                                                   && EqualityComparer<TO_FxForward>.Default.Equals(FxForward, instrument.FxForward)
-                                                   && EqualityComparer<TO_FxFuture>.Default.Equals(FxFuture, instrument.FxFuture)
-                                                   && EqualityComparer<TO_FxVanillaOption>.Default.Equals(FxOption, instrument.FxOption)
-                                                   && EqualityComparer<TO_FxPerpetual>.Default.Equals(FxPerpetual, instrument.FxPerpetual)
-                                                   && EqualityComparer<TO_CashWrapper>.Default.Equals(CashWrapper, instrument.CashWrapper)
-                                                   && EqualityComparer<TO_InflationFwd>.Default.Equals(InflationFwd, instrument.InflationFwd)
-                                                   && EqualityComparer<TO_InflationPerformanceSwap>.Default.Equals(InflationPerfSwap, instrument.InflationPerfSwap);
-
+        [ProtoMember(118)]
+        public TO_IrSwap IrSwap { get; set; }
     }
 }

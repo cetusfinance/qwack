@@ -11,6 +11,7 @@ using Qwack.Dates;
 using static System.Math;
 using Qwack.Providers.Json;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Tests.Instruments
 {

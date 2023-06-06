@@ -10,6 +10,7 @@ using Qwack.Math;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Paths.Payoffs
 {

@@ -10,6 +10,7 @@ using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Models.Calibrators;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Utils.Parallel;
 using static Qwack.Core.Basic.Consts.Cubes;
 
@@ -206,7 +207,8 @@ namespace Qwack.Models.Risk
                 case STIRFuture st:
                     return 1.0 / ((parBump - parFlat) / 0.01 * st.UnitPV01);
                 case OISFuture oi:
-                    return 1.0 / ((parBump - parFlat) / 0.01 * oi.UnitPV01);
+                    var remainLife = model.BuildDate <= oi.AverageStartDate ? 1 : (oi.AverageEndDate - model.BuildDate).TotalDays / (oi.AverageEndDate - oi.AverageStartDate).TotalDays;
+                    return remainLife<=0 ? 0 : (1.0 / ((parBump - parFlat) / 0.01 * oi.UnitPV01) / remainLife);
                 case ForwardRateAgreement fra:
                     return 1.0 / ((parBump - parFlat) * fra.FlowScheduleFra.Flows.First().YearFraction);
                 case ContangoSwap cs:
@@ -216,11 +218,11 @@ namespace Qwack.Models.Risk
                     var fwdBumped = (1 + parBump * t360) * spot;
                     return 1.0 / (fwdBumped - fwdFlat);
                 case IrSwap irs:
-                    var pv = irs.SetParRate(parBump).Pv(model, true);
-                    return 1.0 / pv * irs.Notional;
+                    var unitPvDiff = (irs.SetParRate(parBump).Pv(model, true) - irs.SetParRate(parFlat).Pv(model, true)) / irs.Notional;
+                    return -1.0 / unitPvDiff;
                 case InflationPerformanceSwap cpi:
-                    var pv2a = (cpi.SetParRate(parBump).Pv(model,false) - cpi.SetParRate(parFlat).Pv(model, false));
-                    return -1.0 / pv2a * cpi.Notional;
+                    var unitPvDiff2 = (cpi.SetParRate(parBump).Pv(model,false) - cpi.SetParRate(parFlat).Pv(model, false)) / cpi.Notional;
+                    return -1.0 / unitPvDiff2;
                 case FloatingRateLoanDepo fld:
                     var pvF = fld.SetParRate(parBump).Pv(model, true);
                     return 1.0 / pvF * fld.Notional;

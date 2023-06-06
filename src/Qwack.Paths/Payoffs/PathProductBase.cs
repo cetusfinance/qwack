@@ -8,6 +8,8 @@ using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Extensions;
 using Qwack.Paths.Features;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Paths.Payoffs
 {

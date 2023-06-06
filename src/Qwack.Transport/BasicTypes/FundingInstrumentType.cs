@@ -21,5 +21,7 @@ namespace Qwack.Transport.BasicTypes
         STIRFuture,
         XccyBasisSwap,
         ZeroBond,
+        InflationPerformanceSwap,
+        InflationSwap,
     }
 }

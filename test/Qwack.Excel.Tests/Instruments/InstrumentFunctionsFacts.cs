@@ -15,6 +15,7 @@ using Qwack.Core.Models;
 using Qwack.Excel.Instruments;
 using Qwack.Excel.Utils;
 using Qwack.Models.Models;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Xunit;
 using static ExcelDna.Integration.ExcelMissing;
 

@@ -4,7 +4,9 @@ using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Instruments
 {
@@ -21,6 +23,24 @@ namespace Qwack.Core.Instruments
             DayCountBasis = DayCountBasis,
             ResetType = ResetType,
             AverageType = AverageType
+        };
+
+        public CashFlowSchedule() { }
+
+        public CashFlowSchedule(TO_CashFlowSchedule to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            Flows = to.Flows.Select(x => new CashFlow(x,calendarProvider,currencyProvider)).ToList();
+            DayCountBasis = to.DayCountBasis;
+            ResetType = to.ResetType;
+            AverageType = to.AverageType;
+        }
+
+        public TO_CashFlowSchedule GetTransportObject() => new TO_CashFlowSchedule
+        {
+            AverageType = AverageType,
+            DayCountBasis = DayCountBasis,
+            ResetType = ResetType,
+            Flows = Flows.Select(f => f.GetTransportObject()).ToList()
         };
     }
 

@@ -14,6 +14,7 @@ using Qwack.Models;
 using Qwack.Providers.Json;
 using Xunit;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Core.Tests.CurveSolving
 {

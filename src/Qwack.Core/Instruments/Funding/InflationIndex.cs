@@ -18,8 +18,10 @@ namespace Qwack.Core.Instruments.Funding
             RollConvention = transportObject.RollConvention;
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             FixingInterpolation = transportObject.FixingInterpolation;
+            Name = transportObject.Name;
         }
 
+        public string Name { get; set; }
         public DayCountBasis DayCountBasis { get; set; }
         public DayCountBasis DayCountBasisFixed { get; set; }
         public Frequency FixingLag { get; set; }
@@ -39,7 +41,8 @@ namespace Qwack.Core.Instruments.Funding
             FixingLag = FixingLag.ToString(),
             HolidayCalendars = HolidayCalendars.Name,
             ResetFrequency = ResetFrequency.ToString(),
-            RollConvention = RollConvention
+            RollConvention = RollConvention,
+            Name = Name,
         };   
     }
 }

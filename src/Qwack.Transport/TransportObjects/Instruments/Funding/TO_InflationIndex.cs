@@ -22,6 +22,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public string Currency { get; set; }
         [ProtoMember(8)]
         public Interpolator1DType FixingInterpolation { get; set; }
+        [ProtoMember(9)]
+        public string Name { get; set; }
     }
 }
 

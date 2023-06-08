@@ -1,3 +1,4 @@
+using Qwack.Core.Basic;
 using Qwack.Core.Basic.Capital;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -9,6 +10,31 @@ namespace Qwack.Core.Instruments.Asset
 {
     public class EuropeanOption : Forward, IHasVega, ISaCcrEnabledCommodity
     {
+        public EuropeanOption() { }
+        public EuropeanOption(TO_EuropeanOption to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            TradeId = to.TradeId;
+            Notional = to.Notional;
+            Direction = to.Direction;
+            ExpiryDate = to.ExpiryDate;
+            FixingCalendar = calendarProvider.GetCalendarSafe( to.FixingCalendar);
+            PaymentCalendar = calendarProvider.GetCalendarSafe(to.PaymentCalendar);
+            SpotLag = new Frequency(to.SpotLag);
+            PaymentLag = new Frequency(to.PaymentLag);
+            Strike = to.Strike;
+            AssetId = to.AssetId;
+            PaymentCurrency = currencyProvider.GetCurrencySafe(to.PaymentCurrency);
+            FxFixingId = to.FxFixingId;
+            DiscountCurve = to.DiscountCurve;
+            PaymentDate = to.PaymentDate;
+            Counterparty = to.Counterparty;
+            FxConversionType = to.FxConversionType;
+            HedgingSet = to.HedgingSet;
+            PortfolioName = to.PortfolioName;
+            CallPut = to.CallPut;
+            MetaData = to.MetaData;
+        }
+
         public OptionType CallPut { get; set; }
 
         public new IAssetInstrument Clone() => new EuropeanOption
@@ -31,7 +57,10 @@ namespace Qwack.Core.Instruments.Asset
             FxConversionType = FxConversionType,
             HedgingSet = HedgingSet,
             PortfolioName = PortfolioName,
-            CallPut = CallPut
+            CallPut = CallPut,
+            MetaData = MetaData,
+            AssetClass = AssetClass,
+            CommodityType = CommodityType,
         };
 
         public new IAssetInstrument SetStrike(double strike)

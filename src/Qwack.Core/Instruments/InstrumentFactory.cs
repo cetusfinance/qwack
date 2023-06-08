@@ -42,6 +42,8 @@ namespace Qwack.Core.Instruments
                         return new FuturesOption(transportObject.FuturesOption, currencyProvider);
                     case AssetInstrumentType.Future:
                         return new Future(transportObject.Future, currencyProvider);
+                    case AssetInstrumentType.EuropeanOption:
+                        return new EuropeanOption(transportObject.EuropeanOption, calendarProvider, currencyProvider);
                     case AssetInstrumentType.CashWrapper:
                         return new CashWrapper(transportObject.CashWrapper, currencyProvider, calendarProvider);
                 }
@@ -90,6 +92,10 @@ namespace Qwack.Core.Instruments
                             Premium = to2.Premium,
                             PremiumDate = to2.PremiumDate,
                         };
+                    case FundingInstrumentType.InflationPerformanceSwap:
+                        return new InflationPerformanceSwap(transportObject.InflationPerfSwap, calendarProvider, currencyProvider);
+                    case FundingInstrumentType.IrSwap:
+                        return new IrSwap(transportObject.IrSwap, calendarProvider, currencyProvider);
                 }
             }
 

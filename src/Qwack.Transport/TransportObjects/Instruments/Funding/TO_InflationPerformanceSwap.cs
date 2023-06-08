@@ -59,5 +59,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public string PortfolioName { get; set; }
         [ProtoMember(24)]
         public string HedgingSet { get; set; }
+        [ProtoMember(25)]
+        public DateTime? SettleDate { get; set; }
     }
 }

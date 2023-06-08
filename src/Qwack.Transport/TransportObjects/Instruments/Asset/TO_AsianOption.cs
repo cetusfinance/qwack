@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 
@@ -57,5 +58,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string HedgingSet { get; set; }
         [ProtoMember(25)]
         public OptionType CallPut { get; set; }
+        [ProtoMember(26)]
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
     }
 }

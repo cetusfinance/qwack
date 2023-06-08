@@ -143,7 +143,6 @@ namespace Qwack.Core.Instruments.Funding
 
             //then forecast
             var forecastDict = (ForecastCurve == DiscountCurve) ? discountDict : new Dictionary<DateTime, double>();
-            var forecastCurve = model.Curves[ForecastCurve];
             foreach (var flow in FlowScheduleFloat.Flows)
             {
                 var df = flow.Fv == flow.Pv ? 1.0 : flow.Pv / flow.Fv;

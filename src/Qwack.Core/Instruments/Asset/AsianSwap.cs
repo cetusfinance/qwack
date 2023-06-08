@@ -98,7 +98,10 @@ namespace Qwack.Core.Instruments.Asset
             Strike = Strike,
             Counterparty = Counterparty,
             HedgingSet = HedgingSet,
-            PortfolioName = PortfolioName
+            PortfolioName = PortfolioName,
+            MetaData = MetaData,
+            CommodityType = CommodityType,
+            AssetClass = AssetClass,
         };
 
         public IAssetInstrument SetStrike(double strike)
@@ -188,7 +191,8 @@ namespace Qwack.Core.Instruments.Asset
                     Strike = Strike,
                     Counterparty = Counterparty,
                     HedgingSet = HedgingSet,
-                    PortfolioName = PortfolioName
+                    PortfolioName = PortfolioName,
+                    MetaData = MetaData,
                 }
             };
     }

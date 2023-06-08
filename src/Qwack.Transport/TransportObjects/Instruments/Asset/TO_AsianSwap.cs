@@ -56,7 +56,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string DiscountCurve { get; set; }
         [ProtoMember(24)]
         public string HedgingSet { get; set; }
-
+        [ProtoMember(25)]
+        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
 
 
 

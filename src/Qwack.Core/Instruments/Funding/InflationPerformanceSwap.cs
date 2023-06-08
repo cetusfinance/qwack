@@ -59,7 +59,38 @@ namespace Qwack.Core.Instruments.Funding
             DiscountCurve = discountCurve;
 
             T = StartDate.CalculateYearFraction(EndDate, BasisFixed);
-            FixedFlow = (System.Math.Pow(1.0 + parRate, T) - 1.0) * Notional * (swapType == SwapPayReceiveType.Payer ? -1.0 : 1.0);
+            FixedFlow = (System.Math.Pow(1.0 + ParRate, T) - 1.0) * Notional * (SwapType == SwapPayReceiveType.Payer ? -1.0 : 1.0);
+        }
+
+        public InflationPerformanceSwap(TO_InflationPerformanceSwap to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            RateIndex = new InflationIndex(to.RateIndex, calendarProvider, currencyProvider);
+
+            SwapTenor = new Frequency(to.SwapTenor);
+            ResetFrequency = RateIndex.ResetFrequency;
+            StartDate = to.StartDate;
+            EndDate = to.EndDate;
+            SettleDate = to.SettleDate;
+            ParRate = to.ParRate;
+            BasisFloat = RateIndex.DayCountBasis;
+            BasisFixed = RateIndex.DayCountBasisFixed;
+            SwapType = to.SwapType;
+        
+            Currency =  currencyProvider.GetCurrencySafe(to.Currency) ?? RateIndex.Currency;
+            Notional = to.Notional; 
+            ResetDates = new[] { StartDate, EndDate };
+
+            ForecastCurveCpi = to.ForecastCurveCpi;
+            DiscountCurve = to.DiscountCurve;
+
+            T = StartDate.CalculateYearFraction(EndDate, BasisFixed);
+            FixedFlow = to.FixedFlow == 0 ? (System.Math.Pow(1.0 + ParRate, T) - 1.0) * Notional * (SwapType == SwapPayReceiveType.Payer ? -1.0 : 1.0) : to.FixedFlow;
+
+            PortfolioName = to.PortfolioName;
+            SolveCurve = to.SolveCurve;
+            TradeId = to.TradeId;
+            Counterparty = to.Counterparty;
+            HedgingSet = to.HedgingSet;
         }
 
         public double FixedFlow { get; set; }
@@ -69,6 +100,7 @@ namespace Qwack.Core.Instruments.Funding
         public double ParRate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public DateTime? SettleDate { get; set; }
         public double InitialFixing { get; set; }
         public DateTime[] ResetDates { get; set; }
         public Currency Currency { get; set; }
@@ -120,7 +152,7 @@ namespace Qwack.Core.Instruments.Funding
             var cpiLegFv = cpiPerf * Notional * (SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0);
             var fixedLegFv = FixedFlow;
 
-            var df = discountCurve.GetDf(model.BuildDate, EndDate);
+            var df = discountCurve.GetDf(model.BuildDate, SettleDate ?? EndDate);
 
             return (cpiLegFv + fixedLegFv) * df;
         }
@@ -171,7 +203,8 @@ namespace Qwack.Core.Instruments.Funding
             TradeId = TradeId,
             RateIndex = RateIndex,
             PortfolioName = PortfolioName,
-            HedgingSet = HedgingSet
+            HedgingSet = HedgingSet,
+            SettleDate = SettleDate,
         };
 
         public IFundingInstrument SetParRate(double parRate)
@@ -183,7 +216,10 @@ namespace Qwack.Core.Instruments.Funding
                 PillarDate = PillarDate,
                 RateIndex = RateIndex,
                 PortfolioName = PortfolioName,
-                HedgingSet = HedgingSet
+                HedgingSet = HedgingSet,
+                SettleDate = SettleDate,
+                Counterparty = Counterparty,
+                InitialFixing = InitialFixing,
             };
         }
 
@@ -200,7 +236,6 @@ namespace Qwack.Core.Instruments.Funding
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
         {
-            var discountCurve = model.FundingModel.Curves[DiscountCurve];
             var forecastCurveCpi = model.FundingModel.Curves[ForecastCurveCpi];
 
             if (InitialFixing == 0)
@@ -220,8 +255,8 @@ namespace Qwack.Core.Instruments.Funding
 
             return new List<CashFlow>
             {
-                new CashFlow { Fv = cpiLegFv, Currency = Currency, SettleDate = EndDate }, 
-                new CashFlow { Fv = fixedLegFv, Currency = Currency, SettleDate = EndDate },
+                new CashFlow { Fv = cpiLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate }, 
+                new CashFlow { Fv = fixedLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate },
             };
         }
 
@@ -260,7 +295,10 @@ namespace Qwack.Core.Instruments.Funding
                    TradeId = TradeId,
                    RateIndex = RateIndex.GetTransportObject(),
                    PortfolioName = PortfolioName,
-                   HedgingSet = HedgingSet
+                   HedgingSet = HedgingSet,
+                   SettleDate = SettleDate,
+                   MetaData = MetaData,
+                   T = T
                }
            };
     }

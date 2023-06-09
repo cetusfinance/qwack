@@ -41,18 +41,45 @@ namespace Qwack.Dates
 
         private void SplitPeriod(string period)
         {
-            var periodType = period[period.Length - 1];
-
-            PeriodType = periodType switch
+            if(period.EndsWith("Year"))
             {
-                'D' or 'd' => DatePeriodType.D,
-                'Y' or 'y' => DatePeriodType.Y,
-                'M' or 'm' => DatePeriodType.M,
-                'B' or 'b' => DatePeriodType.B,
-                'w' or 'W' => DatePeriodType.W,
-                _ => throw new ArgumentException(nameof(period), $"Unknown period type {periodType}"),
-            };
-            PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
+                PeriodType = DatePeriodType.Y;
+                PeriodCount = int.Parse(period.Replace("Year",""));
+            } 
+            else if (period.EndsWith("BusinessDay"))
+            {
+                PeriodType = DatePeriodType.B;
+                PeriodCount = int.Parse(period.Replace("BusinessDay", ""));
+            }
+            else if (period.EndsWith("Month"))
+            {
+                PeriodType = DatePeriodType.M;
+                PeriodCount = int.Parse(period.Replace("Month", ""));
+            }
+            else if (period.EndsWith("Day"))
+            {
+                PeriodType = DatePeriodType.D;
+                PeriodCount = int.Parse(period.Replace("Day", ""));
+            }
+            else if (period.EndsWith("Week"))
+            {
+                PeriodType = DatePeriodType.W;
+                PeriodCount = int.Parse(period.Replace("Week", ""));
+            }
+            else
+            {
+                var periodType = period[period.Length - 1];
+                PeriodType = periodType switch
+                {
+                    'D' or 'd' => DatePeriodType.D,
+                    'Y' or 'y' => DatePeriodType.Y,
+                    'M' or 'm' => DatePeriodType.M,
+                    'B' or 'b' => DatePeriodType.B,
+                    'w' or 'W' => DatePeriodType.W,
+                    _ => throw new ArgumentException(nameof(period), $"Unknown period type {periodType}"),
+                };
+                PeriodCount = int.Parse(period.Substring(0, period.Length - 1));
+            }
         }
 
         public static (bool success, DatePeriodType periodType, int periodCount) TrySplitPeriod(string period)

@@ -328,9 +328,17 @@ namespace Qwack.Futures
                 {
                     YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2000) ? 2010 + YearNumber : 2000 + YearNumber;
                 }
-                else
+                else if (YearBeforeWhich2DigitDatesAreUsed < 2020)
                 {
                     YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2010) ? 2020 + YearNumber : 2010 + YearNumber;
+                }
+                else if (YearBeforeWhich2DigitDatesAreUsed < 2030)
+                {
+                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2020) ? 2030 + YearNumber : 2020 + YearNumber;
+                }
+                else 
+                {
+                    YearNumber = YearNumber <= (YearBeforeWhich2DigitDatesAreUsed - 2030) ? 2040 + YearNumber : 2030 + YearNumber;
                 }
             }
         }

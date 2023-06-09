@@ -19,13 +19,13 @@ namespace Qwack.Models.Calibrators
 {
     public static class CMEModelBuilder
     {
-        public static IrCurve GetCurveForCode(string cmeId, string cmeFilename, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static IrCurve GetCurveForCode(string cmeId, string cmeFilename, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Dictionary<DateTime, double> fixings = null)
         {
             var parsed = CMEFileParser.Instance.Parse(cmeFilename).Where(r => r.ID == cmeId && r.SecTyp == "FUT");
             return GetCurveForCode(parsed, qwackCode, curveName, indices, curves, futureSettingsProvider, currencyProvider, calendarProvider);
         }
 
-        public static IrCurve GetCurveForCode(string cmeId, StreamReader stream, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static IrCurve GetCurveForCode(string cmeId, StreamReader stream, string qwackCode, string curveName, Dictionary<string, FloatRateIndex> indices, Dictionary<string, string> curves, IFutureSettingsProvider futureSettingsProvider, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Dictionary<DateTime, double> fixings = null)
         {
             var parsed = CMEFileParser.Instance.Parse(stream).Where(r => r.ID == cmeId && r.SecTyp == "FUT");
             return GetCurveForCode(parsed, qwackCode, curveName, indices, curves, futureSettingsProvider, currencyProvider, calendarProvider);
@@ -45,6 +45,8 @@ namespace Qwack.Models.Calibrators
             };
             
             var fm = new FundingModel(origin, new[] { curve }, currencyProvider, calendarProvider);
+            if (fixings != null)
+                fm.AddFixingDictionary(curveName, new FixingDictionary(fixings));
 
             var solver = new NewtonRaphsonMultiCurveSolverStaged();
             solver.Solve(fm, fic);

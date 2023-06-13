@@ -247,8 +247,8 @@ namespace Qwack.Models.Calibrators
                         AverageEndDate = ffEnd,
                     };
                 case "SR3":
-                    var srEnd = FutureCode.GetExpiryFromCode(MmmYtoCode(record.MMY, qwackCode), futureSettingsProvider);
-                    var srStart = srEnd.AddMonths(-3).ThirdWednesday();
+                    var srStart = FutureCode.GetExpiryFromCode(MmmYtoCode(record.MMY, qwackCode), futureSettingsProvider);
+                    var srEnd = srStart.AddMonths(3).ThirdWednesday();
                     return new OISFuture
                     {
                         ContractSize = 1e6,

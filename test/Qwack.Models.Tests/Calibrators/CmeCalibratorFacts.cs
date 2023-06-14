@@ -96,8 +96,8 @@ namespace Qwack.Models.Tests.Calibrators
                 DayCountBasis = DayCountBasis.Act360,
                 FixingOffset = 0.Bd(),
                 HolidayCalendars = TestProviderHelper.CalendarProvider.Collection["NYC+LON"],
-                ResetTenor = 1.Months(),
-                RollConvention = RollType.MF
+                ResetTenor = 1.Bd(),
+                RollConvention = RollType.F
             };
             var indices = new Dictionary<string, FloatRateIndex> { { "SR3", i } };
             var curves = new Dictionary<string, string> { { "SR3", "USD.SOFR.1B" } };

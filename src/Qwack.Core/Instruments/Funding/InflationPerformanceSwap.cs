@@ -91,6 +91,7 @@ namespace Qwack.Core.Instruments.Funding
             TradeId = to.TradeId;
             Counterparty = to.Counterparty;
             HedgingSet = to.HedgingSet;
+            InitialFixing = to.InitialFixing;
         }
 
         public double FixedFlow { get; set; }

@@ -374,6 +374,10 @@ namespace Qwack.Core.Instruments
             FloatingRateLoanDepo loanDepositFl => loanDepositFl.Equals((FloatingRateLoanDepo)B),
             CashWrapper wrapper => Equals(wrapper.UnderlyingInstrument, (CashWrapper)B),
             CashAsset etc => etc.Equals((CashAsset)B),
+            IrSwap ir => ir.Equals((IrSwap)B),  
+            InflationPerformanceSwap ifp => ifp.Equals((InflationPerformanceSwap)B),
+            InflationSwap ifs => ifs.Equals((InflationSwap)B),
+            OISFuture oISFuture => oISFuture.Equals((OISFuture)B),
             _ => false,
         };
 
@@ -394,6 +398,10 @@ namespace Qwack.Core.Instruments
             CashWrapper wrapper => wrapper.UnderlyingInstrument.Notional(),
             ETC etc => etc.Notional,
             CashAsset ca => ca.Notional,
+            IrSwap ir => ir.Notional,
+            InflationPerformanceSwap ifp => ifp.Notional,
+            InflationSwap ifs => ifs.Notional,
+            OISFuture oISFuture => oISFuture.ContractSize * oISFuture.Position,
             _ => 0.0,
         };
 

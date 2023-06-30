@@ -214,7 +214,7 @@ namespace Qwack.Dates
                 case DayCountBasis.Bus252:
                     return startDate.BusinessDaysInPeriod(endDate.AddDays(-1), calendar).Count / 252.0;
                 case DayCountBasis.Unity:
-                    return 1.0;
+                    return Math.Max(1, endDate.Year - startDate.Year);
             }
             return -1;
         }

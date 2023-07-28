@@ -1074,6 +1074,13 @@
     "DaysToExclude": [],
     "MonthsToExclude": []
   },
+  "IDR": {
+    "InheritedCalendar": [ "JAK" ],
+    "Name": "IDR",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "JPY": {
     "InheritedCalendar": [ "TOK" ],
     "Name": "JPY",

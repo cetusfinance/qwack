@@ -153,6 +153,10 @@
     "Ccy": "ETH",
     "DayCount": "Act365",
     "SettlementCalendarName": "USD"
+  },
+  {
+    "Ccy": "IDR",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "IDR"
   }
-
 ]

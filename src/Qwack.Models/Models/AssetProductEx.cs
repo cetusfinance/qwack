@@ -1433,9 +1433,11 @@ namespace Qwack.Models.Models
             var rolledIrCurves = new Dictionary<string, IIrCurve>();
             foreach (var curve in model.FundingModel.Curves)
             {
-                var c = curve.Value as IrCurve;
-                var rolledCurve = c.RebaseDate(fwdValDate);
-                rolledIrCurves.Add(curve.Key, rolledCurve);
+                if (curve.Value is IrCurve c)
+                {
+                    var rolledCurve = c.RebaseDate(fwdValDate);
+                    rolledIrCurves.Add(curve.Key, rolledCurve);
+                }
             }
 
             var rolledFxVolSurfaces = new Dictionary<string, IVolSurface>();

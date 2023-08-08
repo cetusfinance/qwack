@@ -1162,6 +1162,9 @@ namespace Qwack.Models.Models
                 case FloatingRateLoanDepo fld:
                     flow = fld.FlowsT0(model.FundingModel);
                     break;
+                case InflationPerformanceSwap ips:
+                    flow = ips.FlowsT0(model.FundingModel);
+                    break;
                 case CashBalance:
                 case CashAsset:
                 case STIRFuture:

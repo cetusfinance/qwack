@@ -261,6 +261,24 @@ namespace Qwack.Core.Instruments.Funding
             };
         }
 
+        public double FlowsT0(IFundingModel model)
+        {
+            if (model.BuildDate == SettleDate)
+            {
+                var forecastCurveCpi = model.Curves[ForecastCurveCpi];
+                var forecast = (forecastCurveCpi as CPICurve).GetRate(EndDate.AddPeriod(RollType.P, RateIndex.HolidayCalendars, RateIndex.FixingLag));
+
+                var cpiPerf = forecast / InitialFixing - 1;
+
+                var cpiLegFv = cpiPerf * Notional * (SwapType == SwapPayReceiveType.Payer ? 1.0 : -1.0);
+                var fixedLegFv = FixedFlow;
+                return cpiLegFv + fixedLegFv;
+            }
+            else
+                return 0;
+            
+        }
+
         public double SuggestPillarValue(IFundingModel model)
         {
             var forecastCurveCpi = model.Curves[ForecastCurveCpi];

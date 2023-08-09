@@ -159,7 +159,17 @@ namespace Qwack.Core.Curves
             }
         }
 
-        public IIrCurve RebaseDate(DateTime newAnchorDate) => throw new NotImplementedException();
+        public IIrCurve RebaseDate(DateTime newAnchorDate)
+        {
+            var newCurve = new CPICurve(newAnchorDate, PillarDates, CpiRates, InflationIndex)
+            {
+                Name = Name,
+                CollateralSpec = CollateralSpec,
+                SolveStage = SolveStage,
+            };
+
+            return newCurve;
+        }
 
         public CPICurve Clone() => new(BuildDate, (DateTime[])PillarDates.Clone(), (double[])CpiRates.Clone(), InflationIndex)
         {

@@ -1438,6 +1438,11 @@ namespace Qwack.Models.Models
                     var rolledCurve = c.RebaseDate(fwdValDate);
                     rolledIrCurves.Add(curve.Key, rolledCurve);
                 }
+                else if (curve.Value is CPICurve cp)
+                {
+                    var rolledCurve = cp.RebaseDate(fwdValDate);
+                    rolledIrCurves.Add(curve.Key, rolledCurve);
+                }
             }
 
             var rolledFxVolSurfaces = new Dictionary<string, IVolSurface>();

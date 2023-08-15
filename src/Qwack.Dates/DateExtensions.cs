@@ -816,5 +816,53 @@ namespace Qwack.Dates
         }
 
         public static int DiffinMonths(this DateTime start, DateTime end) => (end.Year * 12 + end.Month) - (start.Year * 12 + start.Month);
+
+        public static DateTime AddWeekDays(DateTime d, int n)
+        {
+            var cd = d;
+            for (var i = 0; i < n; i++)
+            {
+                cd = cd.AddDays(1);
+                while (cd.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+                {
+                    cd = cd.AddDays(1);
+                }
+            }
+            return cd;
+        }
+
+        public static DateTime SubtractWeekDays(DateTime d, int n)
+        {
+            var cd = d;
+            for (var i = n; i > 0; i--)
+            {
+                cd = cd.AddDays(-1);
+                while (cd.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+                {
+                    cd = cd.AddDays(-1);
+                }
+            }
+            return cd;
+        }
+
+        public static DateTime PrevWeekDay(DateTime day)
+        {
+            day = day.AddDays(-1);
+            while (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday)
+            {
+                day = day.AddDays(-1);
+            }
+            return day;
+        }
+
+        public static DateTime NextWeekDay(DateTime day)
+        {
+            day = day.AddDays(1);
+            while (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday)
+            {
+                day = day.AddDays(1);
+            }
+            return day;
+        }
     }
 }

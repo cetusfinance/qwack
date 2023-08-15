@@ -120,7 +120,7 @@ namespace Qwack.Core.Curves
         public Dictionary<DateTime, IIrCurve> BumpScenarios(double delta, DateTime lastSensitivityDate) => throw new NotImplementedException();
 
 
-        public double GetForecast(DateTime fixingDate, int fixingLagInMonths) => _cpiInterp.Interpolate(fixingDate.AddMonths(fixingLagInMonths).ToOADate()); // InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
+        public double GetForecast(DateTime fixingDate, int fixingLagInMonths) => _cpiInterp.Interpolate(fixingDate.AddMonths(-System.Math.Abs(fixingLagInMonths)).ToOADate()); // InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
         public double GetForecastExact(DateTime fixingDate, int fixingLagInMonths) => InflationUtils.InterpFixing(fixingDate, _cpiInterp, fixingLagInMonths);
 
         public double GetDf(DateTime startDate, DateTime endDate)

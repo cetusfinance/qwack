@@ -864,5 +864,7 @@ namespace Qwack.Dates
             }
             return day;
         }
+
+        public static int DaysInMonth(this DateTime date) => date.LastDayOfMonth().AddDays(1).Subtract(date.FirstDayOfMonth()).Days;
     }
 }

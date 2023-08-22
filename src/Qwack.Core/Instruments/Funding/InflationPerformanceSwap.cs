@@ -118,7 +118,7 @@ namespace Qwack.Core.Instruments.Funding
         private DateTime? _pillarDate;
         public DateTime PillarDate
         {
-            get => _pillarDate ?? EndDate;
+            get => _pillarDate ?? EndDate.FirstDayOfMonth();
             set
             {
                 _pillarDate = value;
@@ -247,7 +247,7 @@ namespace Qwack.Core.Instruments.Funding
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
             }
 
-            var forecast = (forecastCurveCpi as CPICurve).GetRate(EndDate.AddPeriod(RollType.P,RateIndex.HolidayCalendars, RateIndex.FixingLag));
+            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
 
             var cpiPerf = forecast / InitialFixing - 1;
 
@@ -266,7 +266,7 @@ namespace Qwack.Core.Instruments.Funding
             if (model.BuildDate == SettleDate)
             {
                 var forecastCurveCpi = model.Curves[ForecastCurveCpi];
-                var forecast = (forecastCurveCpi as CPICurve).GetRate(EndDate.AddPeriod(RollType.P, RateIndex.HolidayCalendars, RateIndex.FixingLag));
+                var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
 
                 var cpiPerf = forecast / InitialFixing - 1;
 

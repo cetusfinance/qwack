@@ -26,5 +26,14 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public int SolveStage { get; set; }
         [ProtoMember(8)]
         public string CollateralSpec { get; set; }
+        [ProtoMember(9)]
+        public CpiInterpolationType CpiInterpolationType { get; set; }
+        [ProtoMember(10)]
+        public double SpotFixing { get; set; }
+        [ProtoMember(11)]
+        public DateTime SpotDate { get; set; }
+        [ProtoMember(12)]
+        public Dictionary<DateTime, double> Fixings { get; set; }
+
     }
 }

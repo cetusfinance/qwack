@@ -34,9 +34,14 @@ namespace Qwack.Core.Instruments.Funding
             return fic;
         }
 
-        public Dictionary<string, IIrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType)
+        public Dictionary<string, IIrCurve> ImplyContainedCurves(DateTime buildDate, Interpolator1DType interpType, 
+            CpiInterpolationType cpiInterpolationType = CpiInterpolationType.IndexLevel, Dictionary<string, double> spotCpiLevels = null, 
+            Dictionary<string, double[]> cpiSeasonalalFactors = null, Dictionary<string, Dictionary<DateTime, double>> fixings = null)
         {
             var o = new Dictionary<string, IIrCurve>();
+            spotCpiLevels ??= new();
+            fixings ??= new(); 
+            cpiSeasonalalFactors ??= new();
 
             foreach (var curveName in SolveCurves)
             {
@@ -55,12 +60,27 @@ namespace Qwack.Core.Instruments.Funding
                 if (insInScope.All(i => i is IIsInflationInstrument))
                 {
                     var dummyRates = pillars.Select(x => 100.0).ToArray();
-                    var irCurve = new CPICurve(buildDate, pillars, dummyRates, DayCountBasis.Act360, new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy))
+                    double? cpiSpot = spotCpiLevels.TryGetValue(curveName, out var cs) ? cs : null;
+                    var cpiSeasonalAdj = cpiSeasonalalFactors.TryGetValue(curveName, out var sf) ? sf : null;
+                    var fixingForIx = fixings.TryGetValue(curveName, out var f) ? f : null;
+                    if (cpiSeasonalAdj == null)
                     {
-                        Name = curveName,
-                        CollateralSpec = colSpec,
-                    };
-                    o.Add(curveName, irCurve);
+                        var irCurve = new CPICurve(buildDate, pillars, dummyRates, DayCountBasis.Act360, new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiInterpolationType, null, cpiSpot, fixingForIx)
+                        {
+                            Name = curveName,
+                            CollateralSpec = colSpec,
+                        };
+                        o.Add(curveName, irCurve);
+                    }
+                    else
+                    {
+                        var irCurve = new SeasonalCpiCurve(buildDate, pillars, dummyRates, DayCountBasis.Act360,  new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiSeasonalAdj, cpiInterpolationType, null, cpiSpot, fixingForIx)
+                        {
+                            Name = curveName,
+                            CollateralSpec = colSpec,
+                        };
+                        o.Add(curveName, irCurve);
+                    }
                 }
                 else
                 {

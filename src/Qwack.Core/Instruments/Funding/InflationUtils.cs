@@ -25,6 +25,14 @@ namespace Qwack.Core.Instruments.Funding
             return InterpFixing(fixingDate, indexA, indexB);  
         }
 
+        public static double InterpFixing(DateTime fixingDate, Func<DateTime, double> getForecastLevel, int fixingLagMonths)
+        {
+            var d0 = fixingDate.AddMonths(-System.Math.Abs(fixingLagMonths));
+            var indexA = getForecastLevel(new DateTime(d0.Year, d0.Month, 1));
+            var indexB = getForecastLevel(new DateTime(d0.Year, d0.Month, 1).AddMonths(1));
+            return InterpFixing(fixingDate, indexA, indexB);
+        }
+
         public static double InterpFixing(DateTime fixingDate, IFixingDictionary fixings, int fixingLagMonths)
         {
             var d0 = fixingDate.AddMonths(-System.Math.Abs(fixingLagMonths));

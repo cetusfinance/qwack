@@ -98,7 +98,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.CLI", "clients\Qwack.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Transport.Tests", "test\Qwack.Transport.Tests\Qwack.Transport.Tests.csproj", "{395E9B68-21B2-42CB-AE13-868726760EC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qwack.Excel.Next", "clients\Qwack.Excel.Next\Qwack.Excel.Next.csproj", "{BAB9BC4F-3452-4A25-9F26-69C73D58AFDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qwack.Excel.Next", "clients\Qwack.Excel.Next\Qwack.Excel.Next.csproj", "{BAB9BC4F-3452-4A25-9F26-69C73D58AFDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

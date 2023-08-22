@@ -218,11 +218,25 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Curve to solve stage mappings")] object SolveStages,
             [ExcelArgument(Description = "Fx matrix object")] object FxMatrix,
             [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces,
-            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings)
+            [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings,
+            [ExcelArgument(Description = "Cpi Interpolation")] object CpiInterpolation,
+            [ExcelArgument(Description = "Cpi Spot levels by curve")] object CpiSpotLevels)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 ContainerStores.GetObjectCache<FundingInstrumentCollection>().TryGetObject(FundingInstrumentCollection, out var fic);
+
+                if (!Enum.TryParse(CpiInterpolation.OptionalExcel("IndexLevel"), out CpiInterpolationType cType))
+                {
+                    return $"Could not parse cpi interpolator type - {CpiInterpolation}";
+                }
+
+                Dictionary<string, double> cpiSpotLevels = new();
+                if(CpiSpotLevels is not ExcelMissing)
+                {
+                    var range = (object[,])CpiSpotLevels;
+                    cpiSpotLevels = range.RangeToDictionary<string,double>();
+                }
 
                 IFxMatrix fxMatrix = null;
                 if (!(FxMatrix is ExcelMissing))
@@ -234,7 +248,7 @@ namespace Qwack.Excel.Curves
                 var emptyCurves = new Dictionary<string, IIrCurve>();
                 if (fic != null)
                 {
-                    emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap);
+                    emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap, cType, cpiSpotLevels);
 
                     var stageDict = !(SolveStages is ExcelMissing)
                         ? ((object[,])SolveStages).RangeToDictionary<string, int>()

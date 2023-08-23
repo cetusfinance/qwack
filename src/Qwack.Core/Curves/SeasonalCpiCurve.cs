@@ -107,7 +107,7 @@ namespace Qwack.Core.Curves
                     var monthFrac = ((double)BuildDate.Day) / daysInMonth;
                     var spotMonth = BuildDate.AddMonths(-System.Math.Abs(InflationIndex.FixingLag.PeriodCount));
                     var daysInSpotMonth = (double)spotMonth.DaysInMonth();
-                    SpotDate = spotMonth.AddDays(daysInSpotMonth * monthFrac);
+                    SpotDate = spotMonth.FirstDayOfMonth().AddDays(daysInSpotMonth * monthFrac);
                 }
                 for (var i = 0; i < PillarDates.Length; i++)
                 {
@@ -117,10 +117,30 @@ namespace Qwack.Core.Curves
                 foreach (var kv in Fixings)
                 {
                     var t = SpotDate.CalculateYearFraction(kv.Key, Basis);
-                    allCpiPoints[kv.Key] = System.Math.Log(kv.Value / SpotFixing) / t;
+                    if(t != 0)
+                        allCpiPoints[kv.Key] = System.Math.Log(kv.Value / SpotFixing) / t;
                 }
                 var x = allCpiPoints.OrderBy(x => x.Key).Select(x => x.Key.ToOADate()).ToArray();
                 var y = allCpiPoints.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+
+                for(var i=0;i<y.Length; i++)
+                {
+                    if (y[i] == 0)
+                    {
+                        if (i < y.Length - 1 && i>0)
+                        {
+                            y[i] = (y[i - 1] + y[i + 1]) / 2;
+                        }
+                        else if (i < y.Length - 1)
+                        {
+                            y[i] = y[i + 1];
+                        }
+                        else if(i > 0)
+                        {
+                            y[i] = y[i - 1];
+                        }
+                    }
+                }
 
                 _cpiInterp = InterpolatorFactory.GetInterpolator(x, y, InflationIndex.FixingInterpolation);
             }
@@ -136,17 +156,19 @@ namespace Qwack.Core.Curves
             var lastPillar = PillarDates.Max();
             var d = lastFixingDate;
             var prevIndex = lastFixing;
-            
+            var prevIndexClean = lastFixing;
+
             while (d < lastPillar)
             {
                 d = d.AddMonths(1).FirstDayOfMonth();
                 var fixing = GetForcastForLaggedDate(d);
-                var ratio = System.Math.Log(fixing / prevIndex);
+                var ratio = System.Math.Log(fixing / prevIndexClean);
                 var f = 12 * ratio;
                 var s = SeasonalAdjustments[d.Month - 1] * 12;
                 var adjForecast = prevIndex * System.Math.Exp((f + s) / 12);
                 adjCurve[d] = adjForecast;
                 prevIndex = adjForecast;
+                prevIndexClean = fixing;
             }
 
             if (CpiInterpolationType == CpiInterpolationType.IndexLevel)
@@ -163,7 +185,8 @@ namespace Qwack.Core.Curves
                 foreach(var kv in adjCurve)
                 {
                     var t = SpotDate.CalculateYearFraction(kv.Key, Basis);
-                    adjCurveRates[kv.Key] = System.Math.Log(kv.Value / SpotFixing) / t;
+                    if(t!=0)
+                        adjCurveRates[kv.Key] = System.Math.Log(kv.Value / SpotFixing) / t;
                 }
                 
                 var x = adjCurveRates.OrderBy(x => x.Key).Select(x => x.Key.ToOADate()).ToArray();

@@ -146,7 +146,7 @@ namespace Qwack.Core.Instruments.Funding
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
             }
 
-            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+            var forecast = (forecastCurveCpi as CPICurve).GetForecastExact(EndDate, RateIndex.FixingLag.PeriodCount);
 
             var cpiPerf = forecast / InitialFixing - 1;
 
@@ -174,7 +174,7 @@ namespace Qwack.Core.Instruments.Funding
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
             }
 
-            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+            var forecast = (forecastCurveCpi as CPICurve).GetForecastExact(EndDate, RateIndex.FixingLag.PeriodCount);
 
             var cpiPerf = forecast / InitialFixing;
 
@@ -247,7 +247,7 @@ namespace Qwack.Core.Instruments.Funding
                 InitialFixing = InflationUtils.InterpFixing(StartDate, fixingDictionary, RateIndex.FixingLag.PeriodCount);
             }
 
-            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+            var forecast = (forecastCurveCpi as CPICurve).GetForecastExact(EndDate, RateIndex.FixingLag.PeriodCount);
 
             var cpiPerf = forecast / InitialFixing - 1;
 
@@ -282,7 +282,7 @@ namespace Qwack.Core.Instruments.Funding
         public double SuggestPillarValue(IFundingModel model)
         {
             var forecastCurveCpi = model.Curves[ForecastCurveCpi];
-            var forecast = (forecastCurveCpi as CPICurve).GetForecast(EndDate, RateIndex.FixingLag.PeriodCount);
+            var forecast = (forecastCurveCpi as CPICurve).GetForecastExact(EndDate, RateIndex.FixingLag.PeriodCount);
 
             return forecast;
         }

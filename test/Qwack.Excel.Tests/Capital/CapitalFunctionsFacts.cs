@@ -1,19 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
-using Moq;
-using Qwack.Core.Instruments;
-using Qwack.Core.Models;
 using Qwack.Excel.Utils;
 using Qwack.Excel.Capital;
-using static ExcelDna.Integration.ExcelMissing;
-using Qwack.Core.Basic;
-using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Curves;
-using Qwack.Core.Cubes;
 using Qwack.Math.Interpolation;
 using Qwack.Transport.BasicTypes;
 

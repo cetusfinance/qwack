@@ -85,5 +85,42 @@ namespace Qwack.Excel.Curves
                 return $"CPI curve {ObjectName} not found in cache";
             });
         }
+
+        [ExcelFunction(Description = "Creates a cpi seasonality curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateCpiSeasonality), IsThreadSafe = false, IsVolatile = true)]
+        public static object CreateCpiSeasonality(
+           [ExcelArgument(Description = "Object name")] string ObjectName,
+           [ExcelArgument(Description = "Curve name")] string CurveName,
+           [ExcelArgument(Description = "Seasonality vector (length 12)")] object[] Vector)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+
+                var vector = new CpiSeasonalityVector
+                {
+                    CurveName = CurveName,
+                    SeasonalityFactors = Vector.ObjectRangeToVector<double>()
+                };
+
+                return ExcelHelper.PushToCache(vector, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Implies a cpi seasonality curve from a fixing dictionary", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(ImplyCpiSeasonality), IsThreadSafe = false, IsVolatile = true)]
+        public static object ImplyCpiSeasonality(
+            [ExcelArgument(Description = "Fixing dictionary")] string ObjectName,
+            [ExcelArgument(Description = "Number years history")] int nYears)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var fd = ContainerStores.GetObjectFromCache<IFixingDictionary>(ObjectName);
+
+                if (fd == null)
+                    return $"{ObjectName} not found";
+
+                var vec = InflationUtils.ImplySeasonality(fd, nYears);
+
+                return ExcelHelper.ReturnExcelRangeVectorFromDouble(vec);
+            });
+        }
     }
 }

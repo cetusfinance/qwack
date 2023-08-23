@@ -115,7 +115,7 @@ namespace Qwack.Core.Curves
                 foreach (var kv in Fixings)
                 {
                     var t = SpotDate.CalculateYearFraction(kv.Key, Basis);
-                    allCpiPoints[kv.Key] = System.Math.Log(kv.Value / SpotFixing) / t;
+                    allCpiPoints[kv.Key] = t == 0 ? 0 : System.Math.Log(kv.Value / SpotFixing) / t;
                 }
                 var x = allCpiPoints.OrderBy(x => x.Key).Select(x => x.Key.ToOADate()).ToArray();
                 var y = allCpiPoints.OrderBy(x => x.Key).Select(x => x.Value).ToArray();

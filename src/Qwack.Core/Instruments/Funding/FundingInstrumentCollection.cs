@@ -63,9 +63,15 @@ namespace Qwack.Core.Instruments.Funding
                     double? cpiSpot = spotCpiLevels.TryGetValue(curveName, out var cs) ? cs : null;
                     var cpiSeasonalAdj = cpiSeasonalalFactors.TryGetValue(curveName, out var sf) ? sf : null;
                     var fixingForIx = fixings.TryGetValue(curveName, out var f) ? f : null;
+                    DateTime? spotDate = null;
+                    if (fixingForIx != null)
+                    {
+                        spotDate = fixingForIx.Keys.Max();
+                        cpiSpot = fixingForIx[spotDate.Value];
+                    }
                     if (cpiSeasonalAdj == null)
                     {
-                        var irCurve = new CPICurve(buildDate, pillars, dummyRates, DayCountBasis.Act360, new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiInterpolationType, null, cpiSpot, fixingForIx)
+                        var irCurve = new CPICurve(buildDate, pillars, dummyRates, DayCountBasis.Act360, new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiInterpolationType, spotDate, cpiSpot, fixingForIx)
                         {
                             Name = curveName,
                             CollateralSpec = colSpec,
@@ -74,7 +80,7 @@ namespace Qwack.Core.Instruments.Funding
                     }
                     else
                     {
-                        var irCurve = new SeasonalCpiCurve(buildDate, pillars, dummyRates, DayCountBasis.Act360,  new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiSeasonalAdj, cpiInterpolationType, null, cpiSpot, fixingForIx)
+                        var irCurve = new SeasonalCpiCurve(buildDate, pillars, dummyRates, DayCountBasis.Act360,  new Frequency("-3m"), _calendarProvider.GetCalendarSafe(ccy), cpiSeasonalAdj, cpiInterpolationType, spotDate, cpiSpot, fixingForIx)
                         {
                             Name = curveName,
                             CollateralSpec = colSpec,

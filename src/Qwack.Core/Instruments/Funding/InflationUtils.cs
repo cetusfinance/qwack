@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Qwack.Core.Models;
 using Qwack.Math;
@@ -42,6 +43,27 @@ namespace Qwack.Core.Instruments.Funding
                 return indexA;
             var indexB = fixings[som.AddMonths(1)];
             return InterpFixing(fixingDate, indexA, indexB);
+        }
+
+        public static double[] ImplySeasonality(this IFixingDictionary fixings, int nYears)
+        {
+            var latestFixing = fixings.Keys.Max();
+            var d = latestFixing.AddYears(-nYears);
+            var monthTotals = new Dictionary<int, double>();
+            while(d<latestFixing) 
+            {
+                var f0 = fixings[d];
+                d = d.AddMonths(1);
+                var f1 = fixings[d];
+                var m = d.Month;
+                if(!monthTotals.ContainsKey(m))
+                    monthTotals[m] = 0;
+                monthTotals[m] += System.Math.Log(f1 / f0) / nYears;
+            }
+
+            var avg = monthTotals.Values.Average();
+
+            return Enumerable.Range(1,12).Select(i => monthTotals[i] - avg).ToArray();
         }
     }
 }

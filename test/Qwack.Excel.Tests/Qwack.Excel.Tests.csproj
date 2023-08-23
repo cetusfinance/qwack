@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Calendars.json" />
@@ -28,7 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\clients\Qwack.Excel\Qwack.Excel.csproj" />
+    <ProjectReference Include="..\..\clients\Qwack.Excel.Next\Qwack.Excel.Next.csproj" />
+    <ProjectReference Include="..\..\src\Qwack.Core\Qwack.Core.csproj" />
     <ProjectReference Include="..\..\src\Qwack.Dates\Qwack.Dates.csproj" />
   </ItemGroup>
   <ItemGroup>

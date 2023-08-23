@@ -220,7 +220,8 @@ namespace Qwack.Excel.Curves
             [ExcelArgument(Description = "Fx vol surfaces")] object FxVolSurfaces,
             [ExcelArgument(Description = "Fixing dictionaries")] object[] Fixings,
             [ExcelArgument(Description = "Cpi Interpolation")] object CpiInterpolation,
-            [ExcelArgument(Description = "Cpi Spot levels by curve")] object CpiSpotLevels)
+            [ExcelArgument(Description = "Cpi Spot levels by curve")] object CpiSpotLevels,
+            [ExcelArgument(Description = "Cpi Seasonality curves")] object[] CpiSeasonalityCurves)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
@@ -245,10 +246,14 @@ namespace Qwack.Excel.Curves
                     fxMatrix = fxMatrixCache.GetObject((string)FxMatrix).Value;
                 }
 
+                var fixings = Fixings.GetAnyFromCache<IFixingDictionary>();
+                var cpiSeasonalityCurves = CpiSeasonalityCurves.GetAnyFromCache<CpiSeasonalityVector>();
+                var cpiSeasons = cpiSeasonalityCurves.Any() ? cpiSeasonalityCurves.ToDictionary(x=>x.CurveName,x=>x.SeasonalityFactors) : null;
+                var fixingsByCurve = fixings.Any() ? fixings.ToDictionary(x => x.Name, x => x.ToDictionary(y => y.Key, y => y.Value)) : null;
                 var emptyCurves = new Dictionary<string, IIrCurve>();
                 if (fic != null)
                 {
-                    emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap, cType, cpiSpotLevels);
+                    emptyCurves = fic.Value.ImplyContainedCurves(BuildDate, Interpolator1DType.LinearFlatExtrap, cType, cpiSpotLevels, cpiSeasons, fixingsByCurve);
 
                     var stageDict = !(SolveStages is ExcelMissing)
                         ? ((object[,])SolveStages).RangeToDictionary<string, int>()
@@ -266,8 +271,7 @@ namespace Qwack.Excel.Curves
                         }
                     }
                 }
-                var fixings = Fixings.GetAnyFromCache<IFixingDictionary>();
-
+          
                 var model = new FundingModel(BuildDate, emptyCurves.Values.ToArray(), ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider);
 
                 foreach (var f in fixings)

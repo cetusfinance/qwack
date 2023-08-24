@@ -12,5 +12,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public TO_IrCurve IrCurve { get; set; }
         [ProtoMember(2)]
         public TO_CPICurve CPICurve { get; set; }
+        [ProtoMember(3)]
+        public TO_SeasonalCpiCurve SeasonalCpiCurve { get; set; }
     }
 }

@@ -48,6 +48,8 @@ namespace Qwack.Models
             {
                 if (x.Value.IrCurve != null)
                     return (IIrCurve)new IrCurve(x.Value.IrCurve, currencyProvider);
+                else if (x.Value.SeasonalCpiCurve != null)
+                    return (IIrCurve)new SeasonalCpiCurve(x.Value.SeasonalCpiCurve, calendarProvider);
                 else
                     return (IIrCurve)new CPICurve(x.Value.CPICurve, calendarProvider);
             }), currencyProvider, calendarProvider)
@@ -316,6 +318,8 @@ namespace Qwack.Models
                 {
                     if (x.Value is IrCurve ir)
                         return new TO_IIrCurve { IrCurve = ir.GetTransportObject() };
+                    else if (x.Value is SeasonalCpiCurve scpi)
+                        return new TO_IIrCurve { SeasonalCpiCurve = scpi.GetTransportObject() };
                     else if (x.Value is CPICurve cpi)
                         return new TO_IIrCurve { CPICurve = cpi.GetTransportObject() };
                     return null;

@@ -67,16 +67,10 @@ namespace Qwack.Core.Curves
         public SeasonalCpiCurve(TO_SeasonalCpiCurve transportObject, ICalendarProvider calendarProvider)
             : this(transportObject.BuildDate, transportObject.PillarDates, transportObject.CpiRates,  transportObject.Basis, 
                   new Frequency(transportObject.InflationIndex.FixingLag), calendarProvider.GetCalendarSafe(transportObject.InflationIndex.HolidayCalendars), 
-                  transportObject.SeasonalAdjustments, transportObject.CpiInterpolationType, fixings: transportObject.Fixings)
+                  transportObject.SeasonalAdjustments, transportObject.CpiInterpolationType, spotDate: transportObject.SpotDate, spotFixing: transportObject.SpotFixing, fixings: transportObject.Fixings)
         {
             Name = transportObject.Name;
-            if (transportObject.SpotDate != default)
-                SpotDate = transportObject.SpotDate;
-
             SolveStage = transportObject.SolveStage;
-
-            if (transportObject.SpotFixing != default)
-                SpotFixing = transportObject.SpotFixing;
         }
 
         private void BuildInterpolator()

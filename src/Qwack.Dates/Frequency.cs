@@ -171,4 +171,9 @@ namespace Qwack.Dates
 
         public static Frequency operator -(Frequency x, Frequency y) => x + new Frequency(-y.PeriodCount, y.PeriodType);
     }
+
+    public static class FrequencyEx
+    {
+        public static Frequency Abs(this Frequency x) => new Frequency(Math.Abs(x.PeriodCount), x.PeriodType);
+    }
 }

@@ -118,7 +118,7 @@ namespace Qwack.Core.Instruments.Funding
         private DateTime? _pillarDate;
         public DateTime PillarDate
         {
-            get => _pillarDate ?? EndDate.FirstDayOfMonth();
+            get => _pillarDate ?? EndDate.SubtractPeriod(RollType.P, RateIndex.HolidayCalendars, RateIndex.FixingLag.Abs());
             set
             {
                 _pillarDate = value;

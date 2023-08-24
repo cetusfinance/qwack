@@ -867,6 +867,9 @@ namespace Qwack.Models.Models
                 case FloatingRateLoanDepo loanDepoFl:
                     pv = loanDepoFl.Pv(model.FundingModel, false);
                     break;
+                case IFundingInstrument fundInst:
+                    pv = fundInst.Pv(model.FundingModel, false);
+                    break;
                 case CashWrapper wrapper:
                     return Theta(wrapper.UnderlyingInstrument, model, fwdDate, repCcy);
                 default:

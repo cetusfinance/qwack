@@ -30,6 +30,7 @@ namespace Qwack.Core.Instruments
         public Currency Currency { get; set; }
         public double FixedRateOrMargin { get; set; }
         public int CpiFixingLagInMonths { get; set; }
+        public string AssetId { get; set; }
 
         public FlowType FlowType { get; set; }
         public DayCountBasis Basis { get; set; }
@@ -55,6 +56,7 @@ namespace Qwack.Core.Instruments
             RateIndex = new FloatRateIndex(to.RateIndex, calendarProvider, currencyProvider);
             Dcf = to.Dcf;
             CpiFixingLagInMonths = to.CpiFixingLagInMonths;
+            AssetId = to.AssetId;
         }
 
         public CashFlow Clone() => new()
@@ -76,7 +78,8 @@ namespace Qwack.Core.Instruments
             Basis = Basis,
             RateIndex = RateIndex,
             Dcf = Dcf,
-            CpiFixingLagInMonths = CpiFixingLagInMonths
+            CpiFixingLagInMonths = CpiFixingLagInMonths,
+            AssetId = AssetId,
         };
 
         public TO_Cashflow GetTransportObject() => new ()
@@ -98,7 +101,8 @@ namespace Qwack.Core.Instruments
             Basis = Basis,
             RateIndex = RateIndex.GetTransportObject(),
             Dcf = Dcf,
-            CpiFixingLagInMonths = CpiFixingLagInMonths
+            CpiFixingLagInMonths = CpiFixingLagInMonths,
+            AssetId = AssetId,
         };
     }
 

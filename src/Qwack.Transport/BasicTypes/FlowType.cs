@@ -6,6 +6,8 @@ namespace Qwack.Transport.BasicTypes
         FixedRate,
         FixedAmount,
         NotionalExchange,
-        FloatInflation
+        FloatInflation,
+        AssetNotional,
+        AssetPerformance
     }
 }

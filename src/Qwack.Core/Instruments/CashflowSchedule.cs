@@ -239,5 +239,75 @@ namespace Qwack.Core.Instruments
 
             return totalPv;
         }
+        public static double PV(this CashFlowSchedule schedule, Currency reportingCCy, IAssetFxModel model, DateTime? filterDate)
+        {
+            var totalPv = 0.0;
+            for (var i = 0; i < schedule.Flows.Count; i++)
+            {
+                var flow = schedule.Flows[i];
+
+                if (string.IsNullOrEmpty(flow.AssetId))
+                    continue;
+                if (filterDate.HasValue && flow.SettleDate < filterDate.Value)
+                    continue;
+
+                double fv, pv;
+                var df = model.FundingModel.GetDf(reportingCCy, model.BuildDate, flow.SettleDate);
+                var fwdFxRate = model.FundingModel.GetFxRate(flow.SettleDate, flow.Currency, reportingCCy);
+                var curve = model.GetPriceCurve(flow.AssetId);
+               
+                switch (flow.FlowType)
+                {
+                    case FlowType.AssetNotional:
+                        {
+                            var price = curve.GetPriceForFixingDate(flow.AccrualPeriodEnd);
+                            var rateLin = flow.FixedRateOrMargin;
+                            var yf = flow.YearFraction;
+                            fv = rateLin * yf * flow.Notional * price;
+                            fv *= fwdFxRate;
+                            pv = fv * df;
+                            totalPv += pv;
+                            break;
+                        }
+                    case FlowType.AssetPerformance:
+                        {
+                            var s = flow.AccrualPeriodStart;
+                            var e = flow.AccrualPeriodEnd;
+                            var priceS = curve.GetPriceForFixingDate(s);
+                            var priceE = curve.GetPriceForFixingDate(e);
+                            var rateLin = priceE / priceS - 1.0;
+                            rateLin += flow.FixedRateOrMargin;
+                            var yf = flow.YearFraction;
+                            fv = rateLin * yf * flow.Notional;
+                            fv *= fwdFxRate;
+                            pv = fv * df;
+                            totalPv += pv;
+                            break;
+                        }
+                    case FlowType.FixedRate:
+                        {
+                            var rateLin = flow.FixedRateOrMargin;
+                            var yf = flow.YearFraction;
+                            fv = rateLin * yf * flow.Notional;
+                            fv *= fwdFxRate;
+                            pv = fv * df;
+                            totalPv += pv;
+                            break;
+                        }
+                    case FlowType.FixedAmount:
+                        {
+                            fv = flow.Notional;
+                            fv *= fwdFxRate;
+                            pv = fv * df;
+                            totalPv += pv;
+                            break;
+                        }
+                }
+
+            }
+
+            return totalPv;
+        }
+
     }
 }

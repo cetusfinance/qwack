@@ -60,5 +60,9 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public ExchangeType NotionalExchange { get; set; }
         [ProtoMember(25)]
         public SwapPayReceiveType Direction { get; set; }
+        [ProtoMember(26)]
+        public TrsLegType? TrsLegType { get; set; }
+        [ProtoMember(27)]
+        public string AssetId { get; set; }
     }
 }

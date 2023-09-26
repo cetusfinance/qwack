@@ -15,7 +15,7 @@ namespace Qwack.Core.Instruments.Asset
         public AssetTrs() { }
 
         public AssetTrs(ITrsUnderlying underlying, TrsLegType assetLegResetType, SwapLegType fundingLegType, TrsLegType fundingLegResetType, FloatRateIndex rateIndex, 
-            double notional, double fundingFixedRateOrMargin, FxConversionType fxConversionType, DateTime startDate, DateTime endDate, Currency currency )
+            double notional, double fundingFixedRateOrMargin, FxConversionType fxConversionType, DateTime startDate, DateTime endDate, Currency currency, SwapPayReceiveType assetLegDirection=SwapPayReceiveType.Rec )
         {
             Underlying = underlying;
             AssetLegResetType = assetLegResetType;
@@ -29,26 +29,30 @@ namespace Qwack.Core.Instruments.Asset
             EndDate = endDate;
             Currency = currency;
 
-            /*
-             *             FixedLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
-                ResetFrequency, BasisFixed)
+            FundingLeg = new GenericSwapLeg(StartDate, EndDate, rateIndex.HolidayCalendars, rateIndex.Currency,
+                rateIndex.ResetTenor, rateIndex.DayCountBasis)
             {
-                FixedRateOrMargin = (decimal)parRate,
-                LegType = SwapLegType.Fixed,
-                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? -1.0M : 1.0M),
-                AccrualDCB = rateIndex.DayCountBasisFixed
-            };
-            FloatLeg = new GenericSwapLeg(StartDate, swapTenor, rateIndex.HolidayCalendars, rateIndex.Currency,
-                ResetFrequency, BasisFloat)
-            {
-                FixedRateOrMargin = 0.0M,
-                LegType = SwapLegType.Float,
-                Nominal = 1e6M * (swapType == SwapPayReceiveType.Payer ? 1.0M : -1.0M),
+                FixedRateOrMargin = (decimal)fundingFixedRateOrMargin,
+                LegType = fundingLegType,
+                Nominal = (decimal)Notional * (assetLegDirection == SwapPayReceiveType.Receiver ? -1.0M : 1.0M),
                 AccrualDCB = rateIndex.DayCountBasis
             };
-            FlowScheduleFixed = FixedLeg.GenerateSchedule();
-            FlowScheduleFloat = FloatLeg.GenerateSchedule();
-            */
+
+            AssetLeg = new GenericSwapLeg(StartDate, EndDate, rateIndex.HolidayCalendars, rateIndex.Currency,
+                rateIndex.ResetTenor, rateIndex.DayCountBasis)
+            {
+                FixedRateOrMargin = 0.0M,
+                LegType = SwapLegType.AssetPerformance,
+                TrsLegType = assetLegResetType,
+                Nominal = (decimal)Notional * (assetLegDirection == SwapPayReceiveType.Receiver ? 1.0M : -1.0M),
+                AccrualDCB = rateIndex.DayCountBasisFixed,
+                AssetId = Underlying.AssetIds[0]
+            };
+
+
+            FlowScheduleFunding = FundingLeg.GenerateSchedule();
+            FlowScheduleAsset = AssetLeg.GenerateSchedule();
+
         }
 
         public ITrsUnderlying Underlying { get; set; }
@@ -94,7 +98,7 @@ namespace Qwack.Core.Instruments.Asset
         public double PV(IAssetFxModel model)
         {
             var fundingLegPv = FlowScheduleFunding.PV(Currency, model, null);
-            var assetLegPv = 0;
+            var assetLegPv = FlowScheduleAsset.PV(Currency, model, null);
 
             return fundingLegPv + assetLegPv;
         }

@@ -60,6 +60,8 @@ namespace Qwack.Core.Instruments.Funding
             AveragingType = to.AveragingType;
             NotionalExchange = to.NotionalExchange;
             Direction = to.Direction;
+            TrsLegType = to.TrsLegType;
+            AssetId = to.AssetId;
         }
 
         private void SetAllCalendars(Calendar calendars)
@@ -95,6 +97,8 @@ namespace Qwack.Core.Instruments.Funding
         public AverageType AveragingType { get; set; }
         public ExchangeType NotionalExchange { get; set; }
         public SwapPayReceiveType Direction { get; set; }
+        public TrsLegType? TrsLegType { get; set; }
+        public string AssetId { get; set; }
 
         public GenericSwapLeg Clone() => new()
         {
@@ -123,6 +127,8 @@ namespace Qwack.Core.Instruments.Funding
             RollDay = RollDay,
             StubType = StubType,
             TerminationDate = TerminationDate,
+            TrsLegType = TrsLegType,
+            AssetId = AssetId,
         };
 
         public TO_GenericSwapLeg GetTransportObject() => new()
@@ -151,7 +157,9 @@ namespace Qwack.Core.Instruments.Funding
             FraDiscounting = FraDiscounting,
             AveragingType = AveragingType,
             NotionalExchange = NotionalExchange,
-            Direction = Direction
+            Direction = Direction,
+            TrsLegType = TrsLegType,
+            AssetId = AssetId,
         };
     
 
@@ -175,7 +183,29 @@ namespace Qwack.Core.Instruments.Funding
                     YearFraction = yf,
                     Dcf = yf,
                     FlowType = FlowType.FloatInflation,
-                    FixedRateOrMargin = (double)FixedRateOrMargin
+                    FixedRateOrMargin = (double)FixedRateOrMargin,
+                    Currency = Currency,
+                });
+                f.Flows = lf;
+                return f;
+            }
+
+            if(LegType==SwapLegType.AssetPerformance && TrsLegType == Transport.BasicTypes.TrsLegType.Bullet)
+            {
+                var yf = startDate.CalculateYearFraction(endDate, AccrualDCB);
+                lf.Add(new CashFlow
+                {
+                    Notional = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
+                    Fv = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
+                    SettleDate = endDate,
+                    AccrualPeriodEnd = endDate,
+                    AccrualPeriodStart = startDate,
+                    YearFraction = yf,
+                    Dcf = 1,
+                    FlowType = FlowType.AssetPerformance,
+                    FixedRateOrMargin = 0,
+                    AssetId = AssetId,
+                    Currency = Currency,
                 });
                 f.Flows = lf;
                 return f;

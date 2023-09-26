@@ -11594,7 +11594,7 @@
     "TickSize": 2.5E-05
   },
   {
-    "Names": [ "STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC", "SXO", "Eurostoxx 50 - Eurex", "DAX - Eurex", "VG", "JS", "KG", "QR", "GX" ],
+    "Names": [ "STOXX 600 - EUREX", "STOXX600", "STOXX 600 Basic Resources - EUREX", "STOXX600-BASIC", "SXO", "Eurostoxx 50 - Eurex", "DAX - Eurex", "VG", "JS", "KG", "QR", "GX", "MUR" ],
     "CodeConversions": {
       "IB": {
         "SXO": "FXXP",
@@ -11602,7 +11602,8 @@
         "VG": "FESX",
         "KG": "FSTE",
         "QR": "ESE",
-        "GX": "FDAX"
+        "GX": "FDAX",
+		"MUR": "FMCH"
       },
       "BBG": {
         "SXO": "SXO",
@@ -11610,7 +11611,8 @@
         "VG": "VG",
         "KG": "KG",
         "QR": "QR",
-        "GX": "GX"
+        "GX": "GX",
+		"MUR": "MUR"
       }
     },
     "ExpiryGen": {

@@ -1,31 +1,25 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
-using Qwack.Core.Models;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
-    public class EquityBasket : ITrsUnderlying
+    public class EquityIndex : ITrsUnderlying
     {
-        public EquityBasket() { }
-        public EquityBasket(TO_EquityBasket to, ICurrencyProvider currencyProvider) 
+        public EquityIndex() { }
+        public EquityIndex(TO_EquityIndex to, ICurrencyProvider currencyProvider) 
         { 
-            Weights = new(to.Weights);
-            Notional = to.Notional;
             Currency = currencyProvider.GetCurrencySafe(to.Currency);
             FxConversionType = to.FxConversionType;
             Name = to.Name;
             MetaData = new(to.MetaData);
+            AssetId = to.AssetId;
         }
 
-        public Dictionary<string,double> Weights { get; set; }
-        public double Notional { get; }
         public FxConversionType FxConversionType { get; set; }
-        public string[] AssetIds => Weights.Keys.ToArray();
+        public string AssetId { get; set; }
+        public string[] AssetIds => new[] { AssetId } ;
         public Currency PaymentCurrency => Currency;
         public string Name { get; set; }
         public Currency Currency { get; set; }
@@ -33,14 +27,13 @@ namespace Qwack.Core.Instruments.Asset
 
         public TO_ITrsUnderlying ToTransportObject() => new()
         {
-            EquityBasket = new TO_EquityBasket
+            EquityIndex = new TO_EquityIndex()
             {
-                Weights = new(Weights),
-                Notional = Notional,
                 Currency = Currency.Ccy,
                 FxConversionType = FxConversionType,
                 Name = Name,
-                MetaData = new(MetaData)
+                MetaData = new(MetaData),
+                AssetId = AssetId
             }
         };
     }

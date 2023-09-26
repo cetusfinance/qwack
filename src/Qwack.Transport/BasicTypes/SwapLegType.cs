@@ -11,6 +11,7 @@ namespace Qwack.Transport.BasicTypes
         ZeroCoupon,
         InflationCoupon,
         FixedNoAccrual,
-        FloatNoAccrual
+        FloatNoAccrual,
+        AssetPerformance
     }
 }

@@ -21,7 +21,8 @@ namespace Qwack.Transport.BasicTypes
         OneTouchOption,
         Equity,
         Bond,
-        CashWrapper
+        CashWrapper,
+        AssetTrs
 
     }
 }

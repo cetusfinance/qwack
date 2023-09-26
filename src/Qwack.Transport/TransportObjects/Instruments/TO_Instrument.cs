@@ -48,5 +48,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_InflationPerformanceSwap InflationPerfSwap { get; set; }
         [ProtoMember(118)]
         public TO_IrSwap IrSwap { get; set; }
+        [ProtoMember(119)]
+        public TO_AssetTrs AssetTrs { get; set; }
     }
 }

@@ -255,7 +255,9 @@ namespace Qwack.Core.Instruments
                 var df = model.FundingModel.GetDf(reportingCCy, model.BuildDate, flow.SettleDate);
                 var fwdFxRate = model.FundingModel.GetFxRate(flow.SettleDate, flow.Currency, reportingCCy);
                 var curve = model.GetPriceCurve(flow.AssetId);
-               
+                if (!model.TryGetFixingDictionary(flow.AssetId, out var assetFixings))
+                    assetFixings = new FixingDictionary(new Dictionary<DateTime, double>());
+
                 switch (flow.FlowType)
                 {
                     case FlowType.AssetNotional:
@@ -273,8 +275,8 @@ namespace Qwack.Core.Instruments
                         {
                             var s = flow.AccrualPeriodStart;
                             var e = flow.AccrualPeriodEnd;
-                            var priceS = curve.GetPriceForFixingDate(s);
-                            var priceE = curve.GetPriceForFixingDate(e);
+                            var priceS = assetFixings.TryGetValue(s, out var fs) ? fs : curve.GetPriceForFixingDate(s);
+                            var priceE = assetFixings.TryGetValue(e, out var fe) ? fe : curve.GetPriceForFixingDate(e);
                             var rateLin = priceE / priceS - 1.0;
                             rateLin += flow.FixedRateOrMargin;
                             var yf = flow.YearFraction;

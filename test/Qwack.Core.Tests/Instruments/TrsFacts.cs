@@ -50,17 +50,22 @@ namespace Qwack.Core.Tests.Instruments
 
             var aModel = new AssetFxModel(bd, fModel);
 
-            var ixCurve = new ConstantPriceCurve(100, bd, TestProviderHelper.CurrencyProvider)
-            {
-                AssetId = "EQIX"
-            };
-            //var ixCurve = new EquityPriceCurve(bd, 100, usd, discoCurve, bd, new DateTime[](), new(), new(), new(), TestProviderHelper.CurrencyProvider)
+            var fixings = new FixingDictionary(new Dictionary<DateTime, double> { { bd.AddDays(-10), 99 } }) 
+                { Name = "EQIX" };
+
+            aModel.AddFixingDictionary("EQIX", fixings);
+
+            //var ixCurve = new ConstantPriceCurve(100, bd, TestProviderHelper.CurrencyProvider)
             //{
             //    AssetId = "EQIX"
             //};
+            var ixCurve = new EquityPriceCurve(bd, 100, usd, discoCurve, bd, TestProviderHelper.CurrencyProvider)
+            {
+                AssetId = "EQIX"
+            };
             aModel.AddPriceCurve("EQIX", ixCurve);
 
-            var startDate = bd.AddPeriod(RollType.F, cal, 2.Bd());
+            var startDate = bd.AddDays(-10);
             var maturity = startDate.AddDays(365);
 
             var ul = new EquityIndex()
@@ -71,10 +76,12 @@ namespace Qwack.Core.Tests.Instruments
                 Name = "EQIX",
             };
 
-            var swp = new AssetTrs(ul, TrsLegType.Bullet, SwapLegType.Float, TrsLegType.Resetting, ix, 1e6, 0, FxConversionType.None, startDate, maturity, usd);
+            var swp = new AssetTrs(ul, TrsLegType.Bullet, SwapLegType.Float, TrsLegType.Resetting, ix, 1e6, 0, FxConversionType.None, startDate, maturity, usd)
+                { ForecastFundingCurve = "USD.DISCO", DiscountCurve="USD.DISCO"};
             var pv = swp.PV(aModel);
-            Assert.Equal(-368.89651349, pv, 8);
+            Assert.Equal(9399.28384704169, pv, 8);
 
+            
         }
 
     }

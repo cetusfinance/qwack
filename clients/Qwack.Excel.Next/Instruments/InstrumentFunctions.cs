@@ -1055,6 +1055,49 @@ namespace Qwack.Excel.Instruments
             });
         }
 
+        [ExcelFunction(Description = "Creates an equity index for a TRS", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateEquityIndex), IsThreadSafe = Parallel)]
+        public static object CreateEquityIndex(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "AssetId")] string AssetId,
+            [ExcelArgument(Description = "Currency")] string Currency)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var product = new EquityIndex
+                {
+                    AssetId = AssetId,
+                    Currency = ContainerStores.CurrencyProvider.GetCurrencySafe(Currency),
+                    FxConversionType = FxConversionType.None,
+                    Name = AssetId,
+                };
+                return ExcelHelper.PushToCache<ITrsUnderlying>(product, ObjectName);
+            });
+        }
+
+        [ExcelFunction(Description = "Creates an asset TRS product", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateAssetTrs), IsThreadSafe = Parallel)]
+        public static object CreateAssetTrs(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Underlying Object")] string UlObject,
+            [ExcelArgument(Description = "Rate Index Object")] string RateIndex,
+            [ExcelArgument(Description = "Notinoal")]  double Notional,
+            [ExcelArgument(Description = "Funding Fixed-Rate Or Margin")] double FundingFixedRateOrMargin,
+            [ExcelArgument(Description = "Start Date")] DateTime StartDate,
+            [ExcelArgument(Description = "End Date")] DateTime EndDate,
+            [ExcelArgument(Description = "Currency")] string Currency,
+            [ExcelArgument(Description = "Asset Leg Reset Type")] TrsLegType AssetLegResetType = TrsLegType.Bullet,
+            [ExcelArgument(Description = "Funding Leg Type")] SwapLegType FundingLegType = SwapLegType.Float,
+            [ExcelArgument(Description = "Funding Leg Reset Type")] TrsLegType FundingLegResetType = TrsLegType.Resetting)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var ul = ContainerStores.GetObjectCache<ITrsUnderlying>().GetObjectOrThrow(UlObject, "TRS Underlying not found");
+                var rateIndex = ContainerStores.GetObjectCache<FloatRateIndex>().GetObjectOrThrow(RateIndex, "Rate Index not found");
+                var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
+                var product = new AssetTrs(ul.Value, AssetLegResetType, FundingLegType, FundingLegResetType, rateIndex.Value, Notional, FundingFixedRateOrMargin, FxConversionType.None, StartDate, EndDate, ccy);
+                return ExcelHelper.PushToCache(product, ObjectName);
+            });
+        }
+
         [ExcelFunction(Description = "Returns par rate of a trade given an AssetFx model", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(ProductParRate), IsThreadSafe = Parallel)]
         public static object ProductParRate(
            [ExcelArgument(Description = "Trade object name")] string TradeName,

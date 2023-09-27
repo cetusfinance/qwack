@@ -64,6 +64,26 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
+        public EquityPriceCurve(DateTime buildDate, double spot, string ccy, IIrCurve irCurve, DateTime spotDate, ICurrencyProvider currencyProvider,
+            DayCountBasis basis = DayCountBasis.ACT360)
+        {
+            _currencyProvider = currencyProvider;
+            Currency = currencyProvider[ccy];
+            BuildDate = buildDate;
+            PillarDates = new DateTime[1] {buildDate};
+            DivYields = new double[1] { 0 }; 
+            DiscreteDivDates = new DateTime[1] { buildDate };
+            DiscreteDivs = new double[1] { 0 }; 
+            Basis = basis;
+            Spot = spot;
+            IrCurve = irCurve;
+            SpotDate = spotDate;
+
+            PillarLabels = new string[1] {"SPOT"};
+
+            Initialize();
+        }
+
         public EquityPriceCurve(TO_EquityPriceCurve to, IFundingModel fundingModel, ICurrencyProvider currencyProvider)
             : this(to.BuildDate, to.Spot, to.Currency, fundingModel.GetCurve(to.Currency), to.SpotDate, to.PillarDates, to.DivYields, to.DiscreteDivDates,
                   to.DiscreteDivs, currencyProvider, to.Basis, to.PillarLabels)

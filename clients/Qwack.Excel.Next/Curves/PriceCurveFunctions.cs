@@ -270,6 +270,37 @@ namespace Qwack.Excel.Curves
             });
         }
 
+        [ExcelFunction(Description = "Creates an asset-style equity price curve", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(CreateEquityPriceCurve), IsThreadSafe = false)]
+        public static object CreateEquityPriceCurve(
+            [ExcelArgument(Description = "Object name")] string ObjectName,
+            [ExcelArgument(Description = "Asset Id")] string AssetId,            
+            [ExcelArgument(Description = "Build Date")] DateTime BuildDate,
+            [ExcelArgument(Description = "Spot Price")] double SpotPrice,
+            [ExcelArgument(Description = "Spot Date")] DateTime SpotDate,
+            [ExcelArgument(Description = "Discount curve name")] string FundingCurve,
+            [ExcelArgument(Description = "Currency")] string Currency)
+        {
+            return ExcelHelper.Execute(_logger, () =>
+            {
+                var irCache = ContainerStores.GetObjectCache<IIrCurve>();
+                if (!irCache.TryGetObject(FundingCurve, out var irCurveObj))
+                {
+                    return $"Could not find ir curve with name {FundingCurve}";
+                }
+                var irCurve = irCurveObj.Value;
+
+                var cObj = new EquityPriceCurve(BuildDate, SpotPrice, Currency, irCurve, SpotDate, ContainerStores.CurrencyProvider)
+                {
+                    Name = ObjectName,
+                    AssetId = AssetId,
+                };
+
+                var curveCache = ContainerStores.GetObjectCache<IPriceCurve>();
+                curveCache.PutObject(ObjectName, new SessionItem<IPriceCurve> { Name = ObjectName, Value = cObj });
+                return ObjectName + '¬' + curveCache.GetObject(ObjectName).Version;
+            });
+        }
+
         [ExcelFunction(Description = "Queries a price curve for a price for a give date", Category = CategoryNames.Curves, Name = CategoryNames.Curves + "_" + nameof(GetPrice), IsThreadSafe = false)]
         public static object GetPrice(
             [ExcelArgument(Description = "Object name")] string ObjectName,

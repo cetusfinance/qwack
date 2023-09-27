@@ -97,17 +97,50 @@ namespace Qwack.Core.Instruments.Asset
 
         public double PV(IAssetFxModel model)
         {
-            var fundingLegPv = FlowScheduleFunding.PV(Currency, model, null);
+            var fundingLegPv = FlowScheduleFunding.PV(Currency, model.FundingModel, ForecastFundingCurve, RateIndex.DayCountBasis, null);
             var assetLegPv = FlowScheduleAsset.PV(Currency, model, null);
 
             return fundingLegPv + assetLegPv;
         }
 
-        public IAssetInstrument Clone() => throw new NotImplementedException();
+        public IAssetInstrument Clone() => new AssetTrs
+        {
+            AssetLeg = AssetLeg.Clone(),
+            AssetLegResetType = AssetLegResetType,
+            Counterparty = Counterparty,
+            Currency = Currency,
+            DiscountCurve = DiscountCurve,
+            EndDate = EndDate,
+            FlowScheduleAsset = FlowScheduleAsset.Clone(),
+            FlowScheduleFunding = FlowScheduleFunding.Clone(),
+            ForecastFundingCurve = ForecastFundingCurve,
+            FundingFixedRateOrMargin = FundingFixedRateOrMargin,
+            FundingLeg = FundingLeg.Clone(),
+            FundingLegResetType = FundingLegResetType,
+            FundingLegType = FundingLegType,
+            FxConversionType = FxConversionType,
+            MetaData = new(MetaData),
+            Notional = Notional,
+            PortfolioName = PortfolioName,
+            RateIndex = RateIndex,
+            StartDate = StartDate,
+            TradeId = TradeId,
+            Underlying = Underlying,
+        };
+
         public string FxPair(IAssetFxModel model) => throw new NotImplementedException();
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType;
         public string[] IrCurves(IAssetFxModel model) => new[] { ForecastFundingCurve, DiscountCurve };
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => throw new NotImplementedException();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate)
+        {
+            if (valDate > EndDate)
+                return new Dictionary<string, List<DateTime>>() { { Underlying.AssetIds[0], new List<DateTime> { StartDate, EndDate } } };
+            else if (valDate > StartDate)
+                return new Dictionary<string, List<DateTime>>() { { Underlying.AssetIds[0], new List<DateTime> { StartDate } } };
+            else
+                return new Dictionary<string, List<DateTime>>() { { Underlying.AssetIds[0], new List<DateTime>() } };
+        }
+
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
         public TO_Instrument ToTransportObject() => new()
@@ -135,7 +168,8 @@ namespace Qwack.Core.Instruments.Asset
                 RateIndex = RateIndex.GetTransportObject(),
                 StartDate = StartDate,
                 TradeId = TradeId,
-                Underlying = Underlying.ToTransportObject()
+                Underlying = Underlying.ToTransportObject(),
+                 
             }
         };
     }

@@ -220,7 +220,8 @@ namespace Qwack.Core.Instruments.Funding
                     SettleDate = startDate,
                     YearFraction = 1.0,
                     Dcf = 1.0,
-                    FlowType = FlowType.FixedAmount
+                    FlowType = FlowType.FixedAmount,
+                    Currency = Currency,
                 });
             }
 
@@ -236,6 +237,7 @@ namespace Qwack.Core.Instruments.Funding
                         {
                             var q = new CashFlow()
                             {
+                                Currency = Currency,
                                 ResetDateStart = currentReset,
                                 AccrualPeriodStart = currentReset,
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
@@ -278,6 +280,7 @@ namespace Qwack.Core.Instruments.Funding
                                 var q = new CashFlow()
                                 {
                                     AccrualPeriodStart = startDate,
+                                    Currency = Currency,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                     AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd != DateTime.MinValue) ? lf.Last().AccrualPeriodStart : endDate
                                 };
@@ -313,6 +316,7 @@ namespace Qwack.Core.Instruments.Funding
                         {
                             var Q = new CashFlow()
                             {
+                                Currency = Currency,
                                 AccrualPeriodStart = currentReset,
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                 AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
@@ -355,6 +359,7 @@ namespace Qwack.Core.Instruments.Funding
                             {
                                 var Q = new CashFlow()
                                 {
+                                    Currency = Currency,
                                     AccrualPeriodStart = lf.Last().AccrualPeriodEnd,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                     AccrualPeriodEnd = endDate
@@ -388,6 +393,7 @@ namespace Qwack.Core.Instruments.Funding
             {
                 lf.Add(new CashFlow
                 {
+                    Currency = Currency,
                     Notional = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     Fv = (double)Nominal * (Direction == SwapPayReceiveType.Receiver ? -1.0 : 1.0),
                     SettleDate = endDate,

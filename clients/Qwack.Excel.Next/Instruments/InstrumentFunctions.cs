@@ -1093,7 +1093,7 @@ namespace Qwack.Excel.Instruments
                 var ul = ContainerStores.GetObjectCache<ITrsUnderlying>().GetObjectOrThrow(UlObject, "TRS Underlying not found");
                 var rateIndex = ContainerStores.GetObjectCache<FloatRateIndex>().GetObjectOrThrow(RateIndex, "Rate Index not found");
                 var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                var product = new AssetTrs(ul.Value, AssetLegResetType, FundingLegType, FundingLegResetType, rateIndex.Value, Notional, FundingFixedRateOrMargin, FxConversionType.None, StartDate, EndDate, ccy);
+                var product = new AssetTrs(ul.Value, AssetLegResetType, FundingLegType, FundingLegResetType, rateIndex.Value, Notional, FundingFixedRateOrMargin, FxConversionType.None, StartDate, EndDate, ccy, ccy.SettlementCalendar);
                 return ExcelHelper.PushToCache(product, ObjectName);
             });
         }

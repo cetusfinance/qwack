@@ -76,7 +76,7 @@ namespace Qwack.Core.Tests.Instruments
                 Name = "EQIX",
             };
 
-            var swp = new AssetTrs(ul, TrsLegType.Bullet, SwapLegType.Float, TrsLegType.Resetting, ix, 1e6, 0, FxConversionType.None, startDate, maturity, usd)
+            var swp = new AssetTrs(ul, TrsLegType.Bullet, SwapLegType.Float, TrsLegType.Resetting, ix, 1e6, 0, FxConversionType.None, startDate, maturity, usd, usd.SettlementCalendar)
                 { ForecastFundingCurve = "USD.DISCO", DiscountCurve="USD.DISCO"};
             var pv = swp.PV(aModel);
             Assert.Equal(9399.28384704169, pv, 8);

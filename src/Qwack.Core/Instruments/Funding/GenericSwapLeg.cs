@@ -197,7 +197,7 @@ namespace Qwack.Core.Instruments.Funding
                 {
                     Notional = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
                     Fv = -(double)Nominal * (Direction == SwapPayReceiveType.Payer ? -1.0 : 1.0),
-                    SettleDate = endDate,
+                    SettleDate = endDate.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset),
                     AccrualPeriodEnd = endDate,
                     AccrualPeriodStart = startDate,
                     YearFraction = yf,
@@ -243,9 +243,7 @@ namespace Qwack.Core.Instruments.Funding
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                 AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
                             };
-                            q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                            q.SettleDate = GetSettleDate(q);
                             q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
                                  1.0;
@@ -268,9 +266,7 @@ namespace Qwack.Core.Instruments.Funding
                                 var Q = lf.Last();
                                 Q.ResetDateStart = startDate;
                                 Q.AccrualPeriodStart = startDate;
-                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                Q.SettleDate = GetSettleDate(Q);
                                 Q.Dcf = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                     Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                     1.0;
@@ -285,9 +281,7 @@ namespace Qwack.Core.Instruments.Funding
                                     AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd != DateTime.MinValue) ? lf.Last().AccrualPeriodStart : endDate
                                 };
 
-                                q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                    q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                q.SettleDate = GetSettleDate(q);
                                 //Q.Currency = CCY;
                                 q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                  q.AccrualPeriodStart.CalculateYearFraction(q.AccrualPeriodEnd, AccrualDCB) :
@@ -321,9 +315,7 @@ namespace Qwack.Core.Instruments.Funding
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                 AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
                             };
-                            Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                            Q.SettleDate = GetSettleDate(Q);
                             //Q.Currency = CCY;
                             Q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                 Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
@@ -348,9 +340,7 @@ namespace Qwack.Core.Instruments.Funding
                             {
                                 var Q = lf.Last();
                                 Q.AccrualPeriodEnd = endDate;
-                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                Q.SettleDate = GetSettleDate(Q);
                                 Q.Dcf = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                     Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
                                     1.0;
@@ -364,9 +354,7 @@ namespace Qwack.Core.Instruments.Funding
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
                                     AccrualPeriodEnd = endDate
                                 };
-                                Q.SettleDate = (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
-                                    Q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
-                                    Q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
+                                Q.SettleDate = GetSettleDate(Q);
                                 //Q.Currency = CCY;
                                 Q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
                                    Q.AccrualPeriodStart.CalculateYearFraction(Q.AccrualPeriodEnd, AccrualDCB) :
@@ -405,6 +393,13 @@ namespace Qwack.Core.Instruments.Funding
             f.Flows = lf.OrderBy(x => x.AccrualPeriodStart).ToList();
 
             return f;
+        }
+
+        private DateTime GetSettleDate(CashFlow q)
+        {
+            return (PaymentOffsetRelativeTo == OffsetRelativeToType.PeriodEnd) ?
+                                q.AccrualPeriodEnd.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset) :
+                                q.AccrualPeriodStart.AddPeriod(PaymentRollType, PaymentCalendar, PaymentOffset);
         }
 
         private DateTime GetNextResetDate(DateTime currentReset, bool fwdDirection)

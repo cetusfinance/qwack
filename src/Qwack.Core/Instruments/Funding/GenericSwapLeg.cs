@@ -99,6 +99,7 @@ namespace Qwack.Core.Instruments.Funding
         public SwapPayReceiveType Direction { get; set; }
         public TrsLegType? TrsLegType { get; set; }
         public string AssetId { get; set; }
+        public double? InitialFixing { get; set; }
 
         public GenericSwapLeg Clone() => new()
         {
@@ -129,6 +130,7 @@ namespace Qwack.Core.Instruments.Funding
             TerminationDate = TerminationDate,
             TrsLegType = TrsLegType,
             AssetId = AssetId,
+            InitialFixing = InitialFixing,
         };
 
         public TO_GenericSwapLeg GetTransportObject() => new()
@@ -160,6 +162,7 @@ namespace Qwack.Core.Instruments.Funding
             Direction = Direction,
             TrsLegType = TrsLegType,
             AssetId = AssetId,
+            InitialFixing = InitialFixing
         };
     
 
@@ -206,9 +209,14 @@ namespace Qwack.Core.Instruments.Funding
                     FixedRateOrMargin = 0,
                     AssetId = AssetId,
                     Currency = Currency,
+                    InitialFixing = InitialFixing,
                 });
                 f.Flows = lf;
                 return f;
+            }
+            else if(LegType == SwapLegType.AssetPerformance)
+            {
+                throw new NotImplementedException("Only bullet asset legs are currently supported");
             }
 
             if (NotionalExchange is ExchangeType.FrontOnly or ExchangeType.Both)

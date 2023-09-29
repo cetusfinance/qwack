@@ -64,5 +64,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public TrsLegType? TrsLegType { get; set; }
         [ProtoMember(27)]
         public string AssetId { get; set; }
+        [ProtoMember(28)]
+        public double? InitialFixing { get; set; }
     }
 }

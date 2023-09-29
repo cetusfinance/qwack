@@ -71,5 +71,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
 
         [ProtoMember(24)]
         public Dictionary<string, string> MetaData { get; set; }
+
+        [ProtoMember(25)]
+        public double? InitialAssetFixing { get; set; }
     }
 }

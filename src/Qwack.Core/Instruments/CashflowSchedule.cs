@@ -275,7 +275,7 @@ namespace Qwack.Core.Instruments
                         {
                             var s = flow.AccrualPeriodStart;
                             var e = flow.AccrualPeriodEnd;
-                            var priceS = assetFixings.TryGetValue(s, out var fs) ? fs : curve.GetPriceForFixingDate(s);
+                            var priceS = flow.InitialFixing ?? (assetFixings.TryGetValue(s, out var fs) ? fs : curve.GetPriceForFixingDate(s));
                             var priceE = assetFixings.TryGetValue(e, out var fe) ? fe : curve.GetPriceForFixingDate(e);
                             var rateLin = priceE / priceS - 1.0;
                             rateLin += flow.FixedRateOrMargin;

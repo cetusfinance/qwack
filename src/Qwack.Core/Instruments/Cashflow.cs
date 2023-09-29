@@ -35,6 +35,7 @@ namespace Qwack.Core.Instruments
         public FlowType FlowType { get; set; }
         public DayCountBasis Basis { get; set; }
         public FloatRateIndex RateIndex { get; set; }
+        public double? InitialFixing { get; set; }
 
         public CashFlow(TO_Cashflow to, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
         {
@@ -57,6 +58,7 @@ namespace Qwack.Core.Instruments
             Dcf = to.Dcf;
             CpiFixingLagInMonths = to.CpiFixingLagInMonths;
             AssetId = to.AssetId;
+            InitialFixing = to.InitialFixing;
         }
 
         public CashFlow Clone() => new()
@@ -80,6 +82,7 @@ namespace Qwack.Core.Instruments
             Dcf = Dcf,
             CpiFixingLagInMonths = CpiFixingLagInMonths,
             AssetId = AssetId,
+            InitialFixing = InitialFixing
         };
 
         public TO_Cashflow GetTransportObject() => new ()
@@ -103,6 +106,7 @@ namespace Qwack.Core.Instruments
             Dcf = Dcf,
             CpiFixingLagInMonths = CpiFixingLagInMonths,
             AssetId = AssetId,
+            InitialFixing = InitialFixing
         };
     }
 

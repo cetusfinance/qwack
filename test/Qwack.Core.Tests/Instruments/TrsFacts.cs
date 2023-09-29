@@ -79,7 +79,7 @@ namespace Qwack.Core.Tests.Instruments
             var swp = new AssetTrs(ul, TrsLegType.Bullet, SwapLegType.Float, TrsLegType.Resetting, ix, 1e6, 0, FxConversionType.None, startDate, maturity, usd, usd.SettlementCalendar)
                 { ForecastFundingCurve = "USD.DISCO", DiscountCurve="USD.DISCO"};
             var pv = swp.PV(aModel);
-            Assert.Equal(9399.28384704169, pv, 8);
+            Assert.Equal(9406.739119358499, pv, 8);
 
             
         }

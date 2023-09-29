@@ -45,5 +45,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public TO_FloatRateIndex RateIndex { get; set; }
         [ProtoMember(19)]
         public string AssetId { get; set; }
+        [ProtoMember(20)]
+        public double? InitialFixing { get; set; }
     }
 }

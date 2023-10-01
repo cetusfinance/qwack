@@ -102,7 +102,7 @@ namespace Qwack.Core.Instruments
             FixedRateOrMargin = FixedRateOrMargin,
             FlowType = FlowType,
             Basis = Basis,
-            RateIndex = RateIndex.GetTransportObject(),
+            RateIndex = RateIndex?.GetTransportObject(),
             Dcf = Dcf,
             CpiFixingLagInMonths = CpiFixingLagInMonths,
             AssetId = AssetId,

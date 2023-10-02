@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using Qwack.Core.Basic;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
@@ -13,7 +14,7 @@ namespace Qwack.Core.Instruments.Asset
             Currency = currencyProvider.GetCurrencySafe(to.Currency);
             FxConversionType = to.FxConversionType;
             Name = to.Name;
-            MetaData = new(to.MetaData);
+            MetaData = to.MetaData == null ? null : new(to.MetaData);
             AssetId = to.AssetId;
         }
 
@@ -32,7 +33,7 @@ namespace Qwack.Core.Instruments.Asset
                 Currency = Currency.Ccy,
                 FxConversionType = FxConversionType,
                 Name = Name,
-                MetaData = new(MetaData),
+                MetaData = MetaData == null ? null : new(MetaData),
                 AssetId = AssetId
             }
         };

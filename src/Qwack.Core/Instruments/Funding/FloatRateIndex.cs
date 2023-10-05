@@ -36,9 +36,9 @@ namespace Qwack.Core.Instruments.Funding
             DayCountBasisFixed = DayCountBasisFixed,
             ResetTenor = ResetTenor.ToString(),
             ResetTenorFixed = ResetTenorFixed.ToString(),
-            HolidayCalendars = HolidayCalendars.ToString(),
+            HolidayCalendars = HolidayCalendars.Name,
             RollConvention = RollConvention,
-            Currency = Currency.ToString(),
+            Currency = Currency.Ccy,
             FixingOffset = FixingOffset.ToString(),
         };
     }

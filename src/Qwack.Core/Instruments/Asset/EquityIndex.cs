@@ -30,7 +30,7 @@ namespace Qwack.Core.Instruments.Asset
         {
             EquityIndex = new TO_EquityIndex()
             {
-                Currency = Currency.Ccy,
+                Currency = Currency?.Ccy,
                 FxConversionType = FxConversionType,
                 Name = Name,
                 MetaData = MetaData == null ? null : new(MetaData),

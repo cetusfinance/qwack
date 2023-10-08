@@ -46,6 +46,8 @@ namespace Qwack.Core.Instruments
                         return new EuropeanOption(transportObject.EuropeanOption, calendarProvider, currencyProvider);
                     case AssetInstrumentType.CashWrapper:
                         return new CashWrapper(transportObject.CashWrapper, currencyProvider, calendarProvider);
+                    case AssetInstrumentType.AssetTrs:
+                        return new AssetTrs(transportObject.AssetTrs, currencyProvider, calendarProvider);
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)

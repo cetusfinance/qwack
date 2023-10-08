@@ -867,6 +867,9 @@ namespace Qwack.Models.Models
                 case FloatingRateLoanDepo loanDepoFl:
                     pv = loanDepoFl.Pv(model.FundingModel, false);
                     break;
+                case AssetTrs trs:
+                    pv = trs.PV(model);
+                    break;
                 case IFundingInstrument fundInst:
                     pv = fundInst.Pv(model.FundingModel, false);
                     break;
@@ -1084,6 +1087,9 @@ namespace Qwack.Models.Models
                 case InflationSwap cpi2:
                     pv = (cpi2.Clone() as InflationSwap).Pv(model.FundingModel, true);
                     break;
+                case AssetTrs trs:
+                    pv = (trs.Clone() as AssetTrs).PV(model);
+                    break;
                 case CashWrapper wrapper:
                     (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
                     if (reportingCurrency != null)
@@ -1168,6 +1174,9 @@ namespace Qwack.Models.Models
                 case InflationPerformanceSwap ips:
                     flow = ips.FlowsT0(model.FundingModel);
                     break;
+                case AssetTrs trs:
+                    flow = trs.FlowsT0(model);
+                    break;
                 case CashBalance:
                 case CashAsset:
                 case STIRFuture:
@@ -1226,6 +1235,9 @@ namespace Qwack.Models.Models
                 case Forward fwd:
                     flows = fwd.ExpectedCashFlows(model);
                     break;
+                case AssetTrs trs:
+                    flows = trs.ExpectedCashFlows(model);
+                    break;
                 case CashWrapper wrapper:
                     (flows, tradeId, tradeType) = ComputeExpectedCashFlows(wrapper.UnderlyingInstrument, model);
                     flows = flows.Concat(wrapper.CashBalances.SelectMany(cb => cb.ExpectedCashFlows(model))).ToList();
@@ -1271,6 +1283,7 @@ namespace Qwack.Models.Models
                 IrBasisSwap => "IRBasisSwap",
                 InflationPerformanceSwap => "InfPerfSwap",
                 InflationSwap => "InfSwap",
+                AssetTrs => "TRS",
                 CashWrapper wrapper => TradeType(wrapper.UnderlyingInstrument),
                 _ => throw new Exception($"Unable to handle product of type {ins.GetType()}"),
             };

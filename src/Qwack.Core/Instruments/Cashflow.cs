@@ -54,7 +54,7 @@ namespace Qwack.Core.Instruments
             FixedRateOrMargin = to.FixedRateOrMargin;
             FlowType = to.FlowType;
             Basis = to.Basis;
-            RateIndex = new FloatRateIndex(to.RateIndex, calendarProvider, currencyProvider);
+            RateIndex = to.RateIndex == null ? null : new FloatRateIndex(to.RateIndex, calendarProvider, currencyProvider);
             Dcf = to.Dcf;
             CpiFixingLagInMonths = to.CpiFixingLagInMonths;
             AssetId = to.AssetId;

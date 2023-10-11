@@ -444,10 +444,11 @@ namespace Qwack.Core.Instruments
             for (var i = 0; i < schedule.Flows.Count; i++)
             {
                 var flow = schedule.Flows[i].Clone();
-                flows.Add(flow);
+
                 if (flow.SettleDate != filterDate)
                     continue;
 
+                flows.Add(flow);
                 var df = model.GetDf(reportingCCy, model.BuildDate, flow.SettleDate);
                 var fwdFxRate = model.GetFxRate(flow.SettleDate, flow.Currency, reportingCCy);
 

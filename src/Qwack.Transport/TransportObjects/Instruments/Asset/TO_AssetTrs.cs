@@ -74,5 +74,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
 
         [ProtoMember(25)]
         public double? InitialAssetFixing { get; set; }
+
+        [ProtoMember(26)]
+        public SwapPayReceiveType PayRecAsset { get; set; }
     }
 }

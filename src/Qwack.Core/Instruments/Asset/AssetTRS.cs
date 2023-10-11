@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
@@ -36,6 +35,8 @@ namespace Qwack.Core.Instruments.Asset
 
             FundingLegPaymentOffset = new Frequency(paymentOffset);
             AssetLegPaymentOffset = new Frequency(paymentOffset);
+
+            PayRecAsset = assetLegDirection;
 
             FundingLeg = new GenericSwapLeg(StartDate, EndDate, rateIndex.HolidayCalendars, rateIndex.Currency,
                 rateIndex.ResetTenor, rateIndex.DayCountBasis)
@@ -94,6 +95,7 @@ namespace Qwack.Core.Instruments.Asset
 
             DiscountCurve = to.DiscountCurve;
             ForecastFundingCurve = to.ForecastFundingCurve;
+            PayRecAsset = to.PayRecAsset;
         }
 
         public ITrsUnderlying Underlying { get; set; }
@@ -102,6 +104,7 @@ namespace Qwack.Core.Instruments.Asset
         public TrsLegType FundingLegResetType { get; set; } = TrsLegType.Resetting;
         public SwapLegType FundingLegType { get; set; } = SwapLegType.Float;
         public FxConversionType FxConversionType { get; set; }
+        public SwapPayReceiveType PayRecAsset { get; set; } = SwapPayReceiveType.Rec;
 
         public string[] AssetIds => Underlying.AssetIds;
 
@@ -176,6 +179,7 @@ namespace Qwack.Core.Instruments.Asset
             FundingLegPaymentOffset = FundingLegPaymentOffset,
             AssetLegPaymentOffset = AssetLegPaymentOffset,
             InitialAssetFixing = InitialAssetFixing,
+            PayRecAsset = PayRecAsset
         };
 
         public string FxPair(IAssetFxModel model) => throw new NotImplementedException();
@@ -234,7 +238,8 @@ namespace Qwack.Core.Instruments.Asset
                 AssetLegPaymentOffset = AssetLegPaymentOffset.ToString(),
                 FundingLegPaymentOffset = FundingLegPaymentOffset.ToString(),
                 SettleCalendar = SettleCalendar?.Name,
-                InitialAssetFixing = InitialAssetFixing
+                InitialAssetFixing = InitialAssetFixing,
+                PayRecAsset = PayRecAsset
             }
         };
     }

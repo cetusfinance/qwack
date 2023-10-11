@@ -92,6 +92,8 @@ namespace Qwack.Core.Instruments.Asset
             FundingLegPaymentOffset = new Frequency(to.FundingLegPaymentOffset);
             AssetLegPaymentOffset = new Frequency(to.AssetLegPaymentOffset);
 
+            DiscountCurve = to.DiscountCurve;
+            ForecastFundingCurve = to.ForecastFundingCurve;
         }
 
         public ITrsUnderlying Underlying { get; set; }

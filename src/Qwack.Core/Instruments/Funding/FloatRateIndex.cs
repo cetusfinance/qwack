@@ -18,6 +18,7 @@ namespace Qwack.Core.Instruments.Funding
             RollConvention = transportObject.RollConvention;
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             FixingOffset = new Frequency(transportObject.FixingOffset);
+            Name = transportObject.Name;
         }
 
         public DayCountBasis DayCountBasis { get; set; }
@@ -30,6 +31,8 @@ namespace Qwack.Core.Instruments.Funding
         public Currency Currency { get; set; }
         public Frequency FixingOffset { get; set; }
 
+        public string Name { get; set; }
+
         public TO_FloatRateIndex GetTransportObject() => new()
         {
             DayCountBasis = DayCountBasis,
@@ -40,6 +43,7 @@ namespace Qwack.Core.Instruments.Funding
             RollConvention = RollConvention,
             Currency = Currency.Ccy,
             FixingOffset = FixingOffset.ToString(),
+            Name = Name,
         };
     }
 }

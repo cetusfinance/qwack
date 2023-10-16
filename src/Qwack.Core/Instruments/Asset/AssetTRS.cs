@@ -205,8 +205,8 @@ namespace Qwack.Core.Instruments.Asset
         }
 
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
-            => FlowScheduleAsset.ExpectedFlows(Currency, model, model.BuildDate)
-                                .Concat(FlowScheduleFunding.ExpectedFlows(Currency, model.FundingModel, ForecastFundingCurve, RateIndex.DayCountBasis, model.BuildDate))
+            => FlowScheduleAsset.ExpectedFlows(Currency, model, null)
+                                .Concat(FlowScheduleFunding.ExpectedFlows(Currency, model.FundingModel, ForecastFundingCurve, RateIndex.DayCountBasis, null))
                                 .ToList();
 
         public TO_Instrument ToTransportObject() => new()

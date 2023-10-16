@@ -438,14 +438,14 @@ namespace Qwack.Core.Instruments
             return totalPv;
         }
 
-        public static CashFlow[] ExpectedFlows(this CashFlowSchedule schedule, Currency reportingCCy, IFundingModel model, string forecastCurve, DayCountBasis basisFloat, DateTime filterDate)
+        public static CashFlow[] ExpectedFlows(this CashFlowSchedule schedule, Currency reportingCCy, IFundingModel model, string forecastCurve, DayCountBasis basisFloat, DateTime? filterDate)
         {
             List<CashFlow> flows = new(); ;
             for (var i = 0; i < schedule.Flows.Count; i++)
             {
                 var flow = schedule.Flows[i].Clone();
 
-                if (flow.SettleDate != filterDate)
+                if (filterDate.HasValue && flow.SettleDate != filterDate)
                     continue;
 
                 flows.Add(flow);
@@ -488,7 +488,7 @@ namespace Qwack.Core.Instruments
             return flows.ToArray();
         }
 
-        public static CashFlow[] ExpectedFlows(this CashFlowSchedule schedule, Currency reportingCCy, IAssetFxModel model, DateTime filterDate)
+        public static CashFlow[] ExpectedFlows(this CashFlowSchedule schedule, Currency reportingCCy, IAssetFxModel model, DateTime? filterDate)
         {
             var flows = new List<CashFlow>();
             for (var i = 0; i < schedule.Flows.Count; i++)
@@ -497,7 +497,7 @@ namespace Qwack.Core.Instruments
                 flows.Add(flow);
                 if (string.IsNullOrEmpty(flow.AssetId))
                     continue;
-                if (flow.SettleDate != filterDate)
+                if (filterDate.HasValue && flow.SettleDate != filterDate)
                     continue;
 
                 var df = model.FundingModel.GetDf(reportingCCy, model.BuildDate, flow.SettleDate);
@@ -527,7 +527,7 @@ namespace Qwack.Core.Instruments
                             var rateLin = priceE / priceS - 1.0;
                             rateLin += flow.FixedRateOrMargin;
                             var yf = flow.YearFraction;
-                            flow.Fv = rateLin * yf * flow.Notional;
+                            flow.Fv = rateLin * flow.Notional;
                             flow.Fv *= fwdFxRate;
                             flow.Pv = flow.Fv * df;
                             break;

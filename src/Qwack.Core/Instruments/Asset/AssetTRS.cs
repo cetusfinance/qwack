@@ -46,7 +46,8 @@ namespace Qwack.Core.Instruments.Asset
                 Nominal = (decimal)Notional * (assetLegDirection == SwapPayReceiveType.Receiver ? -1.0M : 1.0M),
                 AccrualDCB = rateIndex.DayCountBasis,
                 PaymentOffset = FundingLegPaymentOffset,
-                PaymentCalendar = SettleCalendar
+                PaymentCalendar = SettleCalendar,
+                LegId = "Funding"
             };
 
             AssetLeg = new GenericSwapLeg(StartDate, EndDate, rateIndex.HolidayCalendars, rateIndex.Currency,
@@ -59,7 +60,8 @@ namespace Qwack.Core.Instruments.Asset
                 AccrualDCB = rateIndex.DayCountBasisFixed,
                 AssetId = Underlying.AssetIds[0],
                 PaymentOffset = AssetLegPaymentOffset,
-                PaymentCalendar = SettleCalendar
+                PaymentCalendar = SettleCalendar,
+                LegId = "Asset"
             };
 
             FlowScheduleFunding = FundingLeg.GenerateSchedule();
@@ -81,9 +83,15 @@ namespace Qwack.Core.Instruments.Asset
             Currency = currencyProvider.GetCurrencySafe(to.Currency);
             SettleCalendar = calendarProvider.GetCalendarSafe(to.SettleCalendar);
 
-            FundingLeg = new GenericSwapLeg(to.FundingLeg, calendarProvider, currencyProvider);
+            FundingLeg = new GenericSwapLeg(to.FundingLeg, calendarProvider, currencyProvider)
+            {
+                LegId = "Funding"
+            };
 
-            AssetLeg = new GenericSwapLeg(to.AssetLeg, calendarProvider, currencyProvider);
+            AssetLeg = new GenericSwapLeg(to.AssetLeg, calendarProvider, currencyProvider)
+            {
+                LegId = "Asset"
+            };
 
             FlowScheduleFunding = new CashFlowSchedule(to.FlowScheduleFunding, calendarProvider, currencyProvider);
             FlowScheduleAsset = new CashFlowSchedule(to.FlowScheduleAsset, calendarProvider, currencyProvider);

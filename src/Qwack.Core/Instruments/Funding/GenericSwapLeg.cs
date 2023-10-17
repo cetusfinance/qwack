@@ -62,6 +62,7 @@ namespace Qwack.Core.Instruments.Funding
             Direction = to.Direction;
             TrsLegType = to.TrsLegType;
             AssetId = to.AssetId;
+            LegId = to.LegId;
         }
 
         private void SetAllCalendars(Calendar calendars)
@@ -100,6 +101,7 @@ namespace Qwack.Core.Instruments.Funding
         public TrsLegType? TrsLegType { get; set; }
         public string AssetId { get; set; }
         public double? InitialFixing { get; set; }
+        public string LegId { get; set; }
 
         public GenericSwapLeg Clone() => new()
         {
@@ -131,6 +133,7 @@ namespace Qwack.Core.Instruments.Funding
             TrsLegType = TrsLegType,
             AssetId = AssetId,
             InitialFixing = InitialFixing,
+            LegId = LegId,
         };
 
         public TO_GenericSwapLeg GetTransportObject() => new()
@@ -162,7 +165,8 @@ namespace Qwack.Core.Instruments.Funding
             Direction = Direction,
             TrsLegType = TrsLegType,
             AssetId = AssetId,
-            InitialFixing = InitialFixing
+            InitialFixing = InitialFixing,
+            LegId = LegId,
         };
     
 
@@ -188,6 +192,7 @@ namespace Qwack.Core.Instruments.Funding
                     FlowType = FlowType.FloatInflation,
                     FixedRateOrMargin = (double)FixedRateOrMargin,
                     Currency = Currency,
+                    LegId = LegId,
                 });
                 f.Flows = lf;
                 return f;
@@ -210,6 +215,7 @@ namespace Qwack.Core.Instruments.Funding
                     AssetId = AssetId,
                     Currency = Currency,
                     InitialFixing = InitialFixing,
+                    LegId = LegId,
                 });
                 f.Flows = lf;
                 return f;
@@ -230,6 +236,7 @@ namespace Qwack.Core.Instruments.Funding
                     Dcf = 1.0,
                     FlowType = FlowType.FixedAmount,
                     Currency = Currency,
+                    LegId = LegId,
                 });
             }
 
@@ -249,7 +256,8 @@ namespace Qwack.Core.Instruments.Funding
                                 ResetDateStart = currentReset,
                                 AccrualPeriodStart = currentReset,
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
+                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency),
+                                LegId = LegId,
                             };
                             q.SettleDate = GetSettleDate(q);
                             q.YearFraction = (LegType is not SwapLegType.FixedNoAccrual and not SwapLegType.FloatNoAccrual) ?
@@ -286,7 +294,8 @@ namespace Qwack.Core.Instruments.Funding
                                     AccrualPeriodStart = startDate,
                                     Currency = Currency,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                    AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd != DateTime.MinValue) ? lf.Last().AccrualPeriodStart : endDate
+                                    AccrualPeriodEnd = (lf.Count > 0 && lf.Last().AccrualPeriodEnd != DateTime.MinValue) ? lf.Last().AccrualPeriodStart : endDate,
+                                    LegId = LegId,
                                 };
 
                                 q.SettleDate = GetSettleDate(q);
@@ -321,7 +330,8 @@ namespace Qwack.Core.Instruments.Funding
                                 Currency = Currency,
                                 AccrualPeriodStart = currentReset,
                                 FixingDateStart = currentReset.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency)
+                                AccrualPeriodEnd = currentReset.AddPeriod(ResetRollType, ResetCalendar, ResetFrequency),
+                                LegId = LegId,
                             };
                             Q.SettleDate = GetSettleDate(Q);
                             //Q.Currency = CCY;
@@ -360,7 +370,8 @@ namespace Qwack.Core.Instruments.Funding
                                     Currency = Currency,
                                     AccrualPeriodStart = lf.Last().AccrualPeriodEnd,
                                     FixingDateStart = startDate.SubtractPeriod(FixingRollType, FixingCalendar, FixingOffset),
-                                    AccrualPeriodEnd = endDate
+                                    AccrualPeriodEnd = endDate,
+                                    LegId = LegId,
                                 };
                                 Q.SettleDate = GetSettleDate(Q);
                                 //Q.Currency = CCY;
@@ -395,7 +406,8 @@ namespace Qwack.Core.Instruments.Funding
                     SettleDate = endDate,
                     YearFraction = 1.0,
                     Dcf = 1.0,
-                    FlowType = FlowType.FixedAmount
+                    FlowType = FlowType.FixedAmount,
+                    LegId = LegId,
                 });
             }
             f.Flows = lf.OrderBy(x => x.AccrualPeriodStart).ToList();

@@ -47,5 +47,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Funding
         public string AssetId { get; set; }
         [ProtoMember(20)]
         public double? InitialFixing { get; set; }
+        [ProtoMember(21)]
+        public string LegId { get; set; }
     }
 }

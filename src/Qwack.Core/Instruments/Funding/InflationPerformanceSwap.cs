@@ -256,8 +256,8 @@ namespace Qwack.Core.Instruments.Funding
 
             return new List<CashFlow>
             {
-                new CashFlow { Fv = cpiLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate }, 
-                new CashFlow { Fv = fixedLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate },
+                new CashFlow { Fv = cpiLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate, LegId = "CPI" }, 
+                new CashFlow { Fv = fixedLegFv, Currency = Currency, SettleDate = SettleDate ?? EndDate, LegId = "Fixed" },
             };
         }
 

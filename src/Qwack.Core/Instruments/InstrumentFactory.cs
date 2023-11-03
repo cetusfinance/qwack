@@ -21,17 +21,11 @@ namespace Qwack.Core.Instruments
                     case AssetInstrumentType.AsianSwap:
                         return transportObject.AsianSwap.GetAsianSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianSwapStrip:
-                        return new AsianSwapStrip
-                        {
-                            TradeId = transportObject.AsianSwapStrip.TradeId,
-                            Counterparty = transportObject.AsianSwapStrip.Counterparty,
-                            PortfolioName = transportObject.AsianSwapStrip.PortfolioName,
-                            Swaplets = transportObject.AsianSwapStrip.Swaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
-                            HedgingSet = transportObject.AsianSwapStrip.HedgingSet,
-                        };
+                        return transportObject.AsianSwapStrip.GetAsianSwapStrip(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.AsianBasisSwap:
+                        return transportObject.AsianBasisSwap.GetAsianBasisSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianOption:
-                        var ao = GetAsianOption(transportObject.AsianOption, currencyProvider, calendarProvider);
-                        return ao;
+                        return transportObject.AsianOption.GetAsianOption(currencyProvider, calendarProvider);
                     case AssetInstrumentType.Forward:
                         return transportObject.Forward.GetForward(currencyProvider, calendarProvider);
                     case AssetInstrumentType.Equity:
@@ -136,6 +130,25 @@ namespace Qwack.Core.Instruments
             Counterparty = transportObject.Counterparty,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
+        };
+
+        private static AsianSwapStrip GetAsianSwapStrip(this TO_AsianSwapStrip transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            TradeId = transportObject.TradeId,
+            Counterparty = transportObject.Counterparty,
+            PortfolioName = transportObject.PortfolioName,
+            Swaplets = transportObject.Swaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+            HedgingSet = transportObject.HedgingSet,
+        };
+
+    private static AsianBasisSwap GetAsianBasisSwap(this TO_AsianBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            TradeId = transportObject.TradeId,
+            Counterparty = transportObject.Counterparty,
+            HedgingSet = transportObject.HedgingSet,
+            PortfolioName = transportObject.PortfolioName,
+            PaySwaplets = transportObject.PaySwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+            RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
         };
 
         private static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

@@ -5,16 +5,20 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
     public class AsianBasisSwap : IAssetInstrument
     {
+        public AsianBasisSwap() { }
+        
         public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
         public string TradeId { get; set; }
         public string Counterparty { get; set; }
         public string PortfolioName { get; set; }
-
+        public string HedgingSet { get; set; }
         public AsianSwap[] PaySwaplets { get; set; }
         public AsianSwap[] RecSwaplets { get; set; }
 
@@ -27,6 +31,9 @@ namespace Qwack.Core.Instruments.Asset
         public IAssetInstrument Clone() => new AsianBasisSwap
         {
             TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName,
+            HedgingSet = HedgingSet,
             PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
             RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
         };
@@ -34,6 +41,9 @@ namespace Qwack.Core.Instruments.Asset
         public IAssetInstrument SetStrike(double strike) => new AsianBasisSwap
         {
             TradeId = TradeId,
+            Counterparty = Counterparty,
+            PortfolioName = PortfolioName,
+            HedgingSet = HedgingSet,
             PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray(),
             RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
         };
@@ -55,5 +65,21 @@ namespace Qwack.Core.Instruments.Asset
             Enumerable.SequenceEqual(RecSwaplets, basisSwap.RecSwaplets);
 
         public override int GetHashCode() => TradeId.GetHashCode() ^ PaySwaplets.GetHashCode() ^ RecSwaplets.GetHashCode();
+
+        public TO_Instrument ToTransportObject() =>
+           new()
+           {
+               AssetInstrumentType = AssetInstrumentType.AsianBasisSwap,
+               AsianBasisSwap = new TO_AsianBasisSwap
+               {
+                   TradeId = TradeId,
+                   Counterparty = Counterparty,
+                   PortfolioName = PortfolioName,
+                   PaySwaplets = PaySwaplets.Select(x => x.ToTransportObject().AsianSwap).ToArray(),
+                   RecSwaplets = RecSwaplets.Select(x => x.ToTransportObject().AsianSwap).ToArray(),
+                   HedgingSet = HedgingSet,
+               }
+           };
+
     }
 }

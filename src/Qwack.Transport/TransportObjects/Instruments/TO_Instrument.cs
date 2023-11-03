@@ -50,5 +50,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_IrSwap IrSwap { get; set; }
         [ProtoMember(119)]
         public TO_AssetTrs AssetTrs { get; set; }
+        [ProtoMember(120)]
+        public TO_AsianBasisSwap AsianBasisSwap { get; set; }
     }
 }

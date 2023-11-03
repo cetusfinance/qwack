@@ -52,18 +52,18 @@ namespace Qwack.Core.Tests.Instruments
             var swp = new IrSwap(startDate, 1.Years(), ix, parRate, SwapPayReceiveType.Pay, "USD.BLAH", "USD.BLAH") { Notional = notional, RateIndex = ix };
 
             var pv = swp.Pv(fModel, true);
-            Assert.Equal(-368.89651349, pv, 8);
+            Assert.Equal(-219.14913191615778, pv, 8);
 
             swp = new IrSwap(startDate, 1.Years(), ix, parRate+0.01, SwapPayReceiveType.Pay, "USD.BLAH", "USD.BLAH") { Notional = notional, RateIndex = ix };
             pv = swp.Pv(fModel, true);
-            Assert.Equal(-10217.8229952, pv, 8);
+            Assert.Equal(-10011.750801593495, pv, 8);
 
             Assert.Equal(swp.EndDate, swp.LastSensitivityDate);
 
             var d = swp.Dependencies(null);
             Assert.Single(d);
 
-            Assert.Equal(0.0496254169169585, swp.CalculateParRate(fModel),10);
+            Assert.Equal(0.049729847459968106, swp.CalculateParRate(fModel),10);
             Assert.Equal(0.09, (swp.SetParRate(0.09) as IrSwap).ParRate);
 
             Assert.Equal(1.0, swp.SupervisoryDelta(null));

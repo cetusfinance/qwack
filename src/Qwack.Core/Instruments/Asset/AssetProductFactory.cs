@@ -153,7 +153,7 @@ namespace Qwack.Core.Instruments.Asset
                 ExpiryDate = payFixing,
                 PaymentDate = payDate,
                 Notional = notionalPay,
-                Strike = strike,
+                Strike = -strike,
             }.AsBulletSwap();
             var swapRec = new Forward
             {

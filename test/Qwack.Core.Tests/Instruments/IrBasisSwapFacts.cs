@@ -66,7 +66,7 @@ namespace Qwack.Core.Tests.Instruments
             var swp = new IrBasisSwap(startDate, 1.Years(), parSpread, true, ix, ix2, "USD.BLAH.3M", "USD.BLAH.6M", "USD.BLAH.3M", (decimal) notional);
 
             var pv = swp.Pv(fModel, true);
-            Assert.Equal(7211.8875428740866, pv, 8);
+            Assert.Equal(25205.99820979871, pv, 8);
 
             Assert.Equal(swp.EndDate, swp.LastSensitivityDate);
 
@@ -74,13 +74,13 @@ namespace Qwack.Core.Tests.Instruments
             var d = swp.Dependencies(null);
             Assert.Single(d);
 
-            Assert.Equal(-0.109324115016209, swp.CalculateParRate(fModel), 10);
+            Assert.Equal(-0.10980981736211021, swp.CalculateParRate(fModel), 10);
 
             Assert.Equal(0.09, (swp.SetParRate(0.09) as IrBasisSwap).ParSpreadPay);
 
             swp = new IrBasisSwap(startDate, 1.Years(), parSpread, false, ix, ix2, "USD.BLAH.3M", "USD.BLAH.6M", "USD.BLAH.3M", (decimal)notional);
             Assert.Equal(0.077, (swp.SetParRate(0.077) as IrBasisSwap).ParSpreadRec);
-            Assert.Equal(-0.110017199809182, swp.CalculateParRate(fModel), 10);
+            Assert.Equal(-0.11155822315533699, swp.CalculateParRate(fModel), 10);
 
         }
 

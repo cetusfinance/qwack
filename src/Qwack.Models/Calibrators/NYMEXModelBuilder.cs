@@ -21,7 +21,7 @@ namespace Qwack.Models.Calibrators
         {
             var parsed = NYMEXFutureParser.Instance.Parse(nymexFutureFilename).Where(r => r.Symbol == nymexSymbol);
             var q = parsed.Take(110).Where(x => x.Settle.HasValue).ToDictionary(x => Year2to1(x.Contract.Replace(nymexSymbol, qwackCode)), x => x.Settle);
-            var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider), x => x.Key);
+            var datesDict = q.ToDictionary(x => FutureCode.GetExpiryFromCode(x.Key, provider, 2019), x => x.Key);
             var datesVec = datesDict.Keys.OrderBy(x => x).ToArray();
             var labelsVec = datesVec.Select(d => datesDict[d]).ToArray();
             var pricesVec = labelsVec.Select(l => System.Math.Max(q[l].Value, MinPrice)).ToArray();

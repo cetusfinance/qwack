@@ -343,9 +343,9 @@ namespace Qwack.Futures
             }
         }
 
-        public static DateTime GetExpiryFromCode(string code, IFutureSettingsProvider futureSettingsProvider)
+        public static DateTime GetExpiryFromCode(string code, IFutureSettingsProvider futureSettingsProvider, int? yearBeforeWhich2DigitDatesAreUsed = null)
         {
-            var c = new FutureCode(code, DateTime.Today.Year - 2, futureSettingsProvider);
+            var c = new FutureCode(code, yearBeforeWhich2DigitDatesAreUsed ?? (DateTime.Today.Year - 2), futureSettingsProvider);
             return c.GetExpiry();
         }
 

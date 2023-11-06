@@ -284,6 +284,7 @@ namespace Qwack.Excel.Tests.Instruments
             model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
+            fModel.Setup(fm => fm.GetCurve(It.IsAny<string>())).Returns(new ConstantRateIrCurve(0, DateTime.Today, "", null));
             model.Setup(m => m.FundingModel).Returns(fModel.Object);
 
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });
@@ -313,6 +314,7 @@ namespace Qwack.Excel.Tests.Instruments
             model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
+            fModel.Setup(fm => fm.GetCurve(It.IsAny<string>())).Returns(new ConstantRateIrCurve(0, DateTime.Today, "", null));
             model.Setup(m => m.FundingModel).Returns(fModel.Object);
 
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });
@@ -339,6 +341,7 @@ namespace Qwack.Excel.Tests.Instruments
             model.Setup(m => m.GetPriceCurve("xx", null)).Returns(new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider));
             var fModel = new Mock<IFundingModel>();
             fModel.Setup(fm => fm.GetDf(It.IsAny<Currency>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).Returns(1.0);
+            fModel.Setup(fm => fm.GetCurve(It.IsAny<string>())).Returns(new ConstantRateIrCurve(0, DateTime.Today, "", null));
             model.Setup(m => m.FundingModel).Returns(fModel.Object);
 
             ContainerStores.GetObjectCache<IAssetFxModel>().PutObject("model", new SessionItem<IAssetFxModel>() { Name = "model", Value = model.Object });

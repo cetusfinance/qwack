@@ -14340,7 +14340,7 @@
     "TickSize": 0.01
   },
   {
-    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman", "NWE3.5", "NWE1.0", "Sing0.5", "NWE0.5", "UkNbp", "IronOre62", "SCO", "DCO", "GO.1FOB", "SingGo", "EBOX", "EuroBob", "AEO", "GasoilCrack", "ULD", "Mogas92Crack", "STB" ],
+    "Names": [ "NYMEX Swap Generic", "Dated", "Sing180", "Sing380", "Oman", "NWE3.5", "NWE1.0", "Sing0.5", "NWE0.5", "UkNbp", "IronOre62", "SCO", "DCO", "GO.1FOB", "SingGo", "EBOX", "EuroBob", "AEO", "GasoilCrack", "ULD", "Mogas92Crack", "STB", "ABE", "R6" ],
     "CodeConversions": {
       "IB": {
         "SCO": "SCI"

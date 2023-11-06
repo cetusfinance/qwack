@@ -27,6 +27,14 @@ namespace Qwack.Models.Models
     {
         private static readonly bool _useFuturesMethod = true;
 
+        private static IIrCurve GetCurveOrZero(this IFundingModel model, string curveName)
+        {
+            if (string.IsNullOrEmpty(curveName))
+                return new ConstantRateIrCurve(0.0, model.BuildDate, curveName, null);
+
+            return model.GetCurve(curveName);
+        }
+
         public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows)
         {
             var curve = model.GetPriceCurve(asianOption.AssetId);
@@ -69,7 +77,7 @@ namespace Qwack.Models.Models
                 }
             }
 
-            var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
+            var discountCurve = model.FundingModel.GetCurveOrZero(asianOption.DiscountCurve);
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
             if (_useFuturesMethod)
@@ -131,7 +139,7 @@ namespace Qwack.Models.Models
             var pv = avg - asianSwap.Strike;
             pv *= asianSwap.Direction == TradeDirection.Long ? 1.0 : -1.0;
             pv *= asianSwap.Notional;
-            pv *= model.FundingModel.GetDf(asianSwap.DiscountCurve, model.BuildDate, payDate);
+            pv *= model.FundingModel.GetCurveOrZero(asianSwap.DiscountCurve).GetDf(model.BuildDate, payDate);
 
             return pv;
         }
@@ -369,7 +377,7 @@ namespace Qwack.Models.Models
             var price = model.GetPriceCurve(option.AssetId).GetPriceForDate(option.ExpiryDate);
 
             var df = option.MarginingType == OptionMarginingType.FuturesStyle ? 1.0
-                : model.FundingModel.GetDf(option.DiscountCurve, model.BuildDate, option.ExpiryDate);
+                : model.FundingModel.GetCurveOrZero(option.DiscountCurve).GetDf(model.BuildDate, option.ExpiryDate);
             var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate.AddHours(18), DayCountBasis.Act365F, false);
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
 
@@ -403,7 +411,7 @@ namespace Qwack.Models.Models
                 fxFix : model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency);
             }
 
-            var df = model.FundingModel.GetDf(euOpt.DiscountCurve, model.BuildDate, euOpt.PaymentDate);
+            var df = model.FundingModel.GetCurveOrZero(euOpt.DiscountCurve).GetDf(model.BuildDate, euOpt.PaymentDate);
 
             if (euOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
                 return euOpt.Notional * df * (euOpt.CallPut == OptionType.Call ?
@@ -430,7 +438,7 @@ namespace Qwack.Models.Models
         {
             if (fxEuOpt.DeliveryDate < model.BuildDate || (ignoreTodayFlows && fxEuOpt.DeliveryDate == model.BuildDate))
                 return 0.0;
-            var df = model.FundingModel.GetDf(fxEuOpt.ForeignDiscountCurve, model.BuildDate, fxEuOpt.DeliveryDate);
+            var df = model.FundingModel.GetCurveOrZero(fxEuOpt.ForeignDiscountCurve).GetDf(model.BuildDate, fxEuOpt.DeliveryDate);
             var fwdDate = model.FundingModel.FxMatrix.GetFxPair(fxEuOpt.Pair).SpotDate(fxEuOpt.ExpiryDate);
             var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.Pair);
 
@@ -450,7 +458,7 @@ namespace Qwack.Models.Models
             if (euBOpt.PaymentDate < model.BuildDate || (ignoreTodayFlows && euBOpt.PaymentDate == model.BuildDate))
                 return 0.0;
 
-            var df = model.FundingModel.GetDf(euBOpt.DiscountCurve, model.BuildDate, euBOpt.PaymentDate);
+            var df = model.FundingModel.GetCurveOrZero(euBOpt.DiscountCurve).GetDf(model.BuildDate, euBOpt.PaymentDate);
             var fwdDate = euBOpt.ExpiryDate.AddPeriod(RollType.F, euBOpt.FixingCalendar, euBOpt.SpotLag);
             var fwd = model.GetPriceCurve(euBOpt.AssetId).GetPriceForDate(fwdDate);
 
@@ -652,7 +660,7 @@ namespace Qwack.Models.Models
 
             var adjustedStrike = asianOption.Strike;
 
-            var discountCurve = model.FundingModel.GetCurve(asianOption.DiscountCurve);
+            var discountCurve = model.FundingModel.GetCurveOrZero(asianOption.DiscountCurve);
             var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
             (var fwds, var todayFixed) = asianOption.GetFwdVector(model);
@@ -719,7 +727,7 @@ namespace Qwack.Models.Models
                 vol = Sqrt(vol * vol + fxVol * fxVol + 2 * correl * fxVol * vol);
             }
 
-            var df = model.FundingModel.GetDf(euroOption.DiscountCurve, model.BuildDate, euroOption.PaymentDate);
+            var df = model.FundingModel.GetCurveOrZero(euroOption.DiscountCurve).GetDf(model.BuildDate, euroOption.PaymentDate);
             var t = model.BuildDate.CalculateYearFraction(euroOption.PaymentDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
             var blackTheta = BlackFunctions.BlackTheta(fwd * fxFwd, euroOption.Strike, rf, t, vol, euroOption.CallPut) * euroOption.Notional;
@@ -756,7 +764,7 @@ namespace Qwack.Models.Models
             var vol = model.GetVolForStrikeAndDate(fOpt.AssetId, fOpt.ExpiryDate, fOpt.Strike);
 
             var df = fOpt.MarginingType == OptionMarginingType.Regular ?
-                model.FundingModel.GetDf(fOpt.DiscountCurve, model.BuildDate, fOpt.ExpiryDate) :
+                model.FundingModel.GetCurveOrZero(fOpt.DiscountCurve).GetDf(model.BuildDate, fOpt.ExpiryDate) :
                 1.0;
             var t = model.BuildDate.CalculateYearFraction(fOpt.ExpiryDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
@@ -788,7 +796,7 @@ namespace Qwack.Models.Models
             var fwd = model.FundingModel.GetFxRate(payDate, fxOption.FxPair(model));
             var vol = model.GetFxVolForStrikeAndDate(fxOption.FxPair(model), fxOption.ExpiryDate, fxOption.Strike);
 
-            var df = model.FundingModel.GetDf(fxOption.ForeignDiscountCurve, model.BuildDate, payDate);
+            var df = model.FundingModel.GetCurveOrZero(fxOption.ForeignDiscountCurve).GetDf(model.BuildDate, payDate);
             var t = model.BuildDate.CalculateYearFraction(payDate, DayCountBasis.Act365F);
             var rf = Log(1 / df) / t;
             var blackTheta = BlackFunctions.BlackTheta(fwd, fxOption.Strike, rf, t, vol, fxOption.CallPut) * fxOption.DomesticQuantity;

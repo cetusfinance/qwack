@@ -118,56 +118,58 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
-        public static AsianBasisSwap CreateTermAsianBasisSwap(string period, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianBasisSwap CreateTermAsianBasisSwap(string period, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Calendar fixingCalendarLeg1, Calendar fixingCalendarLeg2, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagLeg1 = new Frequency(), Frequency spotLagLeg2 = new Frequency(), double notionalLeg1 = 1, double notionalLeg2 = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var (Start, End) = period.ParsePeriod();
-            return CreateTermAsianBasisSwap(Start, End, strike, assetIdPay, assetIdRec, fixingCalendarPay, fixingCalendarRec, payCalendar, payOffset, currency, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+            return CreateTermAsianBasisSwap(Start, End, leg2PremiumInleg1Units, leg1PayRec, assetIdLeg1, assetIdLeg2, fixingCalendarLeg1, fixingCalendarLeg2, payCalendar, payOffset, currency, spotLagLeg1, spotLagLeg2, notionalLeg1, notionalLeg2, fixingDateType);
         }
 
-        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Calendar fixingCalendarLeg1, Calendar fixingCalendarLeg2, Calendar payCalendar, Frequency payOffset, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalLeg1 = 1, double notionalLeg2 = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
             var payDate = end.AddPeriod(RollType.F, payCalendar, payOffset);
-            return CreateTermAsianBasisSwap(start, end, strike, assetIdPay, assetIdRec, fixingCalendarPay, fixingCalendarRec, payDate, currency, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+            return CreateTermAsianBasisSwap(start, end, leg2PremiumInleg1Units, leg1PayRec, assetIdLeg1, assetIdLeg2, fixingCalendarLeg1, fixingCalendarLeg2, payDate, currency, spotLagPay, spotLagRec, notionalLeg1, notionalLeg2, fixingDateType);
         }
 
-        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double strike, string assetIdPay, string assetIdRec, Calendar fixingCalendarPay, Calendar fixingCalendarRec, DateTime payDate, Currency currency, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Calendar fixingCalendarLeg1, Calendar fixingCalendarLeg2, DateTime payDate, Currency currency, Frequency spotLagLeg1 = new Frequency(), Frequency spotLagLeg2 = new Frequency(), double notionalLeg1 = 1, double notionalLeg2 = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
-            var swapPay = CreateTermAsianSwap(start, end, -strike, assetIdPay, fixingCalendarPay, payDate, currency, TradeDirection.Long, spotLagPay, notionalPay);
-            var swapRec = CreateTermAsianSwap(start, end, 0, assetIdRec, fixingCalendarRec, payDate, currency, TradeDirection.Short, spotLagRec, notionalRec);
+            var swapLeg1 = CreateTermAsianSwap(start, end, -leg2PremiumInleg1Units, assetIdLeg1, fixingCalendarLeg1, payDate, currency, TradeDirection.Long, spotLagLeg1, notionalLeg1);
+            var swapLeg2 = CreateTermAsianSwap(start, end, 0, assetIdLeg2, fixingCalendarLeg2, payDate, currency, TradeDirection.Short, spotLagLeg2, notionalLeg2);
 
+            (var pay, var rec) = leg1PayRec == SwapPayReceiveType.Payer ? (swapLeg1, swapLeg2) : (swapLeg2, swapLeg1);
             var swap = new AsianBasisSwap
             {
-                PaySwaplets = new[] { swapPay },
-                RecSwaplets = new[] { swapRec },
+                PaySwaplets = new[] { pay },
+                RecSwaplets = new[] { rec },
             };
 
             return swap;
         }
 
-        public static AsianBasisSwap CreateBulletBasisSwap(DateTime payFixing, DateTime recFixing, double strike, string assetIdPay, string assetIdRec, Currency currency, double notionalPay, double notionalRec)
+        public static AsianBasisSwap CreateBulletBasisSwap(DateTime leg1Fixing, DateTime leg2Fixing, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Currency currency, double notionalLeg1, double notionalLeg2)
         {
-            var payDate = payFixing.Max(recFixing);
-            var swapPay = new Forward
+            var payDate = leg1Fixing.Max(leg2Fixing);
+            var swapLeg1 = new Forward
             {
-                AssetId = assetIdPay,
-                ExpiryDate = payFixing,
+                AssetId = assetIdLeg1,
+                ExpiryDate = leg1Fixing,
                 PaymentDate = payDate,
-                Notional = notionalPay,
-                Strike = -strike,
+                Notional = notionalLeg1,
+                Strike = -leg2PremiumInleg1Units,
             }.AsBulletSwap();
-            var swapRec = new Forward
+            var swapLeg2 = new Forward
             {
-                AssetId = assetIdRec,
-                ExpiryDate = recFixing,
+                AssetId = assetIdLeg2,
+                ExpiryDate = leg2Fixing,
                 PaymentDate = payDate,
-                Notional = notionalRec,
+                Notional = notionalLeg2,
                 Strike = 0.0,
             }.AsBulletSwap();
+            (var pay, var rec) = leg1PayRec == SwapPayReceiveType.Payer ? (swapLeg1, swapLeg2) : (swapLeg2, swapLeg1);
 
             var swap = new AsianBasisSwap
             {
-                PaySwaplets = new[] { swapPay },
-                RecSwaplets = new[] { swapRec },
+                PaySwaplets = new[] { pay },
+                RecSwaplets = new[] { rec },
             };
 
             return swap;

@@ -157,14 +157,15 @@ namespace Qwack.Excel.Instruments
         public static object CreateAsianCrackDiffSwap(
            [ExcelArgument(Description = "Object name")] string ObjectName,
            [ExcelArgument(Description = "Period code")] object PeriodCodeOrDates,
-           [ExcelArgument(Description = "Asset Id pay")] string AssetIdPay,
-           [ExcelArgument(Description = "Asset Id receive")] string AssetIdRec,
+           [ExcelArgument(Description = "Leg1 Pay or Rec")] string Leg1PayOrRec,
+           [ExcelArgument(Description = "Asset Id leg1")] string AssetIdLeg1,
+           [ExcelArgument(Description = "Asset Id leg2")] string AssetIdLeg2,
            [ExcelArgument(Description = "Currency")] string Currency,
-           [ExcelArgument(Description = "Strike")] double Strike,
-           [ExcelArgument(Description = "Notional pay")] double NotionalPay,
-           [ExcelArgument(Description = "Notional receive")] double NotionalRec,
-           [ExcelArgument(Description = "Fixing calendar pay")] object FixingCalendarPay,
-           [ExcelArgument(Description = "Fixing calendar receive")] object FixingCalendarRec,
+           [ExcelArgument(Description = "Strike (Leg2 premium in leg1 units)")] double Leg2PremiumInLeg1Units,
+           [ExcelArgument(Description = "Notional pay")] double NotionalLeg1,
+           [ExcelArgument(Description = "Notional receive")] double NotionalLeg2,
+           [ExcelArgument(Description = "Fixing calendar pay")] object FixingCalendarLeg1,
+           [ExcelArgument(Description = "Fixing calendar receive")] object FixingCalendarLeg2,
            [ExcelArgument(Description = "Payment calendar")] object PaymentCalendar,
            [ExcelArgument(Description = "Payment offset")] object PaymentOffset,
            [ExcelArgument(Description = "Spot lag pay")] object SpotLagPay,
@@ -173,54 +174,66 @@ namespace Qwack.Excel.Instruments
         {
             return ExcelHelper.Execute(_logger, () =>
             {
-                var fixingCalPay = FixingCalendarPay.OptionalExcel("WeekendsOnly");
-                var fixingCalRec = FixingCalendarRec.OptionalExcel("WeekendsOnly");
+                var fixingCalLeg1 = FixingCalendarLeg1.OptionalExcel("WeekendsOnly");
+                var fixingCalLeg2 = FixingCalendarLeg2.OptionalExcel("WeekendsOnly");
                 var paymentCal = PaymentCalendar.OptionalExcel("WeekendsOnly");
-                var spotLagPay = SpotLagPay.OptionalExcel("0b");
-                var spotLagRec = SpotLagRec.OptionalExcel("0b");
+                var spotLagLeg1 = SpotLagPay.OptionalExcel("0b");
+                var spotLagLeg2 = SpotLagRec.OptionalExcel("0b");
 
                 var paymentOffset = PaymentOffset.OptionalExcel("0b");
 
-                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCalPay, out var fCalPay))
+                var leg1DirStr = Leg1PayOrRec.OptionalExcel("Pay");
+                if (!Enum.TryParse(leg1DirStr, out SwapPayReceiveType leg1Dir))
                 {
-                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalPay);
-                    return $"Calendar {fixingCalPay} not found in cache";
+                    return $"Could not parse leg 1 direction - {leg1DirStr}";
                 }
-                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(fixingCalRec, out var fCalRec))
+
+                var calendar = ContainerStores.SessionContainer.GetService<ICalendarProvider>();
+                if (calendar == null)
+                    return "Calendars missing from store";
+
+                if (!calendar.Collection.TryGetCalendar(fixingCalLeg1, out var fCalPay))
                 {
-                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalRec);
-                    return $"Calendar {fixingCalRec} not found in cache";
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalLeg1);
+                    return $"Calendar {fixingCalLeg1} not found in cache";
                 }
-                if (!ContainerStores.SessionContainer.GetService<ICalendarProvider>().Collection.TryGetCalendar(paymentCal, out var pCal))
+                if (!calendar.Collection.TryGetCalendar(fixingCalLeg2, out var fCalRec))
+                {
+                    _logger?.LogInformation("Calendar {calendar} not found in cache", fixingCalLeg2);
+                    return $"Calendar {fixingCalLeg2} not found in cache";
+                }
+                if (!calendar.Collection.TryGetCalendar(paymentCal, out var pCal))
                 {
                     _logger?.LogInformation("Calendar {calendar} not found in cache", paymentCal);
                     return $"Calendar {paymentCal} not found in cache";
                 }
 
                 var pOffset = new Frequency(paymentOffset);
-                var sLagPay = new Frequency(spotLagPay);
-                var sLagRec = new Frequency(spotLagRec);
+                var sLagPay = new Frequency(spotLagLeg1);
+                var sLagRec = new Frequency(spotLagLeg2);
 
                 var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
-                AsianBasisSwap product = null;
+                AsianBasisSwap product;
                 if (PeriodCodeOrDates is double dateDbl)
                 {
                     PeriodCodeOrDates = DateTime.FromOADate(dateDbl).ToString("MMM-yy");
-                    product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCodeOrDates as string, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(PeriodCodeOrDates as string, Leg2PremiumInLeg1Units, leg1Dir, AssetIdLeg1, AssetIdLeg2, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalLeg1, NotionalLeg2);
                 }
                 else if (PeriodCodeOrDates is string dateStr)
                 {
-                    product = AssetProductFactory.CreateTermAsianBasisSwap(dateStr, Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(dateStr, Leg2PremiumInLeg1Units, leg1Dir, AssetIdLeg1, AssetIdLeg2, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalLeg1, NotionalLeg2);
                 }
                 else if (PeriodCodeOrDates is object[,] v)
                 {
                     var dates = v.ObjectRangeToVector<double>().ToDateTimeArray();
-                    product = AssetProductFactory.CreateTermAsianBasisSwap(dates[0], dates[1], Strike, AssetIdPay, AssetIdRec, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalPay, NotionalRec);
+                    product = AssetProductFactory.CreateTermAsianBasisSwap(dates[0], dates[1], Leg2PremiumInLeg1Units, leg1Dir, AssetIdLeg1, AssetIdLeg2, fCalPay, fCalRec, pCal, pOffset, currency, sLagPay, sLagRec, NotionalLeg1, NotionalLeg2);
                 }
-
+                else
+                {
+                    return "Unsupported product spec";
+                }
                 
-
                 product.TradeId = ObjectName;
                 foreach (var ps in product.PaySwaplets)
                     ps.DiscountCurve = DiscountCurve;
@@ -234,23 +247,30 @@ namespace Qwack.Excel.Instruments
         [ExcelFunction(Description = "Creates a futures crack/diff swap, term settled / single period", Category = CategoryNames.Instruments, Name = CategoryNames.Instruments + "_" + nameof(CreateFutureCrackDiffSwap), IsThreadSafe = Parallel)]
         public static object CreateFutureCrackDiffSwap(
          [ExcelArgument(Description = "Object name")] string ObjectName,
-         [ExcelArgument(Description = "Pay future code")] string PayFuture,
-         [ExcelArgument(Description = "Rec future code")] string RecFuture,
-         [ExcelArgument(Description = "Asset Id pay")] string AssetIdPay,
-         [ExcelArgument(Description = "Asset Id receive")] string AssetIdRec,
+         [ExcelArgument(Description = "Leg1 Pay or Rec")] string Leg1PayOrRec,
+         [ExcelArgument(Description = "Leg1 future code")] string Leg1Future,
+         [ExcelArgument(Description = "Leg2 future code")] string leg2Future,
+         [ExcelArgument(Description = "Asset Id leg1")] string AssetIdLeg1,
+         [ExcelArgument(Description = "Asset Id leg2")] string AssetIdLeg2,
          [ExcelArgument(Description = "Currency")] string Currency,
-         [ExcelArgument(Description = "Strike")] double Strike,
-         [ExcelArgument(Description = "Notional pay")] double NotionalPay,
-         [ExcelArgument(Description = "Notional receive")] double NotionalRec,
+         [ExcelArgument(Description = "Strike (Leg2 premium in leg1 units)")] double Leg2PremiumInLeg1Units,
+         [ExcelArgument(Description = "Notional leg1")] double NotionalLeg1,
+         [ExcelArgument(Description = "Notional leg2")] double NotionalLeg2,
          [ExcelArgument(Description = "Discount curve")] string DiscountCurve)
         {
             return ExcelHelper.Execute(_logger, () =>
             {
                 var currency = ContainerStores.GlobalContainer.GetRequiredService<ICurrencyProvider>()[Currency];
 
-                var fPayExpiry = Futures.FutureCode.GetRollFromCode(PayFuture, ContainerStores.FuturesProvider);
-                var fRecExpiry = Futures.FutureCode.GetRollFromCode(RecFuture, ContainerStores.FuturesProvider);
-                var product = AssetProductFactory.CreateBulletBasisSwap(fPayExpiry, fRecExpiry, Strike, AssetIdPay, AssetIdRec, currency, NotionalPay, NotionalRec);
+                var leg1DirStr = Leg1PayOrRec.OptionalExcel("Pay");
+                if (!Enum.TryParse(leg1DirStr, out SwapPayReceiveType leg1Dir))
+                {
+                    return $"Could not parse leg 1 direction - {leg1DirStr}";
+                }
+
+                var fPayExpiry = Futures.FutureCode.GetRollFromCode(Leg1Future, ContainerStores.FuturesProvider);
+                var fRecExpiry = Futures.FutureCode.GetRollFromCode(leg2Future, ContainerStores.FuturesProvider);
+                var product = AssetProductFactory.CreateBulletBasisSwap(fPayExpiry, fRecExpiry, Leg2PremiumInLeg1Units, leg1Dir, AssetIdLeg1, AssetIdLeg2, currency, NotionalLeg1, NotionalLeg2);
 
                 product.TradeId = ObjectName;
                 foreach (var ps in product.PaySwaplets)

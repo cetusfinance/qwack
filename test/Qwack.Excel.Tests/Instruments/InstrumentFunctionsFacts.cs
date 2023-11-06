@@ -49,21 +49,21 @@ namespace Qwack.Excel.Tests.Instruments
         public void CreateAsianCrackDiffSwap()
         {
             Assert.Equal("Calendar xxxP not found in cache",
-                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "xxxP", "xxxR", "xxxPay", "2b", "2b", "2b", "disco"));
+                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "Pay", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "xxxP", "xxxR", "xxxPay", "2b", "2b", "2b", "disco"));
             Assert.Equal("Calendar xxxR not found in cache",
-                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "xxxR", "xxxPay", "2b", "2b", "2b", "disco"));
+                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "Pay", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "xxxR", "xxxPay", "2b", "2b", "2b", "disco"));
             Assert.Equal("Calendar xxxPay not found in cache",
-                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "xxxPay", "2b", "2b", "2b", "disco"));
+                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "Pay", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "xxxPay", "2b", "2b", "2b", "disco"));
             Assert.Equal("cswp¬0",
-                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "NYC", "2b", "2b", "2b", "disco"));
+                InstrumentFunctions.CreateAsianCrackDiffSwap("cswp", "Jan-19", "Pay", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "NYC", "2b", "2b", "2b", "disco"));
             Assert.Equal("ccswp¬0",
-                InstrumentFunctions.CreateAsianCrackDiffSwap("ccswp", (new DateTime(2019, 1, 1)).ToOADate(), "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "NYC", "2b", "2b", "2b", "disco"));
+                InstrumentFunctions.CreateAsianCrackDiffSwap("ccswp", (new DateTime(2019, 1, 1)).ToOADate(), "Pay", "xxP", "xxR", "ZAR", 0.0, 0.0, 0.0, "NYC", "NYC", "NYC", "2b", "2b", "2b", "disco"));
         }
 
 
         [Fact]
         public void CreateFuturesCrackDiffSwap() => Assert.Equal("fdswap¬0",
-               InstrumentFunctions.CreateFutureCrackDiffSwap("fdswap", "COF9", "QSF9", "CO", "QS", "USD", -19, 1000, 7460, "DISCO"));
+               InstrumentFunctions.CreateFutureCrackDiffSwap("fdswap", "Pay", "COF9", "QSF9", "CO", "QS", "USD", -19, 1000, 7460, "DISCO"));
 
         [Fact]
         public void CreateFuturesPositionSwap() => Assert.Equal("futXXX¬0",

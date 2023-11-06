@@ -4,6 +4,8 @@
 // Project-level suppressions either have no target or are given 
 // a specific target and scoped to a namespace, type, member, etc.
 
+using System.Diagnostics.CodeAnalysis;
+
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Curves.PriceCurveFunctions.CreatePriceCurve(System.String,System.DateTime,System.Double[],System.Double[],System.Object)~System.Object")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Curves.PriceCurveFunctions.CreateSparsePriceCurve(System.String,System.DateTime,System.Double[],System.Double[],System.Object)~System.Object")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Curves.IRCurveFunctions.CreateDiscountCurveFromCCRates(System.String,System.DateTime,System.Double[],System.Double[],System.Object)~System.Object")]
@@ -159,4 +161,4 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Curves.ModelFunctions.CreateMcSettings(System.String,System.Int32,System.Int32,System.Object,System.Object,System.Object)~System.Object")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Curves.IRCurveFunctions.GetForwardFxRate(System.String,System.DateTime,System.String)~System.Object")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0022:Use expression body for methods", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Cubes.CubeFunctions.FieldValues(System.String,System.String)~System.Object")]
-
+[assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:Qwack.Excel.Instruments.InstrumentFunctions.CreateAsianCrackDiffSwap(System.String,System.Object,System.String,System.String,System.String,System.String,System.Double,System.Double,System.Double,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.String)~System.Object")]

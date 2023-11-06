@@ -42,7 +42,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
 
             var instruments = periods.Select((p, ix) =>
-            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
+            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], SwapPayReceiveType.Payer, "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
             .ToList();
             var pillars = instruments.Select(x => ((AsianBasisSwap)x).RecSwaplets.Max(sq => sq.AverageEndDate)).ToList();
 
@@ -81,7 +81,7 @@ namespace Qwack.Core.Tests.CurveSolving
             };
 
             var instruments = periods.Select((p, ix) =>
-            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
+            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], SwapPayReceiveType.Payer, "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
             .ToList();
             var pillars = instruments.Select(x => ((AsianBasisSwap)x).RecSwaplets.Max(sq => sq.AverageEndDate)).ToList();
 
@@ -116,7 +116,7 @@ namespace Qwack.Core.Tests.CurveSolving
 
 
             var instruments = periods.Select((p, ix) =>
-            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
+            (IAssetInstrument)AssetProductFactory.CreateTermAsianBasisSwap(p, strikes[ix], SwapPayReceiveType.Payer, "Brent", "Sing180", cal, cal, cal, 0.Bd(), usd, 0.Bd(), 0.Bd(), 1000, 1000 / 6.35))
             .ToList();
             var pillars = instruments.Select(x => ((AsianBasisSwap)x).RecSwaplets.Max(sq => sq.AverageEndDate)).ToList();
 

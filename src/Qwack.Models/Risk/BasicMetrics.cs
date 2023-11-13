@@ -51,7 +51,9 @@ namespace Qwack.Models.Risk
                 { "PointDate", typeof(DateTime) },
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) },
-                { "Strike", typeof(double) }
+                { "Strike", typeof(double) },
+                { Consts.Cubes.Portfolio, typeof(string)  }
+
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -84,6 +86,7 @@ namespace Qwack.Models.Risk
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
+                var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
                 var bumpedSurfaces = volObj.GetATMVegaScenarios(bumpSize, lastDateInBook);
 
@@ -112,7 +115,8 @@ namespace Qwack.Models.Risk
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Vega" },
-                                { "Strike", strikesByTradeId[trdId] }
+                                { "Strike", strikesByTradeId[trdId] },
+                                { "Portfolio", bumpedRows[i].MetaData[pfIx]  }
                             };
 
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
@@ -143,7 +147,8 @@ namespace Qwack.Models.Risk
                 { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { PointLabel, typeof(string) },
-                { Metric, typeof(string) }
+                { Metric, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -175,7 +180,8 @@ namespace Qwack.Models.Risk
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
-
+                var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
+     
                 var bumpedSurfacesSega = volObj.GetSegaScenarios(bumpSize, lastDateInBook);
                 var bumpedSurfacesRega = volObj.GetRegaScenarios(bumpSize, lastDateInBook);
 
@@ -202,7 +208,9 @@ namespace Qwack.Models.Risk
                                 { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
-                                { Metric, "Sega" }
+                                { Metric, "Sega" },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx]  }
+
                             };
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {
@@ -240,7 +248,8 @@ namespace Qwack.Models.Risk
                                 { AssetId, surfaceName },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
-                                { Metric, "Rega" }
+                                { Metric, "Rega" },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx]  }
                             };
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {
@@ -273,8 +282,10 @@ namespace Qwack.Models.Risk
                 { AssetId, typeof(string) },
                 { "PointDate", typeof(DateTime) },
                 { PointLabel, typeof(string) },
-                { Metric, typeof(string) }
+                { Metric, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) },
             };
+
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
             {
@@ -299,6 +310,7 @@ namespace Qwack.Models.Risk
             var pvRows = pvCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex(TradeId);
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
+            var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
             foreach (var surface in model.FundingModel.VolSurfaces)
             {
@@ -328,7 +340,8 @@ namespace Qwack.Models.Risk
                                 { AssetId, surface.Key },
                                 { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
                                 { PointLabel, bCurve.Key },
-                                { Metric, "Vega" }
+                                { Metric, "Vega" },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx]  },
                             };
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {
@@ -699,6 +712,7 @@ namespace Qwack.Models.Risk
                 { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
                 { "RefPrice", typeof(double) },
+                { Consts.Cubes.Portfolio, typeof(string) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -736,6 +750,7 @@ namespace Qwack.Models.Risk
 
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
+                var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
                 var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
@@ -819,6 +834,7 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -846,6 +862,7 @@ namespace Qwack.Models.Risk
                                 { Metric, "Gamma" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -877,6 +894,7 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -908,7 +926,8 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) },
                 { "CurveType", typeof(string) },
-                { "Currency", typeof(string) }
+                { "Currency", typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -945,6 +964,7 @@ namespace Qwack.Models.Risk
 
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
+                var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
                 var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
 
@@ -987,6 +1007,7 @@ namespace Qwack.Models.Risk
                                 { Metric, "Delta" },
                                 { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
                                 { "Currency", reportingCurrency?.Ccy??bCurve.Value.Currency.Ccy },
+                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {

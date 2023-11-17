@@ -132,8 +132,8 @@ namespace Qwack.Core.Instruments.Asset
 
         public static AsianBasisSwap CreateTermAsianBasisSwap(DateTime start, DateTime end, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Calendar fixingCalendarLeg1, Calendar fixingCalendarLeg2, DateTime payDate, Currency currency, Frequency spotLagLeg1 = new Frequency(), Frequency spotLagLeg2 = new Frequency(), double notionalLeg1 = 1, double notionalLeg2 = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
         {
-            var swapLeg1 = CreateTermAsianSwap(start, end, -leg2PremiumInleg1Units, assetIdLeg1, fixingCalendarLeg1, payDate, currency, TradeDirection.Long, spotLagLeg1, notionalLeg1);
-            var swapLeg2 = CreateTermAsianSwap(start, end, 0, assetIdLeg2, fixingCalendarLeg2, payDate, currency, TradeDirection.Short, spotLagLeg2, notionalLeg2);
+            var swapLeg1 = CreateTermAsianSwap(start, end, -leg2PremiumInleg1Units, assetIdLeg1, fixingCalendarLeg1, payDate, currency, leg1PayRec==SwapPayReceiveType.Rec ? TradeDirection.Long : TradeDirection.Short, spotLagLeg1, notionalLeg1);
+            var swapLeg2 = CreateTermAsianSwap(start, end, 0, assetIdLeg2, fixingCalendarLeg2, payDate, currency, leg1PayRec == SwapPayReceiveType.Pay ? TradeDirection.Long : TradeDirection.Short, spotLagLeg2, notionalLeg2);
 
             (var pay, var rec) = leg1PayRec == SwapPayReceiveType.Payer ? (swapLeg1, swapLeg2) : (swapLeg2, swapLeg1);
             var swap = new AsianBasisSwap
@@ -154,6 +154,7 @@ namespace Qwack.Core.Instruments.Asset
                 ExpiryDate = leg1Fixing,
                 PaymentDate = payDate,
                 Notional = notionalLeg1,
+                Direction = leg1PayRec == SwapPayReceiveType.Payer ? TradeDirection.Short : TradeDirection.Long,
                 Strike = -leg2PremiumInleg1Units,
             }.AsBulletSwap();
             var swapLeg2 = new Forward
@@ -162,6 +163,7 @@ namespace Qwack.Core.Instruments.Asset
                 ExpiryDate = leg2Fixing,
                 PaymentDate = payDate,
                 Notional = notionalLeg2,
+                Direction = leg1PayRec == SwapPayReceiveType.Payer ? TradeDirection.Long : TradeDirection.Short,
                 Strike = 0.0,
             }.AsBulletSwap();
             (var pay, var rec) = leg1PayRec == SwapPayReceiveType.Payer ? (swapLeg1, swapLeg2) : (swapLeg2, swapLeg1);

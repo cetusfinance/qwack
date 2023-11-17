@@ -44,11 +44,11 @@ namespace Qwack.Core.Instruments.Asset
             Counterparty = Counterparty,
             PortfolioName = PortfolioName,
             HedgingSet = HedgingSet,
-            PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.SetStrike(strike)).ToArray(),
+            PaySwaplets = PaySwaplets.Select(x => (AsianSwap)x.SetStrike(-strike)).ToArray(),
             RecSwaplets = RecSwaplets.Select(x => (AsianSwap)x.Clone()).ToArray(),
         };
 
-        public double Strike => PaySwaplets.First().Strike;
+        public double Strike => -PaySwaplets.First().Strike;
 
         public FxConversionType FxType(IAssetFxModel model) => PaySwaplets.First().FxType(model);
         public string FxPair(IAssetFxModel model) => PaySwaplets.First().FxPair(model);

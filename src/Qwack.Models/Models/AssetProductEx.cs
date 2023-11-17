@@ -1016,7 +1016,7 @@ namespace Qwack.Models.Models
             return calcDates.Distinct().OrderBy(x => x).ToArray();
         }
 
-        private static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
+        public static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
         {
             var fxRate = 1.0;
             var ccy = reportingCurrency?.ToString();

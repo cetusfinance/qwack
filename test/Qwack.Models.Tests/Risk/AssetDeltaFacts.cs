@@ -104,7 +104,7 @@ namespace Qwack.Models.Tests.Risk
 
             var curveBR = new ConstantPriceCurve(100, originDate, TestProviderHelper.CurrencyProvider) { AssetId = "BR", Name="BR" };
             var solver = new NewtonRaphsonAssetBasisCurveSolver(TestProviderHelper.CurrencyProvider);
-            var basisSwapA = AssetProductFactory.CreateBulletBasisSwap(originDate.AddDays(30), originDate.AddDays(30), 20, SwapPayReceiveType.Pay, "BR", "QS", usd, 3000, -3000 / 7.45);
+            var basisSwapA = AssetProductFactory.CreateBulletBasisSwap(originDate.AddDays(30), originDate.AddDays(30), 20, SwapPayReceiveType.Pay, "BR", "QS", usd, 3000, 3000 / 7.45);
 
             var curveQS = new BasisPriceCurve(new() { basisSwapA }, new List<DateTime>() { originDate.AddDays(30) }, discoUsd, curveBR, originDate, Transport.BasicTypes.PriceCurveType.NYMEX, solver)
             { AssetId = "QS", Name = "QS" };

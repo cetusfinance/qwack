@@ -90,10 +90,10 @@ namespace Qwack.Core.Curves
                 switch (insListClone[i])
                 {
                     case AsianBasisSwap abs:
-                        insListClone[i] = (AsianBasisSwap)insListClone[i].SetStrike(((AsianBasisSwap)insListClone[i]).Strike - bumpSize);
+                        insListClone[i] = (AsianBasisSwap)insListClone[i].SetStrike(((AsianBasisSwap)insListClone[i]).Strike + bumpSize);
                         break;
                     case Future fut:
-                        insListClone[i] = (Future)insListClone[i].SetStrike(((Future)insListClone[i]).Strike - bumpSize);
+                        insListClone[i] = (Future)insListClone[i].SetStrike(((Future)insListClone[i]).Strike + bumpSize);
                         break;
 
                 }

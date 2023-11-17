@@ -767,7 +767,7 @@ namespace Qwack.Models.Risk
                         foreach (var depCurveName in dependentCurves)
                         {
                             var baseCurve = newVanillaModel.GetPriceCurve(curveName);
-                           var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
+                            var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
                             newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
                             newBaseCurves.Add(depCurveName);
                         }

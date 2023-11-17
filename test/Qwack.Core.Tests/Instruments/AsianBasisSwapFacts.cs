@@ -19,9 +19,11 @@ namespace Qwack.Core.Tests.Instruments
             var fixDates = new[] { DateTime.Today };
             var x = new AsianBasisSwap
             {
-                PaySwaplets = new[] { new AsianSwap { AssetId = "CL", PaymentCurrency = usd, DiscountCurve = "X", FixingDates = fixDates,Strike = 6 } },
+                PaySwaplets = new[] { new AsianSwap { AssetId = "CL", PaymentCurrency = usd, DiscountCurve = "X", FixingDates = fixDates, Strike = -6 } },
                 RecSwaplets = new[] { new AsianSwap { AssetId = "QS", PaymentCurrency = usd, DiscountCurve = "X", FixingDates = fixDates } },
             };
+
+            //strike is leg2 premium in leg1 units
 
             var fakeModel = new Mock<IAssetFxModel>();
             var c = new ConstantPriceCurve(100, DateTime.Today, TestProviderHelper.CurrencyProvider) { Currency = usd };

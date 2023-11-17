@@ -15,6 +15,7 @@ using Qwack.Core.Instruments.Asset;
 
 namespace Qwack.Models.Tests.Risk
 {
+
     [CollectionDefinition("BenchmarkRiskFacts", DisableParallelization = true)]
     public class BenchmarkRiskFacts
     {
@@ -51,7 +52,7 @@ namespace Qwack.Models.Tests.Risk
             };
             var fxMatrix = new FxMatrix(TestProviderHelper.CurrencyProvider);
             fxMatrix.Init(usd, _originDate, new Dictionary<Currency, double> { { zar, 14.0 } }, fxpairs, new Dictionary<Currency, string> { { usd, "DISCO-USD" }, { zar, "DISCO-ZAR" } });
-            
+
             var fModel = new FundingModel(_originDate, new[] { discoUsd, discoZar }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);
             fModel.SetupFx(fxMatrix);
 
@@ -123,7 +124,7 @@ namespace Qwack.Models.Tests.Risk
             Assert.Equal(-13.0, riskSum, 0);
         }
 
-     
+
 
     }
 }

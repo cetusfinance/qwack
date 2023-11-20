@@ -42,6 +42,8 @@ namespace Qwack.Core.Instruments
                         return new CashWrapper(transportObject.CashWrapper, currencyProvider, calendarProvider);
                     case AssetInstrumentType.AssetTrs:
                         return new AssetTrs(transportObject.AssetTrs, currencyProvider, calendarProvider);
+                    case AssetInstrumentType.SyntheticCashAndCarry:
+                        return new SyntheticCashAndCarry(transportObject.SyntheticCashAndCarry, currencyProvider, calendarProvider);
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)
@@ -104,7 +106,7 @@ namespace Qwack.Core.Instruments
             Instruments = transportObject.Instruments.Select(x => x.GetInstrument(currencyProvider, calendarProvider)).ToList()
         };
 
-        private static AsianSwap GetAsianSwap(this TO_AsianSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        public static AsianSwap GetAsianSwap(this TO_AsianSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,
@@ -114,9 +116,9 @@ namespace Qwack.Core.Instruments
             FixingDates = transportObject.FixingDates,
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
             PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
-            SpotLag = new Frequency(transportObject.SpotLag),
+            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Day() : new Frequency(transportObject.SpotLag),
+            PaymentLag = string.IsNullOrEmpty(transportObject.PaymentLag) ? 0.Day() : new Frequency(transportObject.PaymentLag),
             SpotLagRollType = transportObject.SpotLagRollType,
-            PaymentLag = new Frequency(transportObject.PaymentLag),
             PaymentLagRollType = transportObject.PaymentLagRollType,
             PaymentDate = transportObject.PaymentDate,
             PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),
@@ -132,7 +134,7 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
         };
 
-        private static AsianSwapStrip GetAsianSwapStrip(this TO_AsianSwapStrip transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        public static AsianSwapStrip GetAsianSwapStrip(this TO_AsianSwapStrip transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Counterparty = transportObject.Counterparty,
@@ -141,7 +143,7 @@ namespace Qwack.Core.Instruments
             HedgingSet = transportObject.HedgingSet,
         };
 
-    private static AsianBasisSwap GetAsianBasisSwap(this TO_AsianBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        public static AsianBasisSwap GetAsianBasisSwap(this TO_AsianBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Counterparty = transportObject.Counterparty,
@@ -151,7 +153,7 @@ namespace Qwack.Core.Instruments
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
         };
 
-        private static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        public static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,
@@ -161,9 +163,9 @@ namespace Qwack.Core.Instruments
             FixingDates = transportObject.FixingDates,
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
             PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
-            SpotLag = new Frequency(transportObject.SpotLag),
             SpotLagRollType = transportObject.SpotLagRollType,
-            PaymentLag = new Frequency(transportObject.PaymentLag),
+            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Day() : new Frequency(transportObject.SpotLag),
+            PaymentLag = string.IsNullOrEmpty(transportObject.PaymentLag) ? 0.Day() : new Frequency(transportObject.PaymentLag),
             PaymentLagRollType = transportObject.PaymentLagRollType,
             PaymentDate = transportObject.PaymentDate,
             PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),
@@ -180,7 +182,7 @@ namespace Qwack.Core.Instruments
             CallPut = transportObject.CallPut
         };
 
-        private static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        public static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,
             Notional = transportObject.Notional,
@@ -188,8 +190,8 @@ namespace Qwack.Core.Instruments
             ExpiryDate = transportObject.ExpiryDate,
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
             PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
-            SpotLag = new Frequency(transportObject.SpotLag),
-            PaymentLag = new Frequency(transportObject.PaymentLag),
+            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Day() : new Frequency(transportObject.SpotLag),
+            PaymentLag = string.IsNullOrEmpty(transportObject.PaymentLag) ? 0.Day() : new Frequency(transportObject.PaymentLag),
             Strike = transportObject.Strike,
             AssetId = transportObject.AssetId,
             PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),

@@ -399,9 +399,11 @@ namespace Qwack.Core.Instruments
             ETC etc => etc.Notional,
             CashAsset ca => ca.Notional,
             IrSwap ir => ir.Notional,
+            AssetTrs trs => trs.Notional,
             InflationPerformanceSwap ifp => ifp.Notional,
             InflationSwap ifs => ifs.Notional,
             OISFuture oISFuture => oISFuture.ContractSize * oISFuture.Position,
+            SyntheticCashAndCarry cnc => cnc.NearLeg.Strike * cnc.NearLeg.Notional,
             _ => 0.0,
         };
 

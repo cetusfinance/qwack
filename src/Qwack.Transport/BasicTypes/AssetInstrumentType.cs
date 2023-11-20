@@ -22,7 +22,7 @@ namespace Qwack.Transport.BasicTypes
         Equity,
         Bond,
         CashWrapper,
-        AssetTrs
-
+        AssetTrs,
+        SyntheticCashAndCarry
     }
 }

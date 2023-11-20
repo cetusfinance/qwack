@@ -12,6 +12,7 @@ namespace Qwack.Core.Instruments
             AsianOption asianOption => asianOption.ToTransportObject(),
             AsianSwap asianSwap => asianSwap.ToTransportObject(),
             AsianSwapStrip asianSwapStrip => asianSwapStrip.ToTransportObject(),
+            AsianBasisSwap asianBasisSwap => asianBasisSwap.ToTransportObject(),
             EuropeanOption europeanOption => europeanOption.ToTransportObject(),
             Forward forward => forward.ToTransportObject(),
             Equity equity => equity.ToTransportObject(),
@@ -26,6 +27,8 @@ namespace Qwack.Core.Instruments
             CashWrapper cashWrapper => cashWrapper.ToTransportObject(),
             InflationPerformanceSwap inflationPerformanceSwap => inflationPerformanceSwap.ToTransportObject(),
             IrSwap irs => irs.ToTransportObject(),
+            AssetTrs trs => trs.ToTransportObject(),
+            SyntheticCashAndCarry cnc => cnc.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };
     }

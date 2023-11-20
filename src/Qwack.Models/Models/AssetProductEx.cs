@@ -348,6 +348,41 @@ namespace Qwack.Models.Models
             return payPV + recPV;
         }
 
+        public static double PV(this SyntheticCashAndCarry cnc, IAssetFxModel model, bool ignoreTodayFlows)
+        {
+            var payDate = cnc.FarLeg.PaymentDate == DateTime.MinValue ?
+                cnc.FarLeg.ExpiryDate.AddPeriod(RollType.F, cnc.FarLeg.PaymentCalendar, cnc.FarLeg.PaymentLag) :
+                cnc.FarLeg.PaymentDate;
+            
+            if (payDate < model.BuildDate || (ignoreTodayFlows && payDate == model.BuildDate))
+                return 0.0;
+
+            var effectiveDate = cnc.NearLeg.PaymentDate == DateTime.MinValue ?
+                cnc.NearLeg.ExpiryDate.AddPeriod(RollType.F, cnc.NearLeg.PaymentCalendar, cnc.NearLeg.PaymentLag) :
+                cnc.NearLeg.PaymentDate;
+                        
+            var priceCurveNear = model.GetPriceCurve(cnc.NearLeg.AssetId);
+            var priceCurveFar = model.GetPriceCurve(cnc.FarLeg.AssetId);
+            var nearPrice = priceCurveNear.GetPriceForFixingDate(cnc.NearLeg.ExpiryDate.Max(model.BuildDate));
+            var farPrice = priceCurveFar.GetPriceForFixingDate(cnc.FarLeg.ExpiryDate);
+
+            var spreadInitial = cnc.FarLeg.Strike - cnc.NearLeg.Strike;
+            var spreadNow = farPrice - nearPrice;
+
+            var t = model.BuildDate < effectiveDate ? 0 : effectiveDate.CalculateYearFraction(model.BuildDate.Min(payDate), cnc.FundingBasis);
+            var accruedFraction = 1.0 / IrCurve.DFFromRate(t, cnc.FundingRate, cnc.FundingRateType) - 1.0;
+            var fundingNominal = cnc.NearLeg.Strike * cnc.NearLeg.Notional;
+            var fundingPv = fundingNominal * accruedFraction;
+
+            var spreadLegFv = (spreadInitial - spreadNow) * cnc.NearLeg.Notional;
+            var discountCurve = model.FundingModel.GetCurveOrZero(cnc.DiscountCurve);
+            var spreadLegPv = spreadLegFv * discountCurve.GetDf(model.BuildDate, payDate);
+
+            var pv = spreadLegPv - fundingPv;
+
+            return pv;
+        }
+
         public static double PV(this Future future, IAssetFxModel model, bool ignoreTodayFlows)
         {
 
@@ -856,6 +891,9 @@ namespace Qwack.Models.Models
                 case AsianBasisSwap asianBasisSwap:
                     pv = asianBasisSwap.PV(model, true);
                     break;
+                case SyntheticCashAndCarry cnc:
+                    pv = cnc.PV(model, true);
+                    break;
                 case Forward fwd:
                     pv = fwd.PV(model, true);
                     break;
@@ -1037,6 +1075,9 @@ namespace Qwack.Models.Models
                     break;
                 case AsianBasisSwap basisSwap:
                     pv = basisSwap.PV(model, ignoreTodayFlows);
+                    break;
+                case SyntheticCashAndCarry cnc:
+                    pv = cnc.PV(model, ignoreTodayFlows);
                     break;
                 case EuropeanBarrierOption euBOpt:
                     pv = euBOpt.PV(model, ignoreTodayFlows);
@@ -1292,6 +1333,7 @@ namespace Qwack.Models.Models
                 InflationPerformanceSwap => "InfPerfSwap",
                 InflationSwap => "InfSwap",
                 AssetTrs => "TRS",
+                SyntheticCashAndCarry => "CnC",
                 CashWrapper wrapper => TradeType(wrapper.UnderlyingInstrument),
                 _ => throw new Exception($"Unable to handle product of type {ins.GetType()}"),
             };

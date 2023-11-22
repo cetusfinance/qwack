@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -41,7 +42,7 @@ namespace Qwack.Core.Instruments.Asset
         public Forward FarLeg { get; set; }
 
         public string[] AssetIds => (new[] { NearLeg.AssetId, FarLeg.AssetId }).Distinct().ToArray();
-        public string[] IrCurves(IAssetFxModel model) => NearLeg.IrCurves(model).Concat(FarLeg.IrCurves(model)).Distinct().ToArray();
+        public string[] IrCurves(IAssetFxModel model) => new[] { DiscountCurve };
         public Currency Currency => NearLeg.PaymentCurrency;
         public Currency PaymentCurrency => Currency;
         public DateTime LastSensitivityDate => FarLeg.LastSensitivityDate;
@@ -82,6 +83,47 @@ namespace Qwack.Core.Instruments.Asset
             .Concat(FarLeg.PastFixingDates(valDate))
             .Distinct()
             .ToDictionary(x => x.Key, x => x.Value);
+
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
+        {
+            var payDate = FarLeg.PaymentDate == DateTime.MinValue ?
+              FarLeg.ExpiryDate.AddPeriod(RollType.F, FarLeg.PaymentCalendar, FarLeg.PaymentLag) :
+              FarLeg.PaymentDate;
+
+            var effectiveDate = NearLeg.PaymentDate == DateTime.MinValue ?
+            NearLeg.ExpiryDate.AddPeriod(RollType.F, NearLeg.PaymentCalendar, NearLeg.PaymentLag) :
+            NearLeg.PaymentDate;
+
+            var spreadInitial = FarLeg.Strike - NearLeg.Strike;
+
+            var t = effectiveDate.CalculateYearFraction(payDate, FundingBasis);
+            var accruedFraction = 1.0 / IrCurve.DFFromRate(t, FundingRate, FundingRateType) - 1.0;
+            var fundingNominal = NearLeg.Strike * NearLeg.Notional;
+            var fundingPv = fundingNominal * accruedFraction;
+
+            var spreadLegFv = spreadInitial * NearLeg.Notional;
+
+            var f = new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Notional = spreadLegFv,
+                    SettleDate = payDate,
+                    FlowType = FlowType.FixedRate,
+                    FixedRateOrMargin = FundingRate
+                },
+
+                new CashFlow
+                {
+                    Notional = -fundingPv,
+                    SettleDate = payDate, 
+                    FlowType = FlowType.FixedRate 
+                }
+            };
+
+            return f;
+        }
+            
 
         public TO_Instrument ToTransportObject() =>
            new()

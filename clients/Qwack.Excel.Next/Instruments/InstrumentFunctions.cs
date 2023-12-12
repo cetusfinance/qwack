@@ -1104,9 +1104,9 @@ namespace Qwack.Excel.Instruments
             [ExcelArgument(Description = "Start Date")] DateTime StartDate,
             [ExcelArgument(Description = "End Date")] DateTime EndDate,
             [ExcelArgument(Description = "Currency")] string Currency,
-            [ExcelArgument(Description = "Asset Leg Reset Type")] TrsLegType AssetLegResetType = TrsLegType.Bullet,
-            [ExcelArgument(Description = "Funding Leg Type")] SwapLegType FundingLegType = SwapLegType.Float,
-            [ExcelArgument(Description = "Funding Leg Reset Type")] TrsLegType FundingLegResetType = TrsLegType.Resetting)
+            [ExcelArgument(Description = "Asset Leg Reset Type")] TrsLegType AssetLegResetType,
+            [ExcelArgument(Description = "Funding Leg Type")] SwapLegType FundingLegType,
+            [ExcelArgument(Description = "Funding Leg Reset Type")] TrsLegType FundingLegResetType)
         {
             return ExcelHelper.Execute(_logger, () =>
             {

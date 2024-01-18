@@ -145,6 +145,27 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
+        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double payPremium, double recPremium, Currency payCcy, Currency recCcy, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Frequency settleLag, Calendar settleCalendar, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var settleDate = end.AddPeriod(RollType.F, settleCalendar, settleLag);
+            return CreateAssetFxBasisSwap(start, end, assetId, payPremium, recPremium, payCcy, recCcy, fixingCalendarPay, fixingCalendarRec, settleDate, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+        }
+
+        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double payPremium, double recPremium, Currency payCcy, Currency recCcy, Calendar fixingCalendarPay, Calendar fixingCalendarRec, DateTime settleDate, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var swapLegPay = CreateTermAsianSwap(start, end, payPremium, assetId, fixingCalendarPay, settleDate, payCcy, TradeDirection.Long, spotLagPay, notionalPay);
+            var swapLegRec = CreateTermAsianSwap(start, end, recPremium, assetId, fixingCalendarRec, settleDate, recCcy, TradeDirection.Short, spotLagRec, notionalRec);
+
+          
+            var swap = new AssetFxBasisSwap
+            {
+                PaySwaplet = swapLegPay,
+                RecSwaplet = swapLegRec
+            };
+
+            return swap;
+        }
+
         public static AsianBasisSwap CreateBulletBasisSwap(DateTime leg1Fixing, DateTime leg2Fixing, double leg2PremiumInleg1Units, SwapPayReceiveType leg1PayRec, string assetIdLeg1, string assetIdLeg2, Currency currency, double notionalLeg1, double notionalLeg2)
         {
             var payDate = leg1Fixing.Max(leg2Fixing);

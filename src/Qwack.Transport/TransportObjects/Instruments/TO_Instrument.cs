@@ -54,5 +54,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_AsianBasisSwap AsianBasisSwap { get; set; }
         [ProtoMember(121)]
         public TO_SyntheticCashAndCarry SyntheticCashAndCarry { get; set; }
+        [ProtoMember(122)]
+        public TO_AssetFxBasisSwap AssetFxBasisSwap { get; set; }
     }
 }

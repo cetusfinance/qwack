@@ -153,6 +153,16 @@ namespace Qwack.Core.Instruments
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
         };
 
+        public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            TradeId = transportObject.TradeId,
+            Counterparty = transportObject.Counterparty,
+            HedgingSet = transportObject.HedgingSet,
+            PortfolioName = transportObject.PortfolioName,
+            PaySwaplet = transportObject.PaySwaplet.GetAsianSwap(currencyProvider, calendarProvider),
+            RecSwaplet = transportObject.RecSwaplet.GetAsianSwap(currencyProvider, calendarProvider)
+        };
+
         public static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             TradeId = transportObject.TradeId,

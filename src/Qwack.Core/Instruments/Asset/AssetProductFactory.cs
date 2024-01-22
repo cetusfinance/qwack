@@ -145,22 +145,20 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
-        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double payPremium, double recPremium, Currency payCcy, Currency recCcy, Calendar fixingCalendarPay, Calendar fixingCalendarRec, Frequency settleLag, Calendar settleCalendar, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double premium, Currency payCcy, Calendar fixingCalendar, Frequency settleLag, Calendar settleCalendar, Frequency spotLag = new Frequency(), double notional = 1)
         {
             var settleDate = end.AddPeriod(RollType.F, settleCalendar, settleLag);
-            return CreateAssetFxBasisSwap(start, end, assetId, payPremium, recPremium, payCcy, recCcy, fixingCalendarPay, fixingCalendarRec, settleDate, spotLagPay, spotLagRec, notionalPay, notionalRec, fixingDateType);
+            return CreateAssetFxBasisSwap(start, end, assetId, premium, payCcy, fixingCalendar, settleDate, spotLag, notional);
         }
 
-        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double payPremium, double recPremium, Currency payCcy, Currency recCcy, Calendar fixingCalendarPay, Calendar fixingCalendarRec, DateTime settleDate, Frequency spotLagPay = new Frequency(), Frequency spotLagRec = new Frequency(), double notionalPay = 1, double notionalRec = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double premium, Currency payCcy, Calendar fixingCalendar,  DateTime settleDate, Frequency spotLag = new Frequency(), double notional = 1)
         {
-            var swapLegPay = CreateTermAsianSwap(start, end, payPremium, assetId, fixingCalendarPay, settleDate, payCcy, TradeDirection.Long, spotLagPay, notionalPay);
-            var swapLegRec = CreateTermAsianSwap(start, end, recPremium, assetId, fixingCalendarRec, settleDate, recCcy, TradeDirection.Short, spotLagRec, notionalRec);
+            var baseSwaplet = CreateTermAsianSwap(start, end, premium, assetId, fixingCalendar, settleDate, payCcy, TradeDirection.Long, spotLag, notional);
+            baseSwaplet.FxConversionType = FxConversionType.ConvertThenAverage;
 
-          
             var swap = new AssetFxBasisSwap
             {
-                PaySwaplet = swapLegPay,
-                RecSwaplet = swapLegRec
+                BaseSwaplet = baseSwaplet,
             };
 
             return swap;

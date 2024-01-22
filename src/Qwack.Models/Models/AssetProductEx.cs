@@ -16,7 +16,6 @@ using Qwack.Options;
 using Qwack.Options.Asians;
 using Qwack.Options.VolSurfaces;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects.Instruments.Funding;
 using Qwack.Utils.Parallel;
 using static System.Math;
 using static Qwack.Core.Basic.Consts.Cubes;
@@ -140,6 +139,33 @@ namespace Qwack.Models.Models
             pv *= asianSwap.Direction == TradeDirection.Long ? 1.0 : -1.0;
             pv *= asianSwap.Notional;
             pv *= model.FundingModel.GetCurveOrZero(asianSwap.DiscountCurve).GetDf(model.BuildDate, payDate);
+
+            return pv;
+        }
+
+        public static double PV(this AssetFxBasisSwap fxBasisSwap, IAssetFxModel model, bool ignoreTodayFlows)
+        {
+            var swapA = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
+            var swapB = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
+
+            swapA.FxConversionType = FxConversionType.None;
+            swapB.FxConversionType = FxConversionType.CTA;
+
+            var payDate = swapA.PaymentDate == DateTime.MinValue ?
+                swapA.AverageEndDate.AddPeriod(swapA.PaymentLagRollType, swapA.PaymentCalendar, swapA.PaymentLag) :
+                swapA.PaymentDate;
+
+            if (payDate < model.BuildDate || (ignoreTodayFlows && payDate == model.BuildDate))
+                return 0.0;
+
+            var (FixedAverageA, FloatAverageA, FixedCountA, FloatCountA) = swapA.GetAveragesForSwap(model);
+            var avgA = (FixedAverageA * FixedCountA + FloatAverageA * FloatCountA) / (FloatCountA + FixedCountA);
+            var (FixedAverageB, FloatAverageB, FixedCountB, FloatCountB) = swapB.GetAveragesForSwap(model);
+            var avgB = (FixedAverageB * FixedCountB + FloatAverageB * FloatCountB) / (FloatCountB + FixedCountB);
+
+            var fxFwd = model.FundingModel.GetFxRate(payDate, swapB.FxPair(model));
+            var pv = avgA * swapA.Notional - avgB * swapB.Notional * fxFwd;
+            pv *= model.FundingModel.GetCurveOrZero(fxBasisSwap.BaseSwaplet.DiscountCurve).GetDf(model.BuildDate, payDate);
 
             return pv;
         }
@@ -608,6 +634,43 @@ namespace Qwack.Models.Models
             };
         }
 
+        public static List<CashFlow> ExpectedCashFlows(this AssetFxBasisSwap fxBasisSwap, IAssetFxModel model)
+        {
+            var swapA = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
+            var swapB = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
+            _ = model.GetPriceCurve(swapA.AssetId);
+
+            swapA.FxConversionType = FxConversionType.None;
+            swapB.FxConversionType = FxConversionType.CTA;
+
+            var payDate = swapA.PaymentDate == DateTime.MinValue ?
+                swapA.AverageEndDate.AddPeriod(swapA.PaymentLagRollType, swapA.PaymentCalendar, swapA.PaymentLag) :
+                swapA.PaymentDate;
+
+            var (FixedAverageA, FloatAverageA, FixedCountA, FloatCountA) = swapA.GetAveragesForSwap(model);
+            var avgA = (FixedAverageA * FixedCountA + FloatAverageA * FloatCountA) / (FloatCountA + FixedCountA);
+            var (FixedAverageB, FloatAverageB, FixedCountB, FloatCountB) = swapB.GetAveragesForSwap(model);
+            var avgB = (FixedAverageB * FixedCountB + FloatAverageB * FloatCountB) / (FloatCountB + FixedCountB);
+
+            return new List<CashFlow>
+            {
+                new CashFlow
+                {
+                    Currency = swapA.Currency,
+                    Notional = -avgA * swapA.Notional,
+                    Fv = avgA * swapA.Notional,
+                    SettleDate = payDate
+                },
+                new CashFlow
+                {
+                    Currency = swapB.Currency,
+                    Notional = avgB * swapB.Notional,
+                    Fv = avgB * swapB.Notional,
+                    SettleDate = payDate
+                }
+            };
+        }
+
         public static List<CashFlow> ExpectedCashFlows(this Forward fwd, IAssetFxModel model) => fwd.AsBulletSwap().ExpectedCashFlows(model);
 
         public static List<CashFlow> ExpectedCashFlows(this AsianSwapStrip asianSwap, IAssetFxModel model) => asianSwap.Swaplets.SelectMany(x => x.ExpectedCashFlows(model)).ToList();
@@ -891,6 +954,9 @@ namespace Qwack.Models.Models
                 case AsianBasisSwap asianBasisSwap:
                     pv = asianBasisSwap.PV(model, true);
                     break;
+                case AssetFxBasisSwap assetFxBasisSwap:
+                    pv = assetFxBasisSwap.PV(model, true);
+                    break;
                 case SyntheticCashAndCarry cnc:
                     pv = cnc.PV(model, true);
                     break;
@@ -1075,6 +1141,9 @@ namespace Qwack.Models.Models
                     break;
                 case AsianBasisSwap basisSwap:
                     pv = basisSwap.PV(model, ignoreTodayFlows);
+                    break;
+                case AssetFxBasisSwap assetFxBasisSwap:
+                    pv = assetFxBasisSwap.PV(model, ignoreTodayFlows);
                     break;
                 case SyntheticCashAndCarry cnc:
                     pv = cnc.PV(model, ignoreTodayFlows);
@@ -1275,6 +1344,9 @@ namespace Qwack.Models.Models
                 case AsianBasisSwap basisSwap:
                     flows = basisSwap.ExpectedCashFlows(model);
                     break;
+                case AssetFxBasisSwap basisSwapFxAsset:
+                    flows = basisSwapFxAsset.ExpectedCashFlows(model);
+                    break;
                 case EuropeanBarrierOption euBOpt:
                     flows = euBOpt.ExpectedCashFlows(model);
                     break;
@@ -1309,6 +1381,7 @@ namespace Qwack.Models.Models
                 AsianSwap => "AsianSwap",
                 AsianSwapStrip => "AsianSwapStrip",
                 AsianBasisSwap => "AsianBasisSwap",
+                AssetFxBasisSwap => "AssetFxBasisSwap",
                 EuropeanBarrierOption => "BarrierOption",
                 FxVanillaOption => "EuropeanOption",
                 EuropeanOption => "EuropeanOption",

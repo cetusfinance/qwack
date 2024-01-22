@@ -162,7 +162,6 @@ namespace Qwack.Core.Instruments
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
             BaseSwaplet = transportObject.BaseSwaplet.GetAsianSwap(currencyProvider, calendarProvider),
-            RecSwaplet = transportObject.RecSwaplet.GetAsianSwap(currencyProvider, calendarProvider)
         };
 
         public static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

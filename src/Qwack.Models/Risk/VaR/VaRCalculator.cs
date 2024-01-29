@@ -250,6 +250,7 @@ namespace Qwack.Models.Risk.VaR
                 var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
                 if (tidIx >= 0)
                 {
+                    tradeBreakdown = new Dictionary<string, LinearRegressionResult>();
                     var tradeIds = _varEngine.ResultsCache.Values.SelectMany(x => x.KeysForField<string>("TradeId")).ToList().Distinct();
                     
                     foreach(var tradeId in tradeIds)

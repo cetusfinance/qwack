@@ -243,14 +243,15 @@ namespace Qwack.Models.Risk.VaR
             }
 
             var lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
-            Dictionary<string, LinearRegressionResult> tradeBreakdown = null;
+            Dictionary<string, BetaAnalysisResult> tradeBreakdown = null;
+
 
             if (computeTradeLevel)
             {
                 var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
                 if (tidIx >= 0)
                 {
-                    tradeBreakdown = new Dictionary<string, LinearRegressionResult>();
+                    tradeBreakdown = new Dictionary<string, BetaAnalysisResult>();
                     var tradeIds = _varEngine.ResultsCache.Values.SelectMany(x => x.KeysForField<string>("TradeId")).ToList().Distinct();
 
                     foreach (var tradeId in tradeIds)
@@ -276,7 +277,7 @@ namespace Qwack.Models.Risk.VaR
 
                         }
                         var lrResultForTrade = benchmarkReturnsForTrade.ToArray().LinearRegressionVector(pfReturnsForTrade.ToArray());
-                        tradeBreakdown[tradeId] = lrResultForTrade;
+                        tradeBreakdown[tradeId] = new BetaAnalysisResult { LrResult = lrResultForTrade, BenchmarkReturns = benchmarkReturnsForTrade.ToArray(), PortfolioReturns = pfReturnsForTrade.ToArray() };
                     }
                 }
             }

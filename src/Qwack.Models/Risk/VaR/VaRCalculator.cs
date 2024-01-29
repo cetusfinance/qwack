@@ -224,7 +224,7 @@ namespace Qwack.Models.Risk.VaR
 
         public double[] CalculateVaRRange(double[] cis) => _varEngine.CalculateVaRRange(cis);
 
-        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null)
+        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null, bool computeTradeLevel = false)
         {
             if (!earliestDate.HasValue)
                 earliestDate = DateTime.MinValue;
@@ -243,10 +243,40 @@ namespace Qwack.Models.Risk.VaR
             }
 
             var lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
+            Dictionary<string, LinearRegressionResult> tradeBreakdown = null;
+            
+            if (computeTradeLevel)
+            {
+                var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
+                if (tidIx >= 0)
+                {
+                    var tradeIds = _varEngine.ResultsCache.Values.SelectMany(x => x.KeysForField<string>("TradeId")).ToList().Distinct();
+                    
+                    foreach(var tradeId in tradeIds)
+                    {
+                        var filterDict = new Dictionary<string, object> { { "TradeId", tradeId } };
+                        basePv = _varEngine.BasePvCube.Filter(filterDict).SumOfAllRows;
+                        var resultsForTrade = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.SumOfAllRows - basePv + referenceNav);
+
+                        pfReturns = new List<double>();
+                        for (var t = 1; t < intersectingDates.Length; t++)
+                        {
+                            var y = intersectingDates[t - 1];
+                            var d = intersectingDates[t];
+                            var resultY = _varEngine.ResultsCache[intersectingDates[t - 1].ToString()].Filter(filterDict).SumOfAllRows - basePv + referenceNav;
+                            var resultD = _varEngine.ResultsCache[intersectingDates[t].ToString()].Filter(filterDict).SumOfAllRows - basePv + referenceNav;
+                            pfReturns.Add(System.Math.Log(resultD / resultY));
+                        }
+                        lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
+                        tradeBreakdown[tradeId] = lrResult;
+                    }
+                }
+            }
 
             return new BetaAnalysisResult
             {
                 LrResult = lrResult,
+                TradeBreakdown = tradeBreakdown,
                 BenchmarkReturns = benchmarkReturns.ToArray(),
                 PortfolioReturns = pfReturns.ToArray(),
                 BenchmarkPrices = benchmarkPrices

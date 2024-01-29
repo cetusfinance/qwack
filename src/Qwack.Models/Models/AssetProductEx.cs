@@ -159,7 +159,7 @@ namespace Qwack.Models.Models
                 return 0.0;
 
             var (FixedAverageA, FloatAverageA, FixedCountA, FloatCountA) = swapA.GetAveragesForSwap(model);
-            var avgA = (FixedAverageA * FixedCountA + FloatAverageA * FloatCountA) / (FloatCountA + FixedCountA);
+            var avgA = (FixedAverageA * FixedCountA + FloatAverageA * FloatCountA) / (FloatCountA + FixedCountA) + swapA.Strike;
             var (FixedAverageB, FloatAverageB, FixedCountB, FloatCountB) = swapB.GetAveragesForSwap(model);
             var avgB = (FixedAverageB * FixedCountB + FloatAverageB * FloatCountB) / (FloatCountB + FixedCountB);
 

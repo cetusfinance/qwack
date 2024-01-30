@@ -203,7 +203,7 @@ namespace Qwack.Core.Cubes
                 var rowIsRelevant = false;
                 foreach (var val in filterValues)
                 {
-                    if (!IsEqual(row.MetaData[fIx], Convert.ChangeType(val, cube.DataTypes[fieldToFilterOn])))
+                    if (IsEqual(row.MetaData[fIx], Convert.ChangeType(val, cube.DataTypes[fieldToFilterOn])))
                     {
                         rowIsRelevant = true;
                         break;

@@ -224,7 +224,7 @@ namespace Qwack.Models.Risk.VaR
 
         public double[] CalculateVaRRange(double[] cis) => _varEngine.CalculateVaRRange(cis);
 
-        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null, bool computeTradeLevel = false)
+        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null, bool computeTradeLevel = false, string[] filterTradeIds = null)
         {
             if (!earliestDate.HasValue)
                 earliestDate = DateTime.MinValue;
@@ -245,8 +245,33 @@ namespace Qwack.Models.Risk.VaR
             var lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
             Dictionary<string, BetaAnalysisResult> tradeBreakdown = null;
 
+            if (filterTradeIds!=null)
+            {
+                var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
 
-            if (computeTradeLevel)
+                var basePv2 = _varEngine.BasePvCube.FilterOnField("TradeId", filterTradeIds).SumOfAllRows;
+                var results2 = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.FilterOnField("TradeId", filterTradeIds).SumOfAllRows - basePv2 + referenceNav);
+                var intersectingDates2 = results2.Keys.Intersect(benchmarkPrices.Keys).Where(x => x > earliestDate).OrderBy(x => x).ToArray();
+                var pfReturns2 = new List<double>();
+                var benchmarkReturns2 = new List<double>();
+                for (var t = 1; t < intersectingDates2.Length; t++)
+                {
+                    var y = intersectingDates2[t - 1];
+                    var d = intersectingDates2[t];
+                    pfReturns2.Add(System.Math.Log(results2[d] / results2[y]));
+                    benchmarkReturns2.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
+                }
+
+                var lrResult2 = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns2.ToArray());
+
+                return new BetaAnalysisResult
+                {
+                    LrResult = lrResult2,
+                    BenchmarkReturns = benchmarkReturns2.ToArray(),
+                    PortfolioReturns = pfReturns2.ToArray(),
+                };
+            } 
+            else if (computeTradeLevel)
             {
                 var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
                 if (tidIx >= 0)

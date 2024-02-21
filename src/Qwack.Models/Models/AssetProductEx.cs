@@ -479,7 +479,7 @@ namespace Qwack.Models.Models
                     Max((fwd * fxFwd) - euOpt.Strike, 0) :
                     Max(euOpt.Strike - (fwd * fxFwd), 0));
 
-            var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike / fxFwd);
+            var vol = model.GetVolForStrikeAndDate(euOpt.AssetId, euOpt.ExpiryDate, euOpt.Strike / fxFwd, fwd);
             if (isCompo)
             {
                 var fxId = $"{curve.Currency.Ccy}/{euOpt.PaymentCurrency.Ccy}";

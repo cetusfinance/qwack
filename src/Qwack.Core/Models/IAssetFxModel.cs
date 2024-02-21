@@ -27,6 +27,7 @@ namespace Qwack.Core.Models
         void AddFixingDictionaries(Dictionary<string, IFixingDictionary> fixings);
 
         double GetVolForStrikeAndDate(string name, DateTime expiry, double strike);
+        double GetVolForStrikeAndDate(string name, DateTime expiry, double strike, double fwd);
         double GetVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike);
         double GetAverageVolForStrikeAndDates(string name, DateTime[] expiries, double strike);
         double GetAverageVolForMoneynessAndDates(string name, DateTime[] expiries, double moneyness);

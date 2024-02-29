@@ -26,6 +26,8 @@ namespace Qwack.Core.Instruments
                         return transportObject.AsianBasisSwap.GetAsianBasisSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianOption:
                         return transportObject.AsianOption.GetAsianOption(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.AssetFxBasisSwap:
+                        return transportObject.AssetFxBasisSwap.GetAssetFxBasisSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.Forward:
                         return transportObject.Forward.GetForward(currencyProvider, calendarProvider);
                     case AssetInstrumentType.Equity:
@@ -159,8 +161,7 @@ namespace Qwack.Core.Instruments
             Counterparty = transportObject.Counterparty,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
-            PaySwaplet = transportObject.PaySwaplet.GetAsianSwap(currencyProvider, calendarProvider),
-            RecSwaplet = transportObject.RecSwaplet.GetAsianSwap(currencyProvider, calendarProvider)
+            BaseSwaplet = transportObject.BaseSwaplet.GetAsianSwap(currencyProvider, calendarProvider),
         };
 
         public static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

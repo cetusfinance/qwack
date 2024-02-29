@@ -12,10 +12,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(4)]
         public string PortfolioName { get; set; }
         [ProtoMember(5)]
-        public TO_AsianSwap PaySwaplet { get; set; }
+        public TO_AsianSwap BaseSwaplet { get; set; }
         [ProtoMember(6)]
-        public TO_AsianSwap RecSwaplet { get; set; }
-        [ProtoMember(7)]
         public string HedgingSet { get; set; }
     }
 }

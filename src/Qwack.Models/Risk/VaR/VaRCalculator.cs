@@ -224,10 +224,35 @@ namespace Qwack.Models.Risk.VaR
 
         public double[] CalculateVaRRange(double[] cis) => _varEngine.CalculateVaRRange(cis);
 
-        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null)
+        public BetaAnalysisResult ComputeBeta(double referenceNav, Dictionary<DateTime, double> benchmarkPrices, DateTime? earliestDate = null, bool computeTradeLevel = false, string metaFilterField = null, string[] filterData = null)
         {
             if (!earliestDate.HasValue)
                 earliestDate = DateTime.MinValue;
+
+            if (metaFilterField != null && filterData != null)
+            {
+                var basePv2 = _varEngine.BasePvCube.FilterOnField(metaFilterField, filterData).SumOfAllRows;
+                var results2 = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.FilterOnField(metaFilterField, filterData).SumOfAllRows - basePv2 + referenceNav);
+                var intersectingDates2 = results2.Keys.Intersect(benchmarkPrices.Keys).Where(x => x > earliestDate).OrderBy(x => x).ToArray();
+                var pfReturns2 = new List<double>();
+                var benchmarkReturns2 = new List<double>();
+                for (var t = 1; t < intersectingDates2.Length; t++)
+                {
+                    var y = intersectingDates2[t - 1];
+                    var d = intersectingDates2[t];
+                    pfReturns2.Add(System.Math.Log(results2[d] / results2[y]));
+                    benchmarkReturns2.Add(System.Math.Log(benchmarkPrices[d] / benchmarkPrices[y]));
+                }
+
+                var lrResult2 = benchmarkReturns2.ToArray().LinearRegressionVector(pfReturns2.ToArray());
+
+                return new BetaAnalysisResult
+                {
+                    LrResult = lrResult2,
+                    BenchmarkReturns = benchmarkReturns2.ToArray(),
+                    PortfolioReturns = pfReturns2.ToArray(),
+                };
+            }
 
             var basePv = _varEngine.BasePvCube.SumOfAllRows;
             var results = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.SumOfAllRows - basePv + referenceNav);
@@ -243,10 +268,49 @@ namespace Qwack.Models.Risk.VaR
             }
 
             var lrResult = benchmarkReturns.ToArray().LinearRegressionVector(pfReturns.ToArray());
+            Dictionary<string, BetaAnalysisResult> tradeBreakdown = null;
+
+  
+            if (computeTradeLevel)
+            {
+                var tidIx = _varEngine.ResultsCache.First().Value.GetColumnIndex("TradeId");
+                if (tidIx >= 0)
+                {
+                    tradeBreakdown = new Dictionary<string, BetaAnalysisResult>();
+                    var tradeIds = _varEngine.ResultsCache.Values.SelectMany(x => x.KeysForField<string>("TradeId")).ToList().Distinct();
+
+                    foreach (var tradeId in tradeIds)
+                    {
+                        var filterDict = new Dictionary<string, object> { { "TradeId", tradeId } };
+                        basePv = _varEngine.BasePvCube.Filter(filterDict).SumOfAllRows;
+                        var resultsForTrade = _varEngine.ResultsCache.ToDictionary(x => DateTime.Parse(x.Key), x => x.Value.SumOfAllRows - basePv + referenceNav);
+
+                        var pfReturnsForTrade = new List<double>();
+                        var benchmarkReturnsForTrade = new List<double>();
+                        for (var t = 1; t < intersectingDates.Length; t++)
+                        {
+                            var y = intersectingDates[t - 1];
+                            var d = intersectingDates[t];
+                            var resultY = _varEngine.ResultsCache[intersectingDates[t - 1].ToString()].Filter(filterDict).SumOfAllRows - basePv + referenceNav;
+                            var resultD = _varEngine.ResultsCache[intersectingDates[t].ToString()].Filter(filterDict).SumOfAllRows - basePv + referenceNav;
+                            var returnForTrade = System.Math.Log(resultD / resultY);
+                            if (!double.IsNaN(returnForTrade))
+                            {
+                                benchmarkReturnsForTrade.Add(benchmarkReturns[t - 1]);
+                                pfReturnsForTrade.Add(returnForTrade);
+                            }
+
+                        }
+                        var lrResultForTrade = benchmarkReturnsForTrade.ToArray().LinearRegressionVector(pfReturnsForTrade.ToArray());
+                        tradeBreakdown[tradeId] = new BetaAnalysisResult { LrResult = lrResultForTrade, BenchmarkReturns = benchmarkReturnsForTrade.ToArray(), PortfolioReturns = pfReturnsForTrade.ToArray() };
+                    }
+                }
+            }
 
             return new BetaAnalysisResult
             {
                 LrResult = lrResult,
+                TradeBreakdown = tradeBreakdown,
                 BenchmarkReturns = benchmarkReturns.ToArray(),
                 PortfolioReturns = pfReturns.ToArray(),
                 BenchmarkPrices = benchmarkPrices

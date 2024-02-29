@@ -37,7 +37,14 @@ namespace Qwack.Core.Cubes
         public TO_ResultCubeRow ToTransportObject() =>
             new()
             {
-                MetaData = MetaData.Select(x => (string)Convert.ChangeType(x, typeof(string))).ToArray(),
+                MetaData = MetaData.Select(x =>
+                {
+                    if (x is DateTime dt)
+                    {
+                        return dt.TimeOfDay == new TimeSpan(0) ? dt.ToString("yyyy-MM-dd") : dt.ToString("o");
+                    }
+                    return (string)Convert.ChangeType(x, typeof(string));
+                }).ToArray(),
                 Value = Value
             };
     }

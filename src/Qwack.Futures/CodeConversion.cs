@@ -5,7 +5,7 @@ namespace Qwack.Futures
 {
     public static class CodeConversion
     {
-        public static string[] MonthCodes = new[] { "F", "G", "H", "K", "J", "M", "N", "Q", "U", "V", "X", "Z" };
+        public static string[] MonthCodes = new[] { "F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z" };
 
         public static Dictionary<string, string> MonthMap = new Dictionary<string, string>()
             {

@@ -139,6 +139,13 @@ namespace Qwack.Models
             return vol;
         }
 
+        public double GetVolForStrikeAndDate(string name, DateTime expiry, double strike, double fwd)
+        {
+            var surface = GetVolSurface(name);
+            var vol = surface.GetVolForAbsoluteStrike(strike, expiry, fwd);
+            return vol;
+        }
+
         public double GetVolForDeltaStrikeAndDate(string name, DateTime expiry, double strike)
         {
             var fwd = GetPriceCurve(name).GetPriceForFixingDate(expiry); //needs to account for spot/fwd offset

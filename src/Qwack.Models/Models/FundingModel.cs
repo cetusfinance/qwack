@@ -161,6 +161,8 @@ namespace Qwack.Models
         {
             if (curve is IrCurve ir)
                 return ir.Clone();
+            if (curve is SeasonalCpiCurve scpi)
+                return scpi.Clone();
             if (curve is CPICurve cpi)
                 return cpi.Clone();
 

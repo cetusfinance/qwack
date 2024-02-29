@@ -69,11 +69,13 @@ namespace Qwack.Models.Tests.Risk
 
             var curveQS = new BasicPriceCurve(_originDate, _qsCurve.Keys.Select(DateTime.Parse).ToArray(), _qsCurve.Values.ToArray(), PriceCurveType.ICE, TestProviderHelper.CurrencyProvider)
             {
-                AssetId = "QS"
+                AssetId = "QS",
+                Name = "QS"
             };
             var curveCO = new BasicPriceCurve(_originDate, _coCurve.Keys.Select(DateTime.Parse).ToArray(), _coCurve.Values.ToArray(), PriceCurveType.ICE, TestProviderHelper.CurrencyProvider)
             {
-                AssetId = "CO"
+                AssetId = "CO",
+                Name = "CO"
             };
 
             model.AddPriceCurve("QS", curveQS);
@@ -175,6 +177,76 @@ namespace Qwack.Models.Tests.Risk
 
 
             var cube = AssetBenchmarkCurveRisk.Produce(model, new List<AssetCurveBenchmarkSpec> { specA, specB }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, usd);
+
+            var riskCo = cube.Filter(new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("Curve", "CO") });
+            var riskQs = cube.Filter(new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("Curve", "QS") });
+
+            var expectedUnderZeroDiscountForCoFutures = (model.Portfolio.Instruments.First() as AsianSwap).Notional * 7.45 / 1000;
+            Assert.Equal(expectedUnderZeroDiscountForCoFutures, riskCo.SumOfAllRows, 5);
+
+            var expectedUnderZeroDiscountForCoQsCracks = (model.Portfolio.Instruments.First() as AsianSwap).Notional * 7.45 / 1000;
+            Assert.Equal(expectedUnderZeroDiscountForCoQsCracks, riskQs.SumOfAllRows, 5);
+        }
+
+        [Fact]
+        public void CrackBenchmarkRiskNoRestripFacts()
+        {
+            var model = GenerateTestData();
+            var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
+            var cal = TestProviderHelper.CalendarProvider.GetCalendar("USD");
+
+            var lotSizeCO = 1000;
+            var riskInsA = _coCurve.Select(x => (IAssetInstrument)new Future
+            {
+                AssetId = "CO",
+                ContractQuantity = 100,
+                Currency = usd,
+                ExpiryDate = DateTime.Parse(x.Key),
+                LotSize = lotSizeCO,
+                Strike = x.Value,
+                TradeId = "CO|" + x.Key
+            }).ToList();
+
+            var firstDate = _originDate.LastDayOfMonth().AddDays(1);
+            var lastDate = model.Portfolio.LastSensitivityDate.LastDayOfMonth();
+            var riskInsB = new List<IAssetInstrument>();
+            while (firstDate < lastDate)
+            {
+                var ins = AssetProductFactory.CreateTermAsianBasisSwap(firstDate,
+                                                                       firstDate.LastDayOfMonth(),
+                                                                       1,
+                                                                       SwapPayReceiveType.Payer,
+                                                                       "CO",
+                                                                       "QS",
+                                                                       cal,
+                                                                       cal,
+                                                                       firstDate.LastDayOfMonth(),
+                                                                       usd,
+                                                                       notionalLeg1: 1000,
+                                                                       notionalLeg2: 1000 / 7.45);
+                ins.TradeId = "Crack|" + firstDate.ToString("MMMyy");
+                riskInsB.Add(ins);
+                firstDate = firstDate.LastDayOfMonth().AddDays(1);
+            }
+
+
+            var specA = new AssetCurveBenchmarkSpec
+            {
+                CurveName = "CO",
+                CurveType = PriceCurveType.ICE,
+                Instruments = riskInsA
+            };
+
+            var specB = new AssetCurveBenchmarkSpec
+            {
+                CurveName = "QS",
+                CurveType = PriceCurveType.ICE,
+                DependsOnCurves = new string[] { "CO" },
+                Instruments = riskInsB
+            };
+
+
+            var cube = AssetBenchmarkCurveRisk.Produce(model, new List<AssetCurveBenchmarkSpec> { specA, specB }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider, usd, false);
 
             var riskCo = cube.Filter(new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("Curve", "CO") });
             var riskQs = cube.Filter(new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("Curve", "QS") });

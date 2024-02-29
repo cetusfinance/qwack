@@ -19,7 +19,7 @@ namespace Qwack.Models.Risk
 {
     public static class AssetBenchmarkCurveRisk
     {
-        public static ICube Produce(IAssetFxModel pvModel, List<AssetCurveBenchmarkSpec> curveSpecs, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency baseCurrency)
+        public static ICube Produce(IAssetFxModel pvModel, List<AssetCurveBenchmarkSpec> curveSpecs, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency baseCurrency, bool restrip = true)
         {
             var o = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -42,7 +42,8 @@ namespace Qwack.Models.Risk
             var basePrices = curveSpecs.SelectMany(x => x.Instruments).ToDictionary(x => x.TradeId, x => x.ParRate(pvModel));
             var insToRisk = curveSpecs.SelectMany(x => x.Instruments).Select(x => x.SetStrike(basePrices[x.TradeId])).ToList();
             var curveToInsMap = curveSpecs.SelectMany(x => x.Instruments).ToDictionary(x => x.TradeId, x => curveSpecs.FirstOrDefault(y => y.Instruments.Any(z => z.TradeId == x.TradeId)));
-            var baseCurves = PriceCurves(pvModel, curveSpecs, basePrices, currencyProvider, calendarProvider, baseCurrency);
+            var baseCurves = restrip ? PriceCurves(pvModel, curveSpecs, basePrices, currencyProvider, calendarProvider, baseCurrency) :
+                PriceCurvesWithoutRestrip(pvModel, curveSpecs, basePrices, currencyProvider, calendarProvider, baseCurrency);
             var reBaseModel = pvModel.Clone();
             reBaseModel.AddPriceCurves(baseCurves);
             var basePvCube = reBaseModel.PV(baseCurrency);
@@ -86,7 +87,9 @@ namespace Qwack.Models.Risk
                 var bumpSize = GetBumpSize(insToRisk[i]);
 
                 var bumpedPrices = basePrices.ToDictionary(x => x.Key, x => x.Value + (x.Key == insToRisk[i].TradeId ? bumpSize : 0.0));
-                var bumpedCurves = PriceCurves(pvModel, curveSpecs, bumpedPrices, currencyProvider, calendarProvider, baseCurrency);
+                var bumpedCurves = restrip ? PriceCurves(pvModel, curveSpecs, bumpedPrices, currencyProvider, calendarProvider, baseCurrency) 
+             :PriceCurvesWithoutRestrip(pvModel, curveSpecs, bumpedPrices, currencyProvider, calendarProvider, baseCurrency);
+
                 var bumpedModel = pvModel.Clone();
                 bumpedModel.AddPriceCurves(bumpedCurves);
                 var bumpedPvCuve = bumpedModel.PV(baseCurrency);
@@ -204,6 +207,72 @@ namespace Qwack.Models.Risk
 
             return curves;
         }
+
+        private static Dictionary<string, IPriceCurve> PriceCurvesWithoutRestrip(IAssetFxModel baseModel, List<AssetCurveBenchmarkSpec> curveSpecs, Dictionary<string, double> insPrices, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider, Currency baseCurrency)
+        {
+            List<AssetCurveBenchmarkSpec> specs = new();
+            Dictionary<string, AssetCurveBenchmarkSpec> specsNew = new();
+            Dictionary<string, IPriceCurve> curves = new();
+            HashSet<string> curvesStillToSolve = new();
+            HashSet<string> curvesSolved = new();
+
+            var solver = new NewtonRaphsonAssetCurveSolver();
+
+            foreach (var spec in curveSpecs)
+            {
+                var disco = new ConstantRateIrCurve(0, baseModel.BuildDate, "ZERO", baseCurrency);
+
+                var specNew = new AssetCurveBenchmarkSpec
+                {
+                    CurveName = spec.CurveName,
+                    CurveType = spec.CurveType,
+                    Instruments = spec.Instruments.Select(x => x.Clone().SetStrike(insPrices[x.TradeId])).OrderBy(SuggestPillarDate).ToList(),
+                    DependsOnCurves = spec.DependsOnCurves
+                };
+
+                specsNew[spec.CurveName] = specNew;
+
+                var curve = (baseModel.GetPriceCurve(spec.CurveName) as BasicPriceCurve).Clone();
+                if (spec.DependsOnCurves == null || spec.DependsOnCurves.Length == 0)
+                {
+                    curve = (BasicPriceCurve)solver.Solve(specNew.Instruments, curve, null, disco, baseModel.BuildDate, currencyProvider, calendarProvider);
+                    curvesSolved.Add(spec.CurveName);
+                }
+                else
+                {
+                    curvesStillToSolve.Add(spec.CurveName);
+                }
+
+                curves[spec.CurveName] = curve;
+            }
+
+            var breakout = 0;
+            while (breakout < 10 && curvesStillToSolve.Any())
+            {
+                var curvesForNextPass = new HashSet<string>();
+                foreach (var curveName in curvesStillToSolve)
+                {
+                    var specNew = specsNew[curveName];
+                    if (specNew.DependsOnCurves.All(x => curvesSolved.Contains(x)))
+                    {
+                        //solve
+                        var disco = new ConstantRateIrCurve(0, baseModel.BuildDate, "ZERO", baseCurrency);
+                        var curve = curves[specNew.CurveName];
+                        var dependencies = specNew.DependsOnCurves.Select(x => (IPriceCurve)curves[x]).ToList();
+                        curves[specNew.CurveName] = solver.Solve(specNew.Instruments, curve, dependencies, disco, baseModel.BuildDate, currencyProvider, calendarProvider);
+                        curvesSolved.Add(curveName);
+                    }
+                    else
+                        curvesForNextPass.Add(curveName);
+                }
+                curvesStillToSolve = curvesForNextPass;
+                breakout++;
+            }
+
+
+            return curves;
+        }
+
 
         private static double GetBumpSize(IAssetInstrument ins) => ins switch
         {

@@ -129,6 +129,16 @@ namespace Qwack.Core.Curves
             return o;
         }
 
+        public IPriceCurve Clone() => new BasicPriceCurve(BuildDate, _pillarDates.ToArray(), _prices.ToArray(), _curveType, _currencyProvider, _pillarLabels.ToArray())
+        {
+            CollateralSpec = CollateralSpec,
+            Currency = Currency,
+            AssetId = AssetId,
+            SpotCalendar = SpotCalendar,
+            SpotLag = SpotLag,
+            Name = Name
+        };
+
         public IPriceCurve RebaseDate(DateTime newAnchorDate)
         {
             switch (_curveType)

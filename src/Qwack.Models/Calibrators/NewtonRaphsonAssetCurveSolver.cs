@@ -50,7 +50,7 @@ namespace Qwack.Models.Calibrators
             model.AddPriceCurves(dependencies.ToDictionary(x => x.Name, x => x));
             model.AddPriceCurve(curve.Name, curve);
 
-            _currentGuess = instruments.Select(i=>i.ParRate(model)).ToArray();
+            _currentGuess = _pillars.Select(curve.GetPriceForDate).ToArray();
             _currentCurve = curve;
             _currentPVs = ComputePVsGeneric(model);
 

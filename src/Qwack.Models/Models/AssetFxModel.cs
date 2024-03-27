@@ -48,7 +48,7 @@ namespace Qwack.Models
             CorrelationMatrix = transportObject.CorrelationMatrix == null ? null : CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
         }
 
-        public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name] = curve;
+        public void AddPriceCurve(string name, IPriceCurve curve) => _assetCurves[name ?? curve.AssetId] = curve;
 
         public void AddVolSurface(string name, IVolSurface surface)
         {

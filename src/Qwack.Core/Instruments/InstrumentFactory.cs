@@ -22,6 +22,8 @@ namespace Qwack.Core.Instruments
                         return transportObject.AsianSwap.GetAsianSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianSwapStrip:
                         return transportObject.AsianSwapStrip.GetAsianSwapStrip(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.UnpricedAverage:   //needs to be above Asian basis swap due to inheritance 
+                        return transportObject.UnpricedAverage.GetUnpricedAverage(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianBasisSwap:
                         return transportObject.AsianBasisSwap.GetAsianBasisSwap(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianOption:
@@ -154,6 +156,17 @@ namespace Qwack.Core.Instruments
             PaySwaplets = transportObject.PaySwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
         };
+
+        public static UnpricedAverage GetUnpricedAverage(this TO_UnpricedAverage transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            TradeId = transportObject.TradeId,
+            Counterparty = transportObject.Counterparty,
+            HedgingSet = transportObject.HedgingSet,
+            PortfolioName = transportObject.PortfolioName,
+            PaySwaplets = transportObject.PaySwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+            RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+        };
+
 
         public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {

@@ -1,6 +1,7 @@
 using System;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
+using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments;
 
 namespace Qwack.Core.Instruments
@@ -17,7 +18,7 @@ namespace Qwack.Core.Instruments
             Forward forward => forward.ToTransportObject(),
             Equity equity => equity.ToTransportObject(),
             Bond bond => bond.ToTransportObject(),
-            //CashBalance cashBalance => cashBalance.ToTransportObject(),
+            CashBalance cashBalance => new TO_Instrument { FundingInstrumentType = FundingInstrumentType.CashBalance, CashBalance = cashBalance.ToTransportObject() },
             FuturesOption futuresOption => futuresOption.ToTransportObject(),
             FxFuture fxFuture => fxFuture.ToTransportObject(),
             FxVanillaOption fxo => fxo.ToTransportObject(),

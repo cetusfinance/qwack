@@ -1380,6 +1380,7 @@ namespace Qwack.Models.Models
                 AsianOption => "AsianOption",
                 AsianSwap => "AsianSwap",
                 AsianSwapStrip => "AsianSwapStrip",
+                UnpricedAverage => "UnpricedAverage",
                 AsianBasisSwap => "AsianBasisSwap",
                 AssetFxBasisSwap => "AssetFxBasisSwap",
                 EuropeanBarrierOption => "BarrierOption",

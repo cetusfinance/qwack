@@ -207,9 +207,16 @@ namespace Qwack.Models.Risk
                 }
             }
 
+            if (results.IsEmpty)
+            {
+                _logger.LogWarning("Zero results from VaR calculation");
+                return (0, "ERROR", 0);
+            }
+
             var sortedResults = results.OrderBy(kv => kv.Value).ToList();
             var ixCi = (int)System.Math.Floor(sortedResults.Count() * (1.0 - ci));
             ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
+            
             var ciResult = sortedResults[ixCi];
             var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
             return (ciResult.Value, ciResult.Key, cVaR);

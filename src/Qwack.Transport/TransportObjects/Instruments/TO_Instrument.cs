@@ -56,5 +56,9 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_SyntheticCashAndCarry SyntheticCashAndCarry { get; set; }
         [ProtoMember(122)]
         public TO_AssetFxBasisSwap AssetFxBasisSwap { get; set; }
+        [ProtoMember(123)]
+        public TO_CashBalance CashBalance { get; set; }
+        [ProtoMember(124)]
+        public TO_UnpricedAverage UnpricedAverage { get; set; }
     }
 }

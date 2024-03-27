@@ -145,6 +145,21 @@ namespace Qwack.Core.Instruments.Asset
             return swap;
         }
 
+        public static UnpricedAverage CreateUnpricedAverage(DateTime avgStart, DateTime avgEnd, DateTime promptDate, double premium, string assetId, Calendar fixingCalendar,  Currency currency, TradeDirection promptDirection= TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
+            var effectiveFixingDate = promptDate.SubtractPeriod(RollType.P, fixingCalendar, spotLag);
+            var avgSwap = CreateTermAsianSwap(avgStart, avgEnd, 0, assetId, fixingCalendar, promptDate, currency, promptDirection, spotLag, -notional, fixingDateType);
+            var promptSwap = CreateTermAsianSwap(effectiveFixingDate, effectiveFixingDate, premium, assetId, fixingCalendar, promptDate, currency, promptDirection, spotLag, notional);
+
+            var swap = new UnpricedAverage
+            {
+                PaySwaplets = new[] { avgSwap },
+                RecSwaplets = new[] { promptSwap },
+            };
+
+            return swap;
+        }
+
         public static AssetFxBasisSwap CreateAssetFxBasisSwap(DateTime start, DateTime end, string assetId, double premium, Currency payCcy, Calendar fixingCalendar, Frequency settleLag, Calendar settleCalendar, Frequency spotLag = new Frequency(), double notional = 1)
         {
             var settleDate = end.AddPeriod(RollType.F, settleCalendar, settleLag);

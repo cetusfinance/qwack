@@ -5,6 +5,8 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
+using Qwack.Transport.TransportObjects.Instruments.Asset;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -91,5 +93,37 @@ namespace Qwack.Core.Instruments.Asset
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
+
+        public TO_Instrument ToTransportObject() => new()
+        {
+            AssetInstrumentType = AssetInstrumentType.MultiPeriodBackpricingOption,
+            BackpricingOption = new TO_MultiPeriodBackpricingOption
+            {
+                TradeId = TradeId,
+                Notional = Notional,
+                Direction = Direction,
+                PeriodDates = PeriodDates,
+                DecisionDate = DecisionDate,
+                FixingDates = FixingDates.Select(x => (DateTime[])x.Clone()).ToList(),
+                FixingCalendar = FixingCalendar.Name,
+                PaymentCalendar = PaymentCalendar.Name,
+                SpotLag = SpotLag.ToString(),
+                SpotLagRollType = SpotLagRollType,
+                PaymentLag = PaymentLag.ToString(),
+                PaymentLagRollType = PaymentLagRollType,
+                PaymentDate = PaymentDate,
+                PaymentCurrency = PaymentCurrency,
+                AssetFixingId = AssetFixingId,
+                AssetId = AssetId,
+                DiscountCurve = DiscountCurve,
+                FxConversionType = FxConversionType,
+                FxFixingDates = FxFixingDates?.Select(x => (DateTime[])x.Clone()).ToList(),
+                FxFixingId = FxFixingId,
+                CallPut = CallPut,
+                Counterparty = Counterparty,
+                PortfolioName = PortfolioName,
+                SettlementDate = SettlementDate
+            }
+        };
     }
 }

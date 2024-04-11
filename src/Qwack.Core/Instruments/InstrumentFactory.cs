@@ -48,6 +48,8 @@ namespace Qwack.Core.Instruments
                         return new AssetTrs(transportObject.AssetTrs, currencyProvider, calendarProvider);
                     case AssetInstrumentType.SyntheticCashAndCarry:
                         return new SyntheticCashAndCarry(transportObject.SyntheticCashAndCarry, currencyProvider, calendarProvider);
+                    case AssetInstrumentType.MultiPeriodBackpricingOption:
+                        return transportObject.BackpricingOption.GetBackpricingOption(currencyProvider, calendarProvider);
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)
@@ -167,6 +169,34 @@ namespace Qwack.Core.Instruments
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
         };
 
+        public static MultiPeriodBackpricingOption GetBackpricingOption(this TO_MultiPeriodBackpricingOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            AssetFixingId = transportObject.AssetFixingId,
+            AssetId = transportObject.AssetFixingId,
+            CallPut = transportObject.CallPut,
+            Counterparty = transportObject.Counterparty,
+            PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),
+            DecisionDate = transportObject.DecisionDate,
+            Direction = transportObject.Direction,
+            DiscountCurve = transportObject.DiscountCurve,
+            FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
+            FixingDates = transportObject.FixingDates,
+            FxConversionType = transportObject.FxConversionType,
+            FxFixingDates = transportObject.FxFixingDates,
+            FxFixingId = transportObject.FxFixingId,
+            MetaData = transportObject.MetaData,
+            Notional = transportObject.Notional,
+            PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
+            PaymentDate = transportObject.PaymentDate,
+            PaymentLag = !string.IsNullOrWhiteSpace(transportObject.PaymentLag) ? new Frequency(transportObject.PaymentLag) : 0.Day(),
+            PaymentLagRollType = transportObject.PaymentLagRollType,
+            PeriodDates = transportObject.PeriodDates,
+            PortfolioName = transportObject.PortfolioName,
+            SettlementDate = transportObject.SettlementDate,
+            SpotLag = !string.IsNullOrWhiteSpace(transportObject.SpotLag) ? new Frequency(transportObject.SpotLag) : 0.Day(),
+            SpotLagRollType = transportObject.SpotLagRollType,
+            TradeId = transportObject.TradeId
+        };
 
         public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {

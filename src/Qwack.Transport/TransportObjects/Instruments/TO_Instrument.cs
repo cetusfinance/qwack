@@ -60,5 +60,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_CashBalance CashBalance { get; set; }
         [ProtoMember(124)]
         public TO_UnpricedAverage UnpricedAverage { get; set; }
+        [ProtoMember(125)]
+        public TO_MultiPeriodBackpricingOption BackpricingOption { get; set; }
     }
 }

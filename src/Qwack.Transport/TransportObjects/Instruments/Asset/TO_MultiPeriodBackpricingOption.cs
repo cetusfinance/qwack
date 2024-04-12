@@ -31,7 +31,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(10)]
         public DateTime SettlementDate { get; set; }
         [ProtoMember(11)]
-        public List<DateTime[]> FixingDates { get; set; }
+        public List<DateArray> FixingDates { get; set; }
         [ProtoMember(12)]
         public string FixingCalendar { get; set; }
         [ProtoMember(13)]

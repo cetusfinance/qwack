@@ -180,7 +180,7 @@ namespace Qwack.Core.Instruments
             Direction = transportObject.Direction,
             DiscountCurve = transportObject.DiscountCurve,
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
-            FixingDates = transportObject.FixingDates,
+            FixingDates = transportObject.FixingDates.Select(x=>x.Dates).ToList(),
             FxConversionType = transportObject.FxConversionType,
             FxFixingDates = transportObject.FxFixingDates,
             FxFixingId = transportObject.FxFixingId,

@@ -104,7 +104,7 @@ namespace Qwack.Core.Instruments.Asset
                 Direction = Direction,
                 PeriodDates = PeriodDates,
                 DecisionDate = DecisionDate,
-                FixingDates = FixingDates?.Select(x => (DateTime[])x.Clone())?.ToList(),
+                FixingDates = FixingDates?.Select(x => new DateArray((DateTime[])x.Clone()))?.ToList(),
                 FixingCalendar = FixingCalendar?.Name,
                 PaymentCalendar = PaymentCalendar?.Name,
                 SpotLag = SpotLag.ToString(),

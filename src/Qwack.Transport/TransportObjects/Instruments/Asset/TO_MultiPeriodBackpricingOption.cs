@@ -53,7 +53,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(21)]
         public string FxFixingId { get; set; }
         [ProtoMember(22)]
-        public List<DateTime[]> FxFixingDates { get; set; }
+        public List<DateArray> FxFixingDates { get; set; }
         [ProtoMember(23)]
         public string PaymentCurrency { get; set; }
         [ProtoMember(24)]

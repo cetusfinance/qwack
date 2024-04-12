@@ -342,6 +342,11 @@ namespace Qwack.Core.Instruments.Asset
             var fixingDates = fixingDateType == DateGenerationType.BusinessDays ?
                     periodDates.Select(pd => pd.Item1.BusinessDaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList() :
                     periodDates.Select(pd => pd.Item1.FridaysInPeriod(pd.Item2, fixingCalendar).ToArray()).ToList();
+            return CreateMultiPeriodBackPricingOption(periodDates, fixingDates, decision, assetId, putCall, fixingCalendar, payDate, currency, tradeDirection, spotLag, notional, fixingDateType);
+        }
+
+        public static MultiPeriodBackpricingOption CreateMultiPeriodBackPricingOption(Tuple<DateTime, DateTime>[] periodDates, List<DateTime[]> fixingDates, DateTime decision, string assetId, OptionType putCall, Calendar fixingCalendar, DateTime payDate, Currency currency, TradeDirection tradeDirection = TradeDirection.Long, Frequency spotLag = new Frequency(), double notional = 1, DateGenerationType fixingDateType = DateGenerationType.BusinessDays)
+        {
             return new MultiPeriodBackpricingOption
             {
                 AssetId = assetId,

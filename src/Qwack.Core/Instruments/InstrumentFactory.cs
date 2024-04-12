@@ -182,7 +182,7 @@ namespace Qwack.Core.Instruments
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
             FixingDates = transportObject.FixingDates.Select(x=>x.Dates).ToList(),
             FxConversionType = transportObject.FxConversionType,
-            FxFixingDates = transportObject.FxFixingDates,
+            FxFixingDates = transportObject.FxFixingDates?.Select(x => x.Dates).ToList(),
             FxFixingId = transportObject.FxFixingId,
             MetaData = transportObject.MetaData,
             Notional = transportObject.Notional,

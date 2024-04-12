@@ -117,7 +117,7 @@ namespace Qwack.Core.Instruments.Asset
                 AssetId = AssetId,
                 DiscountCurve = DiscountCurve,
                 FxConversionType = FxConversionType,
-                FxFixingDates = FxFixingDates?.Select(x => (DateTime[])x.Clone())?.ToList(),
+                FxFixingDates = FxFixingDates?.Select(x => new DateArray((DateTime[])x.Clone()))?.ToList(),
                 FxFixingId = FxFixingId,
                 CallPut = CallPut,
                 Counterparty = Counterparty,

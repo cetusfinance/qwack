@@ -172,7 +172,7 @@ namespace Qwack.Core.Instruments
         public static MultiPeriodBackpricingOption GetBackpricingOption(this TO_MultiPeriodBackpricingOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
         {
             AssetFixingId = transportObject.AssetFixingId,
-            AssetId = transportObject.AssetFixingId,
+            AssetId = transportObject.AssetId,
             CallPut = transportObject.CallPut,
             Counterparty = transportObject.Counterparty,
             PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),

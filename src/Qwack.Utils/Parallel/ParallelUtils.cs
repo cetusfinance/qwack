@@ -32,7 +32,18 @@ namespace Qwack.Utils.Parallel
         public bool MultiThreaded { get; set; } = true;
 
         private int _activeThreadCount = 0;
-        private static readonly int numThreads = Environment.ProcessorCount;
+        private static readonly int numThreads = HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount);
+
+        private static int HighestPowerOfTwoLessThanOrEqualTo(int n)
+        {
+            var power = 1;
+
+            while (power <= n / 2)
+            {
+                power <<= 1;
+            }
+            return power;
+        }
 
         private ParallelUtils()
         {

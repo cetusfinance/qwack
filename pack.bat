@@ -1,5 +1,5 @@
 @echo off
-set VERSION=12
+set VERSION=13
 set OUTPUT_DIR=c:\code\packages
 
 dotnet pack ./src/Qwack.Options --configuration Release /p:Version=%VERSION% --output %OUTPUT_DIR% /p:DebugType=Embedded

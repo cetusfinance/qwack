@@ -62,6 +62,7 @@ namespace Qwack.Core.Instruments.Asset
            new Dictionary<string, List<DateTime>>() :
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
+        
 
         public IAssetInstrument Clone() => new BackPricingOption
         {

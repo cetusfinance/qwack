@@ -30,6 +30,7 @@ namespace Qwack.Core.Instruments
             IrSwap irs => irs.ToTransportObject(),
             AssetTrs trs => trs.ToTransportObject(),
             SyntheticCashAndCarry cnc => cnc.ToTransportObject(),
+            MultiPeriodBackpricingOption bpo => bpo.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };
     }

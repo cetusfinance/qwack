@@ -14,7 +14,7 @@ namespace Qwack.Paths
     {
         public int NumberOfBlocks => _numberOfBlocks;
 
-        private static readonly int _numberOfThreads = Environment.ProcessorCount;
+        private static readonly int _numberOfThreads = Min(16, Environment.ProcessorCount);
         private readonly int _numberOfPaths;
         private readonly int _numberOfBlocks;
         private readonly int _factors;

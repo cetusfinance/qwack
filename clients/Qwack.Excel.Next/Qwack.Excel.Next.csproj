@@ -14,8 +14,8 @@
     <PackageReference Include="ExcelDna.AddIn" Version="1.6.0" />
     <PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
       <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
-      <PackageReference Include="Microsoft.Windows.Compatibility" Version="6.0.0" />
-      <PackageReference Include="Azure.Identity" Version="1.8.0" />
+      <PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.4" />
+      <PackageReference Include="Azure.Identity" Version="1.11.0" />
   </ItemGroup>
 
   <ItemGroup>

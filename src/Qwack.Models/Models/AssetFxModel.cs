@@ -337,18 +337,21 @@ namespace Qwack.Models
 
         public void OverrideBuildDate(DateTime buildDate) => _buildDate = buildDate;
 
-        public TO_AssetFxModel ToTransportObject() =>
-            new()
-            {
-                AssetCurves = _assetCurves?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
-                AssetVols = _assetVols?.ToDictionary(x => x.Key.GetTransportObject(), x => x.Value.GetTransportObject()),
-                BuildDate = BuildDate,
-                CorrelationMatrix = CorrelationMatrix?.GetTransportObject(),
-                Fixings = _fixings?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject()),
-                FundingModel = _fundingModel.GetTransportObject(),
-                Portfolio = _portfolio?.ToTransportObject(),
-            };
-
+        public TO_AssetFxModel ToTransportObject()
+        {
+            var returnObject = new TO_AssetFxModel();
+            returnObject.AssetCurves = _assetCurves?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject());
+            returnObject.AssetVols = _assetVols?.ToDictionary(x => x.Key.GetTransportObject(), x => x.Value.GetTransportObject());
+            returnObject.BuildDate = BuildDate;
+            returnObject.CorrelationMatrix = CorrelationMatrix?.GetTransportObject();
+            returnObject.Fixings = _fixings?.ToDictionary(x => x.Key, x => x.Value.GetTransportObject());
+            returnObject.FundingModel = _fundingModel.GetTransportObject();
+            returnObject.Portfolio = _portfolio?.ToTransportObject();
+            return returnObject;
+        }
+            
+            
+            
         public void RemovePriceCurve(IPriceCurve curve) => _assetCurves.Remove(curve.Name);
 
         public void RemoveVolSurface(IVolSurface surface)

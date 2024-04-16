@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Qwack.Math.Extensions;
 using static System.Math;
 
@@ -18,15 +19,18 @@ namespace Qwack.Math
 
         public static double NormInv(double p) => NormInv(p, 0.0, 1.0);
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowOutOfRange(string message) => throw new ArgumentOutOfRangeException(message);
+
         public static double NormInv(double p, double mu, double sigma)
         {
             if (p is < 0 or > 1)
             {
-                throw new ArgumentOutOfRangeException("The probality p must be bigger than 0 and smaller than 1");
+                ThrowOutOfRange("The probality p must be bigger than 0 and smaller than 1");
             }
             if (sigma < 0)
             {
-                throw new ArgumentOutOfRangeException("The standard deviation sigma must be positive");
+                ThrowOutOfRange("The standard deviation sigma must be positive");
             }
 
             if (p == 0)

@@ -79,7 +79,7 @@ namespace Qwack.Models.MCModels
                     break;
                 case RandomGeneratorType.Sobol:
                     var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
-                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1000)
+                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
                     {
                         UseNormalInverse = true
                     });

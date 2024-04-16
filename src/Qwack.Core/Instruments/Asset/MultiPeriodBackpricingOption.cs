@@ -94,6 +94,41 @@ namespace Qwack.Core.Instruments.Asset
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
 
+        public void FromTransportObject(TO_Instrument to_instrument, ICalendarProvider calendarProvider, ICurrencyProvider currencyProvider)
+        {
+            if(to_instrument.AssetInstrumentType != AssetInstrumentType.MultiPeriodBackpricingOption)
+            {
+                throw new InvalidOperationException("Incorrect instrument type");
+            }
+            var to = to_instrument.BackpricingOption ?? throw new InvalidOperationException("Missing backpricing option details");
+
+            TradeId = to.TradeId;
+            Notional = to.Notional;
+            Direction = to.Direction;
+            PeriodDates = to.PeriodDates;
+            DecisionDate = to.DecisionDate;
+            FixingDates = to.FixingDates.Select(fx => fx.Dates).ToList();
+            FixingCalendar = to.FixingCalendar == null ? null : calendarProvider.GetCalendar(to.FixingCalendar);
+            PaymentCalendar = to.PaymentCalendar == null ? null : calendarProvider.GetCalendar(to.PaymentCalendar);
+            SpotLag = new Frequency(to.SpotLag);
+            SpotLagRollType = to.SpotLagRollType;
+            PaymentLag = new Frequency(to.PaymentLag);
+            PaymentLagRollType = to.PaymentLagRollType;
+            PaymentDate = to.PaymentDate;
+            PaymentCurrency = currencyProvider.GetCurrency(to.PaymentCurrency);
+            AssetFixingId = to.AssetFixingId;
+            AssetId = to.AssetId;
+            DiscountCurve = to.DiscountCurve;
+            FxConversionType = to.FxConversionType;
+            FxFixingDates = to.FxFixingDates?.Select(fx => fx.Dates).ToList();
+            FxFixingId = to.FxFixingId;
+            CallPut = to.CallPut;
+            Counterparty = to.Counterparty;
+            PortfolioName = to.PortfolioName;
+            SettlementDate = to.SettlementDate;
+
+        }
+
         public TO_Instrument ToTransportObject() => new()
         {
             AssetInstrumentType = AssetInstrumentType.MultiPeriodBackpricingOption,

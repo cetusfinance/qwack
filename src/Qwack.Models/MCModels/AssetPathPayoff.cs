@@ -234,7 +234,7 @@ namespace Qwack.Models.MCModels
                     break;
                 case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate = mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd());
-                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, settleFixingDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional)
+                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, settleFixingDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional, mbpo.IsOption)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {

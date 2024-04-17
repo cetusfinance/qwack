@@ -35,6 +35,9 @@ namespace Qwack.Core.Instruments.Asset
         public string AssetId { get; set; }
         public string AssetFixingId { get; set; }
         public string FxFixingId { get; set; }
+
+        public bool IsOption { get; set; }
+
         public List<DateTime[]> FxFixingDates { get; set; }
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
@@ -89,7 +92,8 @@ namespace Qwack.Core.Instruments.Asset
             CallPut = CallPut,
             Counterparty = Counterparty,
             PortfolioName = PortfolioName,
-            SettlementDate = SettlementDate
+            SettlementDate = SettlementDate,
+            IsOption = IsOption,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -126,7 +130,7 @@ namespace Qwack.Core.Instruments.Asset
             Counterparty = to.Counterparty;
             PortfolioName = to.PortfolioName;
             SettlementDate = to.SettlementDate;
-
+            IsOption = to.IsOption;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -157,7 +161,8 @@ namespace Qwack.Core.Instruments.Asset
                 CallPut = CallPut,
                 Counterparty = Counterparty,
                 PortfolioName = PortfolioName,
-                SettlementDate = SettlementDate
+                SettlementDate = SettlementDate,
+                IsOption = IsOption,
             }
         };
     }

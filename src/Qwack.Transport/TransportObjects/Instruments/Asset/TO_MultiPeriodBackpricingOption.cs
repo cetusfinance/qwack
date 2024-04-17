@@ -60,5 +60,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         [ProtoMember(25)]
         public string DiscountCurve { get; set; }
+        [ProtoMember(26)]
+        public bool IsOption { get; set; }
     }
 }

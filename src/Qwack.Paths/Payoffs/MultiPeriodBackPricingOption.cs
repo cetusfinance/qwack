@@ -40,6 +40,7 @@ namespace Qwack.Paths.Payoffs
         private Vector<double> _notional;
         private bool _isComplete;
         private double _expiryToSettleCarry;
+        private bool _isOption;
 
         private readonly Vector<double> _one = new(1.0);
 
@@ -50,7 +51,7 @@ namespace Qwack.Paths.Payoffs
 
         public IAssetFxModel VanillaModel { get; set; }
 
-        public MultiPeriodBackPricingOption(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional)
+        public MultiPeriodBackPricingOption(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime settlementFixingDate, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -61,6 +62,7 @@ namespace Qwack.Paths.Payoffs
             _payDate = payDate;
             _assetName = assetName;
             _notional = new Vector<double>(notional);
+            _isOption = isOption;
 
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
@@ -168,12 +170,13 @@ namespace Qwack.Paths.Payoffs
                         Vector.Max(avgs[a], avgVec);
                 }
 
-
                 var setVec = new Vector<double>(setReg);
 
-                var payoff = (_callPut == OptionType.C) ?
-                        Vector.Max(new Vector<double>(0), setVec - avgVec) :
-                        Vector.Max(new Vector<double>(0), avgVec - setVec);
+                var payoff = _callPut == OptionType.C ? setVec - avgVec : avgVec - setVec;
+                if (_isOption)
+                {
+                    payoff = Vector.Max(new Vector<double>(0), payoff);
+                }
 
                 var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                 _results[resultIx] = payoff * _notional;

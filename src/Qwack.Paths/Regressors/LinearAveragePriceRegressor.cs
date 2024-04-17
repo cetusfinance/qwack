@@ -18,6 +18,7 @@ namespace Qwack.Paths.Regressors
         private int[] _assetIxs;
         private double[] _pathwiseValuesReg;
         private double[][] _pathwiseValuesFwd;
+        private double[] _pathwiseFwdsSingleDim;
         private readonly DateTime _regressionDate;
         private readonly DateTime[] _fixingDates;
         private readonly string _regressionKey;
@@ -38,9 +39,12 @@ namespace Qwack.Paths.Regressors
         public void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
+
+
             var assetNames = _regressionKey.Split('*');
             _assetIxs = assetNames.Select(x => dims.GetDimension(x)).ToArray();
             _nDims = _assetIxs.Length;
+            if (_nDims > 2) throw new InvalidOperationException("Only supports Single Asset and FX");
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dateIxRegression = dates.GetDateIndex(_regressionDate);
@@ -49,40 +53,80 @@ namespace Qwack.Paths.Regressors
             var engine = collection.GetFeature<IEngineFeature>();
 
             _pathwiseValuesReg = new double[engine.NumberOfPaths];
-            _pathwiseValuesFwd = new double[engine.NumberOfPaths][];
 
-            for (var i = 0; i < _pathwiseValuesFwd.Length; i++)
-                _pathwiseValuesFwd[i] = new double[_fixingDates.Length];
+            if (_nDims > 1)
+            {
+                _pathwiseValuesFwd = new double[engine.NumberOfPaths][];
 
+                for (var i = 0; i < _pathwiseValuesFwd.Length; i++)
+                    _pathwiseValuesFwd[i] = new double[_fixingDates.Length];
+            }
+            else
+            {
+                _pathwiseFwdsSingleDim = new double[engine.NumberOfPaths];
+            }
             IsComplete = true;
         }
 
-        public void Process(IPathBlock block)
+        private void ProcessMultiDim(IPathBlock block)
         {
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
                 for (var d = 0; d < _nDims; d++)
                 {
                     var steps = block.GetStepsForFactor(path, _assetIxs[d]);
-
-                    for (var fd = 0; fd < _dateIxsFwd.Length; fd++)
+                    if (d == 0)
                     {
-                        for (var v = 0; v < Vector<double>.Count; v++)
+                        for (var fd = 0; fd < _dateIxsFwd.Length; fd++)
                         {
-                            if (d == 0)
+                            for (var v = 0; v < Vector<double>.Count; v++)
                             {
+
                                 _pathwiseValuesFwd[block.GlobalPathIndex + path + v][fd] = steps[_dateIxsFwd[fd]][v];
                                 _pathwiseValuesReg[block.GlobalPathIndex + path + v] = steps[_dateIxRegression][v];
                             }
-                            else
+                        }
+                    }
+                    else
+                    {
+                        for (var fd = 0; fd < _dateIxsFwd.Length; fd++)
+                        {
+                            for (var v = 0; v < Vector<double>.Count; v++)
                             {
+
                                 _pathwiseValuesFwd[block.GlobalPathIndex + path + v][fd] *= steps[_dateIxsFwd[fd]][v];
                                 _pathwiseValuesReg[block.GlobalPathIndex + path + v] *= steps[_dateIxRegression][v];
+
                             }
                         }
                     }
                 }
             }
+        }
+
+        private void ProcessSingleDim(IPathBlock block)
+        {
+            var dateForwardLength  = _dateIxsFwd.Length;
+            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+            {
+                var steps = block.GetStepsForFactor(path, _assetIxs[0]);
+
+                for (var fd = 0; fd < dateForwardLength; fd++)
+                {
+                    for (var v = 0; v < Vector<double>.Count; v++)
+                    {
+
+                        _pathwiseFwdsSingleDim[block.GlobalPathIndex + path + v] += (steps[_dateIxsFwd[fd]][v] / dateForwardLength);
+                        _pathwiseValuesReg[block.GlobalPathIndex + path + v] = steps[_dateIxRegression][v];
+                    }
+                }
+            }
+        }
+
+        public void Process(IPathBlock block)
+        {
+            if (_nDims > 1) ProcessMultiDim(block);
+            else ProcessSingleDim(block);
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
@@ -94,14 +138,22 @@ namespace Qwack.Paths.Regressors
 
         public IInterpolator1D PerformRegression()
         {
-            var nPaths = _pathwiseValuesFwd.Length;
-            var pathAvgs = _pathwiseValuesFwd.Select(x => x.Average()).ToArray();
+            if (_nDims > 1)
+            {
+                var nPaths = _pathwiseValuesFwd.Length;
+                var pathAvgs = _pathwiseValuesFwd.Select(x => x.Average()).ToArray();
 
-            if (_pathwiseValuesReg.All(x => x == _pathwiseValuesReg.First()) && pathAvgs.All(x => x == pathAvgs.First()))
-                return new ParametricLinearInterpolator(pathAvgs.First(), 0.0);
+                if (_pathwiseValuesReg.All(x => x == _pathwiseValuesReg.First()) && pathAvgs.All(x => x == pathAvgs.First()))
+                    return new ParametricLinearInterpolator(pathAvgs.First(), 0.0);
 
-            var lr = LinearRegression.LinearRegressionVector(_pathwiseValuesReg, pathAvgs);
-            return new ParametricLinearInterpolator(lr.Alpha, lr.Beta);
+                var lr = LinearRegression.LinearRegressionVector(_pathwiseValuesReg, pathAvgs);
+                return new ParametricLinearInterpolator(lr.Alpha, lr.Beta);
+            }
+            else
+            {
+                var lr = LinearRegression.LinearRegressionVector(_pathwiseValuesReg, _pathwiseFwdsSingleDim);
+                return new ParametricLinearInterpolator(lr.Alpha, lr.Beta);
+            }
         }
 
         public double Predict(double spot)

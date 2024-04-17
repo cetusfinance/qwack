@@ -91,7 +91,7 @@ namespace Qwack.Paths.Processes
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 var c = 0;
-                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
+                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate).OrderBy(x=>x.Key))
                 {
                     steps[c] = new Vector<double>(kv.Value);
                     c++;

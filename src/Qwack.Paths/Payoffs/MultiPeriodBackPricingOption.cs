@@ -66,7 +66,7 @@ namespace Qwack.Paths.Payoffs
                 _fxName = $"USD/{_ccy.Ccy}";
 
             AverageRegressors = avgDates.Select(avg => avg.Last() > decisionDate ? new LinearAveragePriceRegressor(decisionDate, avg.Where(x => x > decisionDate).ToArray(), RegressionKey) : null).ToArray();
-            SettlementRegressor = new LinearAveragePriceRegressor(decisionDate, new[] { _settleFixingDate }, RegressionKey);
+            SettlementRegressor = _settleFixingDate==_decisionDate ? null : new LinearAveragePriceRegressor(decisionDate, new[] { _settleFixingDate }, RegressionKey);
         }
 
         public bool IsComplete => _isComplete;
@@ -157,7 +157,7 @@ namespace Qwack.Paths.Payoffs
                         for (var i = 0; i < Vector<double>.Count; i++)
                         {
                             futSum[i] = AverageRegressors[a] == null ? 0.0 : AverageRegressors[a].Predict(spotAtExpiry[i]) * _nFuture[a];
-                            setReg[i] = SettlementRegressor.Predict(spotAtExpiry[i]);
+                            setReg[i] = SettlementRegressor?.Predict(spotAtExpiry[i]) ?? spotAtExpiry[i];
                         }
                         var futVec = new Vector<double>(futSum);
                         avgs[a] = (futVec + pastSum) / nTotalVec[a];

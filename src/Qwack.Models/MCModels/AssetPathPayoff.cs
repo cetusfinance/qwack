@@ -233,16 +233,21 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
                 case MultiPeriodBackpricingOption mbpo:
-                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, mbpo.SettlementDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional)
+                    var settleFixingDate = mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd());
+                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, settleFixingDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         mbp
                     };
-                    if (mbp.AverageRegressors != null)
+                    if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
                         Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
-                    else
+                    else if (mbp.SettlementRegressor != null)
                         Regressors = new[] { mbp.SettlementRegressor };
+                    else if (mbp.AverageRegressors != null)
+                        Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
+                    else 
+                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
                     break;
             }
             _isCompo = _fxType is FxConversionType.ConvertThenAverage or FxConversionType.AverageThenConvert;

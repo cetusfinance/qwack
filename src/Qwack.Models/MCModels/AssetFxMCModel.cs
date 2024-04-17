@@ -415,18 +415,33 @@ namespace Qwack.Models.MCModels
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider, settings.ReportingCurrency));
             if (!settings.AvoidRegressionForBackPricing && _payoffs.Any(x => x.Value.Regressors != null))
             {
-                var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
-                    .SelectMany(x => x.Value.Regressors)
-                    .Distinct();
+                //var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
+                //    .SelectMany(x => x.Value.Regressors)
+                //    .Distinct();
 
-                foreach (var regressor in regressorsToAdd)
+                //foreach (var regressor in regressorsToAdd)
+                //{
+                //    Engine.AddPathProcess(regressor);
+                //    foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
+                //    {
+                //        if (payoff.Value.Regressors.Any(x => x == regressor))
+                //            payoff.Value.SetRegressor(regressor);
+                //    }
+                //}
+
+                //Engine.IncrementDepth();
+
+
+
+                foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
                 {
-                    Engine.AddPathProcess(regressor);
-                    foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
-                    {
-                        if (payoff.Value.Regressors.Any(x => x == regressor))
-                            payoff.Value.SetRegressor(regressor);
-                    }
+                    foreach(var regressor in payoff.Value.Regressors)
+                        Engine.AddPathProcess(regressor);
+                    //foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
+                    //{
+                    //    if (payoff.Value.Regressors.Any(x => x == regressor))
+                    //        payoff.Value.SetRegressor(regressor);
+                    //}
                 }
 
                 Engine.IncrementDepth();

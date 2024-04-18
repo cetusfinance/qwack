@@ -30,6 +30,7 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
+        private Vector<double>[] _fixings;
 
         private readonly bool _siegelInvert;
 
@@ -81,6 +82,18 @@ namespace Qwack.Paths.Processes
 
                 prevSpot = spot;
             }
+
+            var dates = collection.GetFeature<ITimeStepsFeature>();
+            var fixings = new List<Vector<double>>();
+            for (var d = 0; d < dates.Dates.Length; d++)
+            {
+                var date = dates.Dates[d];
+                if (date >= _startDate) break;
+                var vect = new Vector<double>(_pastFixings[date]);
+                fixings.Add(vect);
+            }
+            _fixings = [.. fixings];
+
             _isComplete = true;
         }
 
@@ -90,12 +103,8 @@ namespace Qwack.Paths.Processes
             {
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
-                var c = 0;
-                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate).OrderBy(x=>x.Key))
-                {
-                    steps[c] = new Vector<double>(kv.Value);
-                    c++;
-                }
+                var c = _fixings.Length;
+                _fixings.AsSpan().CopyTo(steps);
                 steps[c] = previousStep;
 
                 if (_siegelInvert)

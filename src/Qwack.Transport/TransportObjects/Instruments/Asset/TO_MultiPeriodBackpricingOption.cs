@@ -62,5 +62,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string DiscountCurve { get; set; }
         [ProtoMember(26)]
         public bool IsOption { get; set; }
+        [ProtoMember(27)]
+        public DateTime[] SettlementFixingDates { get; set; }
     }
 }

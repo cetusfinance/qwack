@@ -23,6 +23,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public Tuple<DateTime, DateTime>[] PeriodDates { get; set; }
         public DateTime DecisionDate { get; set; }
+        public DateTime[] SettlementFixingDates { get; set; }
         public DateTime SettlementDate { get; set; }
         public List<DateTime[]> FixingDates { get; set; }
         public Calendar FixingCalendar { get; set; }
@@ -93,6 +94,7 @@ namespace Qwack.Core.Instruments.Asset
             Counterparty = Counterparty,
             PortfolioName = PortfolioName,
             SettlementDate = SettlementDate,
+            SettlementFixingDates = SettlementFixingDates,
             IsOption = IsOption,
         };
 
@@ -130,6 +132,7 @@ namespace Qwack.Core.Instruments.Asset
             Counterparty = to.Counterparty;
             PortfolioName = to.PortfolioName;
             SettlementDate = to.SettlementDate;
+            SettlementFixingDates = to.SettlementFixingDates;
             IsOption = to.IsOption;
         }
 
@@ -162,6 +165,7 @@ namespace Qwack.Core.Instruments.Asset
                 Counterparty = Counterparty,
                 PortfolioName = PortfolioName,
                 SettlementDate = SettlementDate,
+                SettlementFixingDates = SettlementFixingDates,
                 IsOption = IsOption,
             }
         };

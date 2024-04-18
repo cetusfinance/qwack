@@ -68,7 +68,7 @@ namespace Qwack.Models.MCModels
                         bpob.VanillaModel = value;
                         break;
                     case MultiPeriodBackpricingOption mpbpo:
-                        var mbpob = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOption;
+                        var mbpob = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOptionPP;
                         mbpob.VanillaModel = value;
                         break;
                 }
@@ -96,7 +96,7 @@ namespace Qwack.Models.MCModels
                     if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
                     break;
                 case MultiPeriodBackpricingOption mpbpo:
-                    var mbpo = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOption;
+                    var mbpo = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOptionPP;
                     if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
                     for (var i = 0; i < mbpo.AverageRegressors.Length; i++)
                         if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
@@ -233,8 +233,12 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
                 case MultiPeriodBackpricingOption mbpo:
-                    var settleFixingDate = mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd());
-                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOption(mbpo.AssetId, mbpo.FixingDates, mbpo.DecisionDate, settleFixingDate, mbpo.SettlementDate, mbpo.CallPut, mbpo.DiscountCurve, mbpo.PaymentCurrency, mbpo.Notional, mbpo.IsOption)
+                    var settleFixingDate = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
+                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
+                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] {settleFixingDate},
+                                                                             mbpo.SettlementDate, mbpo.CallPut,
+                                                                             mbpo.DiscountCurve, mbpo.PaymentCurrency,
+                                                                             mbpo.Notional, mbpo.IsOption)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {

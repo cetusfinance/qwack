@@ -207,6 +207,7 @@ namespace Qwack.Paths.Payoffs
         {
             var dates = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             dates.AddDates(_avgDates.SelectMany(x => x));
+            dates.AddDates(_settleFixingDates);
             dates.AddDate(_payDate);
             dates.AddDate(_decisionDate);
         }

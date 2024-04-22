@@ -232,7 +232,7 @@ namespace Qwack.Models.MCModels
                     else
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
-                case MultiPeriodBackpricingOption mbpo:
+                case MultiPeriodBackpricingOption mbpo: 
                     var settleFixingDate = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     var mbp = new Paths.Payoffs.MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
                                                                              mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] {settleFixingDate},

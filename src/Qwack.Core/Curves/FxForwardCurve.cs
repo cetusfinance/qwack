@@ -65,7 +65,7 @@ namespace Qwack.Core.Curves
             return GetPriceForDate(pair.SpotDate(date));
         }
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
         {
             var o = new Dictionary<string, IPriceCurve>();
             return o;

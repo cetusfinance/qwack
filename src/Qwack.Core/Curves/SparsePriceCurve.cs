@@ -76,7 +76,7 @@ namespace Qwack.Core.Curves
         public double GetPriceForDate(DateTime date) => _interpB.Interpolate(date.ToOADate());
         public double GetPriceForFixingDate(DateTime date) => _interpB.Interpolate(date.AddPeriod(RollType.F, SpotCalendar, SpotLag).ToOADate());
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
         {
             var o = new Dictionary<string, IPriceCurve>();
             for (var i = 0; i < _pillarDates.Length; i++)

@@ -11,6 +11,7 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
+using Qwack.Models.MCModels;
 using Qwack.Models.Risk;
 using Qwack.Options;
 using Qwack.Options.Asians;
@@ -1474,12 +1475,13 @@ namespace Qwack.Models.Models
         }
 
 
-        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model)
+        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetDelta(false);
+            return m.AssetDelta(false, pointsToBump: pointsToBump);
         }
+        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null) => model.AssetDelta(false, pointsToBump:pointsToBump);
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {
@@ -1495,12 +1497,13 @@ namespace Qwack.Models.Models
             return m.FxDeltaRaw(homeCcy, currencyProvider, computeGamma);
         }
 
-        public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model)
+        public static ICube AssetDeltaGamma(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetDelta(true);
+            return m.AssetDelta(true, pointsToBump: pointsToBump);
         }
+        public static ICube AssetDeltaGamma(this IPvModel model, DateTime[] pointsToBump = null) => model.AssetDelta(true, pointsToBump: pointsToBump);
 
 
         public static ICube AssetVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
@@ -1508,7 +1511,6 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.AssetVega(reportingCcy);
-
         }
 
         public static ICube AssetSegaRega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
@@ -1516,7 +1518,6 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.AssetSegaRega(reportingCcy);
-
         }
 
         public static ICube FxVega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
@@ -1524,7 +1525,6 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.FxVega(reportingCcy);
-
         }
 
         public static ICube FxSegaRega(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy)
@@ -1532,7 +1532,6 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.FxSegaRega(reportingCcy);
-
         }
 
         public static ICube AssetIrDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy = null, double bumpSize = 0.0001)
@@ -1540,7 +1539,6 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.AssetIrDelta(reportingCcy, bumpSize);
-
         }
 
         public static ICube CorrelationDelta(this Portfolio portfolio, IAssetFxModel model, Currency reportingCcy, double epsilon)
@@ -1555,6 +1553,10 @@ namespace Qwack.Models.Models
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
             return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
+        }
+        public static ICube AssetTheta(this IPvModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        {
+            return model.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
         }
 
         public static ICube AssetAnalyticTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)

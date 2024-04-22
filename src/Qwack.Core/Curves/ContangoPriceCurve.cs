@@ -88,7 +88,7 @@ namespace Qwack.Core.Curves
             return Spot * (1.0 + contango * t);
         }
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
         {
             var o = new Dictionary<string, IPriceCurve>();
             var cSpot = new ContangoPriceCurve(BuildDate, Spot + bumpSize, SpotDate, PillarDates, Contangos, _currencyProvider, Basis)

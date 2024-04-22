@@ -27,6 +27,8 @@ namespace Qwack.Paths.Processes
         private ITimeStepsFeature _timesteps;
         [SkipSerialization]
         private readonly Func<double, double> _forwardCurve;
+        [SkipSerialization]
+        private readonly Func<DateTime, double> _forwardCurve2;
         private bool _isComplete;
         private double[] _drifts;
         private double[] _vols;
@@ -138,6 +140,7 @@ namespace Qwack.Paths.Processes
             _factorIndex = mappingFeature.AddDimension(_name);
 
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
+            _timesteps.AddDate(_startDate);
             _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
 
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;

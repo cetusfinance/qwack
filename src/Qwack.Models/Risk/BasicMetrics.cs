@@ -698,7 +698,7 @@ namespace Qwack.Models.Risk
 
 
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -752,8 +752,8 @@ namespace Qwack.Models.Risk
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
                 var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
-                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
-                var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
+                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, pointsToBump);
+                var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, pointsToBump) : null;
 
                 ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
                 {

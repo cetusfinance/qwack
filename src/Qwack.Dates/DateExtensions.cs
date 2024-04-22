@@ -866,5 +866,45 @@ namespace Qwack.Dates
         }
 
         public static int DaysInMonth(this DateTime date) => date.LastDayOfMonth().AddDays(1).Subtract(date.FirstDayOfMonth()).Days;
+
+        public static bool IsSparseLMEDate(this DateTime curvePointDate, DateTime valDate, ICalendarProvider calendars)
+        {
+            if (curvePointDate == curvePointDate.ThirdWednesday())
+                return true;
+
+            var usdCal = calendars.GetCalendar("USD");
+            var gbpCal = calendars.GetCalendar("GBP");
+
+            var cash = valDate.SpotDate(2.Bd(), gbpCal, usdCal);
+            if (curvePointDate == cash)
+                return true;
+
+            var gbpUsdCal = calendars.GetCalendar("GBP+USD");
+
+            var m3 = valDate.AddPeriod(RollType.LME, gbpUsdCal, 3.Months());
+            if (curvePointDate == m3)
+                return true;
+
+            return false;
+        }
+
+        public static bool IsLMEDate(this DateTime curvePointDate, DateTime valDate, ICalendarProvider calendars)
+        {
+            if (valDate >= curvePointDate) return false;
+
+            var gbpUsdCal = calendars.GetCalendar("GBP+USD");
+            var m3 = valDate.AddPeriod(RollType.LME, gbpUsdCal, 3.Months());
+
+            if (curvePointDate <= m3 && !gbpUsdCal.IsHoliday(curvePointDate))
+                return true;
+
+            if (curvePointDate.Month <= (m3.Month + 3) && curvePointDate.DayOfWeek == DayOfWeek.Wednesday && !gbpUsdCal.IsHoliday(curvePointDate))
+                return true;
+
+            if (curvePointDate == curvePointDate.ThirdWednesday())
+                return true;
+
+            return false;
+        }
     }
 }

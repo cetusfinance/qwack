@@ -82,9 +82,9 @@ namespace Qwack.Core.Curves
             return commofwd * fxfwd;
         }
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
         {
-            var b = pCurveFunc.Invoke().GetDeltaScenarios(bumpSize, LastDateToBump);
+            var b = pCurveFunc.Invoke().GetDeltaScenarios(bumpSize, LastDateToBump, sparsePointsToBump);
 
             var o = b.ToDictionary(k => k.Key, v => (IPriceCurve)new CompositePriceCurve(BuildDate, () => v.Value, fModelFunc, CompoCurrency));
             return o;

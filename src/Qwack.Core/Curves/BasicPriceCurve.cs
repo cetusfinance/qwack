@@ -98,34 +98,64 @@ namespace Qwack.Core.Curves
         public double GetPriceForDate(DateTime date) => _interp.Interpolate(date.ToOADate());
         public double GetPriceForFixingDate(DateTime date) => _interp.Interpolate(date.AddPeriod(RollType.F, SpotCalendar, SpotLag).ToOADate());
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
         {
             var o = new Dictionary<string, IPriceCurve>();
 
-            var lastBumpIx = _pillarDates.Length;
-
-            if (LastDateToBump.HasValue)
+            if (sparsePointsToBump != null)
             {
-                var ix = Array.BinarySearch(_pillarDates, LastDateToBump.Value);
-                ix = (ix < 0) ? ~ix : ix;
-                ix += 2;
-                lastBumpIx = System.Math.Min(ix, lastBumpIx); //cap at last pillar
-            }
-
-            for (var i = 0; i < lastBumpIx; i++)
-            {
-                var bumpedCurve = _prices.Select((x, ix) => ix == i ? x + bumpSize : x).ToArray();
-                var c = new BasicPriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType, _currencyProvider, _pillarLabels)
+                var pricesDict = sparsePointsToBump.ToDictionary(x => x, GetPriceForDate);
+                var pricesSparse = _pillarDates.Select(x =>(double?)(pricesDict.TryGetValue(x, out var y) ? y : null)).ToArray();
+                for (var i = 0; i < sparsePointsToBump.Length; i++)
                 {
-                    CollateralSpec = CollateralSpec,
-                    Currency = Currency,
-                    AssetId = AssetId,
-                    SpotCalendar = SpotCalendar,
-                    SpotLag = SpotLag
-                };
-                var name = _pillarLabels[i];
-                o.Add(name, c);
+                    var curvePointIx = Array.IndexOf(_pillarDates, sparsePointsToBump[i]);
+
+                    if (curvePointIx < 0)
+                        continue;
+
+                    var bumpedCurveSparse = pricesSparse.Select((x, ix) => (ix == curvePointIx ? x + bumpSize : x) as double?).ToArray();
+                    var bumpedCurveBent = CurveBender.Bend(_prices, bumpedCurveSparse);
+                    var c = new BasicPriceCurve(BuildDate, _pillarDates, bumpedCurveBent, _curveType, _currencyProvider, _pillarLabels)
+                    {
+                        CollateralSpec = CollateralSpec,
+                        Currency = Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = SpotCalendar,
+                        SpotLag = SpotLag
+                    };
+         
+                    var name = _pillarLabels[curvePointIx];
+                    o.Add(name, c);
+                }
             }
+            else
+            {
+                var lastBumpIx = _pillarDates.Length;
+
+                if (LastDateToBump.HasValue)
+                {
+                    var ix = Array.BinarySearch(_pillarDates, LastDateToBump.Value);
+                    ix = (ix < 0) ? ~ix : ix;
+                    ix += 2;
+                    lastBumpIx = System.Math.Min(ix, lastBumpIx); //cap at last pillar
+                }
+
+                for (var i = 0; i < lastBumpIx; i++)
+                {
+                    var bumpedCurve = _prices.Select((x, ix) => ix == i ? x + bumpSize : x).ToArray();
+                    var c = new BasicPriceCurve(BuildDate, _pillarDates, bumpedCurve, _curveType, _currencyProvider, _pillarLabels)
+                    {
+                        CollateralSpec = CollateralSpec,
+                        Currency = Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = SpotCalendar,
+                        SpotLag = SpotLag
+                    };
+                    var name = _pillarLabels[i];
+                    o.Add(name, c);
+                }
+            }
+
             return o;
         }
 

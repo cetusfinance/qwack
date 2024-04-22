@@ -23,7 +23,7 @@ namespace Qwack.Core.Curves
 
         int NumberOfPillars { get; }
 
-        Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump);
+        Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null);
 
         IPriceCurve RebaseDate(DateTime newAnchorDate);
 

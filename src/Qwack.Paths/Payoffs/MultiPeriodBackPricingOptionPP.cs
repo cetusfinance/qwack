@@ -115,7 +115,9 @@ namespace Qwack.Paths.Payoffs
             {
                 var curve = VanillaModel.GetPriceCurve(_assetName);
                 var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-                _expiryToSettleCarry = curve.GetAveragePriceForDates(_settleFixingDates) / curve.GetPriceForDate(decisionSpotDate);
+                var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
+
+                _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(decisionSpotDate);
 
                 var expToAvg = new List<double>();
                 foreach(var ad in _avgDates)
@@ -123,7 +125,7 @@ namespace Qwack.Paths.Payoffs
                     double carry = 0;
                     if(ad.First()>_decisionDate)
                     {
-                        var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).ToArray();
+                        var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x=>x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
                         carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(decisionSpotDate);
                     }
                     expToAvg.Add(carry);

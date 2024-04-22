@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Models;
+using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 
 namespace Qwack.Paths.Features
@@ -58,7 +60,8 @@ namespace Qwack.Paths.Features
                     index++;
                     continue;
                 }
-                _times[index] = ((d - firstDate).TotalDays / 365.0);
+           
+                _times[index] = firstDate.CalculateYearFraction(d, DayCountBasis.ACT365F, false);
                 _timeSteps[index] = _times[index] - _times[index - 1];
                 _timeStepsSqrt[index] = System.Math.Sqrt(_timeSteps[index]);
                 index++;

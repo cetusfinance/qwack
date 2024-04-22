@@ -1475,13 +1475,13 @@ namespace Qwack.Models.Models
         }
 
 
-        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null)
+        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetDelta(false, pointsToBump: pointsToBump);
+            return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
         }
-        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null) => model.AssetDelta(false, pointsToBump:pointsToBump);
+        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null) => model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {

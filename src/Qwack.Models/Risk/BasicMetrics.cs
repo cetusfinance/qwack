@@ -8,6 +8,7 @@ using Qwack.Core.Curves;
 using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
+using Qwack.Dates;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;
@@ -696,9 +697,7 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
-
-
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -751,9 +750,20 @@ namespace Qwack.Models.Risk
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
                 var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
-
-                var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, pointsToBump);
-                var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, pointsToBump) : null;
+                
+                Dictionary<string, IPriceCurve> bumpedCurves;
+                Dictionary<string, IPriceCurve> bumpedDownCurves;
+                if (isSparseLMEMode)
+                {
+                    var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, sparseDates);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, sparseDates) : null;
+                }
+                else
+                {
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, pointsToBump);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, pointsToBump) : null;
+                }
 
                 ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
                 {

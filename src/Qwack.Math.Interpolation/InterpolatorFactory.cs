@@ -18,7 +18,7 @@ namespace Qwack.Math.Interpolation
                 x = newx;
                 y = newy;
             }
-            if (!isSorted)
+            if (!isSorted && x.Length > 1)
             {
                 Array.Sort(x, y);
             }

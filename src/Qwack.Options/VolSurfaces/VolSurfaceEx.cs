@@ -359,7 +359,7 @@ namespace Qwack.Options.VolSurfaces
             y[x.Length - 1] = call;
             x[x.Length - 1] = k * 10;
 
-            return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline);
+            return InterpolatorFactory.GetInterpolator(x, y, Interpolator1DType.MonotoneCubicSpline, isSorted: true);
         }
 
         public static IInterpolator1D GenerateCompositeSmileBasic(this IVolSurface surface, IVolSurface fxSurface, int numSamples, DateTime expiry, double fwdAsset, double fwdFx, double correlation, bool deltaStrikeOutput = false)

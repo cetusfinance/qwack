@@ -76,7 +76,7 @@ namespace Qwack.Core.Curves
             switch (_curveType)
             {
                 case PriceCurveType.Linear:
-                    _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.Linear);
+                    _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.Linear, isSorted: true);
                     break;
                 case PriceCurveType.Next:
                     _interp = InterpolatorFactory.GetInterpolator(pillarsAsDoubles, _prices, Interpolator1DType.NextValue);

@@ -80,7 +80,7 @@ namespace Qwack.Options.VolSurfaces
             Volatilities = vols;
             ExpiriesDouble = Expiries.Select(t => TimeBasis.CalculateYearFraction(originDate, t)).ToArray();
             _interpolators = vols.Select((v, ix) =>
-                InterpolatorFactory.GetInterpolator(Strikes, v, StrikeInterpolatorType)).ToArray();
+                InterpolatorFactory.GetInterpolator(Strikes, v, StrikeInterpolatorType, isSorted: true)).ToArray();
         }
 
         public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
@@ -105,7 +105,7 @@ namespace Qwack.Options.VolSurfaces
                     var dkModified = FlatDeltaSmileInExtreme ? Min(1.0 - FlatDeltaPoint, Max(deltaK, FlatDeltaPoint)) : deltaK;
                     var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(-dkModified)).ToArray(),
-                   TimeInterpolatorType);
+                   TimeInterpolatorType, noCopy : true, isSorted : true);
                     var vol2 = interpForStrike.Interpolate(maturity);
                     var absK = BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, maturity, vol2);
                     return absK - strike;
@@ -125,7 +125,7 @@ namespace Qwack.Options.VolSurfaces
                 }
                 var interpForSolvedStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                    _interpolators.Select(x => x.Interpolate(solvedStrike)).ToArray(),
-                   TimeInterpolatorType);
+                   TimeInterpolatorType, noCopy: true, isSorted: true);
                 vol = interpForSolvedStrike.Interpolate(maturity);
             }
 
@@ -156,7 +156,7 @@ namespace Qwack.Options.VolSurfaces
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
                     _interpolators.Select(x => x.Interpolate(deltaStrike)).ToArray(),
-                    TimeInterpolatorType);
+                    TimeInterpolatorType, noCopy : true, isSorted : true);
                 vol = interpForStrike.Interpolate(maturity);
             }
             else

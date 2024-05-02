@@ -69,21 +69,7 @@ namespace Qwack.Paths.Processes
             _drifts = new double[_timesteps.TimeStepCount];
             _vols = new double[_timesteps.TimeStepCount];
 
-            var prevSpot = _forwardCurve(0);
-            for (var t = 1; t < _drifts.Length; t++)
-            {
-                var atmVol = _surface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * _timesteps.Times[t] * _correlation);
-                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
-                var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
-                var varEnd = Pow(atmVol, 2) * _timesteps.Times[t];
-                var fwdVariance = Max(0, varEnd - varStart);
-                _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
-                _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
-
-                prevSpot = spot;
-            }
+            
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             var fixings = new List<Vector<double>>();
@@ -95,6 +81,25 @@ namespace Qwack.Paths.Processes
                 fixings.Add(vect);
             }
             _fixings = [.. fixings];
+
+            var prevSpot = _forwardCurve(0);
+            var firstTime = _timesteps.Times[_fixings.Length];
+            for (var t = _fixings.Length  + 1; t < _drifts.Length; t++)
+            {
+                var time = _timesteps.Times[t] - firstTime;
+                var prevTime = _timesteps.Times[t - 1] - firstTime;
+                var atmVol = _surface.GetForwardATMVol(0, time);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * time * _correlation);
+                var spot = _forwardCurve(time) * driftAdj;
+                var varStart = Pow(_surface.GetForwardATMVol(0, prevTime), 2) * prevTime;
+                var varEnd = Pow(atmVol, 2) * time;
+                var fwdVariance = Max(0, varEnd - varStart);
+                _vols[t] = Sqrt(fwdVariance / time);
+                _drifts[t] = Log(spot / prevSpot) / time;
+
+                prevSpot = spot;
+            }
 
             _isComplete = true;
         }

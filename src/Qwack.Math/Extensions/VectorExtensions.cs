@@ -16,6 +16,20 @@ namespace Qwack.Math.Extensions
             return (min, max);
         }
 
+        public static Vector<double> ExpVectored(this Vector<double> vector)
+        {
+            var result = new Vector<double>(1.0);
+            var term = new Vector<double>(1.0);
+            
+            for (var i = 1; i < 8; i++)
+            {
+                term = term * vector / new Vector<double>(i);
+                result += term;
+            }
+
+            return result;
+        }
+
         public static Vector<double> Exp(this Vector<double> z)
         {
             var exp = new Vector<double>(1.0);

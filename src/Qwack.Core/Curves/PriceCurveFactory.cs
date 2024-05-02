@@ -21,7 +21,7 @@ namespace Qwack.Core.Curves
                 };
 
             if (transportObject.BasicPriceCurve != null)
-                return new BasicPriceCurve(transportObject.BasicPriceCurve, currencyProvider);
+                return new BasicPriceCurve(transportObject.BasicPriceCurve, currencyProvider, calendarProvider);
 
             if (transportObject.BasisPriceCurve != null)
                 return new BasisPriceCurve(transportObject.BasisPriceCurve, currencyProvider, calendarProvider);

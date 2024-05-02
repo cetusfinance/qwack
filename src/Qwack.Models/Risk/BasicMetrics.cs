@@ -697,9 +697,17 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
+        private static DateTime NextThirdWeds(DateTime date)
         {
-            var bumpSize = 0.01;
+            var w3 = date.ThirdWednesday();
+            if (date > w3)
+                return date.AddMonths(1).ThirdWednesday();
+            else
+                return w3;
+        }
+
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01)
+        {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -755,6 +763,7 @@ namespace Qwack.Models.Risk
                 Dictionary<string, IPriceCurve> bumpedDownCurves;
                 if (isSparseLMEMode)
                 {
+                    lastDateInBook = NextThirdWeds(lastDateInBook);
                     var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
                     bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, sparseDates);
                     bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, sparseDates) : null;

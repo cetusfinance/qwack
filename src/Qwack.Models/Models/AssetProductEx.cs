@@ -1481,7 +1481,7 @@ namespace Qwack.Models.Models
             m.AttachPortfolio(portfolio);
             return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
         }
-        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null) => model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
+        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01) => model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, bumpSize: bumpSize);
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {
@@ -1760,7 +1760,7 @@ namespace Qwack.Models.Models
                         //var newfwds = b.Prices.Select((p, ix) => p * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI)).ToArray();
                         var tob = b.GetTransportObject();
                         tob.BasicPriceCurve.Prices = newfwds;
-                        m.AddPriceCurve(curveName, new BasicPriceCurve(tob.BasicPriceCurve, currencyProvider));
+                        m.AddPriceCurve(curveName, new BasicPriceCurve(tob.BasicPriceCurve, currencyProvider, calendarProvider));
                         break;
                     case ContangoPriceCurve c:
                         var newSpot = c.Spot * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI);

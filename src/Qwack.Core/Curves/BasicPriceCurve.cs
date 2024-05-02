@@ -60,7 +60,7 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
-        public BasicPriceCurve(TO_BasicPriceCurve transportObject, ICurrencyProvider currencyProvider) :
+        public BasicPriceCurve(TO_BasicPriceCurve transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) :
             this(transportObject.BuildDate, transportObject.PillarDates, transportObject.Prices, transportObject.CurveType, currencyProvider, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrency(transportObject.Currency);
@@ -68,6 +68,8 @@ namespace Qwack.Core.Curves
             Name = transportObject.Name;
             AssetId = transportObject.AssetId;
             Units = transportObject.Units;
+            SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
+            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Bd() : new Frequency(transportObject.SpotLag);  
         }
 
         private void Initialize()

@@ -16,12 +16,12 @@ namespace Qwack.Math.Extensions
             return (min, max);
         }
 
-        public static Vector<double> Exp(this Vector<double> vector)
+        public static Vector<double> Exp(this Vector<double> vector, int precision = 8)
         {
             var result = new Vector<double>(1.0);
             var term = new Vector<double>(1.0);
             
-            for (var i = 1; i < 8; i++)
+            for (var i = 1; i < precision; i++)
             {
                 term = term * vector / new Vector<double>(i);
                 result += term;

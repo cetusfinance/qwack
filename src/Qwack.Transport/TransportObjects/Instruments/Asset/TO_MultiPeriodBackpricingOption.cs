@@ -64,5 +64,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public bool IsOption { get; set; }
         [ProtoMember(27)]
         public DateTime[] SettlementFixingDates { get; set; }
+        [ProtoMember(28)]
+        public int? DeclaredPeriod { get; set; }
     }
 }

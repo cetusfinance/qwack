@@ -95,8 +95,8 @@ namespace Qwack.Paths.Processes
                 var varStart = Pow(_surface.GetForwardATMVol(0, prevTime), 2) * prevTime;
                 var varEnd = Pow(atmVol, 2) * time;
                 var fwdVariance = Max(0, varEnd - varStart);
-                _vols[t] = Sqrt(fwdVariance / time);
-                _drifts[t] = Log(spot / prevSpot) / time;
+                _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
+                _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
 
                 prevSpot = spot;
             }

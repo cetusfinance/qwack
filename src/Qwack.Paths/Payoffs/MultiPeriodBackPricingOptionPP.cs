@@ -36,12 +36,16 @@ namespace Qwack.Paths.Payoffs
         private int[] _nFuture;
         private int[] _nTotal;
         private int _decisionDateIx;
+        private int _liveDateIx;
         private Vector<double>[] _results;
         private Vector<double> _notional;
         private bool _isComplete;
         private double _expiryToSettleCarry;
         private double[] _expiryToAvgCarrys;
         private bool _isOption;
+        private int? _declaredPeriod;
+
+        private Vector<double>[][] _exercisedPeriod;
 
         private readonly Vector<double> _one = new(1.0);
 
@@ -52,7 +56,7 @@ namespace Qwack.Paths.Payoffs
 
         public IAssetFxModel VanillaModel { get; set; }
 
-        public MultiPeriodBackPricingOptionPP(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime[] settlementFixingDates, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false)
+        public MultiPeriodBackPricingOptionPP(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime[] settlementFixingDates, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false, int? declaredPeriod = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -64,6 +68,7 @@ namespace Qwack.Paths.Payoffs
             _assetName = assetName;
             _notional = new Vector<double>(notional);
             _isOption = isOption;
+            _declaredPeriod = declaredPeriod;
 
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
@@ -114,10 +119,12 @@ namespace Qwack.Paths.Payoffs
             if (VanillaModel != null)
             {
                 var curve = VanillaModel.GetPriceCurve(_assetName);
+                var liveSpotDate = VanillaModel.BuildDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
+                _liveDateIx = dates.GetDateIndex(VanillaModel.BuildDate);
                 var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
                 var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
 
-                _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(decisionSpotDate);
+                _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
 
                 var expToAvg = new List<double>();
                 foreach(var ad in _avgDates)
@@ -126,13 +133,14 @@ namespace Qwack.Paths.Payoffs
                     if(ad.First()>_decisionDate)
                     {
                         var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x=>x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
-                        carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(decisionSpotDate);
+                        carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
                     }
                     expToAvg.Add(carry);
                 }
                 _expiryToAvgCarrys = expToAvg.ToArray();
             }
 
+            _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
             _isComplete = true;
         }
 
@@ -142,6 +150,8 @@ namespace Qwack.Paths.Payoffs
             var nTotalVec = new Vector<double>[_nTotal.Length];
             for (var i = 0; i < nTotalVec.Length; i++)
                 nTotalVec[i] = new Vector<double>(_nTotal[i]);
+
+            var spotIx = _declaredPeriod.HasValue ? _liveDateIx : _decisionDateIx;
 
             for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
@@ -161,7 +171,7 @@ namespace Qwack.Paths.Payoffs
                         pastSum += steps[_dateIndexesPast[a][p]] * (_fxName != null ? stepsFx[_dateIndexesPast[a][p]] : _one);
                     }
 
-                    var spotAtExpiry = steps[_decisionDateIx] * (_fxName != null ? stepsFx[_decisionDateIx] : _one);
+                    var spotAtExpiry = steps[spotIx] * (_fxName != null ? stepsFx[spotIx] : _one);
 
                     if (VanillaModel != null)
                     {
@@ -194,13 +204,34 @@ namespace Qwack.Paths.Payoffs
 
                 var setVec = new Vector<double>(setReg);
 
+                if (_declaredPeriod.HasValue)
+                    avgVec = avgs[_declaredPeriod.Value];
+
+                var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+                _exercisedPeriod[resultIx] = new Vector<double>[_dateIndexes.Count];
+
+                for (var a = 0; a < _dateIndexes.Count; a++)
+                {
+                    var exBlock = new double[Vector<double>.Count];
+
+                    for (var v = 0; v < Vector<double>.Count; v++)
+                    {
+                        if (_declaredPeriod.HasValue)
+                        {
+                            exBlock[v] = _declaredPeriod.Value == a ? 1.0 : 0.0; 
+                        }
+                        else
+                            exBlock[v] = avgVec == avgs[a] ? 1.0 : 0.0;
+                    }
+                    _exercisedPeriod[resultIx][a] = new Vector<double>(exBlock);
+                }
+
                 var payoff = _callPut == OptionType.C ? setVec - avgVec : avgVec - setVec;
                 if (_isOption)
                 {
                     payoff = Vector.Max(new Vector<double>(0), payoff);
                 }
 
-                var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                 _results[resultIx] = payoff * _notional;
             }
         }
@@ -220,6 +251,29 @@ namespace Qwack.Paths.Payoffs
             x.CopyTo(vec);
             return vec.Average();
         }).Average();
+
+        public double[] ExerciseProbabilities
+        {
+            get
+            {
+                var vecLen = Vector<double>.Count;
+                var results = new double[_dateIndexes.Count][];
+                //[];
+                for (var a = 0; a < _dateIndexes.Count; a++)
+                {
+                    results[a] = new double[_results.Length * vecLen];
+                    for (var i = 0; i < _results.Length; i++)
+                    {
+                        for (var j = 0; j < vecLen; j++)
+                        {
+
+                            results[a][i * vecLen + j] = _exercisedPeriod[i][a][j];
+                        }
+                    }
+                }
+                return results.Select(x=>x.Average()).ToArray();
+            }
+        }
 
         public double[] ResultsByPath
         {

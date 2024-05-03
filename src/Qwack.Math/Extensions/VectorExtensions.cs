@@ -16,7 +16,7 @@ namespace Qwack.Math.Extensions
             return (min, max);
         }
 
-        public static Vector<double> ExpVectored(this Vector<double> vector)
+        public static Vector<double> Exp(this Vector<double> vector)
         {
             var result = new Vector<double>(1.0);
             var term = new Vector<double>(1.0);
@@ -30,7 +30,7 @@ namespace Qwack.Math.Extensions
             return result;
         }
 
-        public static Vector<double> Exp(this Vector<double> z)
+        public static Vector<double> Exp2(this Vector<double> z)
         {
             var exp = new Vector<double>(1.0);
             var facTotal = z;

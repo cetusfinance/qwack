@@ -39,6 +39,8 @@ namespace Qwack.Core.Instruments.Asset
 
         public bool IsOption { get; set; }
 
+        public int? DeclaredPeriod { get; set; }
+
         public List<DateTime[]> FxFixingDates { get; set; }
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
@@ -96,6 +98,7 @@ namespace Qwack.Core.Instruments.Asset
             SettlementDate = SettlementDate,
             SettlementFixingDates = SettlementFixingDates,
             IsOption = IsOption,
+            DeclaredPeriod = DeclaredPeriod,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -134,6 +137,7 @@ namespace Qwack.Core.Instruments.Asset
             SettlementDate = to.SettlementDate;
             SettlementFixingDates = to.SettlementFixingDates;
             IsOption = to.IsOption;
+            DeclaredPeriod = to.DeclaredPeriod;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -167,6 +171,7 @@ namespace Qwack.Core.Instruments.Asset
                 SettlementDate = SettlementDate,
                 SettlementFixingDates = SettlementFixingDates,
                 IsOption = IsOption,
+                DeclaredPeriod = DeclaredPeriod,
             }
         };
     }

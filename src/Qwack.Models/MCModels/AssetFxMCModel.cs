@@ -15,6 +15,7 @@ using Qwack.Models.Models;
 using Qwack.Models.Risk;
 using Qwack.Options.VolSurfaces;
 using Qwack.Paths;
+using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
@@ -448,7 +449,7 @@ namespace Qwack.Models.MCModels
             }
             foreach (var product in _payoffs)
             {
-                if (settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption))
+                if (settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is Core.Instruments.Asset.BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption))
                     product.Value.VanillaModel = VanillaModel;
 
                 Engine.AddPathProcess(product.Value);
@@ -481,6 +482,8 @@ namespace Qwack.Models.MCModels
                 _capitalCalc = new ExpectedCapitalCalculator(Portfolio, settings.CreditSettings.CounterpartyRiskWeighting, settings.CreditSettings.AssetIdToHedgeGroupMap, settings.ReportingCurrency, VanillaModel, settings.CreditSettings.ExposureDates);
                 Engine.AddPathProcess(_capitalCalc);
             }
+
+            //Engine.AddPathProcess(new OutputPaths(@"C:\Temp\pathz.csv", 0));
 
             Engine.SetupFeatures();
         }
@@ -744,6 +747,49 @@ namespace Qwack.Models.MCModels
             foreach (var kv in data)
             {
                 cube.AddRow(new object[] { kv.Key, metric }, kv.Value);
+            }
+            return cube;
+        }
+
+        public ICube ExpectedExercise()
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
+                { "PeriodStart", typeof(DateTime) },
+                { "PeriodEnd", typeof(string) },
+                { Metric, typeof(string) },
+                { "RefPrice", typeof(double) },
+                { Consts.Cubes.Portfolio, typeof(string) },
+            };
+        
+            cube.Initialize(dataTypes);
+
+            //prime PV
+            _ = CleanPV(null, null);
+
+            foreach (var product in _payoffs)
+            {
+                var expectedEx = product.Value.ExerciseProbabilities;
+                if(expectedEx.Length>0)
+                {
+                    for (var i = 0; i < expectedEx.Length; i++)
+                    {
+                        var bpo = product.Value.AssetInstrument as MultiPeriodBackpricingOption;
+                        cube.AddRow(new Dictionary<string, object>
+                        {
+                            { TradeId, product.Key },
+                            { TradeType, bpo.TradeType() },
+                            { AssetId, bpo.AssetIds[0] },
+                            { "PeriodStart", bpo.PeriodDates[i].Item1 },
+                            { "PeriodEnd", bpo.PeriodDates[i].Item2 },
+                            { Metric, "ExpectedExercise" },
+                        }, expectedEx[i]);
+                    }
+                }
             }
             return cube;
         }

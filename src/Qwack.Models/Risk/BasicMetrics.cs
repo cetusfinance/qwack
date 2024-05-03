@@ -9,6 +9,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Models.MCModels;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;

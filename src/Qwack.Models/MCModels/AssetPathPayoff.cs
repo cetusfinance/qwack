@@ -10,9 +10,9 @@ using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Paths.Features;
+using Qwack.Paths.Payoffs;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Models.MCModels
 {
@@ -63,7 +63,7 @@ namespace Qwack.Models.MCModels
                 _vanillaModel = value;
                 switch (AssetInstrument)
                 {
-                    case BackPricingOption bpo:
+                    case Core.Instruments.Asset.BackPricingOption bpo:
                         var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
                         bpob.VanillaModel = value;
                         break;
@@ -90,7 +90,7 @@ namespace Qwack.Models.MCModels
 
             switch (AssetInstrument)
             {
-                case BackPricingOption bpo:
+                case Core.Instruments.Asset.BackPricingOption bpo:
                     var bpob = _subInstruments.First() as Paths.Payoffs.BackPricingOption;
                     if (bpob.SettlementRegressor == regressor) bpob.SettlementRegressor = regressor;
                     if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
@@ -152,7 +152,7 @@ namespace Qwack.Models.MCModels
                     _fxType = FxConversionType.None;
                     _fxName = _fxType == FxConversionType.None ? null : $"USD/{_ccy}";
                     break;
-                case EuropeanBarrierOption ebo:
+                case Core.Instruments.Asset.EuropeanBarrierOption ebo:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         new Paths.Payoffs.EuropeanBarrierOption(ebo.AssetId,ebo.BarrierObservationStartDate,ebo.BarrierObservationEndDate,ebo.ExpiryDate,ebo.CallPut,ebo.Strike,ebo.Barrier,ebo.DiscountCurve,ebo.Currency,ebo.PaymentDate,ebo.Notional,ebo.BarrierSide,ebo.BarrierType, SimulationCcy)
@@ -220,7 +220,7 @@ namespace Qwack.Models.MCModels
                         new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional, SimulationCcy)
                     };
                     break;
-                case BackPricingOption bpo:
+                case Core.Instruments.Asset.BackPricingOption bpo:
                     var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional, SimulationCcy)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
@@ -234,11 +234,11 @@ namespace Qwack.Models.MCModels
                     break;
                 case MultiPeriodBackpricingOption mbpo: 
                     var settleFixingDate = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
-                    var mbp = new Paths.Payoffs.MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
+                    var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
                                                                              mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] {settleFixingDate},
                                                                              mbpo.SettlementDate, mbpo.CallPut,
                                                                              mbpo.DiscountCurve, mbpo.PaymentCurrency,
-                                                                             mbpo.Notional, mbpo.IsOption)
+                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
                     {
@@ -448,6 +448,18 @@ namespace Qwack.Models.MCModels
                     }
                 }
                 return results;
+            }
+        }
+
+        public double[] ExerciseProbabilities
+        {
+            get
+            {
+                if (_subInstruments?.Count > 0 && _subInstruments[0] is MultiPeriodBackPricingOptionPP bpo)
+                {
+                    return bpo.ExerciseProbabilities;
+                }
+                return Array.Empty<double>();
             }
         }
 

@@ -130,7 +130,7 @@ namespace Qwack.Paths.Payoffs
                 foreach(var ad in _avgDates)
                 {
                     double carry = 0;
-                    if(ad.First()>_decisionDate)
+                    if(ad.Last()>_decisionDate)
                     {
                         var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x=>x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
                         carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);

@@ -58,7 +58,8 @@ namespace Qwack.Core.Instruments.Asset
             ExerciseType = ExerciseType,
             MarginingType = MarginingType,
             Premium = Premium,
-            PremiumDate = PremiumDate
+            PremiumDate = PremiumDate,
+            MetaData = new(MetaData)
         };
 
         public new IAssetInstrument SetStrike(double strike)
@@ -101,7 +102,7 @@ namespace Qwack.Core.Instruments.Asset
                 Direction = Direction,
                 ExpiryDate = ExpiryDate,
                 LotSize = LotSize,
-                MetaData = MetaData,
+                MetaData = new(MetaData),
                 PortfolioName = PortfolioName,
                 PriceMultiplier = PriceMultiplier,
                 Strike = Strike,

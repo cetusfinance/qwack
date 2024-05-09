@@ -81,6 +81,7 @@ namespace Qwack.Core.Instruments.Asset
             Counterparty = Counterparty,
             HedgingSet = HedgingSet,
             PortfolioName = PortfolioName,
+            MetaData = new(MetaData)
         };
 
         public IAssetInstrument Clone() => new Forward
@@ -103,6 +104,7 @@ namespace Qwack.Core.Instruments.Asset
             FxConversionType = FxConversionType,
             HedgingSet = HedgingSet,
             PortfolioName = PortfolioName,
+            MetaData = new(MetaData)
         };
 
         public IAssetInstrument SetStrike(double strike)

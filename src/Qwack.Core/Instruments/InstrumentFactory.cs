@@ -138,6 +138,7 @@ namespace Qwack.Core.Instruments
             Counterparty = transportObject.Counterparty,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
+            MetaData = transportObject.MetaData,
         };
 
         public static AsianSwapStrip GetAsianSwapStrip(this TO_AsianSwapStrip transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -147,6 +148,7 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
             Swaplets = transportObject.Swaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
             HedgingSet = transportObject.HedgingSet,
+            MetaData = transportObject.Swaplets.FirstOrDefault()?.MetaData
         };
 
         public static AsianBasisSwap GetAsianBasisSwap(this TO_AsianBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -157,6 +159,7 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
             PaySwaplets = transportObject.PaySwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+            MetaData = transportObject.PaySwaplets.FirstOrDefault()?.MetaData
         };
 
         public static UnpricedAverage GetUnpricedAverage(this TO_UnpricedAverage transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -167,6 +170,7 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
             PaySwaplets = transportObject.PaySwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
             RecSwaplets = transportObject.RecSwaplets.Select(x => x.GetAsianSwap(currencyProvider, calendarProvider)).ToArray(),
+            MetaData = transportObject.PaySwaplets.FirstOrDefault()?.MetaData
         };
 
         public static MultiPeriodBackpricingOption GetBackpricingOption(this TO_MultiPeriodBackpricingOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -205,6 +209,7 @@ namespace Qwack.Core.Instruments
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
             BaseSwaplet = transportObject.BaseSwaplet.GetAsianSwap(currencyProvider, calendarProvider),
+            MetaData = transportObject.BaseSwaplet.MetaData
         };
 
         public static AsianOption GetAsianOption(this TO_AsianOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -233,7 +238,8 @@ namespace Qwack.Core.Instruments
             Counterparty = transportObject.Counterparty,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
-            CallPut = transportObject.CallPut
+            CallPut = transportObject.CallPut,
+            MetaData = transportObject.MetaData,
         };
 
         public static Forward GetForward(this TO_Forward transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
@@ -256,6 +262,7 @@ namespace Qwack.Core.Instruments
             FxConversionType = transportObject.FxConversionType,
             HedgingSet = transportObject.HedgingSet,
             PortfolioName = transportObject.PortfolioName,
+            MetaData = transportObject.MetaData,
         };
     }
 }

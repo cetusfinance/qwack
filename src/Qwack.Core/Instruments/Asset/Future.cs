@@ -58,7 +58,8 @@ namespace Qwack.Core.Instruments.Asset
             Strike = Strike,
             TradeId = TradeId,
             Counterparty = Counterparty,
-            PortfolioName = PortfolioName
+            PortfolioName = PortfolioName,
+            MetaData = MetaData,
         };
 
         public IAssetInstrument SetStrike(double strike)
@@ -104,11 +105,11 @@ namespace Qwack.Core.Instruments.Asset
                 Direction = Direction,
                 ExpiryDate = ExpiryDate,
                 LotSize = LotSize,
-                MetaData = MetaData,
                 PortfolioName = PortfolioName,
                 PriceMultiplier = PriceMultiplier,
                 Strike = Strike,
-                TradeId = TradeId
+                TradeId = TradeId,
+                MetaData = new(MetaData),
             }
         };
     }

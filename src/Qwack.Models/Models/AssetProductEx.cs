@@ -1246,12 +1246,12 @@ namespace Qwack.Models.Models
 
         private static (double flow, string tradeId, string tradeType, string ccy) ComputeFlowsT0(IInstrument ins, IAssetFxModel model, Currency reportingCurrency)
         {
-            var flow = 0.0;
             var fxRate = 1.0;
             var tradeId = ins.TradeId;
             var tradeType = TradeType(ins);
             var flowCcy = ins.GetCurrency();
             var ccy = reportingCurrency?.ToString();
+            double flow;
             switch (ins)
             {
                 case AsianOption asianOption:
@@ -1309,6 +1309,9 @@ namespace Qwack.Models.Models
                         var p = ComputeFlowsT0(cb, model, flowCcy);
                         flow += p.flow;
                     }
+                    break;
+                case MultiPeriodBackpricingOption bpo:
+                    flow = 0;
                     break;
                 default:
                     throw new Exception($"Unabled to handle product of type {ins.GetType()}");

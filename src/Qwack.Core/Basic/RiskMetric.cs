@@ -12,5 +12,7 @@ namespace Qwack.Core.Basic
         PV01,
         PV,
         BenchmarkIrDelta,
+        RiskLadder,
+        RiskMatrix
     }
 }

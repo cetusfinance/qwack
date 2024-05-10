@@ -19,7 +19,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
             var dates2 = Enumerable.Range(20, 10).Select(i => t.AddDays(i)).ToArray();
             var dates = new List<DateTime[]> { dates1, dates2 };
             var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
-            var sut = new MultiPeriodBackPricingOption("Asset", dates, dates1[5], t.AddDays(100), t.AddDays(100), OptionType.C, "boo", usd, 1.0);
+            var sut = new MultiPeriodBackPricingOptionPP("Asset", dates, dates1[5], [t.AddDays(100)], t.AddDays(100), OptionType.C, "boo", usd, 1.0);
             var b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);

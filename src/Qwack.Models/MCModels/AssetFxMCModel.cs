@@ -881,7 +881,7 @@ namespace Qwack.Models.MCModels
                             ccy = aIns.Currency.ToString();
                         break;
                     default:
-                        throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                        throw new Exception($"Unable to handle product of type {ins.GetType()}");
                 }
                 var row = new Dictionary<string, object>
                 {

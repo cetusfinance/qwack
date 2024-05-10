@@ -9,7 +9,6 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
-using Qwack.Models.MCModels;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
 using Qwack.Utils.Parallel;
@@ -537,8 +536,8 @@ namespace Qwack.Models.Risk
                 return cube;
 
             var lastDateInBook = subPortfolio.LastSensitivityDate;
-
-            var pvCube = subPortfolio.PV(model, curveObj.Currency);
+            model.AttachPortfolio(subPortfolio);
+            var pvCube = model.PV(curveObj.Currency);
             var pvRows = pvCube.GetAllRows();
 
             var tidIx = pvCube.GetColumnIndex(TradeId);

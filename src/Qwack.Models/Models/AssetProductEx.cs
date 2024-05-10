@@ -1220,7 +1220,7 @@ namespace Qwack.Models.Models
                     }
                     break;
                 default:
-                    throw new Exception($"Unabled to handle product of type {ins.GetType()}");
+                    throw new Exception($"Unable to PV product of type {ins.GetType()}");
             }
 
             if (reportingCurrency != null)

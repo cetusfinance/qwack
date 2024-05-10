@@ -232,14 +232,18 @@ namespace Qwack.Models.MCModels
                     else
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
-                case MultiPeriodBackpricingOption mbpo: 
+                case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
-                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] {settleFixingDate},
+                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate },
                                                                              mbpo.SettlementDate, mbpo.CallPut,
                                                                              mbpo.DiscountCurve, mbpo.PaymentCurrency,
-                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod)
-                    { VanillaModel = VanillaModel };
+                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset)
+                    { 
+                        VanillaModel = VanillaModel,
+                        FixingId = mbpo.AssetFixingId,
+                        FixingIdDateShifted = mbpo.OffsetFixingId,
+                    };
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         mbp
@@ -250,7 +254,7 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { mbp.SettlementRegressor };
                     else if (mbp.AverageRegressors != null)
                         Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
-                    else 
+                    else
                         Regressors = Array.Empty<LinearAveragePriceRegressor>();
                     break;
             }

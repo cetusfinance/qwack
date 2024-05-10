@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Basic;
 
 namespace Qwack.Transport.TransportObjects.Instruments.Asset
 {
@@ -66,5 +67,10 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public DateTime[] SettlementFixingDates { get; set; }
         [ProtoMember(28)]
         public int? DeclaredPeriod { get; set; }
+        [ProtoMember(29)]
+        public TO_DateShifter FixingOffset { get; set; }
+        [ProtoMember(30)]
+        public string OffsetFixingId { get; set; }
+        
     }
 }

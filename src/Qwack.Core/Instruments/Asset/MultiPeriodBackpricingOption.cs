@@ -36,6 +36,9 @@ namespace Qwack.Core.Instruments.Asset
         public string AssetId { get; set; }
         public string AssetFixingId { get; set; }
         public string FxFixingId { get; set; }
+        public string OffsetFixingId { get; set; }
+
+        public DateShifter FixingOffset {  get; set; }
 
         public bool IsOption { get; set; }
 
@@ -61,7 +64,16 @@ namespace Qwack.Core.Instruments.Asset
         }
         public Currency Currency => PaymentCurrency;
 
-        public DateTime LastSensitivityDate => PaymentDate.Max(PeriodDates.Max(x => x.Item2).AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
+        public DateTime LastSensitivityDate
+        {
+            get
+            {
+                if (FixingOffset != null)
+                    return PaymentDate.Max(PeriodDates.Max(x => x.Item2).AddPeriod(FixingOffset.RollType, FixingOffset.Calendar, FixingOffset.Period));
+                else
+                    return PaymentDate.Max(PeriodDates.Max(x => x.Item2).AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
+            }
+        }
 
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
         public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
@@ -99,6 +111,8 @@ namespace Qwack.Core.Instruments.Asset
             SettlementFixingDates = SettlementFixingDates,
             IsOption = IsOption,
             DeclaredPeriod = DeclaredPeriod,
+            FixingOffset = FixingOffset,
+            OffsetFixingId = OffsetFixingId,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -138,6 +152,8 @@ namespace Qwack.Core.Instruments.Asset
             SettlementFixingDates = to.SettlementFixingDates;
             IsOption = to.IsOption;
             DeclaredPeriod = to.DeclaredPeriod;
+            FixingOffset = new DateShifter(to.FixingOffset, calendarProvider);
+            OffsetFixingId = to.OffsetFixingId;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -172,6 +188,8 @@ namespace Qwack.Core.Instruments.Asset
                 SettlementFixingDates = SettlementFixingDates,
                 IsOption = IsOption,
                 DeclaredPeriod = DeclaredPeriod,
+                FixingOffset = FixingOffset.GetTransportObject(),
+                OffsetFixingId = OffsetFixingId,
             }
         };
     }

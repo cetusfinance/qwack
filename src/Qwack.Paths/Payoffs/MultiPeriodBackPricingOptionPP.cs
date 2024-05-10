@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.ServiceModel;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
@@ -26,6 +27,8 @@ namespace Qwack.Paths.Payoffs
         private readonly DateTime[] _settleFixingDates;
         private readonly DateTime _payDate;
         private readonly string _assetName;
+        private readonly DateShifter _dateShifter;
+
         private int _assetIndex;
         private readonly string _fxName;
         private int _fxIndex;
@@ -45,6 +48,9 @@ namespace Qwack.Paths.Payoffs
         private bool _isOption;
         private int? _declaredPeriod;
 
+        private double[] _contangoScaleFactors;
+
+
         private Vector<double>[][] _exercisedPeriod;
 
         private readonly Vector<double> _one = new(1.0);
@@ -54,9 +60,15 @@ namespace Qwack.Paths.Payoffs
         public LinearAveragePriceRegressor SettlementRegressor { get; set; }
         public LinearAveragePriceRegressor[] AverageRegressors { get; set; }
 
+        public string FixingId { get; set; }
+        public string FixingIdDateShifted { get; set; }
+
+        public IFixingDictionary Fixings { get; set; }
+        public IFixingDictionary FixingsDateShifted { get; set; }
+
         public IAssetFxModel VanillaModel { get; set; }
 
-        public MultiPeriodBackPricingOptionPP(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime[] settlementFixingDates, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false, int? declaredPeriod = null)
+        public MultiPeriodBackPricingOptionPP(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime[] settlementFixingDates, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false, int? declaredPeriod = null, DateShifter dateShifter = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -69,6 +81,7 @@ namespace Qwack.Paths.Payoffs
             _notional = new Vector<double>(notional);
             _isOption = isOption;
             _declaredPeriod = declaredPeriod;
+            _dateShifter = dateShifter;
 
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
@@ -119,25 +132,75 @@ namespace Qwack.Paths.Payoffs
             if (VanillaModel != null)
             {
                 var curve = VanillaModel.GetPriceCurve(_assetName);
-                var liveSpotDate = VanillaModel.BuildDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
                 _liveDateIx = dates.GetDateIndex(VanillaModel.BuildDate);
-                var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-                var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
+                var liveSpotDate = VanillaModel.BuildDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
 
-                _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+                if (!string.IsNullOrEmpty(FixingId))
+                    Fixings = VanillaModel.GetFixingDictionary(FixingId);
+                if (!string.IsNullOrEmpty(FixingIdDateShifted))
+                    FixingsDateShifted = VanillaModel.GetFixingDictionary(FixingIdDateShifted);
 
-                var expToAvg = new List<double>();
-                foreach(var ad in _avgDates)
+                if (Fixings!=null && FixingsDateShifted!=null && _dateShifter != null)
                 {
-                    double carry = 0;
-                    if(ad.Last()>_decisionDate)
+                    liveSpotDate = VanillaModel.BuildDate.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
+
+                    _contangoScaleFactors = new double[dates.TimeStepCount];
+                    for(var i=0;i<_contangoScaleFactors.Length;i++)
                     {
-                        var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x=>x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
-                        carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+                        var date = dates.Dates[i];
+                        if(Fixings.TryGetValue(date, out var fix) && FixingsDateShifted.TryGetValue(date, out var fixShifted))
+                        {
+                            _contangoScaleFactors[i] = fixShifted / fix;
+                        }
+                        else
+                        {
+                            var spotDate = dates.Dates[i].AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
+                            var shiftedDate = dates.Dates[i].AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
+                            _contangoScaleFactors[i] = curve.GetPriceForDate(shiftedDate) / curve.GetPriceForDate(spotDate);
+                        }    
                     }
-                    expToAvg.Add(carry);
+
+                    var decisionSpotDate = _decisionDate.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
+                    var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
+
+                    _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+
+                    var expToAvg = new List<double>();
+                    foreach (var ad in _avgDates)
+                    {
+                        double carry = 0;
+                        if (ad.Last() > _decisionDate)
+                        {
+                            var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x => x.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period)).ToArray();
+                            carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+                        }
+                        expToAvg.Add(carry);
+                    }
+                    _expiryToAvgCarrys = expToAvg.ToArray();
+
                 }
-                _expiryToAvgCarrys = expToAvg.ToArray();
+                else
+                {
+
+                    var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
+                    var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
+
+                    _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+
+                    var expToAvg = new List<double>();
+                    foreach (var ad in _avgDates)
+                    {
+                        double carry = 0;
+                        if (ad.Last() > _decisionDate)
+                        {
+                            var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
+                            carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
+                        }
+                        expToAvg.Add(carry);
+                    }
+                    _expiryToAvgCarrys = expToAvg.ToArray();
+
+                }
             }
 
             _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
@@ -168,10 +231,19 @@ namespace Qwack.Paths.Payoffs
                     var pastSum = new Vector<double>(0.0);
                     for (var p = 0; p < _dateIndexesPast[a].Length; p++)
                     {
-                        pastSum += steps[_dateIndexesPast[a][p]] * (_fxName != null ? stepsFx[_dateIndexesPast[a][p]] : _one);
+                        var thisStep = steps[_dateIndexesPast[a][p]] * (_fxName != null ? stepsFx[_dateIndexesPast[a][p]] : _one);
+                        if (_contangoScaleFactors != null)
+                        {
+                            pastSum *= _contangoScaleFactors[_dateIndexesPast[a][p]];
+                        }
+                        pastSum += thisStep;
                     }
 
                     var spotAtExpiry = steps[spotIx] * (_fxName != null ? stepsFx[spotIx] : _one);
+                    if (_contangoScaleFactors != null)
+                    {
+                        spotAtExpiry *= _contangoScaleFactors[spotIx];
+                    }
 
                     if (VanillaModel != null)
                     {

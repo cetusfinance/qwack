@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
@@ -494,7 +495,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false)
+        public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -543,8 +544,22 @@ namespace Qwack.Models.Risk
             var tidIx = pvCube.GetColumnIndex(TradeId);
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
-            var bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
-            var bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
+            Dictionary<string, IPriceCurve> bumpedCurves;
+            Dictionary<string, IPriceCurve> bumpedDownCurves;
+
+            if (isSparseLMEMode)
+            {
+                lastDateInBook = NextThirdWeds(lastDateInBook);
+                var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
+                bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, sparseDates);
+                bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, sparseDates) : null;
+            }
+            else
+            {
+                bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook);
+                bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook) : null;
+            }
+
 
             ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
             {

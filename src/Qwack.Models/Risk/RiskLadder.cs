@@ -14,6 +14,7 @@ namespace Qwack.Models.Risk
     public class RiskLadder
     {
         public ICurrencyProvider CurrencyProvider { get; set; }
+        public ICalendarProvider CalendarProvider { get; set; }
 
         public string AssetId { get; private set; }
         public MutationType ShiftType { get; private set; }
@@ -23,6 +24,8 @@ namespace Qwack.Models.Risk
         public bool ReturnDifferential { get; private set; }
         public Currency Ccy { get; private set; }
         public FxPair FxPair { get; private set; }
+        public bool LMESparseDeltaMode { get; set; }
+
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
@@ -170,7 +173,7 @@ namespace Qwack.Models.Risk
 
         private ICube GetRisk(IPvModel model) => Metric switch
         {
-            RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId),
+            RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId, isSparseLMEMode: LMESparseDeltaMode, calendars: CalendarProvider),
             RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             RiskMetric.PV => model.PV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),

@@ -537,7 +537,7 @@ namespace Qwack.Models.Risk
 
             var lastDateInBook = subPortfolio.LastSensitivityDate;
             model.AttachPortfolio(subPortfolio);
-            var pvCube = model.PV(curveObj.Currency);
+            var pvCube = pvModel.PV(curveObj.Currency);
             var pvRows = pvCube.GetAllRows();
 
             var tidIx = pvCube.GetColumnIndex(TradeId);

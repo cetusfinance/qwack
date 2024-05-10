@@ -50,6 +50,61 @@ namespace Qwack.Core.Cubes
             return o;
         }
 
+        public static ICube Difference(this ICube baseCube, ICube cubeToSubtract, string[] matchFields)
+        {
+            var ixsBase = new List<int>();
+            var ixsSub = new List<int>();
+            for (var i = 0; i < matchFields.Length; i++)
+            {
+                ixsBase.Add(baseCube.GetColumnIndex(matchFields[i]));
+                ixsSub.Add(cubeToSubtract.GetColumnIndex(matchFields[i]));
+            }
+
+            if (ixsBase.Any(x=>x<0) || ixsSub.Any(x=>x<0))
+                throw new Exception("Cubes must contain all required fields");
+
+            var o = new ResultCube();
+            o.Initialize(baseCube.DataTypes);
+            var baseRows = baseCube.GetAllRows().ToList();
+            var subRows = cubeToSubtract.GetAllRows().ToList();
+            foreach (var br in baseRows)
+            {
+                var rowFound = false;
+                foreach (var sr in subRows)
+                {
+                    var thisRowMatched = true;
+                    for(var i=0;i< matchFields.Length; i++)
+                    {
+                        if (br.MetaData[ixsBase[i]] != sr.MetaData[ixsSub[i]])
+                        {
+                            thisRowMatched = false; 
+                            break;
+                        }
+                    }
+                    if(thisRowMatched)
+                    { 
+                        o.AddRow(br.MetaData, br.Value - sr.Value);
+                        subRows.Remove(sr);
+                        rowFound = true;
+                        break;
+                    }
+                }
+
+                if (!rowFound) //zero to subtract
+                {
+                    o.AddRow(br.MetaData, br.Value);
+                }
+            }
+
+            //look at what is left in subrows
+            foreach (var sr in subRows)
+            {
+                o.AddRow(sr.MetaData, -sr.Value);
+            }
+
+            return o;
+        }
+
         /// <summary>
         /// Differences two cubes, assuming same number and same order of rows in both
         /// </summary>

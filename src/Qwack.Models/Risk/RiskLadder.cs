@@ -103,6 +103,13 @@ namespace Qwack.Models.Risk
             return o;
         }
 
+        private string[] GetCubeMatchingFields(RiskMetric riskMetric) => riskMetric switch
+        {
+            RiskMetric.AssetCurveDelta or RiskMetric.AssetVega or RiskMetric.PV01 => ["TradeId", "PointLabel", "AssetId"],
+            RiskMetric.PV => ["TradeId"],
+            _ => [],
+        };
+
         public ICube Generate(IPvModel model, Portfolio portfolio = null)
         {
             var o = new ResultCube();
@@ -112,6 +119,7 @@ namespace Qwack.Models.Risk
 
             ICube baseRiskCube = null;
 
+            var matchingFields = GetCubeMatchingFields(Metric);
             if (ReturnDifferential)
             {
                 var baseModel = model;
@@ -138,7 +146,14 @@ namespace Qwack.Models.Risk
 
                 if (ReturnDifferential)
                 {
-                    result = result.Difference(baseRiskCube);
+                    try
+                    {
+                        result = result.Difference(baseRiskCube, matchingFields);
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                    }
                 }
 
                 results[i] = result;

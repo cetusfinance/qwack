@@ -234,7 +234,7 @@ namespace Qwack.Paths.Payoffs
                         var thisStep = steps[_dateIndexesPast[a][p]] * (_fxName != null ? stepsFx[_dateIndexesPast[a][p]] : _one);
                         if (_contangoScaleFactors != null)
                         {
-                            pastSum *= _contangoScaleFactors[_dateIndexesPast[a][p]];
+                            thisStep *= _contangoScaleFactors[_dateIndexesPast[a][p]];
                         }
                         pastSum += thisStep;
                     }

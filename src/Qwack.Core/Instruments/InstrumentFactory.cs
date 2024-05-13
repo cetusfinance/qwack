@@ -204,6 +204,7 @@ namespace Qwack.Core.Instruments
             DeclaredPeriod = transportObject.DeclaredPeriod,
             FixingOffset = transportObject.FixingOffset==null ? null : new DateShifter(transportObject.FixingOffset, calendarProvider),
             SettlementFixingDates = transportObject.SettlementFixingDates,
+            IsOption = transportObject.IsOption,
         };
 
         public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

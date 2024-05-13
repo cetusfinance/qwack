@@ -188,7 +188,7 @@ namespace Qwack.Core.Instruments.Asset
                 SettlementFixingDates = SettlementFixingDates,
                 IsOption = IsOption,
                 DeclaredPeriod = DeclaredPeriod,
-                FixingOffset = FixingOffset.GetTransportObject(),
+                FixingOffset = FixingOffset?.GetTransportObject(),
                 OffsetFixingId = OffsetFixingId,
             }
         };

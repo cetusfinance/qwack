@@ -5,6 +5,7 @@ using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.Instruments;
 
 namespace Qwack.Core.Instruments.Asset
 {
@@ -36,6 +37,7 @@ namespace Qwack.Core.Instruments.Asset
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
+        public int WindowSize { get; set; } = 1;
 
         private bool IsFx => AssetId.Length == 7 && AssetId[3] == '/';
 
@@ -85,8 +87,41 @@ namespace Qwack.Core.Instruments.Asset
             FxConversionType = FxConversionType,
             FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
             FxFixingId = FxFixingId,
+            WindowSize = WindowSize,
+            PortfolioName = PortfolioName,
+            CallPut = CallPut,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
+
+        public TO_Instrument ToTransportObject() =>
+                  new(){
+                      AsianLookbackOption = new()
+                      {
+                          TradeId = TradeId,
+                          Notional = Notional,
+                          Direction = Direction,
+                          ObsStartDate = ObsStartDate,
+                          ObsEndDate = ObsStartDate,
+                          FixingDates = (DateTime[])FixingDates.Clone(),
+                          FixingCalendar = FixingCalendar?.Name,
+                          PaymentCalendar = PaymentCalendar?.Name,
+                          SpotLag = SpotLag.ToString(),
+                          SpotLagRollType = SpotLagRollType,
+                          PaymentLag = PaymentLag.ToString(),
+                          PaymentLagRollType = PaymentLagRollType,
+                          PaymentDate = PaymentDate,
+                          PaymentCurrency = PaymentCurrency,
+                          AssetFixingId = AssetFixingId,
+                          AssetId = AssetId,
+                          DiscountCurve = DiscountCurve,
+                          FxConversionType = FxConversionType,
+                          FxFixingDates = FxFixingDates == null ? null : (DateTime[])FxFixingDates.Clone(),
+                          FxFixingId = FxFixingId,
+                          WindowSize = WindowSize,
+                          PortfolioName = PortfolioName,
+                          CallPut = CallPut,
+                      }
+                  };
     }
 }

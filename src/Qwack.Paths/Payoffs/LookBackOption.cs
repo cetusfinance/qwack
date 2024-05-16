@@ -15,6 +15,7 @@ namespace Qwack.Paths.Payoffs
         private readonly OptionType _callPut;
         private string _fxName;
         private int _fxIndex;
+        private int _windowSize;
 
         private readonly Vector<double> _one = new(1.0);
 
@@ -22,12 +23,13 @@ namespace Qwack.Paths.Payoffs
 
         public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
-        public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional, Currency simulationCcy)
+        public LookBackOption(string assetName, List<DateTime> sampleDates, OptionType callPut, string discountCurve, Currency ccy, DateTime payDate, double notional, Currency simulationCcy, int windowSize = 1)
             : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _sampleDates = sampleDates;
             _callPut = callPut;
             _notional = new Vector<double>(notional);
+            _windowSize = windowSize;
         }
 
         public override void Finish(IFeatureCollection collection)
@@ -69,10 +71,23 @@ namespace Qwack.Paths.Payoffs
                     if (_fxName != null)
                         stepsFx = block.GetStepsForFactor(path, _fxIndex);
 
+                    var runningTotal = new Vector<double>(0);
                     var minValue = new Vector<double>(double.MaxValue);
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
-                        minValue = Vector.Min(steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one), minValue);
+                        var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
+                        if (i < _windowSize)
+                        {
+                            runningTotal += point;
+                        }
+                        else
+                        {
+                            var pointToRemove = steps[_dateIndexes[i-_windowSize]] * (_fxName != null ? stepsFx[_dateIndexes[i - _windowSize]] : _one);
+                            runningTotal += point - pointToRemove;
+                        }
+
+                        if(i>=(_windowSize-1))
+                            minValue = Vector.Min(runningTotal, minValue);
                     }
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
                     var payoff = (lastValue - minValue) * _notional;
@@ -92,10 +107,23 @@ namespace Qwack.Paths.Payoffs
                     if (_fxName != null)
                         stepsFx = block.GetStepsForFactor(path, _fxIndex);
 
+                    var runningTotal = new Vector<double>(0);
                     var maxValue = new Vector<double>(double.MinValue);
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
-                        maxValue = Vector.Max(steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one), maxValue);
+                        var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
+                        if (i < _windowSize)
+                        {
+                            runningTotal += point;
+                        }
+                        else
+                        {
+                            var pointToRemove = steps[_dateIndexes[i - _windowSize]] * (_fxName != null ? stepsFx[_dateIndexes[i - _windowSize]] : _one);
+                            runningTotal += point - pointToRemove;
+                        }
+
+                        if (i >= (_windowSize - 1))
+                            maxValue = Vector.Max(runningTotal, maxValue);
                     }
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
                     var payoff = (maxValue - lastValue) * _notional;

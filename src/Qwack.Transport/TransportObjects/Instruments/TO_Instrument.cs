@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.Instruments.Asset;
@@ -62,5 +60,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_UnpricedAverage UnpricedAverage { get; set; }
         [ProtoMember(125)]
         public TO_MultiPeriodBackpricingOption BackpricingOption { get; set; }
+        [ProtoMember(126)]
+        public TO_AsianLookbackOption AsianLookbackOption { get; set; }
     }
 }

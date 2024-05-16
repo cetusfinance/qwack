@@ -50,6 +50,8 @@ namespace Qwack.Core.Instruments
                         return new SyntheticCashAndCarry(transportObject.SyntheticCashAndCarry, currencyProvider, calendarProvider);
                     case AssetInstrumentType.MultiPeriodBackpricingOption:
                         return transportObject.BackpricingOption.GetBackpricingOption(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.AsianLookbackOption:
+                        return transportObject.AsianLookbackOption.GetAsianLookbackOption(currencyProvider, calendarProvider);
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)
@@ -269,5 +271,35 @@ namespace Qwack.Core.Instruments
             PortfolioName = transportObject.PortfolioName,
             MetaData = transportObject.MetaData,
         };
+
+        public static AsianLookbackOption GetAsianLookbackOption(this TO_AsianLookbackOption transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()
+        {
+            AssetFixingId = transportObject.AssetFixingId,
+            AssetId = transportObject.AssetId,
+            CallPut = transportObject.CallPut,
+            Counterparty = transportObject.Counterparty,
+            PaymentCurrency = currencyProvider.GetCurrencySafe(transportObject.PaymentCurrency),
+            Direction = transportObject.Direction,
+            DiscountCurve = transportObject.DiscountCurve,
+            FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
+            FixingDates = transportObject.FixingDates,
+            FxConversionType = transportObject.FxConversionType,
+            FxFixingDates = transportObject.FxFixingDates,
+            FxFixingId = transportObject.FxFixingId,
+            MetaData = transportObject.MetaData,
+            Notional = transportObject.Notional,
+            PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
+            PaymentDate = transportObject.PaymentDate,
+            PaymentLag = !string.IsNullOrWhiteSpace(transportObject.PaymentLag) ? new Frequency(transportObject.PaymentLag) : 0.Day(),
+            PaymentLagRollType = transportObject.PaymentLagRollType,
+            PortfolioName = transportObject.PortfolioName,
+            SpotLag = !string.IsNullOrWhiteSpace(transportObject.SpotLag) ? new Frequency(transportObject.SpotLag) : 0.Day(),
+            SpotLagRollType = transportObject.SpotLagRollType,
+            TradeId = transportObject.TradeId,
+            ObsEndDate = transportObject.ObsEndDate,
+            ObsStartDate = transportObject.ObsStartDate,
+            WindowSize = transportObject.WindowSize,
+        };
+
     }
 }

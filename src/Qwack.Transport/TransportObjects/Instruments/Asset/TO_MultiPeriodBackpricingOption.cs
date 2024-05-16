@@ -71,6 +71,11 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public TO_DateShifter FixingOffset { get; set; }
         [ProtoMember(30)]
         public string OffsetFixingId { get; set; }
-        
+        [ProtoMember(31)]
+        public double? ScaleStrike { get; set; }
+        [ProtoMember(32)]
+        public double? ScaleProportion { get; set;}
+
+
     }
 }

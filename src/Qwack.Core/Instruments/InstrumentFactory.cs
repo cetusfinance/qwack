@@ -186,7 +186,7 @@ namespace Qwack.Core.Instruments
             Direction = transportObject.Direction,
             DiscountCurve = transportObject.DiscountCurve,
             FixingCalendar = calendarProvider.GetCalendarSafe(transportObject.FixingCalendar),
-            FixingDates = transportObject.FixingDates.Select(x=>x.Dates).ToList(),
+            FixingDates = transportObject.FixingDates.Select(x => x.Dates).ToList(),
             FxConversionType = transportObject.FxConversionType,
             FxFixingDates = transportObject.FxFixingDates?.Select(x => x.Dates).ToList(),
             FxFixingId = transportObject.FxFixingId,
@@ -204,9 +204,11 @@ namespace Qwack.Core.Instruments
             TradeId = transportObject.TradeId,
             OffsetFixingId = transportObject.OffsetFixingId,
             DeclaredPeriod = transportObject.DeclaredPeriod,
-            FixingOffset = transportObject.FixingOffset==null ? null : new DateShifter(transportObject.FixingOffset, calendarProvider),
+            FixingOffset = transportObject.FixingOffset == null ? null : new DateShifter(transportObject.FixingOffset, calendarProvider),
             SettlementFixingDates = transportObject.SettlementFixingDates,
             IsOption = transportObject.IsOption,
+            ScaleProportion = transportObject.ScaleProportion,
+            ScaleStrike = transportObject.ScaleStrike,
         };
 
         public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

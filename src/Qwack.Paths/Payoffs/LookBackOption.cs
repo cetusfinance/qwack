@@ -70,7 +70,8 @@ namespace Qwack.Paths.Payoffs
                     Span<Vector<double>> stepsFx = null;
                     if (_fxName != null)
                         stepsFx = block.GetStepsForFactor(path, _fxIndex);
-
+                    
+                    var winVec = new Vector<double>(_windowSize);
                     var runningTotal = new Vector<double>(0);
                     var minValue = new Vector<double>(double.MaxValue);
                     for (var i = 0; i < _dateIndexes.Length; i++)
@@ -87,10 +88,10 @@ namespace Qwack.Paths.Payoffs
                         }
 
                         if(i>=(_windowSize-1))
-                            minValue = Vector.Min(runningTotal, minValue);
+                            minValue = Vector.Min(runningTotal/ winVec, minValue);
                     }
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
-                    var payoff = (lastValue - minValue) * _notional;
+                    var payoff = Vector.Max(_zero,(lastValue - minValue) * _notional);
 
                     ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
 
@@ -126,7 +127,7 @@ namespace Qwack.Paths.Payoffs
                             maxValue = Vector.Max(runningTotal, maxValue);
                     }
                     var lastValue = steps[_dateIndexes.Last()] * (_fxName != null ? stepsFx[_dateIndexes.Last()] : _one);
-                    var payoff = (maxValue - lastValue) * _notional;
+                    var payoff = Vector.Max(_zero, (maxValue - lastValue) * _notional);
 
                     ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
 

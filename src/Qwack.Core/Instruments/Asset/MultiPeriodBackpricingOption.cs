@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -48,6 +49,9 @@ namespace Qwack.Core.Instruments.Asset
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
+
+        public double? ScaleStrike { get; set; }
+        public double? ScaleProportion { get; set; }
 
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
@@ -113,6 +117,9 @@ namespace Qwack.Core.Instruments.Asset
             DeclaredPeriod = DeclaredPeriod,
             FixingOffset = FixingOffset,
             OffsetFixingId = OffsetFixingId,
+            ScaleStrike = ScaleStrike,
+            ScaleProportion = ScaleProportion,
+            MetaData = new(MetaData)
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -154,6 +161,8 @@ namespace Qwack.Core.Instruments.Asset
             DeclaredPeriod = to.DeclaredPeriod;
             FixingOffset = new DateShifter(to.FixingOffset, calendarProvider);
             OffsetFixingId = to.OffsetFixingId;
+            ScaleProportion = to.ScaleProportion;
+            ScaleStrike = to.ScaleStrike;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -190,6 +199,9 @@ namespace Qwack.Core.Instruments.Asset
                 DeclaredPeriod = DeclaredPeriod,
                 FixingOffset = FixingOffset?.GetTransportObject(),
                 OffsetFixingId = OffsetFixingId,
+                ScaleProportion = ScaleProportion,
+                ScaleStrike = ScaleStrike,
+                MetaData = new(MetaData),
             }
         };
     }

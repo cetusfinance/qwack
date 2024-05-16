@@ -47,6 +47,8 @@ namespace Qwack.Paths.Payoffs
         private double[] _expiryToAvgCarrys;
         private bool _isOption;
         private int? _declaredPeriod;
+        private double? _scaleStrike;
+        private double? _scaleProportion;
 
         private double[] _contangoScaleFactors;
 
@@ -68,7 +70,20 @@ namespace Qwack.Paths.Payoffs
 
         public IAssetFxModel VanillaModel { get; set; }
 
-        public MultiPeriodBackPricingOptionPP(string assetName, List<DateTime[]> avgDates, DateTime decisionDate, DateTime[] settlementFixingDates, DateTime payDate, OptionType callPut, string discountCurve, Currency ccy, double notional, bool isOption = false, int? declaredPeriod = null, DateShifter dateShifter = null)
+        public MultiPeriodBackPricingOptionPP(string assetName,
+                                              List<DateTime[]> avgDates,
+                                              DateTime decisionDate,
+                                              DateTime[] settlementFixingDates,
+                                              DateTime payDate,
+                                              OptionType callPut,
+                                              string discountCurve,
+                                              Currency ccy,
+                                              double notional,
+                                              bool isOption = false,
+                                              int? declaredPeriod = null,
+                                              DateShifter dateShifter = null,
+                                              double? scaleStrike = null,
+                                              double? scaleProportion = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -82,7 +97,8 @@ namespace Qwack.Paths.Payoffs
             _isOption = isOption;
             _declaredPeriod = declaredPeriod;
             _dateShifter = dateShifter;
-
+            _scaleStrike = scaleStrike;
+            _scaleProportion = scaleProportion;
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
 
@@ -302,6 +318,12 @@ namespace Qwack.Paths.Payoffs
                 if (_isOption)
                 {
                     payoff = Vector.Max(new Vector<double>(0), payoff);
+                }
+
+                if(_scaleProportion.HasValue && _scaleStrike.HasValue)
+                {
+                    var scalePayoff = Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value;
+                    payoff -= scalePayoff;
                 }
 
                 _results[resultIx] = payoff * _notional;

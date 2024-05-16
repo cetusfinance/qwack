@@ -217,7 +217,7 @@ namespace Qwack.Models.MCModels
                 case AsianLookbackOption alb:
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional, SimulationCcy)
+                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional, SimulationCcy, alb.WindowSize)
                     };
                     break;
                 case Core.Instruments.Asset.BackPricingOption bpo:

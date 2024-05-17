@@ -238,7 +238,7 @@ namespace Qwack.Models.MCModels
                                                                              mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate },
                                                                              mbpo.SettlementDate, mbpo.CallPut,
                                                                              mbpo.DiscountCurve, mbpo.PaymentCurrency,
-                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset)
+                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset, scaleProportion: mbpo.ScaleProportion, scaleStrike:mbpo.ScaleStrike)
                     { 
                         VanillaModel = VanillaModel,
                         FixingId = mbpo.AssetFixingId,

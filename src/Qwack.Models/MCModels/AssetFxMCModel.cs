@@ -23,7 +23,7 @@ using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.MCModels
 {
-    public class AssetFxMCModel : IPvModel
+    public class AssetFxMCModel : IPvModel, IDisposable
     {
         private readonly string _num = "USD";
 
@@ -910,6 +910,11 @@ namespace Qwack.Models.MCModels
             }
 
             return factorValues;
-        } 
+        }
+
+        public void Dispose()
+        {
+            Engine?.Dispose();
+        }
     }
 }

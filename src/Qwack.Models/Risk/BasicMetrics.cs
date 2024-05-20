@@ -495,7 +495,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
+        public static ICube AssetDeltaSingleCurve(this IPvModel pvModel, string assetId, bool computeGamma = false, bool isSparseLMEMode = false, ICalendarProvider calendars = null, bool parallelize = false)
         {
             var bumpSize = 0.01;
             var cube = new ResultCube();
@@ -707,7 +707,7 @@ namespace Qwack.Models.Risk
                         }
                     }
                 }
-            }).Wait();
+            }, !parallelize).Wait();
 
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
@@ -1549,7 +1549,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize = 0.0001)
+        public static ICube AssetIrDelta(this IPvModel pvModel, Currency reportingCcy = null, double bumpSize = 0.0001, bool paralellize = true)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1633,7 +1633,7 @@ namespace Qwack.Models.Risk
                             cube.AddRow(row, delta);
                         }
                     }
-                }).Wait();
+                },!paralellize).Wait();
             }
 
             return cube.Sort();

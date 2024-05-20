@@ -291,7 +291,7 @@ namespace Qwack.Core.Instruments
             MetaData = transportObject.MetaData,
             Notional = transportObject.Notional,
             PaymentCalendar = calendarProvider.GetCalendarSafe(transportObject.PaymentCalendar),
-            PaymentDate = transportObject.PaymentDate,
+            SettlementDate = transportObject.SettlementDate,
             PaymentLag = !string.IsNullOrWhiteSpace(transportObject.PaymentLag) ? new Frequency(transportObject.PaymentLag) : 0.Day(),
             PaymentLagRollType = transportObject.PaymentLagRollType,
             PortfolioName = transportObject.PortfolioName,

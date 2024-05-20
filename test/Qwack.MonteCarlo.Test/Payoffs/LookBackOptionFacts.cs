@@ -16,7 +16,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
             var fc = GetFeatureCollection();
             var dates = Enumerable.Range(10, 10).Select(i => t.AddDays(i)).ToList();
             var usd = TestProviderHelper.CurrencyProvider.GetCurrency("USD");
-            var sut = new LookBackOption("Asset", dates, OptionType.C, "boo", usd, t.AddDays(100), 1.0, usd);
+            var sut = new LookBackOptionPP("Asset", dates, OptionType.C, "boo", usd, t.AddDays(100), 1.0, usd, dates.Last(), [dates.Last()]);
             var b = GetBlock(20);
 
             sut.SetupFeatures(fc.Object);

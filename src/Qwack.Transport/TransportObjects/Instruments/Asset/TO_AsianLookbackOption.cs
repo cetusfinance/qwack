@@ -41,7 +41,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(16)]
         public RollType PaymentLagRollType { get; set; } = RollType.F;
         [ProtoMember(17)]
-        public DateTime PaymentDate { get; set; }
+        public DateTime SettlementDate { get; set; }
         [ProtoMember(18)]
         public string AssetId { get; set; }
         [ProtoMember(19)]
@@ -58,5 +58,9 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string DiscountCurve { get; set; }
         [ProtoMember(25)]
         public int WindowSize { get; set; }
+        [ProtoMember(26)]
+        public DateTime DecisionDate { get; set; }
+        [ProtoMember(27)]
+        public DateTime[] SettlementFixingDates { get; set; }
     }
 }

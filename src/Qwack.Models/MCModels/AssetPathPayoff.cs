@@ -215,9 +215,11 @@ namespace Qwack.Models.MCModels
                         .ToList();
                     break;
                 case AsianLookbackOption alb:
+                    var settleFixingDate = alb.SettlementFixingDates == null ? alb.SettlementDate.SubtractPeriod(RollType.P, alb.FixingCalendar, 2.Bd()) : DateTime.MinValue;
+
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new Paths.Payoffs.LookBackOption(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.PaymentDate, alb.Notional, SimulationCcy, alb.WindowSize)
+                        new LookBackOptionPP(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.SettlementDate, alb.Notional, SimulationCcy, alb.DecisionDate, alb.SettlementFixingDates ?? new[] { settleFixingDate }, alb.WindowSize)
                     };
                     break;
                 case Core.Instruments.Asset.BackPricingOption bpo:
@@ -233,9 +235,9 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
                 case MultiPeriodBackpricingOption mbpo:
-                    var settleFixingDate = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
+                    var settleFixingDate2 = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
-                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate },
+                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
                                                                              mbpo.SettlementDate, mbpo.CallPut,
                                                                              mbpo.DiscountCurve, mbpo.PaymentCurrency,
                                                                              mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset, scaleProportion: mbpo.ScaleProportion, scaleStrike:mbpo.ScaleStrike)

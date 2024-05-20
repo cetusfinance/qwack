@@ -29,7 +29,11 @@ namespace Qwack.Core.Instruments.Asset
         public RollType SpotLagRollType { get; set; } = RollType.F;
         public Frequency PaymentLag { get; set; }
         public RollType PaymentLagRollType { get; set; } = RollType.F;
-        public DateTime PaymentDate { get; set; }
+
+        public DateTime SettlementDate { get; set; }
+        public DateTime[] SettlementFixingDates { get; set; }
+        public DateTime DecisionDate { get; set; }
+
         public string AssetId { get; set; }
         public string AssetFixingId { get; set; }
         public string FxFixingId { get; set; }
@@ -56,7 +60,7 @@ namespace Qwack.Core.Instruments.Asset
         }
         public Currency Currency => PaymentCurrency;
 
-        public DateTime LastSensitivityDate => PaymentDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
+        public DateTime LastSensitivityDate => SettlementDate.Max(ObsEndDate.AddPeriod(SpotLagRollType, FixingCalendar, SpotLag));
 
         public string FxPair(IAssetFxModel model) => IsFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
         public FxConversionType FxType(IAssetFxModel model) => IsFx ? FxConversionType.None : (model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
@@ -79,7 +83,7 @@ namespace Qwack.Core.Instruments.Asset
             SpotLagRollType = SpotLagRollType,
             PaymentLag = PaymentLag,
             PaymentLagRollType = PaymentLagRollType,
-            PaymentDate = PaymentDate,
+            SettlementDate = SettlementDate,
             PaymentCurrency = PaymentCurrency,
             AssetFixingId = AssetFixingId,
             AssetId = AssetId,
@@ -90,6 +94,9 @@ namespace Qwack.Core.Instruments.Asset
             WindowSize = WindowSize,
             PortfolioName = PortfolioName,
             CallPut = CallPut,
+            DecisionDate = DecisionDate,
+            SettlementFixingDates = SettlementFixingDates == null ? null : (DateTime[])SettlementFixingDates.Clone(),
+            MetaData = new(MetaData),
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -110,7 +117,7 @@ namespace Qwack.Core.Instruments.Asset
                           SpotLagRollType = SpotLagRollType,
                           PaymentLag = PaymentLag.ToString(),
                           PaymentLagRollType = PaymentLagRollType,
-                          PaymentDate = PaymentDate,
+                          SettlementDate = SettlementDate,
                           PaymentCurrency = PaymentCurrency,
                           AssetFixingId = AssetFixingId,
                           AssetId = AssetId,
@@ -121,6 +128,8 @@ namespace Qwack.Core.Instruments.Asset
                           WindowSize = WindowSize,
                           PortfolioName = PortfolioName,
                           CallPut = CallPut,
+                          DecisionDate = DecisionDate,
+                          SettlementFixingDates = SettlementFixingDates == null ? null : (DateTime[])SettlementFixingDates.Clone(),
                       }
                   };
     }

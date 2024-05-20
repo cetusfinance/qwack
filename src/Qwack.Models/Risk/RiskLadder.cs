@@ -25,7 +25,8 @@ namespace Qwack.Models.Risk
         public Currency Ccy { get; private set; }
         public FxPair FxPair { get; private set; }
         public bool LMESparseDeltaMode { get; set; }
-
+        public bool ParallelizeRiskMetric { get; set; } = true;
+        public bool ParallelizeOuterCalc { get; set; } = true;
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
@@ -160,7 +161,7 @@ namespace Qwack.Models.Risk
                 }
 
                 results[i] = result;
-            }).Wait();
+            }, !ParallelizeOuterCalc).Wait();
 
             for (var i = 0; i < results.Length; i++)
             {
@@ -173,10 +174,10 @@ namespace Qwack.Models.Risk
 
         private ICube GetRisk(IPvModel model) => Metric switch
         {
-            RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId, isSparseLMEMode: LMESparseDeltaMode, calendars: CalendarProvider),
-            RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId, isSparseLMEMode: LMESparseDeltaMode, calendars: CalendarProvider, parallelize:ParallelizeRiskMetric),
+            RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, ParallelizeRiskMetric),
             RiskMetric.PV => model.PV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
-            RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, paralellize: ParallelizeRiskMetric),
             RiskMetric.FxDelta => model.FxDelta(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, CurrencyProvider, false, ShouldInvert(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency)),
             _ => throw new Exception($"Unable to process risk metric {Metric}"),
         };

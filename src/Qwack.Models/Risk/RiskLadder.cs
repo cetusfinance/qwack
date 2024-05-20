@@ -11,7 +11,7 @@ using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Risk
 {
-    public class RiskLadder
+    public class RiskLadder : IDisposable
     {
         public ICurrencyProvider CurrencyProvider { get; set; }
         public ICalendarProvider CalendarProvider { get; set; }
@@ -132,6 +132,7 @@ namespace Qwack.Models.Risk
                     baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
                 }
                 baseRiskCube = GetRisk(baseModel);
+                baseModel.Dispose();
             }
 
             var threadLock = new object();
@@ -147,7 +148,9 @@ namespace Qwack.Models.Risk
                     pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
                 }
                 var result = GetRisk(pvModel);
-
+                
+                pvModel.Dispose();
+                
                 if (ReturnDifferential)
                 {
                     try
@@ -184,5 +187,10 @@ namespace Qwack.Models.Risk
 
         static string[] _inverseCcys = new[] { "EUR", "GBP", "AUD", "NZD" };
         private static bool ShouldInvert(string ccy) => !_inverseCcys.Contains(ccy);
+
+        public void Dispose()
+        {
+
+        }
     }
 }

@@ -33,6 +33,10 @@ namespace Qwack.Models.Risk
 
         public List<FxPair> FxPairsForDelta { get; set; }
 
+        public bool ParallelizeRiskMetric { get; set; } = true;
+        public bool ParallelizeOuterCalc { get; set; } = true;
+
+
         public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
         {
             AssetId = assetId;
@@ -251,6 +255,7 @@ namespace Qwack.Models.Risk
                     baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
                 }
                 baseRiskCube = GetRisk(baseModel);
+                baseModel.Dispose();
             }
 
             var threadLock = new object();
@@ -266,14 +271,14 @@ namespace Qwack.Models.Risk
                     pvModel = pvModel.Rebuild(pvModel.VanillaModel, portfolio);
                 }
                 var result = GetRisk(pvModel);
-
+                pvModel.Dispose();
                 if (ReturnDifferential)
                 {
                     result = result.Difference(baseRiskCube);
                 }
 
                 results[i] = result;
-            }).Wait();
+            },!ParallelizeOuterCalc).Wait();
 
             for (var i = 0; i < results.Length; i++)
             {
@@ -290,7 +295,7 @@ namespace Qwack.Models.Risk
 
         private ICube GetRisk(IPvModel model) => Metric switch
         {
-            RiskMetric.AssetCurveDelta => model.AssetDelta(),
+            RiskMetric.AssetCurveDelta => model.AssetDelta(parallelize:ParallelizeRiskMetric),
             RiskMetric.PV => model.PV(Ccy??model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             //case RiskMetric.AssetCurveDeltaGamma:
             //    return portfolio.AssetDeltaGamma(model);

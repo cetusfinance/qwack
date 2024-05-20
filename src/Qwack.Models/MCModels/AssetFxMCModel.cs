@@ -23,7 +23,7 @@ using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.MCModels
 {
-    public class AssetFxMCModel : IPvModel, IDisposable
+    public class AssetFxMCModel : IPvModel
     {
         private readonly string _num = "USD";
 

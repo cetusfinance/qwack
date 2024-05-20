@@ -349,9 +349,9 @@ namespace Qwack.Models
             returnObject.Portfolio = _portfolio?.ToTransportObject();
             return returnObject;
         }
-            
-            
-            
+
+
+
         public void RemovePriceCurve(IPriceCurve curve) => _assetCurves.Remove(curve.Name);
 
         public void RemoveVolSurface(IVolSurface surface)
@@ -417,5 +417,9 @@ namespace Qwack.Models
 
             return CorrelationMatrix.GetCorrelation(label1, label2, t);
         }
+
+        public void Dispose() 
+        {
+        } 
     }
 }

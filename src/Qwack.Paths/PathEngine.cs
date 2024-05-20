@@ -225,10 +225,11 @@ namespace Qwack.Paths
 
         public void Dispose()
         {
-            foreach (var block in _blockset)
-            {
-                block.Dispose();
-            }
+            if(_blockset!=null)
+                foreach (var block in _blockset)
+                {
+                    block?.Dispose();
+                }
         }
     }
 }

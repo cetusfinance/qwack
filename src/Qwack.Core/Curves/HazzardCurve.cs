@@ -71,5 +71,6 @@ namespace Qwack.Core.Curves
             var df = discountCurve.GetDf(startDate, endDate);
             return (1.0 - el) * df;
         }
+
     }
 }

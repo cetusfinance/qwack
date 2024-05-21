@@ -40,7 +40,7 @@ namespace Qwack.Core.Models
             NumberOfTimesteps = to.NumberOfTimesteps;
             Parallelize = to.Parallelize;
             ReportingCurrency = currencyProvider.GetCurrencySafe(to.ReportingCurrency);
-            CreditSettings = new CreditSettings(to.CreditSettings, currencyProvider, calendarProvider);
+            CreditSettings = to.CreditSettings==null ? new CreditSettings() : new CreditSettings(to.CreditSettings, currencyProvider, calendarProvider);
         }
 
         public McSettings Clone() => new()
@@ -59,7 +59,24 @@ namespace Qwack.Core.Models
             Parallelize = Parallelize,
             ReportingCurrency = ReportingCurrency,
             CreditSettings = CreditSettings.Clone(),
-            
+        };
+
+        public TO_McSettings GetTransportObject() => new()
+        {
+            AveragePathCorrection = AveragePathCorrection,
+            AvoidRegressionForBackPricing = AvoidRegressionForBackPricing,
+            CompactMemoryMode = CompactMemoryMode,
+            DebugMode = DebugMode,
+            ExpensiveFuturesSimulation = ExpensiveFuturesSimulation,
+            FuturesMappingTable = FuturesMappingTable,
+            Generator = Generator,
+            LocalCorrelation = LocalCorrelation,
+            McModelType = McModelType,
+            NumberOfPaths = NumberOfPaths,
+            NumberOfTimesteps = NumberOfTimesteps,
+            Parallelize = Parallelize,
+            ReportingCurrency = ReportingCurrency,
+            //CreditSettings = CreditSettings.(),
         };
     }
 }

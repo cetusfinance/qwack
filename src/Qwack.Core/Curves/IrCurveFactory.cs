@@ -18,5 +18,16 @@ namespace Qwack.Core.Curves
 
             throw new NotImplementedException("Unable to deserialize IR curve from transport object");
         }
+
+        public static TO_IIrCurve GetTransportObject(this IIrCurve curve)
+        {
+            if (curve is IrCurve ir)
+                return new TO_IIrCurve { IrCurve = ir.GetTransportObject() };
+            else if (curve is SeasonalCpiCurve scpi)
+                return new TO_IIrCurve { SeasonalCpiCurve = scpi.GetTransportObject() };
+            else if (curve is CPICurve cpi)
+                return new TO_IIrCurve { CPICurve = cpi.GetTransportObject() };
+            return null;
+        }
     }
 }

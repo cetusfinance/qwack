@@ -55,12 +55,12 @@ namespace Qwack.Core.Models
         {
             Metric = Metric,
             ConfidenceInterval = ConfidenceInterval,
-            //CreditCurve = CreditCurve.ToTr,
+            CreditCurve = CreditCurve.GetTransportObject(),
             LGD = LGD,
             CounterpartyRiskWeighting = CounterpartyRiskWeighting,
             AssetIdToHedgeGroupMap = AssetIdToHedgeGroupMap,
-            //FundingCurve = FundingCurve,
-            //BaseDiscountCurve = BaseDiscountCurve,
+            FundingCurve = FundingCurve.GetTransportObject(),
+            BaseDiscountCurve = BaseDiscountCurve.GetTransportObject(),
             PfeRegressorType = PfeRegressorType,
             ExposureDates = ExposureDates
         };

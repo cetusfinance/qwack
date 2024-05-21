@@ -72,5 +72,11 @@ namespace Qwack.Core.Curves
             return (1.0 - el) * df;
         }
 
+        public TO_HazzardCurve GetTransportObject() => new()
+        {
+            OriginDate = OriginDate,
+            Basis = Basis,
+            ConstantPD = ConstantPD,
+        };
     }
 }

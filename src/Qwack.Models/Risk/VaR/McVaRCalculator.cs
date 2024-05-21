@@ -11,6 +11,7 @@ using Qwack.Futures;
 using Qwack.Models.MCModels;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using Qwack.Transport.Results;
 
 namespace Qwack.Models.Risk.VaR

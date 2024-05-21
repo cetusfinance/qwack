@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+using ProtoBuf;
 using Qwack.Core.Basic;
+using Qwack.Dates;
+using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Models;
 
 namespace Qwack.Core.Models
 {
@@ -20,6 +24,25 @@ namespace Qwack.Core.Models
         public bool AvoidRegressionForBackPricing { get; set; }
         public CreditSettings CreditSettings { get; set; } = new CreditSettings();
 
+        public McSettings() { }
+        public McSettings(TO_McSettings to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        {
+            AveragePathCorrection = to.AveragePathCorrection;
+            AvoidRegressionForBackPricing = to.AvoidRegressionForBackPricing;
+            CompactMemoryMode = to.CompactMemoryMode;
+            DebugMode = to.DebugMode;
+            ExpensiveFuturesSimulation = to.ExpensiveFuturesSimulation;
+            FuturesMappingTable = to.FuturesMappingTable;
+            Generator = to.Generator;
+            LocalCorrelation = to.LocalCorrelation;
+            McModelType = to.McModelType;
+            NumberOfPaths = to.NumberOfPaths;
+            NumberOfTimesteps = to.NumberOfTimesteps;
+            Parallelize = to.Parallelize;
+            ReportingCurrency = currencyProvider.GetCurrencySafe(to.ReportingCurrency);
+            CreditSettings = new CreditSettings(to.CreditSettings, currencyProvider, calendarProvider);
+        }
+
         public McSettings Clone() => new()
         {
             AveragePathCorrection = AveragePathCorrection,
@@ -35,7 +58,8 @@ namespace Qwack.Core.Models
             NumberOfTimesteps = NumberOfTimesteps,
             Parallelize = Parallelize,
             ReportingCurrency = ReportingCurrency,
-            CreditSettings = CreditSettings.Clone()
+            CreditSettings = CreditSettings.Clone(),
+            
         };
     }
 }

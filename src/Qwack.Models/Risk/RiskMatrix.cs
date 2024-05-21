@@ -35,7 +35,7 @@ namespace Qwack.Models.Risk
 
         public bool ParallelizeRiskMetric { get; set; } = true;
         public bool ParallelizeOuterCalc { get; set; } = true;
-
+        public bool LMESparseDeltaMode { get; set; }
 
         public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
         {
@@ -295,7 +295,7 @@ namespace Qwack.Models.Risk
 
         private ICube GetRisk(IPvModel model) => Metric switch
         {
-            RiskMetric.AssetCurveDelta => model.AssetDelta(parallelize:ParallelizeRiskMetric),
+            RiskMetric.AssetCurveDelta => model.AssetDelta(isSparseLMEMode:LMESparseDeltaMode, calendars:_calendar, parallelize:ParallelizeRiskMetric),
             RiskMetric.PV => model.PV(Ccy??model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             //case RiskMetric.AssetCurveDeltaGamma:
             //    return portfolio.AssetDeltaGamma(model);

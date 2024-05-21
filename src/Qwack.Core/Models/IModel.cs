@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
+using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Core.Models
 {

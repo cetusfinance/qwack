@@ -35,7 +35,7 @@ namespace Qwack.Models.MCModels
             var dirPath = Path.GetDirectoryName(codeBasePath);
             return dirPath;
         }
-        public PathEngine Engine { get; }
+        public PathEngine Engine { get; private set; }
         public DateTime OriginDate { get; }
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
@@ -53,7 +53,7 @@ namespace Qwack.Models.MCModels
 
         private int _priceFactorDepth;
 
-        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = false)
+        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = true)
         {
             if (settings.CompactMemoryMode && settings.AveragePathCorrection)
                 throw new Exception("Can't use both CompactMemoryMode and PathCorrection");
@@ -61,11 +61,6 @@ namespace Qwack.Models.MCModels
             _currencyProvider = currencyProvider;
             _futureSettingsProvider = futureSettingsProvider;
             _calendarProvider = calendarProvider;
-            Engine = new PathEngine(settings.NumberOfPaths)
-            {
-                Parallelize = settings.Parallelize,
-                CompactMemoryMode = settings.CompactMemoryMode
-            };
             OriginDate = originDate;
             Portfolio = portfolio;
             Model = model;
@@ -82,6 +77,12 @@ namespace Qwack.Models.MCModels
         {
             if (_initialized)
                 return;
+
+            Engine = new PathEngine(Settings.NumberOfPaths)
+            {
+                Parallelize = Settings.Parallelize,
+                CompactMemoryMode = Settings.CompactMemoryMode
+            };
 
             switch (Settings.Generator)
             {
@@ -671,16 +672,12 @@ namespace Qwack.Models.MCModels
             Engine.AddPathProcess(fp);
 
             Engine.SetupFeatures();
-            _initialized = true;
         }
 
         public ICube PFE(double confidenceLevel) => PackResults(() => FudgePFE(confidenceLevel), "PFE");
 
         private double[] FudgePFE(double confidenceLevel)
         {
-            if (!_initialized)
-                Initialize();
-
             var pfe = _regressor.PFE(Model, confidenceLevel);
             if (Settings.CreditSettings.ExposureDates.First() == Model.BuildDate)
             {
@@ -700,8 +697,9 @@ namespace Qwack.Models.MCModels
         public ICube FullPack(double confidenceLevel)
         {
             if (!_initialized)
+            {
                 Initialize();
-        
+            }
             var pfe = PFE(confidenceLevel);
             var epe = EPE();
             var cvaDouble = CVA();
@@ -732,6 +730,11 @@ namespace Qwack.Models.MCModels
 
         private ICube PackResults(Func<double[]> method, string metric)
         {
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -739,10 +742,6 @@ namespace Qwack.Models.MCModels
                 { Metric, typeof(string) }
             };
             cube.Initialize(dataTypes);
-            
-            if (!_initialized)
-                Initialize();
-            
             Engine.RunProcess();
 
             var e = method.Invoke();
@@ -757,8 +756,9 @@ namespace Qwack.Models.MCModels
         private ICube PackResults(Func<Dictionary<DateTime, double>> method, string metric)
         {
             if (!_initialized)
+            {
                 Initialize();
-
+            }
             Engine.RunProcess();
             var e = method.Invoke();
             return PackResults(e, metric);
@@ -782,6 +782,11 @@ namespace Qwack.Models.MCModels
 
         public ICube ExpectedExercise()
         {
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -794,10 +799,7 @@ namespace Qwack.Models.MCModels
                 { "RefPrice", typeof(double) },
                 { Consts.Cubes.Portfolio, typeof(string) },
             };
-
-            if (!_initialized)
-                Initialize();
-
+        
             cube.Initialize(dataTypes);
 
             //prime PV
@@ -878,6 +880,11 @@ namespace Qwack.Models.MCModels
 
         private ICube CleanPV(Currency reportingCurrency, ICube cube)
         {
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
             var ccy = reportingCurrency?.ToString();
 
 
@@ -893,9 +900,6 @@ namespace Qwack.Models.MCModels
                 };
                 cube.Initialize(dataTypes);
             }
-
-            if (!_initialized)
-                Initialize();
             Engine.RunProcess();
 
             foreach (var kv in _payoffs)
@@ -939,9 +943,6 @@ namespace Qwack.Models.MCModels
 
         public Dictionary<double, Dictionary<string, double[]>> GetFactorValues()
         {
-            if (!_initialized)
-                Initialize();
-
             var factorValues = new Dictionary<double, Dictionary<string, double[]>>();
             Engine.RunProcess();
 

@@ -583,6 +583,8 @@ namespace Qwack.Models.Risk
                 var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
 
                 var bumpedPVCube = newPvModel.PV(curveObj.Currency);
+                newPvModel.Dispose();
+
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
                     throw new Exception("Dimensions do not match");
@@ -610,6 +612,7 @@ namespace Qwack.Models.Risk
                     var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
 
                     var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
+                    newPvModelDown.Dispose();
                     bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
                     if (bumpedRowsDown.Length != pvRows.Length)
                         throw new Exception("Dimensions do not match");

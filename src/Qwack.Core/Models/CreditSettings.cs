@@ -50,5 +50,19 @@ namespace Qwack.Core.Models
             PfeRegressorType = PfeRegressorType,
             ExposureDates = ExposureDates
         };
+
+        public TO_CreditSettings GetTransportObject() => new()
+        {
+            Metric = Metric,
+            ConfidenceInterval = ConfidenceInterval,
+            //CreditCurve = CreditCurve.ToTr,
+            LGD = LGD,
+            CounterpartyRiskWeighting = CounterpartyRiskWeighting,
+            AssetIdToHedgeGroupMap = AssetIdToHedgeGroupMap,
+            //FundingCurve = FundingCurve,
+            //BaseDiscountCurve = BaseDiscountCurve,
+            PfeRegressorType = PfeRegressorType,
+            ExposureDates = ExposureDates
+        };
     }
 }

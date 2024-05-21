@@ -16,7 +16,7 @@ namespace Qwack.Core.Curves
             else if (to.CPICurve != null)
                 return (IIrCurve)new CPICurve(to.CPICurve, calendarProvider);
 
-            throw new NotImplementedException("Unable to deserialize IR curve from transport object")
+            throw new NotImplementedException("Unable to deserialize IR curve from transport object");
         }
     }
 }

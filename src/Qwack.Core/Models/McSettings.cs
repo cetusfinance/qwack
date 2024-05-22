@@ -23,6 +23,7 @@ namespace Qwack.Core.Models
         public bool CompactMemoryMode { get; set; }
         public bool AvoidRegressionForBackPricing { get; set; }
         public CreditSettings CreditSettings { get; set; } = new CreditSettings();
+        public string GeneratorKey { get; set; }
 
         public McSettings() { }
         public McSettings(TO_McSettings to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)

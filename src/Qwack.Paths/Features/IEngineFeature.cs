@@ -4,5 +4,6 @@ namespace Qwack.Paths.Features
     {
         int NumberOfPaths { get; }
         int RoundedNumberOfPaths { get; }
+        bool CompactMemoryMode { get; }
     }
 }

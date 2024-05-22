@@ -61,10 +61,6 @@ namespace Qwack.Random.Sobol
             }
         }
 
-        public void Finish()
-        {
-        }
-
         public uint GetValueViaGreyCode(int path, int dimension)
         {
             var nPath = (uint)path + 1;

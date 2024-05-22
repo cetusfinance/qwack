@@ -18,6 +18,7 @@ using Qwack.Paths;
 using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Paths.Regressors;
+using Qwack.Random;
 using Qwack.Transport.BasicTypes;
 using static Qwack.Core.Basic.Consts.Cubes;
 
@@ -49,6 +50,7 @@ namespace Qwack.Models.MCModels
         private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly ICalendarProvider _calendarProvider;
         private ExpectedCapitalCalculator _capitalCalc;
+        private IDisposable? _cachedRandom;
         private bool _initialized = false;
 
         private int _priceFactorDepth;
@@ -94,11 +96,20 @@ namespace Qwack.Models.MCModels
                     });
                     break;
                 case RandomGeneratorType.Sobol:
-                    var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
-                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
+                    if (Settings.GeneratorKey == null)
                     {
-                        UseNormalInverse = true
-                    });
+                        var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
+                        Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
+                        {
+                            UseNormalInverse = true
+                        });
+                    }
+                    else
+                    {
+                        var rand = RandomCache.RegisterForRandom(Settings.GeneratorKey);
+                        _cachedRandom = rand;
+                        Engine.AddPathProcess((IPathProcess)rand);
+                    }
                     break;
                 case RandomGeneratorType.Constant:
                     Engine.AddPathProcess(new Random.Constant.Constant()
@@ -531,7 +542,7 @@ namespace Qwack.Models.MCModels
                     break;
                 case RandomGeneratorType.Sobol:
                     var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
-                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1000)
+                    Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
                     {
                         UseNormalInverse = true
                     });
@@ -958,6 +969,7 @@ namespace Qwack.Models.MCModels
 
         public void Dispose()
         {
+            _cachedRandom?.Dispose();
             Engine?.Dispose();
         }
     }

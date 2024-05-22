@@ -50,7 +50,7 @@ namespace Qwack.Paths
             for (var i = 0; i < _blocks.Length; i++)
             {
                 var pathsThisBlock = (i == _blocks.Length - 1) ? pathsPerBlock - _overrun : pathsPerBlock;
-                _blocks[i] = new PathBlock(pathsThisBlock, factors, steps, i * pathsPerBlock, compactMode);
+                _blocks[i] = new PathBlock(pathsThisBlock, factors, steps, i * pathsPerBlock, i, compactMode);
             }
         }
 

@@ -13,12 +13,12 @@ namespace Qwack.Paths
         private GCHandle _handle;
         private double[] _backingArray;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
-
         private readonly bool _lazyInit;
 
-        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex, bool lazyInit = false)
+        public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex,int blockIndex, bool lazyInit = false)
         {
             GlobalPathIndex = globalPathIndex;
+            BlockIndex = blockIndex;
             _numberOfPaths = numberOfPaths;
             _numberOfFactors = factors;
             _numberOfSteps = numberOfSteps;
@@ -41,6 +41,9 @@ namespace Qwack.Paths
                 }
             }
         }
+
+        public int BlockIndex { get; }
+
         private void Init()
         {
             _backingArray = new double[_numberOfPaths * _numberOfFactors * _numberOfSteps];

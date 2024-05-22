@@ -13,6 +13,7 @@ namespace Qwack.Core.Models
         int NumberOfSteps { get; }
         double[] RawData { get; }
         int TotalBlockSize { get; }
+        int BlockIndex { get; }
 
         void Dispose();
         Span<double> GetEntirePath(int pathId);

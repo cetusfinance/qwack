@@ -65,7 +65,7 @@ namespace Qwack.Core.Cubes
             _fieldNames = transportObject.FieldNames;
             _types = transportObject.Types.ToDictionary(x => x.Key, x => Type.GetType(x.Value));
             var types = _fieldNames.Select(x => _types[x]).ToArray();
-            _rows = transportObject.Rows.Select(x => new ResultCubeRow(x, types)).ToList();
+            _rows = transportObject.Rows?.Select(x => new ResultCubeRow(x, types)).ToList() ?? new List<ResultCubeRow>();
         }
 
         public void Initialize(Dictionary<string, Type> dataTypes)

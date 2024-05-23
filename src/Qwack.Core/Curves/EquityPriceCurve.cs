@@ -85,7 +85,7 @@ namespace Qwack.Core.Curves
         }
 
         public EquityPriceCurve(TO_EquityPriceCurve to, IFundingModel fundingModel, ICurrencyProvider currencyProvider)
-            : this(to.BuildDate, to.Spot, to.Currency, fundingModel.GetCurve(to.Currency), to.SpotDate, to.PillarDates, to.DivYields, to.DiscreteDivDates,
+            : this(to.BuildDate, to.Spot, to.Currency, fundingModel?.GetCurve(to.Currency), to.SpotDate, to.PillarDates, to.DivYields, to.DiscreteDivDates,
                   to.DiscreteDivs, currencyProvider, to.Basis, to.PillarLabels)
         {
             AssetId = to.AssetId;

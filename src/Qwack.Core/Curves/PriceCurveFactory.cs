@@ -29,6 +29,8 @@ namespace Qwack.Core.Curves
             if (transportObject.ContangoPriceCurve != null)
                 return new ContangoPriceCurve(transportObject.ContangoPriceCurve, currencyProvider);
 
+            if (transportObject.EquityPriceCurve != null)
+                return new EquityPriceCurve(transportObject.EquityPriceCurve, null, currencyProvider);
 
             throw new Exception("Unable to build price curve");
         }

@@ -32,7 +32,7 @@ namespace Qwack.MonteCarlo.Test.Payoffs
 
         public static IPathBlock GetBlock(int nSteps)
         {
-            var b = new PathBlock(_nPaths, 2, nSteps, 0);
+            var b = new PathBlock(_nPaths, 2, nSteps, 0, 0);
 
             for (var i = 0; i < _nPaths; i += Vector<double>.Count)
             {

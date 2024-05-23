@@ -48,7 +48,7 @@ namespace Qwack.Math.Tests.Random
         [Fact]
         public void TestBlockGeneration()
         {
-            var block = new PathBlock(512, 1, 50, 0);
+            var block = new PathBlock(512, 1, 50, 0, 0);
             var gen = new SobolPathGenerator(new SobolDirectionNumbers(s_directionNumbers), 0);
             var fetCollection = new FeatureCollection();
             var engine = new FakeEngine();
@@ -98,6 +98,8 @@ namespace Qwack.Math.Tests.Random
             public DateTime[] Dates => throw new NotImplementedException();
 
             public int RoundedNumberOfPaths => throw new NotImplementedException();
+
+            public bool CompactMemoryMode => throw new NotImplementedException();
 
             public void AddDate(DateTime date) => throw new NotImplementedException();
 

@@ -19,7 +19,7 @@ namespace Qwack.Math.Tests.Random
         [Fact]
         public void TestBlockGeneration()
         {
-            var block = new PathBlock(64, 1, 10, 0);
+            var block = new PathBlock(64, 1, 10, 0, 0);
             var retVal = 0.5;
             var gen = new Constant(retVal);
             var fetCollection = new FeatureCollection();

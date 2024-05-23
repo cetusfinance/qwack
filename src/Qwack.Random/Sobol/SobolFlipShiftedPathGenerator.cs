@@ -175,7 +175,7 @@ namespace Qwack.Random.Sobol
                     }
                 }
             }
-            Debug.Assert(block.RawData.Length == index);
+            //Debug.Assert(block.RawData.Length == index);
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)

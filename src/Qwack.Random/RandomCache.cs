@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using CsvHelper;
 using Qwack.Core.Models;
 using Qwack.Paths;
 using Qwack.Paths.Features;
 using Qwack.Random.Sobol;
-using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Random
 {
@@ -102,7 +99,7 @@ namespace Qwack.Random
             public void Process(IPathBlock block)
             {
                 var currentBlock = _blockset.GetBlock(block.BlockIndex);
-                Array.Copy(currentBlock.RawData, block.RawData, currentBlock.RawData.Length);
+                Array.Copy(currentBlock.RawData, block.RawData, currentBlock.TotalBlockSize);
             }
         }
     }

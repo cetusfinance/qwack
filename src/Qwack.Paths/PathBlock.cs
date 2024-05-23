@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Qwack.Core.Models;
@@ -46,7 +47,7 @@ namespace Qwack.Paths
 
         private void Init()
         {
-            _backingArray = new double[_numberOfPaths * _numberOfFactors * _numberOfSteps];
+            _backingArray = ArrayPool<double>.Shared.Rent(_numberOfPaths * _numberOfFactors * _numberOfSteps);
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
 
@@ -118,6 +119,11 @@ namespace Qwack.Paths
             if (_handle.IsAllocated)
             {
                 _handle.Free();
+            }
+            if (_backingArray != null)
+            {
+                ArrayPool<double>.Shared.Return(_backingArray);
+                _backingArray = null;
             }
             GC.SuppressFinalize(this);
         }

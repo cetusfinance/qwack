@@ -9,6 +9,7 @@ using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Instruments.Funding;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Futures;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Models.MCModels;
@@ -1683,6 +1684,12 @@ namespace Qwack.Models.Models
             rolledModel.CorrelationMatrix = model.CorrelationMatrix;
 
             return rolledModel;
+        }
+
+        public static AssetFxMCModel RollModel(this AssetFxMCModel model, DateTime fwdValDate, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettings, ICalendarProvider calendarProvider,  bool fillFixings = true)
+        {
+            var rolledVanilla = model.VanillaModel.RollModel(fwdValDate,currencyProvider, fillFixings);
+            return new AssetFxMCModel(rolledVanilla.BuildDate, model.Portfolio, rolledVanilla, model.Settings, currencyProvider, futureSettings, calendarProvider);
         }
 
         public static IAssetFxModel RollModelPfe(this IAssetFxModel model, DateTime fwdValDate, double confidenceInterval,

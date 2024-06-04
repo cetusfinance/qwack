@@ -1,4 +1,5 @@
 <Project>
     <PropertyGroup>
         <VersionPrefix>0.8.21</VersionPrefix>
+	</PropertyGroup>
 </Project>

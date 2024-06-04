@@ -807,7 +807,6 @@ namespace Qwack.Models.MCModels
                 { "PeriodStart", typeof(DateTime) },
                 { "PeriodEnd", typeof(string) },
                 { Metric, typeof(string) },
-                { "RefPrice", typeof(double) },
                 { Consts.Cubes.Portfolio, typeof(string) },
             };
         
@@ -832,6 +831,7 @@ namespace Qwack.Models.MCModels
                             { "PeriodStart", bpo.PeriodDates[i].Item1 },
                             { "PeriodEnd", bpo.PeriodDates[i].Item2 },
                             { Metric, "ExpectedExercise" },
+                            { Consts.Cubes.Portfolio, string.Empty },
                         }, expectedEx[i]);
                     }
                 }

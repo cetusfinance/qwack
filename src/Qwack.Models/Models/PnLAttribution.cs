@@ -1414,7 +1414,6 @@ namespace Qwack.Models.Models
         {
             //first do normal attribution
             var cube = startPortfolio.ExplainAttributionInLineGreeks(startModel, endModel, reportingCcy, currencyProvider, cashOnDayAlreadyPaid);
-
             cube = cube.EnrichWithPortfolio(startPortfolio);
 
             //then do activity PnL

@@ -1702,6 +1702,8 @@ namespace Qwack.Models.Risk
                             if (trade.MetaData.TryGetValue(key, out var metaData))
                                 row[key] = metaData;
                         }
+                        if (trade is IAssetInstrument ia)
+                            row[AssetId] = ia.AssetIds.FirstOrDefault() ?? string.Empty;
                     }
                     cube.AddRow(row, theta);
                 }
@@ -1728,6 +1730,8 @@ namespace Qwack.Models.Risk
                             if (trade.MetaData.TryGetValue(key, out var metaData))
                                 row[key] = metaData;
                         }
+                        if (trade is IAssetInstrument ia)
+                            row[AssetId] = ia.AssetIds.FirstOrDefault() ?? string.Empty;
                     }
                     cube.AddRow(row, cash);
                 }

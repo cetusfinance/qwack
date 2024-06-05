@@ -184,6 +184,53 @@ namespace Qwack.Models.Risk
             return o;
         }
 
+        public ICube GenerateFromCubes(Dictionary<string,ICube> cubes, ICube baseRiskCube)
+        {
+            var o = new ResultCube();
+            o.Initialize(new Dictionary<string, Type> { { "Scenario", typeof(string) } });
+
+            var matchingFields = GetCubeMatchingFields(Metric);
+
+            var threadLock = new object();
+            var results = new ICube[cubes.Count];
+            var scList = cubes.ToList();
+
+            var taskCount = (double)scList.Count;
+            var tasksCompleted = 0;
+            for(var i=0; i<scList.Count, i++)
+            {
+                var scenario = scList[i];
+                var result = scenario.Value;
+
+                if (ReturnDifferential)
+                {
+                    try
+                    {
+                        result = result.Difference(baseRiskCube, matchingFields);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                }
+
+                results[i] = result;
+
+                Interlocked.Increment(ref tasksCompleted);
+                ProgressAction?.Invoke(Convert.ToDouble(tasksCompleted) / taskCount);
+            };
+
+            for (var i = 0; i < results.Length; i++)
+            {
+                o = (ResultCube)o.Merge(results[i],
+                    new Dictionary<string, object> { { "Scenario", scList[i].Key } }, null, true);
+            }
+
+            return o;
+        }
+
+
+
         private ICube GetRisk(IPvModel model) => Metric switch
         {
             RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId, isSparseLMEMode: LMESparseDeltaMode, calendars: CalendarProvider, parallelize:ParallelizeRiskMetric),

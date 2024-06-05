@@ -197,7 +197,7 @@ namespace Qwack.Models.Risk
 
             var taskCount = (double)scList.Count;
             var tasksCompleted = 0;
-            for(var i=0; i<scList.Count, i++)
+            for (var i = 0; i < scList.Count; i++)
             {
                 var scenario = scList[i];
                 var result = scenario.Value;
@@ -218,7 +218,7 @@ namespace Qwack.Models.Risk
 
                 Interlocked.Increment(ref tasksCompleted);
                 ProgressAction?.Invoke(Convert.ToDouble(tasksCompleted) / taskCount);
-            };
+            }
 
             for (var i = 0; i < results.Length; i++)
             {

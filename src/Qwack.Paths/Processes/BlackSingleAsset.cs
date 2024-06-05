@@ -153,7 +153,7 @@ namespace Qwack.Paths.Processes
 
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             _timesteps.AddDate(_startDate);
-            _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
+            //_timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
 
             var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
             var simDates = new List<DateTime>();

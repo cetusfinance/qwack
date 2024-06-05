@@ -1651,7 +1651,7 @@ namespace Qwack.Models.Models
                         {
                             if (newDict.FixingDictionaryType == FixingDictionaryType.Asset)
                             {
-                                var curve = model.GetPriceCurve(newDict.AssetId);
+                                var curve = model.GetPriceCurve(newDict.AssetId ?? (fixingName?.Split('¬').FirstOrDefault()));
                                 var estFixing = curve.GetPriceForDate(date.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag));
                                 newDict.Add(date, estFixing);
                             }

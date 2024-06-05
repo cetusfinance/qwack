@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -13,6 +14,8 @@ namespace Qwack.Models.Risk
 {
     public class RiskLadder : IDisposable
     {
+        public Action<double> ProgressAction { get; set; } 
+
         public ICurrencyProvider CurrencyProvider { get; set; }
         public ICalendarProvider CalendarProvider { get; set; }
 
@@ -139,6 +142,8 @@ namespace Qwack.Models.Risk
             var results = new ICube[scenarios.Count];
             var scList = scenarios.ToList();
 
+            var taskCount = (double) scList.Count;
+            var tasksCompleted = 0;
             ParallelUtils.Instance.For(0, scList.Count, 1, i =>
             {
                 var scenario = scList[i];
@@ -164,6 +169,10 @@ namespace Qwack.Models.Risk
                 }
 
                 results[i] = result;
+                
+                Interlocked.Increment(ref tasksCompleted);
+                ProgressAction?.Invoke(Convert.ToDouble(tasksCompleted) / taskCount);
+
             }, !ParallelizeOuterCalc).Wait();
 
             for (var i = 0; i < results.Length; i++)

@@ -167,9 +167,9 @@ namespace Qwack.Models.MCModels
                 if (Model.GetVolSurface(assetId) is not IATMVolSurface surface)
                     throw new Exception($"Vol surface for asset {assetId} could not be cast to IATMVolSurface");
                 var fixingDict = fixingsNeeded.ContainsKey(assetId) ? Model.GetFixingDictionary(assetId) : null;
-                var fixings = fixingDict != null ?
+                var fixings = fixingDict.ToDictionary(x=>x.Key,x=>x.Value); /*fixingDict != null ?
                     fixingsNeeded[assetId].ToDictionary(x => x, x => fixingDict.GetFixing(x))
-                    : new Dictionary<DateTime, double>();
+                    : new Dictionary<DateTime, double>();*/
                 var futuresSim = Settings.ExpensiveFuturesSimulation &&
                    (Model.GetPriceCurve(assetId).CurveType == PriceCurveType.ICE || Model.GetPriceCurve(assetId).CurveType == PriceCurveType.NYMEX);
                 if (futuresSim)

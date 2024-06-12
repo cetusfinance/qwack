@@ -34,7 +34,7 @@ namespace Qwack.Utils.Parallel
         private int _activeThreadCount = 0;
         private static readonly int numThreads = HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount);
 
-        private static int HighestPowerOfTwoLessThanOrEqualTo(int n)
+        public static int HighestPowerOfTwoLessThanOrEqualTo(int n)
         {
             var power = 1;
 

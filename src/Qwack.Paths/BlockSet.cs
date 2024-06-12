@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Qwack.Utils.Exceptions;
+using Qwack.Utils.Parallel;
 using static System.Math;
 
 namespace Qwack.Paths
@@ -14,7 +15,7 @@ namespace Qwack.Paths
     {
         public int NumberOfBlocks => _numberOfBlocks;
 
-        private static readonly int _numberOfThreads = Min(16, Environment.ProcessorCount);
+        private static readonly int _numberOfThreads = Min(16, ParallelUtils.HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount));
         private readonly int _numberOfPaths;
         private readonly int _numberOfBlocks;
         private readonly int _factors;

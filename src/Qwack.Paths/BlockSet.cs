@@ -34,13 +34,14 @@ namespace Qwack.Paths
         public BlockSet(int numberOfPaths, int factors, int steps, bool compactMode = false)
         {
             _compactMode = compactMode;
-            _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
             numberOfPaths = RoundedNumberOfPaths(numberOfPaths);
+            _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
 
             _steps = steps;
             _factors = factors;
             _numberOfPaths = numberOfPaths;
 
+            //            var pathsPerBlock = (int)System.Math.Ceiling((double)numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads) / 4.0);
             var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads);
 
             if (pathsPerBlock == 0)

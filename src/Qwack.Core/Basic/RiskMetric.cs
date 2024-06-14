@@ -15,6 +15,7 @@ namespace Qwack.Core.Basic
         RiskLadder,
         RiskMatrix,
         PnLAttribution,
-        OptimalExercise
+        OptimalExercise,
+        AssetParallelDelta,
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
@@ -1063,7 +1064,7 @@ namespace Qwack.Models.Risk
         }
 
 
-        public static ICube AssetParallelDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider)
+        public static ICube AssetParallelDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider, double bumpSize = 0.01, string assetId = null)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1086,6 +1087,9 @@ namespace Qwack.Models.Risk
 
             foreach (var curveName in assetIds)
             {
+                if (assetId != null && curveName != assetId)
+                    continue;
+
                 var curveObj = model.GetPriceCurve(curveName);
 
                 var subPortfolio = new Portfolio()
@@ -1110,9 +1114,27 @@ namespace Qwack.Models.Risk
 
                 IPriceCurve bumpedCurve = curveObj switch
                 {
-                    ConstantPriceCurve con => new ConstantPriceCurve(con.Price * 1.01, con.BuildDate, currencyProvider),
-                    ContangoPriceCurve cpc => new ContangoPriceCurve(cpc.BuildDate, cpc.Spot * 1.01, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels),
-                    BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select(p => p * 1.01).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels),
+                    ConstantPriceCurve con => new ConstantPriceCurve(con.Price + bumpSize, con.BuildDate, currencyProvider),
+                    ContangoPriceCurve cpc => new ContangoPriceCurve(cpc.BuildDate, cpc.Spot + bumpSize, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels)
+                    {
+                        Currency = cpc.Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = cpc.SpotCalendar,
+                        SpotLag = cpc.SpotLag
+                    },
+
+                    // if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                    //delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                    BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p, ix) => p + (pc.UnderlyingsAreForwards ? (bumpSize / GetUsdDF(model, pc, pc.PillarDates[ix])) : bumpSize)).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels)
+                    //BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p,ix) => p + bumpSize).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels)
+                    {
+                        CollateralSpec = pc.CollateralSpec,
+                        Currency = pc.Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = pc.SpotCalendar,
+                        SpotLag = pc.SpotLag
+                    },
                     _ => throw new Exception("Unable to handle curve type for flat shift"),
                 };
                 var newVanillaModel = model.Clone();
@@ -1127,7 +1149,7 @@ namespace Qwack.Models.Risk
 
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
-                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / 0.01;
+                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
 
                     if (delta != 0.0)
                     {

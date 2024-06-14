@@ -296,6 +296,7 @@ namespace Qwack.Models.Risk
         private ICube GetRisk(IPvModel model) => Metric switch
         {
             RiskMetric.AssetCurveDelta => model.AssetDelta(isSparseLMEMode:LMESparseDeltaMode, calendars:_calendar, parallelize:ParallelizeRiskMetric),
+            RiskMetric.AssetParallelDelta => model.AssetParallelDelta(currencyProvider: _currencyProvider),
             RiskMetric.PV => model.PV(Ccy??model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             //case RiskMetric.AssetCurveDeltaGamma:
             //    return portfolio.AssetDeltaGamma(model);

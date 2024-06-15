@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Qwack.Utils.Exceptions;
 using Qwack.Utils.Parallel;
 using static System.Math;
@@ -15,7 +16,7 @@ namespace Qwack.Paths
     {
         public int NumberOfBlocks => _numberOfBlocks;
 
-        private static readonly int _numberOfThreads = Min(16, ParallelUtils.HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount));
+        private static readonly int _numberOfThreads = ParallelUtils.HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount);
         private readonly int _numberOfPaths;
         private readonly int _numberOfBlocks;
         private readonly int _factors;
@@ -25,24 +26,27 @@ namespace Qwack.Paths
 
         private readonly bool _compactMode;
 
-        public static int RoundedNumberOfPaths(int numberOfPaths)
+        public static (int nPaths, int overrun, int divisor) RoundedNumberOfPaths(int numberOfPaths)
         {
-            var overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
-            return numberOfPaths + overrun;
+            var nThreads = ParallelUtils.NThreads;
+            var divisor = nThreads * PathBlock.MinNumberOfPaths;
+            var overrun = numberOfPaths % divisor;
+            return (numberOfPaths + (divisor - overrun), divisor - overrun, nThreads);
         }
 
         public BlockSet(int numberOfPaths, int factors, int steps, bool compactMode = false)
         {
             _compactMode = compactMode;
-            numberOfPaths = RoundedNumberOfPaths(numberOfPaths);
-            _overrun = numberOfPaths % PathBlock.MinNumberOfPaths;
+            var x = RoundedNumberOfPaths(numberOfPaths);
+            numberOfPaths = x.nPaths;
+            _overrun = x.overrun;
 
             _steps = steps;
             _factors = factors;
-            _numberOfPaths = numberOfPaths;
+            _numberOfPaths = x.nPaths;
 
             //            var pathsPerBlock = (int)System.Math.Ceiling((double)numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads) / 4.0);
-            var pathsPerBlock = numberOfPaths / (compactMode ? _numberOfThreads * 16 : _numberOfThreads);
+            var pathsPerBlock = numberOfPaths / (compactMode ? x.divisor * 16 : x.divisor);
 
             if (pathsPerBlock == 0)
                 ExceptionHelper.ThrowException(ExceptionType.InvalidDataAlignment, $"A minimum of {(_numberOfThreads * 2)} need to be run on this machine");

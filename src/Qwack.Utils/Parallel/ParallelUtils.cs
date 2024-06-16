@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +33,7 @@ namespace Qwack.Utils.Parallel
         public bool MultiThreaded { get; set; } = true;
 
         private int _activeThreadCount = 0;
-        private static readonly int numThreads = HighestPowerOfTwoLessThanOrEqualTo(Environment.ProcessorCount);
+        private static readonly int numThreads = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?  Environment.ProcessorCount / 2 : Environment.ProcessorCount;
 
         public static int HighestPowerOfTwoLessThanOrEqualTo(int n)
         {

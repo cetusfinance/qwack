@@ -2176,7 +2176,7 @@ namespace Qwack.Models.Risk
                  { PointLabel, string.Empty },
                  { "PointDate", fwdValDate },
                  { Metric, "Theta" }
-            });
+            }, mergeTypes: true);
 
 
             //cash move
@@ -2186,7 +2186,7 @@ namespace Qwack.Models.Risk
                  { PointLabel, "CashMove"  },
                  { "PointDate", fwdValDate },
                  { Metric, "Theta" }
-            });
+            }, mergeTypes: true);
 
             //setup and run in series
             var tasks = new Dictionary<string, ICube>();
@@ -2206,14 +2206,14 @@ namespace Qwack.Models.Risk
             cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
-            });
+            },mergeTypes:true);
 
             //vega
             var assetVegaCube = tasks["AssetVega"];
             cube = cube.Merge(assetVegaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
-            });
+            }, mergeTypes: true);
 
             //var fxVegaCube = tasks["FxVega"];
             //cube = cube.Merge(fxVegaCube, new Dictionary<string, object>
@@ -2233,21 +2233,21 @@ namespace Qwack.Models.Risk
             {
                  { "Currency", string.Empty },
                  { Metric, "Charm"},
-            });
+            }, mergeTypes: true);
             cube = cube.Merge(rolledDeltaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
                  { Metric, "AssetDeltaT1" },
-            });
+            }, mergeTypes: true);
             cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
             }, new Dictionary<string, object>
             {
                  { Metric, "AssetGammaT1" },
-            });
+            }, mergeTypes: true);
 
             //charm-fx
             //baseDeltaCube = tasks["FxDeltaGamma"];

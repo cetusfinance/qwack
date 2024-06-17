@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Qwack.Transport.TransportObjects.Cubes;
 
 namespace Qwack.Core.Cubes
@@ -84,22 +85,27 @@ namespace Qwack.Core.Cubes
         public void AddRow(Dictionary<string, object> data, double value)
         {
             var row = new object[_fieldNames.Count];
-            foreach (var d in data)
+            foreach (var key in data.Keys)
             {
-                if (!_types.ContainsKey(d.Key))
-                    throw new Exception($"Could not map field {d.Key}");
+                if (!_types.ContainsKey(key))
+                    throw new Exception($"Could not map field {key}");
 
-                if (d.Value == null && _types[d.Key] == typeof(string))
+                if (data[key] == null && _types[key] == typeof(string))
                 {
 
+                }
+                else if (data[key] == null)
+                {
+                    var typ = _types[key];
+                    data[key] = Activator.CreateInstance(typ);
                 }
                 else
                 {
-                    _ = Convert.ChangeType(d.Value, _types[d.Key]) ?? throw new Exception($"Could not convert field {d.Key} value {d.Value} as type {_types[d.Key]}");
+                    _ = Convert.ChangeType(data[key], _types[key]) ?? throw new Exception($"Could not convert field {key} value {data[key]} as type {_types[key]}");
                 }
 
-                var ix = _fieldNames.IndexOf(d.Key);
-                row[ix] = d.Value;
+                var ix = _fieldNames.IndexOf(key);
+                row[ix] = data[key];
             }
             lock (_locker)
             {

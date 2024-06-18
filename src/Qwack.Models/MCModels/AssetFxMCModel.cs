@@ -855,6 +855,14 @@ namespace Qwack.Models.MCModels
                 { TradeType, typeof(string) },
                 { Consts.Cubes.Portfolio, typeof(string) }
             };
+            var insDict = Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            var metaKeys = Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+
+
             cube.Initialize(dataTypes);
             Engine.RunProcess();
             switch (Settings.CreditSettings.Metric)

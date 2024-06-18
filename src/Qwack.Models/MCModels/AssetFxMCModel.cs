@@ -898,17 +898,24 @@ namespace Qwack.Models.MCModels
 
             var ccy = reportingCurrency?.ToString();
 
+            var insDict = Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            var metaKeys = Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
 
             if (cube == null)
             {
                 cube = new ResultCube();
-                var dataTypes = new Dictionary<string, Type>
+                var dataTypes = new Dictionary<string, Type>                
                 {
                 { TradeId, typeof(string) },
                 { Consts.Cubes.Currency, typeof(string) },
                 { TradeType, typeof(string) },
                 { Consts.Cubes.Portfolio, typeof(string) }
                 };
+                foreach (var key in metaKeys)
+                {
+                    dataTypes[key] = typeof(string);
+                }
+
                 cube.Initialize(dataTypes);
             }
             Engine.RunProcess();
@@ -945,6 +952,15 @@ namespace Qwack.Models.MCModels
                     { TradeType, tradeType },
                     { Consts.Cubes.Portfolio, ins.PortfolioName??string.Empty  },
                 };
+                if (insDict.TryGetValue(tradeId, out var trade))
+                {
+                    foreach (var key in metaKeys)
+                    {
+                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                            row[key] = metaData;
+                    }
+                }
+
                 cube.AddRow(row, pv / fxRate);
             }
             return cube;

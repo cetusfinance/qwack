@@ -15,7 +15,6 @@ using Qwack.Models.Models;
 using Qwack.Models.Risk;
 using Qwack.Options.VolSurfaces;
 using Qwack.Paths;
-using Qwack.Paths.Payoffs;
 using Qwack.Paths.Processes;
 using Qwack.Paths.Regressors;
 using Qwack.Random;
@@ -98,7 +97,7 @@ namespace Qwack.Models.MCModels
                 case RandomGeneratorType.Sobol:
                     if (Settings.GeneratorKey == null)
                     {
-                        var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
+                        var directionNumers = new Random.Sobol.SobolDirectionNumbers();
                         Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
                         {
                             UseNormalInverse = true
@@ -541,7 +540,7 @@ namespace Qwack.Models.MCModels
                     });
                     break;
                 case RandomGeneratorType.Sobol:
-                    var directionNumers = new Random.Sobol.SobolDirectionNumbers(GetSobolFilename());
+                    var directionNumers = new Random.Sobol.SobolDirectionNumbers();
                     Engine.AddPathProcess(new Random.Sobol.SobolPathGenerator(directionNumers, 1)
                     {
                         UseNormalInverse = true

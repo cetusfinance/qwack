@@ -73,7 +73,7 @@ namespace Qwack.Random
                     _blockset = new BlockSet(numberOfPaths, collection.GetFeature<IPathMappingFeature>().NumberOfDimensions,
                         collection.GetFeature<ITimeStepsFeature>().TimeStepCount, collection.GetFeature<IEngineFeature>().CompactMemoryMode);
 
-                    var directionNumbers = new SobolDirectionNumbers(); //GetSobolFilename());
+                    var directionNumbers = new SobolDirectionNumbers();
                     var pathGen = new SobolPathGenerator(directionNumbers, 1)
                     {
                         UseNormalInverse = true

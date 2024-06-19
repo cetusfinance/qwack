@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Qwack.Utils.Exceptions;
 
 namespace Qwack.Random.Sobol
@@ -39,6 +41,33 @@ namespace Qwack.Random.Sobol
                 }
                 _allDimensions[dim - _dimensionToArrayOffset] = info;
             }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("namespace Qwack.Random.Sobol");
+            sb.AppendLine("{");
+            sb.AppendLine("public class SobolDirectionNumbersEncoded");
+            sb.AppendLine("{");
+            sb.AppendLine("public SobolDirectionInfo[] AllDimensions = new [] {");
+            for (var i = 0; i < _allDimensions.Length; i++)
+            {
+                var info = _allDimensions[i];
+                if(i != 0)
+                {
+                    sb.Append(",");
+                }
+                sb.Append("new SobolDirectionInfo() { Dimension = " + info.Dimension + ", A = " + info.A + ", S = " + info.S + ", DirectionNumbers = [");
+                for(var x = 0; x < info.DirectionNumbers.Length;x++)
+                {
+                    if (x != 0) sb.Append(",");
+                    sb.Append(info.DirectionNumbers[x]);
+                }
+                sb.AppendLine("]}");
+            }
+            sb.AppendLine("};");
+            sb.AppendLine("}");
+            sb.AppendLine("}");
+
+            System.IO.File.WriteAllText("C:\\code\\SobolDirectionNumbersEncoded.cs", sb.ToString());
         }
 
         private string GetEmbeddedResource(string namespacename, string filename)

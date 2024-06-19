@@ -39,10 +39,12 @@ namespace Qwack.Paths.Payoffs
 
         public void Process(IPathBlock block)
         {
-            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+            var numPaths = block.NumberOfPaths;
+            var strike = new Vector<double>(_strike);
+            for (var path = 0; path < numPaths; path += Vector<double>.Count)
             {
                 var steps = block.GetStepsForFactor(path, _assetIndex);
-                var finalValues = steps[_expiryIndex] - (new Vector<double>(_strike));
+                var finalValues = steps[_expiryIndex] - strike;
                 finalValues = Vector.Max(new Vector<double>(0), finalValues);
                 _results.Add(finalValues);
             }

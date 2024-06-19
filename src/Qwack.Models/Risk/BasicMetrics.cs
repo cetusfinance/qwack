@@ -527,7 +527,7 @@ namespace Qwack.Models.Risk
             var model = pvModel.VanillaModel;
             model.BuildDependencyTree();
 
-            var curveName = model.Curves.Where(x => x.AssetId == assetId).First().Name;
+            var curveName = (model.Curves.Where(x => x.AssetId == assetId).FirstOrDefault()?.Name) ?? throw new Exception($"Unable to find curve with asset id {assetId}");
 
             var curveObj = model.GetPriceCurve(curveName);
             var linkedCurves = model.GetDependentCurves(curveName);

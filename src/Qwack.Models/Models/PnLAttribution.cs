@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
@@ -1508,6 +1509,7 @@ namespace Qwack.Models.Models
                 { SubStep, typeof(string) },
                 { SubSubStep, typeof(string) },
                 { PointLabel, typeof(string) },
+                { "PointDate", typeof(DateTime) },
             };
 
             cube.Initialize(dataTypes);
@@ -1522,6 +1524,7 @@ namespace Qwack.Models.Models
 
             var r_tidIx = startingGreeks.GetColumnIndex(TradeId);
             var r_plIx = startingGreeks.GetColumnIndex(PointLabel);
+            var r_pdIx = startingGreeks.GetColumnIndex("PointDate");
             var r_tTypeIx = startingGreeks.GetColumnIndex(TradeType);
 
             //first step roll time fwd
@@ -1538,7 +1541,8 @@ namespace Qwack.Models.Models
                     { Step, "Theta" },
                     { SubStep, string.Empty },
                     { SubSubStep, string.Empty },
-                    { PointLabel, string.Empty }
+                    { PointLabel, string.Empty },
+                    { "PointDate", endModel.OriginDate }
                 };
                 cube.AddRow(row, r.Value);
             }
@@ -1557,7 +1561,8 @@ namespace Qwack.Models.Models
                         { Step, "Theta" },
                         { SubStep, "CashMove" },
                         { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, cash);
                 }
@@ -1582,7 +1587,8 @@ namespace Qwack.Models.Models
                         { Step, "Fixings" },
                         { SubStep, fixingDictName },
                         { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, r.Value);
                 }
@@ -1615,7 +1621,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, string.Empty },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate", point }
                     };
                     cube.AddRow(row, explained);
 
@@ -1646,7 +1653,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, r.Value - explained);
                 }
@@ -1661,7 +1669,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, -kv.Value);
                 }
@@ -1695,7 +1704,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Delta" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, explained);
 
@@ -1725,7 +1735,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Gamma" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, explained);
 
@@ -1751,7 +1762,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1796,7 +1808,8 @@ namespace Qwack.Models.Models
                         { Step, "AssetCurves" },
                         { SubStep, curveName },
                         { SubSubStep, "Delta" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
                     };
                     cube.AddRow(row, explained);
 
@@ -1824,7 +1837,8 @@ namespace Qwack.Models.Models
                         { Step, "AssetCurves" },
                         { SubStep, curveName },
                         { SubSubStep, "Gamma" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
                     };
                     cube.AddRow(row, explained);
 
@@ -1850,7 +1864,8 @@ namespace Qwack.Models.Models
                         { Step, "AssetCurves" },
                         { SubStep, curveName },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1886,7 +1901,8 @@ namespace Qwack.Models.Models
                         { Step, "AssetVols" },
                         { SubStep, surfaceName },
                         { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
                     };
                     cube.AddRow(row, explained);
 
@@ -1913,7 +1929,8 @@ namespace Qwack.Models.Models
                         { Step, "AssetVols" },
                         { SubStep, surfaceName },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1947,7 +1964,8 @@ namespace Qwack.Models.Models
                         { Step, "FxVols" },
                         { SubStep, fxSurface.Key },
                         { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
                     };
                     cube.AddRow(row, explained);
 
@@ -1973,7 +1991,8 @@ namespace Qwack.Models.Models
                         { Step, "FxVols" },
                         { SubStep, fxSurface.Key },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1996,7 +2015,8 @@ namespace Qwack.Models.Models
                         { Step, "Unexplained" },
                         { SubStep, "Unexplained" },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                 cube.AddRow(row, r.Value);
             }

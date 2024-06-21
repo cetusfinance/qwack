@@ -2137,7 +2137,7 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        public static ICube AssetGreeksSafe(this AssetFxMCModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube AssetGreeksSafe(this AssetFxMCModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -2197,10 +2197,10 @@ namespace Qwack.Models.Risk
             //setup and run in series
             var tasks = new Dictionary<string, ICube>();
 
-            tasks["AssetDeltaGamma"] = pvModel.AssetDelta(true);
+            tasks["AssetDeltaGamma"] = pvModel.AssetDelta(true, isSparseLMEMode: true, calendars: calendarProvider);
             tasks["AssetVega"] = rolledPvModel.AssetVega(reportingCcy);
             //tasks["FxVega"] = rolledPvModel.FxVega(reportingCcy);
-            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(true);
+            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(true, isSparseLMEMode:true, calendars: calendarProvider);
             //tasks["FxDeltaGamma"] = pvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["RolledFxDeltaGamma"] = rolledPvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["IrDelta"] = pvModel.AssetIrDelta(reportingCcy);

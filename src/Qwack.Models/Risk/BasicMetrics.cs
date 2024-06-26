@@ -761,6 +761,7 @@ namespace Qwack.Models.Risk
             foreach (var curveName in model.CurveNames)
             {
                 var curveObj = model.GetPriceCurve(curveName);
+                var bumpForCurve = bumpSize / 10 * curveObj.GetPriceForDate(model.BuildDate);
                 var linkedCurves = model.GetDependentCurves(curveName);
                 var allLinkedCurves = model.GetAllDependentCurves(curveName);
 
@@ -791,13 +792,13 @@ namespace Qwack.Models.Risk
                 {
                     lastDateInBook = NextThirdWeds(lastDateInBook);
                     var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
-                    bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, sparseDates);
-                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, sparseDates) : null;
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, sparseDates);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, sparseDates) : null;
                 }
                 else
                 {
-                    bumpedCurves = curveObj.GetDeltaScenarios(bumpSize, lastDateInBook, pointsToBump);
-                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpSize, lastDateInBook, pointsToBump) : null;
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, pointsToBump);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, pointsToBump) : null;
                 }
 
                 ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
@@ -859,10 +860,10 @@ namespace Qwack.Models.Risk
 
                         if (computeGamma)
                         {
-                            var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
-                            var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpSize;
+                            var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpForCurve;
+                            var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpForCurve;
                             var delta = (deltaUp + deltaDown) / 2.0;
-                            var gamma = (deltaUp - deltaDown) / bumpSize;
+                            var gamma = (deltaUp - deltaDown) / bumpForCurve;
 
                             if (Abs(delta) > 1e-8)
                             {
@@ -922,7 +923,7 @@ namespace Qwack.Models.Risk
                         }
                         else
                         {
-                            var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize;
+                            var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpForCurve;
 
                             if (delta != 0.0)
                             {

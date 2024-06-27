@@ -14,6 +14,8 @@ namespace Qwack.Core.Curves
             ScalingFactor = scalingFactor;
         }
         public CommodityUnits Units { get; set; }
+        public DateTime RefDate { get; set; }
+
         public IPriceCurve BaseCurve { get; }
         public double ScalingFactor { get; }
 

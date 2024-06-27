@@ -23,6 +23,7 @@ namespace Qwack.Core.Curves
         public PriceCurveType CurveType => _curveType;
 
         public CommodityUnits Units { get; set; }
+        public DateTime RefDate { get; set; }
 
         private readonly string[] _pillarLabels;
 
@@ -69,7 +70,8 @@ namespace Qwack.Core.Curves
             AssetId = transportObject.AssetId;
             Units = transportObject.Units;
             SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
-            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Bd() : new Frequency(transportObject.SpotLag);  
+            SpotLag = string.IsNullOrEmpty(transportObject.SpotLag) ? 0.Bd() : new Frequency(transportObject.SpotLag);
+            RefDate = transportObject.RefDate;
         }
 
         private void Initialize()
@@ -163,12 +165,15 @@ namespace Qwack.Core.Curves
 
         public IPriceCurve Clone() => new BasicPriceCurve(BuildDate, _pillarDates.ToArray(), _prices.ToArray(), _curveType, _currencyProvider, _pillarLabels.ToArray())
         {
+            Units = Units,
+            RefDate = RefDate,
             CollateralSpec = CollateralSpec,
             Currency = Currency,
             AssetId = AssetId,
             SpotCalendar = SpotCalendar,
             SpotLag = SpotLag,
-            Name = Name
+            Name = Name,
+
         };
 
         public IPriceCurve RebaseDate(DateTime newAnchorDate)
@@ -187,7 +192,7 @@ namespace Qwack.Core.Curves
                             .OrderBy(x => x)
                             .ToArray();
                         var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
-                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { RefDate = RefDate, CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                     else
                     {
@@ -198,7 +203,7 @@ namespace Qwack.Core.Curves
                             .OrderBy(x => x)
                             .ToArray();
                         var newPrices = newPillars.Select(x => GetPriceForDate(x)).ToArray();
-                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                        return new BasicPriceCurve(newAnchorDate, newPillars, newPrices, _curveType, _currencyProvider, _pillarLabels) { RefDate = RefDate, CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                     }
                 case PriceCurveType.NYMEX:
                     var newPillarsNM = _pillarDates
@@ -207,7 +212,7 @@ namespace Qwack.Core.Curves
                         .OrderBy(x => x)
                         .ToArray();
                     var newPricesNM = newPillarsNM.Select(x => GetPriceForDate(x)).ToArray();
-                    return new BasicPriceCurve(newAnchorDate, newPillarsNM, newPricesNM, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    return new BasicPriceCurve(newAnchorDate, newPillarsNM, newPricesNM, _curveType, _currencyProvider, _pillarLabels) { RefDate = RefDate, CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                 case PriceCurveType.ICE:
                     var newPillarsIC = _pillarDates
                         .Where(d => d > newAnchorDate)
@@ -215,7 +220,7 @@ namespace Qwack.Core.Curves
                         .OrderBy(x => x)
                         .ToArray();
                     var newPricesIC = newPillarsIC.Select(x => GetPriceForDate(x.AddDays(-1))).ToArray();
-                    return new BasicPriceCurve(newAnchorDate, newPillarsIC, newPricesIC, _curveType, _currencyProvider, _pillarLabels) { CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
+                    return new BasicPriceCurve(newAnchorDate, newPillarsIC, newPricesIC, _curveType, _currencyProvider, _pillarLabels) { RefDate = RefDate, CollateralSpec = CollateralSpec, Currency = Currency, AssetId = AssetId, SpotCalendar = SpotCalendar, SpotLag = SpotLag };
                 case PriceCurveType.Constant:
                     return new ConstantPriceCurve(_prices.First(), BuildDate, _currencyProvider);
                 default:
@@ -244,7 +249,9 @@ namespace Qwack.Core.Curves
                 PillarLabels = PillarLabels,
                 Prices = Prices,
                 SpotCalendar = SpotCalendar?.Name,
-                SpotLag = SpotLag.ToString()
+                SpotLag = SpotLag.ToString(),
+                RefDate = RefDate,
+                Units = Units
             };
     }
 }

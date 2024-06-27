@@ -31,6 +31,8 @@ namespace Qwack.Transport.TransportObjects.MarketData.Curves
         public string CollateralSpec { get; set; }
         [ProtoMember(12)]
         public CommodityUnits Units { get; set; }
+        [ProtoMember(13)] 
+        public DateTime RefDate { get; set; }
     }
 
 }

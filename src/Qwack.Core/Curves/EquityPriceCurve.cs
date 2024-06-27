@@ -18,6 +18,7 @@ namespace Qwack.Core.Curves
 
         public PriceCurveType CurveType => PriceCurveType.Linear;
         public CommodityUnits Units { get; set; } = CommodityUnits.Unspecified;
+        public DateTime RefDate { get; set; }
 
         public bool UnderlyingsAreForwards => false; //false as we only show spot delta
 

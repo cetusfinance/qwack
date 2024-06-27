@@ -21,6 +21,7 @@ namespace Qwack.Core.Curves
         public bool UnderlyingsAreForwards => false; //false as we only show spot delta
 
         public DateTime BuildDate { get; private set; }
+        public DateTime RefDate => SpotDate;
 
         public string Name { get; set; }
         public string AssetId { get; set; }

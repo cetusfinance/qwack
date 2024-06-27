@@ -39,5 +39,7 @@ namespace Qwack.Core.Curves
         Calendar SpotCalendar { get; set; }
 
         CommodityUnits Units { get; set; }
+        
+        DateTime RefDate { get; }
     }
 }

@@ -15,6 +15,8 @@ namespace Qwack.Core.Curves
         private readonly double[] _prices;
         private readonly string[] _pillarLabels;
         public CommodityUnits Units { get; set; }
+        public DateTime RefDate { get; set; }
+
         private readonly SparsePriceCurveType _curveType;
         private IInterpolator1D _interpA;
         private IInterpolator1D _interpB;

@@ -20,6 +20,8 @@ namespace Qwack.Core.Curves
         public Currency CompoCurrency { get; }
         public Currency CurveCurrency => pCurveFunc.Invoke().Currency;
         public CommodityUnits Units { get; set; }
+        public DateTime RefDate { get; set; }
+
         public string Name { get => pCurveFunc.Invoke().Name; set => throw new Exception("Cant set name"); }
 
         public string AssetId => pCurveFunc.Invoke().AssetId;

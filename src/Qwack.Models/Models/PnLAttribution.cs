@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
@@ -1509,6 +1510,7 @@ namespace Qwack.Models.Models
                 { SubStep, typeof(string) },
                 { SubSubStep, typeof(string) },
                 { PointLabel, typeof(string) },
+                { "PointDate", typeof(DateTime) },
             };
 
             cube.Initialize(dataTypes);
@@ -1523,6 +1525,7 @@ namespace Qwack.Models.Models
 
             var r_tidIx = startingGreeks.GetColumnIndex(TradeId);
             var r_plIx = startingGreeks.GetColumnIndex(PointLabel);
+            var r_pdIx = startingGreeks.GetColumnIndex("PointDate");
             var r_tTypeIx = startingGreeks.GetColumnIndex(TradeType);
 
             //first step roll time fwd
@@ -1539,7 +1542,8 @@ namespace Qwack.Models.Models
                     { Step, "Theta" },
                     { SubStep, string.Empty },
                     { SubSubStep, string.Empty },
-                    { PointLabel, string.Empty }
+                    { PointLabel, string.Empty },
+                    { "PointDate", endModel.OriginDate }
                 };
                 cube.AddRow(row, r.Value);
             }
@@ -1558,7 +1562,8 @@ namespace Qwack.Models.Models
                         { Step, "Theta" },
                         { SubStep, "CashMove" },
                         { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, cash);
                 }
@@ -1583,7 +1588,8 @@ namespace Qwack.Models.Models
                         { Step, "Fixings" },
                         { SubStep, fixingDictName },
                         { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, r.Value);
                 }
@@ -1616,7 +1622,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, string.Empty },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate", point }
                     };
                     cube.AddRow(row, explained);
 
@@ -1647,7 +1654,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, r.Value - explained);
                 }
@@ -1662,7 +1670,8 @@ namespace Qwack.Models.Models
                         { Step, "IrCurves" },
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, -kv.Value);
                 }
@@ -1696,7 +1705,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Delta" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, explained);
 
@@ -1726,7 +1736,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Gamma" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                     cube.AddRow(row, explained);
 
@@ -1752,7 +1763,8 @@ namespace Qwack.Models.Models
                         { Step, "FxSpots" },
                         { SubStep, fxPair },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1761,12 +1773,179 @@ namespace Qwack.Models.Models
             }
 
             //next move asset curves
-            lastPVCuve =
-                new DeltaGammaCurveStep().Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
+            //lastPVCuve =
+            //    new DeltaGammaCurveStep().Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
             
             //next move asset vols
-            lastPVCuve =
-                new AtmVegaCurveStep().Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
+            //lastPVCuve =
+            //    new AtmVegaCurveStep().Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
+            
+
+            foreach (var curveName in endModel.VanillaModel.CurveNames)
+            {
+                var riskForCurve = startingGreeks.Filter(
+                   new Dictionary<string, object> {
+                        { AssetId, curveName },
+                        { Metric, "AssetDeltaT1" }
+                   });
+                var riskForCurveGamma = startingGreeks.Filter(
+                  new Dictionary<string, object> {
+                        { AssetId, curveName },
+                        { Metric, "AssetGammaT1" }
+                  });
+
+                var startCurve = model.VanillaModel.GetPriceCurve(curveName);
+                var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
+
+                var fxRate = model.VanillaModel.FundingModel.GetFxRate(model.OriginDate, startCurve.Currency, reportingCcy);
+
+                var explainedByTrade = new Dictionary<string, double>();
+                foreach (var r in riskForCurve.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
+
+                    var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    var move = (endRate - startRate);
+                    var explained = r.Value * move * fxRate;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { TradeId, r.MetaData[r_tidIx] },
+                        { TradeType, r.MetaData[r_tTypeIx] },
+                        { Step, "AssetCurves" },
+                        { SubStep, curveName },
+                        { SubSubStep, "Delta" },
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
+                    };
+                    cube.AddRow(row, explained);
+
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
+
+                foreach (var r in riskForCurveGamma.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
+
+                    var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    var move = (endRate - startRate);
+                    var explained = 0.5 * r.Value * move * move * fxRate;
+
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { TradeId, r.MetaData[r_tidIx] },
+                        { TradeType, r.MetaData[r_tTypeIx] },
+                        { Step, "AssetCurves" },
+                        { SubStep, curveName },
+                        { SubSubStep, "Gamma" },
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
+                    };
+                    cube.AddRow(row, explained);
+
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
+
+                model.VanillaModel.AddPriceCurve(curveName, endModel.VanillaModel.GetPriceCurve(curveName));
+                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
+                newPVCube = model.PV(reportingCcy);
+                step = newPVCube.QuickDifference(lastPVCuve);
+
+                foreach (var r in step.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { TradeId, r.MetaData[tidIx] },
+                        { TradeType, r.MetaData[tTypeIx] },
+                        { Step, "AssetCurves" },
+                        { SubStep, curveName },
+                        { SubSubStep, "Unexplained" },
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
+                    };
+                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                    cube.AddRow(row, r.Value - explained);
+                }
+                lastPVCuve = newPVCube;
+            }
+
+            //next move asset vols
+            foreach (var surfaceName in endModel.VanillaModel.VolSurfaceNames)
+            {
+                var riskForCurve = startingGreeks.Filter(
+                      new Dictionary<string, object> {
+                        { AssetId, surfaceName },
+                        { Metric, "Vega" }
+                      });
+
+                var startCurve = startModel.VanillaModel.GetVolSurface(surfaceName);
+                var endCurve = endModel.VanillaModel.GetVolSurface(surfaceName);
+                var explainedByTrade = new Dictionary<string, double>();
+                foreach (var r in riskForCurve.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
+                    var pointDate = startCurve.PillarDatesForLabel(point);
+                    var startRate = model.VanillaModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                    var endRate = endModel.VanillaModel.GetVolForDeltaStrikeAndDate(surfaceName, pointDate, 0.5);
+                    var explained = r.Value * (endRate - startRate) / 0.01;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { TradeId, r.MetaData[r_tidIx] },
+                        { TradeType, r.MetaData[r_tTypeIx] },
+                        { Step, "AssetVols" },
+                        { SubStep, surfaceName },
+                        { SubSubStep, "Vega" },
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
+                    };
+                    cube.AddRow(row, explained);
+
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
+
+                var targetSurface = endModel.VanillaModel.GetVolSurface(surfaceName);
+                model.VanillaModel.AddVolSurface(surfaceName, targetSurface);
+                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
+                newPVCube = model.PV(reportingCcy);
+                step = newPVCube.QuickDifference(lastPVCuve);
+
+                foreach (var r in step.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+
+                    var row = new Dictionary<string, object>
+                    {
+                        { TradeId, r.MetaData[tidIx] },
+                        { TradeType, r.MetaData[tTypeIx] },
+                        { Step, "AssetVols" },
+                        { SubStep, surfaceName },
+                        { SubSubStep, "Unexplained" },
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
+                    };
+                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
+                    cube.AddRow(row, r.Value - explained);
+                }
+                lastPVCuve = newPVCube;
+            }
             
             //next move fx vols
             foreach (var fxSurface in endModel.VanillaModel.FundingModel.VolSurfaces)
@@ -1794,7 +1973,8 @@ namespace Qwack.Models.Models
                         { Step, "FxVols" },
                         { SubStep, fxSurface.Key },
                         { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel,r.MetaData[r_plIx]},
+                        { "PointDate",r.MetaData[r_pdIx] }
                     };
                     cube.AddRow(row, explained);
 
@@ -1820,7 +2000,8 @@ namespace Qwack.Models.Models
                         { Step, "FxVols" },
                         { SubStep, fxSurface.Key },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
                     cube.AddRow(row, r.Value - explained);
@@ -1843,7 +2024,8 @@ namespace Qwack.Models.Models
                         { Step, "Unexplained" },
                         { SubStep, "Unexplained" },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, string.Empty }
+                        { PointLabel, string.Empty },
+                        { "PointDate", endModel.OriginDate }
                     };
                 cube.AddRow(row, r.Value);
             }

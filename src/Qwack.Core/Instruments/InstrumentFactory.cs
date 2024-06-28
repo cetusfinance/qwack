@@ -102,6 +102,8 @@ namespace Qwack.Core.Instruments
                         return new InflationPerformanceSwap(transportObject.InflationPerfSwap, calendarProvider, currencyProvider);
                     case FundingInstrumentType.IrSwap:
                         return new IrSwap(transportObject.IrSwap, calendarProvider, currencyProvider);
+                    case FundingInstrumentType.CashBalance:
+                        return new CashBalance(transportObject.CashBalance, currencyProvider);
                 }
             }
 

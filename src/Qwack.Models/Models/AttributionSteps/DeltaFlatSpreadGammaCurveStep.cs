@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Models.MCModels;
@@ -6,7 +7,7 @@ using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Models.AttributionSteps;
 
-public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
+public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttributionStep
 {
     public ICube Attribute(AssetFxMCModel model, AssetFxMCModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
@@ -21,6 +22,7 @@ public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
             var r_tidIx = riskCube.GetColumnIndex(TradeId);
             var r_plIx = riskCube.GetColumnIndex(PointLabel);
             var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
+            var r_pdIx = riskCube.GetColumnIndex("PointDate");
 
             var startCurve = model.VanillaModel.GetPriceCurve(curveName);
             var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
@@ -49,7 +51,8 @@ public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "DeltaFlat" },
-                    { PointLabel, r.MetaData[r_plIx] }
+                    { PointLabel, r.MetaData[r_plIx] },
+                    { "PointDate", r.MetaData[r_pdIx] }
                 };
                 var rowSpread = new Dictionary<string, object>
                 {
@@ -58,7 +61,8 @@ public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "DeltaSpread" },
-                    { PointLabel, r.MetaData[r_plIx] }
+                    { PointLabel, r.MetaData[r_plIx] },
+                    { "PointDate", r.MetaData[r_pdIx] }
                 };
 
                 resultsCube.AddRow(rowFlat, explainedFlat);
@@ -70,32 +74,41 @@ public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
                     explainedByTrade[(string)r.MetaData[r_tidIx]] += (explainedFlat + explainedSpread);
             }
 
-            foreach (var r in riskForCurveGamma.GetAllRows())
+            if (!ignoreGamma)
             {
-                if (r.Value == 0.0) continue;
-                var point = (string)r.MetaData[r_plIx];
+                foreach (var r in riskForCurveGamma.GetAllRows())
+                {
+                    if (r.Value == 0.0) continue;
+                    var point = (string)r.MetaData[r_plIx];
 
-                var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
-                var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
-                var move = (endRate - startRate);
-                var explained = 0.5 * r.Value * move * move * fxRate;
+                    var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+
+                    //var move = (endRate - startRate) / startRate;
+                    //var dollarGamma =  r.Value / startRate;
+                    //var explained = 0.5 * dollarGamma * startRate * move * move;
+
+                    var move = (endRate - startRate);
+                    var explained = 0.5 * r.Value * move * move * fxRate;
 
 
-                var row = new Dictionary<string, object>
+                    var row = new Dictionary<string, object>
                 {
                     { TradeId, r.MetaData[r_tidIx] },
                     { TradeType, r.MetaData[r_tTypeIx] },
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "Gamma" },
-                    { PointLabel, r.MetaData[r_plIx] }
+                    { PointLabel, r.MetaData[r_plIx] },
+                    { "PointDate", r.MetaData[r_pdIx] }
                 };
-                resultsCube.AddRow(row, explained);
+                    resultsCube.AddRow(row, explained);
 
-                if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                    explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                else
-                    explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
+                    else
+                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
+                }
             }
 
             model.VanillaModel.AddPriceCurve(curveName, endModel.VanillaModel.GetPriceCurve(curveName));
@@ -114,7 +127,8 @@ public class DeltaFlatSpreadGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "Unexplained" },
-                    { PointLabel, "Unexplained" }
+                    { PointLabel, "Unexplained" },
+                    { "PointDate", endModel.OriginDate }
                 };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);

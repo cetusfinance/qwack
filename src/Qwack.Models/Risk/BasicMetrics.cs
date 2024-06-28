@@ -865,22 +865,22 @@ namespace Qwack.Models.Risk
                             var delta = (deltaUp + deltaDown) / 2.0;
                             var gamma = (deltaUp - deltaDown) / bumpForCurve;
 
-                            if (Abs(delta) > 1e-8)
+                            if (Abs(delta) > 1e-10)
                             {
                                 if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
                                     delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { TradeId, bumpedRows[i].MetaData[tidIx] },
-                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-                                { AssetId, curveName },
-                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { PointLabel, bCurve.Key },
-                                { Metric, "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
+                                    { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                    { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                    { AssetId, curveName },
+                                    { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                    { PointLabel, bCurve.Key },
+                                    { Metric, "Delta" },
+                                    { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                    { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                    { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -893,22 +893,22 @@ namespace Qwack.Models.Risk
                                 cube.AddRow(row, delta);
                             }
 
-                            if (Abs(gamma) > 1e-8)
+                            if (Abs(gamma) > 1e-10)
                             {
-                                if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
-                                    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+                                //if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
+                                //    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { TradeId, bumpedRows[i].MetaData[tidIx] },
-                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-                                { AssetId, curveName },
-                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { PointLabel, bCurve.Key },
-                                { Metric, "Gamma" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
+                                    { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                    { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                    { AssetId, curveName },
+                                    { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                    { PointLabel, bCurve.Key },
+                                    { Metric, "Gamma" },
+                                    { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                    { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                    { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -932,15 +932,15 @@ namespace Qwack.Models.Risk
 
                                 var row = new Dictionary<string, object>
                                 {
-                                { TradeId, bumpedRows[i].MetaData[tidIx] },
-                                { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-                                { AssetId, curveName },
-                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-                                { PointLabel, bCurve.Key },
-                                { Metric, "Delta" },
-                                { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-                                { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-                                { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
+                                    { TradeId, bumpedRows[i].MetaData[tidIx] },
+                                    { TradeType, bumpedRows[i].MetaData[tTypeIx] },
+                                    { AssetId, curveName },
+                                    { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                    { PointLabel, bCurve.Key },
+                                    { Metric, "Delta" },
+                                    { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
+                                    { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
+                                    { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
                                 };
                                 if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                                 {
@@ -2201,7 +2201,7 @@ namespace Qwack.Models.Risk
             tasks["AssetDeltaGamma"] = pvModel.AssetDelta(true, isSparseLMEMode: true, calendars: calendarProvider);
             tasks["AssetVega"] = rolledPvModel.AssetVega(reportingCcy);
             //tasks["FxVega"] = rolledPvModel.FxVega(reportingCcy);
-            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(true, isSparseLMEMode:true, calendars: calendarProvider);
+            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(true, isSparseLMEMode:true, calendars: calendarProvider, bumpSize: 0.1);
             //tasks["FxDeltaGamma"] = pvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["RolledFxDeltaGamma"] = rolledPvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["IrDelta"] = pvModel.AssetIrDelta(reportingCcy);
@@ -2249,12 +2249,12 @@ namespace Qwack.Models.Risk
                  { Metric, "AssetDeltaT1" },
             }, mergeTypes: true);
             cube = cube.Merge(rolledGammaCube, new Dictionary<string, object>
-            {
-                 { "Currency", string.Empty },
-            }, new Dictionary<string, object>
-            {
-                 { Metric, "AssetGammaT1" },
-            }, mergeTypes: true);
+                {
+                    { "Currency", string.Empty },
+                }, new Dictionary<string, object>
+                {
+                    { Metric, "AssetGammaT1" },
+                }, mergeTypes: true);
 
             //charm-fx
             //baseDeltaCube = tasks["FxDeltaGamma"];

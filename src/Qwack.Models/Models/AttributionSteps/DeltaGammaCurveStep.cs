@@ -22,6 +22,7 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
             var r_tidIx = riskCube.GetColumnIndex(TradeId);
             var r_plIx = riskCube.GetColumnIndex(PointLabel);
             var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
+            var r_pdIx = riskCube.GetColumnIndex("PointDate");
 
             var startCurve = model.VanillaModel.GetPriceCurve(curveName);
             var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
@@ -46,7 +47,8 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "Delta" },
-                    { PointLabel, r.MetaData[r_plIx] }
+                    { PointLabel, r.MetaData[r_plIx] },
+                    { "PointDate", r.MetaData[r_pdIx] }
                 };
                 resultsCube.AddRow(row, explained);
 
@@ -74,7 +76,8 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "Gamma" },
-                    { PointLabel, r.MetaData[r_plIx] }
+                    { PointLabel, r.MetaData[r_plIx] },
+                    { "PointDate", r.MetaData[r_pdIx] }
                 };
                 resultsCube.AddRow(row, explained);
 
@@ -100,7 +103,8 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
                     { Step, "AssetCurves" },
                     { SubStep, curveName },
                     { SubSubStep, "Unexplained" },
-                    { PointLabel, "Unexplained" }
+                    { PointLabel, "Unexplained" },
+                    { "PointDate", endModel.OriginDate }
                 };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);

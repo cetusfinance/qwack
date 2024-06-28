@@ -293,7 +293,13 @@ namespace Qwack.Paths.Payoffs
                 var setVec = new Vector<double>(setReg);
 
                 if (_declaredPeriod.HasValue)
-                    avgVec = avgs[_declaredPeriod.Value];
+                {
+                    if (_declaredPeriod.Value < 0) //its abandoned
+                        avgVec = setVec;
+                    else
+                        avgVec = avgs[_declaredPeriod.Value];
+                }
+                    
 
                 var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                 _exercisedPeriod[resultIx] = new Vector<double>[_dateIndexes.Count];

@@ -23,6 +23,7 @@ public class AtmVegaCurveStep : IPnLAttributionStep
                 var r_tidIx = riskCube.GetColumnIndex(TradeId);
                 var r_plIx = riskCube.GetColumnIndex(PointLabel);
                 var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
+                var r_pdIx = riskCube.GetColumnIndex("PointDate");
 
                 var startCurve = model.VanillaModel.GetVolSurface(surfaceName);
                 var endCurve = endModel.VanillaModel.GetVolSurface(surfaceName);
@@ -43,7 +44,8 @@ public class AtmVegaCurveStep : IPnLAttributionStep
                         { Step, "AssetVols" },
                         { SubStep, surfaceName },
                         { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]}
+                        { PointLabel, r.MetaData[r_plIx] },
+                        { "PointDate", r.MetaData[r_pdIx] }
                     };
                     resultsCube.AddRow(row, explained);
 
@@ -70,7 +72,8 @@ public class AtmVegaCurveStep : IPnLAttributionStep
                         { Step, "AssetVols" },
                         { SubStep, surfaceName },
                         { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" }
+                        { PointLabel, "Unexplained" },
+                        { "PointDate", endModel.OriginDate }
                     };
                     explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                     resultsCube.AddRow(row, r.Value - explained);

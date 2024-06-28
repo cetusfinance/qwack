@@ -28,7 +28,7 @@ namespace Qwack.Core.Instruments.Asset
         }
 
         public Bond(TO_Bond to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
-            : base(to.Notional, to.AssetId, currencyProvider.GetCurrencySafe(to.Currency), to.ScalingFactor, new Frequency(to.SettleLag), calendarProvider.GetCalendarSafe(to.SettleCalendar))
+            : base(to.Notional, to.AssetId, currencyProvider.GetCurrencySafe(to.Currency), to.ScalingFactor, new Frequency(to.SettleLag??"0b"), calendarProvider.GetCalendarSafe(to.SettleCalendar??to.Currency))
         {
             TradeId = to.TradeId;
             SettleDate = to.SettleDate;

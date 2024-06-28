@@ -2,14 +2,13 @@ using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Models;
-using Qwack.Models.MCModels;
 using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Models.AttributionSteps;
 
 public class DeltaGammaCurveStep : IPnLAttributionStep
 {
-    public ICube Attribute(AssetFxMCModel model, AssetFxMCModel endModel, ResultCube resultsCube, ICube lastPvCube,
+    public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
         foreach (var curveName in endModel.VanillaModel.CurveNames)
@@ -27,7 +26,7 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
             var startCurve = model.VanillaModel.GetPriceCurve(curveName);
             var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
 
-            var fxRate = model.VanillaModel.FundingModel.GetFxRate(model.OriginDate, startCurve.Currency, reportingCcy);
+            var fxRate = model.VanillaModel.FundingModel.GetFxRate(model.VanillaModel.BuildDate, startCurve.Currency, reportingCcy);
 
             var explainedByTrade = new Dictionary<string, double>();
             foreach (var r in riskForCurve.GetAllRows())
@@ -88,7 +87,7 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
             }
 
             model.VanillaModel.AddPriceCurve(curveName, endModel.VanillaModel.GetPriceCurve(curveName));
-            model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
+            model = model.Rebuild(model.VanillaModel, model.Portfolio);
             var newPVCube = model.PV(reportingCcy);
             var step = newPVCube.QuickDifference(lastPvCube);
 
@@ -104,7 +103,7 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
                     { SubStep, curveName },
                     { SubSubStep, "Unexplained" },
                     { PointLabel, "Unexplained" },
-                    { "PointDate", endModel.OriginDate }
+                    { "PointDate", endModel.VanillaModel.BuildDate }
                 };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);
@@ -113,6 +112,6 @@ public class DeltaGammaCurveStep : IPnLAttributionStep
             lastPvCube = newPVCube;
         }
 
-        return lastPvCube;
+        return (lastPvCube, model);
     }
 }

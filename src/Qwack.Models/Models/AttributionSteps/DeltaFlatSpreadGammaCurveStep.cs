@@ -1,15 +1,14 @@
 using System.Collections.Generic;
-using System.Threading;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
-using Qwack.Models.MCModels;
+using Qwack.Core.Models;
 using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Models.AttributionSteps;
 
 public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttributionStep
 {
-    public ICube Attribute(AssetFxMCModel model, AssetFxMCModel endModel, ResultCube resultsCube, ICube lastPvCube,
+    public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
         foreach (var curveName in endModel.VanillaModel.CurveNames)
@@ -27,7 +26,7 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
             var startCurve = model.VanillaModel.GetPriceCurve(curveName);
             var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
 
-            var fxRate = model.VanillaModel.FundingModel.GetFxRate(model.OriginDate, startCurve.Currency, reportingCcy);
+            var fxRate = model.VanillaModel.FundingModel.GetFxRate(model.VanillaModel.BuildDate, startCurve.Currency, reportingCcy);
 
             var explainedByTrade = new Dictionary<string, double>();
             var refStartRate = startCurve.GetPriceForDate(startCurve.RefDate);
@@ -112,7 +111,7 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
             }
 
             model.VanillaModel.AddPriceCurve(curveName, endModel.VanillaModel.GetPriceCurve(curveName));
-            model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
+            model = model.Rebuild(model.VanillaModel, model.Portfolio);
             var newPvCube = model.PV(reportingCcy);
             var step = newPvCube.QuickDifference(lastPvCube);
 
@@ -128,7 +127,7 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                     { SubStep, curveName },
                     { SubSubStep, "Unexplained" },
                     { PointLabel, "Unexplained" },
-                    { "PointDate", endModel.OriginDate }
+                    { "PointDate", endModel.VanillaModel.BuildDate }
                 };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);
@@ -137,6 +136,6 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
             lastPvCube = newPvCube;
         }
 
-        return lastPvCube;
+        return (lastPvCube, model);
     }
 }

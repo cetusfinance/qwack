@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
@@ -1515,355 +1516,36 @@ namespace Qwack.Models.Models
 
             cube.Initialize(dataTypes);
 
-            var pvCubeBase = startModel.PV(reportingCcy);
-            var pvRows = pvCubeBase.GetAllRows();
-            var tidIx = pvCubeBase.GetColumnIndex(TradeId);
-            var tTypeIx = pvCubeBase.GetColumnIndex(TradeType);
-
-            var cashCube = portfolio.FlowsT0(startModel.VanillaModel, reportingCcy);
-            var cashRows = cashCube.GetAllRows();
-
-            var r_tidIx = startingGreeks.GetColumnIndex(TradeId);
-            var r_plIx = startingGreeks.GetColumnIndex(PointLabel);
-            var r_pdIx = startingGreeks.GetColumnIndex("PointDate");
-            var r_tTypeIx = startingGreeks.GetColumnIndex(TradeType);
+            var model = startModel.Rebuild(startModel.VanillaModel, startModel.Portfolio);
 
             //first step roll time fwd
-            var model = startModel.RollModel(endModel.OriginDate, currencyProvider, futureSettings, calendarProvider);
-            var newPVCube = model.PV(reportingCcy);
-
-            var step = newPVCube.QuickDifference(pvCubeBase);
-            foreach (var r in step.GetAllRows())
-            {
-                var row = new Dictionary<string, object>
-                {
-                    { TradeId, r.MetaData[tidIx] },
-                    { TradeType, r.MetaData[tTypeIx] },
-                    { Step, "Theta" },
-                    { SubStep, string.Empty },
-                    { SubSubStep, string.Empty },
-                    { PointLabel, string.Empty },
-                    { "PointDate", endModel.OriginDate }
-                };
-                cube.AddRow(row, r.Value);
-            }
-            var lastPVCuve = newPVCube;
-
-            //next cash move
-            for (var i = 0; i < cashRows.Length; i++)
-            {
-                var cash = cashRows[i].Value;
-                if (cash != 0.0)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId,cashRows[i].MetaData[tidIx] },
-                        { TradeType, cashRows[i].MetaData[tTypeIx] },
-                        { Step, "Theta" },
-                        { SubStep, "CashMove" },
-                        { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, cash);
-                }
-            }
-
-            //next replace fixings with actual values
-            foreach (var fixingDictName in endModel.VanillaModel.FixingDictionaryNames)
-            {
-                model.VanillaModel.AddFixingDictionary(fixingDictName, endModel.VanillaModel.GetFixingDictionary(fixingDictName));
-                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
-                newPVCube = model.PV(reportingCcy);
-
-                step = newPVCube.QuickDifference(lastPVCuve);
-                foreach (var r in step.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "Fixings" },
-                        { SubStep, fixingDictName },
-                        { SubSubStep, string.Empty },
-                        { PointLabel, string.Empty },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, r.Value);
-                }
-
-                lastPVCuve = newPVCube;
-            }
+            (var lastPvCube, model) =
+                new TimeRollStep(currencyProvider,futureSettings, calendarProvider).Attribute(model, endModel, cube, null, startingGreeks, reportingCcy);
 
             //next move ir curves
-            foreach (var irCurve in endModel.VanillaModel.FundingModel.Curves)
-            {
-                var riskForCurve = startingGreeks.Filter(
-                    new Dictionary<string, object> {
-                        { AssetId, irCurve.Key },
-                        { Metric, "IrDelta" }
-                    });
-
-                var explainedByTrade = new Dictionary<string, double>();
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var point = DateTime.Parse((string)r.MetaData[r_plIx]);
-                    var startRate = model.VanillaModel.FundingModel.Curves[irCurve.Key].GetRate(point);
-                    var endRate = irCurve.Value.GetRate(point);
-                    var explained = r.Value * (endRate - startRate) / 0.0001;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "IrCurves" },
-                        { SubStep, irCurve.Key },
-                        { SubSubStep, string.Empty },
-                        { PointLabel,r.MetaData[r_plIx]},
-                        { "PointDate", point }
-                    };
-                    cube.AddRow(row, explained);
-
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
-
-                model.VanillaModel.FundingModel.Curves[irCurve.Key] = irCurve.Value;
-                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
-                newPVCube = model.PV(reportingCcy);
-                step = newPVCube.QuickDifference(lastPVCuve);
-
-                foreach (var r in step.GetAllRows())
-                {
-                    if (explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained))
-                    {
-                        explainedByTrade.Remove((string)r.MetaData[tidIx]);
-                    }
-
-                    if (r.Value - explained == 0.0) continue;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "IrCurves" },
-                        { SubStep, irCurve.Key },
-                        { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, r.Value - explained);
-                }
-
-                //overspill
-                foreach (var kv in explainedByTrade)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, kv.Key },
-                        { TradeType, string.Empty },
-                        { Step, "IrCurves" },
-                        { SubStep, irCurve.Key },
-                        { SubSubStep, "Unexplained"},
-                        { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, -kv.Value);
-                }
-
-                lastPVCuve = newPVCube;
-            }
+            (lastPvCube, model) =
+               new IrCurveStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move fx spots
-            foreach (var fxSpot in endModel.VanillaModel.FundingModel.FxMatrix.SpotRates)
-            {
-                var fxPair = $"{endModel.VanillaModel.FundingModel.FxMatrix.BaseCurrency.Ccy}/{fxSpot.Key.Ccy}";
-
-                //delta
-                var riskForCurve = startingGreeks.Filter(
-                    new Dictionary<string, object> {
-                        { AssetId, fxPair },
-                        { Metric, "FxSpotDeltaT1" }
-                    });
-                var explainedByTrade = new Dictionary<string, double>();
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var startRate = model.VanillaModel.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
-                    var endRate = fxSpot.Value;
-                    var explained = r.Value * (endRate - startRate);
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "FxSpots" },
-                        { SubStep, fxPair },
-                        { SubSubStep, "Delta" },
-                        { PointLabel, string.Empty },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, explained);
-
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
-
-                //gamma
-                riskForCurve = startingGreeks.Filter(
-                   new Dictionary<string, object> {
-                        { AssetId, fxPair },
-                        { Metric, "FxSpotGammaT1" }
-                   });
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var startRate = model.VanillaModel.FundingModel.FxMatrix.SpotRates[fxSpot.Key];
-                    var endRate = fxSpot.Value;
-                    var explained = r.Value * (endRate - startRate) * (endRate - startRate) * 0.5;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "FxSpots" },
-                        { SubStep, fxPair },
-                        { SubSubStep, "Gamma" },
-                        { PointLabel, string.Empty },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    cube.AddRow(row, explained);
-
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
-
-                model.VanillaModel.FundingModel.FxMatrix.SpotRates[fxSpot.Key] = fxSpot.Value;
-                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
-                newPVCube = model.PV(reportingCcy);
-                step = newPVCube.QuickDifference(lastPVCuve);
-
-                foreach (var r in step.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "FxSpots" },
-                        { SubStep, fxPair },
-                        { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
-                    cube.AddRow(row, r.Value - explained);
-                }
-                lastPVCuve = newPVCube;
-            }
+            (lastPvCube, model) =
+                new FxSpotsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move asset curves
-            lastPVCuve =
-             ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(true) : new DeltaGammaCurveStep())).Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
-            
+            (lastPvCube, model) =
+            ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(true) : new DeltaGammaCurveStep()))
+                .Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+
             //next move asset vols
-            lastPVCuve =
-               new AtmVegaCurveStep().Attribute(model, endModel, cube, lastPVCuve, startingGreeks, reportingCcy);
-            
+            (lastPvCube, model) =
+               new AtmVegaCurveStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move fx vols
-            foreach (var fxSurface in endModel.VanillaModel.FundingModel.VolSurfaces)
-            {
-                var riskForCurve = startingGreeks.Filter(
-                     new Dictionary<string, object> {
-                        { AssetId, fxSurface.Key },
-                        { Metric, "Vega" }
-                     });
-
-                var explainedByTrade = new Dictionary<string, double>();
-                foreach (var r in riskForCurve.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-                    var point = (string)r.MetaData[r_plIx];
-                    var pointDate = fxSurface.Value.PillarDatesForLabel(point);
-                    var startRate = model.VanillaModel.GetFxVolForDeltaStrikeAndDate(fxSurface.Key, pointDate, 0.5);
-                    var endRate = endModel.VanillaModel.GetFxVolForDeltaStrikeAndDate(fxSurface.Key, pointDate, 0.5);
-                    var explained = r.Value * (endRate - startRate) / 0.01;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[r_tidIx] },
-                        { TradeType, r.MetaData[r_tTypeIx] },
-                        { Step, "FxVols" },
-                        { SubStep, fxSurface.Key },
-                        { SubSubStep, "Vega" },
-                        { PointLabel,r.MetaData[r_plIx]},
-                        { "PointDate",r.MetaData[r_pdIx] }
-                    };
-                    cube.AddRow(row, explained);
-
-                    if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] = explained;
-                    else
-                        explainedByTrade[(string)r.MetaData[r_tidIx]] += explained;
-                }
-
-                model.VanillaModel.FundingModel.VolSurfaces[fxSurface.Key] = fxSurface.Value;
-                model = (AssetFxMCModel)model.Rebuild(model.VanillaModel, model.Portfolio);
-                newPVCube = model.PV(reportingCcy);
-                step = newPVCube.QuickDifference(lastPVCuve);
-
-                foreach (var r in step.GetAllRows())
-                {
-                    if (r.Value == 0.0) continue;
-
-                    var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "FxVols" },
-                        { SubStep, fxSurface.Key },
-                        { SubSubStep, "Unexplained" },
-                        { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                    explainedByTrade.TryGetValue((string)r.MetaData[tidIx], out var explained);
-                    cube.AddRow(row, r.Value - explained);
-                }
-                lastPVCuve = newPVCube;
-            }
+            (lastPvCube, model) =
+               new FxVolsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //finally unexplained step
-            newPVCube = endModel.PV(reportingCcy);
-            step = newPVCube.QuickDifference(lastPVCuve);
-
-            foreach (var r in step.GetAllRows())
-            {
-                if (r.Value == 0.0) continue;
-
-                var row = new Dictionary<string, object>
-                    {
-                        { TradeId, r.MetaData[tidIx] },
-                        { TradeType, r.MetaData[tTypeIx] },
-                        { Step, "Unexplained" },
-                        { SubStep, "Unexplained" },
-                        { SubSubStep, "Unexplained" },
-                        { PointLabel, string.Empty },
-                        { "PointDate", endModel.OriginDate }
-                    };
-                cube.AddRow(row, r.Value);
-            }
-            lastPVCuve = newPVCube;
+            (lastPvCube, model) =
+              new FinalStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

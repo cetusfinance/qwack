@@ -74,7 +74,7 @@ namespace Qwack.Core.Instruments
                             PortfolioName = to1.PortfolioName,
                             SolveCurve = to1.SolveCurve,
                             Strike = to1.Strike,
-                            TradeId = to1.TradeId 
+                            TradeId = to1.TradeId
                         };
                     case FundingInstrumentType.FxVanillaOption:
                         var to2 = transportObject.FxOption;
@@ -104,6 +104,24 @@ namespace Qwack.Core.Instruments
                         return new IrSwap(transportObject.IrSwap, calendarProvider, currencyProvider);
                     case FundingInstrumentType.CashBalance:
                         return new CashBalance(transportObject.CashBalance, currencyProvider);
+                    case FundingInstrumentType.FxFuture:
+                        var to3 = transportObject.FxFuture;
+                        return new FxFuture()
+                        {
+                            Counterparty = to3.Counterparty,
+                            DeliveryDate = to3.DeliveryDate,
+                            DomesticCCY = currencyProvider.GetCurrencySafe(to3.DomesticCCY),
+                            ForeignCCY = currencyProvider.GetCurrencySafe(to3.ForeignCCY),
+                            DomesticQuantity = to3.DomesticQuantity,
+                            ForeignDiscountCurve = to3.ForeignDiscountCurve,
+                            HedgingSet = to3.HedgingSet,
+                            MetaData = to3.MetaData,
+                            PillarDate = to3.PillarDate,
+                            PortfolioName = to3.PortfolioName,
+                            SolveCurve = to3.SolveCurve,
+                            Strike = to3.Strike,
+                            TradeId = to3.TradeId,
+                        };
                 }
             }
 

@@ -651,6 +651,10 @@ namespace Qwack.Dates
                 case string p when p.StartsWith("+M") && p.Split('M').Length == 2 && int.TryParse(p.Split('M')[1], out var mm):
                     var dm = DateTime.Today.AddMonths(mm);
                     return (Start: new DateTime(dm.Year, dm.Month, 1), End: new DateTime(dm.Year, dm.Month, 1).LastDayOfMonth());
+                case string p when FutureMonths.Contains(p): //Jun
+                    var mx = Array.IndexOf(Months, p) + 1;
+                    var yx = DateTime.Today.Month >= mx ? DateTime.Today.Year : DateTime.Today.Year + 1; 
+                    return (Start: new DateTime(yx, mx, 1), End: new DateTime(yx, mx, 1).LastDayOfMonth()); 
                 case string p when p.Length == 2 && int.TryParse(p.Substring(1, 1), out var yr) && FutureMonths.Contains(p.Substring(0, 1)): //X8
                     var m1 = Array.IndexOf(FutureMonths, p.Substring(0, 1)) + 1;
                     return (Start: new DateTime(2010 + yr, m1, 1), End: (new DateTime(2010 + yr, m1, 1)).LastDayOfMonth()); ;

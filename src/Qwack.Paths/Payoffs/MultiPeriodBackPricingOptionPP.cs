@@ -273,7 +273,7 @@ namespace Qwack.Paths.Payoffs
                             setReg[i] = spotAtExpiry[i] * _expiryToSettleCarry;
                         }
                         var futVec = new Vector<double>(futSum);
-                        avgs[a] = (futVec + pastSum) / nTotalVec[a];
+                        avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);
                     }
                     else
                     {

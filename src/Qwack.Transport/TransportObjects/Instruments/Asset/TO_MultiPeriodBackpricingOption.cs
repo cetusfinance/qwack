@@ -75,7 +75,8 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public double? ScaleStrike { get; set; }
         [ProtoMember(32)]
         public double? ScaleProportion { get; set;}
-
+        [ProtoMember(33)]
+        public double[] PeriodPremia { get; set; }
 
     }
 }

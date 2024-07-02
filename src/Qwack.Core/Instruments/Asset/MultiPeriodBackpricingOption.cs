@@ -46,6 +46,7 @@ namespace Qwack.Core.Instruments.Asset
         public int? DeclaredPeriod { get; set; }
 
         public List<DateTime[]> FxFixingDates { get; set; }
+        public double[] PeriodPremia { get; set; }
         public Currency PaymentCurrency { get; set; }
         public FxConversionType FxConversionType { get; set; } = FxConversionType.None;
         public string DiscountCurve { get; set; }
@@ -119,7 +120,8 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = OffsetFixingId,
             ScaleStrike = ScaleStrike,
             ScaleProportion = ScaleProportion,
-            MetaData = new(MetaData)
+            MetaData = new(MetaData),
+            PeriodPremia = PeriodPremia,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -163,6 +165,7 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = to.OffsetFixingId;
             ScaleProportion = to.ScaleProportion;
             ScaleStrike = to.ScaleStrike;
+            PeriodPremia = to.PeriodPremia;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -202,6 +205,7 @@ namespace Qwack.Core.Instruments.Asset
                 ScaleProportion = ScaleProportion,
                 ScaleStrike = ScaleStrike,
                 MetaData = new(MetaData),
+                PeriodPremia = PeriodPremia,
             }
         };
     }

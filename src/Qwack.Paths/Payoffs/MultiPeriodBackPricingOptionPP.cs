@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.ServiceModel;
 using Qwack.Core.Basic;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
@@ -11,7 +10,6 @@ using Qwack.Math;
 using Qwack.Paths.Features;
 using Qwack.Paths.Regressors;
 using Qwack.Transport.BasicTypes;
-using Qwack.Transport.TransportObjects.Instruments.Funding;
 
 namespace Qwack.Paths.Payoffs
 {
@@ -51,6 +49,7 @@ namespace Qwack.Paths.Payoffs
         private double? _scaleProportion;
 
         private double[] _contangoScaleFactors;
+        private double[] _periodPremia;
 
 
         private Vector<double>[][] _exercisedPeriod;
@@ -83,7 +82,8 @@ namespace Qwack.Paths.Payoffs
                                               int? declaredPeriod = null,
                                               DateShifter dateShifter = null,
                                               double? scaleStrike = null,
-                                              double? scaleProportion = null)
+                                              double? scaleProportion = null,
+                                              double[] periodPremia = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -99,6 +99,8 @@ namespace Qwack.Paths.Payoffs
             _dateShifter = dateShifter;
             _scaleStrike = scaleStrike;
             _scaleProportion = scaleProportion;
+            _periodPremia = periodPremia ?? avgDates.Select(x => 0.0).ToArray(); //default to zero spreads
+
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
 
@@ -282,7 +284,7 @@ namespace Qwack.Paths.Payoffs
                             setReg[i] = SettlementRegressor?.Predict(spotAtExpiry[i]) ?? spotAtExpiry[i];
                         }
                         var futVec = new Vector<double>(futSum);
-                        avgs[a] = (futVec + pastSum) / nTotalVec[a];
+                        avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);
                     }
 
                     avgVec = (_callPut == OptionType.C) ?

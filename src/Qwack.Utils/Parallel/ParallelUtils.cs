@@ -59,7 +59,7 @@ namespace Qwack.Utils.Parallel
 
         private void StartThread()
         {
-            var thread = new Thread(ThreadStart)
+            var thread = new Thread(ThreadStart, 1024 * 1024 * 2)
             {
                 IsBackground = true,
                 Name = $"ParallelUtilsThread{_activeThreadCount}"

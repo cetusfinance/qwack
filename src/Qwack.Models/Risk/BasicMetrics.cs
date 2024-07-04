@@ -1109,12 +1109,11 @@ namespace Qwack.Models.Risk
                 }
 
                 //by gamma point, trade row and then string point label
+                
                 var deltas = new Dictionary<string, double[]>[pvRows.Length];
                 for (var n = 0; n <= nGammaPoints; n++) //central plus wings so 1 extra
                 {
-                    
-                    
-                    foreach (var kv in bumpedCurves[n])
+                    foreach (var kv in bumpedCurves[0])
                     {
                         var innerRowsUp = n == 0 ? pvRows : bumpedPvs[n - 1][kv.Key].GetAllRows();
                         var innerRowsDown = n == 0 ? pvRows : bumpedDownPvs[n - 1][kv.Key].GetAllRows();

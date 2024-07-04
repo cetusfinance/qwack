@@ -959,293 +959,228 @@ namespace Qwack.Models.Risk
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
 
-        //public static ICube AssetDeltaStableGamma(this IPvModel pvModel, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, int nGammaPoints = 2)
-        //{
-        //    var cube = new ResultCube();
-        //    var dataTypes = new Dictionary<string, Type>
-        //    {
-        //        { TradeId, typeof(string) },
-        //        { TradeType,  typeof(string) },
-        //        { AssetId, typeof(string) },
-        //        { "PointDate", typeof(DateTime) },
-        //        { PointLabel, typeof(string) },
-        //        { Metric, typeof(string) },
-        //        { "CurveType", typeof(string) },
-        //        { "RefPrice", typeof(double) },
-        //        { Consts.Cubes.Portfolio, typeof(string) },
-        //    };
-        //    var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
-        //    foreach (var key in metaKeys)
-        //    {
-        //        dataTypes[key] = typeof(string);
-        //    }
-        //    var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+        public static ICube AssetDeltaStableGamma(this IPvModel pvModel, bool parallelize = false,
+            DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null,
+            double bumpSize = 0.01, int nGammaPoints = 2)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { "PointDate", typeof(DateTime) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) },
+                { "CurveType", typeof(string) },
+                { "RefPrice", typeof(double) },
+                { Consts.Cubes.Portfolio, typeof(string) },
+            };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys)
+                .Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
 
-        //    cube.Initialize(dataTypes);
-        //    var model = pvModel.VanillaModel.Clone();
-        //    model.BuildDependencyTree();
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null)
+                .ToDictionary(x => x.TradeId, x => x);
 
-        //    foreach (var curveName in model.CurveNames)
-        //    {
-        //        var curveObj = model.GetPriceCurve(curveName);
-        //        var bumpForCurve = bumpSize / 10 * curveObj.GetPriceForDate(model.BuildDate);
-        //        var linkedCurves = model.GetDependentCurves(curveName);
-        //        var allLinkedCurves = model.GetAllDependentCurves(curveName);
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel.Clone();
+            model.BuildDependencyTree();
 
-        //        var subPortfolio = new Portfolio()
-        //        {
-        //            Instruments = pvModel.Portfolio.Instruments
-        //            .Where(x => (x is IAssetInstrument ia) &&
-        //            (ia.AssetIds.Contains(curveObj.AssetId) || ia.AssetIds.Any(aid => allLinkedCurves.Contains(aid))))
-        //            .ToList()
-        //        };
+            foreach (var curveName in model.CurveNames)
+            {
+                var curveObj = model.GetPriceCurve(curveName);
+                var bumpForCurve = bumpSize / 10 * curveObj.GetPriceForDate(model.BuildDate);
+                var linkedCurves = model.GetDependentCurves(curveName);
+                var allLinkedCurves = model.GetAllDependentCurves(curveName);
 
-        //        if (subPortfolio.Instruments.Count == 0)
-        //            continue;
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                        .Where(x => (x is IAssetInstrument ia) &&
+                                    (ia.AssetIds.Contains(curveObj.AssetId) ||
+                                     ia.AssetIds.Any(aid => allLinkedCurves.Contains(aid))))
+                        .ToList()
+                };
 
-        //        var lastDateInBook = subPortfolio.LastSensitivityDate;
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
 
-        //        var baseModel = pvModel.Rebuild(model, subPortfolio);
-        //        var pvCube = baseModel.PV(curveObj.Currency);
-        //        var pvRows = pvCube.GetAllRows();
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-        //        var tidIx = pvCube.GetColumnIndex(TradeId);
-        //        var tTypeIx = pvCube.GetColumnIndex(TradeType);
-        //        var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
 
-        //        var bumpedCurves = new Dictionary<string, IPriceCurve>[nGammaPoints];
-        //        var bumpedDownCurves = new Dictionary<string, IPriceCurve>[nGammaPoints];
-        //        if (isSparseLMEMode)
-        //        {
-        //            lastDateInBook = NextThirdWeds(lastDateInBook);
-        //            var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
-        //            for(var i=0;i<nGammaPoints;i++)
-        //            {
-        //                bumpedCurves[i] = curveObj.GetDeltaScenarios(bumpForCurve * (i + 1), lastDateInBook, sparseDates);
-        //                bumpedDownCurves[i] = curveObj.GetDeltaScenarios(-bumpForCurve * (i + 1), lastDateInBook, sparseDates);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            for (var i = 0; i < nGammaPoints; i++)
-        //            {
-        //                bumpedCurves[i] = curveObj.GetDeltaScenarios(bumpForCurve * (i + 1), lastDateInBook, pointsToBump);
-        //                bumpedDownCurves[i] = curveObj.GetDeltaScenarios(-bumpForCurve * (i + 1), lastDateInBook, pointsToBump);
-        //            }
-        //        }
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
+                var pfIx = pvCube.GetColumnIndex(Consts.Cubes.Portfolio);
 
-        //        var bumpedPvs = new Dictionary<string, ICube>[nGammaPoints];
-        //        var bumpedDownPvs = new Dictionary<string, ICube>[nGammaPoints];
+                var bumpedCurves = new Dictionary<string, IPriceCurve>[nGammaPoints];
+                var bumpedDownCurves = new Dictionary<string, IPriceCurve>[nGammaPoints];
+                if (isSparseLMEMode)
+                {
+                    lastDateInBook = NextThirdWeds(lastDateInBook);
+                    var sparseDates = curveObj.PillarDates.Where(x =>
+                            x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars))
+                        .ToArray();
+                    for (var i = 0; i < nGammaPoints; i++)
+                    {
+                        bumpedCurves[i] =
+                            curveObj.GetDeltaScenarios(bumpForCurve * (i + 1), lastDateInBook, sparseDates);
+                        bumpedDownCurves[i] =
+                            curveObj.GetDeltaScenarios(-bumpForCurve * (i + 1), lastDateInBook, sparseDates);
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < nGammaPoints; i++)
+                    {
+                        bumpedCurves[i] =
+                            curveObj.GetDeltaScenarios(bumpForCurve * (i + 1), lastDateInBook, pointsToBump);
+                        bumpedDownCurves[i] =
+                            curveObj.GetDeltaScenarios(-bumpForCurve * (i + 1), lastDateInBook, pointsToBump);
+                    }
+                }
 
-        //        for (var i = 0; i < nGammaPoints; i++)
-        //        {
-        //            bumpedPvs[i] = [];
-        //            bumpedDownPvs[i] = [];
+                var bumpedPvs = new Dictionary<string, ICube>[nGammaPoints];
+                var bumpedDownPvs = new Dictionary<string, ICube>[nGammaPoints];
 
-        //            ParallelUtils.Instance.Foreach(bumpedCurves[i].ToList(), bCurve =>
-        //            {
-        //                var newVanillaModel = model.Clone();
-        //                newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
+                for (var i = 0; i < nGammaPoints; i++)
+                {
+                    bumpedPvs[i] = [];
+                    bumpedDownPvs[i] = [];
 
-        //                var dependentCurves = new List<string>(linkedCurves);
-        //                while (dependentCurves.Any())
-        //                {
-        //                    var newBaseCurves = new List<string>();
-        //                    foreach (var depCurveName in dependentCurves)
-        //                    {
-        //                        var baseCurve = newVanillaModel.GetPriceCurve(curveName);
-        //                        var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
-        //                        newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
-        //                        newBaseCurves.Add(depCurveName);
-        //                    }
+                    ParallelUtils.Instance.Foreach(bumpedCurves[i].ToList(), bCurve =>
+                    {
+                        var newVanillaModel = model.Clone();
+                        newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
 
-        //                    dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
-        //                }
+                        var dependentCurves = new List<string>(linkedCurves);
+                        while (dependentCurves.Any())
+                        {
+                            var newBaseCurves = new List<string>();
+                            foreach (var depCurveName in dependentCurves)
+                            {
+                                var baseCurve = newVanillaModel.GetPriceCurve(curveName);
+                                var recalCurve =
+                                    ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(
+                                        baseCurve);
+                                newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
+                                newBaseCurves.Add(depCurveName);
+                            }
 
-        //                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
-        //                bumpedPvs[i][bCurve.Key] = newPvModel.PV(curveObj.Currency);
-                     
-        //                var newVanillaModelDown = model.Clone();
-        //                newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[i][bCurve.Key]);
+                            dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct()
+                                .ToList();
+                        }
 
-        //                var dependentCurvesDown = new List<string>(linkedCurves);
-        //                while (dependentCurvesDown.Any())
-        //                {
-        //                    var newBaseCurves = new List<string>();
-        //                    foreach (var depCurveName in dependentCurves)
-        //                    {
-        //                        var baseCurve = newVanillaModelDown.GetPriceCurve(depCurveName);
-        //                        var recalCurve = ((BasisPriceCurve)newVanillaModelDown.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
-        //                        newVanillaModelDown.AddPriceCurve(depCurveName, recalCurve);
-        //                        newBaseCurves.Add(depCurveName);
-        //                    }
+                        var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                        bumpedPvs[i][bCurve.Key] = newPvModel.PV(curveObj.Currency);
 
-        //                    dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
-        //                }
-        //                var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+                        var newVanillaModelDown = model.Clone();
+                        newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[i][bCurve.Key]);
 
-        //                bumpedDownPvs[i][bCurve.Key] = newPvModel.PV(curveObj.Currency);
+                        var dependentCurvesDown = new List<string>(linkedCurves);
+                        while (dependentCurvesDown.Any())
+                        {
+                            var newBaseCurves = new List<string>();
+                            foreach (var depCurveName in dependentCurves)
+                            {
+                                var baseCurve = newVanillaModelDown.GetPriceCurve(depCurveName);
+                                var recalCurve = ((BasisPriceCurve)newVanillaModelDown.GetPriceCurve(depCurveName))
+                                    .ReCalibrate(baseCurve);
+                                newVanillaModelDown.AddPriceCurve(depCurveName, recalCurve);
+                                newBaseCurves.Add(depCurveName);
+                            }
 
-        //            }, !(parallelize)).Wait();
-        //        }
+                            dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct()
+                                .ToList();
+                        }
 
-        //        ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
-        //        {
-        //            var newVanillaModel = model.Clone();
-        //            newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
+                        var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
 
-        //            var dependentCurves = new List<string>(linkedCurves);
-        //            while (dependentCurves.Any())
-        //            {
-        //                var newBaseCurves = new List<string>();
-        //                foreach (var depCurveName in dependentCurves)
-        //                {
-        //                    var baseCurve = newVanillaModel.GetPriceCurve(curveName);
-        //                    var recalCurve = ((BasisPriceCurve)newVanillaModel.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
-        //                    newVanillaModel.AddPriceCurve(depCurveName, recalCurve);
-        //                    newBaseCurves.Add(depCurveName);
-        //                }
+                        bumpedDownPvs[i][bCurve.Key] = newPvModelDown.PV(curveObj.Currency);
 
-        //                dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
-        //            }
-        //            var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                    }, !(parallelize)).Wait();
+                }
 
-        //            var bumpedPVCube = newPvModel.PV(curveObj.Currency);
-        //            var bumpedRows = bumpedPVCube.GetAllRows();
-        //            if (bumpedRows.Length != pvRows.Length)
-        //                throw new Exception("Dimensions do not match");
+                //by gamma point, trade row and then string point label
+                var deltas = new Dictionary<string, double[]>[pvRows.Length];
+                for (var n = 0; n <= nGammaPoints; n++) //central plus wings so 1 extra
+                {
+                    
+                    
+                    foreach (var kv in bumpedCurves[n])
+                    {
+                        var innerRowsUp = n == 0 ? pvRows : bumpedPvs[n - 1][kv.Key].GetAllRows();
+                        var innerRowsDown = n == 0 ? pvRows : bumpedDownPvs[n - 1][kv.Key].GetAllRows();
 
-        //            ResultCubeRow[] bumpedRowsDown = null;
-        //            if (computeGamma)
-        //            {
-        //                var newVanillaModelDown = model.Clone();
-        //                newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
+                        var outerRowsUp = bumpedPvs[n][kv.Key].GetAllRows();
+                        var outerRowsDown = bumpedDownPvs[n][kv.Key].GetAllRows();
+                        for (var i = 0; i < pvRows.Length; i++)
+                        {
+                            if(deltas[i] == null) 
+                                deltas[i] = new Dictionary<string,double[]>();
+                            if (!deltas[i].TryGetValue(kv.Key, out var deltasForPoint))
+                            {
+                                deltasForPoint = new double[nGammaPoints * 2 + 1];
+                                deltas[i][kv.Key] = deltasForPoint;
+                            }
+                            
+                            var pvInnerUp = innerRowsUp[i].Value;
+                            var pvInnerDown = innerRowsDown[i].Value;
+                            var pvOuterUp = outerRowsUp[i].Value;
+                            var pvOuterDown = outerRowsDown[i].Value;
+                            var deltaUp = (pvOuterUp - pvInnerUp) / (bumpForCurve * (n + 1));
+                            var deltaDown = (pvInnerDown - pvOuterDown) / (bumpForCurve * (n + 1));
 
-        //                var dependentCurvesDown = new List<string>(linkedCurves);
-        //                while (dependentCurvesDown.Any())
-        //                {
-        //                    var newBaseCurves = new List<string>();
-        //                    foreach (var depCurveName in dependentCurves)
-        //                    {
-        //                        var baseCurve = newVanillaModelDown.GetPriceCurve(depCurveName);
-        //                        var recalCurve = ((BasisPriceCurve)newVanillaModelDown.GetPriceCurve(depCurveName)).ReCalibrate(baseCurve);
-        //                        newVanillaModelDown.AddPriceCurve(depCurveName, recalCurve);
-        //                        newBaseCurves.Add(depCurveName);
-        //                    }
+                            if (n == 0)
+                            {
+                                var delta = (deltaUp + deltaDown) / 2;
+                                deltasForPoint[nGammaPoints] = delta;
 
-        //                    dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
-        //                }
-        //                var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+                                if (curveObj.UnderlyingsAreForwards) //de-discount delta
+                                    delta /= GetUsdDF(model, (BasicPriceCurve)curveObj, curveObj.PillarDatesForLabel(kv.Key));
 
-        //                var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
-        //                bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
-        //                if (bumpedRowsDown.Length != pvRows.Length)
-        //                    throw new Exception("Dimensions do not match");
-        //            }
+                                var row = new Dictionary<string, object>
+                                {
+                                    { TradeId, pvRows[i].MetaData[tidIx] },
+                                    { TradeType, pvRows[i].MetaData[tTypeIx] },
+                                    { AssetId, curveName },
+                                    { "PointDate", curveObj.PillarDatesForLabel(kv.Key) },
+                                    { PointLabel, kv.Key },
+                                    { Metric, "Delta" },
+                                    { "CurveType", curveObj is BasisPriceCurve ? "Basis" : "Outright" },
+                                    { "RefPrice", curveObj.GetPriceForDate(curveObj.PillarDatesForLabel(kv.Key)) },
+                                    { Consts.Cubes.Portfolio, pvRows[i].MetaData[pfIx] },
+                                };
+                                cube.AddRow(row, delta);
+                            }
+                            else
+                            {
+                                deltasForPoint[nGammaPoints + n] = deltaUp;
+                                deltasForPoint[nGammaPoints - n] = deltaDown;
+                            }
+                        }
+                    }
+                }
+                
+                //now we have the deltas, time for some regression
+                for (var i = 0; i < pvRows.Length; i++)
+                {
+                    foreach (var kv in deltas[0])
+                    {
+                    
+                    }    
+                }
+                
+            }
 
-        //            for (var i = 0; i < bumpedRows.Length; i++)
-        //            {
-
-        //                if (computeGamma)
-        //                {
-        //                    var deltaUp = (bumpedRows[i].Value - pvRows[i].Value) / bumpForCurve;
-        //                    var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpForCurve;
-        //                    var delta = (deltaUp + deltaDown) / 2.0;
-        //                    var gamma = (deltaUp - deltaDown) / bumpForCurve;
-
-        //                    if (Abs(delta) > 1e-10)
-        //                    {
-        //                        if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-        //                            delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
-
-        //                        var row = new Dictionary<string, object>
-        //                        {
-        //                            { TradeId, bumpedRows[i].MetaData[tidIx] },
-        //                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-        //                            { AssetId, curveName },
-        //                            { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-        //                            { PointLabel, bCurve.Key },
-        //                            { Metric, "Delta" },
-        //                            { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-        //                            { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-        //                            { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
-        //                        };
-        //                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
-        //                        {
-        //                            foreach (var key in metaKeys)
-        //                            {
-        //                                if (trade.MetaData.TryGetValue(key, out var metaData))
-        //                                    row[key] = metaData;
-        //                            }
-        //                        }
-        //                        cube.AddRow(row, delta);
-        //                    }
-
-        //                    if (Abs(gamma) > 1e-10)
-        //                    {
-        //                        //if (bCurve.Value.UnderlyingsAreForwards) //de-discount gamma
-        //                        //    gamma /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
-
-        //                        var row = new Dictionary<string, object>
-        //                        {
-        //                            { TradeId, bumpedRows[i].MetaData[tidIx] },
-        //                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-        //                            { AssetId, curveName },
-        //                            { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-        //                            { PointLabel, bCurve.Key },
-        //                            { Metric, "Gamma" },
-        //                            { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-        //                            { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-        //                            { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
-        //                        };
-        //                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
-        //                        {
-        //                            foreach (var key in metaKeys)
-        //                            {
-        //                                if (trade.MetaData.TryGetValue(key, out var metaData))
-        //                                    row[key] = metaData;
-        //                            }
-        //                        }
-        //                        cube.AddRow(row, gamma);
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpForCurve;
-
-        //                    if (delta != 0.0)
-        //                    {
-        //                        if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
-        //                            delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
-
-        //                        var row = new Dictionary<string, object>
-        //                        {
-        //                            { TradeId, bumpedRows[i].MetaData[tidIx] },
-        //                            { TradeType, bumpedRows[i].MetaData[tTypeIx] },
-        //                            { AssetId, curveName },
-        //                            { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
-        //                            { PointLabel, bCurve.Key },
-        //                            { Metric, "Delta" },
-        //                            { "CurveType", bCurve.Value is BasisPriceCurve ? "Basis" : "Outright" },
-        //                            { "RefPrice", bCurve.Value.GetPriceForDate(bCurve.Value.PillarDatesForLabel(bCurve.Key)) },
-        //                            { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx] },
-        //                        };
-        //                        if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
-        //                        {
-        //                            foreach (var key in metaKeys)
-        //                            {
-        //                                if (trade.MetaData.TryGetValue(key, out var metaData))
-        //                                    row[key] = metaData;
-        //                            }
-        //                        }
-        //                        cube.AddRow(row, delta);
-        //                    }
-        //                }
-        //            }
-        //        }, !(parallelize)).Wait();
-        //    }
-        //    return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
-        //}
+            return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
+        }
 
 
         public static ICube AssetCashDelta(this IPvModel pvModel, Currency reportingCurrency = null)

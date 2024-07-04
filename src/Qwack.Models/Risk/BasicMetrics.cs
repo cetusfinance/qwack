@@ -11,6 +11,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Math;
 using Qwack.Models.MCModels;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
@@ -1167,13 +1168,35 @@ namespace Qwack.Models.Risk
                         }
                     }
                 }
-                
+
+                var Xs = new double[nGammaPoints * 2 + 1];
+                for (var i = 0; i < Xs.Length; i++)
+                {
+                    Xs[i] = (i - nGammaPoints) * bumpForCurve;
+                }
                 //now we have the deltas, time for some regression
                 for (var i = 0; i < pvRows.Length; i++)
                 {
-                    foreach (var kv in deltas[0])
+                    foreach (var kv in deltas[i])
                     {
-                    
+                        var pointLabel = kv.Key;
+                        var Ys = kv.Value;
+                        var lr = LinearRegression.LinearRegressionNoVector(Xs, Ys, false);
+                        var gamma = lr.Beta;
+                        
+                        var row = new Dictionary<string, object>
+                        {
+                            { TradeId, pvRows[i].MetaData[tidIx] },
+                            { TradeType, pvRows[i].MetaData[tTypeIx] },
+                            { AssetId, curveName },
+                            { "PointDate", curveObj.PillarDatesForLabel(kv.Key) },
+                            { PointLabel, kv.Key },
+                            { Metric, "Gamma" },
+                            { "CurveType", curveObj is BasisPriceCurve ? "Basis" : "Outright" },
+                            { "RefPrice", curveObj.GetPriceForDate(curveObj.PillarDatesForLabel(kv.Key)) },
+                            { Consts.Cubes.Portfolio, pvRows[i].MetaData[pfIx] },
+                        };
+                        cube.AddRow(row, gamma);
                     }    
                 }
                 

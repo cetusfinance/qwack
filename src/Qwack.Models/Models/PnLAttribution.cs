@@ -1500,7 +1500,7 @@ namespace Qwack.Models.Models
             return o;
         }
 
-        public static ICube ExplainAttribution(this Portfolio portfolio, AssetFxMCModel startModel, AssetFxMCModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettings, ICalendarProvider calendarProvider, bool useSpreadDelta = false)
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, AssetFxMCModel startModel, AssetFxMCModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettings, ICalendarProvider calendarProvider, bool useSpreadDelta = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1543,9 +1543,13 @@ namespace Qwack.Models.Models
             (lastPvCube, model) =
                new FxVolsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
-            //finally unexplained step
+            //unexplained step
             (lastPvCube, model) =
               new FinalStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+
+            //activity step
+            (lastPvCube, model) =
+              new ActivityStep(startPortfolio, endPortfolio).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

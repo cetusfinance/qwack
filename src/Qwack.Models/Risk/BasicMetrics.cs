@@ -1111,7 +1111,7 @@ namespace Qwack.Models.Risk
                 //by gamma point, trade row and then string point label
                 
                 var deltas = new Dictionary<string, double[]>[pvRows.Length];
-                for (var n = 0; n <= nGammaPoints; n++) //central plus wings so 1 extra
+                for (var n = 0; n < nGammaPoints; n++) //2gamma points, 5 pvs, 4 deltas
                 {
                     foreach (var kv in bumpedCurves[0])
                     {
@@ -1122,25 +1122,24 @@ namespace Qwack.Models.Risk
                         var outerRowsDown = bumpedDownPvs[n][kv.Key].GetAllRows();
                         for (var i = 0; i < pvRows.Length; i++)
                         {
-                            if(deltas[i] == null) 
-                                deltas[i] = new Dictionary<string,double[]>();
+                            if (deltas[i] == null)
+                                deltas[i] = new Dictionary<string, double[]>();
                             if (!deltas[i].TryGetValue(kv.Key, out var deltasForPoint))
                             {
-                                deltasForPoint = new double[nGammaPoints * 2 + 1];
+                                deltasForPoint = new double[nGammaPoints * 2];
                                 deltas[i][kv.Key] = deltasForPoint;
                             }
-                            
+
                             var pvInnerUp = innerRowsUp[i].Value;
                             var pvInnerDown = innerRowsDown[i].Value;
                             var pvOuterUp = outerRowsUp[i].Value;
                             var pvOuterDown = outerRowsDown[i].Value;
-                            var deltaUp = (pvOuterUp - pvInnerUp) / (bumpForCurve * (n + 1));
-                            var deltaDown = (pvInnerDown - pvOuterDown) / (bumpForCurve * (n + 1));
+                            var deltaUp = (pvOuterUp - pvInnerUp) / bumpForCurve;
+                            var deltaDown = (pvInnerDown - pvOuterDown) / bumpForCurve;
 
                             if (n == 0)
                             {
                                 var delta = (deltaUp + deltaDown) / 2;
-                                deltasForPoint[nGammaPoints] = delta;
 
                                 if (curveObj.UnderlyingsAreForwards) //de-discount delta
                                     delta /= GetUsdDF(model, (BasicPriceCurve)curveObj, curveObj.PillarDatesForLabel(kv.Key));
@@ -1159,19 +1158,18 @@ namespace Qwack.Models.Risk
                                 };
                                 cube.AddRow(row, delta);
                             }
-                            else
-                            {
-                                deltasForPoint[nGammaPoints + n] = deltaUp;
-                                deltasForPoint[nGammaPoints - n] = deltaDown;
-                            }
+
+                            deltasForPoint[(nGammaPoints-1) + (n+1)] = deltaUp;
+                            deltasForPoint[(nGammaPoints - 1) - n] = deltaDown;
+
                         }
                     }
                 }
 
-                var Xs = new double[nGammaPoints * 2 + 1];
+                var Xs = new double[nGammaPoints * 2];
                 for (var i = 0; i < Xs.Length; i++)
                 {
-                    Xs[i] = (i - nGammaPoints) * bumpForCurve;
+                    Xs[i] = (-nGammaPoints * 2 + 1 + i * 2) * bumpForCurve / 2;
                 }
                 //now we have the deltas, time for some regression
                 for (var i = 0; i < pvRows.Length; i++)
@@ -1423,6 +1421,156 @@ namespace Qwack.Models.Risk
                             }
                         }
                         cube.AddRow(row, delta);
+                    }
+                }
+            }
+
+            return cube.Sort(new List<string> { AssetId, TradeId });
+        }
+
+        private static IPriceCurve GetBumpedCurve(double bumpSize, IPriceCurve curveObjX, IAssetFxModel model, ICurrencyProvider currencyProvider)
+        {
+            return curveObjX switch
+            {
+                ConstantPriceCurve con => new ConstantPriceCurve(con.Price + bumpSize, con.BuildDate, currencyProvider),
+                ContangoPriceCurve cpc => new ContangoPriceCurve(cpc.BuildDate, cpc.Spot + bumpSize, cpc.SpotDate, cpc.PillarDates, cpc.Contangos, currencyProvider, cpc.Basis, cpc.PillarLabels)
+                {
+                    Currency = cpc.Currency,
+                    AssetId = AssetId,
+                    SpotCalendar = cpc.SpotCalendar,
+                    SpotLag = cpc.SpotLag
+                },
+
+                // if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
+                //delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
+
+                BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p, ix) => p + (pc.UnderlyingsAreForwards ? (bumpSize / GetUsdDF(model, pc, pc.PillarDates[ix])) : bumpSize)).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels)
+                //BasicPriceCurve pc => new BasicPriceCurve(pc.BuildDate, pc.PillarDates, pc.Prices.Select((p,ix) => p + bumpSize).ToArray(), pc.CurveType, currencyProvider, pc.PillarLabels)
+                {
+                    CollateralSpec = pc.CollateralSpec,
+                    Currency = pc.Currency,
+                    AssetId = AssetId,
+                    SpotCalendar = pc.SpotCalendar,
+                    SpotLag = pc.SpotLag
+                },
+                _ => throw new Exception("Unable to handle curve type for flat shift"),
+            };
+        }
+
+
+        public static ICube AssetParallelDeltaGamma(this IPvModel pvModel, ICurrencyProvider currencyProvider, double bumpSize = 0.01, string assetId = null)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
+            };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var assetIds = pvModel.Portfolio.AssetIds();
+
+            foreach (var curveName in assetIds)
+            {
+                if (assetId != null && curveName != assetId)
+                    continue;
+
+                var curveObj = model.GetPriceCurve(curveName);
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    ia.AssetIds.Contains(curveName))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
+
+
+                var bumpedCurveUp = GetBumpedCurve(bumpSize, curveObj, model.VanillaModel, currencyProvider);
+                var bumpedCurveDown = GetBumpedCurve(-bumpSize, curveObj, model.VanillaModel, currencyProvider);
+
+                var newVanillaModelUp = model.Clone();
+                newVanillaModelUp.AddPriceCurve(curveName, bumpedCurveUp);
+
+                var newVanillaModelDown = model.Clone();
+                newVanillaModelDown.AddPriceCurve(curveName, bumpedCurveDown);
+
+                var newPvModelUp = pvModel.Rebuild(newVanillaModelUp, subPortfolio);
+                var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+
+                var bumpedPVCubeUp = newPvModelUp.PV(curveObj.Currency);
+                var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
+
+                var bumpedRowsUp = bumpedPVCubeUp.GetAllRows();
+                var bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
+                if (bumpedRowsUp.Length != pvRows.Length || bumpedRowsDown.Length != pvRows.Length)
+                    throw new Exception("Dimensions do not match");
+
+                for (var i = 0; i < pvRows.Length; i++)
+                {
+                    var deltaUp = (bumpedRowsUp[i].Value - pvRows[i].Value) / bumpSize;
+                    var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpSize;
+                    var delta = (deltaUp + deltaDown) / 2;
+                    if (delta != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                            {
+                                { TradeId, pvRows[i].MetaData[tidIx] },
+                                { TradeType, pvRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
+                                { Metric, "ParallelDelta" },
+                            };
+                        if (insDict.TryGetValue((string)pvRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
+                        cube.AddRow(row, delta);
+                    }
+
+                    var gamma = (deltaUp - deltaDown) / bumpSize;
+                    if (gamma != 0.0)
+                    {
+                        var row = new Dictionary<string, object>
+                            {
+                                { TradeId, pvRows[i].MetaData[tidIx] },
+                                { TradeType, pvRows[i].MetaData[tTypeIx] },
+                                { AssetId, curveName },
+                                { Metric, "ParallelGamma" },
+                            };
+                        if (insDict.TryGetValue((string)pvRows[i].MetaData[tidIx], out var trade))
+                        {
+                            foreach (var key in metaKeys)
+                            {
+                                if (trade.MetaData.TryGetValue(key, out var metaData))
+                                    row[key] = metaData;
+                            }
+                        }
+                        cube.AddRow(row, gamma);
                     }
                 }
             }
@@ -2444,14 +2592,15 @@ namespace Qwack.Models.Risk
             //setup and run in series
             var tasks = new Dictionary<string, ICube>();
 
-            tasks["AssetDeltaGamma"] = pvModel.AssetDelta(true, isSparseLMEMode: true, calendars: calendarProvider);
+            tasks["AssetDeltaGamma"] = pvModel.AssetDelta(false, isSparseLMEMode: true, calendars: calendarProvider);
             tasks["AssetVega"] = rolledPvModel.AssetVega(reportingCcy);
             //tasks["FxVega"] = rolledPvModel.FxVega(reportingCcy);
-            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(true, isSparseLMEMode:true, calendars: calendarProvider, bumpSize: 0.1);
+            tasks["RolledParallelGamma"] = rolledPvModel.AssetParallelDeltaGamma(currencyProvider);
+            tasks["RolledDeltaGamma"] = rolledPvModel.AssetDelta(false, isSparseLMEMode:true, calendars: calendarProvider, bumpSize: 0.01);
             //tasks["FxDeltaGamma"] = pvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["RolledFxDeltaGamma"] = rolledPvModel.FxDelta(reportingCcy, currencyProvider, true);
             //tasks["IrDelta"] = pvModel.AssetIrDelta(reportingCcy);
-            
+
 
 
             //delta
@@ -2459,7 +2608,7 @@ namespace Qwack.Models.Risk
             cube = cube.Merge(baseDeltaGammaCube, new Dictionary<string, object>
             {
                  { "Currency", string.Empty },
-            },mergeTypes:true);
+            }, mergeTypes: true);
 
             //vega
             var assetVegaCube = tasks["AssetVega"];
@@ -2477,10 +2626,11 @@ namespace Qwack.Models.Risk
             //charm-asset
             //var rolledDeltaGammaCube = AssetDeltaGamma(portfolio, rolledModel);
             var rolledDeltaGammaCube = tasks["RolledDeltaGamma"];
+            var rolledParallelGammaCube = tasks["RolledParallelGamma"];
 
             var baseDeltaCube = baseDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Delta" } });
             var rolledDeltaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Delta" } });
-            var rolledGammaCube = rolledDeltaGammaCube.Filter(new Dictionary<string, object> { { Metric, "Gamma" } });
+            var rolledGammaCube = rolledParallelGammaCube.Filter(new Dictionary<string, object> { { Metric, "ParallelGamma" } });
             var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
             cube = cube.Merge(charmCube, new Dictionary<string, object>
             {

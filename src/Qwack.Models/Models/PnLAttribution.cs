@@ -1532,7 +1532,7 @@ namespace Qwack.Models.Models
 
             //next move asset curves
             (lastPvCube, model) =
-            ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(true) : new DeltaGammaCurveStep()))
+            ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(false) : new DeltaGammaCurveStep()))
                 .Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move asset vols

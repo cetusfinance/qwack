@@ -80,27 +80,28 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                     if (r.Value == 0.0) continue;
                     var point = (string)r.MetaData[r_plIx];
 
-                    var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
-                    var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    //var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                    //var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
 
                     //var move = (endRate - startRate) / startRate;
                     //var dollarGamma =  r.Value / startRate;
                     //var explained = 0.5 * dollarGamma * startRate * move * move;
 
-                    var move = (endRate - startRate);
-                    var explained = 0.5 * r.Value * move * move * fxRate;
+                    //var move = (endRate - startRate);
+                    //var explained = 0.5 * r.Value * move * move * fxRate;
+                    var explained = 0.5 * r.Value * flatShift * flatShift * fxRate;
 
 
                     var row = new Dictionary<string, object>
-                {
-                    { TradeId, r.MetaData[r_tidIx] },
-                    { TradeType, r.MetaData[r_tTypeIx] },
-                    { Step, "AssetCurves" },
-                    { SubStep, curveName },
-                    { SubSubStep, "Gamma" },
-                    { PointLabel, r.MetaData[r_plIx] },
-                    { "PointDate", r.MetaData[r_pdIx] }
-                };
+                    {
+                        { TradeId, r.MetaData[r_tidIx] },
+                        { TradeType, r.MetaData[r_tTypeIx] },
+                        { Step, "AssetCurves" },
+                        { SubStep, curveName },
+                        { SubSubStep, "GammaFlat" },
+                        { PointLabel, r.MetaData[r_plIx] },
+                        { "PointDate", r.MetaData[r_pdIx] }
+                    };
                     resultsCube.AddRow(row, explained);
 
                     if (!explainedByTrade.ContainsKey((string)r.MetaData[r_tidIx]))

@@ -322,6 +322,7 @@ namespace Qwack.Core.Instruments
             ObsEndDate = transportObject.ObsEndDate,
             ObsStartDate = transportObject.ObsStartDate,
             WindowSize = transportObject.WindowSize,
+            DecisionDate = transportObject.DecisionDate,
         };
 
     }

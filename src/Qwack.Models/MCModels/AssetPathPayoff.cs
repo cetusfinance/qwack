@@ -68,8 +68,12 @@ namespace Qwack.Models.MCModels
                         bpob.VanillaModel = value;
                         break;
                     case MultiPeriodBackpricingOption mpbpo:
-                        var mbpob = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOptionPP;
+                        var mbpob = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
                         mbpob.VanillaModel = value;
+                        break;
+                    case AsianLookbackOption lbo:
+                        var albo = _subInstruments.First() as LookBackOptionPP;
+                        albo.VanillaModel = value;
                         break;
                 }
             }
@@ -96,10 +100,14 @@ namespace Qwack.Models.MCModels
                     if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
                     break;
                 case MultiPeriodBackpricingOption mpbpo:
-                    var mbpo = _subInstruments.First() as Paths.Payoffs.MultiPeriodBackPricingOptionPP;
+                    var mbpo = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
                     if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
                     for (var i = 0; i < mbpo.AverageRegressors.Length; i++)
                         if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
+                    break;
+                case AsianLookbackOption albo:
+                    var lbopp = _subInstruments.First() as LookBackOptionPP;
+                    if (lbopp.SettlementRegressor == regressor) lbopp.SettlementRegressor = regressor;
                     break;
             }
         }
@@ -216,11 +224,18 @@ namespace Qwack.Models.MCModels
                     break;
                 case AsianLookbackOption alb:
                     var settleFixingDate = alb.SettlementFixingDates == null ? alb.SettlementDate.SubtractPeriod(RollType.P, alb.FixingCalendar, 2.Bd()) : DateTime.MinValue;
-
+                    var albpp = new LookBackOptionPP(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.SettlementDate, alb.Notional, SimulationCcy, alb.DecisionDate, alb.SettlementFixingDates ?? new[] { settleFixingDate }, alb.WindowSize)
+                    {
+                        VanillaModel = VanillaModel
+                    };
                     _subInstruments = new List<IAssetPathPayoff>
                     {
-                        new LookBackOptionPP(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.SettlementDate, alb.Notional, SimulationCcy, alb.DecisionDate, alb.SettlementFixingDates ?? new[] { settleFixingDate }, alb.WindowSize)
+                        albpp
                     };
+                    if (albpp.SettlementRegressor != null)
+                        Regressors = new[] { albpp.SettlementRegressor };
+                    else
+                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
                     break;
                 case Core.Instruments.Asset.BackPricingOption bpo:
                     var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional, SimulationCcy)

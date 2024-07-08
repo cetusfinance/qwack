@@ -474,7 +474,7 @@ namespace Qwack.Models.MCModels
             }
             foreach (var product in _payoffs)
             {
-                if (Settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is Core.Instruments.Asset.BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption))
+                if (Settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption || product.Value.AssetInstrument is AsianLookbackOption))
                     product.Value.VanillaModel = VanillaModel;
 
                 Engine.AddPathProcess(product.Value);

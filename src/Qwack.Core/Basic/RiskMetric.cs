@@ -17,5 +17,6 @@ namespace Qwack.Core.Basic
         PnLAttribution,
         OptimalExercise,
         AssetParallelDelta,
+        HistSimVaR
     }
 }

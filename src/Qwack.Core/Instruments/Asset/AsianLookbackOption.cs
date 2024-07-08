@@ -101,8 +101,9 @@ namespace Qwack.Core.Instruments.Asset
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
 
-        public TO_Instrument ToTransportObject() =>
+        public TO_Instrument ToTransportObject() =>           
                   new(){
+                      AssetInstrumentType = AssetInstrumentType.AsianLookbackOption,
                       AsianLookbackOption = new()
                       {
                           TradeId = TradeId,

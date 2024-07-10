@@ -25,10 +25,10 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
 
         var pvCubeBase = model.PV(reportingCcy);
         var pvRows = pvCubeBase.GetAllRows();
-        IPvModel rolledModel = (model is AssetFxMCModel amc) ?
+        model = (model is AssetFxMCModel amc) ?
             amc.RollModel(endModel.VanillaModel.BuildDate, currencyProvider, futureSettingsProvider, calendarProvider) :
             (model is AssetFxModel afx ? afx.RollModel(endModel.VanillaModel.BuildDate, currencyProvider) : throw new Exception("Unsupported model type"));
-        var newPvCube = rolledModel.PV(reportingCcy);
+        var newPvCube = model.PV(reportingCcy);
 
         var step = newPvCube.QuickDifference(pvCubeBase);
         foreach (var r in step.GetAllRows())

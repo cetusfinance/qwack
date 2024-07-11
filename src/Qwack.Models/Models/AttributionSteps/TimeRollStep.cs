@@ -38,7 +38,7 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
                     { TradeId, r.MetaData[r_tidIx] },
                     { TradeType, r.MetaData[r_tTypeIx] },
                     { Step, "Theta" },
-                    { SubStep, string.Empty },
+                    { SubStep, "TimeRoll" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
                     { "PointDate", endModel.VanillaModel.BuildDate }

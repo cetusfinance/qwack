@@ -87,7 +87,7 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
                         { TradeId, r.MetaData[tidIx] },
                         { TradeType, r.MetaData[tTypeIx] },
                         { Step, "Fixings" },
-                        { SubStep, fixingDictName },
+                        { SubStep, fixingDictName ?? "Unknown" },
                         { SubSubStep, string.Empty },
                         { PointLabel, string.Empty },
                         { "PointDate", endModel.VanillaModel.BuildDate }

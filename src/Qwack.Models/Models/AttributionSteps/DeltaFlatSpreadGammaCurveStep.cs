@@ -99,8 +99,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                         { Step, "AssetCurves" },
                         { SubStep, curveName },
                         { SubSubStep, "GammaFlat" },
-                        { PointLabel, r.MetaData[r_plIx] },
-                        { "PointDate", r.MetaData[r_pdIx] }
+                        { PointLabel, "Flat" },
+                        { "PointDate", endModel.VanillaModel.BuildDate }
                     };
                     resultsCube.AddRow(row, explained);
 

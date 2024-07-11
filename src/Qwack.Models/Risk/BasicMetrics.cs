@@ -1438,7 +1438,8 @@ namespace Qwack.Models.Risk
                     Currency = cpc.Currency,
                     AssetId = AssetId,
                     SpotCalendar = cpc.SpotCalendar,
-                    SpotLag = cpc.SpotLag
+                    SpotLag = cpc.SpotLag,
+                    Units = cpc.Units,
                 },
 
                 // if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
@@ -1451,7 +1452,9 @@ namespace Qwack.Models.Risk
                     Currency = pc.Currency,
                     AssetId = AssetId,
                     SpotCalendar = pc.SpotCalendar,
-                    SpotLag = pc.SpotLag
+                    SpotLag = pc.SpotLag,
+                    RefDate = pc.RefDate,
+                    Units = pc.Units,
                 },
                 _ => throw new Exception("Unable to handle curve type for flat shift"),
             };
@@ -1497,6 +1500,8 @@ namespace Qwack.Models.Risk
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
 
+                var bumpForCurve = bumpSize / 10 * curveObj.GetPriceForDate(model.BuildDate);
+
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
                 var baseModel = pvModel.Rebuild(model, subPortfolio);
@@ -1507,8 +1512,8 @@ namespace Qwack.Models.Risk
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
 
-                var bumpedCurveUp = GetBumpedCurve(bumpSize, curveObj, model.VanillaModel, currencyProvider);
-                var bumpedCurveDown = GetBumpedCurve(-bumpSize, curveObj, model.VanillaModel, currencyProvider);
+                var bumpedCurveUp = GetBumpedCurve(bumpForCurve, curveObj, model.VanillaModel, currencyProvider);
+                var bumpedCurveDown = GetBumpedCurve(-bumpForCurve, curveObj, model.VanillaModel, currencyProvider);
 
                 var newVanillaModelUp = model.Clone();
                 newVanillaModelUp.AddPriceCurve(curveName, bumpedCurveUp);
@@ -1529,8 +1534,8 @@ namespace Qwack.Models.Risk
 
                 for (var i = 0; i < pvRows.Length; i++)
                 {
-                    var deltaUp = (bumpedRowsUp[i].Value - pvRows[i].Value) / bumpSize;
-                    var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpSize;
+                    var deltaUp = (bumpedRowsUp[i].Value - pvRows[i].Value) / bumpForCurve;
+                    var deltaDown = (pvRows[i].Value - bumpedRowsDown[i].Value) / bumpForCurve;
                     var delta = (deltaUp + deltaDown) / 2;
                     if (delta != 0.0)
                     {
@@ -1552,7 +1557,7 @@ namespace Qwack.Models.Risk
                         cube.AddRow(row, delta);
                     }
 
-                    var gamma = (deltaUp - deltaDown) / bumpSize;
+                    var gamma = (deltaUp - deltaDown) / bumpForCurve;
                     if (gamma != 0.0)
                     {
                         var row = new Dictionary<string, object>

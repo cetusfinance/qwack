@@ -2358,6 +2358,113 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
+        public static ICube ContangoSwapDelta(this IPvModel pvModel, ICurrencyProvider currencyProvider, string assetId = null)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType,  typeof(string) },
+                { AssetId, typeof(string) },
+                { Metric, typeof(string) },
+                { PointLabel, typeof(string) },
+                { PointDate, typeof(string) },
+            };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            cube.Initialize(dataTypes);
+            var model = pvModel.VanillaModel;
+
+            var assetIds = pvModel.Portfolio.AssetIds();
+
+            foreach (var curveName in assetIds)
+            {
+                if (assetId != null && curveName != assetId)
+                    continue;
+
+                if (model.GetPriceCurve(curveName) is not ContangoPriceCurve curveObj)
+                    continue;
+
+                var subPortfolio = new Portfolio()
+                {
+                    Instruments = pvModel.Portfolio.Instruments
+                    .Where(x => (x is IAssetInstrument ia) &&
+                    ia.AssetIds.Contains(curveName))
+                    .ToList()
+                };
+
+                if (subPortfolio.Instruments.Count == 0)
+                    continue;
+
+                var lastDateInBook = subPortfolio.LastSensitivityDate;
+
+                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                var pvCube = baseModel.PV(curveObj.Currency);
+                var pvRows = pvCube.GetAllRows();
+
+                var tidIx = pvCube.GetColumnIndex(TradeId);
+                var tTypeIx = pvCube.GetColumnIndex(TradeType);
+
+                var bump = 0.001;
+
+                for (var c = 0; c < curveObj.Contangos.Length; c++)
+                {
+                    var t = curveObj.BuildDate.CalculateYearFraction(curveObj.PillarDates[c], Transport.BasicTypes.DayCountBasis.ACT360);
+                    var scale = curveObj.Spot * bump * t * model.FundingModel.GetDf(curveObj.Currency, curveObj.BuildDate, curveObj.PillarDates[c]);
+                    var bumpedRates = curveObj.Contangos.Select((x, ix) => x + (ix == c ? bump : 0)).ToArray();
+                    var newCurve = new ContangoPriceCurve(curveObj.BuildDate, curveObj.Spot, curveObj.SpotDate, curveObj.PillarDates, bumpedRates, currencyProvider, curveObj.Basis, curveObj.PillarLabels)
+                    {
+                        Currency = curveObj.Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = curveObj.SpotCalendar,
+                        SpotLag = curveObj.SpotLag
+                    };
+
+                    var newVanillaModel = model.Clone();
+                    newVanillaModel.AddPriceCurve(curveName, newCurve);
+                    var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                    var bumpedPvs = newPvModel.PV(curveObj.Currency).GetAllRows();
+
+                    for (var ii = 0; ii < pvRows.Length; ii++)
+                    {
+                        var pvDiff = (bumpedPvs[ii].Value - pvRows[ii].Value);
+                        var delta = pvDiff / scale;
+                        if (delta != 0.0)
+                        {
+                            var row = new Dictionary<string, object>
+                            {
+                                { TradeId, pvRows[ii].MetaData[tidIx] },
+                                { TradeType, pvRows[ii].MetaData[tTypeIx] },
+                                { AssetId, curveName },
+                                { Metric, "ContangoSwapDelta" },
+                                { PointDate, curveObj.PillarDates[c] },
+                                { PointLabel, curveObj.PillarLabels[c] },
+                            };
+                            if (insDict.TryGetValue((string)pvRows[ii].MetaData[tidIx], out var trade))
+                            {
+                                foreach (var key in metaKeys)
+                                {
+                                    if (trade.MetaData.TryGetValue(key, out var metaData))
+                                        row[key] = metaData;
+                                }
+                            }
+                            cube.AddRow(row, delta);
+                        }
+                    }
+
+                    if (curveObj.PillarDates[c] > lastDateInBook)
+                        break;
+                }
+            }
+
+            return cube.Sort(new List<string> { AssetId, TradeId });
+        }
+
+
         public static async Task<ICube> AssetGreeks(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
         {
             ICube cube = new ResultCube();

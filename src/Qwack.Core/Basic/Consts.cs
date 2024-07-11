@@ -16,6 +16,7 @@ namespace Qwack.Core.Basic
             public static string SubStep = "SubStep";
             public static string SubSubStep = "SubSubStep";
             public static string PointLabel = "PointLabel";
+            public static string PointDate = "PointDate";
         }
     }
 }

@@ -26,6 +26,8 @@ namespace Qwack.Models.Risk.VaR
         private readonly Dictionary<DateTime, IPvModel> _bumpedModels = new();
         private VaREngine _varEngine;
 
+        public Dictionary<DateTime, IPvModel> BumpedModels => _bumpedModels;
+
         public VaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger)
         {
             _model = model;

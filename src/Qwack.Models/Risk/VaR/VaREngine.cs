@@ -23,6 +23,8 @@ namespace Qwack.Models.Risk
         private readonly ConcurrentDictionary<string, ICube> _resultsCache = new();
         private ICube _basePvCube;
 
+        public Dictionary<string, IPvModel> BumpedModels => _bumpedModels;
+
         public VaREngine(ILogger logger, IAssetFxModel baseModel, Portfolio portfolio, Dictionary<string, IAssetFxModel> bumpedModels)
         {
             _logger = logger;

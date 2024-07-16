@@ -1,17 +1,13 @@
 using System;
-using System.Buffers.Text;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Math;
-using Qwack.Math.Interpolation;
-using Qwack.Models.Models;
 using Qwack.Models.Risk.Mutators;
 using Qwack.Transport.Results;
 using Qwack.Utils.Parallel;
@@ -20,17 +16,17 @@ namespace Qwack.Models.Risk.VaR
 {
     public class VaRCalculator
     {
-        private readonly IAssetFxModel _model;
+        private readonly IPvModel _model;
         private readonly Portfolio _portfolio;
         private readonly ILogger _logger;
         private readonly Dictionary<string, VaRSpotScenarios> _spotTypeBumps = new();
         private readonly Dictionary<string, VaRSpotScenarios> _spotFxTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = new();
         private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = new();
-        private readonly Dictionary<DateTime, IAssetFxModel> _bumpedModels = new();
+        private readonly Dictionary<DateTime, IPvModel> _bumpedModels = new();
         private VaREngine _varEngine;
 
-        public VaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger)
+        public VaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger)
         {
             _model = model;
             _portfolio = portfolio;
@@ -127,7 +123,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void CalculateModels()
         {
-            var allAssetIds = _model.CurveNames.Where(x => !(x.Length == 7 && x[3] == '/')).ToArray(); // _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
+            var allAssetIds = _model.VanillaModel.CurveNames.Where(x => !(x.Length == 7 && x[3] == '/')).ToArray(); // _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
             var allDatesSet = new HashSet<DateTime>();
 
             if (_spotTypeBumps.Any())
@@ -158,7 +154,7 @@ namespace Qwack.Models.Risk.VaR
 
             _logger?.LogInformation($"Total of {allDates.Count} dates");
 
-            ConcurrentDictionary<DateTime, IAssetFxModel> bumpedModels = new();
+            ConcurrentDictionary<DateTime, IPvModel> bumpedModels = new();
 
             ParallelUtils.Instance.Foreach(allDates, d =>
             {
@@ -166,7 +162,7 @@ namespace Qwack.Models.Risk.VaR
                 //    return;
 
                 _logger?.LogDebug($"Computing scenarios for {d}");
-                var m = _model.Clone();
+                var m = _model.VanillaModel.Clone();
 
                 foreach (var assetId in allAssetIds)
                 {
@@ -198,7 +194,7 @@ namespace Qwack.Models.Risk.VaR
                     }
                 }
 
-                foreach (var ccy in m.FundingModel.FxMatrix.SpotRates.Keys)
+                foreach (var ccy in m.VanillaModel.FundingModel.FxMatrix.SpotRates.Keys)
                 {
                     if (_spotFxTypeBumps.TryGetValue(ccy, out var spotBumpRecord))
                     {
@@ -208,7 +204,7 @@ namespace Qwack.Models.Risk.VaR
                         //    m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                 }
-                bumpedModels[d] = m;
+                bumpedModels[d] = _model.Rebuild(m, _portfolio);
             }).Wait();
 
             foreach (var kv in bumpedModels)

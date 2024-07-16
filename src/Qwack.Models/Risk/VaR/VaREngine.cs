@@ -10,7 +10,6 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
-using Qwack.Models.Models;
 using Qwack.Transport.Results;
 
 namespace Qwack.Models.Risk
@@ -42,6 +41,15 @@ namespace Qwack.Models.Risk
 
         public Dictionary<string, ICube> ResultsCache => _resultsCache.ToDictionary(x => x.Key, x => x.Value);
         public ICube BasePvCube => _basePvCube;
+
+        public void SeedResults(ICube basePvCube, Dictionary<string, ICube> bumpedPvCubes)
+        {
+            _basePvCube = basePvCube;
+            foreach(var kv in bumpedPvCubes)
+            {
+                _resultsCache[kv.Key] = kv.Value;
+            }
+        }
 
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
         {

@@ -1,5 +1,4 @@
 using System;
-using System.Buffers.Text;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,23 +11,28 @@ using Qwack.Core.Models;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
 using Qwack.Models.Models;
-using Qwack.Models.Risk.Mutators;
 using Qwack.Transport.Results;
-using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Risk
 {
     public class VaREngine
     {
-
         private readonly ILogger _logger;
-        private readonly IAssetFxModel _model;
+        private readonly IPvModel _model;
         private readonly Portfolio _portfolio;
-        private readonly Dictionary<string, IAssetFxModel> _bumpedModels = new();
+        private readonly Dictionary<string, IPvModel> _bumpedModels = new();
         private readonly ConcurrentDictionary<string, ICube> _resultsCache = new();
         private ICube _basePvCube;
 
         public VaREngine(ILogger logger, IAssetFxModel baseModel, Portfolio portfolio, Dictionary<string, IAssetFxModel> bumpedModels)
+        {
+            _logger = logger;
+            _model = baseModel;
+            _portfolio = portfolio;
+            _bumpedModels = bumpedModels.ToDictionary(x => x.Key, x => (IPvModel)x.Value);
+        }
+
+        public VaREngine(ILogger logger, IPvModel baseModel, Portfolio portfolio, Dictionary<string, IPvModel> bumpedModels)
         {
             _logger = logger;
             _model = baseModel;
@@ -95,11 +99,11 @@ namespace Qwack.Models.Risk
         public decimal ComputeStress(string insId, decimal shockSize, int? nNearestSamples = null)
         {
             var basePv = _basePvCube.SumOfAllRows;
-            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var baseLevel = _model.VanillaModel.GetPriceCurve(insId).GetPriceForFixingDate(_model.VanillaModel.BuildDate);
             var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
 
             var allScenarios = _resultsCache
-                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].VanillaModel.GetPriceCurve(insId).GetPriceForFixingDate(_model.VanillaModel.BuildDate)))
                 .OrderBy(x=>x.Item2)
                 .ToList();
 
@@ -126,11 +130,11 @@ namespace Qwack.Models.Risk
         public StressTestResult ComputeStressObject(string insId, decimal shockSize, int? nNearestSamples = null)
         {
             var basePv = _basePvCube.SumOfAllRows;
-            var baseLevel = _model.GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate);
+            var baseLevel = _model.VanillaModel.GetPriceCurve(insId).GetPriceForFixingDate(_model.VanillaModel.BuildDate);
             var shockedLevel = baseLevel * Convert.ToDouble(1 + shockSize);
 
             var allScenarios = _resultsCache
-                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].GetPriceCurve(insId).GetPriceForFixingDate(_model.BuildDate)))
+                .Select(x => (x.Value.SumOfAllRows, _bumpedModels[x.Key].VanillaModel.GetPriceCurve(insId).GetPriceForFixingDate(_model.VanillaModel.BuildDate)))
                 .OrderBy(x => x.Item2)
                 .ToList();
 
@@ -181,13 +185,14 @@ namespace Qwack.Models.Risk
         
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
-            _basePvCube = pf.PV(_model, ccy);
+            _basePvCube = _model.PV(ccy);
             var basePv = _basePvCube.SumOfAllRows;
             _resultsCache.Clear();
             var results = new ConcurrentDictionary<string, double>();
-            var varFunc = new Action<string, IAssetFxModel>((d, m) =>
+            var varFunc = new Action<string, IPvModel>((d, m) =>
             {
-                var cube = pf.PV(m, ccy, false);
+                var m0 = _model.Rebuild(m.VanillaModel, pf);
+                var cube = m0.PV(ccy);
                 var scenarioPv = cube.SumOfAllRows;
                 _resultsCache[d] = cube;
                 results[d] = scenarioPv - basePv;

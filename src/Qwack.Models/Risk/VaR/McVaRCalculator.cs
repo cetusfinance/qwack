@@ -18,7 +18,7 @@ namespace Qwack.Models.Risk.VaR
 {
     public class McVaRCalculator
     {
-        private readonly IAssetFxModel _model;
+        private readonly IPvModel _model;
         private readonly Portfolio _portfolio;
         private ICube _basePvCube;
         private readonly ILogger _logger;
@@ -26,7 +26,7 @@ namespace Qwack.Models.Risk.VaR
         private readonly ICalendarProvider _calendarProvider;
         private readonly IFutureSettingsProvider _futureSettingsProvider;
         private readonly McModelType _modelType;
-        private readonly List<IAssetFxModel> _bumpedModels = new();
+        private readonly List<IPvModel> _bumpedModels = new();
         private readonly Dictionary<string, double> _spotFactors = new();
         private readonly Dictionary<string, double[]> _returns = new();
         private int _ciIx = 0;
@@ -34,10 +34,10 @@ namespace Qwack.Models.Risk.VaR
 
         public int CIIX => _ciIx;
 
-        public McVaRCalculator(IAssetFxModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider,
+        public McVaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider,
             ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider, McModelType modelType)
         {
-            _model = model.Clone();
+            _model = model.Rebuild(model.VanillaModel, portfolio);
             _portfolio = portfolio;
             _logger = logger;
             _currencyProvider = currencyProvider;
@@ -58,23 +58,23 @@ namespace Qwack.Models.Risk.VaR
 
         public string[] GetSpotFactors() => _spotFactors.Keys.OrderBy(x => x).ToArray();
 
-        public void SetCorrelationMatrix(ICorrelationMatrix matrix) => _model.CorrelationMatrix = matrix;
+        public void SetCorrelationMatrix(ICorrelationMatrix matrix) => _model.VanillaModel.CorrelationMatrix = matrix;
 
         public void CalculateModels()
         {
             //var allAssetIds = _portfolio.AssetIds().Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x =>$"USD/{x}")).ToArray();
-            var allAssetIds = _model.CurveNames.Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x => $"USD/{x}")).ToArray();
+            var allAssetIds = _model.VanillaModel.CurveNames.Concat(_portfolio.Instruments.Select(x => x.Currency.Ccy).Where(x => x != "USD").Select(x => $"USD/{x}")).ToArray();
             var simulatedIds = allAssetIds.Intersect(_spotFactors.Keys).ToArray();
 
             foreach (var simulatedId in simulatedIds)
             {
-                var surf = new ConstantVolSurface(_model.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId };
+                var surf = new ConstantVolSurface(_model.VanillaModel.BuildDate, _spotFactors[simulatedId]) { AssetId = simulatedId };
                 if (_returns.TryGetValue(simulatedId, out var returns))
                     surf.Returns = returns;
-                _model.AddVolSurface(simulatedId, surf);
+                _model.VanillaModel.AddVolSurface(simulatedId, surf);
                 if (simulatedId.Length == 6 && simulatedId[3] == '/')
                 {
-                    _model.FundingModel.VolSurfaces.Add(simulatedId, surf);
+                    _model.VanillaModel.FundingModel.VolSurfaces.Add(simulatedId, surf);
                 }
             }
 
@@ -89,16 +89,16 @@ namespace Qwack.Models.Risk.VaR
                 ReportingCurrency = _currencyProvider.GetCurrencySafe("USD")
             };
 
-            var vd = _model.BuildDate.AddDays(1);
-            var fp = new FactorReturnPayoff(simulatedIds, new DateTime[] { _model.BuildDate, vd });
+            var vd = _model.VanillaModel.BuildDate.AddDays(1);
+            var fp = new FactorReturnPayoff(simulatedIds, new DateTime[] { _model.VanillaModel.BuildDate, vd });
 
-            var mcModel = new AssetFxMCModel(_model.BuildDate, fp, _model, mcSettings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
+            var mcModel = new AssetFxMCModel(_model.VanillaModel.BuildDate, fp, _model.VanillaModel, mcSettings, _currencyProvider, _futureSettingsProvider, _calendarProvider);
             mcModel.Engine.RunProcess();
 
             var dix = fp.DateIndices[vd];
             for (var p = 0; p < mcSettings.NumberOfPaths; p++)
             {
-                var pModel = _model.Clone();
+                var pModel = _model.Rebuild(_model.VanillaModel, _portfolio);
                 for (var a = 0; a < simulatedIds.Length; a++)
                 {
                     var price0 = fp.ResultsByPath[a][p][0];

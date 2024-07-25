@@ -42,7 +42,7 @@ namespace Qwack.Models.Risk
         }
 
         public Dictionary<string, ICube> ResultsCache => _resultsCache.ToDictionary(x => x.Key, x => x.Value);
-        public ICube BasePvCube => _basePvCube;
+        public ICube BasePvCube {get { return _basePvCube; } set { _basePvCube = value; } }
 
         public void SeedResults(ICube basePvCube, Dictionary<string, ICube> bumpedPvCubes)
         {

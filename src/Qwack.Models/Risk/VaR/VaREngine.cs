@@ -240,7 +240,7 @@ namespace Qwack.Models.Risk
         public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
             var basePv = _basePvCube.SumOfAllRows;
-            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows);
+            var results = _resultsCache.ToDictionary(x => x.Key, x => x.Value.SumOfAllRows - basePv);
         
             if (results.Count == 0)
             {

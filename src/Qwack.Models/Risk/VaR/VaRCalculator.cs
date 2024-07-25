@@ -331,6 +331,14 @@ namespace Qwack.Models.Risk.VaR
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
             => _varEngine.CalculateVaR(ci, ccy, pf, parallelize);
 
+
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy) => CalculateVaRFromResults(ci, ccy, _portfolio);
+
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
+            => _varEngine.CalculateVaRFromResults(ci, ccy, pf, parallelize);
+
+
+
         internal class VaRSpotScenarios
         {
             public bool IsRelativeBump { get; set; }

@@ -125,7 +125,8 @@ namespace Qwack.Core.Curves
                         Currency = Currency,
                         AssetId = AssetId,
                         SpotCalendar = SpotCalendar,
-                        SpotLag = SpotLag
+                        SpotLag = SpotLag,
+                        RefDate = RefDate,
                     };
          
                     var name = _pillarLabels[curvePointIx];
@@ -153,7 +154,8 @@ namespace Qwack.Core.Curves
                         Currency = Currency,
                         AssetId = AssetId,
                         SpotCalendar = SpotCalendar,
-                        SpotLag = SpotLag
+                        SpotLag = SpotLag,
+                        RefDate = RefDate,
                     };
                     var name = _pillarLabels[i];
                     o.Add(name, c);

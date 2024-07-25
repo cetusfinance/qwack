@@ -46,6 +46,7 @@ namespace Qwack.Core.Curves
                     Currency = cons.Currency,
                     Name = cons.Name,
                     Price = cons.Price,
+                    Units = cons.Units
                 }
             },
             BasicPriceCurve basic => new TO_PriceCurve
@@ -62,7 +63,9 @@ namespace Qwack.Core.Curves
                     PillarLabels = basic.PillarLabels,
                     Prices = basic.Prices,
                     SpotCalendar = basic.SpotCalendar?.Name,
-                    SpotLag = basic.SpotLag.ToString()
+                    SpotLag = basic.SpotLag.ToString(),
+                    RefDate = basic.RefDate,
+                    Units = basic.Units  
                 }
             },
             BasisPriceCurve basis => new TO_PriceCurve
@@ -81,7 +84,8 @@ namespace Qwack.Core.Curves
                     DiscountCurve = ((IrCurve)basis.DiscountCurve).GetTransportObject(),
                     Instruments = basis.Instruments.Select(x => x.GetTransportObject()).ToList(),
                     PillarLabels = basis.PillarLabels,
-                    Pillars = basis.Pillars
+                    Pillars = basis.Pillars,
+                    Units = basis.Units,
                 }
             },
             ContangoPriceCurve c => new TO_PriceCurve
@@ -99,7 +103,8 @@ namespace Qwack.Core.Curves
                     Basis = c.Basis,
                     Contangos = c.Contangos,
                     Spot = c.Spot,
-                    SpotDate = c.SpotDate
+                    SpotDate = c.SpotDate,
+                    Units = c.Units
                 }
             },
             EquityPriceCurve e => new TO_PriceCurve
@@ -120,7 +125,7 @@ namespace Qwack.Core.Curves
                     DivYields = e.DivYields,
                     Units = e.Units,
                     Spot = e.Spot,
-                    SpotDate = e.SpotDate
+                    SpotDate = e.SpotDate,
                 }
             },
             _ => throw new Exception($"Unable to serialize price curve of type {curve.GetType()}"),

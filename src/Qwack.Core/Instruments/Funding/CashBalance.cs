@@ -20,7 +20,12 @@ namespace Qwack.Core.Instruments.Funding
         }
 
         public CashBalance(TO_CashBalance to, ICurrencyProvider currencyProvider)
-            : this(currencyProvider.GetCurrencySafe(to.Currency), to.Notional, to.PayDate) { }
+            : this(currencyProvider.GetCurrencySafe(to.Currency), to.Notional, to.PayDate) 
+        {
+            TradeId = to.TradeId;
+            Counterparty = to.Counterparty;
+            PillarDate = to.PillarDate;
+        }
 
         public double Notional { get; set; }
         public string PortfolioName { get; set; }
@@ -84,7 +89,16 @@ namespace Qwack.Core.Instruments.Funding
 
         public double SuggestPillarValue(IFundingModel model) => 0.05;
 
-        public TO_CashBalance ToTransportObject() 
-            => new TO_CashBalance { Currency = Currency.Ccy, Notional = Notional, PayDate = PayDate };
+        public TO_CashBalance ToTransportObject()
+            => new()
+            {
+                Currency = Currency.Ccy,
+                Notional = Notional,
+                PayDate = PayDate,
+                Counterparty = Counterparty,
+                PillarDate = PillarDate,
+                SolveCurve = SolveCurve,
+                TradeId = TradeId
+            };
     }
 }

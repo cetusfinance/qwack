@@ -14,5 +14,14 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string Currency { get; set; }
         [ProtoMember(3)]
         public DateTime? PayDate { get; set; }
+        [ProtoMember(4)]
+        public string SolveCurve { get; set; }
+        [ProtoMember(5)]
+        public string TradeId { get; set; }
+        [ProtoMember(6)]
+        public string Counterparty { get; set; }
+        [ProtoMember(7)]
+        public DateTime PillarDate { get; set; }
+
     }
 }

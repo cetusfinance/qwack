@@ -80,7 +80,7 @@ namespace Qwack.Core.Curves
             IrCurve = irCurve;
             SpotDate = spotDate;
 
-            PillarLabels = new string[1] {"SPOT"};
+            PillarLabels = new string[1] { "SPOT" };
 
             Initialize();
         }
@@ -92,6 +92,7 @@ namespace Qwack.Core.Curves
             AssetId = to.AssetId;
             Name = to.Name;
             Currency = currencyProvider.GetCurrencySafe(to.Currency);
+            IrCurve = to.IrCurve == null ? null : fundingModel.GetCurve(to.IrCurve);
         }
 
         private void Initialize()
@@ -112,7 +113,7 @@ namespace Qwack.Core.Curves
         private double GetFwd(DateTime fwdDate, double divYield)
         {
             var t = SpotDate.CalculateYearFraction(fwdDate, Basis);
-            var df = IrCurve.GetDf(BuildDate, fwdDate);
+            var df = IrCurve?.GetDf(BuildDate, fwdDate) ?? 1.0;
             var fwd = Spot / df / (1 + divYield * t);
             if (DiscreteDivDates.Any(x => x > BuildDate && x <= fwdDate))
             {
@@ -120,7 +121,7 @@ namespace Qwack.Core.Curves
                 {
                     var ix = Array.IndexOf(DiscreteDivDates, d); //Array.BinarySearch(DiscreteDivDates, d);
                     var div = DiscreteDivs[ix];
-                    var dfDiv = IrCurve.GetDf(d, fwdDate);
+                    var dfDiv = IrCurve?.GetDf(d, fwdDate) ?? 1.0;
                     fwd -= div / dfDiv;
                 }
             }

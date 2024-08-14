@@ -24,6 +24,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
             var newTradesPnL = model.PV(reportingCcy);
             var tidIx = newTradesPnL.GetColumnIndex(TradeId);
             var tTypeIx = newTradesPnL.GetColumnIndex(TradeType);
+            var r_UlIx = newTradesPnL.GetColumnIndex(Underlying);
             foreach (var t in newTradesPnL.GetAllRows())
             {
                 var tid = (string)t.MetaData[tidIx];
@@ -35,7 +36,8 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "New" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfEndDict[tid]}
+                    { "Portfolio", pfEndDict[tid]},
+                    { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, t.Value);
             }
@@ -48,7 +50,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
             
             var tidIx = removedTradesPnL.GetColumnIndex(TradeId);
             var tTypeIx = removedTradesPnL.GetColumnIndex(TradeType);
-
+            var r_UlIx = removedTradesPnL.GetColumnIndex(Underlying);
             foreach (var t in removedTradesPnL.GetAllRows())
             {
                 var tid = (string)t.MetaData[tidIx];
@@ -60,7 +62,8 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Removed" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfStartDict[tid]}
+                    { "Portfolio", pfStartDict[tid]},
+                    { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, -t.Value);
             }
@@ -76,6 +79,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
             
             var tidIx = amendedTradesPnLStart.GetColumnIndex(TradeId);
             var tTypeIx = amendedTradesPnLStart.GetColumnIndex(TradeType);
+            var r_UlIx = amendedTradesPnLStart.GetColumnIndex(Underlying);
 
             foreach (var t in amendedPnL.GetAllRows())
             {
@@ -88,7 +92,8 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Ammended" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfStartDict[tid]}
+                    { "Portfolio", pfStartDict[tid]},
+                    { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, t.Value);
             }

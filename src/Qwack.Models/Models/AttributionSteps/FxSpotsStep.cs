@@ -15,7 +15,8 @@ public class FxSpotsStep : IPnLAttributionStep
         var r_tidIx = riskCube.GetColumnIndex(TradeId);
         var r_plIx = riskCube.GetColumnIndex(PointLabel);
         var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
-        var r_pdIx = riskCube.GetColumnIndex("PointDate");
+        var r_pdIx = riskCube.GetColumnIndex(PointDate);
+        var r_UlIx = riskCube.GetColumnIndex(Underlying);
 
         foreach (var fxSpot in endModel.VanillaModel.FundingModel.FxMatrix.SpotRates)
         {
@@ -43,7 +44,8 @@ public class FxSpotsStep : IPnLAttributionStep
                         { SubStep, fxPair },
                         { SubSubStep, "Delta" },
                         { PointLabel, string.Empty },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, explained);
 
@@ -74,7 +76,8 @@ public class FxSpotsStep : IPnLAttributionStep
                         { SubStep, fxPair },
                         { SubSubStep, "Gamma" },
                         { PointLabel, string.Empty },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx < 0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, explained);
 
@@ -101,7 +104,8 @@ public class FxSpotsStep : IPnLAttributionStep
                         { SubStep, fxPair },
                         { SubSubStep, "Unexplained" },
                         { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);

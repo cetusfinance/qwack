@@ -13,6 +13,7 @@ public class FinalStep() : IPnLAttributionStep
     {
         var newPvCube = endModel.PV(reportingCcy);
         var step = newPvCube.QuickDifference(lastPvCube);
+        var r_UlIx = riskCube.GetColumnIndex(Underlying);
 
         foreach (var r in step.GetAllRows())
         {
@@ -29,7 +30,8 @@ public class FinalStep() : IPnLAttributionStep
                         { SubStep, "Unexplained" },
                         { SubSubStep, "Unexplained" },
                         { PointLabel, string.Empty },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
             resultsCube.AddRow(row, r.Value);
         }

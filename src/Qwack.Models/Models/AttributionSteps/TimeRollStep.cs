@@ -18,7 +18,8 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
         var r_tidIx = riskCube.GetColumnIndex(TradeId);
         var r_plIx = riskCube.GetColumnIndex(PointLabel);
         var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
-        var r_pdIx = riskCube.GetColumnIndex("PointDate");
+        var r_UlIx = riskCube.GetColumnIndex(Underlying);
+        var r_pdIx = riskCube.GetColumnIndex(PointDate);
 
         var cashCube = model.Portfolio.FlowsT0(model.VanillaModel, reportingCcy);
         var cashRows = cashCube.GetAllRows();
@@ -41,7 +42,8 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
                     { SubStep, "TimeRoll" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "PointDate", endModel.VanillaModel.BuildDate }
+                    { PointDate, endModel.VanillaModel.BuildDate },
+                    { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                 };
             resultsCube.AddRow(row, r.Value);
         }
@@ -60,7 +62,8 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
                         { SubStep, "CashMove" },
                         { SubSubStep, string.Empty },
                         { PointLabel, string.Empty },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : cashRows[i].MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, cash);
             }
@@ -90,7 +93,8 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
                         { SubStep, fixingDictName ?? "Unknown" },
                         { SubSubStep, string.Empty },
                         { PointLabel, string.Empty },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, r.Value);
             }

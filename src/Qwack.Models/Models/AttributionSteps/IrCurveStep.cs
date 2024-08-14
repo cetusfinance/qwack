@@ -15,7 +15,8 @@ public class IrCurveStep : IPnLAttributionStep
         var r_tidIx = riskCube.GetColumnIndex(TradeId);
         var r_plIx = riskCube.GetColumnIndex(PointLabel);
         var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
-        var r_pdIx = riskCube.GetColumnIndex("PointDate");
+        var r_pdIx = riskCube.GetColumnIndex(PointDate);
+        var r_UlIx = riskCube.GetColumnIndex(Underlying);
 
         foreach (var irCurve in endModel.VanillaModel.FundingModel.Curves)
         {
@@ -42,7 +43,8 @@ public class IrCurveStep : IPnLAttributionStep
                         { SubStep, irCurve.Key },
                         { SubSubStep, string.Empty },
                         { PointLabel,r.MetaData[r_plIx]},
-                        { "PointDate", point }
+                        { PointDate, point },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, explained);
 
@@ -74,7 +76,8 @@ public class IrCurveStep : IPnLAttributionStep
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
                         { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                 resultsCube.AddRow(row, r.Value - explained);
             }
@@ -90,7 +93,8 @@ public class IrCurveStep : IPnLAttributionStep
                         { SubStep, irCurve.Key },
                         { SubSubStep, "Unexplained"},
                         { PointLabel, "Unexplained" },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, string.Empty }
                     };
                 resultsCube.AddRow(row, -kv.Value);
             }

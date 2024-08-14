@@ -1506,12 +1506,13 @@ namespace Qwack.Models.Models
             var dataTypes = new Dictionary<string, Type>
             {
                 { TradeId, typeof(string) },
+                { Underlying, typeof(string) },
                 { TradeType, typeof(string) },
                 { Step, typeof(string) },
                 { SubStep, typeof(string) },
                 { SubSubStep, typeof(string) },
                 { PointLabel, typeof(string) },
-                { "PointDate", typeof(DateTime) },
+                { PointDate, typeof(DateTime) },
             };
 
             cube.Initialize(dataTypes);

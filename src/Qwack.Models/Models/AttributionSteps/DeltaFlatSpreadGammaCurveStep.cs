@@ -21,7 +21,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
             var r_tidIx = riskCube.GetColumnIndex(TradeId);
             var r_plIx = riskCube.GetColumnIndex(PointLabel);
             var r_tTypeIx = riskCube.GetColumnIndex(TradeType);
-            var r_pdIx = riskCube.GetColumnIndex("PointDate");
+            var r_pdIx = riskCube.GetColumnIndex(PointDate);
+            var r_UlIx = riskCube.GetColumnIndex(Underlying);
 
             var startCurve = model.VanillaModel.GetPriceCurve(curveName);
             var endCurve = endModel.VanillaModel.GetPriceCurve(curveName);
@@ -51,7 +52,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                     { SubStep, curveName },
                     { SubSubStep, "DeltaFlat" },
                     { PointLabel, r.MetaData[r_plIx] },
-                    { "PointDate", r.MetaData[r_pdIx] }
+                    { PointDate, r.MetaData[r_pdIx] },
+                    { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                 };
                 var rowSpread = new Dictionary<string, object>
                 {
@@ -61,7 +63,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                     { SubStep, curveName },
                     { SubSubStep, "DeltaSpread" },
                     { PointLabel, r.MetaData[r_plIx] },
-                    { "PointDate", r.MetaData[r_pdIx] }
+                    { PointDate, r.MetaData[r_pdIx] },
+                    { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                 };
 
                 resultsCube.AddRow(rowFlat, explainedFlat);
@@ -100,7 +103,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                         { SubStep, curveName },
                         { SubSubStep, "GammaFlat" },
                         { PointLabel, "Flat" },
-                        { "PointDate", endModel.VanillaModel.BuildDate }
+                        { PointDate, endModel.VanillaModel.BuildDate },
+                        { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                     };
                     resultsCube.AddRow(row, explained);
 
@@ -128,7 +132,8 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
                     { SubStep, curveName },
                     { SubSubStep, "Unexplained" },
                     { PointLabel, "Unexplained" },
-                    { "PointDate", endModel.VanillaModel.BuildDate }
+                    { PointDate, endModel.VanillaModel.BuildDate },
+                    { Underlying, r_UlIx<0 ? string.Empty : r.MetaData[r_UlIx] }
                 };
                 explainedByTrade.TryGetValue((string)r.MetaData[r_tidIx], out var explained);
                 resultsCube.AddRow(row, r.Value - explained);

@@ -2653,10 +2653,11 @@ namespace Qwack.Models.Risk
                 { TradeType, typeof(string) },
                 { AssetId, typeof(string) },
                 { PointLabel, typeof(string) },
-                { "PointDate", typeof(DateTime) },
+                { PointDate, typeof(DateTime) },
                 { Metric, typeof(string) },
                 { "Currency", typeof(string) },
-                { "Portfolio", typeof(string) }
+                { "Portfolio", typeof(string) },
+                { Underlying, typeof(string) },
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
             foreach (var key in metaKeys)
@@ -2687,7 +2688,7 @@ namespace Qwack.Models.Risk
             {
                  { AssetId, string.Empty },
                  { PointLabel, string.Empty },
-                 { "PointDate", fwdValDate },
+                 { PointDate, fwdValDate },
                  { Metric, "Theta" }
             }, mergeTypes: true);
 
@@ -2697,7 +2698,7 @@ namespace Qwack.Models.Risk
             {
                  { AssetId, string.Empty },
                  { PointLabel, "CashMove"  },
-                 { "PointDate", fwdValDate },
+                 { PointDate, fwdValDate },
                  { Metric, "Theta" }
             }, mergeTypes: true);
 

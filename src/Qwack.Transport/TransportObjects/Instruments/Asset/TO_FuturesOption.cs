@@ -6,7 +6,7 @@ using Qwack.Transport.BasicTypes;
 namespace Qwack.Transport.TransportObjects.Instruments.Asset
 {
     [ProtoContract]
-    public class TO_FuturesOption : TO_Future
+    public class TO_FuturesOption
     {
         [ProtoMember(1)]
         public string TradeId { get; set; }

@@ -2644,7 +2644,7 @@ namespace Qwack.Models.Risk
             return cube;
         }
 
-        public static ICube AssetGreeksSafe(this AssetFxMCModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
+        public static ICube AssetGreeksSafe(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             ICube cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>

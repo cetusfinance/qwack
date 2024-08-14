@@ -1682,6 +1682,8 @@ namespace Qwack.Models.Models
             rolledModel.AddVolSurfaces(rolledVolSurfaces);
             rolledModel.AddFixingDictionaries(rolledFixings);
             rolledModel.CorrelationMatrix = model.CorrelationMatrix;
+            if (model.Portfolio != null)
+                rolledModel.AttachPortfolio(model.Portfolio);
 
             return rolledModel;
         }

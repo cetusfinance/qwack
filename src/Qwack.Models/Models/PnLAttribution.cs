@@ -1500,7 +1500,7 @@ namespace Qwack.Models.Models
             return o;
         }
 
-        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, AssetFxMCModel startModel, AssetFxMCModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettings, ICalendarProvider calendarProvider, bool useSpreadDelta = false)
+        public static ICube ExplainAttribution(this Portfolio startPortfolio, Portfolio endPortfolio, IPvModel startModel, IPvModel endModel, Currency reportingCcy, ICube startingGreeks, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettings, ICalendarProvider calendarProvider, bool useSpreadDelta = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>

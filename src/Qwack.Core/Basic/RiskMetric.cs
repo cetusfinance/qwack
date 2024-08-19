@@ -18,6 +18,7 @@ namespace Qwack.Core.Basic
         OptimalExercise,
         AssetParallelDelta,
         HistSimVaR,
-        ContangoSwapDelta
+        ContangoSwapDelta,
+        ParRate,
     }
 }

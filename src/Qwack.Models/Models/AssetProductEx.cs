@@ -1073,6 +1073,71 @@ namespace Qwack.Models.Models
             return cube;
         }
 
+        public static ICube ParRate(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false, bool parallelize = true)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { Consts.Cubes.TradeId, typeof(string) },
+                { Consts.Cubes.Currency, typeof(string) },
+                { Consts.Cubes.TradeType, typeof(string) },
+                { Consts.Cubes.Portfolio, typeof(string) },
+            };
+            var metaKeys = portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            cube.Initialize(dataTypes);
+
+            var pvs = new Tuple<Dictionary<string, object>, double>[portfolio.Instruments.Count];
+
+            var pvFunc = new Action<int>((i) =>
+            {
+                var (pv, ccy, tradeId, tradeType) = ComputeParRates(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows);
+
+                var row = new Dictionary<string, object>
+                {
+                    { TradeId, tradeId },
+                    { Consts.Cubes.Currency, ccy },
+                    { Consts.Cubes.TradeType, tradeType },
+                    { Consts.Cubes.Portfolio, portfolio.Instruments[i].PortfolioName ?? string.Empty },
+                };
+                if (insDict.TryGetValue(tradeId, out var trade))
+                {
+                    foreach (var key in metaKeys)
+                    {
+                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                            row[key] = metaData;
+                    }
+                }
+                pvs[i] = new Tuple<Dictionary<string, object>, double>(row, pv);
+            });
+
+            if (parallelize)
+            {
+                ParallelUtils.Instance.For(0, portfolio.Instruments.Count, 1, i =>
+                {
+                    pvFunc(i);
+                }, true).Wait();
+            }
+            else
+            {
+                for (var i = 0; i < portfolio.Instruments.Count; i++)
+                {
+                    pvFunc(i);
+                }
+            }
+
+            for (var i = 0; i < pvs.Length; i++)
+            {
+                cube.AddRow(pvs[i].Item1, pvs[i].Item2);
+            }
+
+            return cube;
+        }
+
         //public static double PVCapital(this Portfolio portfolio, IAssetFxModel model, ICube epeCube, Currency reportingCurrency, HazzardCurve hazzardCurve, double LGD, 
         //    double partyRiskWeight, Dictionary<string, string> assetIdToTypeMap, Dictionary<string, SaCcrAssetClass> typeToAssetClassMap, Dictionary<string, double> hedgeSetToCCF,
         //    IIrCurve discountCurve, ICurrencyProvider currencyProvider, Dictionary<DateTime, IAssetFxModel> models = null)
@@ -1230,6 +1295,110 @@ namespace Qwack.Models.Models
                 ccy = pvCcy.ToString();
 
             return (pv / fxRate, ccy, tradeId, tradeType);
+        }
+
+        public static (double pv, string ccy, string tradeId, string tradeType) ComputeParRates(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
+        {
+            var ccy = reportingCurrency?.ToString();
+            var pvCcy = ins.GetCurrency();
+            var tradeId = ins.TradeId;
+            var tradeType = TradeType(ins);
+            double pv;
+            switch (ins)
+            {
+                case AsianOption asianOption:
+                    pv = asianOption.PV(model, ignoreTodayFlows);
+                    break;
+                case AsianSwap swap:
+                    pv = swap.ParRate(model);
+                    break;
+                case AsianSwapStrip swapStrip:
+                    pv = swapStrip.ParRate(model);
+                    break;
+                case AsianBasisSwap basisSwap:
+                    pv = basisSwap.ParRate(model);
+                    break;
+                case AssetFxBasisSwap assetFxBasisSwap:
+                    pv = assetFxBasisSwap.ParRate(model);
+                    break;
+                case SyntheticCashAndCarry cnc:
+                    pv = cnc.ParRate(model);
+                    break;
+                case EuropeanBarrierOption euBOpt:
+                    pv = euBOpt.PV(model, ignoreTodayFlows);
+                    break;
+                case FxVanillaOption euFxOpt:
+                    pv = euFxOpt.PV(model, ignoreTodayFlows);
+                    break;
+                case EuropeanOption euOpt:
+                    pv = euOpt.PV(model, ignoreTodayFlows);
+                    break;
+                case Forward fwd:
+                    pv = fwd.ParRate(model);
+                    break;
+                case FuturesOption futOpt:
+                    pv = futOpt.PV(model, ignoreTodayFlows);
+                    break;
+                case Future fut:
+                    pv = fut.ParRate(model);
+                    break;
+                case FxFuture fxFut:
+                    pv = fxFut.ParRate(model);
+                    break;
+                case FxPerpetual fxPerp:
+                    pv = fxPerp.ParRate(model);
+                    break;
+                case FxForward fxFwd:
+                    pv = fxFwd.ParRate(model);
+                    break;
+                case FixedRateLoanDeposit loanDepo:
+                    pv = (loanDepo.Clone() as FixedRateLoanDeposit).ParRate(model);
+                    break;
+                case FloatingRateLoanDepo loanDepoFl:
+                    pv = (loanDepoFl.Clone() as FloatingRateLoanDepo).ParRate(model);
+                    break;
+                case CashBalance cash:
+                    pv = cash.Pv(model.FundingModel, false);
+                    break;
+                case CashAsset etc:
+                    pv = etc.ParRate(model);
+                    break;
+                case STIRFuture stir:
+                    pv = stir.ParRate(model);
+                    break;
+                case OISFuture ois:
+                    pv = ois.CalculateParRate(model.FundingModel);
+                    break;
+                case IrSwap irs:
+                    pv = (irs.Clone() as IrSwap).CalculateParRate(model.FundingModel);
+                    break;
+                case IrBasisSwap irsb:
+                    pv = (irsb.Clone() as IrBasisSwap).CalculateParRate(model.FundingModel);
+                    break;
+                case InflationPerformanceSwap cpi:
+                    pv = (cpi.Clone() as InflationPerformanceSwap).CalculateParRate(model.FundingModel);
+                    break;
+                case InflationSwap cpi2:
+                    pv = (cpi2.Clone() as InflationSwap).CalculateParRate(model.FundingModel);
+                    break;
+                case AssetTrs trs:
+                    pv = (trs.Clone() as AssetTrs).ParRate(model);
+                    break;
+                case CashWrapper wrapper:
+                    (pv, ccy, tradeId, tradeType) = ComputePV(wrapper.UnderlyingInstrument, model, pvCcy, ignoreTodayFlows);
+                    if (reportingCurrency != null)
+                        ccy = reportingCurrency.Ccy;
+                    foreach (var cb in wrapper.CashBalances)
+                    {
+                        var p = ComputePV(cb, model, pvCcy);
+                        pv += p.pv;
+                    }
+                    break;
+                default:
+                    throw new Exception($"Unable to PV product of type {ins.GetType()}");
+            }
+
+            return (pv, pvCcy.ToString(), tradeId, tradeType);
         }
 
         private static Currency GetCurrency(this IInstrument ins) => ins switch

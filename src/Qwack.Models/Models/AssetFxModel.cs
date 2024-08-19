@@ -271,7 +271,7 @@ namespace Qwack.Models
         private Portfolio _portfolio;
         public Portfolio Portfolio => _portfolio;
         public void AttachPortfolio(Portfolio portfolio) => _portfolio = portfolio;
-        public ICube PV(Currency reportingCurrency) => _portfolio.PV(this, reportingCurrency);
+        public ICube PV(Currency reportingCurrency) => _portfolio.ParRate(this, reportingCurrency);
 
         public IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio)
         {

@@ -20,5 +20,6 @@ namespace Qwack.Core.Basic
         HistSimVaR,
         ContangoSwapDelta,
         ParRate,
+        AssetParallelGamma
     }
 }

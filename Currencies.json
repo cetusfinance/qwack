@@ -48,5 +48,11 @@
     "Ccy": "NGN",
     "DayCount": "Act365F",
     "HolidayCalendars": "JHB"
+  },
+  {
+    "Ccy": "SGD",
+    "DayCount": "Act365F",
+    "HolidayCalendars": "SIN"
   }
+]
 ]

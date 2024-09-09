@@ -158,5 +158,10 @@
     "Ccy": "IDR",
     "DayCount": "Act365",
     "SettlementCalendarName": "IDR"
-  }
+  },
+  {
+  "Ccy": "SGD",
+  "DayCount": "Act365F",
+  "HolidayCalendars": "SIN"
+}
 ]

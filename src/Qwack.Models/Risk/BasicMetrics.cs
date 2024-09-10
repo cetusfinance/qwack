@@ -1387,6 +1387,15 @@ namespace Qwack.Models.Risk
                         SpotCalendar = pc.SpotCalendar,
                         SpotLag = pc.SpotLag
                     },
+
+                    EquityPriceCurve eqc => new EquityPriceCurve(eqc.BuildDate, eqc.Spot + bumpSize, eqc.Currency?.Ccy, eqc.IrCurve, eqc.SpotDate, currencyProvider)
+                    {
+                        Currency = eqc.Currency,
+                        AssetId = AssetId,
+                        SpotCalendar = eqc.SpotCalendar,
+                        SpotLag = eqc.SpotLag
+                    },
+
                     _ => throw new Exception("Unable to handle curve type for flat shift"),
                 };
                 var newVanillaModel = model.Clone();

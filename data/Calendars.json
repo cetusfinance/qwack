@@ -1067,6 +1067,13 @@
     "DaysToExclude": [],
     "MonthsToExclude": []
   },
+  "SGD": {
+    "InheritedCalendar": [ "SIN" ],
+    "Name": "SGD",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "THB": {
     "InheritedCalendar": [ "BAN" ],
     "Name": "THB",

@@ -1452,6 +1452,15 @@ namespace Qwack.Models.Risk
                     Units = cpc.Units,
                 },
 
+                EquityPriceCurve epc => new EquityPriceCurve(epc.BuildDate, epc.Spot + bumpSize, epc.Currency?.Ccy, epc.IrCurve,epc.SpotDate, currencyProvider)
+                {
+                    Currency = epc.Currency,
+                    AssetId = AssetId,
+                    SpotCalendar = epc.SpotCalendar,
+                    SpotLag = epc.SpotLag,
+                    Units = epc.Units,
+                },
+
                 // if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
                 //delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));
 

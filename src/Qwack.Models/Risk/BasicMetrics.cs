@@ -11,6 +11,7 @@ using Qwack.Core.Instruments;
 using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using Qwack.Dates;
+using Qwack.Futures;
 using Qwack.Math;
 using Qwack.Models.MCModels;
 using Qwack.Models.Models;
@@ -789,7 +790,7 @@ namespace Qwack.Models.Risk
                 
                 Dictionary<string, IPriceCurve> bumpedCurves;
                 Dictionary<string, IPriceCurve> bumpedDownCurves;
-                if (isSparseLMEMode)
+                if (isSparseLMEMode && curveObj is BasicPriceCurve bpc && bpc.CurveType == Transport.BasicTypes.PriceCurveType.LME)
                 {
                     lastDateInBook = NextThirdWeds(lastDateInBook);
                     var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();

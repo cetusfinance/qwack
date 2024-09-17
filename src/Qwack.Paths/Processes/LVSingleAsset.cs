@@ -32,6 +32,7 @@ namespace Qwack.Paths.Processes
         private bool _isComplete;
         private Vector<double>[] _drifts;
         private IInterpolator1D[] _lvInterps;
+        private Vector<double>[] _fixings;
 
         private readonly Vector<double> _two = new(2.0);
 
@@ -42,7 +43,7 @@ namespace Qwack.Paths.Processes
             _surface = volSurface;
             _startDate = startDate;
             _expiryDate = expiryDate;
-            _numberOfSteps = nTimeSteps;
+            _numberOfSteps = nTimeSteps == 0 ? 100 : nTimeSteps;
             _name = name;
             _pastFixings = pastFixings ?? (new Dictionary<DateTime, double>());
             _forwardCurve = forwardCurve;
@@ -66,18 +67,41 @@ namespace Qwack.Paths.Processes
                 return;
             }
 
+            //fixings first
+            var dates = collection.GetFeature<ITimeStepsFeature>();
+            var fixings = new List<Vector<double>>();
+            for (var d = 0; d < dates.Dates.Length; d++)
+            {
+                var date = dates.Dates[d];
+                if (date >= _startDate) break;
+                try
+                {
+                    var vect = new Vector<double>(_pastFixings[date]);
+                    fixings.Add(vect);
+                }
+                catch (Exception e)
+                {
+                }
+
+            }
+            _fixings = [.. fixings];
+            var firstTime = _timesteps.Times[_fixings.Length];
+
             //drifts and vols...
             _drifts = new Vector<double>[_timesteps.TimeStepCount];
             _lvInterps = new IInterpolator1D[_timesteps.TimeStepCount - 1];
 
             var strikes = new double[_timesteps.TimeStepCount][];
             var atmVols = new double[_timesteps.TimeStepCount];
-            for (var t = 0; t < strikes.Length; t++)
+            var adjTimes = new double[_timesteps.TimeStepCount];
+            for (var t = _fixings.Length; t < strikes.Length; t++)
             {
-                var fwd = _forwardCurve(_timesteps.Times[t]);
-                atmVols[t] = _surface.GetVolForDeltaStrike(0.5, _timesteps.Times[t], fwd);
+                var time = _timesteps.Times[t] - firstTime;
+                adjTimes[t] = time;
+                var fwd = _forwardCurve(time);
+                atmVols[t] = _surface.GetVolForDeltaStrike(0.5, time, fwd);
 
-                if (_timesteps.Times[t] == 0)
+                if (time == 0)
                 {
                     strikes[t] = new double[] { fwd };
                     continue;
@@ -86,28 +110,30 @@ namespace Qwack.Paths.Processes
                 {
                     var nStrikes = 200;
                     var strikeStep = 1.0 / nStrikes;
-                    strikes[t] = new double[nStrikes];
+                    strikes[t] = new double[nStrikes-1];
                     for (var k = 0; k < strikes[t].Length; k++)
                     {
                         var deltaK = -(strikeStep + strikeStep * k);
-                        strikes[t][k] = Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, _timesteps.Times[t], atmVols[t]);
+                        strikes[t][k] = Options.BlackFunctions.AbsoluteStrikefromDeltaKAnalytic(fwd, deltaK, 0, time, atmVols[t]);
                     }
                 }
             }
 
-            var lvSurface = Options.LocalVol.ComputeLocalVarianceOnGridFromCalls(_surface, strikes, _timesteps.Times, _forwardCurve);
+            var lvSurface = Options.LocalVol.ComputeLocalVarianceOnGridFromCalls2(_surface, strikes, adjTimes, _forwardCurve, _fixings.Length);
 
-            for (var t = 0; t < _lvInterps.Length; t++)
+            for (var t = _fixings.Length; t < _lvInterps.Length; t++)
             {
-                _lvInterps[t] = InterpolatorFactory.GetInterpolator(strikes[t], lvSurface[t], t == 0 ? Interpolator1DType.DummyPoint : Interpolator1DType.LinearFlatExtrap);
+                _lvInterps[t] = InterpolatorFactory.GetInterpolator(strikes[t], lvSurface[t], t == _fixings.Length ? Interpolator1DType.DummyPoint : Interpolator1DType.LinearFlatExtrap);
             }
 
             var prevSpot = _forwardCurve(0);
-            for (var t = 1; t < _drifts.Length; t++)
+
+            for (var t = _fixings.Length + 1; t < _drifts.Length; t++)
             {
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVols[t] * fxAtmVol * _timesteps.Times[t] * _correlation);
-                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
+                var time = _timesteps.Times[t] - firstTime;
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVols[t] * fxAtmVol * time * _correlation);
+                var spot = _forwardCurve(time) * driftAdj;
 
                 _drifts[t] = new Vector<double>(Log(spot / prevSpot) / _timesteps.TimeSteps[t]);
 
@@ -122,13 +148,16 @@ namespace Qwack.Paths.Processes
             {
                 var previousStep = new Vector<double>(_forwardCurve(0));
                 var steps = block.GetStepsForFactor(path, _factorIndex);
-                var c = 0;
-                foreach (var kv in _pastFixings.Where(x => x.Key < _startDate).OrderBy(x => x.Key))
-                {
-                    steps[c] = new Vector<double>(kv.Value);
-                    c++;
-                }
+                var c = _fixings.Length;
+                _fixings.AsSpan().CopyTo(steps);
                 steps[c] = previousStep;
+
+                //foreach (var kv in _pastFixings.Where(x => x.Key < _startDate).OrderBy(x => x.Key))
+                //{
+                //    steps[c] = new Vector<double>(kv.Value);
+                //    c++;
+                //}
+                //steps[c] = previousStep;
 
                 if (_siegelInvert)
                 {
@@ -175,11 +204,16 @@ namespace Qwack.Paths.Processes
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             _timesteps.AddDates(_pastFixings.Keys.Where(x => x < _startDate));
 
-            var stepSize = (_expiryDate - _startDate).TotalDays / _numberOfSteps;
-            var simDates = new List<DateTime> { _startDate };
-            for (var i = 0; i < _numberOfSteps; i++)
+            var periodSize = (_expiryDate - _startDate).TotalDays;
+            var stepSizeLinear = periodSize / _numberOfSteps;
+            var simDates = new List<DateTime>();
+
+            for (double i = 0; i < _numberOfSteps; i++)
             {
-                simDates.Add(_startDate.AddDays(i * stepSize).Date);
+                var linStep = i * 1.0/_numberOfSteps;
+                var coshStep = (Cosh(linStep) - 1) / (Cosh(1) - 1);
+                var stepDays = coshStep * periodSize;
+                simDates.Add(_startDate.AddDays(stepDays));
             }
 
             _timesteps.AddDates(simDates.Distinct());

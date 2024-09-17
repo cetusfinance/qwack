@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Basic.Correlation;
@@ -80,7 +81,7 @@ namespace Qwack.Options
             return lvGrid;
         }
 
-        public static double[][] ComputeLocalVarianceOnGridFromCalls(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double, double> forwardFunc)
+        public static double[][] ComputeLocalVarianceOnGridFromCalls(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double, double> forwardFunc, int firstTimeStep = 0)
         {
             var numberOfTimesteps = timeSteps.Length;
             var deltaK = 0.001 * forwardFunc(timeSteps[0]);
@@ -89,7 +90,7 @@ namespace Qwack.Options
             var fwds = timeSteps.Select(t => forwardFunc(t)).ToArray();
 
             //ParallelUtils.Instance.For(1, numberOfTimesteps, 1, it =>
-            for (var it = 1; it < numberOfTimesteps; it++)
+            for (var it = firstTimeStep + 1; it < numberOfTimesteps; it++)
             {
                 var T = timeSteps[it];
                 var T1 = timeSteps[it - 1];
@@ -130,6 +131,70 @@ namespace Qwack.Options
 
             return lvGrid;
         }
+
+        public static double[][] ComputeLocalVarianceOnGridFromCalls2(this IVolSurface VanillaSurface, double[][] strikes, double[] timeSteps, Func<double, double> forwardFunc, int firstTimeStep = 0)
+        {
+            var numberOfTimesteps = timeSteps.Length;
+            var deltaK = 0.001 * forwardFunc(timeSteps[0]);
+            var lvGrid = new double[numberOfTimesteps - 1][];
+
+            var fwds = timeSteps.Select(t => forwardFunc(t)).ToArray();
+
+            //ParallelUtils.Instance.For(1, numberOfTimesteps, 1, it =>
+            for (var it = firstTimeStep + 1; it < numberOfTimesteps; it++)
+            {
+                var T = timeSteps[it];
+                var T1 = timeSteps[it - 1];
+                var fwd = fwds[it];
+                var bump = fwd / 10000;
+                var fwdtm1 = fwds[it - 1];
+                var rmq = Log(fwd / fwdtm1) / (T - T1);
+                var numberOfStrikes = strikes[it - 1].Length;
+
+                lvGrid[it - 1] = new double[numberOfStrikes];
+
+                if (numberOfStrikes > 1)
+                {
+                    for (var ik = 0; ik < numberOfStrikes; ik++)
+                    {
+
+                        var K = strikes[it][ik];
+                        var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
+                        var C = BlackFunctions.BlackPV(fwd, K, 0.0, T, V, OptionType.C);                        
+                        var Vtm1 = VanillaSurface.GetVolForAbsoluteStrike(K, T1, fwdtm1);
+
+                        var Cp1 = BlackFunctions.BlackPV(fwd, K + bump, 0.0, T, V, OptionType.C);
+                        var Cp2 = BlackFunctions.BlackPV(fwd, K + 2*bump, 0.0, T, V, OptionType.C);
+                        var Cm1 = BlackFunctions.BlackPV(fwd, K - bump, 0.0, T, V, OptionType.C);
+                        var Cm2 = BlackFunctions.BlackPV(fwd, K - 2 * bump, 0.0, T, V, OptionType.C);
+
+
+                        //var dcdt = -BlackFunctions.BlackTheta(fwd, K, 0.0, T, V, OptionType.C);
+                        var dcdt = -(BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C) - C) / (T - T1);
+                        var dcdk = (Cp1 - Cm1) / (2 * bump);
+                        var dcdkp = (Cp2 - Cp1) / bump;
+                        var dcdkm = (Cm1 - Cm2) / bump;
+                        var d2cdk2 = (dcdkp - dcdkm) / bump;
+
+                        var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);
+                        //if(double.IsNaN(localVariance))
+                        //{
+                        //    Debug.Assert(true);
+                        //}
+                        lvGrid[it - 1][ik] = localVariance;
+                    }
+                }
+                else
+                {
+                    var K = strikes[it][0];
+                    var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
+                    lvGrid[it - 1][0] = V * V;
+                }
+            }//, false).Wait();
+
+            return lvGrid;
+        }
+
 
         public static List<double[][]> LocalCorrelationRaw(this IAssetFxModel model, double[] times)
         {

@@ -30,7 +30,7 @@ namespace Qwack.Math.Interpolation
             for (var i = 0; i < _y.Length; i++)
             {
                 var vix = y[i];
-                _y[i] = vix * vix;
+                _y[i] = _x[i] * vix * vix;
             }
             _minX = _x[0];
             _maxX = _x[x.Length - 1];
@@ -63,9 +63,16 @@ namespace Qwack.Math.Interpolation
         private void CalculateSlope()
         {
             _slope = new double[_x.Length - 1];
+            var currentX = _x[0];
+            var currentY = _y[0];
+            
             for (var i = 0; i < _slope.Length; i++)
             {
-                _slope[i] = (_y[i + 1] - _y[i]) / (_x[i + 1] - _x[i]);
+                var nextY = _y[i + 1];
+                var nextX = _x[i + 1];
+                _slope[i] = (nextY - currentY) / (nextX - currentX);
+                currentX = nextX;
+                currentY = nextY;
             }
         }
 

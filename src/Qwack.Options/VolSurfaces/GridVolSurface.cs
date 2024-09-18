@@ -227,7 +227,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
 
-        public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        public virtual Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
 
@@ -255,6 +255,37 @@ namespace Qwack.Options.VolSurfaces
 
             return o;
         }
+
+        public virtual Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastBumpIx = Expiries.Length;
+
+            if (LastSensitivityDate.HasValue)
+            {
+                var ix = Array.BinarySearch(Expiries, LastSensitivityDate.Value);
+                ix = (ix < 0) ? ~ix : ix;
+                ix += 2;
+                lastBumpIx = Min(ix, lastBumpIx); //cap at last pillar
+            }
+
+            var volsBumped = (double[][])Volatilities.Clone();
+
+            for (var i = lastBumpIx-1; i >= 0; i--)
+            {
+                volsBumped[i] = volsBumped[i].Select(x => x + bumpSize).ToArray();
+                o.Add(PillarLabels[i],
+                    new GridVolSurface(OriginDate, Strikes, Expiries, volsBumped, StrikeType, StrikeInterpolatorType, TimeInterpolatorType, TimeBasis, PillarLabels)
+                    {
+                        Currency = Currency,
+                        AssetId = AssetId
+                    });
+            }
+
+            return o;
+        }
+
 
         public DateTime PillarDatesForLabel(string label)
         {
@@ -416,5 +447,6 @@ namespace Qwack.Options.VolSurfaces
             Strikes = Strikes,
             Volatilities = new MultiDimArray<double>(Volatilities)
         };
+        
     }
 }

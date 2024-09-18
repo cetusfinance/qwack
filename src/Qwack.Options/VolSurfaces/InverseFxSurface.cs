@@ -33,6 +33,8 @@ namespace Qwack.Options.VolSurfaces
         public double CDF(DateTime expiry, double fwd, double strike) => 1.0 - FxSurface.CDF(expiry, 1 / fwd, 1 / strike);
 
         public Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate) => FxSurface.GetATMVegaScenarios(bumpSize, LastSensitivityDate);
+        public Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate) => FxSurface.GetATMVegaWaveyScenarios(bumpSize, LastSensitivityDate);
+
 
         public double GetForwardATMVol(DateTime startDate, DateTime endDate) => FxSurface.GetForwardATMVol(startDate, endDate);
         public double GetForwardATMVol(double start, double end) => FxSurface.GetForwardATMVol(start, end);

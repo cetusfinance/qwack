@@ -17,6 +17,7 @@ namespace Qwack.Core.Basic
         string Name { get; }
 
         Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate);
+        Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate);
 
         Currency Currency { get; set; }
         string AssetId { get; set; }

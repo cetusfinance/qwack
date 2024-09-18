@@ -159,7 +159,7 @@ namespace Qwack.Options.VolSurfaces
             return lastExpiry;
         }
 
-        public new Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        public override Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
             var o = new Dictionary<string, IVolSurface>();
 
@@ -169,7 +169,35 @@ namespace Qwack.Options.VolSurfaces
             {
                 var volsBumped = (double[])ATMs.Clone();
                 volsBumped[i] += bumpSize;
-                o.Add(PillarLabels[i], new RiskyFlySurface(OriginDate, volsBumped, Expiries, WingDeltas, Riskies, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels));
+                var bumped = new RiskyFlySurface(OriginDate, volsBumped, Expiries, WingDeltas, Riskies, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels)
+                {
+                    AssetId = AssetId,
+                    Currency = Currency,
+                    Name = Name,
+                };
+                o.Add(PillarLabels[i], bumped);
+            }
+
+            return o;
+        }
+
+        public override Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate)
+        {
+            var o = new Dictionary<string, IVolSurface>();
+
+            var lastExpiry = LastIx(LastSensitivityDate);
+            var volsBumped = (double[])ATMs.Clone();
+
+            for (var i = lastExpiry-1; i >=0; i--)
+            {
+                volsBumped[i] += bumpSize;
+                var bumped = new RiskyFlySurface(OriginDate, volsBumped, Expiries, WingDeltas, Riskies, Flies, Forwards, WingQuoteType, AtmVolType, StrikeInterpolatorType, TimeInterpolatorType, PillarLabels)
+                {
+                    AssetId = AssetId,
+                    Currency = Currency,
+                    Name = Name,
+                };
+                o.Add(PillarLabels[i], bumped);
             }
 
             return o;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Qwack.Core.Models;
@@ -101,6 +102,11 @@ namespace Qwack.Paths.Processes
                 var spot = _forwardCurve(time) * driftAdj;
                 var varStart = Pow(_surface.GetForwardATMVol(0, prevTime), 2) * prevTime;
                 var varEnd = Pow(atmVol, 2) * time;
+                var x0 = varEnd - varStart;
+                if (x0 < 0)
+                {
+                    Debug.Assert(true);
+                }
                 var fwdVariance = Max(0, varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];

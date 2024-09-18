@@ -60,6 +60,11 @@ namespace Qwack.Options.VolSurfaces
                 { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency, AssetId=AssetId, Name=Name } }
             };
 
+        public Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate) => new()
+        {
+                { "Flat", new ConstantVolSurface(OriginDate, Volatility + bumpSize) {Currency = Currency, AssetId=AssetId, Name=Name } }
+            };
+
         public DateTime PillarDatesForLabel(string label) => OriginDate;
 
         public double InverseCDF(DateTime expiry, double fwd, double p) => VolSurfaceEx.InverseCDFex(this, OriginDate.CalculateYearFraction(expiry, DayCountBasis.Act365F), fwd, p);

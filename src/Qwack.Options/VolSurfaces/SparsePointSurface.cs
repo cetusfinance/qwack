@@ -102,5 +102,6 @@ namespace Qwack.Options.VolSurfaces
             Vols = _vols.ToDictionary(kv => $"{kv.Key.expiry:yyyy-MM-dd}~{kv.Key.strike}", kv => kv.Value),
             PointLabels = _pillarLabels.ToDictionary(kv => $"{kv.Key:yyyy-MM-dd}", kv => kv.Value),
         };
+        public Dictionary<string, IVolSurface> GetATMVegaWaveyScenarios(double bumpSize, DateTime? LastSensitivityDate) => throw new NotImplementedException();
     }
 }

@@ -146,7 +146,7 @@ namespace Qwack.Options
                 var T = timeSteps[it];
                 var T1 = timeSteps[it - 1];
                 var fwd = fwds[it];
-                var bump = fwd / 10000;
+                var bump = fwd / 100000;
                 var fwdtm1 = fwds[it - 1];
                 var rmq = Log(fwd / fwdtm1) / (T - T1);
                 var numberOfStrikes = strikes[it - 1].Length;
@@ -159,21 +159,25 @@ namespace Qwack.Options
                     {
 
                         var K = strikes[it][ik];
+                        
                         var V = VanillaSurface.GetVolForAbsoluteStrike(K, T, fwd);
+                        var Vp = VanillaSurface.GetVolForAbsoluteStrike(K+bump, T, fwd);
+                        var Vm = VanillaSurface.GetVolForAbsoluteStrike(K-bump, T, fwd);
+
                         var C = BlackFunctions.BlackPV(fwd, K, 0.0, T, V, OptionType.C);                        
                         var Vtm1 = VanillaSurface.GetVolForAbsoluteStrike(K, T1, fwdtm1);
 
-                        var Cp1 = BlackFunctions.BlackPV(fwd, K + bump, 0.0, T, V, OptionType.C);
-                        var Cp2 = BlackFunctions.BlackPV(fwd, K + 2*bump, 0.0, T, V, OptionType.C);
-                        var Cm1 = BlackFunctions.BlackPV(fwd, K - bump, 0.0, T, V, OptionType.C);
-                        var Cm2 = BlackFunctions.BlackPV(fwd, K - 2 * bump, 0.0, T, V, OptionType.C);
+                        var Cp1 = BlackFunctions.BlackPV(fwd, K + bump, 0.0, T, Vp, OptionType.C);
+                        //var Cp2 = BlackFunctions.BlackPV(fwd, K + 2 * bump, 0.0, T, V, OptionType.C);
+                        var Cm1 = BlackFunctions.BlackPV(fwd, K - bump, 0.0, T, Vm, OptionType.C);
+                        //var Cm2 = BlackFunctions.BlackPV(fwd, K - 2 * bump, 0.0, T, V, OptionType.C);
 
 
                         //var dcdt = -BlackFunctions.BlackTheta(fwd, K, 0.0, T, V, OptionType.C);
-                        var dcdt = -(BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C) - C) / (T - T1);
+                        var dcdt = (C - BlackFunctions.BlackPV(fwdtm1, K, 0.0, T1, Vtm1, OptionType.C)) / (T - T1);
                         var dcdk = (Cp1 - Cm1) / (2 * bump);
-                        var dcdkp = (Cp2 - Cp1) / bump;
-                        var dcdkm = (Cm1 - Cm2) / bump;
+                        var dcdkp = (Cp1 - C) / bump;
+                        var dcdkm = (C - Cm1) / bump;
                         var d2cdk2 = (dcdkp - dcdkm) / bump;
 
                         var localVariance = d2cdk2 == 0 ? V * V : (dcdt - rmq * (C - K * dcdk)) / (0.5 * K * K * d2cdk2);

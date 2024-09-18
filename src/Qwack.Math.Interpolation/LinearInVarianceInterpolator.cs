@@ -26,7 +26,12 @@ namespace Qwack.Math.Interpolation
         {
             _x = x;
             _rawY = y;
-            _y = x.Select((v, ix) => v * y[ix] * y[ix]).ToArray();
+            _y = new double[x.Length];
+            for (var i = 0; i < _y.Length; i++)
+            {
+                var vix = y[i];
+                _y[i] = vix * vix;
+            }
             _minX = _x[0];
             _maxX = _x[x.Length - 1];
             CalculateSlope();

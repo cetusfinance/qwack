@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Qwack.Math.Solvers
 {
@@ -10,6 +11,12 @@ namespace Qwack.Math.Solvers
 
     public static class Brent
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowInvalidOperation(double fb)
+        {
+            throw new Exception($"Error is {fb}");
+        }
+        
         public static double BrentsMethodSolve(Func<double, double> function, double lowerLimit, double upperLimit, double errorTol)
         {
             var a = lowerLimit;
@@ -79,7 +86,7 @@ namespace Qwack.Math.Solvers
                 { var tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
                 i++;
                 if (i > 1000)
-                    throw new Exception($"Error is {fb}");
+                    ThrowInvalidOperation(fb);
             }
             return b;
         }

@@ -20,8 +20,8 @@ namespace Qwack.Options.VolSurfaces
     public class GridVolSurface : IVolSurface, IATMVolSurface
     {
         private readonly bool _allowCaching = true;
-        private readonly ConcurrentDictionary<string, double> _absVolCache = new();
-        private readonly ConcurrentDictionary<string, double> _deltaVolCache = new();
+        //private readonly ConcurrentDictionary<string, double> _absVolCache = new();
+        //private readonly ConcurrentDictionary<string, double> _deltaVolCache = new();
         public Frequency OverrideSpotLag { get; set; }
         public string Name { get; set; }
         public DateTime OriginDate { get; set; }
@@ -85,10 +85,10 @@ namespace Qwack.Options.VolSurfaces
 
         public double GetVolForAbsoluteStrike(double strike, double maturity, double forward)
         {
-            var key = $"{strike:f6}~{maturity:f3}~{forward:f6}";
+            /*var key = $"{strike:f6}~{maturity:f3}~{forward:f6}";
             if (_allowCaching && _absVolCache.TryGetValue(key, out var vol))
-                return vol;
-
+                return vol;*/
+            double vol;
             if (StrikeType == StrikeType.Absolute)
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
@@ -129,7 +129,7 @@ namespace Qwack.Options.VolSurfaces
                 vol = interpForSolvedStrike.Interpolate(maturity);
             }
 
-            if (_allowCaching) _absVolCache[key] = vol;
+            //if (_allowCaching) _absVolCache[key] = vol;
             return vol;
         }
 
@@ -148,10 +148,10 @@ namespace Qwack.Options.VolSurfaces
             if (deltaStrike is > 1.0 or < (-1.0))
                 throw new ArgumentOutOfRangeException($"Delta strike must be in range -1.0 < x < 1.0 - value was {deltaStrike}");
 
-            var key = $"{deltaStrike:f6}~{maturity:f3}~{forward:f6}";
-            if (_allowCaching && _deltaVolCache.TryGetValue(key, out var vol))
-                return vol;
-
+            //var key = $"{deltaStrike:f6}~{maturity:f3}~{forward:f6}";
+            //if (_allowCaching && _deltaVolCache.TryGetValue(key, out var vol))
+             //   return vol;
+             double vol;
             if (StrikeType == StrikeType.ForwardDelta)
             {
                 var interpForStrike = InterpolatorFactory.GetInterpolator(ExpiriesDouble,
@@ -180,7 +180,7 @@ namespace Qwack.Options.VolSurfaces
                 vol = interpForSolvedStrike.Interpolate(maturity);
             }
 
-            if (_allowCaching) _deltaVolCache[key] = vol;
+            //if (_allowCaching) _deltaVolCache[key] = vol;
             return vol;
         }
 

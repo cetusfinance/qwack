@@ -189,6 +189,12 @@ namespace Qwack.Futures
                     case "FRI2":
                         dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
                         break;
+                    case "FRI1":
+                        dayOfMonthToStart = dateInMonth.NthSpecificWeekDay(DayOfWeek.Friday, 1).Day;
+                        break;
+                    case "D0":
+                        dayOfMonthToStart = dateInMonth.FirstDayOfMonth().AddDays(-1).Day;
+                        break;
                     case "LASTFRI":
  
                         dayOfMonthToStart = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
@@ -217,7 +223,10 @@ namespace Qwack.Futures
                 }
             }
             var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
-            d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
+            if (_settings.ExpiryGen.DayOfMonthToStartOther == "D0" && _settings.ExpiryGen.MonthModifier == 0)
+                d = d.AddMonths(-1);
+            else
+                d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
 
             var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
 
@@ -247,6 +256,14 @@ namespace Qwack.Futures
                     case "FRI2":
                         var dateInMonthf2 = new DateTime(YearNumber, monthNum, 1);
                         dayOfMonthToStart = dateInMonthf2.NthSpecificWeekDay(DayOfWeek.Friday, 2).Day;
+                        break;
+                    case "FRI1":
+                        var dateInMonthf1 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonthf1.NthSpecificWeekDay(DayOfWeek.Friday, 1).Day;
+                        break;
+                    case "D0":
+                        var dateInMonthd0 = new DateTime(YearNumber, monthNum, 1);
+                        dayOfMonthToStart = dateInMonthd0.FirstDayOfMonth().AddDays(-1).Day;
                         break;
                     case "LASTFRI":
                         var dateInMonth1 = new DateTime(YearNumber, monthNum, 1);
@@ -279,7 +296,12 @@ namespace Qwack.Futures
             }
             var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
 
-            d = d.AddMonths(_settings.RollGen.MonthModifier);
+            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
+            if (_settings.RollGen.DayOfMonthToStartOther == "D0" && _settings.RollGen.MonthModifier == 0)
+                d = d.AddMonths(-1);
+            else
+                d = d.AddMonths(_settings.RollGen.MonthModifier);
+
             var parts = _settings.RollGen.DateOffsetModifier.Split(';');
 
             foreach (var part in parts)

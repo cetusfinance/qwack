@@ -295,8 +295,6 @@ namespace Qwack.Futures
                 }
             }
             var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
-
-            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
             if (_settings.RollGen.DayOfMonthToStartOther == "D0" && _settings.RollGen.MonthModifier == 0)
                 d = d.AddMonths(-1);
             else

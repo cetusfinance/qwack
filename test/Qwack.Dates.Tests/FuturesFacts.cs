@@ -67,5 +67,18 @@ namespace Qwack.Dates.Tests
 
             var expiry = fc.GetExpiry();
         }
+
+        [Fact]
+        public void ExtendedDateCodesTestLH2()
+        {
+            var nextCode = "LH";
+            var startDate = new DateTime(2023, 01, 01);
+            var sut = TestProviderHelper.FutureSettingsProvider;
+            FutureCode fs = new(nextCode, sut);
+            var fm = fs.GetFrontMonth(startDate, false);
+        }
+
+    
+
     }
 }

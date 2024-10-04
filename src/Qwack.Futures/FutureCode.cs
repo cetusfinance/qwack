@@ -297,11 +297,14 @@ namespace Qwack.Futures
                         throw new Exception($"Dont know how to handle date code {_settings.RollGen.DayOfMonthToStartOther}");
                 }
             }
-            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
+
             if (_settings.RollGen.DayOfMonthToStartOther == "D0" && _settings.RollGen.MonthModifier == 0)
-                d = d.AddMonths(-1);
-            else
-                d = d.AddMonths(_settings.RollGen.MonthModifier);
+                monthNum--;
+            if (monthNum <= 0)
+                monthNum = 12;
+
+            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
+            d = d.AddMonths(_settings.RollGen.MonthModifier);
 
             var parts = _settings.RollGen.DateOffsetModifier.Split(';');
 

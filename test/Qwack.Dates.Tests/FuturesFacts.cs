@@ -39,5 +39,33 @@ namespace Qwack.Dates.Tests
             ibCode = bbgCode.ConvertBbgToIB(sut);
             Assert.Equal("SCIZ0", ibCode);
         }
+
+        [Fact]
+        public void ExtendedDateCodesTestLC()
+        {
+            var nextCode = "LCH5 Comdty";
+            var startDate = new DateTime(2025, 01, 01);
+            var sut = TestProviderHelper.FutureSettingsProvider;
+            FutureCode fs = new(nextCode, startDate.Year - 1, sut);
+
+            nextCode = fs.GetNextCode(false);
+            FutureCode fc = new(nextCode, startDate.Year - 1, sut);
+
+            var expiry = fc.GetExpiry();
+        }
+
+        [Fact]
+        public void ExtendedDateCodesTestLH()
+        {
+            var nextCode = "LHH5 Comdty";
+            var startDate = new DateTime(2025, 01, 01);
+            var sut = TestProviderHelper.FutureSettingsProvider;
+            FutureCode fs = new(nextCode, startDate.Year - 1, sut);
+
+            nextCode = fs.GetNextCode(false);
+            FutureCode fc = new(nextCode, startDate.Year - 1, sut);
+
+            var expiry = fc.GetExpiry();
+        }
     }
 }

@@ -196,7 +196,7 @@ namespace Qwack.Futures
                         dayOfMonthToStart = dateInMonth.FirstDayOfMonth().AddDays(-1).Day;
                         break;
                     case "LASTFRI":
- 
+
                         dayOfMonthToStart = dateInMonth.NthLastSpecificWeekDay(DayOfWeek.Friday, 1)
                             .IfHolidayRollBack(_settings.RollGen.CalendarObject)
                             .Day;
@@ -222,11 +222,14 @@ namespace Qwack.Futures
                         throw new Exception($"Dont know how to handle date code {_settings.ExpiryGen.DayOfMonthToStartOther}");
                 }
             }
-            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
+
             if (_settings.ExpiryGen.DayOfMonthToStartOther == "D0" && _settings.ExpiryGen.MonthModifier == 0)
-                d = d.AddMonths(-1);
-            else
-                d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
+                monthNum--;
+            if (monthNum <= 0)
+                monthNum = 12;
+
+            var d = new DateTime(YearNumber, monthNum, dayOfMonthToStart);
+            d = d.AddMonths(_settings.ExpiryGen.MonthModifier);
 
             var parts = _settings.ExpiryGen.DateOffsetModifier.Split(';');
 

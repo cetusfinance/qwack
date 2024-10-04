@@ -166,6 +166,15 @@ namespace Qwack.Dates.Tests
         }
 
         [Fact]
+        public void NthLastSpecificWeekdayFeb2025()
+        {
+            var dt = new DateTime(2025,02, 01);
+            Assert.Equal(new DateTime(2025, 02, 28), dt.NthLastSpecificWeekDay(DayOfWeek.Friday, 1));
+        }
+
+        
+
+        [Fact]
         public void ThirdWednesday()
         {
             var dt = new DateTime(2016, 11, 20, 10, 20, 10);

@@ -39,6 +39,16 @@ namespace Qwack.Core.Instruments.Asset
         public string FxFixingId { get; set; }
         public string OffsetFixingId { get; set; }
 
+        public string CashBidFixingId { get; set; }
+        public string CashAskFixingId { get; set; }
+        public string M3BidFixingId { get; set; }
+        public string M3AskFixingId { get; set; }
+
+        public bool IsLowestOfTheFour() => !string.IsNullOrWhiteSpace(CashBidFixingId) &&
+            !string.IsNullOrWhiteSpace(CashAskFixingId) &&
+            !string.IsNullOrWhiteSpace(M3BidFixingId) &&
+            !string.IsNullOrWhiteSpace(M3AskFixingId);
+
         public DateShifter FixingOffset {  get; set; }
 
         public bool IsOption { get; set; }
@@ -122,6 +132,10 @@ namespace Qwack.Core.Instruments.Asset
             ScaleProportion = ScaleProportion,
             MetaData = new(MetaData),
             PeriodPremia = PeriodPremia,
+            CashAskFixingId = CashAskFixingId,
+            CashBidFixingId = CashBidFixingId,
+            M3AskFixingId = M3AskFixingId,
+            M3BidFixingId = M3BidFixingId
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -166,6 +180,10 @@ namespace Qwack.Core.Instruments.Asset
             ScaleProportion = to.ScaleProportion;
             ScaleStrike = to.ScaleStrike;
             PeriodPremia = to.PeriodPremia;
+            CashBidFixingId = to.CashBidFixingId;
+            CashAskFixingId = to.CashAskFixingId;
+            M3BidFixingId = to.M3BidFixingId;
+            M3AskFixingId = to.M3AskFixingId;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -206,6 +224,10 @@ namespace Qwack.Core.Instruments.Asset
                 ScaleStrike = ScaleStrike,
                 MetaData = new(MetaData),
                 PeriodPremia = PeriodPremia,
+                M3AskFixingId = M3AskFixingId,
+                M3BidFixingId = M3BidFixingId,
+                CashAskFixingId = CashAskFixingId,
+                CashBidFixingId = CashBidFixingId
             }
         };
     }

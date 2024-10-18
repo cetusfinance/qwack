@@ -71,6 +71,10 @@ namespace Qwack.Models.MCModels
                         var mbpob = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
                         mbpob.VanillaModel = value;
                         break;
+                    case MultiPeriodMultiIndexBackPricingOptionPP mpbpop:
+                        var mbpobp = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
+                        mbpobp.VanillaModel = value;
+                        break;
                     case AsianLookbackOption lbo:
                         var albo = _subInstruments.First() as LookBackOptionPP;
                         albo.VanillaModel = value;
@@ -100,10 +104,12 @@ namespace Qwack.Models.MCModels
                     if (bpob.AverageRegressor == regressor) bpob.AverageRegressor = regressor;
                     break;
                 case MultiPeriodBackpricingOption mpbpo:
-                    var mbpo = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
-                    if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
-                    for (var i = 0; i < mbpo.AverageRegressors.Length; i++)
-                        if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
+                    if (_subInstruments.First() is MultiPeriodBackPricingOptionPP mbpo)
+                    {
+                        if (mbpo.SettlementRegressor == regressor) mbpo.SettlementRegressor = regressor;
+                        for (var i = 0; i < mbpo.AverageRegressors.Length; i++)
+                            if (mbpo.AverageRegressors[i] == regressor) mbpo.AverageRegressors[i] = regressor;
+                    }
                     break;
                 case AsianLookbackOption albo:
                     var lbopp = _subInstruments.First() as LookBackOptionPP;
@@ -251,29 +257,64 @@ namespace Qwack.Models.MCModels
                     break;
                 case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate2 = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
-                    var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
-                                                                             mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
-                                                                             mbpo.SettlementDate, mbpo.CallPut,
-                                                                             mbpo.DiscountCurve, mbpo.PaymentCurrency,
-                                                                             mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset, 
-                                                                             scaleProportion: mbpo.ScaleProportion, scaleStrike:mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia)
-                    { 
-                        VanillaModel = VanillaModel,
-                        FixingId = mbpo.AssetFixingId,
-                        FixingIdDateShifted = mbpo.OffsetFixingId,
-                    };
-                    _subInstruments = new List<IAssetPathPayoff>
+                    //some magic here to make multi-index?
+
+                    if (mbpo.IsLowestOfTheFour())
+                    {
+                        var shifter = new DateShifter
+                        {
+                            Calendar = _calendarProvider.GetCalendar("LME"),
+                            Period = 3.Months(),
+                            RollType = RollType.LME
+                        };
+                        var mbp = new MultiPeriodMultiIndexBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
+                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
+                                                         mbpo.SettlementDate, mbpo.CallPut,
+                                                         mbpo.DiscountCurve, mbpo.PaymentCurrency,
+                                                         mbpo.Notional, shifter, mbpo.IsOption, mbpo.DeclaredPeriod,
+                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia)
+                        {
+                            VanillaModel = VanillaModel,
+                            BidAskSpread = 0.25,
+                            FixingId3mAsk = mbpo.M3AskFixingId,
+                            FixingId3mBid = mbpo.M3BidFixingId,
+                            FixingIdAsk = mbpo.CashAskFixingId,
+                            FixingIdBid = mbpo.CashBidFixingId,
+                        };
+                        _subInstruments = new List<IAssetPathPayoff>
+                        {
+                            mbp
+                        };
+
+                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                    }
+                    else
+                    {
+                        var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
+                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
+                                                         mbpo.SettlementDate, mbpo.CallPut,
+                                                         mbpo.DiscountCurve, mbpo.PaymentCurrency,
+                                                         mbpo.Notional, mbpo.IsOption, mbpo.DeclaredPeriod, dateShifter: mbpo.FixingOffset,
+                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia)
+                        {
+                            VanillaModel = VanillaModel,
+                            FixingId = mbpo.AssetFixingId,
+                            FixingIdDateShifted = mbpo.OffsetFixingId,
+                        };
+                        _subInstruments = new List<IAssetPathPayoff>
                     {
                         mbp
                     };
-                    if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
-                        Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
-                    else if (mbp.SettlementRegressor != null)
-                        Regressors = new[] { mbp.SettlementRegressor };
-                    else if (mbp.AverageRegressors != null)
-                        Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
-                    else
-                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                        if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
+                            Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
+                        else if (mbp.SettlementRegressor != null)
+                            Regressors = new[] { mbp.SettlementRegressor };
+                        else if (mbp.AverageRegressors != null)
+                            Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
+                        else
+                            Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                    }
+
                     break;
             }
             _isCompo = _fxType is FxConversionType.ConvertThenAverage or FxConversionType.AverageThenConvert;

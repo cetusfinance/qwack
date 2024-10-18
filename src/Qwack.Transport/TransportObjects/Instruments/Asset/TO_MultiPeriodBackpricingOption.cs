@@ -78,5 +78,14 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         [ProtoMember(33)]
         public double[] PeriodPremia { get; set; }
 
+        [ProtoMember(34)]
+        public string CashBidFixingId { get; set; }
+        [ProtoMember(35)]
+        public string CashAskFixingId { get; set; }
+        [ProtoMember(36)]
+        public string M3BidFixingId { get; set; }
+        [ProtoMember(37)]
+        public string M3AskFixingId { get; set; }
+
     }
 }

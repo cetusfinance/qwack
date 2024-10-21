@@ -223,7 +223,7 @@ namespace Qwack.Paths.Payoffs
                         carryTo3mAsk = avg3m / spotOnDecDate;
                         carryToCashAsk = avgCash / spotOnDecDate;
                         carryTo3mBid = (avg3m - BidAskSpread) / spotOnDecDate;
-                        carryToCashAsk = (avgCash - BidAskSpread) / spotOnDecDate;
+                        carryToCashBid = (avgCash - BidAskSpread) / spotOnDecDate;
                     }
                     expToAvg3mAsk.Add(carryTo3mAsk);
                     expToAvg3mBid.Add(carryTo3mBid);

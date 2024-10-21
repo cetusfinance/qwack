@@ -68,12 +68,11 @@ namespace Qwack.Models.MCModels
                         bpob.VanillaModel = value;
                         break;
                     case MultiPeriodBackpricingOption mpbpo:
-                        var mbpob = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
-                        mbpob.VanillaModel = value;
-                        break;
-                    case MultiPeriodMultiIndexBackPricingOptionPP mpbpop:
-                        var mbpobp = _subInstruments.First() as MultiPeriodBackPricingOptionPP;
-                        mbpobp.VanillaModel = value;
+                        var si = _subInstruments.First();
+                        if(si is MultiPeriodBackPricingOptionPP mbpob)
+                            mbpob.VanillaModel = value;
+                        else if (si is MultiPeriodMultiIndexBackPricingOptionPP mpbpop)
+                            mpbpop.VanillaModel = value;
                         break;
                     case AsianLookbackOption lbo:
                         var albo = _subInstruments.First() as LookBackOptionPP;

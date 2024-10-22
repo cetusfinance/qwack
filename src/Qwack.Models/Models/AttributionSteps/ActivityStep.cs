@@ -36,7 +36,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "New" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfEndDict[tid]},
+                    //{ "Portfolio", pfEndDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, t.Value);
@@ -62,7 +62,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Removed" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfStartDict[tid]},
+                    //{ "Portfolio", pfStartDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, -t.Value);
@@ -92,7 +92,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Ammended" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
-                    { "Portfolio", pfStartDict[tid]},
+                    //{ "Portfolio", pfStartDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
                 resultsCube.AddRow(row, t.Value);
@@ -100,7 +100,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
         }
 
         model = model.Rebuild(model.VanillaModel, endPortfolio);
-
+        lastPvCube = model.PV(reportingCcy);
         return (lastPvCube, model);
     }
 }

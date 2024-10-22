@@ -1544,13 +1544,14 @@ namespace Qwack.Models.Models
             (lastPvCube, model) =
                new FxVolsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
+            //activity step
+            (lastPvCube, model) =
+              new ActivityStep(startPortfolio, endPortfolio).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+
             //unexplained step
             (lastPvCube, model) =
               new FinalStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
-            //activity step
-            (lastPvCube, model) =
-              new ActivityStep(startPortfolio, endPortfolio).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

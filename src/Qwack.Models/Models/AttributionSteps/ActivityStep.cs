@@ -36,6 +36,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "New" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
+                    { PointDate, endModel.VanillaModel.BuildDate },
                     //{ "Portfolio", pfEndDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
@@ -62,6 +63,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Removed" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
+                    { PointDate, endModel.VanillaModel.BuildDate },
                     //{ "Portfolio", pfStartDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };
@@ -83,6 +85,8 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
 
             foreach (var t in amendedPnL.GetAllRows())
             {
+                if (t.Value == 0)
+                    continue;
                 var tid = (string)t.MetaData[tidIx];
                 var row = new Dictionary<string, object>
                 {
@@ -92,6 +96,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
                     { SubStep, "Ammended" },
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
+                    { PointDate, endModel.VanillaModel.BuildDate },
                     //{ "Portfolio", pfStartDict[tid]},
                     { Underlying, r_UlIx<0 ? string.Empty : t.MetaData[r_UlIx] }
                 };

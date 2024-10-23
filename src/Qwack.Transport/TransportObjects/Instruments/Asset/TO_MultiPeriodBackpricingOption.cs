@@ -86,6 +86,10 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public string M3BidFixingId { get; set; }
         [ProtoMember(37)]
         public string M3AskFixingId { get; set; }
+        [ProtoMember(38)]
+        public double PremiumTotal { get; set; }
+        [ProtoMember(39)]
+        public DateTime PremiumSettleDate { get; set; }
 
     }
 }

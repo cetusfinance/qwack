@@ -40,6 +40,7 @@ namespace Qwack.Paths.Payoffs
         private int _liveDateIx;
         private Vector<double>[] _results;
         private Vector<double> _notional;
+        private double _notionalDbl;
         private bool _isComplete;
         private double _expiryToSettleCarry;
         private double[] _expiryToAvgCarrys;
@@ -69,6 +70,9 @@ namespace Qwack.Paths.Payoffs
 
         public IAssetFxModel VanillaModel { get; set; }
 
+        public double OptionPremiumTotal { get; set; }
+        public DateTime? OptionPremiumSettleDate { get; set; }
+
         public MultiPeriodBackPricingOptionPP(string assetName,
                                               List<DateTime[]> avgDates,
                                               DateTime decisionDate,
@@ -94,6 +98,7 @@ namespace Qwack.Paths.Payoffs
             _payDate = payDate;
             _assetName = assetName;
             _notional = new Vector<double>(notional);
+            _notionalDbl = notional;
             _isOption = isOption;
             _declaredPeriod = declaredPeriod;
             _dateShifter = dateShifter;
@@ -342,7 +347,7 @@ namespace Qwack.Paths.Payoffs
                     payoff -= scalePayoff;
                 }
 
-                _results[resultIx] = payoff * _notional;
+                _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal / _notionalDbl);
             }
         }
 
@@ -414,8 +419,8 @@ namespace Qwack.Paths.Payoffs
             var ar = AverageResult;
             return new CashFlowSchedule
             {
-                Flows = new List<CashFlow>
-                {
+                Flows =
+                [
                     new CashFlow
                     {
                         Fv = ar,
@@ -424,8 +429,8 @@ namespace Qwack.Paths.Payoffs
                         FlowType =  FlowType.FixedAmount,
                         SettleDate = _payDate,
                         YearFraction = 1.0
-                    }
-                }
+                    },
+                ]
             };
         }
 
@@ -434,8 +439,8 @@ namespace Qwack.Paths.Payoffs
             var df = model.FundingModel.Curves[_discountCurve].GetDf(model.BuildDate, _payDate);
             return ResultsByPath.Select(x => new CashFlowSchedule
             {
-                Flows = new List<CashFlow>
-                {
+                Flows =
+                [
                     new CashFlow
                     {
                         Fv = x,
@@ -445,7 +450,7 @@ namespace Qwack.Paths.Payoffs
                         SettleDate = _payDate,
                         YearFraction = 1.0
                     }
-                }
+                ]
             }).ToArray();
 
         }

@@ -279,6 +279,8 @@ namespace Qwack.Models.MCModels
                             FixingId3mBid = mbpo.M3BidFixingId,
                             FixingIdAsk = mbpo.CashAskFixingId,
                             FixingIdBid = mbpo.CashBidFixingId,
+                            OptionPremiumTotal = mbpo.PremiumTotal,
+                            OptionPremiumSettleDate = mbpo.PremiumSettleDate
                         };
                         _subInstruments = new List<IAssetPathPayoff>
                         {
@@ -299,6 +301,8 @@ namespace Qwack.Models.MCModels
                             VanillaModel = VanillaModel,
                             FixingId = mbpo.AssetFixingId,
                             FixingIdDateShifted = mbpo.OffsetFixingId,
+                            OptionPremiumTotal = mbpo.PremiumTotal,
+                            OptionPremiumSettleDate = mbpo.PremiumSettleDate
                         };
                         _subInstruments = new List<IAssetPathPayoff>
                     {

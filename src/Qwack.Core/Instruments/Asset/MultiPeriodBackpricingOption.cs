@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -43,6 +42,9 @@ namespace Qwack.Core.Instruments.Asset
         public string CashAskFixingId { get; set; }
         public string M3BidFixingId { get; set; }
         public string M3AskFixingId { get; set; }
+
+        public double PremiumTotal { get; set; }
+        public DateTime PremiumSettleDate { get; set; }
 
         public bool IsLowestOfTheFour() => !string.IsNullOrWhiteSpace(CashBidFixingId) &&
             !string.IsNullOrWhiteSpace(CashAskFixingId) &&
@@ -135,7 +137,9 @@ namespace Qwack.Core.Instruments.Asset
             CashAskFixingId = CashAskFixingId,
             CashBidFixingId = CashBidFixingId,
             M3AskFixingId = M3AskFixingId,
-            M3BidFixingId = M3BidFixingId
+            M3BidFixingId = M3BidFixingId,
+            PremiumSettleDate = PremiumSettleDate,
+            PremiumTotal = PremiumTotal,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -184,6 +188,8 @@ namespace Qwack.Core.Instruments.Asset
             CashAskFixingId = to.CashAskFixingId;
             M3BidFixingId = to.M3BidFixingId;
             M3AskFixingId = to.M3AskFixingId;
+            PremiumTotal = to.PremiumTotal;
+            PremiumSettleDate = to.PremiumSettleDate;
         }
 
         public TO_Instrument ToTransportObject() => new()
@@ -227,7 +233,9 @@ namespace Qwack.Core.Instruments.Asset
                 M3AskFixingId = M3AskFixingId,
                 M3BidFixingId = M3BidFixingId,
                 CashAskFixingId = CashAskFixingId,
-                CashBidFixingId = CashBidFixingId
+                CashBidFixingId = CashBidFixingId,
+                PremiumSettleDate = PremiumSettleDate,
+                PremiumTotal = PremiumTotal,
             }
         };
     }

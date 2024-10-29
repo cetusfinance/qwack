@@ -347,7 +347,7 @@ namespace Qwack.Paths.Payoffs
                     payoff -= scalePayoff;
                 }
 
-                _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal / _notionalDbl);
+                _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal);
             }
         }
 

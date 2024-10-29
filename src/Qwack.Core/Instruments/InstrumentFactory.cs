@@ -230,6 +230,12 @@ namespace Qwack.Core.Instruments
             ScaleProportion = transportObject.ScaleProportion,
             ScaleStrike = transportObject.ScaleStrike,
             PeriodPremia = transportObject.PeriodPremia,
+            PremiumTotal = transportObject.PremiumTotal,
+            PremiumSettleDate = transportObject.PremiumSettleDate,
+            CashAskFixingId = transportObject.CashAskFixingId,
+            CashBidFixingId = transportObject.CashBidFixingId,
+            M3AskFixingId = transportObject.M3AskFixingId,
+            M3BidFixingId = transportObject.M3BidFixingId,
         };
 
         public static AssetFxBasisSwap GetAssetFxBasisSwap(this TO_AssetFxBasisSwap transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider) => new()

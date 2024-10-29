@@ -1509,7 +1509,9 @@ namespace Qwack.Models.Models
                                                ICurrencyProvider currencyProvider,
                                                IFutureSettingsProvider futureSettings,
                                                ICalendarProvider calendarProvider,
-                                               bool useSpreadDelta = false)
+                                               bool useSpreadDelta = false,
+                                               Dictionary<string, double> startProvisions = null,
+                                               Dictionary<string, double> endProvisions = null                                               )
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1561,6 +1563,8 @@ namespace Qwack.Models.Models
             (lastPvCube, model) =
               new FinalStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
+            if (startProvisions != null || endProvisions != null)
+                new ProvisionStep(startProvisions, endProvisions).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

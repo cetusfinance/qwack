@@ -255,7 +255,7 @@ namespace Qwack.Models.MCModels
                         Regressors = new[] { bp.SettlementRegressor };
                     break;
                 case MultiPeriodBackpricingOption mbpo:
-                    var settleFixingDate2 = mbpo.SettlementFixingDates == null ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
+                    var settleFixingDate2 = mbpo.SettlementFixingDates == null && mbpo.SettlementDate!=default ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     //some magic here to make multi-index?
 
                     if (mbpo.IsLowestOfTheFour())

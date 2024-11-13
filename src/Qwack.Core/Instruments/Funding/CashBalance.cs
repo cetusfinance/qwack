@@ -71,7 +71,8 @@ namespace Qwack.Core.Instruments.Funding
         public IFundingInstrument SetParRate(double parRate) => Clone();
 
         public string[] IrCurves(IAssetFxModel model) => new[] { model.FundingModel.FxMatrix.DiscountCurveMap[Currency] };
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => [];
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
         public string FxPair(IAssetFxModel model) => string.Empty;
         IAssetInstrument IAssetInstrument.Clone() => (IAssetInstrument)Clone();

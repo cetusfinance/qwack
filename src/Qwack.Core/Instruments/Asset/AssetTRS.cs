@@ -203,6 +203,24 @@ namespace Qwack.Core.Instruments.Asset
                 return new Dictionary<string, List<DateTime>>() { { Underlying.AssetIds[0], new List<DateTime>() } };
         }
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate)
+        {
+            var assetId = Underlying.AssetIds[0];
+            var curve = model.GetPriceCurve(assetId);
+            if (curve.Currency == Currency || valDate <= StartDate)
+            {
+                return [];
+            }
+
+            var pair = FxPair(model);
+            if (valDate > EndDate)
+                return new Dictionary<string, List<DateTime>>() { { pair, new List<DateTime> { StartDate, EndDate } } };
+            else if (valDate > StartDate)
+                return new Dictionary<string, List<DateTime>>() { { pair, new List<DateTime> { StartDate } } };
+            else
+                return [];
+        }
+
         public IAssetInstrument SetStrike(double strike) => throw new NotImplementedException();
 
         public double FlowsT0(IAssetFxModel model)

@@ -84,6 +84,8 @@ namespace Qwack.Core.Instruments.Asset
             .Distinct()
             .ToDictionary(x => x.Key, x => x.Value);
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
+
         public List<CashFlow> ExpectedCashFlows(IAssetFxModel model)
         {
             var payDate = FarLeg.PaymentDate == DateTime.MinValue ?

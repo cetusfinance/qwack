@@ -102,5 +102,6 @@ namespace Qwack.Core.Instruments.Asset
             new Dictionary<string, List<DateTime>>() :
             new Dictionary<string, List<DateTime>> { { AssetId, new List<DateTime> { BarrierObservationStartDate } } };
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
     }
 }

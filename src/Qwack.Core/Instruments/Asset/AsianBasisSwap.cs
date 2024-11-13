@@ -59,6 +59,12 @@ namespace Qwack.Core.Instruments.Asset
             .Distinct()
             .ToDictionary(x => x.Key, x => x.Value);
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) =>
+            PaySwaplets.SelectMany(x => x.PastFixingDatesFx(model, valDate))
+            .Concat(RecSwaplets.SelectMany(x => x.PastFixingDatesFx(model, valDate)))
+            .Distinct()
+            .ToDictionary(x => x.Key, x => x.Value);
+
         public override bool Equals(object obj) => obj is AsianBasisSwap basisSwap &&
             TradeId == basisSwap.TradeId &&
             Enumerable.SequenceEqual(PaySwaplets, basisSwap.PaySwaplets) &&

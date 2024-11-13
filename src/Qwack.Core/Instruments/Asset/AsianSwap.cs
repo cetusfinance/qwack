@@ -119,6 +119,12 @@ namespace Qwack.Core.Instruments.Asset
                 new Dictionary<string, List<DateTime>>() :
                 new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate)
+        {
+            var curve = model.GetPriceCurve(AssetId);
+            return curve.Currency == Currency || valDate <= FixingDates.Min() ?
+            [] : new Dictionary<string, List<DateTime>> { { FxPair(model), FixingDates.Select(x => x).Where(d => d < valDate).ToList() } };
+        }
 
         public double EffectiveNotional(IAssetFxModel model, double? MPOR) => SupervisoryDelta(model) * AdjustedNotional(model) * MaturityFactor(model.BuildDate, MPOR);
         public double AdjustedNotional(IAssetFxModel model) => Notional * Fwd(model);

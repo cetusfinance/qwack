@@ -158,8 +158,8 @@ namespace Qwack.Core.Instruments.Funding
             .Distinct()
             .ToArray();
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
-
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => [];
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
 
         public string FxPair(IAssetFxModel model) => Pair;

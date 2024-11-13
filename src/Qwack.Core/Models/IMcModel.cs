@@ -8,6 +8,7 @@ namespace Qwack.Core.Models
     public interface IPvModel : IDisposable
     {
         ICube PV(Currency reportingCurrency);
+        ICube FV(Currency reportingCurrency);
         IAssetFxModel VanillaModel { get; }
         IPvModel Rebuild(IAssetFxModel newVanillaModel, Portfolio portfolio);
 

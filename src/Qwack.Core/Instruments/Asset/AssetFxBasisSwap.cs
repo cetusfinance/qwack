@@ -52,6 +52,9 @@ namespace Qwack.Core.Instruments.Asset
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) =>
             BaseSwaplet.PastFixingDates(valDate).ToDictionary(x => x.Key, x => x.Value);
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) =>
+            BaseSwaplet.PastFixingDatesFx(model,valDate).ToDictionary(x => x.Key, x => x.Value);
+
         public override bool Equals(object obj) => obj is AssetFxBasisSwap basisSwap &&
             TradeId == basisSwap.TradeId &&
             BaseSwaplet == basisSwap.BaseSwaplet;

@@ -125,6 +125,13 @@ namespace Qwack.Core.Instruments.Asset
             new Dictionary<string, List<DateTime>>() :
             new Dictionary<string, List<DateTime>> { { AssetId, new List<DateTime> { ExpiryDate } } };
 
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate)
+        {
+            var curve = model.GetPriceCurve(AssetId);
+            return curve.Currency == Currency || valDate <= ExpiryDate ?
+            [] : new Dictionary<string, List<DateTime>> { { FxPair(model), [ExpiryDate] } };
+        }
+
         public override bool Equals(object obj) => obj is Forward forward &&
                    TradeId == forward.TradeId &&
                    Notional == forward.Notional &&

@@ -36,7 +36,7 @@ namespace Qwack.Models.Models
             return model.GetCurve(curveName);
         }
 
-        public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this AsianOption asianOption, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             var curve = model.GetPriceCurve(asianOption.AssetId);
 
@@ -79,7 +79,7 @@ namespace Qwack.Models.Models
             }
 
             var discountCurve = model.FundingModel.GetCurveOrZero(asianOption.DiscountCurve);
-            var riskFree = discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
+            var riskFree = returnFv ? 0 : discountCurve.GetForwardRate(discountCurve.BuildDate, asianOption.PaymentDate, RateType.Exponential, DayCountBasis.Act365F);
 
             if (_useFuturesMethod)
             {
@@ -126,7 +126,7 @@ namespace Qwack.Models.Models
             return TurnbullWakeman.PV(fwd, fixedAvg, sigma, asianOption.Strike, model.BuildDate, asianOption.AverageStartDate, asianOption.AverageEndDate, riskFree, asianOption.CallPut) * asianOption.Notional;
         }
 
-        public static double PV(this AsianSwap asianSwap, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this AsianSwap asianSwap, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             var payDate = asianSwap.PaymentDate == DateTime.MinValue ?
                 asianSwap.AverageEndDate.AddPeriod(asianSwap.PaymentLagRollType, asianSwap.PaymentCalendar, asianSwap.PaymentLag) :
@@ -140,12 +140,12 @@ namespace Qwack.Models.Models
             var pv = avg - asianSwap.Strike;
             pv *= asianSwap.Direction == TradeDirection.Long ? 1.0 : -1.0;
             pv *= asianSwap.Notional;
-            pv *= model.FundingModel.GetCurveOrZero(asianSwap.DiscountCurve).GetDf(model.BuildDate, payDate);
+            pv *= (returnFv ? 1 : model.FundingModel.GetCurveOrZero(asianSwap.DiscountCurve).GetDf(model.BuildDate, payDate));
 
             return pv;
         }
 
-        public static double PV(this AssetFxBasisSwap fxBasisSwap, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this AssetFxBasisSwap fxBasisSwap, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             var swapA = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
             var swapB = (AsianSwap)fxBasisSwap.BaseSwaplet.Clone();
@@ -167,7 +167,7 @@ namespace Qwack.Models.Models
 
             var fxFwd = model.FundingModel.GetFxRate(payDate, swapB.FxPair(model));
             var pv = avgA * swapA.Notional - avgB * swapB.Notional * fxFwd;
-            pv *= model.FundingModel.GetCurveOrZero(fxBasisSwap.BaseSwaplet.DiscountCurve).GetDf(model.BuildDate, payDate);
+            pv *= (returnFv ? 1 : model.FundingModel.GetCurveOrZero(fxBasisSwap.BaseSwaplet.DiscountCurve).GetDf(model.BuildDate, payDate));
 
             return pv;
         }
@@ -367,16 +367,16 @@ namespace Qwack.Models.Models
         }
 
 
-        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model, bool ignoreTodayFlows) => asianSwap.Swaplets.Sum(x => x.PV(model, ignoreTodayFlows));
+        public static double PV(this AsianSwapStrip asianSwap, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false) => asianSwap.Swaplets.Sum(x => x.PV(model, ignoreTodayFlows, returnFv));
 
-        public static double PV(this AsianBasisSwap asianBasisSwap, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this AsianBasisSwap asianBasisSwap, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
-            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.PV(model, ignoreTodayFlows));
-            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.PV(model, ignoreTodayFlows));
+            var payPV = asianBasisSwap.PaySwaplets.Sum(x => x.PV(model, ignoreTodayFlows, returnFv));
+            var recPV = asianBasisSwap.RecSwaplets.Sum(x => x.PV(model, ignoreTodayFlows, returnFv));
             return payPV + recPV;
         }
 
-        public static double PV(this SyntheticCashAndCarry cnc, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this SyntheticCashAndCarry cnc, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             var payDate = cnc.FarLeg.PaymentDate == DateTime.MinValue ?
                 cnc.FarLeg.ExpiryDate.AddPeriod(RollType.F, cnc.FarLeg.PaymentCalendar, cnc.FarLeg.PaymentLag) :
@@ -403,7 +403,7 @@ namespace Qwack.Models.Models
             var fundingPv = fundingNominal * accruedFraction;
 
             var spreadLegFv = (spreadInitial - spreadNow) * cnc.NearLeg.Notional;
-            var discountCurve = model.FundingModel.GetCurveOrZero(cnc.DiscountCurve);
+            var discountCurve = model.FundingModel.GetCurveOrZero(returnFv ? "" : cnc.DiscountCurve);
             var spreadLegPv = spreadLegFv * discountCurve.GetDf(model.BuildDate, payDate);
 
             var pv = spreadLegPv - fundingPv;
@@ -411,7 +411,7 @@ namespace Qwack.Models.Models
             return pv;
         }
 
-        public static double PV(this Future future, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this Future future, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
 
             if (future.ExpiryDate < model.BuildDate || (ignoreTodayFlows && future.ExpiryDate == model.BuildDate))
@@ -427,7 +427,7 @@ namespace Qwack.Models.Models
             return (price - future.Strike) * future.ContractQuantity * future.LotSize * future.PriceMultiplier;
         }
 
-        public static double PV(this FuturesOption option, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this FuturesOption option, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             if (option.ExpiryDate < model.BuildDate || (ignoreTodayFlows && option.ExpiryDate == model.BuildDate))
                 return 0.0;
@@ -439,7 +439,7 @@ namespace Qwack.Models.Models
 
             var price = model.GetPriceCurve(option.AssetId).GetPriceForDate(option.ExpiryDate);
 
-            var df = option.MarginingType == OptionMarginingType.FuturesStyle ? 1.0
+            var df = option.MarginingType == OptionMarginingType.FuturesStyle || returnFv ? 1.0
                 : model.FundingModel.GetCurveOrZero(option.DiscountCurve).GetDf(model.BuildDate, option.ExpiryDate);
             var t = model.BuildDate.CalculateYearFraction(option.ExpiryDate.AddHours(18), DayCountBasis.Act365F, false);
             var vol = model.GetVolForStrikeAndDate(option.AssetId, option.ExpiryDate, option.Strike);
@@ -453,9 +453,9 @@ namespace Qwack.Models.Models
             return fv * df * option.ContractQuantity * option.LotSize;
         }
 
-        public static double PV(this Forward fwd, IAssetFxModel model, bool ignoreTodayFlows) => fwd.AsBulletSwap().PV(model, ignoreTodayFlows);
+        public static double PV(this Forward fwd, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false) => fwd.AsBulletSwap().PV(model, ignoreTodayFlows, returnFv);
 
-        public static double PV(this EuropeanOption euOpt, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this EuropeanOption euOpt, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             if (euOpt.PaymentDate < model.BuildDate || (ignoreTodayFlows && euOpt.PaymentDate == model.BuildDate))
                 return 0.0;
@@ -474,7 +474,7 @@ namespace Qwack.Models.Models
                 fxFix : model.FundingModel.GetFxRate(fwdDate, curve.Currency, euOpt.Currency);
             }
 
-            var df = model.FundingModel.GetCurveOrZero(euOpt.DiscountCurve).GetDf(model.BuildDate, euOpt.PaymentDate);
+            var df = returnFv ? 1 : model.FundingModel.GetCurveOrZero(euOpt.DiscountCurve).GetDf(model.BuildDate, euOpt.PaymentDate);
 
             if (euOpt.ExpiryDate < model.BuildDate) //expired, not yet paid
                 return euOpt.Notional * df * (euOpt.CallPut == OptionType.Call ?
@@ -497,11 +497,11 @@ namespace Qwack.Models.Models
             return BlackFunctions.BlackPV(fwd * fxFwd, euOpt.Strike, 0.0, tExp, vol, euOpt.CallPut) * euOpt.Notional * df;
         }
 
-        public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this FxVanillaOption fxEuOpt, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             if (fxEuOpt.DeliveryDate < model.BuildDate || (ignoreTodayFlows && fxEuOpt.DeliveryDate == model.BuildDate))
                 return 0.0;
-            var df = model.FundingModel.GetCurveOrZero(fxEuOpt.ForeignDiscountCurve).GetDf(model.BuildDate, fxEuOpt.DeliveryDate);
+            var df = returnFv ? 1 : model.FundingModel.GetCurveOrZero(fxEuOpt.ForeignDiscountCurve).GetDf(model.BuildDate, fxEuOpt.DeliveryDate);
             var fwdDate = model.FundingModel.FxMatrix.GetFxPair(fxEuOpt.Pair).SpotDate(fxEuOpt.ExpiryDate);
             var fwd = model.FundingModel.GetFxRate(fwdDate, fxEuOpt.Pair);
 
@@ -516,7 +516,7 @@ namespace Qwack.Models.Models
             return BlackFunctions.BlackPV(fwd, fxEuOpt.Strike, 0, tExp, vol, fxEuOpt.CallPut) * fxEuOpt.DomesticQuantity * df;
         }
 
-        public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model, bool ignoreTodayFlows)
+        public static double PV(this EuropeanBarrierOption euBOpt, IAssetFxModel model, bool ignoreTodayFlows, bool returnFv = false)
         {
             if (euBOpt.PaymentDate < model.BuildDate || (ignoreTodayFlows && euBOpt.PaymentDate == model.BuildDate))
                 return 0.0;
@@ -532,7 +532,7 @@ namespace Qwack.Models.Models
 
             var vol = model.GetVolForStrikeAndDate(euBOpt.AssetId, euBOpt.ExpiryDate, euBOpt.Strike);
             var t = model.BuildDate.CalculateYearFraction(euBOpt.PaymentDate, DayCountBasis.Act365F);
-            var rf = Log(1 / df) / t;
+            var rf = returnFv ? 0 : (Log(1 / df) / t);
             return BlackFunctions.BarrierOptionPV(fwd, euBOpt.Strike, rf, t, vol, euBOpt.CallPut, euBOpt.Barrier, euBOpt.BarrierType, euBOpt.BarrierSide);
         }
 
@@ -1008,7 +1008,7 @@ namespace Qwack.Models.Models
             return (finTheta, 0.0);
         }
 
-        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false, bool parallelize = true)
+        public static ICube PV(this Portfolio portfolio, IAssetFxModel model, Currency reportingCurrency = null, bool ignoreTodayFlows = false, bool parallelize = true, bool returnFv = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1030,7 +1030,7 @@ namespace Qwack.Models.Models
 
             var pvFunc = new Action<int>((i) =>
             {
-                var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows);
+                var (pv, ccy, tradeId, tradeType) = ComputePV(portfolio.Instruments[i], model, reportingCurrency, ignoreTodayFlows, returnFv);
 
                 var row = new Dictionary<string, object>
                 {
@@ -1187,7 +1187,7 @@ namespace Qwack.Models.Models
             return calcDates.Distinct().OrderBy(x => x).ToArray();
         }
 
-        public static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false)
+        public static (double pv, string ccy, string tradeId, string tradeType) ComputePV(IInstrument ins, IAssetFxModel model, Currency reportingCurrency, bool ignoreTodayFlows = false, bool returnFv=false)
         {
             var fxRate = 1.0;
             var ccy = reportingCurrency?.ToString();
@@ -1198,40 +1198,40 @@ namespace Qwack.Models.Models
             switch (ins)
             {
                 case AsianOption asianOption:
-                    pv = asianOption.PV(model, ignoreTodayFlows);
+                    pv = asianOption.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case AsianSwap swap:
-                    pv = swap.PV(model, ignoreTodayFlows);
+                    pv = swap.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case AsianSwapStrip swapStrip:
-                    pv = swapStrip.PV(model, ignoreTodayFlows);
+                    pv = swapStrip.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case AsianBasisSwap basisSwap:
-                    pv = basisSwap.PV(model, ignoreTodayFlows);
+                    pv = basisSwap.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case AssetFxBasisSwap assetFxBasisSwap:
-                    pv = assetFxBasisSwap.PV(model, ignoreTodayFlows);
+                    pv = assetFxBasisSwap.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case SyntheticCashAndCarry cnc:
-                    pv = cnc.PV(model, ignoreTodayFlows);
+                    pv = cnc.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case EuropeanBarrierOption euBOpt:
-                    pv = euBOpt.PV(model, ignoreTodayFlows);
+                    pv = euBOpt.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case FxVanillaOption euFxOpt:
-                    pv = euFxOpt.PV(model, ignoreTodayFlows);
+                    pv = euFxOpt.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case EuropeanOption euOpt:
-                    pv = euOpt.PV(model, ignoreTodayFlows);
+                    pv = euOpt.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case Forward fwd:
-                    pv = fwd.PV(model, ignoreTodayFlows);
+                    pv = fwd.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case FuturesOption futOpt:
-                    pv = futOpt.PV(model, ignoreTodayFlows);
+                    pv = futOpt.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case Future fut:
-                    pv = fut.PV(model, ignoreTodayFlows);
+                    pv = fut.PV(model, ignoreTodayFlows, returnFv);
                     break;
                 case FxFuture fxFut:
                     pv = fxFut.Pv(model.FundingModel, false, ignoreTodayFlows);

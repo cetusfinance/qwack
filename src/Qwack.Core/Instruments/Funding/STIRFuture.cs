@@ -103,10 +103,11 @@ namespace Qwack.Core.Instruments.Funding
             return newIns;
         }
 
-        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => new();
+        public List<CashFlow> ExpectedCashFlows(IAssetFxModel model) => [];
 
-        public string[] IrCurves(IAssetFxModel model) => new[] { ForecastCurve };
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
+        public string[] IrCurves(IAssetFxModel model) => [ForecastCurve];
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => [];
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
         public FxConversionType FxType(IAssetFxModel model) => FxConversionType.None;
         public string FxPair(IAssetFxModel model) => null;
         IAssetInstrument IAssetInstrument.Clone() => (STIRFuture)Clone();

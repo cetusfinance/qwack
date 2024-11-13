@@ -72,8 +72,8 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == Currency ? FxConversionType.None : FxConversionType.ConvertThenAverage;
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == Currency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{Currency}";
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => new();
-
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => [];
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => [];
         public DateTime LastSensitivityDate => ExpiryDate;
 
         public string[] IrCurves(IAssetFxModel model) => Array.Empty<string>();

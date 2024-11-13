@@ -72,6 +72,7 @@ namespace Qwack.Core.Instruments
         public FxConversionType FxType(IAssetFxModel model) => UnderlyingInstrument.FxType(model);
         public string[] IrCurves(IAssetFxModel model) => UnderlyingInstrument.IrCurves(model);
         public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => UnderlyingInstrument.PastFixingDates(valDate);
+        public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate) => UnderlyingInstrument.PastFixingDatesFx(model, valDate);
         public IAssetInstrument SetStrike(double strike) => UnderlyingInstrument.SetStrike(strike);
 
         public TO_Instrument ToTransportObject() => new()

@@ -21,6 +21,8 @@ namespace Qwack.Core.Basic
         ContangoSwapDelta,
         ParRate,
         AssetParallelGamma,
-        AssetWaveyVega
+        AssetWaveyVega,
+        FV,
+        Custom
     }
 }

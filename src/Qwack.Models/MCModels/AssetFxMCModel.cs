@@ -320,20 +320,22 @@ namespace Qwack.Models.MCModels
 
                 pairsAdded.Add(pair.ToString());
 
-                var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
-                if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
-                    throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
-                var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
-                if (correlation != -1.0 && Model.CorrelationMatrix != null)
-                {
-                    if (Model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
-                        correlation = correl;
-                }
 
                 if (Settings.McModelType == McModelType.LocalVol)
                 {
+
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
                     {
+                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
+                        if (correlation != -1.0 && Model.CorrelationMatrix != null)
+                        {
+                            if (Model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
+                                correlation = correl;
+                        }
+
                         var asset = new LVSingleAsset
                         (
                             startDate: OriginDate,
@@ -373,6 +375,16 @@ namespace Qwack.Models.MCModels
                 {
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
                     {//needs to be drift-adjusted
+
+                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
+                        if (correlation != -1.0 && Model.CorrelationMatrix != null)
+                        {
+                            if (Model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
+                                correlation = correl;
+                        }
 
                         var asset = new TurboSkewSingleAsset
                         (
@@ -415,7 +427,16 @@ namespace Qwack.Models.MCModels
                 {
                     if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
                     {//needs to be drift-adjusted
-                        
+                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
+                            throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
+                        var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
+                        if (correlation != -1.0 && Model.CorrelationMatrix != null)
+                        {
+                            if (Model.CorrelationMatrix.TryGetCorrelation(fxAdjPair, fxPair, out var correl))
+                                correlation = correl;
+                        }
+
                         var asset = new BlackSingleAsset
                         (
                            startDate: OriginDate,

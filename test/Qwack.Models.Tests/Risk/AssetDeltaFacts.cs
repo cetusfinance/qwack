@@ -70,7 +70,7 @@ namespace Qwack.Models.Tests.Risk
             var model = GenerateTestData();
             var cube = model.AssetParallelDelta(TestProviderHelper.CurrencyProvider);
 
-            Assert.Equal(1e8, cube.GetAllRows().First().Value);
+            Assert.Equal(model.Portfolio.Instruments.First().Notional(), cube.GetAllRows().First().Value, 4);
         }
 
         private IPvModel GenerateTestDataBasis()

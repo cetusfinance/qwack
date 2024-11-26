@@ -28,7 +28,7 @@ namespace Qwack.Core.Tests.CurveSolving
             var pillarDate2 = startDate.AddPeriod(RollType.MF, jhb, swapTenor2);
             var pillarDateDepo = startDate.AddPeriod(RollType.MF, jhb, 3.Months());
 
-            var ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
+            var ccyZar = TestProviderHelper.CurrencyProvider["ZAR"];
 
             var zar3m = new FloatRateIndex()
             {

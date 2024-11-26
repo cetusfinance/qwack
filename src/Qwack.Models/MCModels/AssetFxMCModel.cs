@@ -953,7 +953,7 @@ namespace Qwack.Models.MCModels
 
         public ICube PV(Currency reportingCurrency) => PV(reportingCurrency, false);
 
-        private ICube CleanPV(Currency reportingCurrency, ICube cube, bool returnFv=false)
+        private ICube CleanPV(Currency reportingCurrency, ICube cube, bool returnFv = false)
         {
             if (!_initialized)
             {

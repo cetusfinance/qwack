@@ -28,6 +28,7 @@ namespace Qwack.Models.MCModels
         private readonly string _fxName;
         private readonly string _discountCurve;
         private readonly DateTime _payDate;
+        private readonly DateTime _payFixingDate;
         private readonly Currency _ccy;
         private int _assetIndex;
         private int _fxIndex;
@@ -329,6 +330,13 @@ namespace Qwack.Models.MCModels
             {
                 _conversionToSimCcyName = $"{SimulationCcy}/{_ccy}";
             }
+
+            if (_requiresConversionToSimCcy || _fxType == FxConversionType.SettleOtherCurrency)
+            {
+                _payFixingDate = _payDate.SubtractPeriod(RollType.P, calendarProvider.GetCalendar(SimulationCcy), 2.Bd());
+            }
+
+       
         }
 
         public bool IsComplete => _isComplete;
@@ -388,7 +396,7 @@ namespace Qwack.Models.MCModels
                     _fxDateIndexes[i] = dates.GetDateIndex(_asianFxDates[i]);
                 }
 
-            _payDateIx = dates.GetDateIndex(_payDate);
+            _payDateIx = dates.GetDateIndex(_payFixingDate);
 
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.RoundedNumberOfPaths / Vector<double>.Count];
@@ -492,7 +500,8 @@ namespace Qwack.Models.MCModels
             dates.AddDates(_asianDates);
             if (_isCompo)
                 dates.AddDates(_asianFxDates);
-            dates.AddDate(_payDate);
+            if(_payFixingDate!=default)
+                dates.AddDate(_payFixingDate);
         }
 
         public double AverageResult => ResultsByPath.Average();

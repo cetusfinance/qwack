@@ -37,7 +37,7 @@ namespace Qwack.Core.Instruments.Funding
 
         public string[] AssetIds => new[] { Pair };
 
-        public Currency PaymentCurrency => DomesticCCY;
+        public Currency PaymentCurrency => ForeignCCY;
 
         public string HedgingSet { get; set; }
 

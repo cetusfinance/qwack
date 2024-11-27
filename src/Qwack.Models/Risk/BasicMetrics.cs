@@ -418,7 +418,7 @@ namespace Qwack.Models.Risk
 
             var subPortfolio = new Portfolio()
             {
-                Instruments = model.Portfolio.Instruments.Where(x => x is IHasVega || (x is CashWrapper cw && cw.UnderlyingInstrument is IHasVega)).ToList()
+                Instruments = pvModel.Portfolio.Instruments.Where(x => x is IHasVega || (x is CashWrapper cw && cw.UnderlyingInstrument is IHasVega)).ToList()
             };
 
             if (subPortfolio.Instruments.Count == 0)
@@ -1712,7 +1712,7 @@ namespace Qwack.Models.Risk
 
         public static ICube FxDelta(this IPvModel pvModel, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverseDelta = false)
         {
-            var bumpSize = 0.0001;
+            var bumpSize = 0.001;
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
             {
@@ -1756,9 +1756,10 @@ namespace Qwack.Models.Risk
                 //var fxPair = $"{currency}/{domCcy}";
 
                 var newModel = m.Clone();
-                var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
+                var baseSpot = m.FundingModel.FxMatrix.SpotRates[currency];
+                var bumpedSpot = baseSpot * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var inverseSpotBump = reportInverseDelta ? 1 / bumpedSpot - 1 / m.FundingModel.FxMatrix.SpotRates[currency] : bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency];
+                var inverseSpotBump = reportInverseDelta ? (1 / bumpedSpot - 1 / baseSpot) : (bumpedSpot - baseSpot);
                 var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
@@ -1774,7 +1775,7 @@ namespace Qwack.Models.Risk
                 {
                     var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
                     newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
-                    inverseSpotBumpDown = reportInverseDelta ? 1 / bumpedSpotDown - 1 / m.FundingModel.FxMatrix.SpotRates[currency] : bumpedSpotDown - m.FundingModel.FxMatrix.SpotRates[currency];
+                    inverseSpotBumpDown = reportInverseDelta ? 1 / bumpedSpotDown - 1 / baseSpot : bumpedSpotDown - baseSpot;
 
                     var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
 
@@ -1786,7 +1787,9 @@ namespace Qwack.Models.Risk
 
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
-                    var delta = (bumpedRows[i].Value - pvRows[i].Value) / inverseSpotBump / dfToSpotDate;
+                    var pnl = bumpedRows[i].Value - pvRows[i].Value;
+                    var delta = reportInverseDelta ? pnl / inverseSpotBump / dfToSpotDate :
+                       (pnl / (1/bumpedSpot - 1/ baseSpot) / dfToSpotDate ) ;
 
                     if (delta != 0.0)
                     {

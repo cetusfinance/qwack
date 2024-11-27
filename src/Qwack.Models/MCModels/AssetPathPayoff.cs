@@ -152,6 +152,8 @@ namespace Qwack.Models.MCModels
                     _payDate = asw.PaymentDate;
                     break;
                 case AsianSwapStrip asws:
+                    _ccy = asws.Currency;
+                    _payDate = asws.Swaplets.Max(x=>x.PaymentDate);
                     _subInstruments = asws.Swaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider, simulationCcy)).ToList();
                     break;
                 case FxVanillaOption fxeo:
@@ -185,6 +187,8 @@ namespace Qwack.Models.MCModels
                     _payDate = eo.PaymentDate;
                     break;
                 case OneTouchOption ot:
+                    _ccy = ot.Currency;
+                    _payDate = ot.PaymentDate;
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         new Paths.Payoffs.OneTouch(ot.AssetId,ot.BarrierObservationStartDate,ot.BarrierObservationEndDate
@@ -192,6 +196,8 @@ namespace Qwack.Models.MCModels
                     };
                     break;
                 case DoubleNoTouchOption dnt:
+                    _ccy = dnt.Currency;
+                    _payDate = dnt.PaymentDate;
                     _subInstruments = new List<IAssetPathPayoff>
                     {
                         new Paths.Payoffs.DoubleNoTouch(dnt.AssetId,dnt.BarrierObservationStartDate,dnt.BarrierObservationEndDate
@@ -229,6 +235,8 @@ namespace Qwack.Models.MCModels
                         .ToList();
                     break;
                 case AsianLookbackOption alb:
+                    _ccy = alb.Currency;
+                    _payDate = alb.SettlementDate;
                     var settleFixingDate = alb.SettlementFixingDates == null ? alb.SettlementDate.SubtractPeriod(RollType.P, alb.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     var albpp = new LookBackOptionPP(alb.AssetId, alb.FixingDates.ToList(), alb.CallPut, alb.DiscountCurve, alb.PaymentCurrency, alb.SettlementDate, alb.Notional, SimulationCcy, alb.DecisionDate, alb.SettlementFixingDates ?? new[] { settleFixingDate }, alb.WindowSize)
                     {
@@ -244,6 +252,8 @@ namespace Qwack.Models.MCModels
                         Regressors = Array.Empty<LinearAveragePriceRegressor>();
                     break;
                 case Core.Instruments.Asset.BackPricingOption bpo:
+                    _ccy = bpo.Currency;
+                    _payDate = bpo.SettlementDate;
                     var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional, SimulationCcy)
                     { VanillaModel = VanillaModel };
                     _subInstruments = new List<IAssetPathPayoff>
@@ -258,7 +268,8 @@ namespace Qwack.Models.MCModels
                 case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate2 = mbpo.SettlementFixingDates == null && mbpo.SettlementDate!=default ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
                     //some magic here to make multi-index?
-
+                    _ccy = mbpo.Currency;
+                    _payDate = mbpo.SettlementDate;
                     if (mbpo.IsLowestOfTheFour())
                     {
                         var shifter = new DateShifter
@@ -306,9 +317,9 @@ namespace Qwack.Models.MCModels
                             OptionPremiumSettleDate = mbpo.PremiumSettleDate
                         };
                         _subInstruments = new List<IAssetPathPayoff>
-                    {
-                        mbp
-                    };
+                            {
+                                mbp
+                            };
                         if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
                             Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
                         else if (mbp.SettlementRegressor != null)

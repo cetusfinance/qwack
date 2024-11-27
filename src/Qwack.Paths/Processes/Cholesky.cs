@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Qwack.Core.Models;
+using Qwack.Futures;
 using Qwack.Math.Matrix;
 using Qwack.Paths.Features;
 
@@ -34,13 +35,36 @@ namespace Qwack.Paths.Processes
                     _correlationMatrix[i] = new double[pathFeatures.NumberOfDimensions];
                     for (var j = 0; j < _correlationMatrix[i].Length; j++)
                     {
-                        _correlationMatrix[i][j] = i == j ? 1.0 : (_matrix.TryGetCorrelation(dimNames[i], dimNames[j], out var correl) ? correl : 0.0);
+                        if (i == j)
+                            _correlationMatrix[i][j] = 1.0;
+                        else if (_matrix.TryGetCorrelation(dimNames[i], dimNames[j], out var correl))
+                            _correlationMatrix[i][j] = correl;
+                        else if (TryFlipFx(dimNames[i], out var flippedName1) && _matrix.TryGetCorrelation(flippedName1, dimNames[j], out correl))
+                            _correlationMatrix[i][j] = -correl;
+                        else if (TryFlipFx(dimNames[j], out var flippedName2) && _matrix.TryGetCorrelation(dimNames[i], flippedName2, out correl))
+                            _correlationMatrix[i][j] = -correl;
+                        else if (!string.IsNullOrEmpty(flippedName1) && !string.IsNullOrEmpty(flippedName2) && _matrix.TryGetCorrelation(flippedName1, flippedName2, out correl))
+                            _correlationMatrix[i][j] = correl;
+                        else
+                            _correlationMatrix[i][j] = 0;
                     }
                 }
             }
             _decompMatrix = _correlationMatrix.Cholesky2();
             _isComplete = true;
         }
+
+        private bool TryFlipFx(string input, out string output)
+        {
+            if(input.Length==7 && input[3]=='/')
+            {
+                output = $"{input.Right(3)}/{input.Left(3)}";
+                return true;
+            }
+            output = string.Empty;
+            return false;
+        }
+
         public void Process(IPathBlock block)
         {
             var nFactors = block.Factors;

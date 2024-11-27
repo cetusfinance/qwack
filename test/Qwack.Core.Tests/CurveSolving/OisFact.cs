@@ -22,8 +22,8 @@ namespace Qwack.Core.Tests.CurveSolving
     {
         bool IsCoverageOnly => bool.TryParse(Environment.GetEnvironmentVariable("CoverageOnly"), out var coverageOnly) && coverageOnly;
 
-        private static readonly Currency ccyZar = TestProviderHelper.CurrencyProvider["JHB"];
-        private static readonly Calendar _usd = TestProviderHelper.CalendarProvider.Collection["nyc"];
+        private static readonly Currency ccyZar = TestProviderHelper.CurrencyProvider["ZAR"];
+        private static readonly Calendar _usd = TestProviderHelper.CalendarProvider.Collection["NYC"];
         private static readonly Calendar JHB = TestProviderHelper.CalendarProvider.Collection["JHB"];
         private static readonly Currency ccyUsd = TestProviderHelper.CurrencyProvider["USD"];
         private static readonly FloatRateIndex _zar3m = new FloatRateIndex()

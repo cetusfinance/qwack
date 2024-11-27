@@ -48,5 +48,120 @@
     "Ccy": "NGN",
     "DayCount": "Act365F",
     "SettlementCalendarName": "JHB"
+  },
+  {
+    "Ccy": "XAU",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XAG",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPD",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "XPT",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "LON"
+  },
+  {
+    "Ccy": "JPY",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "JPY"
+  },
+  {
+    "Ccy": "NOK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "NOK"
+  },
+  {
+    "Ccy": "SEK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "SEK"
+  },
+  {
+    "Ccy": "DKK",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "DKK"
+  },
+  {
+    "Ccy": "BRL",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "BRL"
+  },
+  {
+    "Ccy": "RUB",
+    "DayCount": "Act_Act",
+    "SettlementCalendarName": "RUB"
+  },
+  {
+    "Ccy": "CNY",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "CNY"
+  },
+  {
+    "Ccy": "CNH",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "CNH"
+  },
+  {
+    "Ccy": "KRW",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "KRW"
+  },
+  {
+    "Ccy": "INR",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "INR"
+  },
+  {
+    "Ccy": "PHP",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "PHP"
+  },
+  {
+    "Ccy": "TWD",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "TWD"
+  },
+  {
+    "Ccy": "MXN",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "MXN"
+  },
+  {
+    "Ccy": "HKD",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "HKD"
+  },
+  {
+    "Ccy": "CHF",
+    "DayCount": "Act_360",
+    "SettlementCalendarName": "CHF"
+  },
+  {
+    "Ccy": "BTC",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "USD"
+  },
+  {
+    "Ccy": "ETH",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "USD"
+  },
+  {
+    "Ccy": "IDR",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "IDR"
+  },
+  {
+    "Ccy": "SGD",
+    "DayCount": "Act365",
+    "SettlementCalendarName": "SIN"
   }
 ]

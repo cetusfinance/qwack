@@ -12,6 +12,7 @@ using Qwack.Futures;
 using Qwack.Models.MCModels;
 using Qwack.Models.Models.AttributionSteps;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using static Qwack.Core.Basic.Consts.Cubes;
 
 namespace Qwack.Models.Models
@@ -1510,8 +1511,8 @@ namespace Qwack.Models.Models
                                                IFutureSettingsProvider futureSettings,
                                                ICalendarProvider calendarProvider,
                                                bool useSpreadDelta = false,
-                                               Dictionary<string, double> startProvisions = null,
-                                               Dictionary<string, double> endProvisions = null                                               )
+                                               List<ProvisionRecord> startProvisions = null,
+                                               List<ProvisionRecord> endProvisions = null                                               )
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>

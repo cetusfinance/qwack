@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
+using Qwack.Core.Instruments.Asset;
 using Qwack.Core.Models;
 using static Qwack.Core.Basic.Consts.Cubes;
 
@@ -24,6 +26,15 @@ public class ProvisionStep(Dictionary<string, double> startProvisions, Dictionar
             var change = kv.Value - start;
             if (change != 0)
             {
+                var underlying = string.Empty;
+                var insObj = endModel.Portfolio.Instruments.Where(x=>x.TradeId == kv.Key).FirstOrDefault();
+                if(insObj != null)
+                {
+                    if(insObj is MultiPeriodBackpricingOption mbp)
+                        underlying = mbp.AssetId.ToString();
+                    else if (insObj is AsianLookbackOption alb)
+                        underlying = alb.AssetId.ToString();
+                }
                 var row = new Dictionary<string, object>
                 {
                     { TradeId,  kv.Key},
@@ -33,7 +44,7 @@ public class ProvisionStep(Dictionary<string, double> startProvisions, Dictionar
                     { SubSubStep, string.Empty },
                     { PointLabel, string.Empty },
                     { PointDate, endModel.VanillaModel.BuildDate },
-                    { Underlying, string.Empty }
+                    { Underlying, underlying }
                 };
                 resultsCube.AddRow(row, change);
             }
@@ -45,6 +56,16 @@ public class ProvisionStep(Dictionary<string, double> startProvisions, Dictionar
             if (seen.Contains(kv.Key))
                 continue;
 
+            var underlying = string.Empty;
+            var insObj = endModel.Portfolio.Instruments.Where(x => x.TradeId == kv.Key).FirstOrDefault();
+            if (insObj != null)
+            {
+                if (insObj is MultiPeriodBackpricingOption mbp)
+                    underlying = mbp.AssetId.ToString();
+                else if (insObj is AsianLookbackOption alb)
+                    underlying = alb.AssetId.ToString();
+            }
+
             var row = new Dictionary<string, object>
             {
                 { TradeId,  kv.Key},
@@ -54,7 +75,7 @@ public class ProvisionStep(Dictionary<string, double> startProvisions, Dictionar
                 { SubSubStep, string.Empty },
                 { PointLabel, string.Empty },
                 { PointDate, endModel.VanillaModel.BuildDate },
-                { Underlying, string.Empty }
+                { Underlying, underlying }
             };
             resultsCube.AddRow(row, -kv.Value);
         }

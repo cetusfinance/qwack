@@ -1747,6 +1747,7 @@ namespace Qwack.Models.Risk
             {
                 var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
+                
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
                 var tTypeIx = pvCube.GetColumnIndex(TradeType);
@@ -1759,7 +1760,7 @@ namespace Qwack.Models.Risk
                 var baseSpot = m.FundingModel.FxMatrix.SpotRates[currency];
                 var bumpedSpot = baseSpot * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
-                var inverseSpotBump = reportInverseDelta ? (1 / bumpedSpot - 1 / baseSpot) : (bumpedSpot - baseSpot);
+                var spotBump = reportInverseDelta ? (1 / bumpedSpot - 1 / baseSpot) : (bumpedSpot - baseSpot);
                 var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
@@ -1767,7 +1768,7 @@ namespace Qwack.Models.Risk
                     throw new Exception("Dimensions do not match");
 
                 ResultCubeRow[] bumpedRowsDown = null;
-                var inverseSpotBumpDown = 0.0;
+                var spotBumpDown = 0.0;
 
                 var dfToSpotDate = m.FundingModel.GetDf(m.FundingModel.FxMatrix.BaseCurrency, m.BuildDate, m.FundingModel.FxMatrix.GetFxPair(fxPair).SpotDate(m.BuildDate));
 
@@ -1775,7 +1776,7 @@ namespace Qwack.Models.Risk
                 {
                     var bumpedSpotDown = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 - bumpSize);
                     newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
-                    inverseSpotBumpDown = reportInverseDelta ? 1 / bumpedSpotDown - 1 / baseSpot : bumpedSpotDown - baseSpot;
+                    spotBumpDown = reportInverseDelta ? (1 / bumpedSpotDown - 1 / baseSpot) : (bumpedSpotDown - baseSpot);
 
                     var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
 
@@ -1788,8 +1789,7 @@ namespace Qwack.Models.Risk
                 for (var i = 0; i < bumpedRows.Length; i++)
                 {
                     var pnl = bumpedRows[i].Value - pvRows[i].Value;
-                    var delta = reportInverseDelta ? pnl / inverseSpotBump / dfToSpotDate :
-                       (pnl / (1/bumpedSpot - 1/ baseSpot) / dfToSpotDate ) ;
+                    var delta = (reportInverseDelta ? -1 : 1) * pnl / spotBump / dfToSpotDate; 
 
                     if (delta != 0.0)
                     {
@@ -1816,8 +1816,8 @@ namespace Qwack.Models.Risk
                     {
                         var noGammaTypes = new[] { "Equity", "Bond", "Cash", "Future", "LoanDepo", "FxForward" };
                         var tradeType = bumpedRows[i].MetaData[tTypeIx];
-                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / inverseSpotBumpDown / dfToSpotDate;
-                        var gamma = (delta - deltaDown) / (inverseSpotBump - inverseSpotBumpDown) * 2.0;
+                        var deltaDown = (bumpedRowsDown[i].Value - pvRows[i].Value) / spotBumpDown / dfToSpotDate;
+                        var gamma = (delta - deltaDown) / (spotBump - spotBumpDown) * 2.0;
                         if (gamma != 0.0 && !noGammaTypes.Contains(tradeType))
                         {
                             var row = new Dictionary<string, object>

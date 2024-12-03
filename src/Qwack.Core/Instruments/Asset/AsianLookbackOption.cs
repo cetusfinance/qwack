@@ -103,6 +103,7 @@ namespace Qwack.Core.Instruments.Asset
             DecisionDate = DecisionDate,
             SettlementFixingDates = SettlementFixingDates == null ? null : (DateTime[])SettlementFixingDates.Clone(),
             MetaData = new(MetaData),
+            Counterparty = Counterparty,
         };
 
         public IAssetInstrument SetStrike(double strike) => throw new InvalidOperationException();
@@ -137,6 +138,8 @@ namespace Qwack.Core.Instruments.Asset
                           CallPut = CallPut,
                           DecisionDate = DecisionDate,
                           SettlementFixingDates = SettlementFixingDates == null ? null : (DateTime[])SettlementFixingDates.Clone(),
+                          MetaData = MetaData,
+                          Counterparty = Counterparty 
                       }
                   };
     }

@@ -1481,6 +1481,7 @@ namespace Qwack.Models.Models
                     }
                     break;
                 case MultiPeriodBackpricingOption bpo:
+                case AsianLookbackOption lbpo:
                     flow = 0;
                     break;
                 default:

@@ -1050,7 +1050,12 @@ namespace Qwack.Models.MCModels
         public void Dispose()
         {
             _cachedRandom?.Dispose();
+            _cachedRandom = null;
             Engine?.Dispose();
+            Engine = null;
+            GC.SuppressFinalize(this);
         }
+
+        ~AssetFxMCModel() => Dispose();
     }
 }

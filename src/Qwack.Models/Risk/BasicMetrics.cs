@@ -865,7 +865,7 @@ namespace Qwack.Models.Risk
             var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
 
             cube.Initialize(dataTypes);
-            var model = pvModel.VanillaModel.Clone();
+            using var model = pvModel.VanillaModel.Clone();
             model.BuildDependencyTree();
 
             foreach (var curveName in model.CurveNames)
@@ -913,7 +913,7 @@ namespace Qwack.Models.Risk
 
                 ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
                 {
-                    var newVanillaModel = model.Clone();
+                    using var newVanillaModel = model.Clone();
                     newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
 
                     var dependentCurves = new List<string>(linkedCurves);
@@ -930,7 +930,7 @@ namespace Qwack.Models.Risk
 
                         dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                     }
-                    var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
 
                     var bumpedPVCube = newPvModel.PV(curveObj.Currency);
                     var bumpedRows = bumpedPVCube.GetAllRows();
@@ -940,7 +940,7 @@ namespace Qwack.Models.Risk
                     ResultCubeRow[] bumpedRowsDown = null;
                     if (computeGamma)
                     {
-                        var newVanillaModelDown = model.Clone();
+                        using var newVanillaModelDown = model.Clone();
                         newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
 
                         var dependentCurvesDown = new List<string>(linkedCurves);
@@ -957,7 +957,7 @@ namespace Qwack.Models.Risk
 
                             dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                         }
-                        var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+                        using var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
 
                         var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
                         bumpedRowsDown = bumpedPVCubeDown.GetAllRows();

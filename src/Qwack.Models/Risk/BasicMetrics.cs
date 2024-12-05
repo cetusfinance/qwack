@@ -88,7 +88,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                using var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -101,7 +101,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -191,7 +191,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                using var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
 
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -206,7 +206,7 @@ namespace Qwack.Models.Risk
                     var pvRows = pvCube.GetAllRows();
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -295,7 +295,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                using var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -309,7 +309,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -349,7 +349,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.AddVolSurface(surfaceName, bCurve.Value);
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -425,7 +425,7 @@ namespace Qwack.Models.Risk
                 return cube;
 
             var lastDateInBook = subPortfolio.LastSensitivityDate;
-            var basePvModel = pvModel.Rebuild(model, subPortfolio);
+            using var basePvModel = pvModel.Rebuild(model, subPortfolio);
             var pvCube = basePvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
             var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -441,7 +441,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.FundingModel.VolSurfaces[surface.Key] = bCurve.Value;
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -520,7 +520,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var basePvModel = pvModel.Rebuild(model, subPortfolio);
+                using var basePvModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = basePvModel.PV(reportingCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -533,7 +533,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -571,7 +571,7 @@ namespace Qwack.Models.Risk
                 {
                     var newVanillaModel = model.Clone();
                     newVanillaModel.FundingModel.VolSurfaces[surfaceName] = bCurve.Value;
-                    var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
+                    using var bumpedPvModel = basePvModel.Rebuild(newVanillaModel, subPortfolio);
                     var bumpedPVCube = bumpedPvModel.PV(reportingCcy);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -681,7 +681,7 @@ namespace Qwack.Models.Risk
 
             ParallelUtils.Instance.Foreach(bumpedCurves.ToList(), bCurve =>
             {
-                var newVanillaModel = model.Clone();
+                using var newVanillaModel = model.Clone();
                 newVanillaModel.AddPriceCurve(curveName, bCurve.Value);
 
                 var dependentCurves = new List<string>(linkedCurves);
@@ -698,7 +698,7 @@ namespace Qwack.Models.Risk
 
                     dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                 }
-                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                using var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
 
                 var bumpedPVCube = newPvModel.PV(curveObj.Currency);
                 newPvModel.Dispose();
@@ -710,7 +710,7 @@ namespace Qwack.Models.Risk
                 ResultCubeRow[] bumpedRowsDown = null;
                 if (computeGamma)
                 {
-                    var newVanillaModelDown = model.Clone();
+                    using var newVanillaModelDown = model.Clone();
                     newVanillaModelDown.AddPriceCurve(curveName, bumpedDownCurves[bCurve.Key]);
 
                     var dependentCurvesDown = new List<string>(linkedCurves);
@@ -727,7 +727,7 @@ namespace Qwack.Models.Risk
 
                         dependentCurvesDown = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                     }
-                    var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+                    using var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
 
                     var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
                     newPvModelDown.Dispose();
@@ -888,7 +888,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                using var baseModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
@@ -1466,7 +1466,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                using var baseModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
@@ -1510,7 +1510,7 @@ namespace Qwack.Models.Risk
                 var newVanillaModel = model.Clone();
                 newVanillaModel.AddPriceCurve(curveName, bumpedCurve);
 
-                var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                using var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
 
                 var bumpedPVCube = newPvModel.PV(curveObj.Currency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
@@ -1631,7 +1631,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                using var baseModel = pvModel.Rebuild(model, subPortfolio);
                 var pvCube = baseModel.PV(curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
@@ -1648,8 +1648,8 @@ namespace Qwack.Models.Risk
                 var newVanillaModelDown = model.Clone();
                 newVanillaModelDown.AddPriceCurve(curveName, bumpedCurveDown);
 
-                var newPvModelUp = pvModel.Rebuild(newVanillaModelUp, subPortfolio);
-                var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
+                using var newPvModelUp = pvModel.Rebuild(newVanillaModelUp, subPortfolio);
+                using var newPvModelDown = pvModel.Rebuild(newVanillaModelDown, subPortfolio);
 
                 var bumpedPVCubeUp = newPvModelUp.PV(curveObj.Currency);
                 var bumpedPVCubeDown = newPvModelDown.PV(curveObj.Currency);
@@ -1745,7 +1745,7 @@ namespace Qwack.Models.Risk
 
             foreach (var currency in m.FundingModel.FxMatrix.SpotRates.Keys)
             {
-                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                using var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 
                 var pvRows = pvCube.GetAllRows();
@@ -1761,7 +1761,7 @@ namespace Qwack.Models.Risk
                 var bumpedSpot = baseSpot * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
                 var spotBump = reportInverseDelta ? (1 / bumpedSpot - 1 / baseSpot) : (bumpedSpot - baseSpot);
-                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                using var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(m.FundingModel.FxMatrix.BaseCurrency);
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
@@ -1874,7 +1874,7 @@ namespace Qwack.Models.Risk
                 var homeToCcyPair = mf.FxMatrix.GetFxPair(homeCcy, currency);
                 var homeToCcyRate = mf.GetFxRate(homeToCcyPair.SpotDate(model.BuildDate), homeCcy, currency);
 
-                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                using var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -1888,7 +1888,7 @@ namespace Qwack.Models.Risk
                 var bumpedSpot = m.FundingModel.FxMatrix.SpotRates[currency] * (1.00 + bumpSize);
                 newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpot;
                 var spotBump = bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency];
-                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                using var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(homeCcy);
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
@@ -2017,7 +2017,7 @@ namespace Qwack.Models.Risk
                 else
                     throw new Exception("Pairs must contain base currency");
 
-                var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
+                using var newPvModel = pvModel.Rebuild(m, pvModel.Portfolio);
                 var pvCube = newPvModel.PV(homeCcy);
                 var pvRows = pvCube.GetAllRows();
                 var tidIx = pvCube.GetColumnIndex(TradeId);
@@ -2030,7 +2030,7 @@ namespace Qwack.Models.Risk
                 var spotBump = flipDelta ?
                     1.0 / bumpedSpot - 1.0 / m.FundingModel.FxMatrix.SpotRates[currency] :
                     (bumpedSpot - m.FundingModel.FxMatrix.SpotRates[currency]) * homeToBase;
-                var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                using var bumpedPvModel = pvModel.Rebuild(newModel, pvModel.Portfolio);
                 var bumpedPVCube = bumpedPvModel.PV(homeCcy);
                 var bumpedRows = bumpedPVCube.GetAllRows();
                 if (bumpedRows.Length != pvRows.Length)
@@ -2047,7 +2047,7 @@ namespace Qwack.Models.Risk
                     newModel.FundingModel.FxMatrix.SpotRates[currency] = bumpedSpotDown;
                     spotBumpDown = bumpedSpotDown - m.FundingModel.FxMatrix.SpotRates[currency];
 
-                    var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
+                    using var bumpedPvModelDown = pvModel.Rebuild(newModel, pvModel.Portfolio);
 
                     var bumpedPVCubeDown = bumpedPvModelDown.PV(homeCcy);
                     bumpedRowsDown = bumpedPVCubeDown.GetAllRows();
@@ -2150,7 +2150,7 @@ namespace Qwack.Models.Risk
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var subModel = pvModel.Rebuild(pvModel.VanillaModel, subPortfolio);
+                using var subModel = pvModel.Rebuild(pvModel.VanillaModel, subPortfolio);
                 var pvCube = subModel.PV(reportingCcy ?? curveObj.Currency);
                 var pvRows = pvCube.GetAllRows();
 
@@ -2164,7 +2164,7 @@ namespace Qwack.Models.Risk
                 {
                     var newModel = model.Clone();
                     newModel.FundingModel.Curves[curve.Key] = bCurve.Value;
-                    var newPvModel = pvModel.Rebuild(newModel, subPortfolio);
+                    using var newPvModel = pvModel.Rebuild(newModel, subPortfolio);
                     var bumpedPVCube = newPvModel.PV(reportingCcy ?? curveObj.Currency);
                     var bumpedRows = bumpedPVCube.GetAllRows();
                     if (bumpedRows.Length != pvRows.Length)
@@ -2233,7 +2233,7 @@ namespace Qwack.Models.Risk
 
             var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
             var rolledPortfolio = pvModel.Portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate, fwdValDate);
-            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
+            using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
             var pvCubeFwd = rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
@@ -2627,7 +2627,7 @@ namespace Qwack.Models.Risk
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var rolledVanillaModel = pvModel.VanillaModel.RollModel(fwdValDate, currencyProvider);
-            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
+            using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
 
             var pvCubeFwd = rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
@@ -2807,7 +2807,7 @@ namespace Qwack.Models.Risk
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
             var rolledVanillaModel = pvModel.VanillaModel.RollModel(fwdValDate, currencyProvider);
-            var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
+            using  var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, pvModel.Portfolio);
 
             var pvCubeFwd = rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();

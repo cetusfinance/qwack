@@ -37,7 +37,7 @@ namespace Qwack.Models.Risk
         public bool ParallelizeOuterCalc { get; set; } = true;
         public bool LMESparseDeltaMode { get; set; }
 
-        public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, bool returnDifferential = true)
+        public RiskMatrix(string assetId, Currency ccy, MutationType shiftType, RiskMetric metric, double shiftStepSizeAsset, double shiftStepSizeFx, int nScenarios, ICurrencyProvider currencyProvider, ICalendarProvider calendar, bool returnDifferential = true)
         {
             AssetId = assetId;
             Ccy = ccy;
@@ -47,6 +47,7 @@ namespace Qwack.Models.Risk
             ShiftSizeFx = shiftStepSizeFx;
             NScenarios = nScenarios;
             _currencyProvider = currencyProvider;
+            _calendar = calendar;
             ReturnDifferential = returnDifferential;
         }
 

@@ -86,7 +86,7 @@ namespace Qwack.Models.Risk.VaR
                 Generator = RandomGeneratorType.MersenneTwister,
                 NumberOfPaths = 2048,
                 NumberOfTimesteps = 2,
-                ReportingCurrency = _currencyProvider.GetCurrencySafe("USD")
+                SimulationCurrency = _currencyProvider.GetCurrencySafe("USD")
             };
 
             var vd = _model.VanillaModel.BuildDate.AddDays(1);

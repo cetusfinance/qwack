@@ -217,10 +217,10 @@ namespace Qwack.Models.MCModels
                     IATMVolSurface adjSurface = null;
                     var correlation = 0.0;
 
-                    if (Settings.ReportingCurrency != Model.GetPriceCurve(assetId).Currency)
+                    if (Settings.SimulationCurrency != Model.GetPriceCurve(assetId).Currency)
                     {
-                        var fxAdjPair = Settings.ReportingCurrency + "/" + Model.GetPriceCurve(assetId).Currency;
-                        var fxAdjPairInv = Model.GetPriceCurve(assetId).Currency + "/" + Settings.ReportingCurrency;
+                        var fxAdjPair = Settings.SimulationCurrency + "/" + Model.GetPriceCurve(assetId).Currency;
+                        var fxAdjPairInv = Model.GetPriceCurve(assetId).Currency + "/" + Settings.SimulationCurrency;
                         if (Model.FundingModel.GetVolSurface(fxAdjPair) is not IATMVolSurface adjSurface2)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         adjSurface = adjSurface2;
@@ -290,10 +290,10 @@ namespace Qwack.Models.MCModels
             var pairsAdded = new List<string>();
             var fxPairs = Portfolio.FxPairs(Model).Concat(fxAssetsToAdd);
             var payoutCcys = Portfolio.Instruments.Select(i => i.Currency);
-            if (payoutCcys.Any(p => p != Settings.ReportingCurrency))
+            if (payoutCcys.Any(p => p != Settings.SimulationCurrency))
             {
-                var ccysToAdd = payoutCcys.Where(p => p != Settings.ReportingCurrency).Distinct();
-                var pairsToAdd = ccysToAdd.Select(c => $"{c.Ccy}/{Settings.ReportingCurrency}");
+                var ccysToAdd = payoutCcys.Where(p => p != Settings.SimulationCurrency).Distinct();
+                var pairsToAdd = ccysToAdd.Select(c => $"{c.Ccy}/{Settings.SimulationCurrency}");
                 fxPairs = fxPairs.Concat(pairsToAdd).Distinct();
             }
             foreach (var fxPair in fxPairs)
@@ -324,9 +324,9 @@ namespace Qwack.Models.MCModels
                 if (Settings.McModelType == McModelType.LocalVol)
                 {
 
-                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
+                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.SimulationCurrency)
                     {
-                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        var fxAdjPair = Settings.SimulationCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
                         if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
@@ -373,10 +373,10 @@ namespace Qwack.Models.MCModels
                 }
                 else if (Settings.McModelType == McModelType.TurboSkew)
                 {
-                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
+                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.SimulationCurrency)
                     {//needs to be drift-adjusted
 
-                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        var fxAdjPair = Settings.SimulationCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
                         if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
@@ -425,9 +425,9 @@ namespace Qwack.Models.MCModels
                 }
                 else
                 {
-                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.ReportingCurrency)
+                    if (fxPairName.Substring(fxPairName.Length - 3, 3) != Settings.SimulationCurrency)
                     {//needs to be drift-adjusted
-                        var fxAdjPair = Settings.ReportingCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
+                        var fxAdjPair = Settings.SimulationCurrency + "/" + fxPairName.Substring(fxPairName.Length - 3, 3);
                         if (Model.FundingModel.VolSurfaces[fxAdjPair] is not IATMVolSurface adjSurface)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         var correlation = fxPair == fxAdjPair ? -1.0 : 0.0;
@@ -491,7 +491,7 @@ namespace Qwack.Models.MCModels
 
             //payoffs
             Engine.IncrementDepth();
-            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider, Settings.ReportingCurrency));
+            _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider, Settings.SimulationCurrency));
             if (!Settings.AvoidRegressionForBackPricing && _payoffs.Any(x => x.Value.Regressors != null))
             {
                 //var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
@@ -535,7 +535,7 @@ namespace Qwack.Models.MCModels
 
             var metricsNeedRegression = new[] { BaseMetric.PFE, BaseMetric.KVA, BaseMetric.CVA, BaseMetric.FVA, BaseMetric.EPE };
             //Need to calculate PFE
-            if (Settings.CreditSettings != null && Settings.CreditSettings.ExposureDates != null && Settings.ReportingCurrency != null && metricsNeedRegression.Contains(Settings.CreditSettings.Metric))//setup for PFE, etc
+            if (Settings.CreditSettings != null && Settings.CreditSettings.ExposureDates != null && Settings.SimulationCurrency != null && metricsNeedRegression.Contains(Settings.CreditSettings.Metric))//setup for PFE, etc
             {
                 Engine.IncrementDepth();
 
@@ -554,10 +554,10 @@ namespace Qwack.Models.MCModels
             }
 
             //Need to calculate expected capital
-            if (Settings.CreditSettings != null && Settings.CreditSettings.ExposureDates != null && Settings.ReportingCurrency != null && Settings.CreditSettings.Metric == BaseMetric.ExpectedCapital)
+            if (Settings.CreditSettings != null && Settings.CreditSettings.ExposureDates != null && Settings.SimulationCurrency != null && Settings.CreditSettings.Metric == BaseMetric.ExpectedCapital)
             {
                 Engine.IncrementDepth();
-                _capitalCalc = new ExpectedCapitalCalculator(Portfolio, Settings.CreditSettings.CounterpartyRiskWeighting, Settings.CreditSettings.AssetIdToHedgeGroupMap, Settings.ReportingCurrency, VanillaModel, Settings.CreditSettings.ExposureDates);
+                _capitalCalc = new ExpectedCapitalCalculator(Portfolio, Settings.CreditSettings.CounterpartyRiskWeighting, Settings.CreditSettings.AssetIdToHedgeGroupMap, Settings.SimulationCurrency, VanillaModel, Settings.CreditSettings.ExposureDates);
                 Engine.AddPathProcess(_capitalCalc);
             }
 
@@ -666,10 +666,10 @@ namespace Qwack.Models.MCModels
                     IATMVolSurface adjSurface = null;
                     var correlation = 0.0;
 
-                    if (settings.ReportingCurrency != model.GetPriceCurve(assetId).Currency)
+                    if (settings.SimulationCurrency != model.GetPriceCurve(assetId).Currency)
                     {
-                        var fxAdjPair = settings.ReportingCurrency + "/" + model.GetPriceCurve(assetId).Currency;
-                        var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.ReportingCurrency;
+                        var fxAdjPair = settings.SimulationCurrency + "/" + model.GetPriceCurve(assetId).Currency;
+                        var fxAdjPairInv = model.GetPriceCurve(assetId).Currency + "/" + settings.SimulationCurrency;
                         if (model.FundingModel.GetVolSurface(fxAdjPair) is not IATMVolSurface adjSurface2)
                             throw new Exception($"Vol surface for fx pair {fxAdjPair} could not be cast to IATMVolSurface");
                         adjSurface = adjSurface2;
@@ -744,7 +744,7 @@ namespace Qwack.Models.MCModels
             var pfe = _regressor.PFE(Model, confidenceLevel);
             if (Settings.CreditSettings.ExposureDates.First() == Model.BuildDate)
             {
-                var pv = CleanPV(Settings.ReportingCurrency, null);
+                var pv = CleanPV(Settings.SimulationCurrency, null);
                 pfe[0] = pv.SumOfAllRows;
             }
             return pfe;
@@ -767,7 +767,7 @@ namespace Qwack.Models.MCModels
             var epe = EPE();
             var cvaDouble = CVA();
             var (FBA, FCA) = FVA();
-            var pv = PV(Settings.ReportingCurrency);
+            var pv = PV(Settings.SimulationCurrency);
             var cube = pfe.Merge(epe);
 
             cube.AddRow(new Dictionary<string, object>
@@ -1002,7 +1002,7 @@ namespace Qwack.Models.MCModels
                     case IAssetInstrument aIns:
                         tradeType = aIns.TradeType();
                         if (reportingCurrency != null)
-                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, Settings.ReportingCurrency);
+                            fxRate = Model.FundingModel.GetFxRate(Model.BuildDate, reportingCurrency, Settings.SimulationCurrency);
                         else
                             ccy = aIns.Currency.ToString();
                         break;
@@ -1025,7 +1025,7 @@ namespace Qwack.Models.MCModels
                     }
                 }
 
-                cube.AddRow(row, pv / fxRate);
+                cube.AddRow(row, pv * fxRate);
             }
             return cube;
         }

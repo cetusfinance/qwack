@@ -36,7 +36,7 @@ namespace Qwack.Paths.Regressors
             _regressionDates = regressionDates;
             _portfolio = portfolio;
             _requireContinuity = requireContinuity;
-            _repCcy = settings.ReportingCurrency;
+            _repCcy = settings.SimulationCurrency;
             _pathwiseValues = new double[_regressionDates.Length][];
             DebugMode = settings.DebugMode;
 

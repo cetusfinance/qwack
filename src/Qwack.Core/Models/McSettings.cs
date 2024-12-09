@@ -12,7 +12,7 @@ namespace Qwack.Core.Models
         public int NumberOfPaths { get; set; }
         public int NumberOfTimesteps { get; set; }
         public RandomGeneratorType Generator { get; set; }
-        public Currency ReportingCurrency { get; set; }
+        public Currency SimulationCurrency { get; set; }
         public bool ExpensiveFuturesSimulation { get; set; }
         public Dictionary<string, string> FuturesMappingTable { get; set; } = new Dictionary<string, string>();
         public McModelType McModelType { get; set; }
@@ -40,7 +40,7 @@ namespace Qwack.Core.Models
             NumberOfPaths = to.NumberOfPaths;
             NumberOfTimesteps = to.NumberOfTimesteps;
             Parallelize = to.Parallelize;
-            ReportingCurrency = currencyProvider.GetCurrencySafe(to.ReportingCurrency);
+            SimulationCurrency = currencyProvider.GetCurrencySafe(to.SimulationCurrency);
             CreditSettings = to.CreditSettings==null ? new CreditSettings() : new CreditSettings(to.CreditSettings, currencyProvider, calendarProvider);
         }
 
@@ -58,7 +58,7 @@ namespace Qwack.Core.Models
             NumberOfPaths = NumberOfPaths,
             NumberOfTimesteps = NumberOfTimesteps,
             Parallelize = Parallelize,
-            ReportingCurrency = ReportingCurrency,
+            SimulationCurrency = SimulationCurrency,
             CreditSettings = CreditSettings.Clone(),
         };
 
@@ -76,7 +76,7 @@ namespace Qwack.Core.Models
             NumberOfPaths = NumberOfPaths,
             NumberOfTimesteps = NumberOfTimesteps,
             Parallelize = Parallelize,
-            ReportingCurrency = ReportingCurrency,
+            SimulationCurrency = SimulationCurrency,
             //CreditSettings = CreditSettings.(),
         };
     }

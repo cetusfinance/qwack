@@ -14,7 +14,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
         [ProtoMember(3)]
         public RandomGeneratorType Generator { get; set; }
         [ProtoMember(4)]
-        public string ReportingCurrency { get; set; }
+        public string SimulationCurrency { get; set; }
         [ProtoMember(5)]
         public bool ExpensiveFuturesSimulation { get; set; }
         [ProtoMember(6)]

@@ -248,6 +248,7 @@ namespace Qwack.Models.Risk
             var scenarios = GenerateScenarios(model);
 
             ICube baseRiskCube = null;
+            string[] matchFieldsForDiff = null;
             if (ReturnDifferential)
             {
                 var baseModel = model;
@@ -256,6 +257,7 @@ namespace Qwack.Models.Risk
                     baseModel = baseModel.Rebuild(baseModel.VanillaModel, portfolio);
                 }
                 baseRiskCube = GetRisk(baseModel);
+                matchFieldsForDiff = baseRiskCube.DataTypes.Keys.Where(x => x != "RefPrice").ToArray();
                 baseModel.Dispose();
             }
 
@@ -275,7 +277,7 @@ namespace Qwack.Models.Risk
                 pvModel.Dispose();
                 if (ReturnDifferential)
                 {
-                    result = result.Difference(baseRiskCube);
+                    result = result.Difference(baseRiskCube, matchFieldsForDiff);
                 }
 
                 results[i] = result;

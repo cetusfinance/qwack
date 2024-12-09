@@ -28,7 +28,7 @@ namespace Qwack.Paths.Regressors
         {
             _regressionDates = regressionDates;
             _portfolio = portfolio;
-            _repCcy = settings.ReportingCurrency;
+            _repCcy = settings.SimulationCurrency;
             _pathwiseValues = new double[_regressionDates.Length][][];
             for (var i = 0; i < _pathwiseValues.Length; i++)
             {

@@ -125,7 +125,7 @@ namespace Qwack.Models.Risk
 
                     IPvModel shiftedFx;
 
-                    if (thisShiftAsset == 0)
+                    if (thisShiftFx == 0)
                         shiftedFx = shifted;
                     else
                         shiftedFx = FlatShiftMutator.FxSpotShift(Ccy, thisShiftFx, shifted);

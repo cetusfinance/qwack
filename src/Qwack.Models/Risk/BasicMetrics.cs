@@ -404,6 +404,7 @@ namespace Qwack.Models.Risk
                 { PointLabel, typeof(string) },
                 { Metric, typeof(string) },
                 { Consts.Cubes.Portfolio, typeof(string) },
+                { "RefPrice", typeof(double) },
             };
 
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
@@ -453,15 +454,20 @@ namespace Qwack.Models.Risk
                         var vega = (bumpedRows[i].Value - pvRows[i].Value) / bumpSize * 0.01;
                         if (vega != 0.0)
                         {
+                            var pillarDate = bCurve.Value.PillarDatesForLabel(bCurve.Key);
+                            var cleanVol = model.VanillaModel.GetFxVolForDeltaStrikeAndDate(surface.Key, pillarDate, 0.5);
+
                             var row = new Dictionary<string, object>
                             {
                                 { TradeId, bumpedRows[i].MetaData[tidIx] },
                                 { TradeType, bumpedRows[i].MetaData[tTypeIx] },
                                 { AssetId, surface.Key },
-                                { "PointDate", bCurve.Value.PillarDatesForLabel(bCurve.Key) },
+                                { "PointDate", pillarDate},
                                 { PointLabel, bCurve.Key },
                                 { Metric, "Vega" },
                                 { Consts.Cubes.Portfolio, bumpedRows[i].MetaData[pfIx]  },
+                                { "RefPrice", cleanVol },
+
                             };
                             if (insDict.TryGetValue((string)bumpedRows[i].MetaData[tidIx], out var trade))
                             {

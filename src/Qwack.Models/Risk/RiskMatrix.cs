@@ -20,6 +20,7 @@ namespace Qwack.Models.Risk
 
         public string AssetId { get; private set; }
         public Currency Ccy { get; private set; }
+        public Currency FxDeltaCcy { get; private set; }
         public MutationType ShiftType { get; private set; }
         public RiskMetric Metric { get; private set; }
         public double ShiftSizeAsset { get; private set; }
@@ -303,7 +304,7 @@ namespace Qwack.Models.Risk
             RiskMetric.PV => model.PV(Ccy??model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             //case RiskMetric.AssetCurveDeltaGamma:
             //    return portfolio.AssetDeltaGamma(model);
-            RiskMetric.FxDelta => model.FxDeltaSpecific(_currencyProvider.GetCurrency("ZAR"), FxPairsForDelta, _currencyProvider, false),
+            RiskMetric.FxDelta => model.FxDeltaSpecific(FxDeltaCcy ?? _currencyProvider.GetCurrency("EUR"), FxPairsForDelta, _currencyProvider, false),
             //case RiskMetric.FxDeltaGamma:
             //    return portfolio.FxDelta(model, _currencyProvider.GetCurrency("ZAR"), _currencyProvider, true);
             _ => throw new Exception($"Unable to process risk metric {Metric}"),

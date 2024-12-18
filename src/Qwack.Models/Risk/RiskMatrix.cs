@@ -20,7 +20,7 @@ namespace Qwack.Models.Risk
 
         public string AssetId { get; private set; }
         public Currency Ccy { get; private set; }
-        public Currency FxDeltaCcy { get; private set; }
+        public Currency FxDeltaCcy { get; set; }
         public MutationType ShiftType { get; private set; }
         public RiskMetric Metric { get; private set; }
         public double ShiftSizeAsset { get; private set; }

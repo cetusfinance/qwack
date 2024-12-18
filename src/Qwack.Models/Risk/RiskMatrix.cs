@@ -297,6 +297,27 @@ namespace Qwack.Models.Risk
             return o;
         }
 
+        public ICube GenerateFromResults(Dictionary<Tuple<string, string>, ICube> resultsDictionary)
+        {
+            var o = new ResultCube();
+            o.Initialize(new Dictionary<string, Type>
+            {
+                { "AxisA", typeof(string) },
+                { "AxisB", typeof(string) }
+            });
+
+            foreach(var kv in resultsDictionary) {
+                o = (ResultCube)o.Merge(kv.Value,
+                    new Dictionary<string, object>
+                    {
+                        { "AxisA", kv.Key.Item1 },
+                        { "AxisB", kv.Key.Item2 }
+                    }, null, true);
+            }
+
+            return o;
+        }
+
         private ICube GetRisk(IPvModel model) => Metric switch
         {
             RiskMetric.AssetCurveDelta => model.AssetDelta(isSparseLMEMode:LMESparseDeltaMode, calendars:_calendar, parallelize:ParallelizeRiskMetric),

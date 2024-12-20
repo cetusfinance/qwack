@@ -195,7 +195,8 @@ namespace Qwack.Models.Risk
         
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
         {
-            _basePvCube = _model.PV(ccy);
+            var m00 = _model.Rebuild(_model.VanillaModel, pf);
+            _basePvCube = m00.PV(ccy);
             var basePv = _basePvCube.SumOfAllRows;
             _resultsCache.Clear();
             var results = new ConcurrentDictionary<string, double>();

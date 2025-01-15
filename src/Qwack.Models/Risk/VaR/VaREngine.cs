@@ -254,7 +254,8 @@ namespace Qwack.Models.Risk
             ixCi = System.Math.Min(System.Math.Max(ixCi, 0), sortedResults.Count - 1);
 
             var ciResult = sortedResults[ixCi];
-            var cVaR = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).Average(x => x.Value);
+            var cVaRPortion = sortedResults.Take(System.Math.Max(ixCi - 1, 0)).ToList();
+            var cVaR = cVaRPortion.Count == 0 ? ciResult.Value : cVaRPortion.Average(x => x.Value);
             return (ciResult.Value, ciResult.Key, cVaR);
         }
     }

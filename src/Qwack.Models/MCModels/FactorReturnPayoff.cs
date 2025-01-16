@@ -102,15 +102,16 @@ namespace Qwack.Models.MCModels
                     {
                         var c = resultIx * vecLen + j;
                         if(_results[a][c]==null)
-                            _results[a][c] = new double[_dateIndexes.Length];
+                            _results[a][c] = new double[_dateIndexes.Max()+1];
 
                         if (c >= _results[a].Length)
                             break;
          
                         for (var tIx = 0; tIx < _dateIndexes.Length; tIx++)
                         {
+                            var t = _dateIndexes[tIx];
                             //_results[a][resultIx][tIx] = steps[_dateIndexes[tIx]][1];
-                            _results[a][c][tIx] = steps[_dateIndexes[tIx]][j];
+                            _results[a][c][t] = steps[t][j];
                         }
                     }
                 }

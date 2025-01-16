@@ -53,7 +53,7 @@ namespace Qwack.Models.Risk.VaR
                 }
             }
 
-            logger.LogInformation("Simulating {nFac} spot factors", simulatedIds.Length);
+            logger?.LogInformation("Simulating {nFac} spot factors", simulatedIds.Length);
 
             var mcSettings = new McSettings
             {

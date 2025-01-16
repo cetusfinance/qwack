@@ -14,31 +14,21 @@ using Qwack.Utils.Parallel;
 
 namespace Qwack.Models.Risk.VaR
 {
-    public class VaRCalculator
+    public class VaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger)
     {
-        private readonly IPvModel _model;
-        private readonly Portfolio _portfolio;
-        private readonly ILogger _logger;
-        private readonly Dictionary<string, VaRSpotScenarios> _spotTypeBumps = new();
-        private readonly Dictionary<string, VaRSpotScenarios> _spotFxTypeBumps = new();
-        private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = new();
-        private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = new();
-        private readonly Dictionary<DateTime, IPvModel> _bumpedModels = new();
+        private readonly Dictionary<string, VaRSpotScenarios> _spotTypeBumps = [];
+        private readonly Dictionary<string, VaRSpotScenarios> _spotFxTypeBumps = [];
+        private readonly Dictionary<string, VaRCurveScenarios> _curveTypeBumps = [];
+        private readonly Dictionary<string, VaRCurveScenarios> _surfaceTypeBumps = [];
+        private readonly Dictionary<DateTime, IPvModel> _bumpedModels = [];
         private VaREngine _varEngine;
 
         public Dictionary<DateTime, IPvModel> BumpedModels => _bumpedModels;
         public VaREngine VaREngine => _varEngine;
 
-        public VaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger)
-        {
-            _model = model;
-            _portfolio = portfolio;
-            _logger = logger;
-        }
-
         public void AddSpotRelativeScenarioBumps(string assetId, Dictionary<DateTime, double> bumps)
         {
-            _logger?.LogInformation($"Adding relative/spot bumps for {assetId}");
+            logger?.LogInformation($"Adding relative/spot bumps for {assetId}");
             _spotTypeBumps[assetId] = new VaRSpotScenarios
             {
                 IsRelativeBump = true,
@@ -49,7 +39,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddSpotAbsoluteScenarioBumps(string assetId, Dictionary<DateTime, double> bumps)
         {
-            _logger?.LogInformation($"Adding absolute/spot bumps for {assetId}");
+            logger?.LogInformation($"Adding absolute/spot bumps for {assetId}");
             _spotTypeBumps[assetId] = new VaRSpotScenarios
             {
                 IsRelativeBump = false,
@@ -60,7 +50,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddSpotFxRelativeScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
         {
-            _logger?.LogInformation($"Adding relative/spot bumps for fx ccy {ccy}");
+            logger?.LogInformation($"Adding relative/spot bumps for fx ccy {ccy}");
             _spotFxTypeBumps[ccy] = new VaRSpotScenarios
             {
                 IsRelativeBump = true,
@@ -71,7 +61,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddSpotFxAbsoluteScenarioBumps(string ccy, Dictionary<DateTime, double> bumps)
         {
-            _logger?.LogInformation($"Adding absolute/spot bumps for fx ccy {ccy}");
+            logger?.LogInformation($"Adding absolute/spot bumps for fx ccy {ccy}");
             _spotFxTypeBumps[ccy] = new VaRSpotScenarios
             {
                 IsRelativeBump = false,
@@ -82,7 +72,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddCurveRelativeScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
         {
-            _logger?.LogInformation($"Adding relative/curve bumps for {assetId}");
+            logger?.LogInformation($"Adding relative/curve bumps for {assetId}");
             _curveTypeBumps[assetId] = new VaRCurveScenarios
             {
                 IsRelativeBump = true,
@@ -93,7 +83,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddCurveAbsoluteScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
         {
-            _logger?.LogInformation($"Adding absolute/curve bumps for {assetId}");
+            logger?.LogInformation($"Adding absolute/curve bumps for {assetId}");
             _curveTypeBumps[assetId] = new VaRCurveScenarios
             {
                 IsRelativeBump = false,
@@ -104,7 +94,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddSurfaceAtmRelativeScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
         {
-            _logger?.LogInformation($"Adding relative/surface atm bumps for {assetId}");
+            logger?.LogInformation($"Adding relative/surface atm bumps for {assetId}");
             _surfaceTypeBumps[assetId] = new VaRCurveScenarios
             {
                 IsRelativeBump = true,
@@ -115,7 +105,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void AddSurfaceAtmAbsoluteScenarioBumps(string assetId, Dictionary<DateTime, double[]> bumps)
         {
-            _logger?.LogInformation($"Adding absolute/surface atm bumps for {assetId}");
+            logger?.LogInformation($"Adding absolute/surface atm bumps for {assetId}");
             _surfaceTypeBumps[assetId] = new VaRCurveScenarios
             {
                 IsRelativeBump = false,
@@ -126,7 +116,7 @@ namespace Qwack.Models.Risk.VaR
 
         public void CalculateModels()
         {
-            var allAssetIds = _model.VanillaModel.CurveNames.Where(x => !(x.Length == 7 && x[3] == '/')).ToArray(); // _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
+            var allAssetIds = model.VanillaModel.CurveNames.Where(x => !(x.Length == 7 && x[3] == '/')).ToArray(); // _portfolio.AssetIds().Where(x => !(x.Length == 7 && x[3] == '/')).ToArray();
             var allDatesSet = new HashSet<DateTime>();
 
             if (_spotTypeBumps.Any())
@@ -155,7 +145,7 @@ namespace Qwack.Models.Risk.VaR
 
             var allDates = allDatesSet.OrderBy(d => d).ToList();
 
-            _logger?.LogInformation($"Total of {allDates.Count} dates");
+            logger?.LogInformation($"Total of {allDates.Count} dates");
 
             ConcurrentDictionary<DateTime, IPvModel> bumpedModels = new();
 
@@ -164,8 +154,8 @@ namespace Qwack.Models.Risk.VaR
                 //if (d != new DateTime(2021, 08, 02))
                 //    return;
 
-                _logger?.LogDebug($"Computing scenarios for {d}");
-                var m = _model.VanillaModel.Clone();
+                logger?.LogDebug($"Computing scenarios for {d}");
+                var m = model.VanillaModel.Clone();
 
                 foreach (var assetId in allAssetIds)
                 {
@@ -185,7 +175,7 @@ namespace Qwack.Models.Risk.VaR
                     }
                     else
                     {
-                        _logger?.LogWarning($"No shift data available for {assetId} / {d}");
+                        logger?.LogWarning($"No shift data available for {assetId} / {d}");
                     }
 
                     if (_surfaceTypeBumps.TryGetValue(assetId, out var surfaceBumpRecord))
@@ -207,13 +197,13 @@ namespace Qwack.Models.Risk.VaR
                         //    m = FlatShiftMutator.AssetCurveShift(assetId, spotBumpRecord.Bumps[d], m);
                     }
                 }
-                bumpedModels[d] = _model.Rebuild(m, _portfolio);
+                bumpedModels[d] = model.Rebuild(m, portfolio);
             }).Wait();
 
             foreach (var kv in bumpedModels)
                 _bumpedModels[kv.Key] = kv.Value;
 
-            _varEngine = new VaREngine(_logger, _model, _portfolio, _bumpedModels.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value));
+            _varEngine = new VaREngine(logger, model, portfolio, _bumpedModels.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value));
         }
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, string[] excludeTradeIds)
             => _varEngine.CalculateVaR(ci, ccy, excludeTradeIds);
@@ -326,13 +316,13 @@ namespace Qwack.Models.Risk.VaR
         public StressTestResult ComputeStressObject(string insId, decimal shockSize, int? nNearestSamples = null)
             => _varEngine.ComputeStressObject(insId, shockSize, nNearestSamples);
 
-        public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, _portfolio);
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy) => CalculateVaR(ci, ccy, portfolio);
 
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
             => _varEngine.CalculateVaR(ci, ccy, pf, parallelize);
 
 
-        public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy) => CalculateVaRFromResults(ci, ccy, _portfolio);
+        public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy) => CalculateVaRFromResults(ci, ccy, portfolio);
 
         public (double VaR, string ScenarioId, double cVaR) CalculateVaRFromResults(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
             => _varEngine.CalculateVaRFromResults(ci, ccy, pf, parallelize);

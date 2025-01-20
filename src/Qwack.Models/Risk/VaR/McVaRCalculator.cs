@@ -27,6 +27,8 @@ namespace Qwack.Models.Risk.VaR
 
         public int CIIX => _ciIx;
 
+        public int nPaths { get; set; } = 2048;
+
         public void AddSpotFactor(string assetId, double vol) => _spotFactors[assetId] = vol;
 
         public void AddReturns(string assetId, double[] returns) => _returns[assetId] = returns;
@@ -59,7 +61,7 @@ namespace Qwack.Models.Risk.VaR
             {
                 McModelType = modelType,
                 Generator = RandomGeneratorType.MersenneTwister,
-                NumberOfPaths = 2048,
+                NumberOfPaths = nPaths,
                 NumberOfTimesteps = 2,
                 SimulationCurrency = currencyProvider.GetCurrencySafe("USD")
             };

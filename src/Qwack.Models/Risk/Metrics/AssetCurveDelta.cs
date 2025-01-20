@@ -18,6 +18,8 @@ namespace Qwack.Models.Risk.Metrics
         private readonly Dictionary<string, double> _bumpsForCurve = [];
         private readonly Dictionary<string, Currency> _ccysForCurve = [];
 
+        public void Dispose() { }
+
         public ICube ComputeSync(bool parallelize = false)
         {
             var models = GenerateScenarios();
@@ -238,7 +240,7 @@ namespace Qwack.Models.Risk.Metrics
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
-                var baseModel = pvModel.Rebuild(model, subPortfolio);
+                using var baseModel = pvModel.Rebuild(model, subPortfolio);
 
                 o[$"{curveName}¬BASE"] = baseModel;
                 _bumpsForCurve[curveName] = bumpForCurve;
@@ -278,9 +280,8 @@ namespace Qwack.Models.Risk.Metrics
 
                         dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                     }
-                    var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
-
-                    o[$"{curveName}¬{bCurve.Key}"] = baseModel;
+                    using var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                    o[$"{curveName}¬{bCurve.Key}"] = newPvModel;
                 }
 
                 if (bumpedDownCurves != null)
@@ -304,9 +305,8 @@ namespace Qwack.Models.Risk.Metrics
 
                             dependentCurves = newBaseCurves.SelectMany(x => model.GetDependentCurves(x)).Distinct().ToList();
                         }
-                        var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
-
-                        o[$"{curveName}¬DOWN¬{bCurve.Key}"] = baseModel;
+                        using var newPvModel = pvModel.Rebuild(newVanillaModel, subPortfolio);
+                        o[$"{curveName}¬DOWN¬{bCurve.Key}"] = newPvModel;
                     }
                 }
             }

@@ -38,13 +38,14 @@ namespace Qwack.Models.Risk
             return results.ToDictionary(k => k.Item1, v => v.Item2);
         }
 
-        private static double GetStrike(this IInstrument ins) => ins switch
+        public static double GetStrike(this IInstrument ins) => ins switch
         {
             null => 0.0,
             EuropeanOption euo => euo.Strike,
             FuturesOption fuo => fuo.Strike,
             _ => 0.0,
         };
+
         public static ICube AssetVega(this IPvModel pvModel, Currency reportingCcy, bool parallelize = true)
         {
             var bumpSize = -0.01;

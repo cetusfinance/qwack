@@ -23,6 +23,7 @@ namespace Qwack.Core.Basic
         AssetParallelGamma,
         AssetWaveyVega,
         FV,
+        AssetDeltaSingleCurve,
         Custom
     }
 }

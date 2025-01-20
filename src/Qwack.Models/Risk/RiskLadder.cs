@@ -71,7 +71,7 @@ namespace Qwack.Models.Risk
                 var thisShift = i * ShiftSize;
                 var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy ) : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
-                    results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model);
+                    results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, model.Rebuild(model.VanillaModel,model.Portfolio));
                 else
                 {
                     if (string.IsNullOrWhiteSpace(AssetId) && FxPair==null)

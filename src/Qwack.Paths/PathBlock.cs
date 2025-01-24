@@ -15,6 +15,7 @@ namespace Qwack.Paths
         private double[] _backingArray;
         private static readonly int _vectorShift = (int)System.Math.Log(Vector<double>.Count, 2);
         private readonly bool _lazyInit;
+        private bool _isDisposed;
 
         public PathBlock(int numberOfPaths, int factors, int numberOfSteps, int globalPathIndex,int blockIndex, bool lazyInit = false)
         {
@@ -47,6 +48,7 @@ namespace Qwack.Paths
 
         private void Init()
         {
+            if (_isDisposed) throw new ObjectDisposedException("Pathblock already disposed");
             _backingArray = ArrayPool<double>.Shared.Rent(_numberOfPaths * _numberOfFactors * _numberOfSteps);
             _handle = GCHandle.Alloc(_backingArray, GCHandleType.Pinned);
         }
@@ -126,6 +128,7 @@ namespace Qwack.Paths
                 _backingArray = null;
             }
             GC.SuppressFinalize(this);
+            _isDisposed = true;
         }
 
         ~PathBlock() => Dispose();

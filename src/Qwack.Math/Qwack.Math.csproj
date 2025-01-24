@@ -1,18 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-      <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+      <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Qwack.Math</AssemblyName>
     <PackageId>Qwack.Math</PackageId>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
     <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
@@ -20,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview5.19224.8" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.0" />
       <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.0" />

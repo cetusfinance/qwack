@@ -79,7 +79,7 @@ namespace Qwack.Paths.Processes
                     var vect = new Vector<double>(_pastFixings[date]);
                     fixings.Add(vect);
                 }
-                catch (Exception e)
+                catch
                 {
                 }
 

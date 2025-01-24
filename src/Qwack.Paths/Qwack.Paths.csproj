@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\common.props" />
   <PropertyGroup>
-      <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+      <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>Qwack.Paths</AssemblyName>
     <PackageId>Qwack.Paths</PackageId>

@@ -123,6 +123,7 @@ namespace Qwack.Models.Risk.VaR
         public void Dispose()
         {
             _model.Dispose();
+            
             foreach (var bm in _bumpedModels)
             {
                 bm.Dispose();

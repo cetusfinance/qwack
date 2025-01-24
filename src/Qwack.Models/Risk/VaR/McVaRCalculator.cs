@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ using Qwack.Transport.Results;
 namespace Qwack.Models.Risk.VaR
 {
     public class McVaRCalculator(IPvModel model, Portfolio portfolio, ILogger logger, ICurrencyProvider currencyProvider,
-        ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider, McModelType modelType, int horizon = 1)
+        ICalendarProvider calendarProvider, IFutureSettingsProvider futureSettingsProvider, McModelType modelType, int horizon = 1) : IDisposable
     {
         private readonly IPvModel _model = model.Rebuild(model.VanillaModel, portfolio);
         private readonly List<IPvModel> _bumpedModels = [];
@@ -118,5 +119,14 @@ namespace Qwack.Models.Risk.VaR
 
         public (double VaR, string ScenarioId, double cVaR) CalculateVaR(double ci, Currency ccy, Portfolio pf, bool parallelize = true)
             => _varEngine.CalculateVaR(ci, ccy, pf, parallelize);
+
+        public void Dispose()
+        {
+            _model.Dispose();
+            foreach (var bm in _bumpedModels)
+            {
+                bm.Dispose();
+            }
+        }
     }
 }

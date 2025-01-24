@@ -69,7 +69,7 @@ namespace Qwack.Models.Risk.VaR
             var vd = _model.VanillaModel.BuildDate.AddDays(horizon);
             var fp = new FactorReturnPayoff(simulatedIds, [_model.VanillaModel.BuildDate, vd]);
 
-            var mcModel = new AssetFxMCModel(_model.VanillaModel.BuildDate, fp, _model.VanillaModel, mcSettings, currencyProvider, futureSettingsProvider, calendarProvider);
+            using var mcModel = new AssetFxMCModel(_model.VanillaModel.BuildDate, fp, _model.VanillaModel, mcSettings, currencyProvider, futureSettingsProvider, calendarProvider);
             mcModel.Engine.RunProcess();
 
             var dix = fp.DateIndices[vd];

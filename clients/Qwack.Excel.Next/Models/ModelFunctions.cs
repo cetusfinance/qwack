@@ -63,7 +63,7 @@ namespace Qwack.Excel.Curves
                     Generator = randomGenerator,
                     NumberOfPaths = NumberOfPaths,
                     NumberOfTimesteps = NumberOfTimesteps,
-                    ReportingCurrency = repCcy,
+                    SimulationCurrency = repCcy,
                     McModelType = mcModel,
                     ExpensiveFuturesSimulation = FuturesSim,
                     Parallelize = Parallel,

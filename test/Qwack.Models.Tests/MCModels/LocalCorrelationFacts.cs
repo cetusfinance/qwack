@@ -73,7 +73,7 @@ namespace Qwack.Models.Tests.MCModels
                 Generator = RandomGeneratorType.MersenneTwister,
                 NumberOfPaths = (int)2.0.IntPow(15),
                 NumberOfTimesteps = 1,
-                ReportingCurrency = zar,
+                SimulationCurrency = zar,
                 Parallelize = false,
                 LocalCorrelation = true, 
             };

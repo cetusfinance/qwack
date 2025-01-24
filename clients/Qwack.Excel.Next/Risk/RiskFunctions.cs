@@ -408,7 +408,7 @@ namespace Qwack.Excel.Curves
                 else
                 {
                     var ccy = ContainerStores.CurrencyProvider.GetCurrency(Currency);
-                    var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, retDiff);
+                    var riskMatrix = new RiskMatrix(AssetId, ccy, bType, metric, BumpStepAsset, BumpStepFx, NScenarios, ContainerStores.CurrencyProvider, ContainerStores.CalendarProvider, retDiff);
 
                     if (PairsToRisk != null && PairsToRisk.Any())
                     {

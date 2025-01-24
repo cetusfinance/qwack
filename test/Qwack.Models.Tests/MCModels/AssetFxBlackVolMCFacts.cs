@@ -56,7 +56,7 @@ namespace Qwack.Models.Tests.MCModels
                 McModelType = McModelType.Black,
                 NumberOfPaths = 2048,
                 NumberOfTimesteps = 1,
-                ReportingCurrency = usd,
+                SimulationCurrency = usd,
                 ExpensiveFuturesSimulation = expensiveFutures,
                 Parallelize = false,
                 FuturesMappingTable = new Dictionary<string, string> { { "CL", "CL" } },

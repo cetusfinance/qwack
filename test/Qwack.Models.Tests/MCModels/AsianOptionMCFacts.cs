@@ -51,7 +51,7 @@ namespace Qwack.Models.Tests.MCModels
                 Generator = RandomGeneratorType.MersenneTwister,
                 NumberOfPaths = (int)System.Math.Pow(2, 13),
                 NumberOfTimesteps = 1,
-                ReportingCurrency = usd,
+                SimulationCurrency = usd,
                 Parallelize = false,
                 CreditSettings=  new CreditSettings
                 {

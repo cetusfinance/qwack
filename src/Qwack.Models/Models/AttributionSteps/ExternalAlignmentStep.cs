@@ -45,6 +45,10 @@ public class ExternalAlignmentStep(List<ProvisionRecord> externalPnLs) : IPnLAtt
                     { PointDate, endModel.VanillaModel.BuildDate },
                     { Underlying, string.Empty }
                 };
+                foreach (var kv in p.MetaData)
+                {
+                    row[kv.Key] = kv.Value;
+                }
                 resultsCube.AddRow(row, ux);
             }
         }

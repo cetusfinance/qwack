@@ -1512,7 +1512,8 @@ namespace Qwack.Models.Models
                                                ICalendarProvider calendarProvider,
                                                bool useSpreadDelta = false,
                                                List<ProvisionRecord> startProvisions = null,
-                                               List<ProvisionRecord> endProvisions = null                                               )
+                                               List<ProvisionRecord> endProvisions = null,
+                                               List<ProvisionRecord> externalPnLs = null)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1566,6 +1567,9 @@ namespace Qwack.Models.Models
 
             if (startProvisions != null || endProvisions != null)
                 new ProvisionStep(startProvisions, endProvisions).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+
+            if(externalPnLs != null)
+                new ExternalAlignmentStep(externalPnLs).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

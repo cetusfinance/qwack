@@ -8,6 +8,8 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class AtmVegaCurveStep : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
+
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -59,7 +61,7 @@ public class AtmVegaCurveStep : IPnLAttributionStep
                 var targetSurface = endModel.VanillaModel.GetVolSurface(surfaceName);
                 model.VanillaModel.AddVolSurface(surfaceName, targetSurface);
                 model = model.Rebuild(model.VanillaModel, model.Portfolio);
-                var newPvCube = model.PV(reportingCcy);
+                var newPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
                 var step = newPvCube.QuickDifference(lastPvCube);
 
                 foreach (var r in step.GetAllRows())

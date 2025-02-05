@@ -12,6 +12,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider) : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -24,12 +25,12 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
         var cashCube = model.Portfolio.FlowsT0(model.VanillaModel, reportingCcy);
         var cashRows = cashCube.GetAllRows();
 
-        var pvCubeBase = model.PV(reportingCcy);
+        var pvCubeBase = UseFv ? model.FV(reportingCcy) :  model.PV(reportingCcy);
         var pvRows = pvCubeBase.GetAllRows();
         model = (model is AssetFxMCModel amc) ?
             amc.RollModel(endModel.VanillaModel.BuildDate, currencyProvider, futureSettingsProvider, calendarProvider) :
             (model is AssetFxModel afx ? afx.RollModel(endModel.VanillaModel.BuildDate, currencyProvider) : throw new Exception("Unsupported model type"));
-        var newPvCube = model.PV(reportingCcy);
+        var newPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
 
         var step = newPvCube.QuickDifference(pvCubeBase);
         foreach (var r in step.GetAllRows())
@@ -75,7 +76,7 @@ public class TimeRollStep(ICurrencyProvider currencyProvider, IFutureSettingsPro
         {
             model.VanillaModel.AddFixingDictionary(fixingDictName, endModel.VanillaModel.GetFixingDictionary(fixingDictName));
             model = model.Rebuild(model.VanillaModel, model.Portfolio);
-            newPvCube = model.PV(reportingCcy);
+            newPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
 
             var tidIx = newPvCube.GetColumnIndex(TradeId);
             var tTypeIx = newPvCube.GetColumnIndex(TradeType);

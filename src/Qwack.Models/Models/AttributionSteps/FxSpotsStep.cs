@@ -9,6 +9,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class FxSpotsStep : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -89,7 +90,7 @@ public class FxSpotsStep : IPnLAttributionStep
 
             model.VanillaModel.FundingModel.FxMatrix.SpotRates[fxSpot.Key] = fxSpot.Value;
             model = model.Rebuild(model.VanillaModel, model.Portfolio);
-            var newPVCube = model.PV(reportingCcy);
+            var newPVCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var step = newPVCube.QuickDifference(lastPvCube);
 
             foreach (var r in step.GetAllRows())

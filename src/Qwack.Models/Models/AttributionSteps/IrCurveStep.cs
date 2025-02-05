@@ -9,6 +9,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class IrCurveStep : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -56,7 +57,7 @@ public class IrCurveStep : IPnLAttributionStep
 
             model.VanillaModel.FundingModel.Curves[irCurve.Key] = irCurve.Value;
             model = model.Rebuild(model.VanillaModel, model.Portfolio);
-            var newPvCube = model.PV(reportingCcy);
+            var newPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var step = newPvCube.QuickDifference(lastPvCube);
 
             foreach (var r in step.GetAllRows())

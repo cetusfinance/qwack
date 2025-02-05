@@ -10,6 +10,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class ProvisionStep(List<ProvisionRecord> startProvisions, List<ProvisionRecord> endProvisions) : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {

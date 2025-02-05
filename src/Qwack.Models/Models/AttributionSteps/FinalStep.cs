@@ -8,10 +8,11 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class FinalStep() : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
-        var newPvCube = endModel.PV(reportingCcy);
+        var newPvCube = UseFv ? endModel.FV(reportingCcy) : endModel.PV(reportingCcy);
         var step = newPvCube.QuickDifference(lastPvCube);
         var r_UlIx = riskCube.GetColumnIndex(Underlying);
 

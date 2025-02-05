@@ -10,6 +10,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class ExternalAlignmentStep(List<ProvisionRecord> externalPnLs) : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {

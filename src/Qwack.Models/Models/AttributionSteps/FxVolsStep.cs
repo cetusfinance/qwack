@@ -9,6 +9,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class FxVolsStep : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -57,7 +58,7 @@ public class FxVolsStep : IPnLAttributionStep
 
             model.VanillaModel.FundingModel.VolSurfaces[fxSurface.Key] = fxSurface.Value;
             model = model.Rebuild(model.VanillaModel, model.Portfolio);
-            var newPVCube = model.PV(reportingCcy);
+            var newPVCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var step = newPVCube.QuickDifference(lastPvCube);
 
             foreach (var r in step.GetAllRows())

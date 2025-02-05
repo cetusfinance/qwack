@@ -1513,7 +1513,8 @@ namespace Qwack.Models.Models
                                                bool useSpreadDelta = false,
                                                List<ProvisionRecord> startProvisions = null,
                                                List<ProvisionRecord> endProvisions = null,
-                                               List<ProvisionRecord> externalPnLs = null)
+                                               List<ProvisionRecord> externalPnLs = null,
+                                               bool useFv = true)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -1534,42 +1535,42 @@ namespace Qwack.Models.Models
 
             //first step roll time fwd
             (var lastPvCube, model) =
-                new TimeRollStep(currencyProvider,futureSettings, calendarProvider).Attribute(model, endModel, cube, null, startingGreeks, reportingCcy);
+                new TimeRollStep(currencyProvider, futureSettings, calendarProvider) { UseFv = useFv }.Attribute(model, endModel, cube, null, startingGreeks, reportingCcy);
 
             //next move ir curves
             (lastPvCube, model) =
-               new IrCurveStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+               new IrCurveStep() { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move fx spots
             (lastPvCube, model) =
-                new FxSpotsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+                new FxSpotsStep() { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move asset curves
             (lastPvCube, model) =
-            ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(false) : new DeltaGammaCurveStep()))
+            ((IPnLAttributionStep)(useSpreadDelta ? new DeltaFlatSpreadGammaCurveStep(false) { UseFv = useFv } : new DeltaGammaCurveStep() { UseFv = useFv }))
                 .Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move asset vols
             (lastPvCube, model) =
-               new AtmVegaCurveStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+               new AtmVegaCurveStep() { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //next move fx vols
             (lastPvCube, model) =
-               new FxVolsStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+               new FxVolsStep() { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //activity step
             (lastPvCube, model) =
-              new ActivityStep(startPortfolio, endPortfolio).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+              new ActivityStep(startPortfolio, endPortfolio) { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             //unexplained step
             (lastPvCube, model) =
-              new FinalStep().Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+              new FinalStep() { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             if (startProvisions != null || endProvisions != null)
-                new ProvisionStep(startProvisions, endProvisions).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+                new ProvisionStep(startProvisions, endProvisions) { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             if(externalPnLs != null)
-                new ExternalAlignmentStep(externalPnLs).Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
+                new ExternalAlignmentStep(externalPnLs) { UseFv = useFv }.Attribute(model, endModel, cube, lastPvCube, startingGreeks, reportingCcy);
 
             return cube;
         }

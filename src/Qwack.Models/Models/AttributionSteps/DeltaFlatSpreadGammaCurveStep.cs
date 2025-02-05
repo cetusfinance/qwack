@@ -8,6 +8,7 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -117,7 +118,7 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
 
             model.VanillaModel.AddPriceCurve(curveName, endModel.VanillaModel.GetPriceCurve(curveName));
             model = model.Rebuild(model.VanillaModel, model.Portfolio);
-            var newPvCube = model.PV(reportingCcy);
+            var newPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var step = newPvCube.QuickDifference(lastPvCube);
 
             foreach (var r in step.GetAllRows())

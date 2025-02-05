@@ -10,6 +10,8 @@ namespace Qwack.Models.Models.AttributionSteps;
 
 public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IPnLAttributionStep
 {
+    public bool UseFv { get; set; }
+
     public (ICube endOfStepPvCube, IPvModel model) Attribute(IPvModel model, IPvModel endModel, ResultCube resultsCube, ICube lastPvCube,
         ICube riskCube, Currency reportingCcy)
     {
@@ -21,7 +23,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
         if (newTrades.Instruments.Count > 0)
         {
             model = model.Rebuild(model.VanillaModel, newTrades);
-            var newTradesPnL = model.PV(reportingCcy);
+            var newTradesPnL = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var tidIx = newTradesPnL.GetColumnIndex(TradeId);
             var tTypeIx = newTradesPnL.GetColumnIndex(TradeType);
             var r_UlIx = newTradesPnL.GetColumnIndex(Underlying);
@@ -47,7 +49,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
         if (removedTrades.Instruments.Count > 0)
         {
             model = model.Rebuild(model.VanillaModel, removedTrades);
-            var removedTradesPnL = model.PV(reportingCcy);
+            var removedTradesPnL = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             
             var tidIx = removedTradesPnL.GetColumnIndex(TradeId);
             var tTypeIx = removedTradesPnL.GetColumnIndex(TradeType);
@@ -74,9 +76,9 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
         if (ammendedTradesStart.Instruments.Count > 0)
         {
             model = model.Rebuild(model.VanillaModel, ammendedTradesStart);
-            var amendedTradesPnLStart = model.PV(reportingCcy);
+            var amendedTradesPnLStart = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             model = model.Rebuild(model.VanillaModel, ammendedTradesEnd);
-            var amendedTradesPnLEnd = model.PV(reportingCcy);
+            var amendedTradesPnLEnd = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
             var amendedPnL = amendedTradesPnLEnd.QuickDifference(amendedTradesPnLStart);
             
             var tidIx = amendedTradesPnLStart.GetColumnIndex(TradeId);
@@ -105,7 +107,7 @@ public class ActivityStep(Portfolio startPortfolio, Portfolio endPortfolio) : IP
         }
 
         model = model.Rebuild(model.VanillaModel, endPortfolio);
-        lastPvCube = model.PV(reportingCcy);
+        lastPvCube = UseFv ? model.FV(reportingCcy) : model.PV(reportingCcy);
         return (lastPvCube, model);
     }
 }

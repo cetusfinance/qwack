@@ -219,6 +219,19 @@ namespace Qwack.Math
         public static double StdDev(this IEnumerable<double> x) => Sqrt(Variance(x));
         public static double StdDevWithAverage(this double[] x, double average) => Sqrt(VarianceWithAverage(x, average));
 
+        public static double DownsideDeviation(double[] x, double targetReturn, bool useNratherThanNminus1 = false)
+        {
+            var n = x.Length;
+            var v = 0.0;
+
+            for (var i = 0; i < n; i++)
+            {
+                var v1 = Min(0, x[i] - targetReturn);
+                v += (v1 * v1);
+            }
+            return Sqrt(v / (useNratherThanNminus1 ? n : (n - 1)));
+        }
+
         public static double NormSDist(double d) => FiNormSDist(d);
 
         public static double FiNormSDist(double z)

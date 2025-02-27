@@ -2208,7 +2208,7 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
-        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null)
+        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null, ICalendarProvider calendarProvider = null, bool useFv = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -2229,7 +2229,7 @@ namespace Qwack.Models.Risk
 
             var model = pvModel.VanillaModel;
 
-            var pvCube = pvModel.PV(reportingCcy);
+            var pvCube = useFv ? pvModel.FV(reportingCcy) : pvModel.PV(reportingCcy);
             var pvRows = pvCube.GetAllRows();
 
             var cashCube = pvModel.Portfolio.FlowsT0(model, reportingCcy);
@@ -2238,11 +2238,15 @@ namespace Qwack.Models.Risk
             var tidIx = pvCube.GetColumnIndex(TradeId);
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
 
-            var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
+            //var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
             var rolledPortfolio = pvModel.Portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate, fwdValDate);
-            using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
+            //using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
-            var pvCubeFwd = rolledPvModel.PV(reportingCcy);
+            using IPvModel rolledPvModel = (model is AssetFxMCModel amc) ?
+                        amc.RollModel(pvModel.VanillaModel.BuildDate, currencyProvider, null, calendarProvider) :
+                        (model is AssetFxModel afx ? afx.RollModel(pvModel.VanillaModel.BuildDate, currencyProvider) : throw new Exception("Unsupported model type"));
+
+            var pvCubeFwd = useFv ? rolledPvModel.FV(reportingCcy) : rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();
 
             //theta

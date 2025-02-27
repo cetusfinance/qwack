@@ -2237,14 +2237,16 @@ namespace Qwack.Models.Risk
 
             var tidIx = pvCube.GetColumnIndex(TradeId);
             var tTypeIx = pvCube.GetColumnIndex(TradeType);
-
-            //var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
+          
             var rolledPortfolio = pvModel.Portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate, fwdValDate);
-            //using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
+            using var cloned = pvModel.Rebuild(model.VanillaModel, rolledPortfolio);
+        
+            //var rolledVanillaModel = model.RollModel(fwdValDate, currencyProvider);
+             //using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
-            using IPvModel rolledPvModel = (model is AssetFxMCModel amc) ?
-                        amc.RollModel(pvModel.VanillaModel.BuildDate, currencyProvider, null, calendarProvider) :
-                        (model is AssetFxModel afx ? afx.RollModel(pvModel.VanillaModel.BuildDate, currencyProvider) : throw new Exception("Unsupported model type"));
+            using IPvModel rolledPvModel = (cloned is AssetFxMCModel amc) ?
+                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider) :
+                        (cloned is AssetFxModel afx ? afx.RollModel(fwdValDate, currencyProvider) : throw new Exception("Unsupported model type"));
 
             var pvCubeFwd = useFv ? rolledPvModel.FV(reportingCcy) : rolledPvModel.PV(reportingCcy);
             var pvRowsFwd = pvCubeFwd.GetAllRows();

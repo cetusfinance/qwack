@@ -870,21 +870,38 @@ namespace Qwack.Models.MCModels
             foreach (var product in _payoffs)
             {
                 var expectedEx = product.Value.ExerciseProbabilities;
-                if(expectedEx.Length>0)
+                var expectedExDates = product.Value.ExercisePeriods;
+                if (expectedEx.Length>0)
                 {
                     for (var i = 0; i < expectedEx.Length; i++)
                     {
-                        var bpo = product.Value.AssetInstrument as MultiPeriodBackpricingOption;
-                        cube.AddRow(new Dictionary<string, object>
+                        if (product.Value.AssetInstrument is MultiPeriodBackpricingOption bpo)
                         {
-                            { TradeId, product.Key },
-                            { TradeType, bpo.TradeType() },
-                            { AssetId, bpo.AssetIds[0] },
-                            { "PeriodStart", bpo.PeriodDates[i].Item1 },
-                            { "PeriodEnd", bpo.PeriodDates[i].Item2 },
-                            { Metric, "ExpectedExercise" },
-                            { Consts.Cubes.Portfolio, string.Empty },
-                        }, expectedEx[i]);
+                            cube.AddRow(new Dictionary<string, object>
+                            {
+                                { TradeId, product.Key },
+                                { TradeType, bpo.TradeType() },
+                                { AssetId, bpo.AssetIds[0] },
+                                { "PeriodStart", bpo.PeriodDates[i].Item1 },
+                                { "PeriodEnd", bpo.PeriodDates[i].Item2 },
+                                { Metric, "ExpectedExercise" },
+                                { Consts.Cubes.Portfolio, string.Empty },
+                            }, expectedEx[i]);
+                        }
+                        else if(product.Value.AssetInstrument is AsianLookbackOption lbo)
+                        {
+                           
+                            cube.AddRow(new Dictionary<string, object>
+                            {
+                                { TradeId, product.Key },
+                                { TradeType, lbo.TradeType() },
+                                { AssetId, lbo.AssetIds[0] },
+                                { "PeriodStart",expectedExDates[i].Item1.ToString() },
+                                { "PeriodEnd", expectedExDates[i].Item2.ToString()  },
+                                { Metric, "ExpectedExercise" },
+                                { Consts.Cubes.Portfolio, string.Empty },
+                            }, expectedEx[i]);
+                        }
                     }
                 }
             }

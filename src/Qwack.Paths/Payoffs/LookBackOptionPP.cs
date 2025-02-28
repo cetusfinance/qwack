@@ -47,6 +47,9 @@ namespace Qwack.Paths.Payoffs
                 new LinearAveragePriceRegressor(_decisionDate, _settlementFixingDates, RegressionKey);
         }
 
+
+        private Vector<double>[] _lookbackMinIxs;
+
         public override void Finish(IFeatureCollection collection)
         {
             var dims = collection.GetFeature<IPathMappingFeature>();
@@ -83,6 +86,7 @@ namespace Qwack.Paths.Payoffs
                 _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(decisionSpotDate);
             }
 
+            _lookbackMinIxs = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
 
             _isComplete = true;
         }
@@ -103,6 +107,7 @@ namespace Qwack.Paths.Payoffs
                     var winVec = new Vector<double>(_windowSize);
                     var runningTotal = new Vector<double>(0);
                     var minValue = new Vector<double>(double.MaxValue);
+                    var minIxs = new double[Vector<double>.Count];
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
                         var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
@@ -116,10 +121,21 @@ namespace Qwack.Paths.Payoffs
                             runningTotal += point - pointToRemove;
                         }
 
-                        if(i>=(_windowSize-1))
-                            minValue = Vector.Min(runningTotal/ winVec, minValue);
-                    }
+                        if (i >= (_windowSize - 1))
+                        {
+                            var cp = runningTotal / winVec;
+                            minValue = Vector.Min(cp, minValue);
 
+                  
+                            for (var v = 0; v < Vector<double>.Count; v++)
+                            {
+                                if (cp[v] == minValue[v])
+                                    minIxs[v] = i;
+                            }
+                           
+                        }
+                    }
+            
                     var spotAtDecision = steps[_decisionIx] * (_fxName != null ? stepsFx[_decisionIx] : _one);
                     var setReg = new double[Vector<double>.Count];
 
@@ -145,6 +161,7 @@ namespace Qwack.Paths.Payoffs
 
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
+                    _lookbackMinIxs[resultIx] = new Vector<double>(minIxs);
                 }
             }
             else
@@ -158,6 +175,9 @@ namespace Qwack.Paths.Payoffs
 
                     var runningTotal = new Vector<double>(0);
                     var maxValue = new Vector<double>(double.MinValue);
+                    var maxIxs = new double[Vector<double>.Count];
+                    var winVec = new Vector<double>(_windowSize);
+
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
                         var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
@@ -172,7 +192,16 @@ namespace Qwack.Paths.Payoffs
                         }
 
                         if (i >= (_windowSize - 1))
-                            maxValue = Vector.Max(runningTotal, maxValue);
+                        {
+                            var cp = runningTotal / winVec;
+                            maxValue = Vector.Max(cp, maxValue);
+
+                            for (var v = 0; v < Vector<double>.Count; v++)
+                            {
+                                if (cp[v] == maxValue[v])
+                                    maxIxs[v] = i;
+                            }
+                        }
                     }
                     var spotAtDecision = steps[_decisionIx] * (_fxName != null ? stepsFx[_decisionIx] : _one);
                     var setReg = new double[Vector<double>.Count];
@@ -199,7 +228,46 @@ namespace Qwack.Paths.Payoffs
 
                     var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
+                    _lookbackMinIxs[resultIx] = new Vector<double>(maxIxs);
                 }
+            }
+        }
+
+        public double[] ExerciseProbabilities
+        {
+            get
+            {
+                var vecLen = Vector<double>.Count;
+                var results = new double[_dateIndexes.Length - _windowSize][];
+                //[];
+                for (var a = _windowSize; a < _dateIndexes.Length; a++)
+                {
+                    results[a -_windowSize] = new double[_results.Length * vecLen];
+                    for (var i = 0; i < _results.Length; i++)
+                    {
+                        for (var j = 0; j < vecLen; j++)
+                        {
+                            if (_lookbackMinIxs[i][j] == a)
+                                results[a - _windowSize][i * vecLen + j] = 1.0;
+                        }
+                    }
+                }
+                return results.Select(x => x.Average()).ToArray();
+            }
+        }
+
+        public Tuple<DateTime, DateTime>[] ExercisePeriods
+        {
+            get
+            {
+                var results = new Tuple<DateTime, DateTime>[_dateIndexes.Length-_windowSize];
+                for (var a = _windowSize; a < _dateIndexes.Length; a++)
+                {
+                    var startIx = _dateIndexes[a - _windowSize];
+                    var endIx = _dateIndexes[a - 1];
+                    results[a - _windowSize] = new Tuple<DateTime, DateTime>(_sampleDates[startIx], _sampleDates[endIx]);
+                }
+                return results;
             }
         }
 

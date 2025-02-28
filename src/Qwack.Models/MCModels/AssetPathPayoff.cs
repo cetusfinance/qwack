@@ -545,7 +545,23 @@ namespace Qwack.Models.MCModels
                 {
                     return bpo.ExerciseProbabilities;
                 }
+                else if (_subInstruments?.Count > 0 && _subInstruments[0] is LookBackOptionPP lbo)
+                {
+                    return lbo.ExerciseProbabilities;
+                }
                 return Array.Empty<double>();
+            }
+        }
+
+        public Tuple<DateTime, DateTime>[] ExercisePeriods
+        {
+            get
+            {
+                if (_subInstruments?.Count > 0 && _subInstruments[0] is LookBackOptionPP lbo)
+                {
+                    return lbo.ExercisePeriods;
+                }
+                return Array.Empty<Tuple<DateTime, DateTime>>();
             }
         }
 

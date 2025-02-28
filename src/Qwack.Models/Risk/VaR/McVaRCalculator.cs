@@ -67,7 +67,7 @@ namespace Qwack.Models.Risk.VaR
                 SimulationCurrency = currencyProvider.GetCurrencySafe("USD")
             };
 
-            var vd = _model.VanillaModel.BuildDate.AddDays(horizon/252*365); //horizon is in business days
+            var vd = _model.VanillaModel.BuildDate.AddDays(horizon/252.0*365.0); //horizon is in business days
             var fp = new FactorReturnPayoff(simulatedIds, [_model.VanillaModel.BuildDate, vd]);
 
             using var mcModel = new AssetFxMCModel(_model.VanillaModel.BuildDate, fp, _model.VanillaModel, mcSettings, currencyProvider, futureSettingsProvider, calendarProvider);

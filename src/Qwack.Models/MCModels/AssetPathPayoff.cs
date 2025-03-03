@@ -549,7 +549,7 @@ namespace Qwack.Models.MCModels
                 {
                     return lbo.ExerciseProbabilities;
                 }
-                return Array.Empty<double>();
+                return [];
             }
         }
 
@@ -561,7 +561,19 @@ namespace Qwack.Models.MCModels
                 {
                     return lbo.ExercisePeriods;
                 }
-                return Array.Empty<Tuple<DateTime, DateTime>>();
+                return [];
+            }
+        }
+
+        public double[] ExerciseAverages
+        {
+            get
+            {
+                if (_subInstruments?.Count > 0 && _subInstruments[0] is LookBackOptionPP lbo)
+                {
+                    return lbo.Averages;
+                }
+                return [];
             }
         }
 

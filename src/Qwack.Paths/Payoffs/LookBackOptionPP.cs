@@ -49,6 +49,7 @@ namespace Qwack.Paths.Payoffs
 
 
         private Vector<double>[] _lookbackMinIxs;
+        private Vector<double>[][] _averages;
 
         public override void Finish(IFeatureCollection collection)
         {
@@ -87,6 +88,7 @@ namespace Qwack.Paths.Payoffs
             }
 
             _lookbackMinIxs = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
+            _averages = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
 
             _isComplete = true;
         }
@@ -108,6 +110,11 @@ namespace Qwack.Paths.Payoffs
                     var runningTotal = new Vector<double>(0);
                     var minValue = new Vector<double>(double.MaxValue);
                     var minIxs = new double[Vector<double>.Count];
+
+                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+
+                    _averages[resultIx] = new Vector<double>[_dateIndexes.Length];
+
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
                         var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
@@ -121,12 +128,11 @@ namespace Qwack.Paths.Payoffs
                             runningTotal += point - pointToRemove;
                         }
 
-                        if (i >= (_windowSize - 1))
+                        if (i >= (_windowSize -1) )
                         {
                             var cp = runningTotal / winVec;
                             minValue = Vector.Min(cp, minValue);
-
-                  
+                            _averages[resultIx][i] = cp;
                             for (var v = 0; v < Vector<double>.Count; v++)
                             {
                                 if (cp[v] == minValue[v])
@@ -159,7 +165,6 @@ namespace Qwack.Paths.Payoffs
 
                     ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
 
-                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
                     _lookbackMinIxs[resultIx] = new Vector<double>(minIxs);
                 }
@@ -191,7 +196,7 @@ namespace Qwack.Paths.Payoffs
                             runningTotal += point - pointToRemove;
                         }
 
-                        if (i >= (_windowSize - 1))
+                        if (i >= _windowSize )
                         {
                             var cp = runningTotal / winVec;
                             maxValue = Vector.Max(cp, maxValue);
@@ -238,17 +243,18 @@ namespace Qwack.Paths.Payoffs
             get
             {
                 var vecLen = Vector<double>.Count;
-                var results = new double[_dateIndexes.Length - _windowSize][];
+
+                var results = new double[_dateIndexes.Length - _windowSize + 1][];
                 //[];
-                for (var a = _windowSize; a < _dateIndexes.Length; a++)
+                for (var a = _windowSize - 1; a < _dateIndexes.Length; a++)
                 {
-                    results[a -_windowSize] = new double[_results.Length * vecLen];
+                    results[a -_windowSize + 1] = new double[_results.Length * vecLen];
                     for (var i = 0; i < _results.Length; i++)
                     {
                         for (var j = 0; j < vecLen; j++)
                         {
                             if (_lookbackMinIxs[i][j] == a)
-                                results[a - _windowSize][i * vecLen + j] = 1.0;
+                                results[a - _windowSize + 1][i * vecLen + j] = 1.0;
                         }
                     }
                 }
@@ -260,14 +266,38 @@ namespace Qwack.Paths.Payoffs
         {
             get
             {
-                var results = new Tuple<DateTime, DateTime>[_dateIndexes.Length-_windowSize];
-                for (var a = _windowSize; a < _dateIndexes.Length; a++)
+                var results = new Tuple<DateTime, DateTime>[_dateIndexes.Length-_windowSize+1];
+                for (var a = _windowSize - 1; a < _dateIndexes.Length; a++)
                 {
-                    var startIx = _dateIndexes[a - _windowSize];
-                    var endIx = _dateIndexes[a - 1];
-                    results[a - _windowSize] = new Tuple<DateTime, DateTime>(_sampleDates[startIx], _sampleDates[endIx]);
+                    results[a - _windowSize +1] = new Tuple<DateTime, DateTime>(_sampleDates[a - _windowSize + 1], _sampleDates[a]);
                 }
                 return results;
+            }
+        }
+
+        public double[] Averages
+        {
+            get
+            {
+                var vecLen = Vector<double>.Count;
+                var results = new double[_dateIndexes.Length][];
+                //[];
+                for (var a = 0; a < _dateIndexes.Length; a++)
+                {
+                    results[a] = new double[_results.Length * vecLen];
+                    if (a >= _windowSize - 1)
+                    {
+                        for (var i = 0; i < _results.Length; i++)
+                        {
+                            for (var j = 0; j < vecLen; j++)
+                            {
+
+                                results[a - _windowSize + 1][i * vecLen + j] = _averages[i][a][j];
+                            }
+                        }
+                    }
+                }
+                return results.Select(x => x.Average()).ToArray();
             }
         }
 

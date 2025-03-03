@@ -856,10 +856,11 @@ namespace Qwack.Models.MCModels
                 { TradeId, typeof(string) },
                 { TradeType,  typeof(string) },
                 { AssetId, typeof(string) },
-                { "PeriodStart", typeof(DateTime) },
+                { "PeriodStart", typeof(string) },
                 { "PeriodEnd", typeof(string) },
                 { Metric, typeof(string) },
                 { Consts.Cubes.Portfolio, typeof(string) },
+                { "Average", typeof(string) },
             };
         
             cube.Initialize(dataTypes);
@@ -871,6 +872,8 @@ namespace Qwack.Models.MCModels
             {
                 var expectedEx = product.Value.ExerciseProbabilities;
                 var expectedExDates = product.Value.ExercisePeriods;
+                var expectedExAverages = product.Value.ExerciseAverages;
+
                 if (expectedEx.Length>0)
                 {
                     for (var i = 0; i < expectedEx.Length; i++)
@@ -886,6 +889,7 @@ namespace Qwack.Models.MCModels
                                 { "PeriodEnd", bpo.PeriodDates[i].Item2 },
                                 { Metric, "ExpectedExercise" },
                                 { Consts.Cubes.Portfolio, string.Empty },
+                                { "Average", string.Empty },
                             }, expectedEx[i]);
                         }
                         else if(product.Value.AssetInstrument is AsianLookbackOption lbo)
@@ -900,6 +904,7 @@ namespace Qwack.Models.MCModels
                                 { "PeriodEnd", expectedExDates[i].Item2.ToString()  },
                                 { Metric, "ExpectedExercise" },
                                 { Consts.Cubes.Portfolio, string.Empty },
+                                { "Average", expectedExAverages[i].ToString() },
                             }, expectedEx[i]);
                         }
                     }
@@ -907,6 +912,8 @@ namespace Qwack.Models.MCModels
             }
             return cube;
         }
+
+
 
         public ICube PV(Currency reportingCurrency, bool returnFv = false)
         {

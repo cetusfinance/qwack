@@ -27,7 +27,7 @@ namespace Qwack.Paths.Payoffs
 
         private bool IsFx => _assetName.Length == 7 && _assetName[3] == '/';
 
-        public string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
+        public override string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
         public LinearAveragePriceRegressor SettlementRegressor { get; set; }
 
         public IAssetFxModel VanillaModel { get; set; }
@@ -46,7 +46,6 @@ namespace Qwack.Paths.Payoffs
                 null : //settlement is spot price on decision date
                 new LinearAveragePriceRegressor(_decisionDate, _settlementFixingDates, RegressionKey);
         }
-
 
         private Vector<double>[] _lookbackMinIxs;
         private Vector<double>[][] _averages;
@@ -183,6 +182,8 @@ namespace Qwack.Paths.Payoffs
                     var maxIxs = new double[Vector<double>.Count];
                     var winVec = new Vector<double>(_windowSize);
 
+                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
+
                     for (var i = 0; i < _dateIndexes.Length; i++)
                     {
                         var point = steps[_dateIndexes[i]] * (_fxName != null ? stepsFx[_dateIndexes[i]] : _one);
@@ -200,7 +201,7 @@ namespace Qwack.Paths.Payoffs
                         {
                             var cp = runningTotal / winVec;
                             maxValue = Vector.Max(cp, maxValue);
-
+                            _averages[resultIx][i] = cp;
                             for (var v = 0; v < Vector<double>.Count; v++)
                             {
                                 if (cp[v] == maxValue[v])
@@ -231,7 +232,6 @@ namespace Qwack.Paths.Payoffs
 
                     ConvertToSimCcyIfNeeded(block, path, payoff, _dateIndexes.Last());
 
-                    var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                     _results[resultIx] = payoff;
                     _lookbackMinIxs[resultIx] = new Vector<double>(maxIxs);
                 }

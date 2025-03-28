@@ -126,7 +126,7 @@ namespace Qwack.Core.Instruments.Asset
             var daysAccrued = (spotDate - prevCouponDate).TotalDays;
             var couponPeriodDays = (nextCouponDate - prevCouponDate).TotalDays;
             if (daysAccrued > 0 && couponPeriodDays > 0)
-                return bond.Coupon.Value * (daysAccrued / couponPeriodDays);
+                return bond.Coupon.Value * bond.CouponFactor() * (daysAccrued / couponPeriodDays);
             else
                 return 0.0;
         }

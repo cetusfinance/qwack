@@ -170,6 +170,11 @@ namespace Qwack.Core.Instruments.Asset
             if (bond.FirstCouponDate.HasValue && asOf <= bond.FirstCouponDate)
                 return bond.FirstCouponDate.Value;
 
+            if(bond.FirstCouponDate.HasValue && bond.StubType == StubType.ShortBoth)
+            {
+                return bond.NextCouponDatePerp(asOf);
+            }
+
             var maturity = bond.MaturityDate.Value;
             var d = maturity;
             var count = 0;

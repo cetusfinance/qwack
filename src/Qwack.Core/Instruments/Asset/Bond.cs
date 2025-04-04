@@ -15,6 +15,7 @@ namespace Qwack.Core.Instruments.Asset
         public double? Coupon { get;set; }
         public CouponFrequency CouponFrequency { get; set; } = CouponFrequency.SemiAnnual;
         public DayCountBasis DayCountbasis { get; set; } = DayCountBasis.Thirty360;
+        public StubType StubType { get; set; } = StubType.ShortBoth;
 
         public DateTime? IssueDate { get; set; }
         public DateTime? MaturityDate { get; set; }
@@ -109,20 +110,41 @@ namespace Qwack.Core.Instruments.Asset
 
         public static double AccruedCoupon(this Bond bond, DateTime spotDate)
         {
+            if (bond.IssueDate.HasValue && spotDate<=bond.IssueDate)
+            {
+                return 0;
+            }
+            if (bond.MaturityDate.HasValue && spotDate > bond.MaturityDate)
+            {
+                return 0;
+            }
+
             var nextCouponDate = bond.NextCouponDate(spotDate);
             var prevCouponDate = nextCouponDate;
-            switch (bond.CouponFrequency)
+
+            if (bond.FirstCouponDate.HasValue && bond.IssueDate.HasValue && nextCouponDate == bond.FirstCouponDate)
             {
-                case CouponFrequency.SemiAnnual:
-                    prevCouponDate = nextCouponDate.AddMonths(-6);
-                    break;
-                case CouponFrequency.Annual:
-                    prevCouponDate = nextCouponDate.AddYears(-1);
-                    break;
-                case CouponFrequency.Quarterly:
-                    prevCouponDate = nextCouponDate.AddMonths(-3);
-                    break;
+                prevCouponDate = bond.IssueDate.Value;
             }
+            else
+            {
+                switch (bond.CouponFrequency)
+                {
+                    case CouponFrequency.SemiAnnual:
+                        prevCouponDate = nextCouponDate.AddMonths(-6);
+                        break;
+                    case CouponFrequency.Annual:
+                        prevCouponDate = nextCouponDate.AddYears(-1);
+                        break;
+                    case CouponFrequency.Quarterly:
+                        prevCouponDate = nextCouponDate.AddMonths(-3);
+                        break;
+                }
+
+                if (bond.FirstCouponDate.HasValue && prevCouponDate < bond.FirstCouponDate)
+                    prevCouponDate = bond.FirstCouponDate.Value;
+            }
+
             var daysAccrued = (spotDate - prevCouponDate).TotalDays;
             var couponPeriodDays = (nextCouponDate - prevCouponDate).TotalDays;
             if (daysAccrued > 0 && couponPeriodDays > 0)
@@ -144,6 +166,9 @@ namespace Qwack.Core.Instruments.Asset
         {
             if (!bond.MaturityDate.HasValue)
                 return bond.NextCouponDatePerp(asOf);
+
+            if (bond.FirstCouponDate.HasValue && asOf <= bond.FirstCouponDate)
+                return bond.FirstCouponDate.Value;
 
             var maturity = bond.MaturityDate.Value;
             var d = maturity;

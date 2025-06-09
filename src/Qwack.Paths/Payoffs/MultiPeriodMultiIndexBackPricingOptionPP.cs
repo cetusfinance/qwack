@@ -50,8 +50,13 @@ namespace Qwack.Paths.Payoffs
 
         private bool _isOption;
         private int? _declaredPeriod;
+
         private double? _scaleStrike;
         private double? _scaleProportion;
+        private double? _scaleStrike2;
+        private double? _scaleProportion2;
+        private double? _scaleStrike3;
+        private double? _scaleProportion3;
 
         private double[] _contangoScaleFactors3mBid;
         private double[] _contangoScaleFactors3mAsk;
@@ -97,7 +102,11 @@ namespace Qwack.Paths.Payoffs
                                               double? scaleProportion = null,
                                               double[] periodPremia = null,
                                               double optionPremiumTotal = 0,
-                                              DateTime? optionPremiumSettleDate = null)
+                                              DateTime? optionPremiumSettleDate = null,
+                                              double? scaleStrike2 = null,
+                                              double? scaleProportion2 = null,
+                                              double? scaleStrike3 = null,
+                                              double? scaleProportion3 = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -114,6 +123,10 @@ namespace Qwack.Paths.Payoffs
             _dateShifter = dateShifter;
             _scaleStrike =  scaleStrike;
             _scaleProportion = scaleProportion;
+            _scaleStrike2 = scaleStrike2;
+            _scaleProportion2 = scaleProportion2;
+            _scaleStrike3 = scaleStrike3;
+            _scaleProportion3 = scaleProportion3;
             _periodPremia = periodPremia ?? avgDates.Select(x => 0.0).ToArray(); //default to zero spreads
 
             if (_ccy.Ccy != "USD")
@@ -349,6 +362,31 @@ namespace Qwack.Paths.Payoffs
                 }
 
                 var payoff = _callPut == OptionType.C ? setVec - avgVec : avgVec - setVec;
+
+                if (_scaleProportion.HasValue && _scaleStrike.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                        Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value :
+                        Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike.Value) - avgVec) * _scaleProportion.Value;
+                    payoff -= scalePayoff;
+                }
+
+                if (_scaleProportion2.HasValue && _scaleStrike2.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                         Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike2.Value)) * _scaleProportion2.Value :
+                         Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike2.Value) - avgVec) * _scaleProportion2.Value;
+                    payoff -= scalePayoff;
+                }
+
+                if (_scaleProportion3.HasValue && _scaleStrike3.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                        Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike3.Value)) * _scaleProportion3.Value :
+                        Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike3.Value) - avgVec) * _scaleProportion3.Value;
+                    payoff -= scalePayoff;
+                }
+
                 if (_isOption)
                 {
                     payoff = Vector.Max(new Vector<double>(0), payoff);
@@ -360,12 +398,6 @@ namespace Qwack.Paths.Payoffs
                             _exercisedPeriod[resultIx][a] = Vector<double>.Zero;
                         }
                     }
-                }
-
-                if(_scaleProportion.HasValue && _scaleStrike.HasValue)
-                {
-                    var scalePayoff = Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value;
-                    payoff -= scalePayoff;
                 }
 
                 _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal);

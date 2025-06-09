@@ -46,8 +46,13 @@ namespace Qwack.Paths.Payoffs
         private double[] _expiryToAvgCarrys;
         private bool _isOption;
         private int? _declaredPeriod;
+
         private double? _scaleStrike;
         private double? _scaleProportion;
+        private double? _scaleStrike2;
+        private double? _scaleProportion2;
+        private double? _scaleStrike3;
+        private double? _scaleProportion3;
 
         private double[] _contangoScaleFactors;
         private double[] _periodPremia;
@@ -87,7 +92,11 @@ namespace Qwack.Paths.Payoffs
                                               DateShifter dateShifter = null,
                                               double? scaleStrike = null,
                                               double? scaleProportion = null,
-                                              double[] periodPremia = null)
+                                              double[] periodPremia = null,
+                                              double? scaleStrike2 = null,
+                                              double? scaleProportion2 = null,
+                                              double? scaleStrike3 = null,
+                                              double? scaleProportion3 = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate;
@@ -104,13 +113,17 @@ namespace Qwack.Paths.Payoffs
             _dateShifter = dateShifter;
             _scaleStrike = scaleStrike;
             _scaleProportion = scaleProportion;
+            _scaleStrike2 = scaleStrike2;
+            _scaleProportion2 = scaleProportion2;
+            _scaleStrike3 = scaleStrike3;
+            _scaleProportion3 = scaleProportion3;
             _periodPremia = periodPremia ?? avgDates.Select(x => 0.0).ToArray(); //default to zero spreads
 
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
 
             AverageRegressors = avgDates.Select(avg => avg.Last() > decisionDate ? new LinearAveragePriceRegressor(decisionDate, avg.Where(x => x > decisionDate).ToArray(), RegressionKey) : null).ToArray();
-            SettlementRegressor = _settleFixingDates.Length==1 && settlementFixingDates[0] ==_decisionDate ? 
+            SettlementRegressor = _settleFixingDates.Length == 1 && settlementFixingDates[0] == _decisionDate ?
                 null : //settlement is spot price on decision date
                 new LinearAveragePriceRegressor(decisionDate, _settleFixingDates, RegressionKey);
         }
@@ -306,7 +319,7 @@ namespace Qwack.Paths.Payoffs
                     else
                         avgVec = avgs[_declaredPeriod.Value];
                 }
-                    
+
 
                 var resultIx = (blockBaseIx + path) / Vector<double>.Count;
                 _exercisedPeriod[resultIx] = new Vector<double>[_dateIndexes.Count];
@@ -319,7 +332,7 @@ namespace Qwack.Paths.Payoffs
                     {
                         if (_declaredPeriod.HasValue)
                         {
-                            exBlock[v] = _declaredPeriod.Value == a ? 1.0 : 0.0; 
+                            exBlock[v] = _declaredPeriod.Value == a ? 1.0 : 0.0;
                         }
                         else
                             exBlock[v] = avgVec == avgs[a] ? 1.0 : 0.0;
@@ -328,6 +341,31 @@ namespace Qwack.Paths.Payoffs
                 }
 
                 var payoff = _callPut == OptionType.C ? setVec - avgVec : avgVec - setVec;
+
+                if (_scaleProportion.HasValue && _scaleStrike.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                        Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value :
+                        Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike.Value) - avgVec) * _scaleProportion.Value;
+                    payoff -= scalePayoff;
+                }
+
+                if (_scaleProportion2.HasValue && _scaleStrike2.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                         Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike2.Value)) * _scaleProportion2.Value :
+                         Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike2.Value) - avgVec) * _scaleProportion2.Value;
+                    payoff -= scalePayoff;
+                }
+
+                if (_scaleProportion3.HasValue && _scaleStrike3.HasValue)
+                {
+                    var scalePayoff = _callPut == OptionType.C ?
+                        Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike3.Value)) * _scaleProportion3.Value :
+                        Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike3.Value) - avgVec) * _scaleProportion3.Value;
+                    payoff -= scalePayoff;
+                }
+
                 if (_isOption)
                 {
                     payoff = Vector.Max(new Vector<double>(0), payoff);
@@ -339,12 +377,6 @@ namespace Qwack.Paths.Payoffs
                             _exercisedPeriod[resultIx][a] = Vector<double>.Zero;
                         }
                     }
-                }
-
-                if(_scaleProportion.HasValue && _scaleStrike.HasValue)
-                {
-                    var scalePayoff = Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value;
-                    payoff -= scalePayoff;
                 }
 
                 _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal);

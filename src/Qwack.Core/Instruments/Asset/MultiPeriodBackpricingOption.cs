@@ -66,6 +66,12 @@ namespace Qwack.Core.Instruments.Asset
         public double? ScaleStrike { get; set; }
         public double? ScaleProportion { get; set; }
 
+        public double? ScaleStrike2 { get; set; }
+        public double? ScaleProportion2 { get; set; }
+
+        public double? ScaleStrike3 { get; set; }
+        public double? ScaleProportion3 { get; set; }
+
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
         {
@@ -137,6 +143,10 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = OffsetFixingId,
             ScaleStrike = ScaleStrike,
             ScaleProportion = ScaleProportion,
+            ScaleStrike2 = ScaleStrike2,
+            ScaleProportion2 = ScaleProportion2,
+            ScaleStrike3 = ScaleStrike3,
+            ScaleProportion3 = ScaleProportion3,
             MetaData = new(MetaData),
             PeriodPremia = PeriodPremia,
             CashAskFixingId = CashAskFixingId,
@@ -188,6 +198,10 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = to.OffsetFixingId;
             ScaleProportion = to.ScaleProportion;
             ScaleStrike = to.ScaleStrike;
+            ScaleProportion2 = to.ScaleProportion2;
+            ScaleStrike2 = to.ScaleStrike2;
+            ScaleProportion3 = to.ScaleProportion3;
+            ScaleStrike3 = to.ScaleStrike3;
             PeriodPremia = to.PeriodPremia;
             CashBidFixingId = to.CashBidFixingId;
             CashAskFixingId = to.CashAskFixingId;
@@ -233,6 +247,10 @@ namespace Qwack.Core.Instruments.Asset
                 OffsetFixingId = OffsetFixingId,
                 ScaleProportion = ScaleProportion,
                 ScaleStrike = ScaleStrike,
+                ScaleProportion2 = ScaleProportion2,
+                ScaleStrike2 = ScaleStrike2,
+                ScaleProportion3 = ScaleProportion3,
+                ScaleStrike3 = ScaleStrike3,
                 MetaData = new(MetaData),
                 PeriodPremia = PeriodPremia,
                 M3AskFixingId = M3AskFixingId,

@@ -90,6 +90,14 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public double PremiumTotal { get; set; }
         [ProtoMember(39)]
         public DateTime PremiumSettleDate { get; set; }
+        [ProtoMember(40)]
+        public double? ScaleStrike2 { get; set; }
+        [ProtoMember(41)]
+        public double? ScaleProportion2 { get; set; }
+        [ProtoMember(42)]
+        public double? ScaleStrike3 { get; set; }
+        [ProtoMember(43)]
+        public double? ScaleProportion3 { get; set; }
 
     }
 }

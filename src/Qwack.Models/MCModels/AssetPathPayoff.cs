@@ -242,28 +242,28 @@ namespace Qwack.Models.MCModels
                     {
                         VanillaModel = VanillaModel
                     };
-                    _subInstruments = new List<IAssetPathPayoff>
-                    {
+                    _subInstruments =
+                    [
                         albpp
-                    };
+                    ];
                     if (albpp.SettlementRegressor != null)
-                        Regressors = new[] { albpp.SettlementRegressor };
+                        Regressors = [albpp.SettlementRegressor];
                     else
-                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                        Regressors = [];
                     break;
                 case Core.Instruments.Asset.BackPricingOption bpo:
                     _ccy = bpo.Currency;
                     _payDate = bpo.SettlementDate;
                     var bp = new Paths.Payoffs.BackPricingOption(bpo.AssetId, bpo.FixingDates.ToList(), bpo.DecisionDate, bpo.SettlementDate, bpo.SettlementDate, bpo.CallPut, bpo.DiscountCurve, bpo.PaymentCurrency, bpo.Notional, SimulationCcy)
                     { VanillaModel = VanillaModel };
-                    _subInstruments = new List<IAssetPathPayoff>
-                    {
+                    _subInstruments =
+                    [
                         bp
-                    };
+                    ];
                     if (bp.AverageRegressor != null)
-                        Regressors = new[] { bp.AverageRegressor, bp.SettlementRegressor };
+                        Regressors = [bp.AverageRegressor, bp.SettlementRegressor];
                     else
-                        Regressors = new[] { bp.SettlementRegressor };
+                        Regressors = [bp.SettlementRegressor];
                     break;
                 case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate2 = mbpo.SettlementFixingDates == null && mbpo.SettlementDate!=default ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;
@@ -279,7 +279,7 @@ namespace Qwack.Models.MCModels
                             RollType = RollType.LME
                         };
                         var mbp = new MultiPeriodMultiIndexBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
-                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
+                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? [settleFixingDate2],
                                                          mbpo.SettlementDate, mbpo.CallPut,
                                                          mbpo.DiscountCurve, mbpo.PaymentCurrency,
                                                          mbpo.Notional, shifter, mbpo.IsOption, null,
@@ -294,21 +294,23 @@ namespace Qwack.Models.MCModels
                             OptionPremiumTotal = mbpo.PremiumTotal,
                             OptionPremiumSettleDate = mbpo.PremiumSettleDate
                         };
-                        _subInstruments = new List<IAssetPathPayoff>
-                        {
+                        _subInstruments =
+                        [
                             mbp
-                        };
+                        ];
 
-                        Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                        Regressors = [];
                     }
                     else
                     {
                         var mbp = new MultiPeriodBackPricingOptionPP(mbpo.AssetId, mbpo.FixingDates,
-                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? new[] { settleFixingDate2 },
+                                                         mbpo.DecisionDate, mbpo.SettlementFixingDates ?? [settleFixingDate2],
                                                          mbpo.SettlementDate, mbpo.CallPut,
                                                          mbpo.DiscountCurve, mbpo.PaymentCurrency,
                                                          mbpo.Notional, mbpo.IsOption, null, dateShifter: mbpo.FixingOffset,
-                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia)
+                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia,
+                                                         scaleProportion2: mbpo.ScaleProportion2, scaleStrike2: mbpo.ScaleStrike2, 
+                                                         scaleProportion3: mbpo.ScaleProportion3, scaleStrike3: mbpo.ScaleStrike3)
                         {
                             VanillaModel = VanillaModel,
                             FixingId = mbpo.AssetFixingId,
@@ -316,18 +318,18 @@ namespace Qwack.Models.MCModels
                             OptionPremiumTotal = mbpo.PremiumTotal,
                             OptionPremiumSettleDate = mbpo.PremiumSettleDate
                         };
-                        _subInstruments = new List<IAssetPathPayoff>
-                            {
+                        _subInstruments =
+                            [
                                 mbp
-                            };
+                            ];
                         if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
-                            Regressors = mbp.AverageRegressors.Where(x => x != null).Concat(new[] { mbp.SettlementRegressor }).ToArray();
+                            Regressors = mbp.AverageRegressors.Where(x => x != null).Concat([mbp.SettlementRegressor]).ToArray();
                         else if (mbp.SettlementRegressor != null)
-                            Regressors = new[] { mbp.SettlementRegressor };
+                            Regressors = [mbp.SettlementRegressor];
                         else if (mbp.AverageRegressors != null)
                             Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
                         else
-                            Regressors = Array.Empty<LinearAveragePriceRegressor>();
+                            Regressors = [];
                     }
 
                     break;

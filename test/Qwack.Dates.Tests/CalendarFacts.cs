@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Qwack.Providers.Json;
 using Qwack.Transport.BasicTypes;
 using Xunit;
@@ -166,6 +167,28 @@ namespace Qwack.Dates.Tests
 
             Assert.False(calendarA.Equals(calendarB));
             Assert.True(calendarA.Equals(calendarA));
+        }
+
+        [Fact]
+        public void Junteenth()
+        {
+            var usd = CalendarProvider.GetCalendar("NYC");
+            var gbp = CalendarProvider.GetCalendar("GBP");
+
+            var juneteenth = new DateTime(2025, 06, 19);
+
+            var isHoliday = usd.IsHoliday(juneteenth);
+
+            var d = new DateTime(2025, 06, 13);
+            var sb = new StringBuilder();
+            while (d < juneteenth.AddDays(5))
+            {
+                var dSpot = d.SpotDate(2.Bd(), gbp, usd);
+                sb.AppendLine($"{d:yyyy-MM-dd} is {(usd.IsHoliday(d) ? "a USD holiday" : "not USD a holiday")} / LME cash {dSpot:yyyy-MM-dd}");
+                d = d.NextWeekDay();
+            }
+
+            var log = sb.ToString();
         }
     }
 }

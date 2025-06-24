@@ -1144,6 +1144,13 @@
     "DaysToExclude": [],
     "MonthsToExclude": []
   },
+  "TRY": {
+    "InheritedCalendar": [ "IST" ],
+    "Name": "TRY",
+    "DaysToAlwaysExclude": [ 6, 0 ],
+    "DaysToExclude": [],
+    "MonthsToExclude": []
+  },
   "XAU": {
     "InheritedCalendar": [ "LON" ],
     "Name": "XAU",

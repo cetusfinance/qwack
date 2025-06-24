@@ -163,5 +163,10 @@
     "Ccy": "SGD",
     "DayCount": "Act365",
     "SettlementCalendarName": "SIN"
+  },
+  {
+    "Ccy": "TRY",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "IST"
   }
 ]

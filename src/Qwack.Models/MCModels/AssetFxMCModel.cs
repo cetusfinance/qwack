@@ -40,6 +40,7 @@ namespace Qwack.Models.MCModels
         public Portfolio Portfolio { get; }
         public IAssetFxModel Model { get; }
         public McSettings Settings { get; }
+        public SchwartzSmithTwoFactorModelParameters TwoFactorModelParameters { get; }
 
         public IAssetFxModel VanillaModel => Model;
 
@@ -54,7 +55,7 @@ namespace Qwack.Models.MCModels
 
         private int _priceFactorDepth;
 
-        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = true)
+        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = true, SchwartzSmithTwoFactorModelParameters twoFactorModelParameters = null)
         {
             if (settings.CompactMemoryMode && settings.AveragePathCorrection)
                 throw new Exception("Can't use both CompactMemoryMode and PathCorrection");
@@ -66,6 +67,7 @@ namespace Qwack.Models.MCModels
             Portfolio = portfolio;
             Model = model;
             Settings = settings;
+            TwoFactorModelParameters = twoFactorModelParameters;
 
             if (!deferInitialization)
             {
@@ -262,6 +264,19 @@ namespace Qwack.Models.MCModels
                             pastFixings: fixings,
                             fxAdjustSurface: adjSurface,
                             fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                    else if (Settings.McModelType == McModelType.Commodity2Factor)
+                    {
+                        var asset = new SchwartzSmithTwoFactorModel
+                        (
+                            ssParams: TwoFactorModelParameters,
+                            startDate: OriginDate,
+                            expiryDate: lastDate,
+                            nTimeSteps: Settings.NumberOfTimesteps,
+                            name: assetId,
+                            pastFixings: fixings
                         );
                         Engine.AddPathProcess(asset);
                     }

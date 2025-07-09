@@ -194,7 +194,7 @@ namespace Qwack.Core.Instruments.Asset
             SettlementFixingDates = to.SettlementFixingDates;
             IsOption = to.IsOption;
             DeclaredPeriod = to.DeclaredPeriod;
-            FixingOffset = new DateShifter(to.FixingOffset, calendarProvider);
+            FixingOffset = to.FixingOffset == null? null : new DateShifter(to.FixingOffset, calendarProvider);
             OffsetFixingId = to.OffsetFixingId;
             ScaleProportion = to.ScaleProportion;
             ScaleStrike = to.ScaleStrike;

@@ -4,6 +4,7 @@ namespace Qwack.Transport.BasicTypes
     {
         Black,
         LocalVol,
-        TurboSkew
+        TurboSkew,
+        Commodity2Factor
     }
 }

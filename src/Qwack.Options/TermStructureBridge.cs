@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Qwack.Options
 {
     public class TermStructureBridge(double[] times, double[] mu, double[] sigma)
@@ -38,6 +40,37 @@ namespace Qwack.Options
                     sum += sigma[i] * sigma[i] * dt;
             }
             return sum;
+        }
+
+        // ∫_a^b f(u) du for step function f
+        double Integrate(double a, double b, double[] times, double[] values)
+        {
+            var sum = 0.0;
+            for (var i = 1; i < times.Length; i++)
+            {
+                double t0 = times[i - 1], t1 = times[i];
+                if (b <= t0) break;
+                if (a >= t1) continue;
+                var left = System.Math.Max(a, t0);
+                var right = System.Math.Min(b, t1);
+                if (left < right)
+                    sum += values[i] * (right - left);
+            }
+            return sum;
+        }
+
+        // ∫₀^t (μ(u) - ½σ²(u)) du
+        public double DriftIntegral2(double t)
+        {
+            var muInt = Integrate(0.0, t, times, mu);
+            var sig2Int = Integrate(0.0, t, times, sigma.Select(x => x * x).ToArray());
+            return muInt - 0.5 * sig2Int;
+        }
+
+        // ∫ₐᵗ σ²(u) du
+        public double VarianceIntegral(double a, double t)
+        {
+            return Integrate(a, t, times, sigma.Select(x => x * x).ToArray());
         }
     }
 }

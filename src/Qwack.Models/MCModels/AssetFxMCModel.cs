@@ -299,7 +299,7 @@ namespace Qwack.Models.MCModels
                         var asset = new LMEFuturesCurve
                         (
                             startDate: OriginDate,
-                            expiryDate: lastDate,
+                            expiryDate: lastDate.NextThirdWednesday(),
                             volSurface: surface,
                             forwardCurve: fwdCurve2,
                             nTimeSteps: Settings.NumberOfTimesteps,

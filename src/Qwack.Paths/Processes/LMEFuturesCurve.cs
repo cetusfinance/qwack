@@ -86,11 +86,11 @@ namespace Qwack.Paths.Processes
                 promptDict[$"{name}~{fmExpiry:yyyyMMdd}"] = fmExpiry;
             }
 
-            fmExpiry = fmExpiry.AddMonths(1).ThirdWednesday();
-            _futuresExpiries.Add(fmExpiry);
-            _optionExpiries.Add(fmExpiry.SubtractWeekDays(10));
-            _codes.Add($"{name}~{fmExpiry:yyyyMMdd}");
-            promptDict[$"{name}~{fmExpiry:yyyyMMdd}"] = fmExpiry;
+            //fmExpiry = fmExpiry.AddMonths(1).ThirdWednesday();
+            //_futuresExpiries.Add(fmExpiry);
+            //_optionExpiries.Add(fmExpiry.SubtractWeekDays(10));
+            //_codes.Add($"{name}~{fmExpiry:yyyyMMdd}");
+            //promptDict[$"{name}~{fmExpiry:yyyyMMdd}"] = fmExpiry;
 
             _startSpotDate = spotDate;
 
@@ -227,30 +227,30 @@ namespace Qwack.Paths.Processes
                     var tb = _timesteps.Times[nextExp];
                     var xa = previousStep.Log();
                     var xb = futPrice.Log();
-                    var Da = bb.DriftIntegral(ta);
-                    var Db = bb.DriftIntegral(tb);
+                    var Da = bb.DriftIntegral2(ta);
+                    var Db = bb.DriftIntegral2(tb);
                     var ya = xa - new Vector<double>(Da);
                     var yb = xb - new Vector<double>(Db);
 
-                    var V_total = bb.SigmaSqIntegral(ta, tb);
+                    var V_total = bb.VarianceIntegral(ta, tb);
 
                     for(var ti=step; ti < nextExp; ti++)
                     {
                         var t = _timesteps.Times[ti];
-                        var A = bb.SigmaSqIntegral(ta, t);
+                        //var A = bb.VarianceIntegral(ta, t);
                         //var lambda = V_total==0 ? 0 : A / V_total;
                         var lambda = (t - ta) / (tb - ta);
 
                         var meanY = ya + lambda * (yb - ya);
-                        var varY = A * (1 - lambda);
+                        var varY = V_total * (1 - lambda) * lambda;
 
                         var W = steps[ti];
                         var y = meanY + System.Math.Sqrt(varY) * W;
                         //var y = (1 - lambda) * ya + lambda * yb + new Vector<double>(System.Math.Sqrt(A*lambda*(1-lambda)*t))*W;
 
-                        var D = bb.DriftIntegral(t);
+                        var D = bb.DriftIntegral2(t);
                         var x = y + new Vector<double>(D);
-                        var S = x.ExpD(1e-12);
+                        var S = x.ExpD(1e-14);
                         steps[ti] = S;
                     }
 
@@ -315,24 +315,27 @@ namespace Qwack.Paths.Processes
         {
             _factorIndices = new int[_codes.Count];
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
+            _mainFactorIndex = mappingFeature.AddDimension(_name);
+
             for (var c = 0; c < _factorIndices.Length; c++)
             {
                 _factorIndices[c] = mappingFeature.AddDimension(_codes[c]);
             }
-            _mainFactorIndex = mappingFeature.AddDimension(_name);
+     
+
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             var simDates = new List<DateTime>(_pastFixings.Keys.Where(x => x < _startDate))
             {
                 _startDate,
             };
 
-            var d = _startDate.NextThirdWednesday(true);
-            while (d < _expiryDate)
-            {
-                simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
-                d = d.NextThirdWednesday(true);
-            }
-            simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
+            //var d = _startDate.NextThirdWednesday(true);
+            //while (d < _expiryDate)
+            //{
+            //    simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
+            //    d = d.NextThirdWednesday(true);
+            //}
+            //simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
 
             simDates.AddRange(_futuresExpiries.Select(e => e.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd())));
 

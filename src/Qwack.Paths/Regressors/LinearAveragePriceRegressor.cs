@@ -10,7 +10,7 @@ using Qwack.Paths.Features;
 
 namespace Qwack.Paths.Regressors
 {
-    public class LinearAveragePriceRegressor : IPathProcess, IRequiresFinish
+    public class LinearAveragePriceRegressor : IForwardPriceEstimate
     {
         private int _nDims;
         private int _dateIxRegression;
@@ -172,9 +172,12 @@ namespace Qwack.Paths.Regressors
             return Regressor.Interpolate(spot);
         }
 
+        public double GetEstimate(double? spot) => Predict(spot ?? 0);
+
         public override bool Equals(object obj) => obj is LinearAveragePriceRegressor regressor &&
                    _regressionDate == regressor._regressionDate &&
                    Enumerable.SequenceEqual(_fixingDates, regressor._fixingDates) &&
                    _regressionKey == regressor._regressionKey;
+
     }
 }

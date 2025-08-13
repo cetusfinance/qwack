@@ -102,7 +102,7 @@ namespace Qwack.Paths.Processes
                 {
                     var W = steps[step];
                     var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                    var bm = (_vols[step][f] * _vols[step][f] / 2.0) * dt + (_vols[step][f] * _timesteps.TimeStepsSqrt[step] * W);
+                    var bm = (-_vols[step][f] * _vols[step][f] / 2.0) * dt + (_vols[step][f] * _timesteps.TimeStepsSqrt[step] * W);
                     previousStep *= bm.Exp();
                     steps[step] = previousStep;
                 }

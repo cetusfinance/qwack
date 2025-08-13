@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using static System.Math;
 
@@ -445,14 +446,19 @@ namespace Qwack.Math.Matrix
                         {
                             sum += ret[c][j] * ret[c][j];
                         }
-                        ret[c][c] = Sqrt(a[c][c] - sum);
+
+                        ret[c][c] = sum > a[c][c] ? 0 : Sqrt(a[c][c] - sum);
                     }
                     else
                     {
                         double sum = 0;
                         for (var j = 0; j < c; j++)
                             sum += ret[r][j] * ret[c][j];
-                        ret[r][c] = 1.0 / ret[c][c] * (a[r][c] - sum);
+                        ret[r][c] = ret[c][c]==0 ? 0 : 1.0 / ret[c][c] * (a[r][c] - sum);
+                    }
+                    if (double.IsNaN(ret[r][c]))
+                    {
+                        Debug.Assert(true);
                     }
                 }
             }

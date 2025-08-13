@@ -322,14 +322,14 @@ namespace Qwack.Models.MCModels
                             [
                                 mbp
                             ];
-                        if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
-                            Regressors = mbp.AverageRegressors.Where(x => x != null).Concat([mbp.SettlementRegressor]).ToArray();
-                        else if (mbp.SettlementRegressor != null)
-                            Regressors = [mbp.SettlementRegressor];
-                        else if (mbp.AverageRegressors != null)
-                            Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
-                        else
-                            Regressors = [];
+                        //if (mbp.AverageRegressors != null && mbp.SettlementRegressor != null)
+                        //    Regressors = mbp.AverageRegressors.Where(x => x != null).Concat([mbp.SettlementRegressor]).ToArray();
+                        //else if (mbp.SettlementRegressor != null)
+                        //    Regressors = [mbp.SettlementRegressor];
+                        //else if (mbp.AverageRegressors != null)
+                        //    Regressors = mbp.AverageRegressors.Where(x => x != null).ToArray();
+                        //else
+                        //    Regressors = [];
                     }
 
                     break;
@@ -513,8 +513,23 @@ namespace Qwack.Models.MCModels
             dates.AddDates(_asianDates);
             if (_isCompo)
                 dates.AddDates(_asianFxDates);
-            if(_payFixingDate!=default)
+            if (_payFixingDate != default)
                 dates.AddDate(_payFixingDate);
+        }
+
+        public List<ForwardPriceEstimatorSpec> GetRequiredEstimators(IAssetFxModel vanillaModel)
+        {
+            var o = new List<ForwardPriceEstimatorSpec>();
+            if (_subInstruments != null)
+            {
+                foreach (var ins in _subInstruments)
+                {
+                    if(ins is IRequiresPriceEstimators insEst)
+                        o.AddRange(insEst.GetRequiredEstimators(vanillaModel));
+                }
+            }
+
+            return [.. o.Distinct()];
         }
 
         public double AverageResult => ResultsByPath.Average();

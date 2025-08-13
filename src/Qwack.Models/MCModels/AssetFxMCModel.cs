@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
 using Qwack.Core.Curves;
@@ -124,7 +125,14 @@ namespace Qwack.Models.MCModels
             }
             Engine.IncrementDepth();
 
-            if (Model.CorrelationMatrix != null)
+            TimeDependentLmeCorrelations lmeCorrelations = null;
+            if (Settings.McModelType == McModelType.LMEForward)
+            {
+                lmeCorrelations = new TimeDependentLmeCorrelations(Model, _calendarProvider);
+                Engine.AddPathProcess(lmeCorrelations);
+                Engine.IncrementDepth();
+            }
+            else if (Model.CorrelationMatrix != null)
             {
                 if (Settings.LocalCorrelation)
                     Engine.AddPathProcess(new CholeskyWithTime(Model.CorrelationMatrix, Model));
@@ -132,6 +140,7 @@ namespace Qwack.Models.MCModels
                     Engine.AddPathProcess(new Cholesky(Model.CorrelationMatrix));
                 Engine.IncrementDepth();
             }
+           
 
             var lastDate = Portfolio.LastSensitivityDate;
             var assetIds = Portfolio.AssetIds();
@@ -277,6 +286,27 @@ namespace Qwack.Models.MCModels
                             nTimeSteps: Settings.NumberOfTimesteps,
                             name: assetId,
                             pastFixings: fixings
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                    else if (Settings.McModelType == McModelType.LMEForward)
+                    {
+                        var fwdCurve2 = new Func<DateTime, double>(t =>
+                        {
+                            return Model.GetPriceCurve(assetId).GetPriceForDate(t);
+                        });
+
+                        var asset = new LMEFuturesCurve
+                        (
+                            startDate: OriginDate,
+                            expiryDate: lastDate,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve2,
+                            nTimeSteps: Settings.NumberOfTimesteps,
+                            name: assetId,
+                            pastFixings: fixings,
+                            calendarProvider: _calendarProvider,
+                            correlations: lmeCorrelations
                         );
                         Engine.AddPathProcess(asset);
                     }
@@ -507,39 +537,40 @@ namespace Qwack.Models.MCModels
             //payoffs
             Engine.IncrementDepth();
             _payoffs = assetInstruments.ToDictionary(x => x.TradeId, y => new AssetPathPayoff(y, _currencyProvider, _calendarProvider, Settings.SimulationCurrency));
-            if (!Settings.AvoidRegressionForBackPricing && _payoffs.Any(x => x.Value.Regressors != null))
+
+
+            //forward price estimators
+            var estimatorSpecs = new List<ForwardPriceEstimatorSpec>();
+            foreach (var payoff in _payoffs)
             {
-                //var regressorsToAdd = _payoffs.Where(x => x.Value.Regressors != null)
-                //    .SelectMany(x => x.Value.Regressors)
-                //    .Distinct();
-
-                //foreach (var regressor in regressorsToAdd)
-                //{
-                //    Engine.AddPathProcess(regressor);
-                //    foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
-                //    {
-                //        if (payoff.Value.Regressors.Any(x => x == regressor))
-                //            payoff.Value.SetRegressor(regressor);
-                //    }
-                //}
-
-                //Engine.IncrementDepth();
-
-
-
-                foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
-                {
-                    foreach (var regressor in payoff.Value.Regressors)
-                        Engine.AddPathProcess(regressor);
-                    //foreach (var payoff in _payoffs.Where(x => x.Value.Regressors != null))
-                    //{
-                    //    if (payoff.Value.Regressors.Any(x => x == regressor))
-                    //        payoff.Value.SetRegressor(regressor);
-                    //}
-                }
-
-                Engine.IncrementDepth();
+                var e = payoff.Value.GetRequiredEstimators(VanillaModel);
+                estimatorSpecs.AddRange(e);
             }
+            estimatorSpecs = [..estimatorSpecs.Distinct()];
+            var specsAdded = false;
+            foreach(var spec in estimatorSpecs)
+            {
+                if(Settings.AvoidRegressionForBackPricing) //use fixed spread
+                {
+                    var estimator = new FixedSpreadEstimator(spec.AssetId, VanillaModel, spec.ValDate, spec.AverageDates);
+                    Engine.AddPathProcess(estimator);
+                    spec.Estimator = estimator;
+                    Engine.Features.AddPriceEstimator(spec, estimator);
+                }
+                else
+                {
+                    var regressionKey = spec.AssetId; //TODO fix for FX
+                    var estimator = new LinearAveragePriceRegressor(spec.ValDate, spec.AverageDates, regressionKey);
+                    Engine.AddPathProcess(estimator);
+                    spec.Estimator = estimator;
+                    Engine.Features.AddPriceEstimator(spec, estimator);
+                }
+                specsAdded = true;
+            }
+            if (specsAdded)
+                Engine.IncrementDepth();
+
+            //adding payoffs to engine
             foreach (var product in _payoffs)
             {
                 if (Settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption || product.Value.AssetInstrument is AsianLookbackOption))

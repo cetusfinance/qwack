@@ -5,6 +5,7 @@ namespace Qwack.Transport.BasicTypes
         Black,
         LocalVol,
         TurboSkew,
-        Commodity2Factor
+        Commodity2Factor,
+        LMEForward
     }
 }

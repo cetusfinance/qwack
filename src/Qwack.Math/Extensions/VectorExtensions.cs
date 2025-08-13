@@ -30,6 +30,32 @@ namespace Qwack.Math.Extensions
             return result;
         }
 
+        public static Vector<double> ExpD(this Vector<double> vector, double precision = 1e-8)
+        {
+            var result = new Vector<double>(1.0);
+            var term = new Vector<double>(1.0);
+            var vecPrecision = new Vector<double>(precision);
+            for (var i = 1; i < 500; i++)
+            {
+                term = term * vector / new Vector<double>(i);
+                result += term;
+                if(Vector.LessThanOrEqualAll(Vector.Abs(term), vecPrecision))
+                    break;
+            }
+
+            return result;
+        }
+
+        public static Vector<double> Log(this Vector<double> vector, int precision = 8)
+        {
+            var o = new double[Vector<double>.Count];
+            for (var i = 0; i < Vector<double>.Count; i++)
+            {
+                o[i] = System.Math.Log(vector[i]);
+            }
+            return new Vector<double>(o);
+        }
+
         public static Vector<double> Exp2(this Vector<double> z)
         {
             var exp = new Vector<double>(1.0);

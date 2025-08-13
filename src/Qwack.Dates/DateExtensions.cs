@@ -299,6 +299,16 @@ namespace Qwack.Dates
         /// <returns></returns>
         public static DateTime ThirdWednesday(this DateTime date) => date.NthSpecificWeekDay(DayOfWeek.Wednesday, 3);
 
+
+        /// <summary>
+        /// Returns the following third wednesday to the input date
+        /// </summary>
+        /// <param name="date">Input date</param>
+        /// <returns></returns>
+        public static DateTime NextThirdWednesday(this DateTime date, bool rollOnMatch=false) => rollOnMatch ? 
+             (date < date.ThirdWednesday() ? date.ThirdWednesday() : date.AddMonths(1).ThirdWednesday()) :
+             (date <= date.ThirdWednesday() ? date.ThirdWednesday() : date.AddMonths(1).ThirdWednesday());
+
         /// <summary>
         /// Returns the Nth instance of a specific week day in the month in which the input date falls
         /// E.g. NthSpecificWeekDay(date,DayOfWeek.Wednesday, 3) would return the third wednesday of the month in which the input date falls

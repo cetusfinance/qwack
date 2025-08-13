@@ -13,7 +13,7 @@ using Qwack.Transport.BasicTypes;
 
 namespace Qwack.Paths.Payoffs
 {
-    public class MultiPeriodBackPricingOptionPP : IPathProcess, IRequiresFinish, IAssetPathPayoff
+    public class MultiPeriodBackPricingOptionPP : IPathProcess, IRequiresFinish, IAssetPathPayoff, IRequiresPriceEstimators
     {
         private readonly object _locker = new();
 
@@ -40,10 +40,7 @@ namespace Qwack.Paths.Payoffs
         private int _liveDateIx;
         private Vector<double>[] _results;
         private Vector<double> _notional;
-        private double _notionalDbl;
         private bool _isComplete;
-        private double _expiryToSettleCarry;
-        private double[] _expiryToAvgCarrys;
         private bool _isOption;
         private int? _declaredPeriod;
 
@@ -57,6 +54,8 @@ namespace Qwack.Paths.Payoffs
         private double[] _contangoScaleFactors;
         private double[] _periodPremia;
 
+        private ITimeStepsFeature _dates;
+        private IFeatureCollection _featureCollection;
 
         private Vector<double>[][] _exercisedPeriod;
 
@@ -64,8 +63,8 @@ namespace Qwack.Paths.Payoffs
 
         public string RegressionKey => _assetName + (_fxName != null ? $"*{_fxName}" : "");
 
-        public LinearAveragePriceRegressor SettlementRegressor { get; set; }
-        public LinearAveragePriceRegressor[] AverageRegressors { get; set; }
+        public IForwardPriceEstimate SettlementRegressor { get; set; }
+        public IForwardPriceEstimate[] AverageRegressors { get; set; }
 
         public string FixingId { get; set; }
         public string FixingIdDateShifted { get; set; }
@@ -107,7 +106,6 @@ namespace Qwack.Paths.Payoffs
             _payDate = payDate;
             _assetName = assetName;
             _notional = new Vector<double>(notional);
-            _notionalDbl = notional;
             _isOption = isOption;
             _declaredPeriod = declaredPeriod;
             _dateShifter = dateShifter;
@@ -121,11 +119,6 @@ namespace Qwack.Paths.Payoffs
 
             if (_ccy.Ccy != "USD")
                 _fxName = $"USD/{_ccy.Ccy}";
-
-            AverageRegressors = avgDates.Select(avg => avg.Last() > decisionDate ? new LinearAveragePriceRegressor(decisionDate, avg.Where(x => x > decisionDate).ToArray(), RegressionKey) : null).ToArray();
-            SettlementRegressor = _settleFixingDates.Length == 1 && settlementFixingDates[0] == _decisionDate ?
-                null : //settlement is spot price on decision date
-                new LinearAveragePriceRegressor(decisionDate, _settleFixingDates, RegressionKey);
         }
 
         public bool IsComplete => _isComplete;
@@ -134,6 +127,8 @@ namespace Qwack.Paths.Payoffs
 
         public void Finish(IFeatureCollection collection)
         {
+            _featureCollection = collection;
+
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(_assetName);
 
@@ -141,6 +136,7 @@ namespace Qwack.Paths.Payoffs
                 _fxIndex = dims.GetDimension(_fxName);
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
+            _dates = dates;
             _dateIndexes = _avgDates
                 .Select(x => x.Select(y => dates.GetDateIndex(y)).ToArray())
                 .ToList();
@@ -165,86 +161,45 @@ namespace Qwack.Paths.Payoffs
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
 
-            if (VanillaModel != null)
+            _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
+            
+            var curve = VanillaModel.GetPriceCurve(_assetName);
+            if (Fixings != null && FixingsDateShifted != null && _dateShifter != null)
             {
-                var curve = VanillaModel.GetPriceCurve(_assetName);
-                _liveDateIx = dates.GetDateIndex(VanillaModel.BuildDate);
-                var liveSpotDate = VanillaModel.BuildDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-
-                if (!string.IsNullOrEmpty(FixingId))
-                    Fixings = VanillaModel.GetFixingDictionary(FixingId);
-                if (!string.IsNullOrEmpty(FixingIdDateShifted))
-                    FixingsDateShifted = VanillaModel.GetFixingDictionary(FixingIdDateShifted);
-
-                if (Fixings!=null && FixingsDateShifted!=null && _dateShifter != null)
+                var liveSpotDate = VanillaModel.BuildDate.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
+                _contangoScaleFactors = new double[_dates.TimeStepCount];
+                for (var i = 0; i < _contangoScaleFactors.Length; i++)
                 {
-                    liveSpotDate = VanillaModel.BuildDate.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
-
-                    _contangoScaleFactors = new double[dates.TimeStepCount];
-                    for(var i=0;i<_contangoScaleFactors.Length;i++)
+                    var date = _dates.Dates[i];
+                    if (Fixings.TryGetValue(date, out var fix) && FixingsDateShifted.TryGetValue(date, out var fixShifted))
                     {
-                        var date = dates.Dates[i];
-                        if(Fixings.TryGetValue(date, out var fix) && FixingsDateShifted.TryGetValue(date, out var fixShifted))
-                        {
-                            _contangoScaleFactors[i] = fixShifted / fix;
-                        }
-                        else
-                        {
-                            var spotDate = dates.Dates[i].AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-                            var shiftedDate = dates.Dates[i].AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
-                            _contangoScaleFactors[i] = curve.GetPriceForDate(shiftedDate) / curve.GetPriceForDate(spotDate);
-                        }    
+                        _contangoScaleFactors[i] = fixShifted / fix;
                     }
-
-                    var decisionSpotDate = _decisionDate.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
-                    var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
-
-                    _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
-
-                    var expToAvg = new List<double>();
-                    foreach (var ad in _avgDates)
+                    else
                     {
-                        double carry = 0;
-                        if (ad.Last() > _decisionDate)
-                        {
-                            var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x => x.AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period)).ToArray();
-                            carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
-                        }
-                        expToAvg.Add(carry);
+                        var spotDate = _dates.Dates[i].AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
+                        var shiftedDate = _dates.Dates[i].AddPeriod(_dateShifter.RollType, _dateShifter.Calendar, _dateShifter.Period);
+                        _contangoScaleFactors[i] = curve.GetPriceForDate(shiftedDate) / curve.GetPriceForDate(spotDate);
                     }
-                    _expiryToAvgCarrys = expToAvg.ToArray();
-
-                }
-                else
-                {
-
-                    var decisionSpotDate = _decisionDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-                    var settlePromptDates = _settleFixingDates.Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
-
-                    _expiryToSettleCarry = curve.GetAveragePriceForDates(settlePromptDates) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
-
-                    var expToAvg = new List<double>();
-                    foreach (var ad in _avgDates)
-                    {
-                        double carry = 0;
-                        if (ad.Last() > _decisionDate)
-                        {
-                            var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).Select(x => x.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag)).ToArray();
-                            carry = curve.GetAveragePriceForDates(pointsPastDecisionDate) / curve.GetPriceForDate(_declaredPeriod.HasValue ? liveSpotDate : decisionSpotDate);
-                        }
-                        expToAvg.Add(carry);
-                    }
-                    _expiryToAvgCarrys = expToAvg.ToArray();
-
                 }
             }
 
-            _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
+
+
             _isComplete = true;
         }
 
         public void Process(IPathBlock block)
         {
+            if (_settleSpec != null && SettlementRegressor==null)
+            {
+                SettlementRegressor = _featureCollection.GetPriceEstimator(_settleSpec);
+            }
+            foreach (var spec in _avgSpecs)
+            {
+                AverageRegressors = [.. _avgSpecs.Select(x => x == null ? null : _featureCollection.GetPriceEstimator(x))];
+            }
+
             var blockBaseIx = block.GlobalPathIndex;
             var nTotalVec = new Vector<double>[_nTotal.Length];
             for (var i = 0; i < nTotalVec.Length; i++)
@@ -276,34 +231,21 @@ namespace Qwack.Paths.Payoffs
                     }
 
                     var spotAtExpiry = steps[spotIx] * (_fxName != null ? stepsFx[spotIx] : _one);
-                    if (_contangoScaleFactors != null)
-                    {
-                        spotAtExpiry *= _contangoScaleFactors[spotIx];
-                    }
+                    //if (_contangoScaleFactors != null)
+                    //{
+                    //    spotAtExpiry *= _contangoScaleFactors[spotIx];
+                    //}
 
-                    if (VanillaModel != null)
-                    {
-                        var futSum = new double[Vector<double>.Count];
 
-                        for (var i = 0; i < Vector<double>.Count; i++)
-                        {
-                            futSum[i] = spotAtExpiry[i] * _expiryToAvgCarrys[a] * _nFuture[a];
-                            setReg[i] = spotAtExpiry[i] * _expiryToSettleCarry;
-                        }
-                        var futVec = new Vector<double>(futSum);
-                        avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);
-                    }
-                    else
+                    var futSum = new double[Vector<double>.Count];
+                    for (var i = 0; i < Vector<double>.Count; i++)
                     {
-                        var futSum = new double[Vector<double>.Count];
-                        for (var i = 0; i < Vector<double>.Count; i++)
-                        {
-                            futSum[i] = AverageRegressors[a] == null ? 0.0 : AverageRegressors[a].Predict(spotAtExpiry[i]) * _nFuture[a];
-                            setReg[i] = SettlementRegressor?.Predict(spotAtExpiry[i]) ?? spotAtExpiry[i];
-                        }
-                        var futVec = new Vector<double>(futSum);
-                        avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);
+                        futSum[i] = AverageRegressors[a] == null ? 0.0 : AverageRegressors[a].GetEstimate(spotAtExpiry[i]) * _nFuture[a];
+                        setReg[i] = SettlementRegressor?.GetEstimate(spotAtExpiry[i]) ?? spotAtExpiry[i];
                     }
+                    var futVec = new Vector<double>(futSum);
+                    avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);
+
 
                     avgVec = (_callPut == OptionType.C) ?
                         Vector.Min(avgs[a], avgVec) :
@@ -390,6 +332,54 @@ namespace Qwack.Paths.Payoffs
             dates.AddDates(_settleFixingDates);
             dates.AddDate(_payDate);
             dates.AddDate(_decisionDate);
+        }
+
+        private ForwardPriceEstimatorSpec _settleSpec;
+        private List<ForwardPriceEstimatorSpec> _avgSpecs = [];
+
+        public List<ForwardPriceEstimatorSpec> GetRequiredEstimators(IAssetFxModel vanillaModel)
+        {
+            var o = new List<ForwardPriceEstimatorSpec>();
+            var curve = vanillaModel.GetPriceCurve(_assetName);
+
+            if (!string.IsNullOrEmpty(FixingId))
+                Fixings = vanillaModel.GetFixingDictionary(FixingId);
+            if (!string.IsNullOrEmpty(FixingIdDateShifted))
+                FixingsDateShifted = vanillaModel.GetFixingDictionary(FixingIdDateShifted);
+
+            if (!(_settleFixingDates.Length == 1 && _settleFixingDates[0] == _decisionDate)) // || _dateShifter != null )
+            {
+                var spec = new ForwardPriceEstimatorSpec
+                {
+                    AssetId = _assetName,
+                    AverageDates = _settleFixingDates,
+                    ValDate = _decisionDate,
+                    //DateShifter = _dateShifter
+                };
+                o.Add(spec);
+                _settleSpec = spec;
+            }
+
+            foreach (var ad in _avgDates)
+            {
+                if (ad.Last() > _decisionDate)
+                {
+                    var pointsPastDecisionDate = ad.Where(d => d > _decisionDate).ToArray();
+                    var spec = new ForwardPriceEstimatorSpec
+                    {
+                        AssetId = _assetName,
+                        AverageDates = pointsPastDecisionDate,
+                        ValDate = _decisionDate,
+                        DateShifter = _dateShifter
+                    };
+                    o.Add(spec);
+                    _avgSpecs.Add(spec);
+                }
+                else
+                    _avgSpecs.Add(null);
+            }
+
+            return o;
         }
 
         public double AverageResult => _results.Select(x =>

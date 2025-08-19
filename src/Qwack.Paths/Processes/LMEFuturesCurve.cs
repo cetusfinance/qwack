@@ -44,11 +44,12 @@ namespace Qwack.Paths.Processes
         private double[][] _vols;
         private double[] _spotVols;
         private double[] _spotDrifts;
-        private Vector<double>[] _tToNextFuture;
-        private Vector<double>[] _totalDriftToNextFuture;
         private int[] _futureExpiryPoints;
         private int[] _futuresIndices;
 
+        private double[] _totalDrift;
+        private double[] _totalVar;
+        private DateTime[] _futExpiryDates;
 
         public LMEFuturesCurve(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<DateTime, double> forwardCurve, string name, ICalendarProvider calendarProvider, TimeDependentLmeCorrelations correlations, Dictionary<DateTime, double> pastFixings = null)        {
             _surface = volSurface;
@@ -103,6 +104,25 @@ namespace Qwack.Paths.Processes
             {
                 return;
             }
+
+            _totalDrift = new double[_optionExpiries.Count];
+            _totalVar = new double[_optionExpiries.Count];
+            _futExpiryDates = new DateTime[_optionExpiries.Count];
+
+            var initialSpot = _forwardCurve(_startSpotDate);
+            for (var c = 0; c < _totalDrift.Length; c++)
+            {
+                var lastDay = _futuresExpiries[c].SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd());
+                _futExpiryDates[c] = lastDay;
+
+                var vol = _surface.GetVolForDeltaStrike(0.5, _futExpiryDates[c], 1.0);
+                var fwd = _forwardCurve(_futuresExpiries[c]);
+
+                var time = (lastDay - _startDate).TotalDays / 365.0;
+                _totalVar[c] = System.Math.Pow(vol, 2) * time;
+                _totalDrift[c] = System.Math.Log(fwd / initialSpot);
+            }
+
             //vols...
             _vols = new double[_timesteps.TimeStepCount][];
             for (var t = 0; t < _vols.Length; t++)
@@ -110,16 +130,15 @@ namespace Qwack.Paths.Processes
                 _vols[t] = new double[_optionExpiries.Count];
                 for (var c = 0; c < _vols[t].Length; c++)
                 {
-                    _vols[t][c] = _surface.GetVolForDeltaStrike(0.5, _optionExpiries[c], 1.0);
+                    _vols[t][c] = _surface.GetVolForDeltaStrike(0.5, _futExpiryDates[c], 1.0);
                 }
             }
+
+
 
             //initial state spot drifts
             _spotDrifts = new double[_timesteps.TimeStepCount];
             _spotVols = new double[_timesteps.TimeStepCount];
-            _tToNextFuture = new Vector<double>[_timesteps.TimeStepCount];
-            _totalDriftToNextFuture = new Vector<double>[_timesteps.TimeStepCount];
-
 
             var dates = collection.GetFeature<ITimeStepsFeature>();
             var fixings = new List<Vector<double>>();
@@ -150,14 +169,11 @@ namespace Qwack.Paths.Processes
                 var d3w = prevSpotDate.NextThirdWednesday();
                 var d3m = d3w.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd());
                 var td3w = (d3m - dPrev).TotalDays;
-                _tToNextFuture[t] = new Vector<double>(td3w / 365.0);
                 var time = _timesteps.Times[t] - firstTime;
                 var prevTime = _timesteps.Times[t - 1] - firstTime;
                 var atmVol = _surface.GetForwardATMVol(0, time);
                 var prevVol =  _surface.GetForwardATMVol(0, prevTime);
                 var spotPrice = _forwardCurve(spotDate);
-                var nextFuturePrice = _forwardCurve(d3w);
-                _totalDriftToNextFuture[t] = new Vector<double>(nextFuturePrice / prevSpot);
                 var varStart = System.Math.Pow(prevVol, 2) * prevTime;
                 var varEnd = System.Math.Pow(atmVol, 2) * time;
                 var x0 = varEnd - varStart;
@@ -227,26 +243,27 @@ namespace Qwack.Paths.Processes
                     var tb = _timesteps.Times[nextExp];
                     var xa = previousStep.Log();
                     var xb = futPrice.Log();
-                    var Da = bb.DriftIntegral2(ta);
-                    var Db = bb.DriftIntegral2(tb);
+                    var Da = fut == 0 ? 0 : (_totalDrift[fut - 1] - 0.5 * _totalVar[fut-1]); //bb.DriftIntegral2(ta);
+                    var Db = _totalDrift[fut] - 0.5 * _totalVar[fut]; //bb.DriftIntegral2(tb);
                     var ya = xa - new Vector<double>(Da);
                     var yb = xb - new Vector<double>(Db);
 
-                    var V_total = bb.VarianceIntegral(ta, tb);
+                    var va = fut==0 ? 0 : _totalVar[fut - 1];
+                    var vb = _totalVar[fut];
+                    var V_total = vb - va;
 
                     for(var ti=step; ti < nextExp; ti++)
                     {
                         var t = _timesteps.Times[ti];
-                        //var A = bb.VarianceIntegral(ta, t);
-                        //var lambda = V_total==0 ? 0 : A / V_total;
                         var lambda = (t - ta) / (tb - ta);
 
+                        var A = (vb - va) * lambda;
+                      
                         var meanY = ya + lambda * (yb - ya);
-                        var varY = V_total * (1 - lambda) * lambda;
+                        var varY = A * (1 - lambda);
 
                         var W = steps[ti];
                         var y = meanY + System.Math.Sqrt(varY) * W;
-                        //var y = (1 - lambda) * ya + lambda * yb + new Vector<double>(System.Math.Sqrt(A*lambda*(1-lambda)*t))*W;
 
                         var D = bb.DriftIntegral2(t);
                         var x = y + new Vector<double>(D);
@@ -259,58 +276,8 @@ namespace Qwack.Paths.Processes
                     previousStep = futPrice;
                     fut++;
                 }
-
-                //previousStep = new Vector<double>(_forwardCurve(_startSpotDate));
-                //steps = block.GetStepsForFactor(path, _mainFactorIndex);
-                //_fixings.AsSpan().CopyTo(steps);
-                //steps[c] = previousStep;
-
-                //for (var step = c + 1; step < block.NumberOfSteps; step++)
-                //{
-                //    var fmPath = block.GetStepsForFactor(path, _frontMonthFactors[step - 1]);
-                //    var fmPrice = fmPath[step];
-                //    var tToNextFuture = _tToNextFuture[step];
-
-                //    Vector<double> drift;
-                //    Vector<double> vol;
-                //    var dt = new Vector<double>(_timesteps.TimeSteps[step]);
-                //    if (tToNextFuture == Vector<double>.Zero)
-                //    {
-                //        var currentTotalDrift = fmPrice / previousStep;
-                //        var excessDrift = currentTotalDrift.Log() / dt;
-                //        drift = excessDrift;
-                //        vol = new Vector<double>(0);
-                //    }
-                //    else
-                //    {
-                //        vol = new Vector<double>(_spotVols[step]);
-
-                //        var totalDriftToNextFuture = _totalDriftToNextFuture[step];
-                //        var currentTotalDrift = fmPrice / previousStep;
-                //        //var d2 = currentTotalDrift.Log() / tToNextFuture;
-                //        var excessFwd = currentTotalDrift / totalDriftToNextFuture;
-                //        var excessDrift = excessFwd.Log() / tToNextFuture;
-                //        drift = new Vector<double>(_spotDrifts[step]) + excessDrift;
-                //        //drift = d2 - vol * vol / _two;
-
-                //    }
-
-                //    var W = steps[step];
-                //    var bm = (drift - vol * vol / _two) * dt + (vol * _timesteps.TimeStepsSqrt[step] * W);
-                //    previousStep *= bm.Exp(64);
-                //    steps[step] = previousStep;
-
-                //    for (var i = 0; i < Vector<double>.Count; i++)
-                //    {
-                //        if (System.Math.Abs(previousStep[i]) > 1e6 || double.IsNaN(previousStep[i]) || double.IsInfinity(previousStep[i]))
-                //        {
-                //            Debug.Assert(true);
-                //        }
-                //    }
-
-                //}
             }
-        }//).Wait();
+        }
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)
         {
             _factorIndices = new int[_codes.Count];
@@ -321,21 +288,12 @@ namespace Qwack.Paths.Processes
             {
                 _factorIndices[c] = mappingFeature.AddDimension(_codes[c]);
             }
-     
 
             _timesteps = pathProcessFeaturesCollection.GetFeature<ITimeStepsFeature>();
             var simDates = new List<DateTime>(_pastFixings.Keys.Where(x => x < _startDate))
             {
                 _startDate,
             };
-
-            //var d = _startDate.NextThirdWednesday(true);
-            //while (d < _expiryDate)
-            //{
-            //    simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
-            //    d = d.NextThirdWednesday(true);
-            //}
-            //simDates.Add(d.Date.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd()));
 
             simDates.AddRange(_futuresExpiries.Select(e => e.SubtractPeriod(Transport.BasicTypes.RollType.P, _calendarProvider.GetCalendar("GBP+USD"), 2.Bd())));
 

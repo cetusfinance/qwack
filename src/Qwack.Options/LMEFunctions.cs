@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Qwack.Math;
 using Qwack.Transport.BasicTypes;
 using static System.Math;
@@ -75,6 +76,36 @@ namespace Qwack.Options
 
             var impliedVol = Math.Solvers.Brent.BrentsMethodSolve(testLMEBlack, 0.000000001, 5.0000000, 1e-10);
             return impliedVol;
+        }
+
+        public static Dictionary<int, double> LinearWeights(DateTime[] pillars, DateTime targetDate)
+        {
+            var weights = new Dictionary<int, double>();
+            if (pillars.Length < 2)
+                throw new ArgumentOutOfRangeException(nameof(pillars), "At least two pillars are required for linear interpolation");
+            if (targetDate <= pillars[0])
+            {
+                weights[0] = 1.0;
+                return weights;
+            }
+            if (targetDate >= pillars[pillars.Length - 1])
+            {
+                weights[pillars.Length - 1] = 1.0;
+                return weights;
+            }
+            for (var i = 1; i < pillars.Length; i++)
+            {
+                if (targetDate >= pillars[i - 1] && targetDate <= pillars[i])
+                {
+                    var totalSpan = (pillars[i] - pillars[i - 1]).TotalDays;
+                    var leftSpan = (targetDate - pillars[i - 1]).TotalDays;
+                    var rightSpan = (pillars[i] - targetDate).TotalDays;
+                    weights[i - 1] = rightSpan / totalSpan;
+                    weights[i] = leftSpan / totalSpan;
+                    return weights;
+                }
+            }
+            throw new Exception("Should never reach here");
         }
     }
 }

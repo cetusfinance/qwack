@@ -20,7 +20,7 @@ namespace Qwack.Paths.Regressors
             var averageDatesPrompts = averageDates.Select(x=>x.AddPeriod(dateShifter?.RollType ?? RollType.Following, dateShifter?.Calendar ?? curve.SpotCalendar, dateShifter?.Period ?? curve.SpotLag)).ToArray();
             _carry = curve.GetAveragePriceForDates(averageDatesPrompts) / curve.GetPriceForDate(valDatePrompt);
         }
-        public double GetEstimate(double? spot) => (spot ?? 0) * _carry;
+        public double GetEstimate(double? spot, int? globalPathIndex) => (spot ?? 0) * _carry;
         public void Process(IPathBlock block) { }
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection) { }
     }

@@ -236,12 +236,13 @@ namespace Qwack.Paths.Payoffs
                     //    spotAtExpiry *= _contangoScaleFactors[spotIx];
                     //}
 
+                    var globalPathIndex = blockBaseIx + path;
 
                     var futSum = new double[Vector<double>.Count];
                     for (var i = 0; i < Vector<double>.Count; i++)
                     {
-                        futSum[i] = AverageRegressors[a] == null ? 0.0 : AverageRegressors[a].GetEstimate(spotAtExpiry[i]) * _nFuture[a];
-                        setReg[i] = SettlementRegressor?.GetEstimate(spotAtExpiry[i]) ?? spotAtExpiry[i];
+                        futSum[i] = AverageRegressors[a] == null ? 0.0 : AverageRegressors[a].GetEstimate(spotAtExpiry[i], globalPathIndex+i) * _nFuture[a];
+                        setReg[i] = SettlementRegressor?.GetEstimate(spotAtExpiry[i], globalPathIndex + i) ?? spotAtExpiry[i];
                     }
                     var futVec = new Vector<double>(futSum);
                     avgs[a] = (futVec + pastSum) / nTotalVec[a] + new Vector<double>(_periodPremia[a]);

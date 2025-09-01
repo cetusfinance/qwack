@@ -172,7 +172,7 @@ namespace Qwack.Paths.Regressors
             return Regressor.Interpolate(spot);
         }
 
-        public double GetEstimate(double? spot) => Predict(spot ?? 0);
+        public double GetEstimate(double? spot, int? globalPathIndex) => Predict(spot ?? 0);
 
         public override bool Equals(object obj) => obj is LinearAveragePriceRegressor regressor &&
                    _regressionDate == regressor._regressionDate &&

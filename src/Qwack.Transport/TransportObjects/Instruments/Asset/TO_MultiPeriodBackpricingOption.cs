@@ -10,7 +10,7 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
     public class TO_MultiPeriodBackpricingOption
     {
         [ProtoMember(1)]
-        public Dictionary<string, string> MetaData { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> MetaData { get; set; } = [];
         [ProtoMember(2)]
         public OptionType CallPut { get; set; }
 

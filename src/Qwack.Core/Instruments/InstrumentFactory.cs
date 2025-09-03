@@ -52,6 +52,10 @@ namespace Qwack.Core.Instruments
                         return transportObject.BackpricingOption.GetBackpricingOption(currencyProvider, calendarProvider);
                     case AssetInstrumentType.AsianLookbackOption:
                         return transportObject.AsianLookbackOption.GetAsianLookbackOption(currencyProvider, calendarProvider);
+                    case AssetInstrumentType.StripQPSwaption:
+                        var swpt = new StripQPSwaption();
+                        swpt.FromTransportObject(transportObject, calendarProvider, currencyProvider);
+                        return swpt;
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)

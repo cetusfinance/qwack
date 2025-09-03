@@ -62,5 +62,7 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_MultiPeriodBackpricingOption BackpricingOption { get; set; }
         [ProtoMember(126)]
         public TO_AsianLookbackOption AsianLookbackOption { get; set; }
+        [ProtoMember(127)]
+        public TO_StripQPSwaption StripQPSwaption { get; set; }
     }
 }

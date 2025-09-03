@@ -79,6 +79,10 @@ namespace Qwack.Models.MCModels
                         var albo = _subInstruments.First() as LookBackOptionPP;
                         albo.VanillaModel = value;
                         break;
+                    case StripQPSwaption lbo:
+                        var sqpp = _subInstruments.First() as StripQPSwaptionPP;
+                        sqpp.VanillaModel = value;
+                        break;
                 }
             }
         }
@@ -264,6 +268,19 @@ namespace Qwack.Models.MCModels
                         Regressors = [bp.AverageRegressor, bp.SettlementRegressor];
                     else
                         Regressors = [bp.SettlementRegressor];
+                    break;
+                case StripQPSwaption sqps:
+                    _ccy = sqps.Currency;
+                    _payDate = sqps.PaymentDate;
+                    var sqpspp = new StripQPSwaptionPP(sqps.AssetId, sqps.QPs, sqps.Offsets,
+                                  sqps.DecisionDate, sqps.PaymentDate, sqps.CallPut, sqps.DiscountCurve, sqps.PaymentCurrency, sqps.Notional, _calendarProvider)
+                    {
+                        VanillaModel = VanillaModel
+                    };
+                    _subInstruments =
+                        [
+                            sqpspp
+                        ];
                     break;
                 case MultiPeriodBackpricingOption mbpo:
                     var settleFixingDate2 = mbpo.SettlementFixingDates == null && mbpo.SettlementDate!=default ? mbpo.SettlementDate.SubtractPeriod(RollType.P, mbpo.FixingCalendar, 2.Bd()) : DateTime.MinValue;

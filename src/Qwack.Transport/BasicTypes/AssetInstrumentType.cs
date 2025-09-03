@@ -25,6 +25,7 @@ namespace Qwack.Transport.BasicTypes
         AssetTrs,
         SyntheticCashAndCarry,
         AssetFxBasisSwap,
-        UnpricedAverage
+        UnpricedAverage,
+        StripQPSwaption
     }
 }

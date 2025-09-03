@@ -557,6 +557,13 @@ namespace Qwack.Models.MCModels
                     spec.Estimator = estimator;
                     Engine.Features.AddPriceEstimator(spec, estimator);
                 }
+                else if(Settings.McModelType==McModelType.LMEForward) //use multi-future estimator
+                {
+                    var estimator = new MultiFutureEstimator(spec.AssetId, spec.ValDate, spec.AverageDates, _calendarProvider);
+                    Engine.AddPathProcess(estimator);
+                    spec.Estimator = estimator;
+                    Engine.Features.AddPriceEstimator(spec, estimator);
+                }
                 else
                 {
                     var regressionKey = spec.AssetId; //TODO fix for FX
@@ -573,7 +580,7 @@ namespace Qwack.Models.MCModels
             //adding payoffs to engine
             foreach (var product in _payoffs)
             {
-                if (Settings.AvoidRegressionForBackPricing && (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption || product.Value.AssetInstrument is AsianLookbackOption))
+                if (product.Value.AssetInstrument is BackPricingOption || product.Value.AssetInstrument is MultiPeriodBackpricingOption || product.Value.AssetInstrument is AsianLookbackOption)
                     product.Value.VanillaModel = VanillaModel;
 
                 Engine.AddPathProcess(product.Value);

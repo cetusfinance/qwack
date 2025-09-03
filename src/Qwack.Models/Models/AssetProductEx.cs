@@ -1570,6 +1570,7 @@ namespace Qwack.Models.Models
                 CashBalance => "Cash",
                 AsianLookbackOption => "LookBack",
                 BackPricingOption or MultiPeriodBackpricingOption => "BackPricing",
+                StripQPSwaption => "QPSwaption",
                 ETC => "ETC",
                 Equity => "Equity",
                 Bond => "Bond",

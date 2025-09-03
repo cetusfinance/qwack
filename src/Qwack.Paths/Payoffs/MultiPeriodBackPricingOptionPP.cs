@@ -15,8 +15,6 @@ namespace Qwack.Paths.Payoffs
 {
     public class MultiPeriodBackPricingOptionPP : IPathProcess, IRequiresFinish, IAssetPathPayoff, IRequiresPriceEstimators
     {
-        private readonly object _locker = new();
-
         private readonly List<DateTime[]> _avgDates;
         private readonly DateTime _decisionDate;
         private readonly OptionType _callPut;

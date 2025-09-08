@@ -122,7 +122,7 @@ namespace Qwack.Models.Risk
             var results = new KeyValuePair<string, IPvModel>[n * 2 + 1];
             ParallelUtils.Instance.For(-n, n + 1, 1, (i) =>
             {
-                var thisShift = i == 0 ? 0 : System.Math.Sign(n) * SpecificShifts[System.Math.Abs(n)];
+                var thisShift = i == 0 ? 0 : System.Math.Sign(i) * SpecificShifts[System.Math.Abs(i)];
                 var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy ) : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
                     results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, model.Rebuild(model.VanillaModel,model.Portfolio));

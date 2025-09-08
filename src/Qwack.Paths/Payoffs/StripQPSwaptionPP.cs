@@ -153,11 +153,11 @@ namespace Qwack.Paths.Payoffs
                     }
                 }
     
-                var avgVec = new Vector<double>((callPut == OptionType.C) ? double.MaxValue : double.MinValue);
+                var avgVec = new Vector<double>((callPut == OptionType.P) ? double.MaxValue : double.MinValue);
 
                 for(var i=1;i<offsets.Length;i++)
                 {
-                    avgVec = (callPut == OptionType.C) ?
+                    avgVec = (callPut == OptionType.P) ?
                         Vector.Min(swapRates[i], avgVec) :
                         Vector.Max(swapRates[i], avgVec);
                 }

@@ -30,6 +30,8 @@ namespace Qwack.Models.Risk
         public bool LMESparseDeltaMode { get; set; }
         public bool ParallelizeRiskMetric { get; set; } = true;
         public bool ParallelizeOuterCalc { get; set; } = true;
+        public double[] SpecificShifts { get; set; }
+        public bool SpecificShiftsAreRelative { get; set; }
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
@@ -63,6 +65,9 @@ namespace Qwack.Models.Risk
 
         public Dictionary<string, IPvModel> GenerateScenarios(IPvModel model)
         {
+            if(SpecificShifts!=null && SpecificShifts.Length>0)
+                return GenerateScenariosSpecific(model);
+
             var o = new Dictionary<string, IPvModel>();
 
             var results = new KeyValuePair<string, IPvModel>[NScenarios * 2 + 1];
@@ -109,6 +114,56 @@ namespace Qwack.Models.Risk
 
             return o;
         }
+
+        public Dictionary<string, IPvModel> GenerateScenariosSpecific(IPvModel model)
+        {
+            var o = new Dictionary<string, IPvModel>();
+            var n = SpecificShifts.Length;
+            var results = new KeyValuePair<string, IPvModel>[n * 2 + 1];
+            ParallelUtils.Instance.For(-n, n + 1, 1, (i) =>
+            {
+                var thisShift = i == 0 ? 0 : System.Math.Sign(n) * SpecificShifts[System.Math.Abs(n)];
+                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy ) : AssetId) + "~" + thisShift;
+                if (thisShift == 0)
+                    results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, model.Rebuild(model.VanillaModel,model.Portfolio));
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(AssetId) && FxPair==null)
+                    {
+                        var shifted = ShiftType switch
+                        {
+                            MutationType.FlatShift => FlatShiftMutator.FxSpotShift(Ccy, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
+                        results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    }
+                    else if (FxPair != null)
+                    {
+                        var shifted = ShiftType switch
+                        {
+                            MutationType.FlatShift => FlatShiftMutator.FxSpotShift(FxPair, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
+                        results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    }
+                    else
+                    {
+                        var shifted = ShiftType switch
+                        {
+                            MutationType.FlatShift => SpecificShiftsAreRelative ? RelativeShiftMutator.AssetCurveShift(AssetId,thisShift,model) : FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
+                            _ => throw new Exception($"Unable to process shift type {ShiftType}"),
+                        };
+                        results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
+                    }
+                }
+            }).Wait();
+
+            foreach (var kv in results)
+                o.Add(kv.Key, kv.Value);
+
+            return o;
+        }
+
 
         private string[] GetCubeMatchingFields(RiskMetric riskMetric) => riskMetric switch
         {

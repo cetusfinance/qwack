@@ -121,14 +121,15 @@ namespace Qwack.Models.Risk
             var n = SpecificShifts.Length;
             var results = new KeyValuePair<string, IPvModel>[n * 2 + 1];
             ParallelUtils.Instance.For(-n, n + 1, 1, (i) =>
+            //for(var i=-n;i<=n;i++)
             {
-                var thisShift = i == 0 ? 0 : System.Math.Sign(i) * SpecificShifts[System.Math.Abs(i)];
-                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy ) : AssetId) + "~" + thisShift;
+                var thisShift = i == 0 ? 0 : System.Math.Sign(i) * SpecificShifts[System.Math.Abs(i) - 1];
+                var thisLabel = (string.IsNullOrWhiteSpace(AssetId) ? (FxPair?.ToString() ?? Ccy.Ccy) : AssetId) + "~" + thisShift;
                 if (thisShift == 0)
-                    results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, model.Rebuild(model.VanillaModel,model.Portfolio));
+                    results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, model.Rebuild(model.VanillaModel, model.Portfolio));
                 else
                 {
-                    if (string.IsNullOrWhiteSpace(AssetId) && FxPair==null)
+                    if (string.IsNullOrWhiteSpace(AssetId) && FxPair == null)
                     {
                         var shifted = ShiftType switch
                         {
@@ -150,13 +151,14 @@ namespace Qwack.Models.Risk
                     {
                         var shifted = ShiftType switch
                         {
-                            MutationType.FlatShift => SpecificShiftsAreRelative ? RelativeShiftMutator.AssetCurveShift(AssetId,thisShift,model) : FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
+                            MutationType.FlatShift => SpecificShiftsAreRelative ? RelativeShiftMutator.AssetCurveShift(AssetId, thisShift, model) : FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
                             _ => throw new Exception($"Unable to process shift type {ShiftType}"),
                         };
                         results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
                     }
                 }
             }).Wait();
+            //}
 
             foreach (var kv in results)
                 o.Add(kv.Key, kv.Value);

@@ -170,7 +170,7 @@ namespace Qwack.Models.Risk
         private string[] GetCubeMatchingFields(RiskMetric riskMetric) => riskMetric switch
         {
             RiskMetric.AssetCurveDelta or RiskMetric.AssetVega or RiskMetric.PV01 => ["TradeId", "PointLabel", "AssetId"],
-            RiskMetric.PV => ["TradeId"],
+            RiskMetric.PV or RiskMetric.FV => ["TradeId"],
             _ => [],
         };
 
@@ -293,6 +293,7 @@ namespace Qwack.Models.Risk
             RiskMetric.AssetCurveDelta => model.AssetDeltaSingleCurve(AssetId, isSparseLMEMode: LMESparseDeltaMode, calendars: CalendarProvider, parallelize:ParallelizeRiskMetric),
             RiskMetric.AssetVega => model.AssetVega(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, ParallelizeRiskMetric),
             RiskMetric.PV => model.PV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
+            RiskMetric.FV => model.FV(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency),
             RiskMetric.PV01 => model.AssetIrDelta(model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, paralellize: ParallelizeRiskMetric),
             RiskMetric.FxDelta => model.FxDelta(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency, CurrencyProvider, false, ShouldInvert(FxPair?.Foreign ?? Ccy ?? model.VanillaModel.FundingModel.FxMatrix.BaseCurrency)),
             _ => throw new Exception($"Unable to process risk metric {Metric}"),

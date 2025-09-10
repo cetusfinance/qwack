@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -53,10 +54,12 @@ namespace Qwack.Core.Cubes
         public static ICube Difference(this ICube baseCube, ICube cubeToSubtract, string[] matchFields)
         {
             var ixsBase = new List<int>();
+            var typesBase = new List<Type>();
             var ixsSub = new List<int>();
             for (var i = 0; i < matchFields.Length; i++)
             {
                 ixsBase.Add(baseCube.GetColumnIndex(matchFields[i]));
+                typesBase.Add(baseCube.DataTypes[matchFields[i]]);
                 ixsSub.Add(cubeToSubtract.GetColumnIndex(matchFields[i]));
             }
 
@@ -73,11 +76,11 @@ namespace Qwack.Core.Cubes
                 foreach (var sr in subRows)
                 {
                     var thisRowMatched = true;
-                    for(var i=0;i< matchFields.Length; i++)
+                    for (var i = 0; i < matchFields.Length; i++)
                     {
-                        if (br.MetaData[ixsBase[i]] != sr.MetaData[ixsSub[i]])
+                        if (!Equals(br.MetaData[ixsBase[i]], sr.MetaData[ixsSub[i]])) 
                         {
-                            thisRowMatched = false; 
+                            thisRowMatched = false;
                             break;
                         }
                     }

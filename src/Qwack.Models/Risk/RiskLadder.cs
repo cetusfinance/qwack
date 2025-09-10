@@ -170,8 +170,7 @@ namespace Qwack.Models.Risk
         private string[] GetCubeMatchingFields(RiskMetric riskMetric) => riskMetric switch
         {
             RiskMetric.AssetCurveDelta or RiskMetric.AssetVega or RiskMetric.PV01 => ["TradeId", "PointLabel", "AssetId"],
-            RiskMetric.PV or RiskMetric.FV => ["TradeId"],
-            _ => [],
+            RiskMetric.PV or RiskMetric.FV or _ => ["TradeId"],
         };
 
         public ICube Generate(IPvModel model, Portfolio portfolio = null)

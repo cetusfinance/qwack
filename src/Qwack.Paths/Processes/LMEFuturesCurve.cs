@@ -225,57 +225,111 @@ namespace Qwack.Paths.Processes
                 }//).Wait();
 
 
-                //fill in spot using a series of brownian bridges
                 previousStep = new Vector<double>(_forwardCurve(_startSpotDate));
                 steps = block.GetStepsForFactor(path, _mainFactorIndex);
                 _fixings.AsSpan().CopyTo(steps);
                 steps[c] = previousStep;
 
-                var bb = new TermStructureBridge(_timesteps.Times, _spotDrifts, _spotVols);
+                //var bb = new TermStructureBridge(_timesteps.Times, _spotDrifts, _spotVols);
 
+                //fill in the spot path assuming 1:1 correlation to front month future
                 var fut = 0;
                 for (var step = c + 1; step < block.NumberOfSteps; step++)
                 {
                     var nextExp = _futureExpiryPoints[fut];
                     var futIx = _futuresIndices[fut];
-                    var futPrice = block.GetStepsForFactor(path, futIx)[nextExp];
+                   
                     var ta = _timesteps.Times[step - 1];
                     var tb = _timesteps.Times[nextExp];
-                    var xa = previousStep.Log();
-                    var xb = futPrice.Log();
-                    var Da = fut == 0 ? 0 : (_totalDrift[fut - 1] - 0.5 * _totalVar[fut-1]); //bb.DriftIntegral2(ta);
-                    var Db = _totalDrift[fut] - 0.5 * _totalVar[fut]; //bb.DriftIntegral2(tb);
-                    var ya = xa - new Vector<double>(Da);
-                    var yb = xb - new Vector<double>(Db);
 
-                    var va = fut==0 ? 0 : _totalVar[fut - 1];
-                    var vb = _totalVar[fut];
-                    var V_total = vb - va;
+                    //var vvb = bb.SigmaSqIntegral(0, tb);
 
-                    for(var ti=step; ti < nextExp; ti++)
+                    for (var ti = step; ti < nextExp; ti++)
                     {
                         var t = _timesteps.Times[ti];
-                        var lambda = (t - ta) / (tb - ta);
+                        var tToNextExp = new Vector<double>(tb - t);
+                        var futPrice = block.GetStepsForFactor(path, futIx)[ti];
+                        var futReturn = (futPrice / block.GetStepsForFactor(path, futIx)[ti-1]);
+                        previousStep *= futReturn;
+                        var lastSpotPrice = previousStep;
+                        var totalDrift = (futPrice / lastSpotPrice).Log() / tToNextExp;
 
-                        var A = (vb - va) * lambda;
-                      
-                        var meanY = ya + lambda * (yb - ya);
-                        var varY = A * (1 - lambda);
+                        var W = Vector<double>.Zero; // steps[ti];
+                        var dt = new Vector<double>(_timesteps.TimeSteps[ti]);
+                        //var bm = (totalDrift - new Vector<double>(_spotVols[ti] * _spotVols[ti] / 2.0)) * dt + (_spotVols[ti] * _timesteps.TimeStepsSqrt[ti] * W);
+                        var bm = totalDrift * dt;
+                        previousStep *= bm.Exp();
+                        steps[ti] = previousStep;
 
-                        var W = steps[ti];
-                        var y = meanY + System.Math.Sqrt(varY) * W;
-
-                        var D = bb.DriftIntegral2(t);
-                        var x = y + new Vector<double>(D);
-                        var S = x.ExpD(1e-14);
-                        steps[ti] = S;
+                        //ya = y;
+                        //va += A;
+                        //ta = t;
                     }
 
                     step = nextExp;
-                    steps[step] = futPrice;
-                    previousStep = futPrice;
+                    var futPriceA = block.GetStepsForFactor(path, futIx)[step];
+                    steps[step] = futPriceA;
+                    previousStep = futPriceA;
                     fut++;
                 }
+
+                //fill in spot using a series of brownian bridges
+                //previousStep = new Vector<double>(_forwardCurve(_startSpotDate));
+                //steps = block.GetStepsForFactor(path, _mainFactorIndex);
+                //_fixings.AsSpan().CopyTo(steps);
+                //steps[c] = previousStep;
+
+                //var bb = new TermStructureBridge(_timesteps.Times, _spotDrifts, _spotVols);
+
+                //var fut = 0;
+                //for (var step = c + 1; step < block.NumberOfSteps; step++)
+                //{
+                //    var nextExp = _futureExpiryPoints[fut];
+                //    var futIx = _futuresIndices[fut];
+                //    var futPrice = block.GetStepsForFactor(path, futIx)[nextExp];
+                //    var ta = _timesteps.Times[step - 1];
+                //    var tb = _timesteps.Times[nextExp];
+                //    var xa = previousStep.Log();
+                //    var xb = futPrice.Log();
+                //    var Da = fut == 0 ? 0 : (_totalDrift[fut - 1] - 0.5 * _totalVar[fut-1]); //bb.DriftIntegral2(ta);
+                //    var Db = _totalDrift[fut] - 0.5 * _totalVar[fut]; //bb.DriftIntegral2(tb);
+                //    var ya = xa - new Vector<double>(Da);
+                //    var yb = xb - new Vector<double>(Db);
+
+                //    var va = fut==0 ? 0 : _totalVar[fut - 1];
+                //    var vb = _totalVar[fut];
+                //    var V_total = vb - va;
+
+                //    //var vvb = bb.SigmaSqIntegral(0, tb);
+
+                //    for(var ti=step; ti < nextExp; ti++)
+                //    {
+                //        var t = _timesteps.Times[ti];
+                //        var lambda = (t - ta) / (tb - ta);
+
+                //        var A = (vb - va) * lambda;
+
+                //        var meanY = ya + lambda * (yb - ya);
+                //        var varY = A * (1 - lambda);
+
+                //        var W = steps[ti];
+                //        var y = meanY + System.Math.Sqrt(varY) * W;
+
+                //        var D = bb.DriftIntegral2(t);
+                //        var x = y + new Vector<double>(D);
+                //        var S = x.ExpD(1e-14);
+                //        steps[ti] = S;
+
+                //        //ya = y;
+                //        //va += A;
+                //        //ta = t;
+                //    }
+
+                //    step = nextExp;
+                //    steps[step] = futPrice;
+                //    previousStep = futPrice;
+                //    fut++;
+                //}
             }
         }
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)

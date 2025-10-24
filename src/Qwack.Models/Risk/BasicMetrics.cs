@@ -2208,7 +2208,7 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
-        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null, ICalendarProvider calendarProvider = null, bool useFv = false)
+        public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null, ICalendarProvider calendarProvider = null, bool useFv = false, bool isSparseLmeMode = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -2312,9 +2312,9 @@ namespace Qwack.Models.Risk
             //charm-asset
             if (computeCharm)
             {
-                var baseDeltaCube = pvModel.AssetDelta();
-                var rolledDeltaCube = rolledPvModel.AssetDelta();
-                var charmCube = rolledDeltaCube.Difference(baseDeltaCube);
+                var baseDeltaCube = pvModel.AssetDelta(isSparseLMEMode: isSparseLmeMode, calendars: calendarProvider);
+                var rolledDeltaCube = rolledPvModel.AssetDelta(isSparseLMEMode: isSparseLmeMode, calendars: calendarProvider);
+                var charmCube = rolledDeltaCube.Difference(baseDeltaCube, ["TradeId","AssetId","Metric","PointLabel"]);
                 var charmRows = charmCube.GetAllRows();
                 var plId = charmCube.GetColumnIndex(PointLabel);
                 var aId = charmCube.GetColumnIndex(AssetId);

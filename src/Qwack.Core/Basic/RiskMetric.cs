@@ -25,6 +25,7 @@ namespace Qwack.Core.Basic
         FV,
         AssetDeltaSingleCurve,
         AssetThetaCharm,
+        AssetDeltaDecay,
         Custom
     }
 }

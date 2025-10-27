@@ -77,21 +77,23 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date >= _startDate) break;
+                if (date > _startDate) break;
                 try
                 {
                     var vect = new Vector<double>(_pastFixings[date]);
                     fixings.Add(vect);
                 }
                 catch (Exception e) 
-                { 
+                {
+                    //Console.WriteLine(e.Message);
                 }
 
             }
             _fixings = [.. fixings];
 
             var prevSpot = _forwardCurve(0);
-            var firstTime = _timesteps.Times[_fixings.Length];
+            var six = Array.IndexOf(_timesteps.Dates, _startDate);
+            var firstTime = _timesteps.Times[six];
             for (var t = _fixings.Length  + 1; t < _drifts.Length; t++)
             {
                 var time = _timesteps.Times[t] - firstTime;

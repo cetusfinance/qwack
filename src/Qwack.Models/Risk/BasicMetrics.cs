@@ -16,6 +16,7 @@ using Qwack.Math;
 using Qwack.Models.MCModels;
 using Qwack.Models.Models;
 using Qwack.Options.VolSurfaces;
+using Qwack.Transport.BasicTypes;
 using Qwack.Utils.Parallel;
 using static System.Math;
 using static Qwack.Core.Basic.Consts.Cubes;
@@ -2208,6 +2209,138 @@ namespace Qwack.Models.Risk
             return cube.Sort();
         }
 
+        public static ICube AssetDeltaDecay(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider = null, bool useFv = false, bool isSparseLmeMode = false)
+        {
+            var cube = new ResultCube();
+            var dataTypes = new Dictionary<string, Type>
+            {
+                { TradeId, typeof(string) },
+                { TradeType, typeof(string) },
+                { AssetId, typeof(string) },
+                { PointLabel, typeof(string) },
+                { Metric, typeof(string) }
+            };
+            var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
+            foreach (var key in metaKeys)
+            {
+                dataTypes[key] = typeof(string);
+            }
+            var insDict = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).ToDictionary(x => x.TradeId, x => x);
+            cube.Initialize(dataTypes);
+
+            var model = pvModel.VanillaModel;
+
+            var pvCube = useFv ? pvModel.FV(reportingCcy) : pvModel.PV(reportingCcy);
+            var pvRows = pvCube.GetAllRows();
+
+            var tidIx = pvCube.GetColumnIndex(TradeId);
+            var tTypeIx = pvCube.GetColumnIndex(TradeType);
+
+            //today fixing drop-off
+            var baseDeltaCube = pvModel.AssetDelta(isSparseLMEMode: isSparseLmeMode, calendars: calendarProvider);
+            var vm = pvModel.VanillaModel;
+            foreach (var fName in vm.FixingDictionaryNames)
+            {
+                var cName = fName.Split('¬')[0];
+                var fixings = pvModel.VanillaModel.GetFixingDictionary(fName);
+                if (!fixings.ContainsKey(model.BuildDate))
+                {
+                    var newDict = fixings.Clone();
+                    if (!fixings.ContainsKey(model.BuildDate))
+                    {
+                        if (newDict.FixingDictionaryType == FixingDictionaryType.Asset)
+                        {
+                            var curve = model.GetPriceCurve(newDict.AssetId ?? (fName?.Split('¬').FirstOrDefault()));
+                            var estFixing = curve.GetPriceForDate(model.BuildDate.AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag));
+                            newDict.Add(model.BuildDate, estFixing);
+                        }
+                        else //its FX
+                        {
+                            var id = newDict.FxPair ?? newDict.AssetId;
+                            var ccyLeft = currencyProvider[id.Substring(0, 3)];
+                            var ccyRight = currencyProvider[id.Substring(id.Length - 3, 3)];
+                            var pair = model.FundingModel.FxMatrix.GetFxPair(ccyLeft, ccyRight);
+                            var spotDate = pair.SpotDate(model.BuildDate);
+                            var estFixing = model.FundingModel.GetFxRate(spotDate, ccyLeft, ccyRight);
+                            newDict.Add(model.BuildDate, estFixing);
+                        }
+
+                        pvModel.VanillaModel.AddFixingDictionary(fName, newDict);
+                    }
+                }
+            }
+            using var clonedFix = pvModel.Rebuild(pvModel.VanillaModel, pvModel.Portfolio);
+            var fpv = clonedFix.FV(reportingCcy);
+            var fpp = pvModel.FV(reportingCcy);
+            var fixedDeltaCube = clonedFix.AssetDelta(isSparseLMEMode: isSparseLmeMode, calendars: calendarProvider);
+            var fixCube = fixedDeltaCube.Difference(baseDeltaCube, ["TradeId", "AssetId", "Metric", "PointLabel"]);
+            var fixRows = fixCube.GetAllRows();
+            var plId = fixCube.GetColumnIndex(PointLabel);
+            var aId = fixCube.GetColumnIndex(AssetId);
+            var ttId = fixCube.GetColumnIndex(TradeType);
+            foreach (var fixRow in fixRows)
+            {
+                var row = new Dictionary<string, object>
+                    {
+                    { TradeId, fixRow.MetaData[tidIx] },
+                    { TradeType, fixRow.MetaData[ttId] },
+                    { AssetId, fixRow.MetaData[aId] },
+                    { PointLabel, fixRow.MetaData[plId] },
+                    { Metric, "FixingDelta" }
+                    };
+                if (insDict.TryGetValue((string)fixRow.MetaData[tidIx], out var trade))
+                {
+                    foreach (var key in metaKeys)
+                    {
+                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                            row[key] = metaData;
+                    }
+                }
+                cube.AddRow(row, fixRow.Value);
+            }
+
+
+            //time-decay / charm
+            var rolledPortfolio = pvModel.Portfolio.RollWithLifecycle(pvModel.VanillaModel.BuildDate, fwdValDate);
+            using var cloned = clonedFix.Rebuild(clonedFix.VanillaModel, rolledPortfolio);
+
+            using IPvModel rolledPvModel = (cloned is AssetFxMCModel amc) ?
+                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider) :
+                        (cloned is AssetFxModel afx ? afx.RollModel(fwdValDate, currencyProvider) : throw new Exception("Unsupported model type"));
+
+            var pvCubeFwd = useFv ? rolledPvModel.FV(reportingCcy) : rolledPvModel.PV(reportingCcy);
+            var pvRowsFwd = pvCubeFwd.GetAllRows();
+
+
+
+            var rolledDeltaCube = rolledPvModel.AssetDelta(isSparseLMEMode: isSparseLmeMode, calendars: calendarProvider);
+            var charmCube = rolledDeltaCube.Difference(fixedDeltaCube, ["TradeId", "AssetId", "Metric", "PointLabel"]);
+            var charmRows = charmCube.GetAllRows();
+            foreach (var charmRow in charmRows)
+            {
+                var row = new Dictionary<string, object>
+                    {
+                    { TradeId, charmRow.MetaData[tidIx] },
+                    { TradeType, charmRow.MetaData[ttId] },
+                    { AssetId, charmRow.MetaData[aId] },
+                    { PointLabel, charmRow.MetaData[plId] },
+                    { Metric, "Charm" }
+                    };
+                if (insDict.TryGetValue((string)charmRow.MetaData[tidIx], out var trade))
+                {
+                    foreach (var key in metaKeys)
+                    {
+                        if (trade.MetaData.TryGetValue(key, out var metaData))
+                            row[key] = metaData;
+                    }
+                }
+                cube.AddRow(row, charmRow.Value);
+            }
+
+            return cube;
+        }
+
+
         public static ICube AssetThetaCharm(this IPvModel pvModel, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, bool computeCharm = false, List<FxPair> FxPairsToRisk = null, ICalendarProvider calendarProvider = null, bool useFv = false, bool isSparseLmeMode = false)
         {
             var cube = new ResultCube();
@@ -2443,7 +2576,6 @@ namespace Qwack.Models.Risk
 
             return cube;
         }
-
 
         public static ICube CorrelationDelta(this IPvModel pvModel, Currency reportingCcy, double epsilon)
         {

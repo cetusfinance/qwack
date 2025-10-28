@@ -2218,6 +2218,7 @@ namespace Qwack.Models.Risk
                 { TradeType, typeof(string) },
                 { AssetId, typeof(string) },
                 { PointLabel, typeof(string) },
+                { PointDate, typeof(string) },
                 { Metric, typeof(string) }
             };
             var metaKeys = pvModel.Portfolio.Instruments.Where(x => x.TradeId != null).SelectMany(x => x.MetaData.Keys).Distinct().ToArray();
@@ -2276,6 +2277,7 @@ namespace Qwack.Models.Risk
             var fixCube = fixedDeltaCube.Difference(baseDeltaCube, ["TradeId", "AssetId", "Metric", "PointLabel"]);
             var fixRows = fixCube.GetAllRows();
             var plId = fixCube.GetColumnIndex(PointLabel);
+            var pdId = fixCube.GetColumnIndex(PointDate);
             var aId = fixCube.GetColumnIndex(AssetId);
             var ttId = fixCube.GetColumnIndex(TradeType);
             foreach (var fixRow in fixRows)
@@ -2286,6 +2288,7 @@ namespace Qwack.Models.Risk
                     { TradeType, fixRow.MetaData[ttId] },
                     { AssetId, fixRow.MetaData[aId] },
                     { PointLabel, fixRow.MetaData[plId] },
+                    { PointDate, fixRow.MetaData[pdId] },
                     { Metric, "FixingDelta" }
                     };
                 if (insDict.TryGetValue((string)fixRow.MetaData[tidIx], out var trade))
@@ -2324,6 +2327,7 @@ namespace Qwack.Models.Risk
                     { TradeType, charmRow.MetaData[ttId] },
                     { AssetId, charmRow.MetaData[aId] },
                     { PointLabel, charmRow.MetaData[plId] },
+                    { PointDate, charmRow.MetaData[pdId] },
                     { Metric, "Charm" }
                     };
                 if (insDict.TryGetValue((string)charmRow.MetaData[tidIx], out var trade))

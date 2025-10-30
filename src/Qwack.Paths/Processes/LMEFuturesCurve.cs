@@ -145,7 +145,7 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date >= _startDate) break;
+                if (date > _startDate) break;
                 try
                 {
                     var vect = new Vector<double>(_pastFixings[date]);
@@ -160,7 +160,8 @@ namespace Qwack.Paths.Processes
 
             var prevSpotDate = _startSpotDate;
             var prevSpot = _forwardCurve(prevSpotDate);
-            var firstTime = _timesteps.Times[_fixings.Length];
+            var sdIx = _timesteps.GetDateIndex(_startDate);
+            var firstTime = _timesteps.Times[sdIx];
             for (var t = _fixings.Length + 1; t < _spotDrifts.Length; t++)
             {
                 var d = _timesteps.Dates[t];
@@ -208,11 +209,11 @@ namespace Qwack.Paths.Processes
                 {
                     previousStep = new Vector<double>(_forwardCurve(_futuresExpiries[f]));
                     steps = block.GetStepsForFactor(path, _factorIndices[f]);
-                    foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
-                    {
-                        steps[c] = new Vector<double>(kv.Value);
-                        c++;
-                    }
+                    //foreach (var kv in _pastFixings.Where(x => x.Key < _startDate))
+                    //{
+                    //    steps[c] = new Vector<double>(kv.Value);
+                    //    c++;
+                    //}
                     steps[c] = previousStep;
                     for (var step = c + 1; step < block.NumberOfSteps; step++)
                     {

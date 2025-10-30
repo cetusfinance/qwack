@@ -77,7 +77,7 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date >= _startDate) break;
+                if (date > _startDate) break;
                 try
                 {
                     var vect = new Vector<double>(_pastFixings[date]);

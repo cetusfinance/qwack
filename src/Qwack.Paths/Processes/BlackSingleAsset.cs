@@ -78,9 +78,14 @@ namespace Qwack.Paths.Processes
             {
                 var date = dates.Dates[d];
                 if (date > _startDate) break;
+                
+                if(!_pastFixings.ContainsKey(date.Date))
+                {
+                    continue;
+                }
                 try
                 {
-                    var vect = new Vector<double>(_pastFixings[date]);
+                    var vect = new Vector<double>(_pastFixings[date.Date]);
                     fixings.Add(vect);
                 }
                 catch (Exception e) 

@@ -132,6 +132,8 @@ namespace Qwack.Paths.Processes
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 var c = _fixings.Length;
                 _fixings.AsSpan().CopyTo(steps);
+                if (c >= steps.Length)
+                    continue;
                 steps[c] = previousStep;
 
                 if (_siegelInvert)

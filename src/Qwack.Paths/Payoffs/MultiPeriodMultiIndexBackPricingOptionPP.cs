@@ -109,7 +109,7 @@ namespace Qwack.Paths.Payoffs
                                               double? scaleProportion3 = null)
         {
             _avgDates = avgDates;
-            _decisionDate = decisionDate;
+            _decisionDate = decisionDate.Date.AddDays(1).AddTicks(-1);
             _callPut = callPut;
             _discountCurve = discountCurve;
             _ccy = ccy;

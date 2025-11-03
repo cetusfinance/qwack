@@ -37,7 +37,7 @@ namespace Qwack.Paths.Payoffs
         {
             _sampleDates = sampleDates;
             _callPut = callPut;
-            _decisionDate = decisionDate;
+            _decisionDate = decisionDate.Date.AddDays(1).AddTicks(-1);
             _settlementFixingDates = settlementFixingDates;
             _notional = new Vector<double>(notional);
             _windowSize = windowSize;

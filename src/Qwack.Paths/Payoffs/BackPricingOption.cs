@@ -40,7 +40,7 @@ namespace Qwack.Paths.Payoffs
             : base(assetName, discountCurve, ccy, payDate, notional, simulationCcy)
         {
             _avgDates = avgDates;
-            _decisionDate = decisionDate;
+            _decisionDate = decisionDate.Date.AddDays(1).AddTicks(-1);
             _callPut = callPut;
             _settleFixingDate = settlementFixingDate;
             _notional = new Vector<double>(notional);

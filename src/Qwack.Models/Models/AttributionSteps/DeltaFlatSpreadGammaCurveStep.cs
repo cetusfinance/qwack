@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
@@ -38,9 +39,11 @@ public class DeltaFlatSpreadGammaCurveStep(bool ignoreGamma = false) : IPnLAttri
             {
                 if (r.Value == 0.0) continue;
                 var point = (string)r.MetaData[r_plIx];
+                var pointDate = (DateTime)r.MetaData[r_pdIx];
 
-                var startRate = startCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
-                var endRate = endCurve.GetPriceForDate(startCurve.PillarDatesForLabel(point));
+                var startRate = startCurve.GetPriceForDate(pointDate);
+                var endRate = endCurve.GetPriceForDate(pointDate);
+
                 var move = (endRate - startRate);
                 var explainedFlat = r.Value * flatShift * fxRate;
                 var explainedSpread = r.Value * (move - flatShift) * fxRate;

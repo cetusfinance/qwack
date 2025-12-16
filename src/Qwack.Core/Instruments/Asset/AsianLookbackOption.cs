@@ -64,14 +64,14 @@ namespace Qwack.Core.Instruments.Asset
 
         public string FxPair(IAssetFxModel model) => IsFx ? AssetId : model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
         public FxConversionType FxType(IAssetFxModel model) => IsFx ? FxConversionType.None : (model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType);
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate < FixingDates.First() ?
            new Dictionary<string, List<DateTime>>() :
            new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 
         public Dictionary<string, List<DateTime>> PastFixingDatesFx(IAssetFxModel model, DateTime valDate)
         {
             var curve = model.GetPriceCurve(AssetId);
-            return curve.Currency == Currency || valDate <= FixingDates.Min() ?
+            return curve.Currency == Currency || valDate < FixingDates.Min() ?
             [] : new Dictionary<string, List<DateTime>> { { FxPair(model), FixingDates.Select(x => x).Where(d => d < valDate).ToList() } };
         }
 

@@ -115,7 +115,7 @@ namespace Qwack.Core.Instruments.Asset
 
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= FixingDates.First() ?
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate < FixingDates.First() ?
                 new Dictionary<string, List<DateTime>>() :
                 new Dictionary<string, List<DateTime>> { { AssetId, FixingDates.Where(d => d < valDate).ToList() } };
 

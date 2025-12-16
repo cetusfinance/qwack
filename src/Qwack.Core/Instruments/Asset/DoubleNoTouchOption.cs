@@ -98,7 +98,7 @@ namespace Qwack.Core.Instruments.Asset
         public FxConversionType FxType(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? FxConversionType.None : FxConversionType;
         public string FxPair(IAssetFxModel model) => model.GetPriceCurve(AssetId).Currency == PaymentCurrency ? string.Empty : $"{model.GetPriceCurve(AssetId).Currency}/{PaymentCurrency}";
 
-        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate <= BarrierObservationStartDate ?
+        public Dictionary<string, List<DateTime>> PastFixingDates(DateTime valDate) => valDate < BarrierObservationStartDate ?
             new Dictionary<string, List<DateTime>>() :
             new Dictionary<string, List<DateTime>> { { AssetId, new List<DateTime> { BarrierObservationStartDate } } };
 

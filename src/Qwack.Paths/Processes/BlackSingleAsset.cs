@@ -81,7 +81,9 @@ namespace Qwack.Paths.Processes
                 
                 if(!_pastFixings.ContainsKey(date.Date))
                 {
+                    //Console.WriteLine($"Warning: Missing fixing for {_name} on {date:yyyy-MM-dd}");
                     continue;
+
                 }
                 try
                 {
@@ -102,7 +104,7 @@ namespace Qwack.Paths.Processes
             for (var t = _fixings.Length  + 1; t < _drifts.Length; t++)
             {
                 var time = _timesteps.Times[t] - firstTime;
-                var prevTime = _timesteps.Times[t - 1] - firstTime;
+                var prevTime = Max(0,_timesteps.Times[t - 1] - firstTime);
                 var atmVol = _surface.GetForwardATMVol(0, time);
                 var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
                 var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * time * _correlation);

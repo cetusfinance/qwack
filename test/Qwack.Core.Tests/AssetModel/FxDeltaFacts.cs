@@ -95,7 +95,7 @@ namespace Qwack.Core.Tests.AssetModel
             var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(expectedPV, delta, 4);
+            Assert.Equal(-expectedPV, delta, 4);
 
 
         }
@@ -178,7 +178,7 @@ namespace Qwack.Core.Tests.AssetModel
             var deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(nominal * assetFwd, delta, 4);
+            Assert.Equal(-nominal * assetFwd, delta, 4);
 
             //change intrinsic value, fx delta does not change as intrinsic is in ZAR
             strike = fairStrike - 20;
@@ -197,7 +197,7 @@ namespace Qwack.Core.Tests.AssetModel
             deltaCube = portfolio.FxDelta(aModel, zar, TestProviderHelper.CurrencyProvider);
             dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             delta = (double)dAgg.GetAllRows().First().Value;
-            Assert.Equal(nominal * assetFwd, delta, 4);
+            Assert.Equal(-nominal * assetFwd, delta, 4);
         }
     }
 }

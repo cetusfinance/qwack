@@ -168,5 +168,15 @@
     "Ccy": "TRY",
     "DayCount": "Act360",
     "SettlementCalendarName": "IST"
-  }
+  },
+  {
+    "Ccy": "COP",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "USD"
+  },
+  {
+    "Ccy": "EGP",
+    "DayCount": "Act360",
+    "SettlementCalendarName": "USD"
+  },
 ]

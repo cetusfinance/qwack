@@ -191,7 +191,7 @@ namespace Qwack.Models.Models
 
                 if (model.BuildDate < firstFix)
                 {
-                    var fwds = sampleDates.Select(x => priceCurve.GetPriceForDate(x)).ToArray();
+                    var fwds = swap.FixingDates.Select(priceCurve.GetPriceForFixingDate).ToArray();
                     var avg = fwds.Average();
 
                     if (swap.FxConversionType == FxConversionType.AverageThenConvert)
@@ -222,7 +222,7 @@ namespace Qwack.Models.Models
 
                         fixedAvg = alreadyFixed.Select(d => fixingDict.GetFixing(d)).Average();
                     }
-                    var floatAvg = stillToFix.Any() ? priceCurve.GetAveragePriceForDates(stillToFix.AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag)) : 0.0;
+                    var floatAvg = stillToFix.Any() ? stillToFix.Average(priceCurve.GetPriceForFixingDate) : 0.0;
 
                     if (swap.FxConversionType == FxConversionType.AverageThenConvert)
                     {
@@ -287,8 +287,7 @@ namespace Qwack.Models.Models
                     fixedAvg = assetFixings.Select((x, ix) => x * fxFixingsA[ix]).Average();
                 }
 
-                var floatAsset = stillToFix.AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag)
-                    .Select(d => priceCurve.GetPriceForDate(d));
+                var floatAsset = stillToFix.Select(priceCurve.GetPriceForFixingDate);
                 var floatFx = model.FundingModel.GetFxRates(stillToFix, priceCurve.Currency, swap.PaymentCurrency).ToArray();
                 var floatCompoAvg = floatAsset.Any() ? floatAsset.Select((x, ix) => x * floatFx[ix]).Average() : 0.0;
 
@@ -323,7 +322,7 @@ namespace Qwack.Models.Models
                 if (swap.FixingDates[i] < model.BuildDate || (fixingForToday && swap.FixingDates[i] == model.BuildDate))
                     fwds[i] = fixingDict.GetFixing(swap.FixingDates[i]);
                 else
-                    fwds[i] = priceCurve.GetPriceForDate(swap.FixingDates[i].AddPeriod(swap.SpotLagRollType, swap.FixingCalendar, swap.SpotLag));
+                    fwds[i] = priceCurve.GetPriceForFixingDate(swap.FixingDates[i]);
             }
 
 

@@ -23,6 +23,8 @@ namespace Qwack.Models.Risk.Mutators
                         Currency = pc.Currency,
                         Units = pc.Units,
                         RefDate = pc.RefDate,
+                        SpotCalendar = pc.SpotCalendar,
+                        SpotLag = pc.SpotLag,                     
                     };
                     o.AddPriceCurve(assetId, npc);
                     break;
@@ -33,6 +35,8 @@ namespace Qwack.Models.Risk.Mutators
                         Name = eq.Name,
                         Currency = eq.Currency,
                         Units = eq.Units,
+                        SpotCalendar = eq.SpotCalendar,
+                        SpotLag = eq.SpotLag,
                     };
                     o.AddPriceCurve(assetId, neq);
                     break;
@@ -43,6 +47,8 @@ namespace Qwack.Models.Risk.Mutators
                         Name = cp.Name,
                         Currency = cp.Currency,
                         Units = cp.Units,
+                        SpotCalendar = cp.SpotCalendar,
+                        SpotLag = cp.SpotLag,
                     };
                     o.AddPriceCurve(assetId, ncp);
                     break;

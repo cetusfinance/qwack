@@ -67,6 +67,7 @@ namespace Qwack.Core.Curves
             Name = transportObject.Name;
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
+            SpotLag = new Frequency(transportObject.SpotLag ?? "2b");
         }
 
         private void Initialize()

@@ -59,13 +59,14 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
-        public ContangoPriceCurve(TO_ContangoPriceCurve transportObject, ICurrencyProvider currencyProvider)
+        public ContangoPriceCurve(TO_ContangoPriceCurve transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
             : this(transportObject.BuildDate, transportObject.Spot, transportObject.SpotDate, transportObject.PillarDates, transportObject.Contangos,
                  currencyProvider, transportObject.Basis, transportObject.PillarLabels)
         {
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
+            SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
         }
 
         private void Initialize()

@@ -1948,7 +1948,7 @@ namespace Qwack.Models.Models
                         var newSpot = c.Spot * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI);
                         var toc = c.GetTransportObject();
                         toc.ContangoPriceCurve.Spot = newSpot;
-                        m.AddPriceCurve(curveName, new ContangoPriceCurve(toc.ContangoPriceCurve, currencyProvider));
+                        m.AddPriceCurve(curveName, new ContangoPriceCurve(toc.ContangoPriceCurve, currencyProvider, calendarProvider));
                         break;
                     default:
                         throw new Exception("PFE roll unable to handle price curve type");

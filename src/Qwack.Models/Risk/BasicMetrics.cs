@@ -2692,7 +2692,7 @@ namespace Qwack.Models.Risk
 
                 for (var c = 0; c < curveObj.Contangos.Length; c++)
                 {
-                    var t = curveObj.BuildDate.CalculateYearFraction(curveObj.PillarDates[c], Transport.BasicTypes.DayCountBasis.ACT360);
+                    var t = curveObj.SpotDate.CalculateYearFraction(curveObj.PillarDates[c], DayCountBasis.ACT360);
                     var scale = curveObj.Spot * bump * t * model.FundingModel.GetDf(curveObj.Currency, curveObj.BuildDate, curveObj.PillarDates[c]);
                     var bumpedRates = curveObj.Contangos.Select((x, ix) => x + (ix == c ? bump : 0)).ToArray();
                     var newCurve = new ContangoPriceCurve(curveObj.BuildDate, curveObj.Spot, curveObj.SpotDate, curveObj.PillarDates, bumpedRates, currencyProvider, curveObj.Basis, curveObj.PillarLabels)

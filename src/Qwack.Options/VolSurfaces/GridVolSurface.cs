@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -43,6 +44,8 @@ namespace Qwack.Options.VolSurfaces
         public IInterpolator2D LocalVolGrid { get; set; }
 
         internal IInterpolator1D[] _interpolators;
+
+        public IPriceCurve StickyStrikeCurve { get; set; }
 
         public GridVolSurface() { }
 
@@ -98,7 +101,7 @@ namespace Qwack.Options.VolSurfaces
             }
             else
             {
-                var fwd = forward;
+                var fwd = StickyStrikeCurve?.GetPriceForDate(OriginDate.AddYearFraction(maturity, DayCountBasis.Act365F)) ?? forward;
                 //var cp = strike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (deltaK =>
                 {
@@ -161,7 +164,7 @@ namespace Qwack.Options.VolSurfaces
             }
             else
             {
-                var fwd = forward;
+                var fwd = StickyStrikeCurve?.GetPriceForDate(OriginDate.AddYearFraction(maturity, DayCountBasis.Act365F)) ?? forward;
                 var cp = deltaStrike < 0 ? OptionType.Put : OptionType.Call;
                 Func<double, double> testFunc = (absK =>
                 {

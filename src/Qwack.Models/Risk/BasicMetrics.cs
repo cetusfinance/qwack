@@ -850,7 +850,7 @@ namespace Qwack.Models.Risk
                 return w3;
         }
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool stickyStrike = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -893,6 +893,15 @@ namespace Qwack.Models.Risk
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
+
+                if (stickyStrike)
+                {
+                    var surface = model.GetVolSurface(curveObj.AssetId);
+                    if (surface is RiskyFlySurface rf)
+                    {
+                        rf.StickyStrikeCurve = curveObj;
+                    }
+                }
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
@@ -1073,6 +1082,15 @@ namespace Qwack.Models.Risk
                         }
                     }
                 }, !(parallelize)).Wait();
+
+                if (stickyStrike)
+                {
+                    var surface = model.GetVolSurface(curveObj.AssetId);
+                    if (surface is RiskyFlySurface rf)
+                    {
+                        rf.StickyStrikeCurve = null;
+                    }
+                }
             }
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }

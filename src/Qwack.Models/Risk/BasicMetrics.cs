@@ -2400,7 +2400,7 @@ namespace Qwack.Models.Risk
              //using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
             using IPvModel rolledPvModel = (cloned is AssetFxMCModel amc) ?
-                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider) :
+                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider ?? amc.CalendarProvider) :
                         (cloned is AssetFxModel afx ? afx.RollModel(fwdValDate, currencyProvider) : throw new Exception("Unsupported model type"));
 
             var pvCubeFwd = useFv ? rolledPvModel.FV(reportingCcy) : rolledPvModel.PV(reportingCcy);

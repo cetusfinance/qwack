@@ -1724,15 +1724,16 @@ namespace Qwack.Models.Models
             return m.CorrelationDelta(reportingCcy, epsilon);
         }
 
-        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider = null)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
+            return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false, calendarProvider: calendarProvider);
         }
-        public static ICube AssetTheta(this IPvModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+
+        public static ICube AssetTheta(this IPvModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider = null)
         {
-            return model.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
+            return model.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false, calendarProvider: calendarProvider);
         }
 
         public static ICube AssetAnalyticTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)

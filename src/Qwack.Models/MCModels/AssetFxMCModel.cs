@@ -43,6 +43,8 @@ namespace Qwack.Models.MCModels
         public McSettings Settings { get; }
         public SchwartzSmithTwoFactorModelParameters TwoFactorModelParameters { get; }
 
+        public ICalendarProvider CalendarProvider => _calendarProvider;
+
         public IAssetFxModel VanillaModel => Model;
 
         private Dictionary<string, AssetPathPayoff> _payoffs;

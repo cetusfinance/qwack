@@ -84,6 +84,9 @@ namespace Qwack.Paths.Processes
                 {
                     //Console.WriteLine($"Warning: Missing fixing for {_name} on {date:yyyy-MM-dd}");
                     //continue;
+                    if (lastFixing == 0 && d == 0)
+                        continue;
+
                     var vect = new Vector<double>(lastFixing);
                     fixings.Add(vect);
 

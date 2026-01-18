@@ -10100,7 +10100,7 @@
     "TickSize": 0.0001
   },
   {
-    "Names": [ "AUD", "Australian Dollar - CME", "NZD", "New Zealand Dollar - CME", "NOK", "Norwegian Krone - CME", "SEK", "Sweedish Krone - CME", "ZAR", "South African Rand - CME" ],
+    "Names": [ "AUD", "Australian Dollar - CME", "AD", "NZD", "New Zealand Dollar - CME", "NV", "NOK", "Norwegian Krone - CME", "SEK", "Sweedish Krone - CME", "ZAR", "South African Rand - CME" ],
     "CodeConversions": {
       "IB": {
         "AUD": "6A",

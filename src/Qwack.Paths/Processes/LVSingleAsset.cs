@@ -70,17 +70,28 @@ namespace Qwack.Paths.Processes
             //fixings first
             var dates = collection.GetFeature<ITimeStepsFeature>();
             var fixings = new List<Vector<double>>();
+            var lastFixing = 0.0;
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date >= _startDate) break;
-                try
+                if (date > _startDate) break;
+
+                if (!_pastFixings.ContainsKey(date.Date))
                 {
-                    var vect = new Vector<double>(_pastFixings[date]);
+                    var vect = new Vector<double>(lastFixing);
                     fixings.Add(vect);
                 }
-                catch
+                else
                 {
+                    try
+                    {
+                        lastFixing = _pastFixings[date.Date];
+                        var vect = new Vector<double>(lastFixing);
+                        fixings.Add(vect);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
 
             }

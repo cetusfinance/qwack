@@ -1655,7 +1655,9 @@ namespace Qwack.Models.Models
             m.AttachPortfolio(portfolio);
             return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
         }
-        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool parallelize = false) => model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, bumpSize: bumpSize, parallelize: parallelize);
+
+        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool parallelize = false, bool stickyStrike = false) => 
+            model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, bumpSize: bumpSize, parallelize: parallelize, stickyStrike: stickyStrike);
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {
@@ -1722,15 +1724,16 @@ namespace Qwack.Models.Models
             return m.CorrelationDelta(reportingCcy, epsilon);
         }
 
-        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+        public static ICube AssetTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider = null)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
+            return m.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false, calendarProvider: calendarProvider);
         }
-        public static ICube AssetTheta(this IPvModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
+
+        public static ICube AssetTheta(this IPvModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider = null)
         {
-            return model.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false);
+            return model.AssetThetaCharm(fwdValDate, reportingCcy, currencyProvider, false, calendarProvider: calendarProvider);
         }
 
         public static ICube AssetAnalyticTheta(this Portfolio portfolio, IAssetFxModel model, DateTime fwdValDate, Currency reportingCcy, ICurrencyProvider currencyProvider)
@@ -1948,7 +1951,7 @@ namespace Qwack.Models.Models
                         var newSpot = c.Spot * Exp(-(v * v) * t / 2.0 + v * sqrt * nCI);
                         var toc = c.GetTransportObject();
                         toc.ContangoPriceCurve.Spot = newSpot;
-                        m.AddPriceCurve(curveName, new ContangoPriceCurve(toc.ContangoPriceCurve, currencyProvider));
+                        m.AddPriceCurve(curveName, new ContangoPriceCurve(toc.ContangoPriceCurve, currencyProvider, calendarProvider));
                         break;
                     default:
                         throw new Exception("PFE roll unable to handle price curve type");

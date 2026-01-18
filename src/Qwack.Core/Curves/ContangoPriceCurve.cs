@@ -59,13 +59,15 @@ namespace Qwack.Core.Curves
             Initialize();
         }
 
-        public ContangoPriceCurve(TO_ContangoPriceCurve transportObject, ICurrencyProvider currencyProvider)
+        public ContangoPriceCurve(TO_ContangoPriceCurve transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
             : this(transportObject.BuildDate, transportObject.Spot, transportObject.SpotDate, transportObject.PillarDates, transportObject.Contangos,
                  currencyProvider, transportObject.Basis, transportObject.PillarLabels)
         {
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
+            SpotCalendar = calendarProvider.GetCalendarSafe(transportObject.SpotCalendar);
+            SpotLag = new Frequency(transportObject.SpotLag ?? "2b");
         }
 
         private void Initialize()
@@ -79,7 +81,7 @@ namespace Qwack.Core.Curves
         public double GetPriceForDate(DateTime date) => GetFwd(date, _interp.Interpolate(date.ToOADate()));
         public double GetPriceForFixingDate(DateTime date)
         {
-            var prompt = date.AddPeriod(RollType.F, SpotCalendar, SpotLag);
+            var prompt = date.SpotDate(SpotLag, SpotCalendar, Currency?.SettlementCalendar ?? SpotCalendar);
             return GetFwd(prompt, _interp.Interpolate(prompt.ToOADate()));
         }
 

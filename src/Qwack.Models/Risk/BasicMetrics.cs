@@ -850,7 +850,7 @@ namespace Qwack.Models.Risk
                 return w3;
         }
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool stickyStrike = false)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>
@@ -893,6 +893,15 @@ namespace Qwack.Models.Risk
 
                 if (subPortfolio.Instruments.Count == 0)
                     continue;
+
+                if (stickyStrike)
+                {
+                    var surface = model.GetVolSurface(curveObj.AssetId);
+                    if (surface is RiskyFlySurface rf)
+                    {
+                        rf.StickyStrikeCurve = curveObj;
+                    }
+                }
 
                 var lastDateInBook = subPortfolio.LastSensitivityDate;
 
@@ -1073,6 +1082,15 @@ namespace Qwack.Models.Risk
                         }
                     }
                 }, !(parallelize)).Wait();
+
+                if (stickyStrike)
+                {
+                    var surface = model.GetVolSurface(curveObj.AssetId);
+                    if (surface is RiskyFlySurface rf)
+                    {
+                        rf.StickyStrikeCurve = null;
+                    }
+                }
             }
             return cube.Sort(new List<string> { AssetId, "CurveType", "PointDate", TradeId });
         }
@@ -2382,7 +2400,7 @@ namespace Qwack.Models.Risk
              //using var rolledPvModel = pvModel.Rebuild(rolledVanillaModel, rolledPortfolio);
 
             using IPvModel rolledPvModel = (cloned is AssetFxMCModel amc) ?
-                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider) :
+                        amc.RollModel(fwdValDate, currencyProvider, null, calendarProvider ?? amc.CalendarProvider) :
                         (cloned is AssetFxModel afx ? afx.RollModel(fwdValDate, currencyProvider) : throw new Exception("Unsupported model type"));
 
             var pvCubeFwd = useFv ? rolledPvModel.FV(reportingCcy) : rolledPvModel.PV(reportingCcy);
@@ -2692,7 +2710,7 @@ namespace Qwack.Models.Risk
 
                 for (var c = 0; c < curveObj.Contangos.Length; c++)
                 {
-                    var t = curveObj.BuildDate.CalculateYearFraction(curveObj.PillarDates[c], Transport.BasicTypes.DayCountBasis.ACT360);
+                    var t = curveObj.SpotDate.CalculateYearFraction(curveObj.PillarDates[c], DayCountBasis.ACT360);
                     var scale = curveObj.Spot * bump * t * model.FundingModel.GetDf(curveObj.Currency, curveObj.BuildDate, curveObj.PillarDates[c]);
                     var bumpedRates = curveObj.Contangos.Select((x, ix) => x + (ix == c ? bump : 0)).ToArray();
                     var newCurve = new ContangoPriceCurve(curveObj.BuildDate, curveObj.Spot, curveObj.SpotDate, curveObj.PillarDates, bumpedRates, currencyProvider, curveObj.Basis, curveObj.PillarLabels)

@@ -27,7 +27,7 @@ namespace Qwack.Core.Curves
                 return new BasisPriceCurve(transportObject.BasisPriceCurve, currencyProvider, calendarProvider);
 
             if (transportObject.ContangoPriceCurve != null)
-                return new ContangoPriceCurve(transportObject.ContangoPriceCurve, currencyProvider);
+                return new ContangoPriceCurve(transportObject.ContangoPriceCurve, currencyProvider, calendarProvider);
 
             if (transportObject.EquityPriceCurve != null)
                 return new EquityPriceCurve(transportObject.EquityPriceCurve, null, currencyProvider);
@@ -65,7 +65,7 @@ namespace Qwack.Core.Curves
                     SpotCalendar = basic.SpotCalendar?.Name,
                     SpotLag = basic.SpotLag.ToString(),
                     RefDate = basic.RefDate,
-                    Units = basic.Units  
+                    Units = basic.Units 
                 }
             },
             BasisPriceCurve basis => new TO_PriceCurve

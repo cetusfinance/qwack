@@ -26,6 +26,8 @@ namespace Qwack.Core.Basic
         AssetDeltaSingleCurve,
         AssetThetaCharm,
         AssetDeltaDecay,
+        AssetCurveDeltaStickyStrike,
+        PFE,
         Custom
     }
 }

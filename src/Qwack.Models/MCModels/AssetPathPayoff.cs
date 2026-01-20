@@ -237,6 +237,8 @@ namespace Qwack.Models.MCModels
                     _subInstruments = abs.PaySwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider, simulationCcy))
                         .Concat(abs.RecSwaplets.Select(x => (IAssetPathPayoff)new AssetPathPayoff(x, _currencyProvider, _calendarProvider, simulationCcy)))
                         .ToList();
+                    _payDate = abs.LastSensitivityDate;
+                    _ccy = abs.Currency;
                     break;
                 case AsianLookbackOption alb:
                     _ccy = alb.Currency;

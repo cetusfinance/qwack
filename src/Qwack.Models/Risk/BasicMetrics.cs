@@ -928,7 +928,8 @@ namespace Qwack.Models.Risk
                     bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, pointsToBump, wavey: wavey) : null;
                 }
 
-                var baseRows = pvRows; 
+                var baseRows = pvRows;
+                var baseRowsDown = pvRows;
 
                 foreach (var bCurve in bumpedCurves.ToList())
                 {
@@ -990,7 +991,7 @@ namespace Qwack.Models.Risk
                         if (computeGamma)
                         {
                             var deltaUp = (bumpedRows[i].Value - baseRows[i].Value) / bumpForCurve;
-                            var deltaDown = (baseRows[i].Value - bumpedRowsDown[i].Value) / bumpForCurve;
+                            var deltaDown = (baseRowsDown[i].Value - bumpedRowsDown[i].Value) / bumpForCurve;
                             var delta = (deltaUp + deltaDown) / 2.0;
                             var gamma = (deltaUp - deltaDown) / bumpForCurve;
 
@@ -1089,6 +1090,7 @@ namespace Qwack.Models.Risk
                     if (wavey)
                     {
                         baseRows = bumpedRows;
+                        baseRowsDown = bumpedRowsDown;
                     }
                 }
 

@@ -850,7 +850,7 @@ namespace Qwack.Models.Risk
                 return w3;
         }
 
-        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool stickyStrike = false, bool wavey=false)
+        public static ICube AssetDelta(this IPvModel pvModel, bool computeGamma = false, bool parallelize = false, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool stickyStrike = false, bool wavey=true)
         {
             var cube = new ResultCube();
             var dataTypes = new Dictionary<string, Type>

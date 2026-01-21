@@ -1656,8 +1656,8 @@ namespace Qwack.Models.Models
             return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
         }
 
-        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool parallelize = false, bool stickyStrike = false) => 
-            model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, bumpSize: bumpSize, parallelize: parallelize, stickyStrike: stickyStrike);
+        public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool parallelize = false, bool stickyStrike = false, bool wavey=true) => 
+            model.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, bumpSize: bumpSize, parallelize: parallelize, stickyStrike: stickyStrike, wavey: wavey);
 
         public static ICube FxDelta(this Portfolio portfolio, IAssetFxModel model, Currency homeCcy, ICurrencyProvider currencyProvider, bool computeGamma = false, bool reportInverse = true)
         {

@@ -102,7 +102,7 @@ namespace Qwack.Core.Curves
         public double GetPriceForDate(DateTime date) => _interp.Interpolate(date.ToOADate());
         public double GetPriceForFixingDate(DateTime date) => _interp.Interpolate(date.SpotDate(SpotLag, SpotCalendar, Currency.SettlementCalendar).ToOADate());
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null, bool wavey = false)
         {
             var o = new Dictionary<string, IPriceCurve>();
 
@@ -131,6 +131,9 @@ namespace Qwack.Core.Curves
          
                     var name = _pillarLabels[curvePointIx];
                     o.Add(name, c);
+
+                    if(wavey)
+                        pricesSparse = bumpedCurveSparse;
                 }
             }
             else

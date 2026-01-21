@@ -77,7 +77,7 @@ namespace Qwack.Core.Curves
 
         public double GetAveragePriceForDates(DateTime[] dates) => Curve.GetAveragePriceForDates(dates);
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null)
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null, bool wavey = false)
         {
             var o = new Dictionary<string, IPriceCurve>();
 

@@ -33,7 +33,7 @@ namespace Qwack.Core.Curves
 
         public double GetAveragePriceForDates(DateTime[] dates) => BaseCurve.GetAveragePriceForDates(dates) * ScalingFactor;
 
-        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null) => throw new NotImplementedException();
+        public Dictionary<string, IPriceCurve> GetDeltaScenarios(double bumpSize, DateTime? LastDateToBump, DateTime[] sparsePointsToBump = null, bool wavey = false) => throw new NotImplementedException();
 
         public double GetPriceForDate(DateTime date) => BaseCurve.GetPriceForDate(date) * ScalingFactor;
 

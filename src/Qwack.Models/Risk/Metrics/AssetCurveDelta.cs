@@ -252,13 +252,13 @@ namespace Qwack.Models.Risk.Metrics
                 {
                     lastDateInBook = Utils.NextThirdWeds(lastDateInBook);
                     var sparseDates = curveObj.PillarDates.Where(x => x <= lastDateInBook && DateExtensions.IsSparseLMEDate(x, curveObj.BuildDate, calendars)).ToArray();
-                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, sparseDates);
-                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, sparseDates) : null;
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, sparseDates, wavey: false);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, sparseDates, wavey: false) : null;
                 }
                 else
                 {
-                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, pointsToBump);
-                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, pointsToBump) : null;
+                    bumpedCurves = curveObj.GetDeltaScenarios(bumpForCurve, lastDateInBook, pointsToBump, wavey: false);
+                    bumpedDownCurves = computeGamma ? curveObj.GetDeltaScenarios(-bumpForCurve, lastDateInBook, pointsToBump, wavey: false) : null;
                 }
 
                 foreach (var bCurve in bumpedCurves)

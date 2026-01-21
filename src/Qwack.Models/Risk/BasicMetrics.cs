@@ -1083,10 +1083,12 @@ namespace Qwack.Models.Risk
                             }
                         }
 
-                        if (wavey)
-                        {
-                            baseRows = bumpedRows;
-                        }
+         
+                    }
+
+                    if (wavey)
+                    {
+                        baseRows = bumpedRows;
                     }
                 }
 

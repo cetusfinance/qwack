@@ -879,7 +879,7 @@ namespace Qwack.Models.Risk
             foreach (var curveName in model.CurveNames)
             {
                 var curveObj = model.GetPriceCurve(curveName);
-                var bumpForCurve = bumpSize / 10 * curveObj.GetPriceForDate(model.BuildDate);
+                var bumpForCurve = bumpSize / 100 * curveObj.GetPriceForDate(model.BuildDate);
                 var linkedCurves = model.GetDependentCurves(curveName);
                 var allLinkedCurves = model.GetAllDependentCurves(curveName);
 
@@ -1052,7 +1052,7 @@ namespace Qwack.Models.Risk
                         {
                             var delta = (bumpedRows[i].Value - pvRows[i].Value) / bumpForCurve;
 
-                            if (delta != 0.0)
+                            if(!double.IsNaN(delta)) //(delta != 0.0)
                             {
                                 if (bCurve.Value.UnderlyingsAreForwards) //de-discount delta
                                     delta /= GetUsdDF(model, (BasicPriceCurve)bCurve.Value, bCurve.Value.PillarDatesForLabel(bCurve.Key));

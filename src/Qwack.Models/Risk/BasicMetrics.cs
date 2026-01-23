@@ -1083,8 +1083,6 @@ namespace Qwack.Models.Risk
                                 cube.AddRow(row, delta);
                             }
                         }
-
-         
                     }
 
                     if (wavey)

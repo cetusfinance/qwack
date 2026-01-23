@@ -302,7 +302,8 @@ namespace Qwack.Models.MCModels
                                                          mbpo.SettlementDate, mbpo.CallPut,
                                                          mbpo.DiscountCurve, mbpo.PaymentCurrency,
                                                          mbpo.Notional, shifter, mbpo.IsOption, null,
-                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia)
+                                                         scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia,
+                                                         scaleIsPut: mbpo.ScaleIsPut, scaleIsPut2: mbpo.ScaleIsPut2, scaleIsPut3: mbpo.ScaleIsPut3)
                         {
                             VanillaModel = VanillaModel,
                             BidAskSpread = 0.25,
@@ -329,7 +330,8 @@ namespace Qwack.Models.MCModels
                                                          mbpo.Notional, mbpo.IsOption, null, dateShifter: mbpo.FixingOffset,
                                                          scaleProportion: mbpo.ScaleProportion, scaleStrike: mbpo.ScaleStrike, periodPremia: mbpo.PeriodPremia,
                                                          scaleProportion2: mbpo.ScaleProportion2, scaleStrike2: mbpo.ScaleStrike2, 
-                                                         scaleProportion3: mbpo.ScaleProportion3, scaleStrike3: mbpo.ScaleStrike3)
+                                                         scaleProportion3: mbpo.ScaleProportion3, scaleStrike3: mbpo.ScaleStrike3,
+                                                         scaleIsPut: mbpo.ScaleIsPut, scaleIsPut2: mbpo.ScaleIsPut2, scaleIsPut3: mbpo.ScaleIsPut3)
                         {
                             VanillaModel = VanillaModel,
                             FixingId = mbpo.AssetFixingId,

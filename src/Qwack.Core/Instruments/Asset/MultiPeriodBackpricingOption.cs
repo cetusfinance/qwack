@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProtoBuf;
 using Qwack.Core.Basic;
 using Qwack.Core.Models;
 using Qwack.Dates;
@@ -65,12 +66,16 @@ namespace Qwack.Core.Instruments.Asset
 
         public double? ScaleStrike { get; set; }
         public double? ScaleProportion { get; set; }
+        public bool? ScaleIsPut { get; set; }
 
         public double? ScaleStrike2 { get; set; }
         public double? ScaleProportion2 { get; set; }
+        public bool? ScaleIsPut2 { get; set; }
 
         public double? ScaleStrike3 { get; set; }
         public double? ScaleProportion3 { get; set; }
+        public bool? ScaleIsPut3 { get; set; }
+
 
         public string[] AssetIds => new[] { AssetId };
         public string[] IrCurves(IAssetFxModel model)
@@ -143,10 +148,13 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = OffsetFixingId,
             ScaleStrike = ScaleStrike,
             ScaleProportion = ScaleProportion,
+            ScaleIsPut = ScaleIsPut,
             ScaleStrike2 = ScaleStrike2,
             ScaleProportion2 = ScaleProportion2,
+            ScaleIsPut2 = ScaleIsPut2,
             ScaleStrike3 = ScaleStrike3,
             ScaleProportion3 = ScaleProportion3,
+            ScaleIsPut3 = ScaleIsPut3,
             MetaData = new(MetaData),
             PeriodPremia = PeriodPremia,
             CashAskFixingId = CashAskFixingId,
@@ -198,10 +206,13 @@ namespace Qwack.Core.Instruments.Asset
             OffsetFixingId = to.OffsetFixingId;
             ScaleProportion = to.ScaleProportion;
             ScaleStrike = to.ScaleStrike;
+            ScaleIsPut = to.ScaleIsPut;
             ScaleProportion2 = to.ScaleProportion2;
             ScaleStrike2 = to.ScaleStrike2;
+            ScaleIsPut2 = to.ScaleIsPut2;
             ScaleProportion3 = to.ScaleProportion3;
             ScaleStrike3 = to.ScaleStrike3;
+            ScaleIsPut3 = to.ScaleIsPut3;
             PeriodPremia = to.PeriodPremia;
             CashBidFixingId = to.CashBidFixingId;
             CashAskFixingId = to.CashAskFixingId;
@@ -247,10 +258,13 @@ namespace Qwack.Core.Instruments.Asset
                 OffsetFixingId = OffsetFixingId,
                 ScaleProportion = ScaleProportion,
                 ScaleStrike = ScaleStrike,
+                ScaleIsPut = ScaleIsPut,
                 ScaleProportion2 = ScaleProportion2,
                 ScaleStrike2 = ScaleStrike2,
+                ScaleIsPut2 = ScaleIsPut2,
                 ScaleProportion3 = ScaleProportion3,
                 ScaleStrike3 = ScaleStrike3,
+                ScaleIsPut3 = ScaleIsPut3,
                 MetaData = new(MetaData),
                 PeriodPremia = PeriodPremia,
                 M3AskFixingId = M3AskFixingId,

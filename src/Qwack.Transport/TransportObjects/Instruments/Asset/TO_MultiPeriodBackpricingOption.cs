@@ -98,6 +98,12 @@ namespace Qwack.Transport.TransportObjects.Instruments.Asset
         public double? ScaleStrike3 { get; set; }
         [ProtoMember(43)]
         public double? ScaleProportion3 { get; set; }
+        [ProtoMember(44)]
+        public bool? ScaleIsPut { get; set; }
+        [ProtoMember(45)]
+        public bool? ScaleIsPut2 { get; set; }
+        [ProtoMember(46)]
+        public bool? ScaleIsPut3 { get; set; }
 
     }
 }

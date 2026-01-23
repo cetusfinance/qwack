@@ -53,10 +53,13 @@ namespace Qwack.Paths.Payoffs
 
         private double? _scaleStrike;
         private double? _scaleProportion;
+        private bool? _scaleIsPut;
         private double? _scaleStrike2;
         private double? _scaleProportion2;
+        private bool? _scaleIsPut2;
         private double? _scaleStrike3;
         private double? _scaleProportion3;
+        private bool? _scaleIsPut3;
 
         private double[] _contangoScaleFactors3mBid;
         private double[] _contangoScaleFactors3mAsk;
@@ -106,7 +109,10 @@ namespace Qwack.Paths.Payoffs
                                               double? scaleStrike2 = null,
                                               double? scaleProportion2 = null,
                                               double? scaleStrike3 = null,
-                                              double? scaleProportion3 = null)
+                                              double? scaleProportion3 = null,
+                                              bool? scaleIsPut = null,
+                                              bool? scaleIsPut2 = null,
+                                              bool? scaleIsPut3 = null)
         {
             _avgDates = avgDates;
             _decisionDate = decisionDate.Date.AddDays(1).AddTicks(-1);
@@ -123,10 +129,13 @@ namespace Qwack.Paths.Payoffs
             _dateShifter = dateShifter;
             _scaleStrike =  scaleStrike;
             _scaleProportion = scaleProportion;
+            _scaleIsPut = scaleIsPut;
             _scaleStrike2 = scaleStrike2;
             _scaleProportion2 = scaleProportion2;
+            _scaleIsPut2 = scaleIsPut2;
             _scaleStrike3 = scaleStrike3;
             _scaleProportion3 = scaleProportion3;
+            _scaleIsPut3 = scaleIsPut3;
             _periodPremia = periodPremia ?? avgDates.Select(x => 0.0).ToArray(); //default to zero spreads
 
             if (_ccy.Ccy != "USD")
@@ -365,7 +374,8 @@ namespace Qwack.Paths.Payoffs
 
                 if (_scaleProportion.HasValue && _scaleStrike.HasValue)
                 {
-                    var scalePayoff = _callPut == OptionType.C ?
+                    var scaleIsCall = _scaleIsPut.HasValue ? _scaleIsPut == false : _callPut == OptionType.C;
+                    var scalePayoff = scaleIsCall ?
                         Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike.Value)) * _scaleProportion.Value :
                         Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike.Value) - avgVec) * _scaleProportion.Value;
                     payoff -= scalePayoff;
@@ -373,7 +383,8 @@ namespace Qwack.Paths.Payoffs
 
                 if (_scaleProportion2.HasValue && _scaleStrike2.HasValue)
                 {
-                    var scalePayoff = _callPut == OptionType.C ?
+                    var scaleIsCall = _scaleIsPut2.HasValue ? _scaleIsPut2 == false : _callPut == OptionType.C;
+                    var scalePayoff = scaleIsCall ?
                          Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike2.Value)) * _scaleProportion2.Value :
                          Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike2.Value) - avgVec) * _scaleProportion2.Value;
                     payoff -= scalePayoff;
@@ -381,7 +392,8 @@ namespace Qwack.Paths.Payoffs
 
                 if (_scaleProportion3.HasValue && _scaleStrike3.HasValue)
                 {
-                    var scalePayoff = _callPut == OptionType.C ?
+                    var scaleIsCall = _scaleIsPut3.HasValue ? _scaleIsPut3 == false : _callPut == OptionType.C;
+                    var scalePayoff = scaleIsCall ?
                         Vector.Max(new Vector<double>(0), avgVec - new Vector<double>(_scaleStrike3.Value)) * _scaleProportion3.Value :
                         Vector.Max(new Vector<double>(0), new Vector<double>(_scaleStrike3.Value) - avgVec) * _scaleProportion3.Value;
                     payoff -= scalePayoff;

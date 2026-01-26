@@ -32,6 +32,8 @@ namespace Qwack.Models.Risk
         public bool ParallelizeOuterCalc { get; set; } = true;
         public double[] SpecificShifts { get; set; }
         public bool SpecificShiftsAreRelative { get; set; }
+        public double FMELambda { get; set; } = 0.99;
+        public bool FMEUseImpliedVol { get; set; }
 
         public RiskLadder(string assetId, MutationType shiftType, RiskMetric metric, double shiftStepSize, int nScenarios, bool returnDifferential = true)
         {
@@ -102,6 +104,7 @@ namespace Qwack.Models.Risk
                         var shifted = ShiftType switch
                         {
                             MutationType.FlatShift => FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
+                            MutationType.FME => FMEShiftMutator.AssetCurveShift(AssetId, thisShift, FMELambda, FMEUseImpliedVol, model),
                             _ => throw new Exception($"Unable to process shift type {ShiftType}"),
                         };
                         results[i + NScenarios] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);
@@ -152,6 +155,7 @@ namespace Qwack.Models.Risk
                         var shifted = ShiftType switch
                         {
                             MutationType.FlatShift => SpecificShiftsAreRelative ? RelativeShiftMutator.AssetCurveShift(AssetId, thisShift, model) : FlatShiftMutator.AssetCurveShift(AssetId, thisShift, model),
+                            MutationType.FME => FMEShiftMutator.AssetCurveShift(AssetId, thisShift, FMELambda, FMEUseImpliedVol, model),
                             _ => throw new Exception($"Unable to process shift type {ShiftType}"),
                         };
                         results[i + n] = new KeyValuePair<string, IPvModel>(thisLabel, shifted);

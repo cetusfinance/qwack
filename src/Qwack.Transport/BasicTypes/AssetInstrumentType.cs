@@ -26,6 +26,7 @@ namespace Qwack.Transport.BasicTypes
         SyntheticCashAndCarry,
         AssetFxBasisSwap,
         UnpricedAverage,
-        StripQPSwaption
+        StripQPSwaption,
+        QPDoubleChoiceOption
     }
 }

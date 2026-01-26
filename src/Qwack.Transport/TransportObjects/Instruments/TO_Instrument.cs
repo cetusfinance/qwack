@@ -64,5 +64,8 @@ namespace Qwack.Transport.TransportObjects.Instruments
         public TO_AsianLookbackOption AsianLookbackOption { get; set; }
         [ProtoMember(127)]
         public TO_StripQPSwaption StripQPSwaption { get; set; }
+        [ProtoMember(128)]
+        public TO_QPDoubleChoiceOption QPDoubleChoiceOption { get; set; }
+        
     }
 }

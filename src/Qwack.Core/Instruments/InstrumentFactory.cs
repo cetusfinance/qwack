@@ -56,6 +56,10 @@ namespace Qwack.Core.Instruments
                         var swpt = new StripQPSwaption();
                         swpt.FromTransportObject(transportObject, calendarProvider, currencyProvider);
                         return swpt;
+                    case AssetInstrumentType.QPDoubleChoiceOption:
+                        var qpdc = new QPDoubleChoiceOption();
+                        qpdc.FromTransportObject(transportObject, calendarProvider, currencyProvider);
+                        return qpdc;
                 }
             }
             else if(transportObject.FundingInstrumentType != FundingInstrumentType.None)

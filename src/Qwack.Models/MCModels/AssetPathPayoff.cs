@@ -83,6 +83,10 @@ namespace Qwack.Models.MCModels
                         var sqpp = _subInstruments.First() as StripQPSwaptionPP;
                         sqpp.VanillaModel = value;
                         break;
+                    case QPDoubleChoiceOption lbo:
+                        var qpdc = _subInstruments.First() as QPDoubleChoiceOption;
+                        qpdc.VanillaModel = value;
+                        break;
                 }
             }
         }
@@ -282,6 +286,19 @@ namespace Qwack.Models.MCModels
                     _subInstruments =
                         [
                             sqpspp
+                        ];
+                    break;
+                case QPDoubleChoiceOption qpdc:
+                    _ccy = qpdc.Currency;
+                    _payDate = qpdc.PaymentDate;
+                    var settleFixingDate3 = qpdc.SettlementFixingDates == null && qpdc.SettlementDate != default ? qpdc.SettlementDate.SubtractPeriod(RollType.P, qpdc.FixingCalendar, 2.Bd()) : DateTime.MinValue;
+                    var qpdcpp = new QPDoubleChoiceOptionPP(qpdc.AssetId, [.. qpdc.FixingDates], qpdc.DecisionDate1, qpdc.DecisionDate2, qpdc.SettlementFixingDates ?? [settleFixingDate3], qpdc.PaymentDate, qpdc.CallPut, qpdc.DiscountCurve, qpdc.PaymentCurrency, qpdc.Notional, qpdc.IsOption)
+                    {
+                        VanillaModel = VanillaModel
+                    };
+                    _subInstruments =
+                        [
+                            qpdcpp
                         ];
                     break;
                 case MultiPeriodBackpricingOption mbpo:

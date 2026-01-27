@@ -73,39 +73,13 @@ namespace Qwack.Paths.Payoffs
             var dims = collection.GetFeature<IPathMappingFeature>();
             _assetIndex = dims.GetDimension(assetName);
 
-
             var dates = collection.GetFeature<ITimeStepsFeature>();
             _dates = dates;
             _decisionDateIx = dates.GetDateIndex(decisionDate);
 
-        
-
             var engine = collection.GetFeature<IEngineFeature>();
             _results = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count];
-
-            _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];
-            
-            //var curve = VanillaModel.GetPriceCurve(assetName);
-            //if (Fixings != null && FixingsDateShifted != null && dateShifter != null)
-            //{
-            //    var liveSpotDate = VanillaModel.BuildDate.AddPeriod(dateShifter.RollType, dateShifter.Calendar, dateShifter.Period);
-            //    _contangoScaleFactors = new double[_dates.TimeStepCount];
-            //    for (var i = 0; i < _contangoScaleFactors.Length; i++)
-            //    {
-            //        var date = _dates.Dates[i];
-            //        if (Fixings.TryGetValue(date, out var fix) && FixingsDateShifted.TryGetValue(date, out var fixShifted))
-            //        {
-            //            _contangoScaleFactors[i] = fixShifted / fix;
-            //        }
-            //        else
-            //        {
-            //            var spotDate = _dates.Dates[i].AddPeriod(RollType.F, curve.SpotCalendar, curve.SpotLag);
-            //            var shiftedDate = _dates.Dates[i].AddPeriod(dateShifter.RollType, dateShifter.Calendar, dateShifter.Period);
-            //            _contangoScaleFactors[i] = curve.GetPriceForDate(shiftedDate) / curve.GetPriceForDate(spotDate);
-            //        }
-            //    }
-            //}
-
+            _exercisedPeriod = new Vector<double>[engine.NumberOfPaths / Vector<double>.Count][];        
             _isComplete = true;
         }
 
@@ -122,7 +96,6 @@ namespace Qwack.Paths.Payoffs
                         AverageRegressors[i][j] = _featureCollection.GetPriceEstimator(_avgSpecs[i][j]);
                 }
             }
-
 
             var blockBaseIx = block.GlobalPathIndex;
             var spotIx = _liveDateIx;

@@ -32,6 +32,8 @@ namespace Qwack.Core.Instruments
             SyntheticCashAndCarry cnc => cnc.ToTransportObject(),
             MultiPeriodBackpricingOption bpo => bpo.ToTransportObject(),
             AsianLookbackOption albo => albo.ToTransportObject(),
+            StripQPSwaption stripQPSwaption => stripQPSwaption.ToTransportObject(),
+            QPDoubleChoiceOption dcOption => dcOption.ToTransportObject(),
             _ => throw new Exception("Unable to serialize instrument"),
         };
     }

@@ -61,6 +61,8 @@ namespace Qwack.Core.Instruments
                     BackPricingOption bpo => bpo.Equals(UnderlyingInstrument),
                     MultiPeriodBackpricingOption mbpo => mbpo.Equals(UnderlyingInstrument),
                     AsianLookbackOption lbo => lbo.Equals(UnderlyingInstrument),
+                    QPDoubleChoiceOption doubleChoiceOption => doubleChoiceOption.Equals(UnderlyingInstrument),
+                    StripQPSwaption stripQPSwaption => stripQPSwaption.Equals(UnderlyingInstrument),
                     _ => wrapper.UnderlyingInstrument.Equals(UnderlyingInstrument),
                 };
             }

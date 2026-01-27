@@ -561,7 +561,9 @@ namespace Qwack.Models.MCModels
                 }
                 else if(Settings.McModelType==McModelType.LMEForward) //use multi-future estimator
                 {
-                    var estimator = new MultiFutureEstimator(spec.AssetId, spec.ValDate, spec.AverageDates, _calendarProvider);
+                    var curve = VanillaModel.GetPriceCurve(spec.AssetId);
+                    var curveDates = spec.AverageDates.Select(d=>d.SpotDate(curve.SpotLag, curve.SpotCalendar, curve.Currency.SettlementCalendar)).ToArray();
+                    var estimator = new MultiFutureEstimator(spec.AssetId, spec.ValDate, curveDates, _calendarProvider);
                     Engine.AddPathProcess(estimator);
                     spec.Estimator = estimator;
                     Engine.Features.AddPriceEstimator(spec, estimator);

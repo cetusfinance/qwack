@@ -40,7 +40,6 @@ namespace Qwack.Paths.Payoffs
         private Vector<double> _notional;
         private bool _isComplete;
         private bool _isOption;
-        private int? _declaredPeriod;
 
         private double[] _contangoScaleFactors;
         private double[] _periodPremia;
@@ -96,7 +95,6 @@ namespace Qwack.Paths.Payoffs
             _assetName = assetName;
             _notional = new Vector<double>(notional);
             _isOption = isOption;
-            _declaredPeriod = declaredPeriod;
             _dateShifter = dateShifter;
             _periodPremia = periodPremia ?? avgDates.Select(x => 0.0).ToArray(); //default to zero spreads
 
@@ -424,6 +422,7 @@ namespace Qwack.Paths.Payoffs
         public CashFlowSchedule ExpectedFlows(IAssetFxModel model)
         {
             var ar = AverageResult;
+
             return new CashFlowSchedule
             {
                 Flows =

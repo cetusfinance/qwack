@@ -35,5 +35,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.Models
         public bool AvoidRegressionForBackPricing { get; set; }
         [ProtoMember(14)]
         public TO_CreditSettings CreditSettings { get; set; }
+        [ProtoMember(15)]
+        public double? LmeCorrelationLambda { get; set; }
     }
 }

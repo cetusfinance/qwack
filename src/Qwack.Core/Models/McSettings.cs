@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ProtoBuf;
 using Qwack.Core.Basic;
 using Qwack.Dates;
 using Qwack.Transport.BasicTypes;
@@ -24,6 +23,7 @@ namespace Qwack.Core.Models
         public bool AvoidRegressionForBackPricing { get; set; }
         public CreditSettings CreditSettings { get; set; } = new CreditSettings();
         public string GeneratorKey { get; set; }
+        public double? LmeCorrelationLambda { get; set; } = 0.01;
 
         public McSettings() { }
         public McSettings(TO_McSettings to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
@@ -32,6 +32,7 @@ namespace Qwack.Core.Models
             AvoidRegressionForBackPricing = to.AvoidRegressionForBackPricing;
             CompactMemoryMode = to.CompactMemoryMode;
             DebugMode = to.DebugMode;
+            LmeCorrelationLambda = to.LmeCorrelationLambda;
             ExpensiveFuturesSimulation = to.ExpensiveFuturesSimulation;
             FuturesMappingTable = to.FuturesMappingTable;
             Generator = to.Generator;
@@ -60,6 +61,7 @@ namespace Qwack.Core.Models
             Parallelize = Parallelize,
             SimulationCurrency = SimulationCurrency,
             CreditSettings = CreditSettings.Clone(),
+            LmeCorrelationLambda = LmeCorrelationLambda,
         };
 
         public TO_McSettings GetTransportObject() => new()
@@ -77,6 +79,7 @@ namespace Qwack.Core.Models
             NumberOfTimesteps = NumberOfTimesteps,
             Parallelize = Parallelize,
             SimulationCurrency = SimulationCurrency,
+            LmeCorrelationLambda = LmeCorrelationLambda,
             //CreditSettings = CreditSettings.(),
         };
     }

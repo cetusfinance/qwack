@@ -269,13 +269,13 @@ namespace Qwack.Paths.Payoffs
                 {
                     payoff = Vector.Max(new Vector<double>(0), payoff);
 
-                    if (payoff == Vector<double>.Zero) //abandon option
-                    {
-                        for (var a = 0; a < _dateIndexes.Count; a++)
-                        {
-                            _exercisedPeriod[resultIx][a] = Vector<double>.Zero;
-                        }
-                    }
+                    //if (payoff == Vector<double>.Zero) //abandon option
+                    //{
+                    //    for (var a = 0; a < _dateIndexes.Count; a++)
+                    //    {
+                    //        _exercisedPeriod[resultIx][a] = Vector<double>.Zero;
+                    //    }
+                    //}
                 }
 
                 _results[resultIx] = payoff * _notional - new Vector<double>(OptionPremiumTotal);

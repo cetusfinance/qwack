@@ -130,7 +130,7 @@ namespace Qwack.Models.MCModels
             TimeDependentLmeCorrelations lmeCorrelations = null;
             if (Settings.McModelType == McModelType.LMEForward)
             {
-                lmeCorrelations = new TimeDependentLmeCorrelations(Model, _calendarProvider);
+                lmeCorrelations = new TimeDependentLmeCorrelations(Model, _calendarProvider, Settings.LmeCorrelationLambda ?? 0.01);
                 Engine.AddPathProcess(lmeCorrelations);
                 Engine.IncrementDepth();
             }

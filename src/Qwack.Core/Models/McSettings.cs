@@ -24,6 +24,7 @@ namespace Qwack.Core.Models
         public CreditSettings CreditSettings { get; set; } = new CreditSettings();
         public string GeneratorKey { get; set; }
         public double? LmeCorrelationLambda { get; set; } = 0.01;
+        public Commodity2FactorCalibrationSettings Commodity2FactorCalibrationSettings { get; set; }
 
         public McSettings() { }
         public McSettings(TO_McSettings to, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
@@ -62,6 +63,7 @@ namespace Qwack.Core.Models
             SimulationCurrency = SimulationCurrency,
             CreditSettings = CreditSettings.Clone(),
             LmeCorrelationLambda = LmeCorrelationLambda,
+            Commodity2FactorCalibrationSettings = Commodity2FactorCalibrationSettings,
         };
 
         public TO_McSettings GetTransportObject() => new()

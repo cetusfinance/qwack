@@ -291,6 +291,23 @@ namespace Qwack.Models.MCModels
                         );
                         Engine.AddPathProcess(asset);
                     }
+                    else if (Settings.McModelType == McModelType.Commodity2FactorCalibrated)
+                    {
+                        var asset = new CalibratedCommodity2FactorModel
+                        (
+                            volSurface: surface,
+                            startDate: OriginDate,
+                            expiryDate: lastDate,
+                            nTimeSteps: Settings.NumberOfTimesteps,
+                            forwardCurve: fwdCurve,
+                            name: assetId,
+                            pastFixings: fixings,
+                            calibrationSettings: Settings.Commodity2FactorCalibrationSettings,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
                     else if (Settings.McModelType == McModelType.LMEForward)
                     {
                         var fwdCurve2 = new Func<DateTime, double>(t =>

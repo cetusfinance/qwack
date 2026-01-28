@@ -250,5 +250,139 @@ namespace Qwack.Options
 
             return value;
         }
+
+        /// <summary>
+        /// Compute ATM implied vol for futures option in 2-factor model (Schwartz-Smith style).
+        /// Factor 1 is GBM (kappa=0), Factor 2 is mean-reverting OU.
+        /// </summary>
+        /// <param name="sigma1">Long-term (GBM) volatility</param>
+        /// <param name="sigma2">Short-term (OU) volatility</param>
+        /// <param name="kappa">Mean reversion speed for factor 2</param>
+        /// <param name="rho">Correlation between factors</param>
+        /// <param name="tOption">Time to option expiry in years</param>
+        /// <param name="tFuture">Time to futures expiry in years (>= tOption, default = tOption for spot)</param>
+        /// <returns>ATM implied volatility</returns>
+        public static double ImpliedVolForFuturesOption2F(
+            double sigma1, double sigma2, double kappa, double rho,
+            double tOption, double tFuture = 0)
+        {
+            // If tFuture not specified or less than tOption, assume spot option (tFuture = tOption)
+            if (tFuture < tOption) tFuture = tOption;
+
+            var tau = tFuture - tOption;  // Time from option expiry to futures expiry
+
+            var expNegKappaTau = Exp(-kappa * tau);
+            var expNeg2KappaTau = expNegKappaTau * expNegKappaTau;
+
+            // Variance components for ln(F(tOption, tFuture))
+            // Var[ln(F)] = sigma1^2 * tOption
+            //            + sigma2^2 * e^{-2*kappa*tau} * (1 - e^{-2*kappa*tOption}) / (2*kappa)
+            //            + 2 * rho * sigma1 * sigma2 * e^{-kappa*tau} * (1 - e^{-kappa*tOption}) / kappa
+
+            var var1 = sigma1 * sigma1 * tOption;  // GBM factor contribution
+
+            double var2, cov;
+            if (Abs(kappa) < 1e-10)
+            {
+                // Limiting case when kappa -> 0: OU becomes another GBM
+                var2 = sigma2 * sigma2 * tOption;
+                cov = 2 * rho * sigma1 * sigma2 * tOption;
+            }
+            else
+            {
+                var expNeg2KappaTOption = Exp(-2 * kappa * tOption);
+                var expNegKappaTOption = Exp(-kappa * tOption);
+
+                var2 = sigma2 * sigma2 * expNeg2KappaTau * (1 - expNeg2KappaTOption) / (2 * kappa);
+                cov = 2 * rho * sigma1 * sigma2 * expNegKappaTau * (1 - expNegKappaTOption) / kappa;
+            }
+
+            var totalVariance = var1 + var2 + cov;
+            if (totalVariance <= 0) return 0;
+
+            return Sqrt(totalVariance / tOption);
+        }
+
+        /// <summary>
+        /// Compute implied vol for swaption (option on commodity swap/average) in 2-factor model.
+        /// The swap rate is the average of spot prices over the averaging period.
+        /// </summary>
+        /// <param name="sigma1">Long-term (GBM) volatility</param>
+        /// <param name="sigma2">Short-term (OU) volatility</param>
+        /// <param name="kappa">Mean reversion speed for factor 2</param>
+        /// <param name="rho">Correlation between factors</param>
+        /// <param name="tOption">Time to option expiry in years</param>
+        /// <param name="averagingDates">Dates over which the swap averages</param>
+        /// <param name="originDate">Valuation date</param>
+        /// <returns>Implied volatility for the swaption</returns>
+        public static double ImpliedVolForSwaption2F(
+            double sigma1, double sigma2, double kappa, double rho,
+            double tOption, DateTime[] averagingDates, DateTime originDate)
+        {
+            if (averagingDates == null || averagingDates.Length == 0)
+                return ImpliedVolForFuturesOption2F(sigma1, sigma2, kappa, rho, tOption, tOption);
+
+            var n = averagingDates.Length;
+
+            // Convert averaging dates to year fractions
+            var tValues = new double[n];
+            for (var i = 0; i < n; i++)
+            {
+                tValues[i] = (averagingDates[i] - originDate).TotalDays / 365.0;
+            }
+
+            // Variance of average price in 2-factor model:
+            // Var[SwapRate] = (1/n^2) * sum_{i,j} Cov[ln(S(ti)), ln(S(tj))]
+            // where the covariance involves integrals of the 2-factor covariance structure
+
+            var totalCovariance = 0.0;
+
+            for (var i = 0; i < n; i++)
+            {
+                for (var j = 0; j < n; j++)
+                {
+                    var ti = tValues[i];
+                    var tj = tValues[j];
+                    var tMin = Min(ti, tj);
+                    var tMax = Max(ti, tj);
+
+                    // Cov[ln(S(ti)), ln(S(tj))] has contributions from both factors
+                    // For GBM factor (factor 1): Cov = sigma1^2 * min(ti, tj)
+                    var cov1 = sigma1 * sigma1 * tMin;
+
+                    double cov2, cov12;
+                    if (Abs(kappa) < 1e-10)
+                    {
+                        // Limiting case: OU becomes GBM
+                        cov2 = sigma2 * sigma2 * tMin;
+                        cov12 = 2 * rho * sigma1 * sigma2 * tMin;
+                    }
+                    else
+                    {
+                        // For OU factor (factor 2):
+                        // Cov[X2(ti), X2(tj)] = (sigma2^2 / (2*kappa)) * e^{-kappa*(ti+tj)} * (e^{2*kappa*min(ti,tj)} - 1)
+                        var expNegKappaTi = Exp(-kappa * ti);
+                        var expNegKappaTj = Exp(-kappa * tj);
+                        var exp2KappaMin = Exp(2 * kappa * tMin);
+
+                        cov2 = (sigma2 * sigma2 / (2 * kappa)) * expNegKappaTi * expNegKappaTj * (exp2KappaMin - 1);
+
+                        // Cross-covariance between GBM and OU factors:
+                        // Cov[X1(ti), X2(tj)] = rho * sigma1 * sigma2 * e^{-kappa*tj} * (1 - e^{-kappa*min(ti,tj)}) / kappa
+                        // Cov[X1(tj), X2(ti)] = rho * sigma1 * sigma2 * e^{-kappa*ti} * (1 - e^{-kappa*min(ti,tj)}) / kappa
+                        var expNegKappaMin = Exp(-kappa * tMin);
+                        cov12 = rho * sigma1 * sigma2 * (1 - expNegKappaMin) / kappa *
+                                (expNegKappaTi + expNegKappaTj);
+                    }
+
+                    totalCovariance += cov1 + cov2 + cov12;
+                }
+            }
+
+            var variance = totalCovariance / (n * n);
+            if (variance <= 0 || tOption <= 0) return 0;
+
+            return Sqrt(variance / tOption);
+        }
     }
 }

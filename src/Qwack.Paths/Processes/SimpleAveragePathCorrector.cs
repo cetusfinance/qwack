@@ -66,8 +66,8 @@ namespace Qwack.Paths.Processes
         private readonly object _threadLock = new();
         private void SetupFactors()
         {
-            if (PathCalc.CompactMode)
-            {
+            //if (PathCalc.CompactMode)
+            //{
                 if (_correctionFactorsByBlock == null)
                 {
                     lock (_threadLock)
@@ -78,28 +78,28 @@ namespace Qwack.Paths.Processes
                         }
                     }
                 }
-            }
-            else
-            {
-                if (_correctionFactors == null)
-                {
-                    lock (_threadLock)
-                    {
-                        if (_correctionFactors == null)
-                        {
-                            _correctionFactors = _fwds.Select((f, ix) => new Vector<double>(f / PathCalc.PathAvg[ix])).ToArray();
-                        }
-                    }
-                }
-            }
+            //}
+            //else
+            //{
+            //    if (_correctionFactors == null)
+            //    {
+            //        lock (_threadLock)
+            //        {
+            //            if (_correctionFactors == null)
+            //            {
+            //                _correctionFactors = _fwds.Select((f, ix) => new Vector<double>(f / PathCalc.PathAvg[ix])).ToArray();
+            //            }
+            //        }
+            //    }
+            //}
         }
 
 
         public void Process(IPathBlock block)
         {
             SetupFactors();
-            if (PathCalc.CompactMode)
-            {
+            //if (PathCalc.CompactMode)
+            //{
                 var averagesForThisBlock = PathCalc.PathSumsByBlock[block.GlobalPathIndex].Select(a => a / PathCalc.PathCountsByBlock[block.GlobalPathIndex]).ToArray();
                 var factorsForThisBlock = _fwds.Select((f, ix) => new Vector<double>(f / averagesForThisBlock[ix])).ToArray();
                 for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
@@ -111,19 +111,19 @@ namespace Qwack.Paths.Processes
                         steps[step] *= factorsForThisBlock[step];
                     }
                 }
-            }
-            else
-            {
-                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
-                {
-                    var steps = block.GetStepsForFactor(path, _factorIndex);
+            //}
+            //else
+            //{
+            //    for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+            //    {
+            //        var steps = block.GetStepsForFactor(path, _factorIndex);
 
-                    for (var step = 0; step < block.NumberOfSteps; step++)
-                    {
-                        steps[step] *= _correctionFactors[step];
-                    }
-                }
-            }
+            //        for (var step = 0; step < block.NumberOfSteps; step++)
+            //        {
+            //            steps[step] *= _correctionFactors[step];
+            //        }
+            //    }
+            //}
         }
 
         public void SetupFeatures(IFeatureCollection pathProcessFeaturesCollection)

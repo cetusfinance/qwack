@@ -43,6 +43,7 @@ namespace Qwack.Models.MCModels
         public McSettings Settings { get; }
         public SchwartzSmithTwoFactorModelParameters TwoFactorModelParameters { get; }
         public HullWhiteCommodityModelParameters HullWhiteParameters { get; }
+        public HestonModelParameters HestonParameters { get; }
 
         public ICalendarProvider CalendarProvider => _calendarProvider;
 
@@ -59,7 +60,7 @@ namespace Qwack.Models.MCModels
 
         private int _priceFactorDepth;
 
-        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = true, SchwartzSmithTwoFactorModelParameters twoFactorModelParameters = null, HullWhiteCommodityModelParameters hullWhiteParameters = null)
+        public AssetFxMCModel(DateTime originDate, Portfolio portfolio, IAssetFxModel model, McSettings settings, ICurrencyProvider currencyProvider, IFutureSettingsProvider futureSettingsProvider, ICalendarProvider calendarProvider, bool deferInitialization = true, SchwartzSmithTwoFactorModelParameters twoFactorModelParameters = null, HullWhiteCommodityModelParameters hullWhiteParameters = null, HestonModelParameters hestonParameters = null)
         {
             if (settings.CompactMemoryMode && settings.AveragePathCorrection)
                 throw new Exception("Can't use both CompactMemoryMode and PathCorrection");
@@ -73,6 +74,7 @@ namespace Qwack.Models.MCModels
             Settings = settings;
             TwoFactorModelParameters = twoFactorModelParameters;
             HullWhiteParameters = hullWhiteParameters;
+            HestonParameters = hestonParameters;
 
             if (!deferInitialization)
             {
@@ -298,6 +300,23 @@ namespace Qwack.Models.MCModels
                         var asset = new HullWhiteCommodityModel
                         (
                             hwParams: HullWhiteParameters,
+                            volSurface: surface,
+                            startDate: OriginDate,
+                            expiryDate: lastDate,
+                            nTimeSteps: Settings.NumberOfTimesteps,
+                            forwardCurve: fwdCurve,
+                            name: assetId,
+                            pastFixings: fixings,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
+                        );
+                        Engine.AddPathProcess(asset);
+                    }
+                    else if (Settings.McModelType == McModelType.Heston)
+                    {
+                        var asset = new HestonModel
+                        (
+                            hestonParams: HestonParameters,
                             volSurface: surface,
                             startDate: OriginDate,
                             expiryDate: lastDate,

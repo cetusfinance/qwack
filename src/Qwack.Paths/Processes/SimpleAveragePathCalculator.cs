@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Qwack.Core.Models;
 using Qwack.Paths.Features;
@@ -11,12 +10,9 @@ namespace Qwack.Paths.Processes
     {
         private readonly string _name;
         private int _factorIndex;
-        private int _nPaths;
+
         private readonly bool _isComplete;
         public bool CompactMode { get; set; }
-
-        public double[] PathSum { get; private set; }
-        public double[] PathAvg => PathSum.Select(x => x / _nPaths).ToArray();
 
         public Dictionary<int, double[]> PathSumsByBlock { get; private set; }
         public Dictionary<int, int> PathCountsByBlock { get; private set; }
@@ -28,30 +24,14 @@ namespace Qwack.Paths.Processes
         private readonly object _threadLock = new();
         private void SetupAverages(Span<Vector<double>> blockSteps)
         {
-            if (CompactMode)
+            if (PathSumsByBlock == null)
             {
-                if (PathSumsByBlock == null)
+                lock (_threadLock)
                 {
-                    lock (_threadLock)
+                    if (PathSumsByBlock == null)
                     {
-                        if (PathSumsByBlock == null)
-                        {
-                            PathSumsByBlock = new Dictionary<int, double[]>();
-                            PathCountsByBlock = new Dictionary<int, int>();
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (PathSum == null)
-                {
-                    lock (_threadLock)
-                    {
-                        if (PathSum == null)
-                        {
-                            PathSum = new double[blockSteps.Length];
-                        }
+                        PathSumsByBlock = new Dictionary<int, double[]>();
+                        PathCountsByBlock = new Dictionary<int, int>();
                     }
                 }
             }
@@ -59,56 +39,21 @@ namespace Qwack.Paths.Processes
 
         public void Process(IPathBlock block)
         {
-            if (CompactMode)
+            for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
             {
-                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
+                var steps = block.GetStepsForFactor(path, _factorIndex);
+                SetupAverages(steps);
+
+                if (!PathSumsByBlock.ContainsKey(block.GlobalPathIndex))
                 {
-                    var steps = block.GetStepsForFactor(path, _factorIndex);
-                    SetupAverages(steps);
-
-                    if (CompactMode)
-                    {
-                        if (!PathSumsByBlock.ContainsKey(block.GlobalPathIndex))
-                        {
-                            PathSumsByBlock.Add(block.GlobalPathIndex, new double[steps.Length]);
-                            PathCountsByBlock.Add(block.GlobalPathIndex, steps.Length);
-                        }
-
-                        for (var i = 0; i < steps.Length; i++)
-                        {
-                            for (var j = 0; j < Vector<double>.Count; j++)
-                                PathSumsByBlock[block.GlobalPathIndex][i] += steps[i][j];
-                        }
-                    }
-                    else
-                    {
-                        for (var i = 0; i < steps.Length; i++)
-                        {
-                            for (var j = 0; j < Vector<double>.Count; j++)
-                                lock (_threadLock)
-                                {
-                                    PathSum[i] += steps[i][j];
-                                }
-                        }
-                    }
-
+                    PathSumsByBlock.Add(block.GlobalPathIndex, new double[steps.Length]);
+                    PathCountsByBlock.Add(block.GlobalPathIndex, block.NumberOfPaths);
                 }
-            }
-            else
-            {
-                for (var path = 0; path < block.NumberOfPaths; path += Vector<double>.Count)
-                {
-                    var steps = block.GetStepsForFactor(path, _factorIndex);
-                    SetupAverages(steps);
 
-                    for (var i = 0; i < steps.Length; i++)
-                    {
-                        for (var j = 0; j < Vector<double>.Count; j++)
-                            lock (_threadLock)
-                            {
-                                PathSum[i] += steps[i][j];
-                            }
-                    }
+                for (var i = 0; i < steps.Length; i++)
+                {
+                    for (var j = 0; j < Vector<double>.Count; j++)
+                        PathSumsByBlock[block.GlobalPathIndex][i] += steps[i][j];
                 }
             }
         }
@@ -117,9 +62,6 @@ namespace Qwack.Paths.Processes
         {
             var mappingFeature = pathProcessFeaturesCollection.GetFeature<IPathMappingFeature>();
             _factorIndex = mappingFeature.GetDimension(_name);
-
-            var engine = pathProcessFeaturesCollection.GetFeature<IEngineFeature>();
-            _nPaths = engine.NumberOfPaths;
         }
     }
 }

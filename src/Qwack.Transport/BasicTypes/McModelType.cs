@@ -7,6 +7,7 @@ namespace Qwack.Transport.BasicTypes
         TurboSkew,
         Commodity2Factor,
         LMEForward,
-        HullWhiteCommodity
+        HullWhiteCommodity,
+        Heston
     }
 }

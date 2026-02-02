@@ -36,7 +36,8 @@ namespace Qwack.Models.Tests
             var fwd = new ConstantPriceCurve(assetPrice, valDate, TestProviderHelper.CurrencyProvider)
             {
                 AssetId = assetId,
-                Name = assetId
+                Name = assetId,
+                Currency = usd
             };
             var ir = new FlatIrCurve(0.0, usd, "USD");
             var fm = new FundingModel(valDate, new[] { ir }, TestProviderHelper.CurrencyProvider, TestProviderHelper.CalendarProvider);

@@ -1650,11 +1650,11 @@ namespace Qwack.Models.Models
         }
 
 
-        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null)
+        public static ICube AssetDelta(this Portfolio portfolio, IAssetFxModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, bool wavey = true)
         {
             var m = model.Clone();
             m.AttachPortfolio(portfolio);
-            return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars);
+            return m.AssetDelta(false, pointsToBump: pointsToBump, isSparseLMEMode: isSparseLMEMode, calendars: calendars, wavey: wavey);
         }
 
         public static ICube AssetDelta(this IPvModel model, DateTime[] pointsToBump = null, bool isSparseLMEMode = false, ICalendarProvider calendars = null, double bumpSize = 0.01, bool parallelize = false, bool stickyStrike = false, bool wavey=true) => 

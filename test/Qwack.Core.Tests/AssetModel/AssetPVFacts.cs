@@ -91,7 +91,7 @@ namespace Qwack.Core.Tests.AssetModel
             var pfPv = (double)pfPvCube.GetAllRows().First().Value;
             Assert.Equal(0.0, pfPv, 8); 
 
-            var deltaCube = portfolio.AssetDelta(aModel);
+            var deltaCube = portfolio.AssetDelta(aModel, wavey: false);
             var dAgg = deltaCube.Pivot(TradeId, AggregationAction.Sum);
             var delta = (double)dAgg.GetAllRows().First().Value;
             var t0Spot = aModel.FundingModel.GetFxRate(startDate, usd, xaf);

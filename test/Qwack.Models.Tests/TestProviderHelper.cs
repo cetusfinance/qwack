@@ -13,8 +13,8 @@ namespace Qwack.Models.Tests
         public static readonly string JsonFuturesPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "futuresettings.json");
         public static readonly string JsonCurrencyPath = System.IO.Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "Currencies.json");
         public static readonly ILoggerFactory LoggerFactory = new LoggerFactory();
-        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath, LoggerFactory.CreateLogger<CurrenciesFromJson>());
         public static readonly ICalendarProvider CalendarProvider = CalendarsFromJson.Load(JsonCalendarPath);
+        public static readonly ICurrencyProvider CurrencyProvider = new CurrenciesFromJson(CalendarProvider, JsonCurrencyPath, LoggerFactory.CreateLogger<CurrenciesFromJson>());
         public static readonly IFutureSettingsProvider FutureSettingsProvider = new FutureSettingsFromJson(CalendarProvider, JsonFuturesPath, LoggerFactory);
     }
 }

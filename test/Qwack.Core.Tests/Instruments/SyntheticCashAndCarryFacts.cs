@@ -63,7 +63,9 @@ namespace Qwack.Core.Tests.Instruments
             var euaCurve = new BasicPriceCurve(origin, pillars, prices, PriceCurveType.Linear, TestProviderHelper.CurrencyProvider)
             {
                 AssetId = "EUA",
-                Name = "EUA"
+                Name = "EUA",
+                SpotLag = 0.Bd(),
+                SpotCalendar = TestProviderHelper.CalendarProvider.GetCalendar("WEEKENDS")
             };
 
             aModel.AddPriceCurve("EUA", euaCurve);
@@ -87,14 +89,16 @@ namespace Qwack.Core.Tests.Instruments
             Assert.Equal(expectedPVFunding + expectedPVSpread, pv, 8);
 
             //PV in the middle is a blend of accrued and spread move
-            var oNew = DateTime.Parse("2024-06-01");
+            var oNew = DateTime.Parse("2024-06-03");
             aModel = new AssetFxModel(oNew, fModel);
             pillars = new DateTime[] { oNew, expB };
             prices = new double[] { 78, 93 };
             euaCurve = new BasicPriceCurve(origin, pillars, prices, PriceCurveType.Linear, TestProviderHelper.CurrencyProvider)
             {
                 AssetId = "EUA",
-                Name = "EUA"
+                Name = "EUA",
+                SpotLag = 0.Bd(),
+                SpotCalendar = TestProviderHelper.CalendarProvider.GetCalendar("WEEKENDS")
             };
             aModel.AddPriceCurve("EUA", euaCurve);
 

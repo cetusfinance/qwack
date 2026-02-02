@@ -78,6 +78,9 @@ namespace Qwack.Paths.Processes
 
                 if (!_pastFixings.ContainsKey(date.Date))
                 {
+                    if (lastFixing == 0 && d == 0)
+                        continue;
+
                     var vect = new Vector<double>(lastFixing);
                     fixings.Add(vect);
                 }

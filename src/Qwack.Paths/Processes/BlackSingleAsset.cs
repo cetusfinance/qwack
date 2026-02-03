@@ -21,6 +21,7 @@ namespace Qwack.Paths.Processes
 
         private readonly DateTime _expiryDate;
         private readonly DateTime _startDate;
+        private readonly bool _hasFixedStart;
         private readonly int _numberOfSteps;
         private readonly string _name;
         private readonly Dictionary<DateTime, double> _pastFixings;
@@ -40,8 +41,8 @@ namespace Qwack.Paths.Processes
         public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
-            //var hasFixedStart = pastFixings?.ContainsKey(startDate.Date) ?? false;
-            _startDate = startDate; // hasFixedStart ? startDate.AddDays(1) : startDate;
+            _hasFixedStart = pastFixings?.ContainsKey(startDate.Date) ?? false;
+            _startDate = startDate; 
             _expiryDate = expiryDate;
             _numberOfSteps = nTimeSteps;
             _name = name;
@@ -79,7 +80,7 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date >= _startDate) break;
+                if (date > _startDate) break;
 
                 if (!_pastFixings.ContainsKey(date.Date))
                 {
@@ -201,6 +202,11 @@ namespace Qwack.Paths.Processes
             for (var i = 0; i < _numberOfSteps; i++)
             {
                 simDates.Add(_startDate.AddDays(i * stepSize).Date);
+            }
+
+            if (_hasFixedStart && _numberOfSteps < 2)
+            {
+                simDates.Add(_startDate.AddHours(1));
             }
 
             _timesteps.AddDates(simDates.Distinct());

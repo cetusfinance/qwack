@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using Qwack.Core.Models;
@@ -14,8 +15,8 @@ namespace Qwack.Paths.Processes
         private readonly bool _isComplete;
         public bool CompactMode { get; set; }
 
-        public Dictionary<int, double[]> PathSumsByBlock { get; private set; }
-        public Dictionary<int, int> PathCountsByBlock { get; private set; }
+        public ConcurrentDictionary<int, double[]> PathSumsByBlock { get; private set; }
+        public ConcurrentDictionary<int, int> PathCountsByBlock { get; private set; }
 
         public SimpleAveragePathCalculator(string name) => _name = name;
 
@@ -30,8 +31,8 @@ namespace Qwack.Paths.Processes
                 {
                     if (PathSumsByBlock == null)
                     {
-                        PathSumsByBlock = new Dictionary<int, double[]>();
-                        PathCountsByBlock = new Dictionary<int, int>();
+                        PathSumsByBlock = new ConcurrentDictionary<int, double[]>();
+                        PathCountsByBlock = new ConcurrentDictionary<int, int>();
                     }
                 }
             }
@@ -44,16 +45,13 @@ namespace Qwack.Paths.Processes
                 var steps = block.GetStepsForFactor(path, _factorIndex);
                 SetupAverages(steps);
 
-                if (!PathSumsByBlock.ContainsKey(block.GlobalPathIndex))
-                {
-                    PathSumsByBlock.Add(block.GlobalPathIndex, new double[steps.Length]);
-                    PathCountsByBlock.Add(block.GlobalPathIndex, block.NumberOfPaths);
-                }
-
+                var psb = PathSumsByBlock.GetOrAdd(block.GlobalPathIndex, new double[steps.Length]);
+                PathCountsByBlock.TryAdd(block.GlobalPathIndex, block.NumberOfPaths);
+           
                 for (var i = 0; i < steps.Length; i++)
                 {
                     for (var j = 0; j < Vector<double>.Count; j++)
-                        PathSumsByBlock[block.GlobalPathIndex][i] += steps[i][j];
+                        psb[i] += steps[i][j];
                 }
             }
         }

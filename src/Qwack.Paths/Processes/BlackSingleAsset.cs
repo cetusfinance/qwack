@@ -40,7 +40,8 @@ namespace Qwack.Paths.Processes
         public BlackSingleAsset(IATMVolSurface volSurface, DateTime startDate, DateTime expiryDate, int nTimeSteps, Func<double, double> forwardCurve, string name, Dictionary<DateTime, double> pastFixings = null, IATMVolSurface fxAdjustSurface = null, double fxAssetCorrelation = 0.0)
         {
             _surface = volSurface;
-            _startDate = startDate;
+            //var hasFixedStart = pastFixings?.ContainsKey(startDate.Date) ?? false;
+            _startDate = startDate; // hasFixedStart ? startDate.AddDays(1) : startDate;
             _expiryDate = expiryDate;
             _numberOfSteps = nTimeSteps;
             _name = name;
@@ -78,7 +79,7 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date > _startDate) break;
+                if (date >= _startDate) break;
 
                 if (!_pastFixings.ContainsKey(date.Date))
                 {
@@ -95,7 +96,20 @@ namespace Qwack.Paths.Processes
                 {
                     try
                     {
-                        lastFixing = _pastFixings[date.Date];
+                        if(date == _startDate)
+                        {
+                            if (_pastFixings.TryGetValue(date, out var val1))
+                            {
+                                var vect1 = new Vector<double>(val1);
+                                fixings.Add(vect1);
+                            }
+                            continue;
+                        }
+                        
+                        if(_pastFixings.TryGetValue(date, out var val))
+                        {
+                            lastFixing = val;
+                        }
                         var vect = new Vector<double>(lastFixing);
                         fixings.Add(vect);
                     }

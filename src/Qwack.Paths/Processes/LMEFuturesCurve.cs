@@ -37,6 +37,7 @@ namespace Qwack.Paths.Processes
         private ITimeStepsFeature _timesteps;
         private readonly Func<DateTime, double> _forwardCurve;
         private bool _isComplete;
+        private readonly bool _hasFixedStart;
 
         private Vector<double>[] _fixings;
 
@@ -60,6 +61,7 @@ namespace Qwack.Paths.Processes
             _calendarProvider = calendarProvider;
             _forwardCurve = forwardCurve;
             _pastFixings = pastFixings ?? ([]);
+            _hasFixedStart = pastFixings?.ContainsKey(startDate.Date) ?? false;
 
             if (startDate > expiryDate)
                 throw new Exception("Start date must be before expiry date");
@@ -146,7 +148,7 @@ namespace Qwack.Paths.Processes
             for (var d = 0; d < dates.Dates.Length; d++)
             {
                 var date = dates.Dates[d];
-                if (date > _startDate) break;
+                if ((_hasFixedStart && date > _startDate) || (!_hasFixedStart && date >= _startDate)) break;
 
                 if (!_pastFixings.ContainsKey(date.Date))
                 {
@@ -369,6 +371,12 @@ namespace Qwack.Paths.Processes
             {
                 simDates.Add(_startDate.AddDays(i * stepSize).Date);
             }
+
+            if (_hasFixedStart && _numberOfSteps < 2)
+            {
+                simDates.Add(_startDate.AddHours(1));
+            }
+
             simDates = simDates.Distinct().ToList();
             _timesteps.AddDates(simDates);
         }

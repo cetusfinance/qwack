@@ -688,13 +688,17 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
                         throw new Exception($"Could not parse year from {period}");
                     var m = Months.ToList().IndexOf(p.Substring(0, 3)) + 1;
-                    return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth());
+                    if (ym < 100)
+                        ym += 2000;
+                    return (Start: new DateTime(ym, m, 1), End: (new DateTime(ym, m, 1)).LastDayOfMonth());
                 case string p when LongMonths.Any(x => p.Contains(x,StringComparison.InvariantCultureIgnoreCase)):
                     var mmm = LongMonths.First(x => p.Contains(x, StringComparison.InvariantCultureIgnoreCase));
                     if (!int.TryParse(p.ToLower().Replace(mmm.ToLower(),"").Trim('-', ' '), out var ymm))
                         throw new Exception($"Could not parse year from {period}");
                     var mmmm = LongMonths.ToList().IndexOf(mmm) + 1;
-                    return (Start: new DateTime(ymm + 2000, mmmm, 1), End: (new DateTime(ymm + 2000, mmmm, 1)).LastDayOfMonth());
+                    if (ymm < 100)
+                        ymm += 2000;
+                    return (Start: new DateTime(ymm, mmmm, 1), End: (new DateTime(ymm, mmmm, 1)).LastDayOfMonth());
                 default:
                     throw new Exception($"Could not parse period {period}");
             }
@@ -737,13 +741,17 @@ namespace Qwack.Dates
                     if (!int.TryParse(p.Substring(3).Trim('-', ' '), out var ym))
                         return (Start: default, End: default, valid: false);
                     var m = Months.ToList().IndexOf(p.Substring(0, 3)) + 1;
-                    return (Start: new DateTime(ym + 2000, m, 1), End: (new DateTime(ym + 2000, m, 1)).LastDayOfMonth(), valid: true);
+                    if (ym < 100)
+                        ym += 2000;
+                    return (Start: new DateTime(ym, m, 1), End: (new DateTime(ym, m, 1)).LastDayOfMonth(), valid: true);
                 case string p when LongMonths.Any(x => p.Contains(x, StringComparison.InvariantCultureIgnoreCase)):
                     var mmm = LongMonths.First(x => p.Contains(x, StringComparison.InvariantCultureIgnoreCase));
                     if (!int.TryParse(p.ToLower().Replace(mmm.ToLower(), "").Trim('-', ' '), out var ymm))
                         return (Start: default, End: default, valid: false);
                     var mmmm = LongMonths.ToList().IndexOf(mmm) + 1;
-                    return (Start: new DateTime(ymm + 2000, mmmm, 1), End: (new DateTime(ymm + 2000, mmmm, 1)).LastDayOfMonth(), valid: true);
+                    if (ymm < 100)
+                        ymm += 2000;
+                    return (Start: new DateTime(ymm, mmmm, 1), End: (new DateTime(ymm, mmmm, 1)).LastDayOfMonth(), valid: true);
                 default:
                     return (Start: default, End: default, valid: false);
             }

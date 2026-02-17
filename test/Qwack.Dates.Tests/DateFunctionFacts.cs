@@ -168,11 +168,11 @@ namespace Qwack.Dates.Tests
         [Fact]
         public void NthLastSpecificWeekdayFeb2025()
         {
-            var dt = new DateTime(2025,02, 01);
+            var dt = new DateTime(2025, 02, 01);
             Assert.Equal(new DateTime(2025, 02, 28), dt.NthLastSpecificWeekDay(DayOfWeek.Friday, 1));
         }
 
-        
+
 
         [Fact]
         public void ThirdWednesday()
@@ -400,6 +400,12 @@ namespace Qwack.Dates.Tests
             Assert.Equal(e, DateExtensions.EasterGauss(year));
         }
 
-        
+        [Fact]
+        public void PeriodParsingTests()
+        {
+            var (start, end) = "Nov-2025".ParsePeriod();
+            Assert.Equal(new DateTime(2025, 11, 1), start);
+            Assert.Equal(new DateTime(2025, 11, 30), end);
+        }
     }
 }

@@ -287,11 +287,15 @@ namespace Qwack.Models.MCModels
                         var asset = new SchwartzSmithTwoFactorModel
                         (
                             ssParams: TwoFactorModelParameters,
+                            volSurface: surface,
+                            forwardCurve: fwdCurve,
                             startDate: OriginDate,
                             expiryDate: lastDate,
                             nTimeSteps: Settings.NumberOfTimesteps,
                             name: assetId,
-                            pastFixings: fixings
+                            pastFixings: fixings,
+                            fxAdjustSurface: adjSurface,
+                            fxAssetCorrelation: correlation
                         );
                         Engine.AddPathProcess(asset);
                     }

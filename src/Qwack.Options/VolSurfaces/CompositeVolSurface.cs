@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Core.Models;
 using Qwack.Dates;
 using Qwack.Math;
@@ -39,6 +40,7 @@ namespace Qwack.Options.VolSurfaces
         public DateTime PillarDatesForLabel(string label) => AssetSurface.PillarDatesForLabel(label);
 
         public IInterpolator2D LocalVolGrid { get; set; }
+        public ITimeProvider TimeProvider { get; set; } = new CalendarTimeProvider();
 
         private FxPair Pair { get; }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Transport.BasicTypes;
@@ -21,6 +22,7 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get; set; }
 
         public IInterpolator2D LocalVolGrid { get; set; }
+        public ITimeProvider TimeProvider { get; set; } = new CalendarTimeProvider();
 
         public DateTime[] Expiries => new[] { OriginDate };
         public Frequency OverrideSpotLag { get; set; }

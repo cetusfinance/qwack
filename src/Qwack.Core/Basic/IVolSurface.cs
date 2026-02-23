@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Dates;
 using Qwack.Math;
 
@@ -28,5 +29,7 @@ namespace Qwack.Core.Basic
         double InverseCDF(DateTime expiry, double fwd, double p);
         double CDF(DateTime expiry, double fwd, double strike);
         Frequency OverrideSpotLag { get; set; }
+
+        ITimeProvider TimeProvider { get; set; }
     }
 }

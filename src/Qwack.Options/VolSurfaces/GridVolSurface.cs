@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Curves;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -42,6 +43,7 @@ namespace Qwack.Options.VolSurfaces
         public Currency Currency { get; set; }
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
+        public ITimeProvider TimeProvider { get; set; } = new CalendarTimeProvider();
 
         internal IInterpolator1D[] _interpolators;
 
@@ -81,7 +83,7 @@ namespace Qwack.Options.VolSurfaces
             Strikes = strikes;
             Expiries = expiries;
             Volatilities = vols;
-            ExpiriesDouble = Expiries.Select(t => TimeBasis.CalculateYearFraction(originDate, t)).ToArray();
+            ExpiriesDouble = Expiries.Select(t => TimeProvider.GetYearFraction(originDate, t)).ToArray();
             _interpolators = vols.Select((v, ix) =>
                 InterpolatorFactory.GetInterpolator(Strikes, v, StrikeInterpolatorType, isSorted: true)).ToArray();
         }
@@ -136,7 +138,7 @@ namespace Qwack.Options.VolSurfaces
             return vol;
         }
 
-        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
+        public double GetVolForAbsoluteStrike(double strike, DateTime expiry, double forward) => GetVolForAbsoluteStrike(strike, TimeProvider.GetYearFraction(OriginDate, expiry), forward);
 
         public double RiskReversal(double deltaStrike, double maturity, double forward)
         {
@@ -228,7 +230,7 @@ namespace Qwack.Options.VolSurfaces
             return solvedStrike;
         }
 
-        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeBasis.CalculateYearFraction(OriginDate, expiry), forward);
+        public double GetVolForDeltaStrike(double strike, DateTime expiry, double forward) => GetVolForDeltaStrike(strike, TimeProvider.GetYearFraction(OriginDate, expiry), forward);
 
         public virtual Dictionary<string, IVolSurface> GetATMVegaScenarios(double bumpSize, DateTime? LastSensitivityDate)
         {
@@ -297,7 +299,7 @@ namespace Qwack.Options.VolSurfaces
             return Expiries[labelIx];
         }
 
-        public double GetForwardATMVol(DateTime startDate, DateTime endDate) => GetForwardATMVol(TimeBasis.CalculateYearFraction(OriginDate, startDate), TimeBasis.CalculateYearFraction(OriginDate, endDate));
+        public double GetForwardATMVol(DateTime startDate, DateTime endDate) => GetForwardATMVol(TimeProvider.GetYearFraction(OriginDate, startDate), TimeProvider.GetYearFraction(OriginDate, endDate));
 
         public double GetForwardATMVol(double start, double end)
         {
@@ -358,7 +360,7 @@ namespace Qwack.Options.VolSurfaces
         {
             if (StrikeType == StrikeType.ForwardDelta)
             {
-                var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
+                var t = TimeProvider.GetYearFraction(OriginDate, expiry);
 
                 var pillarIx = Array.BinarySearch(Expiries, expiry);
                 var interpForMaturity = pillarIx > 0 ?
@@ -381,7 +383,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double CDF(DateTime expiry, double fwd, double strike)
         {
-            var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
+            var t = TimeProvider.GetYearFraction(OriginDate, expiry);
             var vol = GetVolForAbsoluteStrike(strike, expiry, fwd);
             _ = vol * Sqrt(t);
             (_, _) = BlackFunctions.D1d2(fwd, strike, t, vol);
@@ -402,7 +404,7 @@ namespace Qwack.Options.VolSurfaces
 
         public double InverseCDF(DateTime expiry, double fwd, double p)
         {
-            var t = TimeBasis.CalculateYearFraction(OriginDate, expiry);
+            var t = TimeProvider.GetYearFraction(OriginDate, expiry);
             var targetFunc = new Func<double, double>(k => p - CDF(expiry, fwd, k));
             var minK = GetAbsStrikeForDelta(fwd, -1e-10, t) / 2.0;
             var maxK = GetAbsStrikeForDelta(fwd, -(1.0 - 1e-10), t) * 10.0;

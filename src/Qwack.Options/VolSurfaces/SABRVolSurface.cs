@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Dates;
 using Qwack.Math;
 using Qwack.Math.Interpolation;
@@ -32,6 +33,7 @@ namespace Qwack.Options.VolSurfaces
         public DayCountBasis TimeBasis { get; set; } = DayCountBasis.Act365F;
         public string AssetId { get; set; }
         public IInterpolator2D LocalVolGrid { get; set; }
+        public ITimeProvider TimeProvider { get; set; } = new CalendarTimeProvider();
         public string[] PillarLabels { get; }
 
         private IInterpolator1D _alphaInterp;

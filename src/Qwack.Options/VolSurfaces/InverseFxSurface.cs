@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Qwack.Core.Basic;
+using Qwack.Core.Curves.TimeProviders;
 using Qwack.Dates;
 using Qwack.Math;
 
@@ -27,6 +28,7 @@ namespace Qwack.Options.VolSurfaces
         public string AssetId { get => InvertedPair; set => throw new NotImplementedException(); }
 
         public IInterpolator2D LocalVolGrid { get; set; }
+        public ITimeProvider TimeProvider { get; set; } = new CalendarTimeProvider();
 
         public IATMVolSurface FxSurface { get; }
 

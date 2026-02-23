@@ -1,6 +1,7 @@
 using System;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
 {
@@ -51,6 +52,8 @@ namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
         public WingQuoteType WingQuoteType { get; set; }
         [ProtoMember(22)]
         public AtmVolType AtmVolType { get; set; }
+        [ProtoMember(23)]
+        public TO_ITimeProvider TimeProvider { get; set; }
 
     }
 }

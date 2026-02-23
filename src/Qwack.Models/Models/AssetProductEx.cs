@@ -1991,7 +1991,7 @@ namespace Qwack.Models.Models
             return m;
         }
 
-        public static (IVolSurface fxSurface, IVolSurface assetSurface) ImplySurfaceToCorrelation(this IAssetFxModel model, string assetId, string fxPair, Currency ccy, ICurrencyProvider currencyProvider)
+        public static (IVolSurface fxSurface, IVolSurface assetSurface) ImplySurfaceToCorrelation(this IAssetFxModel model, string assetId, string fxPair, Currency ccy, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
 
             var fxSurface = model.GetVolSurface(fxPair);
@@ -2029,7 +2029,7 @@ namespace Qwack.Models.Models
                     to.Flies = rf.Flies.Select((x, ix) => x.Select(f => f * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
                     //to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
                     //to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
-                    shiftedFxSurface = new RiskyFlySurface(to, currencyProvider);
+                    shiftedFxSurface = new RiskyFlySurface(to, currencyProvider, calendarProvider);
                     break;
                 default:
                     throw new Exception("Currently only works for risky/fly fx surfaces");
@@ -2045,7 +2045,7 @@ namespace Qwack.Models.Models
                     to.Flies = rf.Flies.Select((x, ix) => x.Select(f => f * shifFactors[to.Expiries[ix]]).ToArray()).ToArray();
                     //to.Riskies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
                     //to.Flies = to.Expiries.Select(x => new double[to.WingDeltas.Length]).ToArray();
-                    shiftedAssetSurface = new RiskyFlySurface(to, currencyProvider);
+                    shiftedAssetSurface = new RiskyFlySurface(to, currencyProvider, calendarProvider);
                     break;
                 default:
                     throw new Exception("Currently only works for risky/fly fx surfaces");

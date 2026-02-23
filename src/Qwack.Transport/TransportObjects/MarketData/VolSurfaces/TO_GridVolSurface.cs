@@ -1,6 +1,7 @@
 using System;
 using ProtoBuf;
 using Qwack.Transport.BasicTypes;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
 {
@@ -37,5 +38,7 @@ namespace Qwack.Transport.TransportObjects.MarketData.VolSurfaces
         public bool FlatDeltaSmileInExtreme { get; set; }
         [ProtoMember(15)]
         public double FlatDeltaPoint { get; set; }
+        [ProtoMember(16)]
+        public TO_ITimeProvider TimeProvider { get; set; }
     }
 }

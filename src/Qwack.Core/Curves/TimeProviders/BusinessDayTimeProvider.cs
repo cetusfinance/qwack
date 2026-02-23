@@ -1,5 +1,6 @@
 using System;
 using Qwack.Dates;
+using Qwack.Transport.TransportObjects.MarketData.Curves;
 
 namespace Qwack.Core.Curves.TimeProviders
 {
@@ -31,6 +32,16 @@ namespace Qwack.Core.Curves.TimeProviders
             return sign * (wholeYears + remainingDays / fullYearDays);
         }
 
+        public TO_ITimeProvider ToTransportObject() => new()
+        {
+            BusinessDayTimeProvider = new TO_BusinessDayTimeProvider
+            {
+                Calendar = calendar?.Name,
+                WeekendWeight = weekendWeight,
+                HolidayWeight = holidayWeight
+            }
+        };
+
         private double CountWeightedDays(DateTime start, DateTime end)
         {
             var total = 0.0;
@@ -45,5 +56,6 @@ namespace Qwack.Core.Curves.TimeProviders
             }
             return total;
         }
+
     }
 }

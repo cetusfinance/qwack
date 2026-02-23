@@ -1,19 +1,20 @@
 using System;
 using Qwack.Core.Basic;
+using Qwack.Dates;
 using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
 
 namespace Qwack.Options.VolSurfaces
 {
     public static class VolSurfaceFactory
     {
-        public static IVolSurface GetVolSurface(this TO_VolSurface transportObject, ICurrencyProvider currencyProvider)
+        public static IVolSurface GetVolSurface(this TO_VolSurface transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
         {
             if (transportObject.ConstantVolSurface != null)
                 return new ConstantVolSurface(transportObject.ConstantVolSurface, currencyProvider);
             if (transportObject.RiskyFlySurface != null)
-                return new RiskyFlySurface(transportObject.RiskyFlySurface, currencyProvider);
+                return new RiskyFlySurface(transportObject.RiskyFlySurface, currencyProvider, calendarProvider);
             if (transportObject.GridVolSurface != null)
-                return new GridVolSurface(transportObject.GridVolSurface, currencyProvider);
+                return new GridVolSurface(transportObject.GridVolSurface, currencyProvider, calendarProvider);
             if (transportObject.SparsePointSurface != null)
                 return new SparsePointSurface(transportObject.SparsePointSurface, currencyProvider);
 

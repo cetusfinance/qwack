@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Qwack.Core.Basic;
 using Qwack.Core.Cubes;
+using Qwack.Core.Curves.TimeProviders;
+using Qwack.Dates;
 using Qwack.Options.Calibrators;
 using Qwack.Transport.BasicTypes;
 using Qwack.Transport.TransportObjects.MarketData.VolSurfaces;
@@ -136,7 +138,7 @@ namespace Qwack.Options.VolSurfaces
             base.Build(originDate, strikes, expiries, vols);
         }
 
-        public RiskyFlySurface(TO_RiskyFlySurface transportObject, ICurrencyProvider currencyProvider)
+        public RiskyFlySurface(TO_RiskyFlySurface transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
             : this(transportObject.OriginDate, transportObject.ATMs, transportObject.Expiries, transportObject.WingDeltas, transportObject.Riskies,
                  transportObject.Flies, transportObject.Forwards, transportObject.WingQuoteType, transportObject.AtmVolType, transportObject.StrikeInterpolatorType,
                  transportObject.TimeInterpolatorType, transportObject.PillarLabels)
@@ -144,6 +146,7 @@ namespace Qwack.Options.VolSurfaces
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
+            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider);
         }
 
         private int LastIx(DateTime? LastSensitivityDate)
@@ -503,7 +506,8 @@ namespace Qwack.Options.VolSurfaces
             TimeBasis = TimeBasis,
             TimeInterpolatorType = TimeInterpolatorType,
             WingDeltas = WingDeltas,
-            WingQuoteType = WingQuoteType
+            WingQuoteType = WingQuoteType,
+            TimeProvider = TimeProvider?.ToTransportObject()
         };
     }
 }

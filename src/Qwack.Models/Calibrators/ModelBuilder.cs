@@ -96,7 +96,7 @@ namespace Qwack.Models.Calibrators
             {
                 var surfaceTo = (surfaces.Where(s => s.AssetId == c.QwackCodeProxy).First() as RiskyFlySurface).GetTransportObject();
                 surfaceTo.AssetId = c.QwackCode;
-                var surface = new RiskyFlySurface(surfaceTo, currencyProvider);
+                var surface = new RiskyFlySurface(surfaceTo, currencyProvider, calendarProvider);
                 surfaces.Add(surface);
             }
             var irCurves = new Dictionary<string, IIrCurve>();

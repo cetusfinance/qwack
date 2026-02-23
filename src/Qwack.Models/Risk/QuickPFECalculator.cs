@@ -59,7 +59,7 @@ namespace Qwack.Models.Risk
                     throw new Exception("Expecting a single Fx pair, if any");
                 var pair = pd.Single();
                 var assetId = assetIns.SelectMany(x => x.AssetIds).Distinct().Single();
-                var (fxSurface, assetSurface) = model.ImplySurfaceToCorrelation(assetId, pair, assetIns.First().Currency, currencyProvider);
+                var (fxSurface, assetSurface) = model.ImplySurfaceToCorrelation(assetId, pair, assetIns.First().Currency, currencyProvider, calendarProvider);
                 m.FundingModel.VolSurfaces[pair] = fxSurface;
                 m.AddVolSurface(assetId, assetSurface);
             }

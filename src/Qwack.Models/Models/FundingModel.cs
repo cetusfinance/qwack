@@ -55,8 +55,8 @@ namespace Qwack.Models
             }), currencyProvider, calendarProvider)
         {
             if (transportObject.VolSurfaces != null)
-                VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider));
-            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>();
+                VolSurfaces = transportObject.VolSurfaces.ToDictionary(x => x.Key, x => x.Value.GetVolSurface(currencyProvider, calendarProvider));
+            _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? [];
             SetupFx(new FxMatrix(transportObject.FxMatrix, currencyProvider, calendarProvider));
         }
 

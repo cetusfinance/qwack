@@ -68,13 +68,14 @@ namespace Qwack.Options.VolSurfaces
             Build(originDate, strikes, expiries, vols);
         }
 
-        public GridVolSurface(TO_GridVolSurface transportObject, ICurrencyProvider currencyProvider)
+        public GridVolSurface(TO_GridVolSurface transportObject, ICurrencyProvider currencyProvider, ICalendarProvider calendarProvider)
             : this(transportObject.OriginDate, transportObject.Strikes, transportObject.Expiries, transportObject.Volatilities, transportObject.StrikeType,
                  transportObject.StrikeInterpolatorType, transportObject.TimeInterpolatorType, transportObject.TimeBasis, transportObject.PillarLabels)
         {
             Currency = currencyProvider.GetCurrency(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
+            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider);
         }
 
         public void Build(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols)
@@ -450,7 +451,8 @@ namespace Qwack.Options.VolSurfaces
             TimeBasis = TimeBasis,
             TimeInterpolatorType = TimeInterpolatorType,
             Strikes = Strikes,
-            Volatilities = new MultiDimArray<double>(Volatilities)
+            Volatilities = new MultiDimArray<double>(Volatilities),
+            TimeProvider = TimeProvider?.ToTransportObject()
         };
         
     }

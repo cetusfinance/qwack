@@ -8,6 +8,9 @@ namespace Qwack.Core.Curves.TimeProviders
     {
         public static ITimeProvider CreateTimeProvider(this TO_ITimeProvider toTimeProvider, ICalendarProvider calendarProvider)
         {
+            if (toTimeProvider == null)
+                return null;
+
             if (toTimeProvider.CalendarTimeProvider != null)
             {
                 return new CalendarTimeProvider(toTimeProvider.CalendarTimeProvider.DayCountBasis);
@@ -17,6 +20,7 @@ namespace Qwack.Core.Curves.TimeProviders
                 var calendar = calendarProvider.GetCalendar(toTimeProvider.BusinessDayTimeProvider.Calendar);
                 return new BusinessDayTimeProvider(calendar, toTimeProvider.BusinessDayTimeProvider.WeekendWeight, toTimeProvider.BusinessDayTimeProvider.HolidayWeight);
             }
+
             throw new ArgumentException("Invalid TO_ITimeProvider");
         }
     }

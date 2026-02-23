@@ -43,7 +43,7 @@ namespace Qwack.Models
             : this(transportObject.BuildDate, new FundingModel(transportObject.FundingModel, currencyProvider, calendarProvider))
         {
             _assetCurves = transportObject.AssetCurves?.ToDictionary(x => x.Key, x => x.Value.GetPriceCurve(currencyProvider, calendarProvider)) ?? new Dictionary<string, IPriceCurve>();
-            _assetVols = transportObject.AssetVols?.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider)) ?? new Dictionary<VolSurfaceKey, IVolSurface>();
+            _assetVols = transportObject.AssetVols?.ToDictionary(x => new VolSurfaceKey(x.Key, currencyProvider), y => VolSurfaceFactory.GetVolSurface(y.Value, currencyProvider, calendarProvider)) ?? [];
             _fixings = transportObject.Fixings?.ToDictionary(x => x.Key, x => (IFixingDictionary)new FixingDictionary(x.Value)) ?? new Dictionary<string, IFixingDictionary>();
             CorrelationMatrix = transportObject.CorrelationMatrix == null ? null : CorrelationMatrixFactory.GetCorrelationMatrix(transportObject.CorrelationMatrix);
         }

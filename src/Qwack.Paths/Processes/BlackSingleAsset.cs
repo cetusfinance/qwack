@@ -126,16 +126,18 @@ namespace Qwack.Paths.Processes
             var prevSpot = _forwardCurve(0);
             var six = Array.IndexOf(_timesteps.Dates, _startDate);
             var firstTime = _timesteps.Times[six];
+            var surfaceTimeProvider = _surface.TimeProvider;
             for (var t = _fixings.Length  + 1; t < _drifts.Length; t++)
             {
-                var time = _timesteps.Times[t] - firstTime;
-                var prevTime = Max(0,_timesteps.Times[t - 1] - firstTime);
-                var atmVol = _surface.GetForwardATMVol(0, time);
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * time * _correlation);
-                var spot = _forwardCurve(time) * driftAdj;
-                var varStart = Pow(_surface.GetForwardATMVol(0, prevTime), 2) * prevTime;
-                var varEnd = Pow(atmVol, 2) * time;
+                var calendarTime = _timesteps.Times[t] - firstTime;
+                var surfaceTime = surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]);
+                var surfacePrevTime = Max(0, surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t - 1]));
+                var atmVol = _surface.GetForwardATMVol(0, surfaceTime);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]));
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * calendarTime * _correlation);
+                var spot = _forwardCurve(calendarTime) * driftAdj;
+                var varStart = Pow(_surface.GetForwardATMVol(0, surfacePrevTime), 2) * surfacePrevTime;
+                var varEnd = Pow(atmVol, 2) * surfaceTime;
                 var x0 = varEnd - varStart;
                 if (x0 < 0)
                 {

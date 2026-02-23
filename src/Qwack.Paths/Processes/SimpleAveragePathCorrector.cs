@@ -52,12 +52,15 @@ namespace Qwack.Paths.Processes
 
             _fwds = new double[_timesteps.TimeStepCount];
 
+            var surfaceTimeProvider = _surface.TimeProvider;
             for (var t = 0; t < _fwds.Length; t++)
             {
-                var atmVol = _surface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * _timesteps.Times[t] * _correlation);
-                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
+                var calendarTime = _timesteps.Times[t];
+                var surfaceTime = surfaceTimeProvider.GetYearFraction(_surface.OriginDate, _timesteps.Dates[t]);
+                var atmVol = _surface.GetForwardATMVol(0, surfaceTime);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_adjSurface.OriginDate, _timesteps.Dates[t]));
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * calendarTime * _correlation);
+                var spot = _forwardCurve(calendarTime) * driftAdj;
                 _fwds[t] = spot;
             }
             _isComplete = true;

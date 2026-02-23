@@ -33,7 +33,8 @@ namespace Qwack.Paths.Processes
         private double[] _vols;
         private double[] _spotDrifts;
         private double[] _spotVols;
-        private double[] _spotTimesSqrt;
+        private double[] _surfaceTimes;
+        private double[] _surfaceTimesSqrt;
         private double _spot0;
 
         private IInterpolator1D[] _invCdfs;
@@ -78,26 +79,32 @@ namespace Qwack.Paths.Processes
 
             _spot0 = _forwardCurve(0);
             var prevSpot = _spot0;
+            var surfaceTimeProvider = _surface.TimeProvider;
+            _surfaceTimes = new double[_timesteps.TimeStepCount];
             for (var t = 1; t < _drifts.Length; t++)
             {
-                var atmVol = _surface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _timesteps.Times[t]);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * _timesteps.Times[t] * _correlation);
-                var spot = _forwardCurve(_timesteps.Times[t]) * driftAdj;
-                var varStart = Pow(_surface.GetForwardATMVol(0, _timesteps.Times[t - 1]), 2) * _timesteps.Times[t - 1];
-                var varEnd = Pow(atmVol, 2) * _timesteps.Times[t];
+                var calendarTime = _timesteps.Times[t];
+                var surfaceTime = surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]);
+                var surfacePrevTime = Max(0, surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t - 1]));
+                _surfaceTimes[t] = surfaceTime;
+                var atmVol = _surface.GetForwardATMVol(0, surfaceTime);
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]));
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * calendarTime * _correlation);
+                var spot = _forwardCurve(calendarTime) * driftAdj;
+                var varStart = Pow(_surface.GetForwardATMVol(0, surfacePrevTime), 2) * surfacePrevTime;
+                var varEnd = Pow(atmVol, 2) * surfaceTime;
                 var fwdVariance = Max(0, varEnd - varStart);
                 _vols[t] = Sqrt(fwdVariance / _timesteps.TimeSteps[t]);
                 _drifts[t] = Log(spot / prevSpot) / _timesteps.TimeSteps[t];
                 _invCdfs[t] = _surface.GenerateCDF2(500, _timesteps.Dates[t], spot, true, driftAdj);
 
                 _spotVols[t] = atmVol;
-                _spotDrifts[t] = Log(spot / _spot0) / _timesteps.Times[t];
+                _spotDrifts[t] = Log(spot / _spot0) / surfaceTime;
 
                 prevSpot = spot;
             }
 
-            _spotTimesSqrt = _timesteps.Times.Select(x => Sqrt(x)).ToArray();
+            _surfaceTimesSqrt = _surfaceTimes.Select(x => Sqrt(x)).ToArray();
 
             _isComplete = true;
         }
@@ -134,9 +141,9 @@ namespace Qwack.Paths.Processes
                         for (var v = 0; v < ws.Length; v++)
                         {
                             var t1 = Log(steps[step][v] / _spot0);
-                            var t2 = (_spotDrifts[step] + _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
+                            var t2 = (_spotDrifts[step] + _spotVols[step] * _spotVols[step] / 2.0) * _surfaceTimes[step];
                             t1 -= t2;
-                            t1 /= _spotVols[step] * _spotTimesSqrt[step];
+                            t1 /= _spotVols[step] * _surfaceTimesSqrt[step];
                             t1 = Statistics.NormSDist(t1);
                             ws[v] = _invCdfs[step].Interpolate(t1);
                         }
@@ -161,9 +168,9 @@ namespace Qwack.Paths.Processes
                         for (var v = 0; v < ws.Length; v++)
                         {
                             var t1 = Log(steps[step][v] / _spot0);
-                            var t2 = (_spotDrifts[step] - _spotVols[step] * _spotVols[step] / 2.0) * _timesteps.Times[step];
+                            var t2 = (_spotDrifts[step] - _spotVols[step] * _spotVols[step] / 2.0) * _surfaceTimes[step];
                             t1 -= t2;
-                            t1 /= _spotVols[step] * _spotTimesSqrt[step];
+                            t1 /= _spotVols[step] * _surfaceTimesSqrt[step];
                             t1 = Statistics.NormSDist(t1);
                             ws[v] = _invCdfs[step].Interpolate(t1);
                         }

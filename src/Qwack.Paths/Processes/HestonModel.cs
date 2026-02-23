@@ -122,18 +122,23 @@ namespace Qwack.Paths.Processes
             var six = Array.IndexOf(_timesteps.Dates, _startDate);
             var firstTime = six >= 0 ? _timesteps.Times[six] : 0.0;
             var prevSpot = _forwardCurve(0);
+            var surfaceTimeProvider = _surface.TimeProvider;
 
             // Calibrate variance parameters from vol surface
             if (_params.CalibrateToVolSurface)
             {
                 // Get short-term vol for v_0
-                var shortTermTime = Min(_params.ShortTermHorizon, (_expiryDate - _startDate).TotalDays / 365.25);
-                var shortTermVol = _surface.GetForwardATMVol(0, shortTermTime);
+                var shortTermTimeCal = Min(_params.ShortTermHorizon, (_expiryDate - _startDate).TotalDays / 365.25);
+                var shortTermDate = _startDate.AddDays(shortTermTimeCal * 365.25);
+                var shortTermSurfaceTime = surfaceTimeProvider.GetYearFraction(_startDate, shortTermDate);
+                var shortTermVol = _surface.GetForwardATMVol(0, shortTermSurfaceTime);
                 _v0Calibrated = shortTermVol * shortTermVol;
 
                 // Get long-term vol for θ
-                var longTermTime = Min(_params.LongTermHorizon, (_expiryDate - _startDate).TotalDays / 365.25);
-                var longTermVol = _surface.GetForwardATMVol(0, longTermTime);
+                var longTermTimeCal = Min(_params.LongTermHorizon, (_expiryDate - _startDate).TotalDays / 365.25);
+                var longTermDate = _startDate.AddDays(longTermTimeCal * 365.25);
+                var longTermSurfaceTime = surfaceTimeProvider.GetYearFraction(_startDate, longTermDate);
+                var longTermVol = _surface.GetForwardATMVol(0, longTermSurfaceTime);
                 _thetaCalibrated = longTermVol * longTermVol;
             }
             else
@@ -145,14 +150,14 @@ namespace Qwack.Paths.Processes
             // Calibrate drift from forward curve
             for (var t = _fixings.Length + 1; t < _drifts.Length; t++)
             {
-                var time = _timesteps.Times[t] - firstTime;
+                var calendarTime = _timesteps.Times[t] - firstTime;
                 var dt = _timesteps.TimeSteps[t];
 
                 // FX adjustment if needed
                 var atmVol = Sqrt(_v0Calibrated);  // Use initial vol for FX adjustment
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * time * _fxCorrelation);
-                var spot = _forwardCurve(time) * driftAdj;
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]));
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * calendarTime * _fxCorrelation);
+                var spot = _forwardCurve(calendarTime) * driftAdj;
 
                 // Drift calibration: ensure forward is a martingale
                 if (_params.CalibrateToForwardCurve)

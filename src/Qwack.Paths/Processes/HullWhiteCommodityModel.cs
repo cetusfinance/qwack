@@ -123,15 +123,17 @@ namespace Qwack.Paths.Processes
             var firstTime = six >= 0 ? _timesteps.Times[six] : 0.0;
             var prevSpot = _forwardCurve(0);
             var alpha = _params.MeanReversion;
+            var surfaceTimeProvider = _surface.TimeProvider;
 
-            // Total time to expiry (delivery date)
-            var totalTime = (_expiryDate - _startDate).TotalDays / 365.25;
+            // Total time to expiry — calendar time for mean reversion dynamics, surface time for vol lookup
+            var calTotalTime = (_expiryDate - _startDate).TotalDays / 365.25;
+            var surfaceTotalTime = surfaceTimeProvider.GetYearFraction(_startDate, _expiryDate);
 
             // Get the Black vol at delivery date - this is what we need to match
             double blackVol;
             if (_params.CalibrateToVolSurface)
             {
-                blackVol = _surface.GetForwardATMVol(0, totalTime);
+                blackVol = _surface.GetForwardATMVol(0, surfaceTotalTime);
             }
             else
             {
@@ -139,24 +141,23 @@ namespace Qwack.Paths.Processes
             }
 
             // Compute the scaling factor to ensure HW integrated variance = Black variance
-            // Black variance: σ_Black² * T
-            // HW variance: σ² * ∫₀^T e^{-2α(T-t)} dt = σ² * (1 - e^{-2αT}) / (2α)
+            // Black variance: σ_Black² * T_surface (surface time, matching vol lookup convention)
+            // HW variance: σ² * ∫₀^T e^{-2α(T-t)} dt = σ² * (1 - e^{-2αT_cal}) / (2α) (calendar time for mean reversion)
             // 
-            // For these to match at delivery (τ = T):
-            // σ = σ_Black * √(2αT / (1 - e^{-2αT}))
+            // For these to match at delivery:
+            // σ = σ_Black * √(T_surface * 2α / (1 - e^{-2αT_cal}))
             //
             // This scaling factor → 1 as α → 0 (recovers Black exactly)
             double volScaleFactor;
-            if (alpha < 1e-10 || totalTime < 1e-10)
+            if (alpha < 1e-10 || calTotalTime < 1e-10)
             {
                 volScaleFactor = 1.0;  // No scaling needed for Black-equivalent case
             }
             else
             {
-                var hwVarianceFactor = (1 - Exp(-2 * alpha * totalTime)) / (2 * alpha);
-                var blackVarianceFactor = totalTime;
+                var hwVarianceFactor = (1 - Exp(-2 * alpha * calTotalTime)) / (2 * alpha);
+                var blackVarianceFactor = surfaceTotalTime;
                 volScaleFactor = Sqrt(blackVarianceFactor / hwVarianceFactor);
-                // This equals √(2αT / (1 - e^{-2αT}))
             }
 
             // Scaled base vol that will integrate to Black variance at delivery
@@ -164,17 +165,17 @@ namespace Qwack.Paths.Processes
 
             for (var t = _fixings.Length + 1; t < _drifts.Length; t++)
             {
-                var time = _timesteps.Times[t] - firstTime;
-                var prevTime = Max(0, _timesteps.Times[t - 1] - firstTime);
+                var calendarTime = _timesteps.Times[t] - firstTime;
+                var calendarPrevTime = Max(0, _timesteps.Times[t - 1] - firstTime);
                 var dt = _timesteps.TimeSteps[t];
 
-                // Time remaining to delivery from current simulation time
-                var timeToDelivery = Max(0, totalTime - time);
+                // Time remaining to delivery from current simulation time (calendar time for mean reversion)
+                var timeToDelivery = Max(0, calTotalTime - calendarTime);
 
-                // FX adjustment if needed
-                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, time);
-                var driftAdj = _adjSurface == null ? 1.0 : Exp(blackVol * fxAtmVol * time * _fxCorrelation);
-                var spot = _forwardCurve(time) * driftAdj;
+                // FX adjustment if needed — adj surface vol uses its own TimeProvider
+                var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]));
+                var driftAdj = _adjSurface == null ? 1.0 : Exp(blackVol * fxAtmVol * calendarTime * _fxCorrelation);
+                var spot = _forwardCurve(calendarTime) * driftAdj;
 
                 // Hull-White volatility decay factor: e^{-α(T-t)}
                 // This captures how volatility "propagates" through the forward curve
@@ -197,10 +198,10 @@ namespace Qwack.Paths.Processes
                 }
                 else
                 {
-                    // Exact integration of variance over the step
-                    var T = totalTime;
-                    var t1 = prevTime;
-                    var t2 = time;
+                    // Exact integration of variance over the step (calendar time for mean reversion dynamics)
+                    var T = calTotalTime;
+                    var t1 = calendarPrevTime;
+                    var t2 = calendarTime;
                     // ∫_{t1}^{t2} e^{-2α(T-s)} ds = (e^{-2α(T-t2)} - e^{-2α(T-t1)}) / (2α)
                     var varIntegral = (Exp(-2 * alpha * (T - t2)) - Exp(-2 * alpha * (T - t1))) / (2 * alpha);
                     stepVariance = scaledBaseVol * scaledBaseVol * varIntegral;

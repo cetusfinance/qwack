@@ -34,7 +34,7 @@ namespace Qwack.Core.Curves.TimeProviders
         private double CountWeightedDays(DateTime start, DateTime end)
         {
             var total = 0.0;
-            for (var date = start; date <= end; date = date.AddDays(1))
+            for (var date = start; date < end; date = date.AddDays(1))
             {
                 if (calendar.DaysToAlwaysExclude.Contains(date.DayOfWeek))
                     total += weekendWeight;

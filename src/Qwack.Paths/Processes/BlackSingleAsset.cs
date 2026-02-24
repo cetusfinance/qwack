@@ -131,7 +131,7 @@ namespace Qwack.Paths.Processes
             {
                 var calendarTime = _timesteps.Times[t] - firstTime;
                 var surfaceTime = surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]);
-                var surfacePrevTime = Max(0, surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t - 1]));
+                var surfacePrevTime = Max(0, surfaceTimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t - 1])); // = _timesteps.Times[t - 1] - firstTime;
                 var atmVol = _surface.GetForwardATMVol(0, surfaceTime);
                 var fxAtmVol = _adjSurface == null ? 0.0 : _adjSurface.GetForwardATMVol(0, _adjSurface.TimeProvider.GetYearFraction(_startDate, _timesteps.Dates[t]));
                 var driftAdj = _adjSurface == null ? 1.0 : Exp(atmVol * fxAtmVol * calendarTime * _correlation);

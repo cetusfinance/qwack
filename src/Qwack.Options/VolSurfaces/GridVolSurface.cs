@@ -75,7 +75,7 @@ namespace Qwack.Options.VolSurfaces
             Currency = currencyProvider.GetCurrency(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
-            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider);
+            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider) ?? new CalendarTimeProvider();
         }
 
         public void Build(DateTime originDate, double[] strikes, DateTime[] expiries, double[][] vols)

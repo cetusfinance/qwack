@@ -146,7 +146,7 @@ namespace Qwack.Options.VolSurfaces
             Currency = currencyProvider.GetCurrencySafe(transportObject.Currency);
             AssetId = transportObject.AssetId;
             Name = transportObject.Name;
-            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider);
+            TimeProvider = TimeProviderFactory.CreateTimeProvider(transportObject.TimeProvider, calendarProvider) ?? new CalendarTimeProvider();
         }
 
         private int LastIx(DateTime? LastSensitivityDate)

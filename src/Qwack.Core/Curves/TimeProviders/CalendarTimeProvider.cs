@@ -8,7 +8,7 @@ namespace Qwack.Core.Curves.TimeProviders
     public class CalendarTimeProvider(DayCountBasis dayCountBasis = DayCountBasis.Act365F) : ITimeProvider
     {
         public double GetYearFraction(DateTime start, DateTime end) 
-            => start.CalculateYearFraction(end, dayCountBasis);
+            => start.CalculateYearFraction(end, dayCountBasis, false);
 
         TO_ITimeProvider ITimeProvider.ToTransportObject() => new()
         {
